@@ -7,6 +7,7 @@ from player_store import GameplayFault
 from gameplay_common import grant_reward, game_day, equipment_exclusive_ids
 from battle_intents import create_intent, consume_intent
 from battle_engine import serialize_player_team, serialize_stage_team, validate_team_lane_coverage
+from solo_progression import arena_equipment
 
 class GameplayCompetition:
     METHODS={"user.get_rank_list","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
@@ -133,7 +134,7 @@ class GameplayCompetition:
                     if isinstance(unit,list) and len(unit)>=10:
                         team.append([unit[0],int(unit[1]),int(unit[2]),int(unit[7]),float(unit[8]),1 if unit[9] else 0])
                 if team:
-                    return {"uid":uid,"rank":99998,"name":"新手竞技试炼","lv":level,"group":999999999,"index":6,"team":team}
+                    return {"uid":uid,"rank":100,"name":"新手竞技试炼","lv":level,"group":999999999,"index":6,"team":team,"target_power":4000}
         bits=str(uid).split("_")
         if len(bits)<3 or not bits[0].startswith("r"): return None
         try: group,index=int(bits[1]),int(bits[2])
@@ -141,7 +142,7 @@ class GameplayCompetition:
         return next((b for b in self.pvp_bots if int(b.get("group",-1))==group and int(b.get("index",-1))==index),None)
     def _bot_units(self,bot):
         team=bot.get("team",[]) if bot else []
-        return serialize_stage_team(self.cfg,team,team=2)
+        return arena_equipment(self.full_config,bot or {},serialize_stage_team(self.cfg,team,team=2))
     @staticmethod
     def _compact(units):
         return [[u.get("aid"),int(u.get("lv",1)),int(u.get("slv",1)),int(u.get("hp",0)),int(u.get("ap",0)),int(u.get("de_ph",0)),int(u.get("de_ma",0)),int(u.get("phase",0)),int(u.get("line",0)),float(u.get("pos",0)),u.get("talent"),int(u.get("morph",0))] for u in units]

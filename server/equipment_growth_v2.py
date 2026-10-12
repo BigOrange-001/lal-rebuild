@@ -138,10 +138,10 @@ def migrate_pending_save(item: dict, pending: dict, pair: tuple[str, str]) -> di
     return migrated
 
 
-def wash_roll(old: dict[str, int], pair: tuple[str, str], cap: int, num: int, rng) -> dict[str, int]:
+def wash_roll(old: dict[str, int], pair: tuple[str, str], cap: int, num: int, rng, *, star: int = 1, level: int = 1) -> dict[str, int]:
     """Candidate roll only fills the two native-declared attrs, capped in aggregate."""
     remaining = max(0, int(cap) - sum(max(0, int(old.get(k, 0))) for k in ATTRS))
-    budget = min(remaining, max(1, int(num)) * 5 * len(pair))
+    budget = min(remaining, max(1, int(num)) * max(1, int(star)) * max(5, int(level) // 10))
     rolled = {key: 0 for key in ATTRS}
     if budget <= 0:
         return rolled

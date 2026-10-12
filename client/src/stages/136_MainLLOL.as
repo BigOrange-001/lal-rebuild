@@ -31,6 +31,7 @@ package
    import flash.text.TextField;
    import flash.text.TextFormat;
    import flash.utils.ByteArray;
+   import flash.utils.getDefinitionByName;
    import flash.utils.getTimer;
    import flash.utils.setTimeout;
    import starling.core.Starling;
@@ -82,15 +83,15 @@ package
       
       public var UI_init_logo:Class = logo_png$fd4912dcc0b52c65f25aba8ec8d7969a518538278;
       
-      public var UI_img_index:Class = ui_img_index_png;
+      public var UI_img_index:Class = getDefinitionByName("ui_img_index_png$fb44ee62dacf39bb1e2d7dbb9526dadc-966789018") as Class;
       
-      public var UI_init_ui_logo:Class = ui_logo_png;
+      public var UI_init_ui_logo:Class = getDefinitionByName("ui_logo_png$e335bbd756c36162ba0dc88c374c8888-148600735") as Class;
       
       public var UI_waitStage_loadingClip:Class = ui_waitStage_loadingClip_atf$fb2416c0e6f6e5dd5c33a43af2938e53823746115;
       
       public var Config_ui_waitStage_loadingClip:Class = ui_waitStage_loadingClip_xml$bb6a2c1d160f949ce1c44a1dbd5ef877823719111;
       
-      public var Config_initLoader:Class = initLoader_xml;
+      public var Config_initLoader:Class = getDefinitionByName("initLoader_xml$2216d217c6b921e84f36cea063682bc4-1143981681") as Class;
       
       public var Config_language_tw:Class = language_tw_xml$879146f2c71a4e1f433e963f68743fb41608885072;
       
@@ -123,7 +124,8 @@ package
          param1.currentTarget.removeEventListener("addedToStage",onADDED_TO_STAGE);
          if(this.stage)
          {
-            ConfigManager.getInstance().init();
+            var startupConfig:ConfigManager = ConfigManager.getInstance();
+            startupConfig.init();
             if(Capabilities.manufacturer.indexOf("Android") != -1)
             {
                MainConfig.VERSION_CURR = "1.0.0";
@@ -226,10 +228,9 @@ package
       
       public function checkCapabilities() : void
       {
-         var _loc1_:Capabilities = Capabilities;
          GlobalData.$fullScreenWidth = stage.fullScreenWidth;
          GlobalData.$fullScreenHeight = stage.fullScreenHeight;
-         if(_loc1_.manufacturer.indexOf("Window") > -1)
+         if(Capabilities.manufacturer.indexOf("Window") > -1)
          {
             MainConfig.$isWindows = true;
             if(MainConfig.$isAir || !Capabilities.isDebugger)
@@ -239,7 +240,7 @@ package
                setAirStage();
             }
          }
-         if(_loc1_.isDebugger)
+         if(Capabilities.isDebugger)
          {
             MainConfig.$isDebug = true;
          }

@@ -1,0 +1,1742 @@
+[
+  {
+    "apk_entry": "assets/MainLLOL.swf",
+    "path": "resources/template/MainLLOL.swf",
+    "size": 8971330,
+    "sha256": "dc439bbbc9b58f65df0ba12dfc625d6348050f705761360e1fa2cf0fb627cd5b"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1001.mp3",
+    "path": "resources/app/assets/audio/A_1001.mp3",
+    "size": 15463,
+    "sha256": "97407c148ab19b7a4d0a9f05500a79eb2626f84c667ecc8d5b2d6815355598f3"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1002.mp3",
+    "path": "resources/app/assets/audio/A_1002.mp3",
+    "size": 17345,
+    "sha256": "b08487afcf2587fd385350e4aaa68908bac8ab112fa04758319cb5f79c415465"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1003.mp3",
+    "path": "resources/app/assets/audio/A_1003.mp3",
+    "size": 24869,
+    "sha256": "94df92802b18d0f4d56032d846905df8b0e3a4c510c5659f06cb2b09583962f1"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1004.mp3",
+    "path": "resources/app/assets/audio/A_1004.mp3",
+    "size": 35736,
+    "sha256": "6da79a775284fddde665b341c0df5291fe63ef2b8896e1a73a57f9464b320e14"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1005.mp3",
+    "path": "resources/app/assets/audio/A_1005.mp3",
+    "size": 19435,
+    "sha256": "8366b9de085bceacfad04ce6b2235ad4c5dc954905ce2b0000aea5b9fadb94e4"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1006.mp3",
+    "path": "resources/app/assets/audio/A_1006.mp3",
+    "size": 16091,
+    "sha256": "5f54eaa24de7f19ef2818785217c0d1a88040cec13d8c91a934786bf091852dd"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1007.mp3",
+    "path": "resources/app/assets/audio/A_1007.mp3",
+    "size": 19853,
+    "sha256": "520586c3f5df9234f29aed2b2266b2275be47f2df5447ba3bcb40856084f365b"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1008.mp3",
+    "path": "resources/app/assets/audio/A_1008.mp3",
+    "size": 29466,
+    "sha256": "9dda49ef8b75acebef95720f605f05a801e882f65791f4acf0d2569ba525b4bd"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1009.mp3",
+    "path": "resources/app/assets/audio/A_1009.mp3",
+    "size": 25913,
+    "sha256": "a368fb63b6e89b7f9152852e4bbd1aef71452651d540b4e226aa898ab980de05"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1010.mp3",
+    "path": "resources/app/assets/audio/A_1010.mp3",
+    "size": 11912,
+    "sha256": "86572a0b6a8cafed31da400f821d947a9c559ddc9507dee34c323be5b2eca39c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1011.mp3",
+    "path": "resources/app/assets/audio/A_1011.mp3",
+    "size": 24242,
+    "sha256": "4c38f8cee74d8f5eeb4378e05e62c255387ae48b2ddcc0f14ceb82b72c488f48"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1012.mp3",
+    "path": "resources/app/assets/audio/A_1012.mp3",
+    "size": 17972,
+    "sha256": "660b992255a14a3f420042cd533edf1e70eb4a0b8ee32e15021799469caffb46"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1013.mp3",
+    "path": "resources/app/assets/audio/A_1013.mp3",
+    "size": 33855,
+    "sha256": "71cd0a7f319867e577917237332d436d0b74164183f95394258cf019cf4f7894"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1014.mp3",
+    "path": "resources/app/assets/audio/A_1014.mp3",
+    "size": 16927,
+    "sha256": "b0f56d9d1ecf96c1aa60a9db7dffca0749fb1301a8ecf35c0451fbd41b50b996"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1015.mp3",
+    "path": "resources/app/assets/audio/A_1015.mp3",
+    "size": 10031,
+    "sha256": "c933612850c759f02b93797fd7b319df3f1895b629341d82748cc6266db4fc38"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1016.mp3",
+    "path": "resources/app/assets/audio/A_1016.mp3",
+    "size": 15464,
+    "sha256": "52acc3cb240fec57ed443eee3160a3c759cbdf993c12db2b0e354fb5f6f5260f"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1017.mp3",
+    "path": "resources/app/assets/audio/A_1017.mp3",
+    "size": 21943,
+    "sha256": "024ed5838dc85c878fad6cb6a682260813d178f4d225e51d125f2eaea160026f"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1018.mp3",
+    "path": "resources/app/assets/audio/A_1018.mp3",
+    "size": 26749,
+    "sha256": "989e36bad279268c5581d63d390e87b9e2d2a424e3be0d495d0f4335d4426490"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1019.mp3",
+    "path": "resources/app/assets/audio/A_1019.mp3",
+    "size": 33646,
+    "sha256": "74c180f7e9761cedda37344f25c517475df7490389e06b563363265e11e6219d"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1020.mp3",
+    "path": "resources/app/assets/audio/A_1020.mp3",
+    "size": 12330,
+    "sha256": "6897645e64713d9cf1735c058e4b86e7580f9d871e3113db92ee0f98a49fc1dc"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1021.mp3",
+    "path": "resources/app/assets/audio/A_1021.mp3",
+    "size": 16300,
+    "sha256": "cbcc22f205d5bbe5712e676fcd117b4c55de0c3dc8380f85c05e1d1517e0528c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1022.mp3",
+    "path": "resources/app/assets/audio/A_1022.mp3",
+    "size": 33228,
+    "sha256": "406fe14192bd4cee6cd15d73614e710c2a713c01937ebd42ecf9215f643f59fa"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1023.mp3",
+    "path": "resources/app/assets/audio/A_1023.mp3",
+    "size": 32942,
+    "sha256": "01220886fff4183d75bb31dbb955422572eae63a87214c08ac1183843d3646d6"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1024.mp3",
+    "path": "resources/app/assets/audio/A_1024.mp3",
+    "size": 49110,
+    "sha256": "dbdfc2b7b32444bc375bc6cfad858a6ca5ade69147c49c9e104a12b29ef8c180"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1025.mp3",
+    "path": "resources/app/assets/audio/A_1025.mp3",
+    "size": 33437,
+    "sha256": "e9557704f35b35ee0aa0dfba32d9419c9943594480ecbd144f43324820081f91"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1026.mp3",
+    "path": "resources/app/assets/audio/A_1026.mp3",
+    "size": 39915,
+    "sha256": "1f7a600264a8166400eae9c162ed8429063d0f9ca1f7abede59b965ed316edf7"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1027.mp3",
+    "path": "resources/app/assets/audio/A_1027.mp3",
+    "size": 23406,
+    "sha256": "bfb941fa55b6a281d2c32c619f259da2206759f4b82c3fa0021c624d078185e9"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1028.mp3",
+    "path": "resources/app/assets/audio/A_1028.mp3",
+    "size": 21943,
+    "sha256": "7ddb82950c7a6d6d5b9b39f1a4a1f49eee7f4c4a4d15b8d0607f58277cbf5e61"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1029.mp3",
+    "path": "resources/app/assets/audio/A_1029.mp3",
+    "size": 18390,
+    "sha256": "b31b17aa2647d2d3f9617cd13bb5a3421b82352580f728ee824855951ccc988a"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1030.mp3",
+    "path": "resources/app/assets/audio/A_1030.mp3",
+    "size": 47229,
+    "sha256": "867cf0f8de11d9053d8d5ea885d53b86ab6efc676f8e51cb6657e3271af2cb44"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1032.mp3",
+    "path": "resources/app/assets/audio/A_1032.mp3",
+    "size": 82024,
+    "sha256": "aa864e970e538cd5da3541fc9cedab07a121b7fd50311e8a58acb3c2cc20c4c1"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1033.mp3",
+    "path": "resources/app/assets/audio/A_1033.mp3",
+    "size": 39915,
+    "sha256": "2cab958b7307b82739edd6e56cc48b53b73ff771fb64acecfb8a590a4ed29066"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1036.mp3",
+    "path": "resources/app/assets/audio/A_1036.mp3",
+    "size": 61440,
+    "sha256": "70e14b06093fd381be2686ef021b2d69a0ba7fbcfaaae288971c409bae6322ca"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1040.mp3",
+    "path": "resources/app/assets/audio/A_1040.mp3",
+    "size": 14629,
+    "sha256": "33becc45395397eec092f7655a7b4bdbf0b55adee680a755dfeabe58a76163de"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1041.mp3",
+    "path": "resources/app/assets/audio/A_1041.mp3",
+    "size": 12330,
+    "sha256": "59b925612a66ac2b2e7242919141f7c37fc3beeaf46039a759dba618128afeab"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1045.mp3",
+    "path": "resources/app/assets/audio/A_1045.mp3",
+    "size": 30720,
+    "sha256": "303cf182fbcd7a408153bef72e91d68e7082d788b0b6025fafe13bb0c3878f9d"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1049.mp3",
+    "path": "resources/app/assets/audio/A_1049.mp3",
+    "size": 11076,
+    "sha256": "18accc64738d2a526c5a6985ac817fa74d687b0e2cedbcdac903769458801fd7"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1052.mp3",
+    "path": "resources/app/assets/audio/A_1052.mp3",
+    "size": 35004,
+    "sha256": "e644bff4f5eba293c8df87273a5a16176771d52162d1c8c56a73b641d99a78b3"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1053.mp3",
+    "path": "resources/app/assets/audio/A_1053.mp3",
+    "size": 34900,
+    "sha256": "90bc48174fc9f63106ad723e0b45ea43327e9d7a8473798f76e47524ff092262"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1054.mp3",
+    "path": "resources/app/assets/audio/A_1054.mp3",
+    "size": 50155,
+    "sha256": "24ba2bd24501bd2f4f37c670a6a45c76539782757a486a9cf6957cd8935454ea"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1056.mp3",
+    "path": "resources/app/assets/audio/A_1056.mp3",
+    "size": 23197,
+    "sha256": "c18c19d4bd28cf110febba3821e7637235e92b9712d8648735a02742ff724883"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1060.mp3",
+    "path": "resources/app/assets/audio/A_1060.mp3",
+    "size": 45453,
+    "sha256": "ecc0974bf8b9cfbc8dc7b84555f519f0b3212f78c30036e5cf16d5940eaa81ee"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1063.mp3",
+    "path": "resources/app/assets/audio/A_1063.mp3",
+    "size": 77740,
+    "sha256": "baa251526a3b878cb2c32e4ec942a4e503a349f0e98fd8c6a3333bf2122ba569"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1066.mp3",
+    "path": "resources/app/assets/audio/A_1066.mp3",
+    "size": 19435,
+    "sha256": "34c9f2cdc46af9aaa0614ef2595bf223d2289f6b285c70d8cd73a7a85ec592ae"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1068.mp3",
+    "path": "resources/app/assets/audio/A_1068.mp3",
+    "size": 79212,
+    "sha256": "8bbf628c162a40ccc9443385a834598d36f462376edc783e11dbefd3c3b87970"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1071.mp3",
+    "path": "resources/app/assets/audio/A_1071.mp3",
+    "size": 12330,
+    "sha256": "1e6463959d51470b0524315638933caf4a8190571d1eeeca9a971a677251dc17"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1073.mp3",
+    "path": "resources/app/assets/audio/A_1073.mp3",
+    "size": 41796,
+    "sha256": "7c2634390cc39a9bc0da41ec8bd22700ae054c8fcdf37a75b0ecece6f4f44f73"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1074.mp3",
+    "path": "resources/app/assets/audio/A_1074.mp3",
+    "size": 21316,
+    "sha256": "2a6661faaefeb2295b88cd7ce2d1bbbc8632eba6048080a4e0cd9ce4f5ff8438"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1077.mp3",
+    "path": "resources/app/assets/audio/A_1077.mp3",
+    "size": 43392,
+    "sha256": "87b41430e943fe3c6160f00d1acd93aa98da9d77ffd8718bd8e5fb37e50d78c1"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1078.mp3",
+    "path": "resources/app/assets/audio/A_1078.mp3",
+    "size": 11494,
+    "sha256": "51588a2c0bc1458267e41138e5e3e6b6f562c6610f8d3c87e9de3fdea0608581"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1079.mp3",
+    "path": "resources/app/assets/audio/A_1079.mp3",
+    "size": 59117,
+    "sha256": "2fd79e3a310a2a3a611be5ac0b68559609ff37bb2e67504225885d45a7dc1bf1"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1081.mp3",
+    "path": "resources/app/assets/audio/A_1081.mp3",
+    "size": 14838,
+    "sha256": "d0dfb42d5c846fec4c89e24d8f26126967308984c82997d1b32f7c156a5f9fd6"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1082.mp3",
+    "path": "resources/app/assets/audio/A_1082.mp3",
+    "size": 21002,
+    "sha256": "17cb36ea568961020e07a88bb806c3406f49c1d3dca2f2d03a51489d63ca1946"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1083.mp3",
+    "path": "resources/app/assets/audio/A_1083.mp3",
+    "size": 12121,
+    "sha256": "4db6ea3fb7c40cda68d6e5bb66ae421b3fc2a4f9050fadd775d5b70bcc393762"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1085.mp3",
+    "path": "resources/app/assets/audio/A_1085.mp3",
+    "size": 23424,
+    "sha256": "84d7f9cb5c97f116a3c84f4ea21b4dd105a9fde2c030692f04c7991d66f53933"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1086.mp3",
+    "path": "resources/app/assets/audio/A_1086.mp3",
+    "size": 35527,
+    "sha256": "81b4fdb71b9bcba825b43a7291b1d427c80aa9c2f4ec32a249c5726126e65d43"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1090.mp3",
+    "path": "resources/app/assets/audio/A_1090.mp3",
+    "size": 13166,
+    "sha256": "4c86007d8f4a1ea11bd80e6ac9bade6f28e6973980bd55e9a4b14a1e1199278f"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1093.mp3",
+    "path": "resources/app/assets/audio/A_1093.mp3",
+    "size": 20062,
+    "sha256": "ad0a727ae06e529e6c09b425995f43b6d6d29f32197aba2affe770044a5b82fc"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1094.mp3",
+    "path": "resources/app/assets/audio/A_1094.mp3",
+    "size": 35527,
+    "sha256": "290c9a0c7d93879ce058dea1eefa5e64a87afbf9f9cafd61f854a0ca36bfacd4"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1095.mp3",
+    "path": "resources/app/assets/audio/A_1095.mp3",
+    "size": 60027,
+    "sha256": "2339bbd6671ff7bdd492b82944dad624c13206afe25c4d88a9b475f5054b7476"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1096.mp3",
+    "path": "resources/app/assets/audio/A_1096.mp3",
+    "size": 19226,
+    "sha256": "b7e69f48e7cde37d81f259ccec04d1dcf883d21bfbdb21a4628eaff18c405a9c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1097.mp3",
+    "path": "resources/app/assets/audio/A_1097.mp3",
+    "size": 37198,
+    "sha256": "96efacfce21ffce26aaa726e519bcb658f49e2492a5762962d7a6082ad6f052e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1098.mp3",
+    "path": "resources/app/assets/audio/A_1098.mp3",
+    "size": 19435,
+    "sha256": "e7545b116ff97eaa21cf250500233aef87b75de6ff6972324c527656f076a510"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1099.mp3",
+    "path": "resources/app/assets/audio/A_1099.mp3",
+    "size": 42214,
+    "sha256": "ac45b6573020d9642b8099b1c42d50eb5cc8e4e233c3442486546da28873721a"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1101.mp3",
+    "path": "resources/app/assets/audio/A_1101.mp3",
+    "size": 33855,
+    "sha256": "b3e0e6d4585cc12ab5886ae4861f8f9f4de77f382a50ebae6980eac1dbca7ed5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1103.mp3",
+    "path": "resources/app/assets/audio/A_1103.mp3",
+    "size": 77113,
+    "sha256": "5af2073f2a4b9f0ae76a46bf4f178bd058afb482084642f3ad306acb4ebea154"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1105.mp3",
+    "path": "resources/app/assets/audio/A_1105.mp3",
+    "size": 20898,
+    "sha256": "96a135c24dd15d84f300cf8ff7e9521d5093dc05f59137a050095de7ca825894"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1106.mp3",
+    "path": "resources/app/assets/audio/A_1106.mp3",
+    "size": 60195,
+    "sha256": "85c37d72a2f164bcab1dc3b4fd89ffd6d52b8d4ca7c5c8717daba609556d6100"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1108.mp3",
+    "path": "resources/app/assets/audio/A_1108.mp3",
+    "size": 31765,
+    "sha256": "6449480e9bacd3e471b3342afe6a79b1d66465b6bd32b9d822ab819ad1a409a3"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1109.mp3",
+    "path": "resources/app/assets/audio/A_1109.mp3",
+    "size": 17972,
+    "sha256": "448f6bf10687c9086e99c8036a17bb4687b0ba4fd777f60385db02bf69886c3d"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1112.mp3",
+    "path": "resources/app/assets/audio/A_1112.mp3",
+    "size": 19435,
+    "sha256": "3e5505d5eca302dafcecc79ec9cb541efa640a7e16bfeb5ea3cf90de7660dfa0"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1113.mp3",
+    "path": "resources/app/assets/audio/A_1113.mp3",
+    "size": 26749,
+    "sha256": "4edeb7e10c3794d841dbb45e7eeca1536c5ff77fa5135a33e8201783277d2469"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1114.mp3",
+    "path": "resources/app/assets/audio/A_1114.mp3",
+    "size": 51200,
+    "sha256": "6ff036401fd4b0015a66b3b6a9efc1a85234b4cb7321928a78cecebd3074eeb5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1115.mp3",
+    "path": "resources/app/assets/audio/A_1115.mp3",
+    "size": 31974,
+    "sha256": "7c63e86f56fccf55734ae8e67623eb3ac08d1a335f3574460286326802d222ce"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1117.mp3",
+    "path": "resources/app/assets/audio/A_1117.mp3",
+    "size": 43468,
+    "sha256": "7b3d9256ec2b5c418ab75620d230717db97161716efc82c366cd3f731633d153"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1119.mp3",
+    "path": "resources/app/assets/audio/A_1119.mp3",
+    "size": 29884,
+    "sha256": "d24e4e1cdf28a8aa7e6f8f82cec3f66664720c717d6ac61351083003199ce877"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1120.mp3",
+    "path": "resources/app/assets/audio/A_1120.mp3",
+    "size": 42632,
+    "sha256": "03937b31c889dddc98beae1f66952aec00df0bea3171832fbed8f14c235d88f2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1123.mp3",
+    "path": "resources/app/assets/audio/A_1123.mp3",
+    "size": 22779,
+    "sha256": "31f199c02e7e0844d8368627198d80e5730f4b786b29e7a1b2993c5cd5282c93"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1124.mp3",
+    "path": "resources/app/assets/audio/A_1124.mp3",
+    "size": 30511,
+    "sha256": "cdf5a2d2a35c21d7506c07b285a22753a64f6c62c6fd56a192be5df2e12926f0"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1125.mp3",
+    "path": "resources/app/assets/audio/A_1125.mp3",
+    "size": 23615,
+    "sha256": "e76ecdedc185af0d66fe64a9fbc903fc651f35ecdd1556b1df8de339db092c4c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1126.mp3",
+    "path": "resources/app/assets/audio/A_1126.mp3",
+    "size": 34482,
+    "sha256": "89ee2a47ccb3c7bec0916376c3f9d4ee3ad76c5daa9a4718907c9a4fc7e129f6"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1127.mp3",
+    "path": "resources/app/assets/audio/A_1127.mp3",
+    "size": 30093,
+    "sha256": "c30812183c37612ded36287f8cd12a99d0720ebbb37a94b9d5d493583b1ef450"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1128.mp3",
+    "path": "resources/app/assets/audio/A_1128.mp3",
+    "size": 37407,
+    "sha256": "8e3bd025b30be67d9e71e796d92770e911141ce9476b2a420175777f3dd31315"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1129.mp3",
+    "path": "resources/app/assets/audio/A_1129.mp3",
+    "size": 20271,
+    "sha256": "9db6a6310266496c9e7e1b1c2b0631523156286d8ed2baa5f687752f0376ec8f"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1130.mp3",
+    "path": "resources/app/assets/audio/A_1130.mp3",
+    "size": 21525,
+    "sha256": "2913df644d9d731f4e3ddb1c398abce037250929ed56ddab95d983a92be30f19"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1131.mp3",
+    "path": "resources/app/assets/audio/A_1131.mp3",
+    "size": 17763,
+    "sha256": "abe61e4023ed4719386c0080dbfc52495456446862ab9ed2bc41871a304cf00c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1132.mp3",
+    "path": "resources/app/assets/audio/A_1132.mp3",
+    "size": 18599,
+    "sha256": "608a8ad6ae91fca3803a0b3d51a24cb513f2d1bee990058317edf75a3dff7ff3"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1133.mp3",
+    "path": "resources/app/assets/audio/A_1133.mp3",
+    "size": 27585,
+    "sha256": "d8a336d284ea901edbaa1d5c602509c6077f5922e69e9634b9ad06e0e3a7e092"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1134.mp3",
+    "path": "resources/app/assets/audio/A_1134.mp3",
+    "size": 27794,
+    "sha256": "211989f42a7ad1b31bc33201e9970768aeef2ca1ffda12db690abfd440490354"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1135.mp3",
+    "path": "resources/app/assets/audio/A_1135.mp3",
+    "size": 30511,
+    "sha256": "6836f835a9ce4658b3d74cbb1e02b69754fe82708b380545565cb85dfb8c3d6d"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1136.mp3",
+    "path": "resources/app/assets/audio/A_1136.mp3",
+    "size": 49110,
+    "sha256": "f2efd3ccb2137b076b2e2ca3a27857bb213acf2b62a289a8de4b4ca5fea20048"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1137.mp3",
+    "path": "resources/app/assets/audio/A_1137.mp3",
+    "size": 24242,
+    "sha256": "a9e975cf7b8a27ee8cc672097e0c1ed51535c8c72af7809cde2f3f711f30fdfa"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1138.mp3",
+    "path": "resources/app/assets/audio/A_1138.mp3",
+    "size": 39079,
+    "sha256": "ae8b46707acd1eab2447ef83bfdd1a6a9ff39d581e5edac8f82ac9993b4c415b"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1139.mp3",
+    "path": "resources/app/assets/audio/A_1139.mp3",
+    "size": 17763,
+    "sha256": "94586d61b955ae993aecadb329ac84f74854b70fb4e0529021e8b9dfa5ae50f4"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1140.mp3",
+    "path": "resources/app/assets/audio/A_1140.mp3",
+    "size": 14838,
+    "sha256": "5681368fd7b25dd87694f42974b35b2f7ea4c2e20902bdf0ac0ff2571fd3eff9"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1142.mp3",
+    "path": "resources/app/assets/audio/A_1142.mp3",
+    "size": 27376,
+    "sha256": "d8c624c12f0c326840f95d11d3c855187c978a13a33e4585d49198e02ea5b410"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1143.mp3",
+    "path": "resources/app/assets/audio/A_1143.mp3",
+    "size": 24869,
+    "sha256": "b963ce2750d93f8168321258da920b0218bdfeb454a296dd9f6c0d642f38aaa2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1201.mp3",
+    "path": "resources/app/assets/audio/A_1201.mp3",
+    "size": 21002,
+    "sha256": "08b90fe0c5f931fc4df1a509f53402b572d64c25bf198b7908bcaf2fb55c07cf"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1202.mp3",
+    "path": "resources/app/assets/audio/A_1202.mp3",
+    "size": 9404,
+    "sha256": "c18e6aac78b5989c290a8d7019adbd661e92199b6f3398469f3ff000f5f7911e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1203.mp3",
+    "path": "resources/app/assets/audio/A_1203.mp3",
+    "size": 49319,
+    "sha256": "1dd0f530f94f5aede1298dcc6a4b766d2908f62fac66178a50ea7a187cbd3016"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1204.mp3",
+    "path": "resources/app/assets/audio/A_1204.mp3",
+    "size": 36989,
+    "sha256": "00c07618f123f7a53d271d03e700563224f19472728be79e897430661a55f6cd"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1205.mp3",
+    "path": "resources/app/assets/audio/A_1205.mp3",
+    "size": 50573,
+    "sha256": "f91aeb4fc0e53295c7c950b29c100dbee9abcfb35de84234aa0106351455c8f3"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1206.mp3",
+    "path": "resources/app/assets/audio/A_1206.mp3",
+    "size": 27167,
+    "sha256": "3c61ea91a14fe1e5cd7f96c51e6e53dd77aa41b48311d429bcaab9d0489fb2fd"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1207.mp3",
+    "path": "resources/app/assets/audio/A_1207.mp3",
+    "size": 15673,
+    "sha256": "f4abe696b16ff443fe92cfe7bcac7d4d84d1209c15f4dd671f8c6bfa50bd0bf5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1208.mp3",
+    "path": "resources/app/assets/audio/A_1208.mp3",
+    "size": 48065,
+    "sha256": "2cc3f0209da4f622e336fa53f06d8b3a99e61e9b74102fc995cd769cea9aa746"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1209.mp3",
+    "path": "resources/app/assets/audio/A_1209.mp3",
+    "size": 78994,
+    "sha256": "72b674c3c3c9555aa208d1e6243a28358d0fbbd3acba2f26df070ac56058e15b"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1210.mp3",
+    "path": "resources/app/assets/audio/A_1210.mp3",
+    "size": 12539,
+    "sha256": "bcece58f5f4f7a70865c78492ff4a798586ab407deb30e8b83a1cecef5ab94f1"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1211.mp3",
+    "path": "resources/app/assets/audio/A_1211.mp3",
+    "size": 43259,
+    "sha256": "f9f9adbe1785fe7fc7fefb66c39da015be11d4502fa8bb09fe555cb8a573fb69"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1212.mp3",
+    "path": "resources/app/assets/audio/A_1212.mp3",
+    "size": 25287,
+    "sha256": "75da9b7b30834dfc86f24025ea04b759d2286ad61f1b35733887f9112dd787c9"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1215.mp3",
+    "path": "resources/app/assets/audio/A_1215.mp3",
+    "size": 17763,
+    "sha256": "19685e307dea63ecaf65ebb305083f00a54b027a770198c126940ce4edb9f980"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1216.mp3",
+    "path": "resources/app/assets/audio/A_1216.mp3",
+    "size": 42841,
+    "sha256": "1ca81b83922e71d5367e9dccb721b48d532e882995414276716833e2d694a449"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1217.mp3",
+    "path": "resources/app/assets/audio/A_1217.mp3",
+    "size": 39706,
+    "sha256": "b4bc93d44cc5e7bd758fea55737811a885ab39232207609cadfcd96c5d3a6703"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1218.mp3",
+    "path": "resources/app/assets/audio/A_1218.mp3",
+    "size": 33855,
+    "sha256": "018f9da7fb66847ad509e021afe867438f0352e1ccf8f0d43eb29cdd840fde53"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1219.mp3",
+    "path": "resources/app/assets/audio/A_1219.mp3",
+    "size": 29675,
+    "sha256": "a0f3ebbc2a5241d093c90c1a97525f88c2d79a9ee8dfcc4a8b6e2eef25a0ba7d"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1220.mp3",
+    "path": "resources/app/assets/audio/A_1220.mp3",
+    "size": 115984,
+    "sha256": "6e2547328619af7f0991c127c4256ae5d84794cb009f77583c67f8e11b665da1"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1221.mp3",
+    "path": "resources/app/assets/audio/A_1221.mp3",
+    "size": 13793,
+    "sha256": "5ddca02bd968755086b2d6cf3b23003e501e5f4176452505b0cfb6b6af61e1b8"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1222.mp3",
+    "path": "resources/app/assets/audio/A_1222.mp3",
+    "size": 21107,
+    "sha256": "0d6f7e013d77ca5815c45be171c22326d29676f87a1f90ad8e41396dce989b1c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1223.mp3",
+    "path": "resources/app/assets/audio/A_1223.mp3",
+    "size": 29257,
+    "sha256": "e7890867759e725c809e8bd0a03768c4d25fcc671d787e3de60adc3e6faaa695"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1224.mp3",
+    "path": "resources/app/assets/audio/A_1224.mp3",
+    "size": 40229,
+    "sha256": "4bff05bf85e522f3a98d384726b3cedbd6016d34c696c11004eb1b71109d8bca"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1225.mp3",
+    "path": "resources/app/assets/audio/A_1225.mp3",
+    "size": 47647,
+    "sha256": "b0d04b3640e0119e024390d03d892fdde1ce60e3d60f3004a02a371a20dc8115"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1226.mp3",
+    "path": "resources/app/assets/audio/A_1226.mp3",
+    "size": 13375,
+    "sha256": "55e90f4611255029b95c598253e0b17a3126540dd8e88d440b43ca6462c639e2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1227.mp3",
+    "path": "resources/app/assets/audio/A_1227.mp3",
+    "size": 37616,
+    "sha256": "92a04ae1fce6c82a2894dbcd61ab502f916ef2da0a6ca1e18f65ed9aec1bb272"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1228.mp3",
+    "path": "resources/app/assets/audio/A_1228.mp3",
+    "size": 21107,
+    "sha256": "36d79cac92ab5d4b260cf3600e9c4a4ad2a7d31e0268759652f8a12dd49d6b6b"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1309.mp3",
+    "path": "resources/app/assets/audio/A_1309.mp3",
+    "size": 78994,
+    "sha256": "bd56911e85af888b1ff76a93108909aa04acba5909b0f4481c678e5394c7a2b3"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1310.mp3",
+    "path": "resources/app/assets/audio/A_1310.mp3",
+    "size": 78367,
+    "sha256": "80c20804c0a0e0c485968d5c343b1aa48dc111fc2fed28da4f6c3803c29cd84a"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1311.mp3",
+    "path": "resources/app/assets/audio/A_1311.mp3",
+    "size": 17972,
+    "sha256": "346b3bcc22eef8b3fb8d46eef0cad7e89e630bf66d2eefced2d39ea0c308a683"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1900.mp3",
+    "path": "resources/app/assets/audio/A_1900.mp3",
+    "size": 38661,
+    "sha256": "223cdfe26254bd5c995af2bfed271ec7470a4211898b86bd884538fb1fa2a146"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1901.mp3",
+    "path": "resources/app/assets/audio/A_1901.mp3",
+    "size": 17554,
+    "sha256": "57a6f869faf6d4da5b649a4d7d25f5a52b4411c90d8694209d4c8650c50e0c52"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1902.mp3",
+    "path": "resources/app/assets/audio/A_1902.mp3",
+    "size": 22570,
+    "sha256": "aa0105f87bb69e54a34b445dedb6e6c4fa52f51a9d8bde83438b66ab425a1357"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1903.mp3",
+    "path": "resources/app/assets/audio/A_1903.mp3",
+    "size": 35736,
+    "sha256": "32163e5e18135c44bff6c94e7758180392b0bdc5f2382dbf18a6908540375b75"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1904.mp3",
+    "path": "resources/app/assets/audio/A_1904.mp3",
+    "size": 34482,
+    "sha256": "d7c613fc1a7396380e92278f6d6f96f210801fa97a2124fd1dc6084ef24f189f"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1905.mp3",
+    "path": "resources/app/assets/audio/A_1905.mp3",
+    "size": 39497,
+    "sha256": "17a6264e2accdee27aa6e2ce97acfeedd557dd95902d9942369f997946d36fd5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1906.mp3",
+    "path": "resources/app/assets/audio/A_1906.mp3",
+    "size": 28421,
+    "sha256": "509f87b2f5b83bd3e8b48130d788615066e1907f4396ec68bbf2b4aae4c7d15e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1907.mp3",
+    "path": "resources/app/assets/audio/A_1907.mp3",
+    "size": 48065,
+    "sha256": "a0cd04e634fd71d025c08cd5b82b1b2fcdfadce4f6674f62ad07cc5e691c721a"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1908.mp3",
+    "path": "resources/app/assets/audio/A_1908.mp3",
+    "size": 24033,
+    "sha256": "4dc1021342b96763069798721bb023bfcd19dcd94095b6dbec3097793937d04c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1909.mp3",
+    "path": "resources/app/assets/audio/A_1909.mp3",
+    "size": 35527,
+    "sha256": "27b9bc7ae731e9d49d4c1fae404dc5c129e72f3bc5999cf9ead89b0a104e12cc"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1910.mp3",
+    "path": "resources/app/assets/audio/A_1910.mp3",
+    "size": 24660,
+    "sha256": "21319413fd27969e3175a52659d41930775bba200f4f3db22ac715c279d7d9ff"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1998.mp3",
+    "path": "resources/app/assets/audio/A_1998.mp3",
+    "size": 17972,
+    "sha256": "d7795ed3dc26b3bd9bb74f7d723a971bcc20d7d81a9ced7d2763e3843c6763c6"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_1999.mp3",
+    "path": "resources/app/assets/audio/A_1999.mp3",
+    "size": 40229,
+    "sha256": "4bff05bf85e522f3a98d384726b3cedbd6016d34c696c11004eb1b71109d8bca"
+  },
+  {
+    "apk_entry": "assets/assets/audio/A_2012.mp3",
+    "path": "resources/app/assets/audio/A_2012.mp3",
+    "size": 6687,
+    "sha256": "f9144988682f19c78ed11bf210ebbc950655b2904330f584ae2542b9a559eac5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/avatarExpUp.mp3",
+    "path": "resources/app/assets/audio/avatarExpUp.mp3",
+    "size": 2926,
+    "sha256": "c71b503e8ec60287c0da61d8eb493e39c64a5d3d335c8881210d3e672baa6fb5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/avatarLvUp.mp3",
+    "path": "resources/app/assets/audio/avatarLvUp.mp3",
+    "size": 4180,
+    "sha256": "b3d8b896341fd024b6a584c60a8121176ed88c2f70f7089d0ee32a6f5e61eedb"
+  },
+  {
+    "apk_entry": "assets/assets/audio/avatarStarUp.mp3",
+    "path": "resources/app/assets/audio/avatarStarUp.mp3",
+    "size": 12748,
+    "sha256": "fd2588f71753d953b9d69664a96ef509c770a13ff39746fa5aaf78a23784fe13"
+  },
+  {
+    "apk_entry": "assets/assets/audio/beMoved.mp3",
+    "path": "resources/app/assets/audio/beMoved.mp3",
+    "size": 4389,
+    "sha256": "75bcc97cc1229f6c377e222fcbd4425f62f20ddc4b9051e77a6da9645aeeeab5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/btn1.mp3",
+    "path": "resources/app/assets/audio/btn1.mp3",
+    "size": 1567,
+    "sha256": "68fbf4478f9f3aafff4fc772288ee09843522535e1c82ecafde973b5449c6368"
+  },
+  {
+    "apk_entry": "assets/assets/audio/btn2.mp3",
+    "path": "resources/app/assets/audio/btn2.mp3",
+    "size": 1567,
+    "sha256": "c339383fa6296fb40a5cb44370dae04df629ecfe828ae12b0de33f608fabd007"
+  },
+  {
+    "apk_entry": "assets/assets/audio/combat0.mp3",
+    "path": "resources/app/assets/audio/combat0.mp3",
+    "size": 354267,
+    "sha256": "c70cbffbfd4a5e93784c26851f59401be4657f94e64a26a41b221f150d58f0ac"
+  },
+  {
+    "apk_entry": "assets/assets/audio/combat1.mp3",
+    "path": "resources/app/assets/audio/combat1.mp3",
+    "size": 904882,
+    "sha256": "18615fad47920b8362c4823dc026076bf34e5512d9afad45d4e661fdec4c7628"
+  },
+  {
+    "apk_entry": "assets/assets/audio/combat2.mp3",
+    "path": "resources/app/assets/audio/combat2.mp3",
+    "size": 243043,
+    "sha256": "ec2af11fbff9d2329ef5d713774bc76ef16c64964c11bf44440f170fdfa97dab"
+  },
+  {
+    "apk_entry": "assets/assets/audio/combat3.mp3",
+    "path": "resources/app/assets/audio/combat3.mp3",
+    "size": 400872,
+    "sha256": "b66950a29816be6875efd6abbb1f5f2ab680598d444d9156dcb81c996bf9d9fc"
+  },
+  {
+    "apk_entry": "assets/assets/audio/combat4.mp3",
+    "path": "resources/app/assets/audio/combat4.mp3",
+    "size": 415201,
+    "sha256": "483342d329802ba6b3ebeaf259bec7f79786ba06e7221f47b34918241403f4c8"
+  },
+  {
+    "apk_entry": "assets/assets/audio/combat5.mp3",
+    "path": "resources/app/assets/audio/combat5.mp3",
+    "size": 268539,
+    "sha256": "334622c138f8a6abaf081b987ef70e107fbd680a41bcf71958349d2f584e836b"
+  },
+  {
+    "apk_entry": "assets/assets/audio/combatWin.mp3",
+    "path": "resources/app/assets/audio/combatWin.mp3",
+    "size": 22570,
+    "sha256": "551a86348b443f325a1d9573826fb5dd72ad27c170bd8b6b10be9eca66801a03"
+  },
+  {
+    "apk_entry": "assets/assets/audio/compound.mp3",
+    "path": "resources/app/assets/audio/compound.mp3",
+    "size": 8359,
+    "sha256": "6240a22d3f569eb4512f6fb84a7a73a6bd4eeef62af432aba4a72da7dbaf8e18"
+  },
+  {
+    "apk_entry": "assets/assets/audio/cure.mp3",
+    "path": "resources/app/assets/audio/cure.mp3",
+    "size": 5224,
+    "sha256": "646681185f399a3a840c28c85fa81fa5737f8ef64b2cd8c135b07c4c8e4612d5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/dash.mp3",
+    "path": "resources/app/assets/audio/dash.mp3",
+    "size": 1463,
+    "sha256": "c6f6961a10789d111cde56b08ab0fbadba767daadfbfaeaea5ef87835c97dae2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/doorClose.mp3",
+    "path": "resources/app/assets/audio/doorClose.mp3",
+    "size": 8777,
+    "sha256": "2a1cb087f7f7b0367d29d606ed8e20d9102da9006dff7e9ed9644e7e168ba9b5"
+  },
+  {
+    "apk_entry": "assets/assets/audio/doorOpen.mp3",
+    "path": "resources/app/assets/audio/doorOpen.mp3",
+    "size": 3553,
+    "sha256": "bca99be041d51bd30584c4dea9a432f99fb3d9d1d74a1088feb3437133619c25"
+  },
+  {
+    "apk_entry": "assets/assets/audio/drop.mp3",
+    "path": "resources/app/assets/audio/drop.mp3",
+    "size": 6478,
+    "sha256": "45f85169bbd192fe8cde2f6251de69c06a232a8ece09ecdc20bf4e570e1a1ddc"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8001.mp3",
+    "path": "resources/app/assets/audio/E_8001.mp3",
+    "size": 2926,
+    "sha256": "ca402ffafed7a5199abb90a808ec4d1f95e2f24ba7b44bafc74be37938ae2521"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8002.mp3",
+    "path": "resources/app/assets/audio/E_8002.mp3",
+    "size": 2090,
+    "sha256": "24ba3e637846558523fbc105c5337d1020414787c44834983017eb02865e4721"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8003.mp3",
+    "path": "resources/app/assets/audio/E_8003.mp3",
+    "size": 1672,
+    "sha256": "587f35556005cd4440902d12303aaef01f43b322338d4f6f04168b3a71889514"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8004.mp3",
+    "path": "resources/app/assets/audio/E_8004.mp3",
+    "size": 14211,
+    "sha256": "84376128cee0d2cbc4f691ad4a0a00a91906ab6c49356426d0721b0301aaf9e8"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8005.mp3",
+    "path": "resources/app/assets/audio/E_8005.mp3",
+    "size": 7105,
+    "sha256": "ea191f9e17b95c088b36ec4120c3734bee218b234baac436f05fb8c65f4de319"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8006.mp3",
+    "path": "resources/app/assets/audio/E_8006.mp3",
+    "size": 5433,
+    "sha256": "60389dfc0b37dc824872278ce4460ecf00dd2a77f146001a0d8ece312fae1e2e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8007.mp3",
+    "path": "resources/app/assets/audio/E_8007.mp3",
+    "size": 6896,
+    "sha256": "9cc65fac34a1eb308317d8506a59f511b0526b1a27dc2e03019a7f51b085d969"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_8008.mp3",
+    "path": "resources/app/assets/audio/E_8008.mp3",
+    "size": 2090,
+    "sha256": "e80adcdd31d7996b75ba852c697e0a04b5f8432021b2acf900274a81e46d3fd6"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9001.mp3",
+    "path": "resources/app/assets/audio/E_9001.mp3",
+    "size": 5747,
+    "sha256": "79aaf6d5a3dc42b3064c08ae1f11d2d6aae89cbd121462ef294b6fd17cfe1f65"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9002.mp3",
+    "path": "resources/app/assets/audio/E_9002.mp3",
+    "size": 2090,
+    "sha256": "7daccbe57009e775f1b956efdd18e7fa229545c7b68f28d9f101e1496c5f7342"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9003.mp3",
+    "path": "resources/app/assets/audio/E_9003.mp3",
+    "size": 1672,
+    "sha256": "b2b6e208c935737f3d3ac8b8306f7e3980270f5723326845047926f996ebe128"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9004.mp3",
+    "path": "resources/app/assets/audio/E_9004.mp3",
+    "size": 2508,
+    "sha256": "66e5be42d304da3714db85993c873ca4d82a9d9d17174545ac39ba69cea563e2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9005.mp3",
+    "path": "resources/app/assets/audio/E_9005.mp3",
+    "size": 2299,
+    "sha256": "c1bb224311bbda8e7133c684af5ff836fa3e191ff0170c0815401ec7eacf8f74"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9006.mp3",
+    "path": "resources/app/assets/audio/E_9006.mp3",
+    "size": 4807,
+    "sha256": "0568909ae605ff77a5dbc9a839f314e17b96838c0caae29ca2e74345ac21eecb"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9007.mp3",
+    "path": "resources/app/assets/audio/E_9007.mp3",
+    "size": 4807,
+    "sha256": "efdda5fa44e653493f49f2e1da841b2f9d55c04bf346fba28e78e7e2faaddb4c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9008.mp3",
+    "path": "resources/app/assets/audio/E_9008.mp3",
+    "size": 3135,
+    "sha256": "9e61ae260cd0f2fd07cdbfdf66c41f8845a1e9f9d7e837a86d54320332256992"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9009.mp3",
+    "path": "resources/app/assets/audio/E_9009.mp3",
+    "size": 2717,
+    "sha256": "bffc9e3d0ba8a810694a512d413a94d0cf4b909e18ffc61462597e16eefa74e2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9010.mp3",
+    "path": "resources/app/assets/audio/E_9010.mp3",
+    "size": 2717,
+    "sha256": "56c1adb675de77531b47f2f4fca106dded30b1ee5aa38f8c8005eabdf542ec0d"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9011.mp3",
+    "path": "resources/app/assets/audio/E_9011.mp3",
+    "size": 6478,
+    "sha256": "37422f7e69a16e1fd6606a106efb927115d57317604960818626844ddddf96ad"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9012.mp3",
+    "path": "resources/app/assets/audio/E_9012.mp3",
+    "size": 7732,
+    "sha256": "79b415d99d694db1b16d2c7edf3e5457fe8668d2104ba02cddc1f0c50a5da719"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9013.mp3",
+    "path": "resources/app/assets/audio/E_9013.mp3",
+    "size": 2926,
+    "sha256": "e8f1adca4e381ea94292b9f6fc2a5bdb0cc938cdc1dfe50d65c7f1c1775054de"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9014.mp3",
+    "path": "resources/app/assets/audio/E_9014.mp3",
+    "size": 1254,
+    "sha256": "d88031b0f8f13e93d92bbdfc7290178a87de34645bfb364f341221980776a8ae"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9015.mp3",
+    "path": "resources/app/assets/audio/E_9015.mp3",
+    "size": 2717,
+    "sha256": "690f7d0fe0208ff5c99a9a6fc8c3db20a2576498f963dc4d8848e2ef7c1b5356"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9016.mp3",
+    "path": "resources/app/assets/audio/E_9016.mp3",
+    "size": 8777,
+    "sha256": "fff0542e6c2bad7a2e9641b5e67881d74841eb4a9531a40fa1664f9c29c22c30"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9017.mp3",
+    "path": "resources/app/assets/audio/E_9017.mp3",
+    "size": 5642,
+    "sha256": "d1079ebced8d437329342e5aa815e577abff7eb4760f2916f54498ecd2f1ab70"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9018.mp3",
+    "path": "resources/app/assets/audio/E_9018.mp3",
+    "size": 10240,
+    "sha256": "181f1ac5b770e46bc43e0f2a94688fdc6cded980c679812d1df6cee473403e6e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9019.mp3",
+    "path": "resources/app/assets/audio/E_9019.mp3",
+    "size": 4807,
+    "sha256": "2812a3b1c376f59a812cc45a9f828f017fc858f093059673549784087d407ec0"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9020.mp3",
+    "path": "resources/app/assets/audio/E_9020.mp3",
+    "size": 6687,
+    "sha256": "1552637c7f355c1e5e8f1737874827caad76113eb7a4e205ca4e5e477ca310d7"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9021.mp3",
+    "path": "resources/app/assets/audio/E_9021.mp3",
+    "size": 5851,
+    "sha256": "b8d10291c6a1309e9ca0838cb8f50bfac4d657ee095221cd036dc7521f84b472"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9022.mp3",
+    "path": "resources/app/assets/audio/E_9022.mp3",
+    "size": 5642,
+    "sha256": "b2995a41fb0764ca33bf38d53d248d5d2f79f355664703c803f41e5c810d29e0"
+  },
+  {
+    "apk_entry": "assets/assets/audio/E_9023.mp3",
+    "path": "resources/app/assets/audio/E_9023.mp3",
+    "size": 6896,
+    "sha256": "5eb89366b02aa641d3839e6aee482ea421655f1597ba199eed4084fd3ac32322"
+  },
+  {
+    "apk_entry": "assets/assets/audio/embattle.mp3",
+    "path": "resources/app/assets/audio/embattle.mp3",
+    "size": 7314,
+    "sha256": "ccec86ce4c45bdfd21d7510ca141eb61efb251d3ed0f7d60e332407e916e9f76"
+  },
+  {
+    "apk_entry": "assets/assets/audio/getAvatar.mp3",
+    "path": "resources/app/assets/audio/getAvatar.mp3",
+    "size": 17763,
+    "sha256": "31741e58a854727d082ac33dfbb1b7444965e0b8ec6093eae31b007f6124bfec"
+  },
+  {
+    "apk_entry": "assets/assets/audio/gold.mp3",
+    "path": "resources/app/assets/audio/gold.mp3",
+    "size": 10031,
+    "sha256": "2ebaf85eaebc8335e8e6316c472989fcd7a40d6e7eedb8bc73e9b0610337c688"
+  },
+  {
+    "apk_entry": "assets/assets/audio/levelUp.mp3",
+    "path": "resources/app/assets/audio/levelUp.mp3",
+    "size": 11703,
+    "sha256": "d99630af398dcf845f8420c06391cb3c98f71a06cc6e6c1e7cc7d2eb79caba9a"
+  },
+  {
+    "apk_entry": "assets/assets/audio/lose.mp3",
+    "path": "resources/app/assets/audio/lose.mp3",
+    "size": 27376,
+    "sha256": "9f6b5304732b1017a5d98c31ebb2985c03fef7b9b57707bfdd606dda356a6508"
+  },
+  {
+    "apk_entry": "assets/assets/audio/main.mp3",
+    "path": "resources/app/assets/audio/main.mp3",
+    "size": 599510,
+    "sha256": "275190b6c1e4b8676af38cfe259a53da1b880bb08981365ed71a77c647d4bb65"
+  },
+  {
+    "apk_entry": "assets/assets/audio/mainClear.mp3",
+    "path": "resources/app/assets/audio/mainClear.mp3",
+    "size": 10867,
+    "sha256": "073400f8daeb8fd7109ffb93389d169ddcb2a315911b5ff7c7278342ad2b97f2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/miss.mp3",
+    "path": "resources/app/assets/audio/miss.mp3",
+    "size": 1672,
+    "sha256": "3f59e115bce46c0a212ec2903c9a96f4a42bebd7c30660d14d184832dc85a013"
+  },
+  {
+    "apk_entry": "assets/assets/audio/move.mp3",
+    "path": "resources/app/assets/audio/move.mp3",
+    "size": 6269,
+    "sha256": "4887112b48ad8bae0cb333e02d5bae8172551bf5110fcd5e0037d69630cf68b0"
+  },
+  {
+    "apk_entry": "assets/assets/audio/ployClear.mp3",
+    "path": "resources/app/assets/audio/ployClear.mp3",
+    "size": 8568,
+    "sha256": "82cc2f4067b1a8488f670fa66abe953162695b8e63feeccec0e3aeace228a49f"
+  },
+  {
+    "apk_entry": "assets/assets/audio/reline1.mp3",
+    "path": "resources/app/assets/audio/reline1.mp3",
+    "size": 5851,
+    "sha256": "8eed7e19eccc6b99162c397bbe832cb8d846bd1c7688063bab8de2bcf1deb0da"
+  },
+  {
+    "apk_entry": "assets/assets/audio/reline2.mp3",
+    "path": "resources/app/assets/audio/reline2.mp3",
+    "size": 7523,
+    "sha256": "87540727930cb7c62eccd98956339d6f43d6a3d80ab6b27822049df667bf946e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/rndAvatar.mp3",
+    "path": "resources/app/assets/audio/rndAvatar.mp3",
+    "size": 7105,
+    "sha256": "3b4b218dedd56a2b29b3cba68e282506991ab475b0b24161be572980e0d7862e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/roll.mp3",
+    "path": "resources/app/assets/audio/roll.mp3",
+    "size": 3762,
+    "sha256": "9329d006101f0513a61bc43da413fa12a407e2dc25b5ee0b46c33945ec9215f3"
+  },
+  {
+    "apk_entry": "assets/assets/audio/self.mp3",
+    "path": "resources/app/assets/audio/self.mp3",
+    "size": 2926,
+    "sha256": "3c4763f60d2f9976c3f88284367448c9bcabcf4ce5549f9fb11bccee047e060c"
+  },
+  {
+    "apk_entry": "assets/assets/audio/skill0.mp3",
+    "path": "resources/app/assets/audio/skill0.mp3",
+    "size": 3344,
+    "sha256": "ae84e7054c1af52883b300eb849a4f1a2bc667c8b3f47806028a2378b0bc7ff2"
+  },
+  {
+    "apk_entry": "assets/assets/audio/skill1.mp3",
+    "path": "resources/app/assets/audio/skill1.mp3",
+    "size": 5433,
+    "sha256": "10a00e67a2ccb80c4717dd5062561380af40c23e6fff0bb1b824137ef4bfca86"
+  },
+  {
+    "apk_entry": "assets/assets/audio/skill2.mp3",
+    "path": "resources/app/assets/audio/skill2.mp3",
+    "size": 5016,
+    "sha256": "c2c727c3b9479aa9565ef0dd559c349f5ca4828d110726d4363a29e6613556af"
+  },
+  {
+    "apk_entry": "assets/assets/audio/sound01.mp3",
+    "path": "resources/app/assets/audio/sound01.mp3",
+    "size": 10449,
+    "sha256": "ce3d9e86afadb47c9d1b98bf61edd70598b5f569c649aa5381704b34c02b0c33"
+  },
+  {
+    "apk_entry": "assets/assets/audio/sound02.mp3",
+    "path": "resources/app/assets/audio/sound02.mp3",
+    "size": 9613,
+    "sha256": "d05945e912cebf1e570dbd561e16d3fb85195fd685d417129b372903550c71ba"
+  },
+  {
+    "apk_entry": "assets/assets/audio/sound03.mp3",
+    "path": "resources/app/assets/audio/sound03.mp3",
+    "size": 8359,
+    "sha256": "c8bef663c01599a70be98b22eee26508dea1a2516b6cbe6a0b59dc7c5b4baf4e"
+  },
+  {
+    "apk_entry": "assets/assets/audio/sound04.mp3",
+    "path": "resources/app/assets/audio/sound04.mp3",
+    "size": 10031,
+    "sha256": "75f543b3571c13de4f01c268ed2ffeb45f5ab76e4e59fd3c127e10c2f401d8f7"
+  },
+  {
+    "apk_entry": "assets/assets/audio/sound05.mp3",
+    "path": "resources/app/assets/audio/sound05.mp3",
+    "size": 10449,
+    "sha256": "6d969a502f8522f974da6c84db2e8b7a08673f80d55161a5640d245ed47d5394"
+  },
+  {
+    "apk_entry": "assets/assets/audio/startFight.mp3",
+    "path": "resources/app/assets/audio/startFight.mp3",
+    "size": 6896,
+    "sha256": "9dba19873934055f3b85dd07086b93265bf84be59b04e90277d1231a32978490"
+  },
+  {
+    "apk_entry": "assets/assets/audio/stop.mp3",
+    "path": "resources/app/assets/audio/stop.mp3",
+    "size": 15882,
+    "sha256": "5bfe9636724ccf6e1b0d0c0b4a21d287a390bed1cfe317422d4d4d96e2cc2d00"
+  },
+  {
+    "apk_entry": "assets/assets/audio/stun.mp3",
+    "path": "resources/app/assets/audio/stun.mp3",
+    "size": 6060,
+    "sha256": "5e37ac228ad279bac1f85340c19b51952cbd5b0cb172a34eb182faa2c846fb87"
+  },
+  {
+    "apk_entry": "assets/assets/audio/summon.mp3",
+    "path": "resources/app/assets/audio/summon.mp3",
+    "size": 6687,
+    "sha256": "893fcc3c6d6b2def6813657f0b343115712b52575de6c29f053aa6ab0f6f022a"
+  },
+  {
+    "apk_entry": "assets/assets/audio/worldBoss1.mp3",
+    "path": "resources/app/assets/audio/worldBoss1.mp3",
+    "size": 13166,
+    "sha256": "9be6302a4fac7c54fe3b3823fa551f6ff4067829c01a9664f3ff05cc22cfcd0d"
+  },
+  {
+    "apk_entry": "assets/assets/audio/worldBoss2.mp3",
+    "path": "resources/app/assets/audio/worldBoss2.mp3",
+    "size": 14629,
+    "sha256": "490f7b55df1a5136445c3948322c4e8aea8fe7240b1eb794cce4d572df3f9f27"
+  },
+  {
+    "apk_entry": "assets/assets/fonts/1x/Font_numAndtag_1.atf",
+    "path": "resources/app/assets/fonts/1x/Font_numAndtag_1.atf",
+    "size": 279934,
+    "sha256": "b7ed04091367456c80db3a63b7e5a82e7a3adef06857525359649d7b914a39a7"
+  },
+  {
+    "apk_entry": "assets/assets/fonts/1x/Font_numAndtag_1.fnt",
+    "path": "resources/app/assets/fonts/1x/Font_numAndtag_1.fnt",
+    "size": 21140,
+    "sha256": "06bc80161bec18a7f09c7b9eb84dc158635221f038307ea4dc9979a2c0c12d1e"
+  },
+  {
+    "apk_entry": "assets/assets/fonts/1x/Font_numAndtag_2.atf",
+    "path": "resources/app/assets/fonts/1x/Font_numAndtag_2.atf",
+    "size": 14084,
+    "sha256": "ec299dcbe6983676783cb0b9298919d4b7358722881001827caef5bf1fcd53bc"
+  },
+  {
+    "apk_entry": "assets/assets/fonts/1x/Font_numAndtag_2.fnt",
+    "path": "resources/app/assets/fonts/1x/Font_numAndtag_2.fnt",
+    "size": 3234,
+    "sha256": "29955b51866782ea5ef9d57a5501332ac140707598c5404be9cc559b7258feb8"
+  },
+  {
+    "apk_entry": "assets/assets/fonts/1x/Font_numAndtag_3.atf",
+    "path": "resources/app/assets/fonts/1x/Font_numAndtag_3.atf",
+    "size": 536744,
+    "sha256": "d8be5bf0869980c19e136cfc3d3587443fb755dc7059a99200bac12d69678550"
+  },
+  {
+    "apk_entry": "assets/assets/fonts/1x/Font_numAndtag_3.fnt",
+    "path": "resources/app/assets/fonts/1x/Font_numAndtag_3.fnt",
+    "size": 11626,
+    "sha256": "5fe8aad1d6341ec7f70cfb0d67a2aae08837b58c6d8ab6d972d8279ee13770d2"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/cartoon.swf",
+    "path": "resources/app/assets/swfs/cartoon.swf",
+    "size": 1428731,
+    "sha256": "0a1c0ea061c6c7da7283425dee70931fcf41152eec542ea5f964ca50a2bd0724"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/font.swf",
+    "path": "resources/app/assets/swfs/font.swf",
+    "size": 8046025,
+    "sha256": "db12f751895f49acbde777809352c21f1e9c74646175d50c605c23828dcdcca9"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/hero_A.swf",
+    "path": "resources/app/assets/swfs/hero_A.swf",
+    "size": 4323361,
+    "sha256": "5d4f46f144bae228c706c3630f1f27cb152db5afeb3745158a0325fc94fafc29"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/hero_B.swf",
+    "path": "resources/app/assets/swfs/hero_B.swf",
+    "size": 14509084,
+    "sha256": "e0badaac397a1a3a804b511765f5d8588492eb845733c5e21cbe3101124f5fcf"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/hero_C.swf",
+    "path": "resources/app/assets/swfs/hero_C.swf",
+    "size": 5372845,
+    "sha256": "05210f023c69d455461a1562a2fb8e6b1e4aede830010009dc6449b66cf96f39"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/map.swf",
+    "path": "resources/app/assets/swfs/map.swf",
+    "size": 6675922,
+    "sha256": "c88f45af9b1fe1f3a9fb84039db4aa36c818f03eee64123961d8eb3cd9377d81"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/ui_bitmapData_A.swf",
+    "path": "resources/app/assets/swfs/ui_bitmapData_A.swf",
+    "size": 5766041,
+    "sha256": "aee941400d3a1669f6aaa3771ef3d56bcdd06fae43aab56661159de497d84135"
+  },
+  {
+    "apk_entry": "assets/assets/swfs/ui_bitmapData_B.swf",
+    "path": "resources/app/assets/swfs/ui_bitmapData_B.swf",
+    "size": 475422,
+    "sha256": "cecdbac9af0ce67799ea02cefcc0b4eabc3f8873f49c849e889bf1bcaba1a479"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/equip.atf",
+    "path": "resources/app/assets/textures/1x/icon/equip.atf",
+    "size": 816454,
+    "sha256": "1cd8e52069e49c6c97f8417e681fccf47ec5429836e67735fd074a687adbce8b"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/equip.xml",
+    "path": "resources/app/assets/textures/1x/icon/equip.xml",
+    "size": 31008,
+    "sha256": "c3b8ddeeee7b135535a7e68de083af464c368e769992e55f83f2d68d32fe5b42"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/equip_2.atf",
+    "path": "resources/app/assets/textures/1x/icon/equip_2.atf",
+    "size": 218897,
+    "sha256": "987da47e309735cbf0732ee97569b05afa1a40491f31daccabc1b4bcaff5b2d0"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/equip_2.xml",
+    "path": "resources/app/assets/textures/1x/icon/equip_2.xml",
+    "size": 8114,
+    "sha256": "5fe7683eb2e9014fa94359e2305010d7864ba7cb8e8e065c03a0f06cdb8e53dc"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/equip_3.atf",
+    "path": "resources/app/assets/textures/1x/icon/equip_3.atf",
+    "size": 100337,
+    "sha256": "6b235845265a5921b16b62e4f605bb418f667171137c03502113f119fa78f286"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/equip_3.xml",
+    "path": "resources/app/assets/textures/1x/icon/equip_3.xml",
+    "size": 6692,
+    "sha256": "b5103e64364ae62ae33c1d8e6099ab2e59d85122884b275389b3042681334c56"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_A.atf",
+    "path": "resources/app/assets/textures/1x/icon/hero_A.atf",
+    "size": 733908,
+    "sha256": "e4a6cb4784690ba16aab06828ec94e13b2ea6177bd4acec9c4597caa3e7318a3"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_A.xml",
+    "path": "resources/app/assets/textures/1x/icon/hero_A.xml",
+    "size": 24338,
+    "sha256": "dace451796525c7b9c342a1d79940e0e890164a0e8d128d323a7cc20676c1ff3"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_B.atf",
+    "path": "resources/app/assets/textures/1x/icon/hero_B.atf",
+    "size": 744380,
+    "sha256": "194c71ff9344d842643ee8e5b34c7ed5cee4eb15a6789008c92064a1acf2430a"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_B.xml",
+    "path": "resources/app/assets/textures/1x/icon/hero_B.xml",
+    "size": 23434,
+    "sha256": "10c994f93b36bcc39f99ccbf9c3520f6c568fd057449bf2ac46c7fc88901f05c"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_C.atf",
+    "path": "resources/app/assets/textures/1x/icon/hero_C.atf",
+    "size": 729736,
+    "sha256": "8dfa4926a62739ba6eaec9258d39cd4fa64d4e931221399fc1d6e06b4f0a1664"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_C.xml",
+    "path": "resources/app/assets/textures/1x/icon/hero_C.xml",
+    "size": 24878,
+    "sha256": "d7088ba12324a4b7954461172a52fc37bf5c11a0a81dbf871fff2ce44b5efd76"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_D.atf",
+    "path": "resources/app/assets/textures/1x/icon/hero_D.atf",
+    "size": 231590,
+    "sha256": "0dd7db8b80e9609819239df9c34fffa963fc41008caaf549feb48f8e5d3477d1"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/icon/hero_D.xml",
+    "path": "resources/app/assets/textures/1x/icon/hero_D.xml",
+    "size": 7318,
+    "sha256": "efe2e3572901bdc7a0ecf9d055cdef86118aa7f95566c980b086ac6935eeb656"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/particle.png",
+    "path": "resources/app/assets/textures/1x/particle/particle.png",
+    "size": 91380,
+    "sha256": "acba6c09d8db90005b2b670e70d98aca1a21fdd697a657241a79d9e4aca94086"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/particle.xml",
+    "path": "resources/app/assets/textures/1x/particle/particle.xml",
+    "size": 5920,
+    "sha256": "602f21efd21014a4e23b8b4590c2aecb4fd2ee32b34621803724d45e3ac4d228"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px01.pex",
+    "path": "resources/app/assets/textures/1x/particle/px01.pex",
+    "size": 1453,
+    "sha256": "aeadb14bfa81a5e77581fa77a7e1c610051217c883b0e9d7c4a540fc6ec6510b"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px02.pex",
+    "path": "resources/app/assets/textures/1x/particle/px02.pex",
+    "size": 1409,
+    "sha256": "f27544785f756fab5330cea9da5ad828e4c97f50b290ab432297ae8a6a2296c3"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px03.pex",
+    "path": "resources/app/assets/textures/1x/particle/px03.pex",
+    "size": 1340,
+    "sha256": "057c44653073ebca3f90676aefdc781600d0fbe6cc4f88887aa9a017fb81c9f8"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px04.pex",
+    "path": "resources/app/assets/textures/1x/particle/px04.pex",
+    "size": 1339,
+    "sha256": "9244d3101e461f1bccefb69fb16ac2834ddb01cb7b088c461449b87574cded2c"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px05.pex",
+    "path": "resources/app/assets/textures/1x/particle/px05.pex",
+    "size": 1405,
+    "sha256": "ec02a18019eba7a68691cbe21611e892135cf38c4d423a6ba6bc61cd16038d39"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px06.pex",
+    "path": "resources/app/assets/textures/1x/particle/px06.pex",
+    "size": 1458,
+    "sha256": "3adbee8d59bf27adbfa628f9bc8b96c2e296714c55b420d2c3ee34e8fb688a0f"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px07.pex",
+    "path": "resources/app/assets/textures/1x/particle/px07.pex",
+    "size": 1442,
+    "sha256": "f56d1c8cbb2360cbdb09fb0fc2ef0896b11cd4a0f1d088f412de2fe64ba5bdef"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px08.pex",
+    "path": "resources/app/assets/textures/1x/particle/px08.pex",
+    "size": 1432,
+    "sha256": "5bb9d9c7f859d7ad2e1ab6540641815ac5b342aff8a5eb25c0d75d8abc039192"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px09.pex",
+    "path": "resources/app/assets/textures/1x/particle/px09.pex",
+    "size": 1371,
+    "sha256": "b70509f8e3e342d5287ee2cb169830c23392185ec5bd0d0596d6ad70ebf23832"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px10.pex",
+    "path": "resources/app/assets/textures/1x/particle/px10.pex",
+    "size": 1384,
+    "sha256": "8f567a9132ef1deea18ee2d59be6e3f63777cba7552ceed92095dd5211c2bc28"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px11.pex",
+    "path": "resources/app/assets/textures/1x/particle/px11.pex",
+    "size": 1379,
+    "sha256": "005405c7e40e5c7f610135446494bc1fb4009022ffc5f8b46007edd37b103d40"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px12.pex",
+    "path": "resources/app/assets/textures/1x/particle/px12.pex",
+    "size": 1388,
+    "sha256": "efce27e27e311cebfa6813b62ad1d8a952bc9f1f0a34afac5b6e3804c5f940f2"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px13.pex",
+    "path": "resources/app/assets/textures/1x/particle/px13.pex",
+    "size": 1382,
+    "sha256": "2b1cb253ae9df144df258239798a71bb24d2fa8c0bac7336ab65f76f2b192aa3"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px14.pex",
+    "path": "resources/app/assets/textures/1x/particle/px14.pex",
+    "size": 1367,
+    "sha256": "7dd6310772568131fb8cfc002d6ffb8ba543c34e8cdddb2ce0baf1660faf6c9d"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px15.pex",
+    "path": "resources/app/assets/textures/1x/particle/px15.pex",
+    "size": 1474,
+    "sha256": "6431fc52a34e7065bfd8d4b50ae6c7ea2f269159f82244f35627d0468b033716"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px90.pex",
+    "path": "resources/app/assets/textures/1x/particle/px90.pex",
+    "size": 1448,
+    "sha256": "093cf957fd3022d9dd4e81c9210492831c58f4a97c7c51e13dbc9bd689e31048"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/particle/px91.pex",
+    "path": "resources/app/assets/textures/1x/particle/px91.pex",
+    "size": 1446,
+    "sha256": "7641cf0dd538a537333c00e065ec554b8f78e671b2b0f5d9b4e544e403b1c812"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/button.atf",
+    "path": "resources/app/assets/textures/1x/play/button.atf",
+    "size": 106741,
+    "sha256": "8465a7251b3405cebbd0cf5492c7d69f4e620ccabee5deeb610fb9f8f8e9f720"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/button.xml",
+    "path": "resources/app/assets/textures/1x/play/button.xml",
+    "size": 7306,
+    "sha256": "6bf7d6e9ff5cf7cfbbfa58a7d5bca3818842fbcf162a542b7a6c00ef89aa612a"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/combat.atf",
+    "path": "resources/app/assets/textures/1x/play/combat.atf",
+    "size": 447031,
+    "sha256": "0a007462b079679e3e0aab5d19f4f192158932d317d66f2f55a95b9143242e01"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/combat.xml",
+    "path": "resources/app/assets/textures/1x/play/combat.xml",
+    "size": 6980,
+    "sha256": "2e2826f867d51185d8920ae90d73fc3389478bf23e9068c9ce2243905e1a0107"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/hero.atf",
+    "path": "resources/app/assets/textures/1x/play/hero.atf",
+    "size": 161629,
+    "sha256": "fe6f54b065b629f2026b049f622730ac413c5fb06b3e92f0cd5697a7277d87b6"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/hero.xml",
+    "path": "resources/app/assets/textures/1x/play/hero.xml",
+    "size": 14440,
+    "sha256": "4d1be500686eeda9c2c3622ebc213b1fdc1359668251ad8bc742af215f0ac4c3"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/hero_new.atf",
+    "path": "resources/app/assets/textures/1x/play/hero_new.atf",
+    "size": 206184,
+    "sha256": "8a60740556a336894ac514f38581fb0b2d58e9cf3e6d965efa7d339f087ba3d6"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/hero_new.xml",
+    "path": "resources/app/assets/textures/1x/play/hero_new.xml",
+    "size": 31394,
+    "sha256": "04e8361c74fca7a444d92dddac1f073b32d1075596a56b31d377adb172de2ccf"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_equip_clip.atf",
+    "path": "resources/app/assets/textures/1x/ui/ui_equip_clip.atf",
+    "size": 286170,
+    "sha256": "aeeed9a375e563ab421bba2274f4d2bd34df7a0fec8391a3a7faefeb749a4855"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_equip_clip.xml",
+    "path": "resources/app/assets/textures/1x/ui/ui_equip_clip.xml",
+    "size": 15786,
+    "sha256": "8fad024f7e7447195eef67c4bb5e4877f1123594793ac1e648bbb321c72d5200"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_main.atf",
+    "path": "resources/app/assets/textures/1x/ui/ui_main.atf",
+    "size": 1219184,
+    "sha256": "f960ba3995a425dbe96390cff0a12d8def1a118641e28c70c129a2e797ec3db8"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_main.xml",
+    "path": "resources/app/assets/textures/1x/ui/ui_main.xml",
+    "size": 32228,
+    "sha256": "cb552d5e4f15fd1ef0a4e7463f0c4ce9c9007346646e65a69d3765086d5ce5c2"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_main_3.0.atf",
+    "path": "resources/app/assets/textures/1x/ui/ui_main_3.0.atf",
+    "size": 1041045,
+    "sha256": "dba2cc123a0e79853ab57d62a466b1fd422fa579ada3d1aed0f8517c1522dce2"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_main_3.0.xml",
+    "path": "resources/app/assets/textures/1x/ui/ui_main_3.0.xml",
+    "size": 48854,
+    "sha256": "dd08a7deefa112b61f5ab36c52c8796f2a87d494b0fd323a879e48cf11189111"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_main_9.0.atf",
+    "path": "resources/app/assets/textures/1x/ui/ui_main_9.0.atf",
+    "size": 111803,
+    "sha256": "92bd9b0f267fdd9fa47526765aaf788cafab1f126863b98a62004a564e11cacc"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_main_9.0.xml",
+    "path": "resources/app/assets/textures/1x/ui/ui_main_9.0.xml",
+    "size": 5134,
+    "sha256": "4f0f6a448ea8cb66a685c7d5166453169ab5d81af9b0fdfc12a840990b8ee23d"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_movieClipB.atf",
+    "path": "resources/app/assets/textures/1x/ui/ui_movieClipB.atf",
+    "size": 273962,
+    "sha256": "cc71ba153d3011bc2c47e3e28ebeace2e89d3d0639bcbce5e464d12952246ce6"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/ui/ui_movieClipB.xml",
+    "path": "resources/app/assets/textures/1x/ui/ui_movieClipB.xml",
+    "size": 8802,
+    "sha256": "c2af9b04992a8d205d7dce3f85ff41d86a55705678e350114297bfca7b8d1add"
+  },
+  {
+    "apk_entry": "res/drawable-ldpi-v4/icon.png",
+    "path": "resources/icons/icon-36.png",
+    "size": 6516,
+    "sha256": "00fd5a7a1e1aeed65394194fe001b40c21493d4d0c5ad4f824b48c919ed69387"
+  },
+  {
+    "apk_entry": "res/drawable-mdpi-v4/icon.png",
+    "path": "resources/icons/icon-48.png",
+    "size": 9109,
+    "sha256": "f0ad4670f230fcebdbe8fd463417bcb9e8931ab5022f4c0588db57576e24a750"
+  },
+  {
+    "apk_entry": "res/drawable-hdpi-v4/icon.png",
+    "path": "resources/icons/icon-72.png",
+    "size": 15871,
+    "sha256": "d9312bb7eddc0a6c3eb0cb579789966a3cee14f131c6bd6b7b6c6d0206d2d800"
+  },
+  {
+    "apk_entry": "res/drawable-xhdpi-v4/icon.png",
+    "path": "resources/icons/icon-96.png",
+    "size": 24504,
+    "sha256": "cbb7dadf4127e1fea3d3c25a0e66321146832f18e6919fc3f46f8a094b58bb3d"
+  },
+  {
+    "apk_entry": "res/drawable-xxxhdpi-v4/icon.png",
+    "path": "resources/icons/icon-192.png",
+    "size": 76625,
+    "sha256": "4cc0110c292834f019fa0cb667f71fd62fb2a6cb66fc0a9681b8db4ce9e45dd6"
+  }
+]

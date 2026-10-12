@@ -34,10 +34,10 @@ package com.meng52.game.module.avatar
    import starling.events.TouchEvent;
    import starling.filters.ColorMatrixFilter;
    import starling.text.TextField;
-   
+
    public class Avatar extends BaseDisplayModule
    {
-      
+
       public static var iconStyle:int = 1;
 
       private static var purpleBondMap:GameMap;
@@ -711,181 +711,181 @@ package com.meng52.game.module.avatar
          return buffs && buffs["summon"] != null;
       }
 
-      
+
       public static const TEST_DAMAGE_RATE:Number = 1;
-      
+
       public static var MIN_DAMAGE_RATE:Number = 0.1;
-      
+
       public static var REAL_DAMAGE_RATE:Number = 0.3;
-      
+
       public static var SIGN_DAMAGE_RATE:Number = 1.5;
-      
+
       public static var CRIT_RATE:Number = 2;
-      
+
       public static var MISS_POINT:int = 20;
-      
+
       public static var CRIT_POINT:int = 20;
-      
+
       public static var MISS_MAX:int = 60;
-      
+
       public static var CRIT_MAX:int = 80;
-      
+
       public static var DANGEROUS_RATE:Number = 0.5;
-      
+
       public static var POWER_RATE:Number = 1e-8;
-      
+
       public static var POWER_HP:Number = 0.5;
-      
+
       public static var POWER_DAMAGE:Number = 2;
-      
+
       public static var POWER_DE_PH:Number = 0.625;
-      
+
       public static var POWER_DE_MA:Number = 0.625;
-      
+
       public static var POWER_SPEED_RANGE:int = 1000;
-      
+
       public static var POWER_SKILL_0_STAR:Number = 0.1;
-      
+
       public static var POWER_SKILL_0_LV:Number = 0.1;
-      
+
       public static var POWER_SKILL_1_STAR:Number = 0.5;
-      
+
       public static var PITH_MAX:int = 99999;
-      
+
       public static var PITH_POINT:int = 10;
-      
+
       public static const RES_SIDE:int = 94;
-      
+
       public static const RES_STAND_SCALE:Number = 0.4;
-      
+
       public static const MISS_COLOR:uint = 13684944;
-      
+
       public static const HP_BIG:int = 5;
-      
+
       public static const HP_LINE:int = 1000;
-      
+
       public static const HP_HIDE_LINE:int = 10000;
-      
+
       public static const HP_HIDE_BIG:int = 50000;
-      
+
       public static const HP_HIDE_GOD:int = 250000;
-      
+
       public static const ACTION_TIME:Number = 0.3;
-      
+
       public static const AUTO_POS_TIME:Number = 0.6;
-      
+
       public static const SHOW_TIME:Number = 0.5;
-      
+
       public static const SKILL_TIME:Number = 0.5;
-      
+
       public static const WAIT_TIME:Number = 0.4;
-      
+
       public static const ACTION_SHORTCUT:Number = 0.08;
-      
+
       public static const MOVE_TIME:Number = 0.4;
-      
+
       public static const SWING_TIME:Number = 0.12;
-      
+
       public static const HIT_TIME:Number = 0.2;
-      
+
       public static const RE_LINE_TIME:Number = 2.8;
-      
+
       public static const DEAD_TIME:Number = 0.5;
-      
+
       public static const MISS_TIME:Number = 0.2;
-      
+
       public static const ROTATION_TIME:Number = 0.3;
-      
+
       public static const ATTACK_TIME:Number = 0.25;
-      
+
       public static const AOE_TIME:Number = 0.15;
-      
+
       public static const POISON_TIME:Number = 1;
-      
+
       public static const BLESS_TIME:Number = 1;
-      
+
       public static const PRE_TIME:Number = 0.05;
-      
+
       public static const MG_MOVE_TIME:Number = 1.2;
-      
+
       public static const CLOSE_LINE_TIME:Number = 2;
-      
+
       public static const POP_STR_TIME:Number = 0.5;
-      
+
       public static const POP_STR_LONG_TIME:Number = 0.75;
-      
+
       public static const POP_STR_LONG_LONG_TIME:Number = 1;
-      
+
       public static const POP_STR_SIZE:int = 35;
-      
+
       public static const POP_STR_SMALL_SIZE:int = 25;
-      
+
       public static const POP_STR_BIG_SIZE:int = 45;
-      
+
       public static const DEAD_FLY_DELAY:Number = 0.4;
-      
+
       public static const DEAD_FLY_RANDOM_X:int = 100;
-      
+
       public static const DEAD_FLY_RATE:Number = 0.2;
-      
+
       public static const DEAD_FLY_SPEED:int = 1000;
-      
+
       public static const DEAD_FLY_FADE_TIME:Number = 0.1;
-      
+
       public static const DEAD_FLY_NUM:int = 3;
-      
+
       public static const DEAD_FLY_SCALE:Number = 1.1;
-      
+
       public static const MISS_X:int = 40;
-      
+
       public static const HIT_Y:int = 20;
-      
+
       public static const ATTACK_Y:int = 25;
-      
+
       public static const MOVE_POS:int = 400;
-      
+
       public static const FIGHT_RES_SCALE:Number = 1;
-      
+
       public static const SUMMON_RES_SCALE:Number = 0.8;
-      
+
       public static const BOSS_RES_SCALE:Number = 1.3;
-      
+
       public static const ACTION_SCALE:Number = 1.2;
-      
+
       public static const BOUNCE_SCALE:Number = 1.15;
-      
+
       public static const MISS_SCALE:Number = 0.9;
-      
+
       public static const MOVE_ROTATION:Number = 0.1;
-      
+
       public static const SWING_ROTATION:Number = 0.5;
-      
+
       public static const SWING_TIMES:int = 3;
-      
+
       public static var index:int = 0;
-      
+
       public var isShowLock:Boolean = false;
-      
+
       public var dragAvatar:Avatar;
-      
+
       public var m_icon:Image;
-      
+
       public var isOthers:Boolean;
-      
+
       public var actionNum:int;
-      
+
       public var id:String;
-      
+
       public var isLocked:Boolean;
-      
+
       public var isNPC:Boolean;
-      
+
       public var indexID_s:int = 0;
-      
+
       public var team:int;
-      
+
       public var line:int;
-      
+
       private var abilityPosition:int;
       public function get pos() : int { return abilityPosition; }
       public function set pos(value:int) : void
@@ -893,51 +893,51 @@ package com.meng52.game.module.avatar
          if(value != abilityPosition && abilityState) delete abilityState.channel;
          abilityPosition = value;
       }
-      
+
       public var offset:Number = 0;
-      
+
       public var offsetAim:Number = 0;
-      
+
       public var hp:int;
-      
+
       public var hpMax:int;
-      
+
       public var ap:int;
-      
+
       public var dePh:int;
-      
+
       public var deMa:int;
-      
+
       public var speed:int;
-      
+
       public var range:int;
-      
+
       public var hit:int;
-      
+
       public var flee:int;
-      
+
       public var crit:int;
-      
+
       public var tough:int;
-      
+
       public var isLeader:Boolean;
-      
+
       public var isBoss:Boolean;
-      
+
       public var isDrop:Boolean;
-      
+
       public var dropRate:Number;
-      
+
       public var dropId:String;
-      
+
       public var talent:Talent;
-      
+
       public var skill0:SkillSet;
-      
+
       public var skill1:SkillSet;
-      
+
       public var skill2:SkillSet;
-      
+
       public var skillB:SkillSet;
 
       public var currentSkillKillContext:Object;
@@ -951,65 +951,65 @@ package com.meng52.game.module.avatar
       public var manualSkillDamageCapture:Object;
       public var manualLethalFloor:Object;
       public var currentSkillHitContext:Object;
-      
+
       public var buffs:Object;
-      
+
       public var lv:int = 0;
-      
+
       public var exp:int = 0;
-      
+
       public var slv:int = 0;
-      
+
       public var loveExp:int = 0;
-      
+
       public var morph:int;
-      
+
       public var hpP:int;
-      
+
       public var apP:int;
-      
+
       public var dePhP:int;
-      
+
       public var deMaP:int;
-      
+
       public var phase:int;
-      
+
       public var equips:Vector.<Equip>;
-      
+
       protected var m_buff:Sprite;
-      
+
       protected var m_avatarRes:Sprite;
-      
+
       protected var m_fightRes:Sprite;
-      
+
       protected var m_fightBg:Sprite;
-      
+
       protected var m_fightRange:Image;
-      
+
       public var m_actionNum:Sprite;
-      
+
       protected var m_tf:TextField;
-      
+
       protected var m_drop:DisplayObject;
-      
+
       public var mDestiny:Object;
-      
+
       public var mDNdata:Object;
-      
+
       public var mData:Object;
-      
+
       private var _checkListmyCurrHp:Array;
-      
+
       private var _checkListotherCurrHp:Array;
-      
+
       public var mBloodSpr:ProgressBar;
-      
+
       private var tryndUndyingActive:Boolean = false;
-      
+
       private var tryndUndyingRounds:int = 0;
 
       public var manualActionTypeOverride:int = -1;
-      
+
       public function Avatar(param1:String, param2:Object = null, param3:Boolean = false)
       {
          super();
@@ -1036,7 +1036,7 @@ package com.meng52.game.module.avatar
          }
          init(param2);
       }
-      
+
       public static function getUserAvatarObj(param1:String = "0", param2:Object = null) : Object
       {
          var _loc3_:Object = null;
@@ -1075,14 +1075,14 @@ package com.meng52.game.module.avatar
          }
          return null;
       }
-      
+
       public static function getPosPer(param1:int, param2:int = 1) : Number
       {
          var _loc3_:Number = param1 / GameMapConfig.LINE_POS;
          _loc3_ = Math.round(_loc3_ * 100) / 100;
          return param2 == 1 ? 1 - _loc3_ : _loc3_;
       }
-      
+
       public static function getColorMatrixFilter(param1:int = 1) : ColorMatrixFilter
       {
          var _loc3_:Array = null;
@@ -1114,7 +1114,7 @@ package com.meng52.game.module.avatar
          _loc2_.adjustHue(-0.15);
          return _loc2_;
       }
-      
+
       public static function getPhaseMax(param1:String) : int
       {
          var _loc5_:Array = null;
@@ -1137,7 +1137,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       public static function countDamage(param1:Avatar, param2:Avatar, param3:int, param4:int = -1, param5:Number = 1) : Array
       {
          var _loc7_:Number = Number(NaN);
@@ -1181,7 +1181,7 @@ package com.meng52.game.module.avatar
          _loc6_[1] = _loc6_[1] == SIGN_DAMAGE_RATE ? true : false;
          return _loc6_;
       }
-      
+
       public static function checkCrit(param1:Avatar, param2:Avatar) : Number
       {
          var _loc7_:Number = Number(NaN);
@@ -1201,7 +1201,7 @@ package com.meng52.game.module.avatar
          }
          return 1;
       }
-      
+
       public static function missTween(param1:Avatar) : void
       {
          var _loc3_:Sprite = param1.fightRes;
@@ -1222,7 +1222,7 @@ package com.meng52.game.module.avatar
          _loc4_.addTween(_loc6_);
          _loc4_.addTween(_loc5_);
       }
-      
+
       public static function attackTween(param1:Avatar, param2:Avatar, param3:int = -1, param4:Number = 0) : void
       {
          var _loc8_:Sprite = null;
@@ -1278,7 +1278,7 @@ package com.meng52.game.module.avatar
          _loc7_.addTween(_loc15_);
          _loc7_.addTween(_loc14_);
       }
-      
+
       public static function sortOnPosLine(param1:Avatar, param2:Avatar) : int
       {
          var _loc4_:int = param1.pos;
@@ -1293,7 +1293,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       public function get resId() : String
       {
          var _loc1_:String = avatarData.res;
@@ -1303,12 +1303,12 @@ package com.meng52.game.module.avatar
          }
          return _loc1_;
       }
-      
+
       public function get isBot() : Boolean
       {
          return id.indexOf("-") != -1;
       }
-      
+
       public function setDestinyAndDN(param1:String = "", param2:Array = null, param3:Array = null, param4:Object = null, param5:Object = null, param6:Boolean = false) : void
       {
          mDestiny = PanelCenterDNTeam.getDestinyMyAll(param1 == "" ? id : param1,param2,param3,param4,param5,param6);
@@ -1322,17 +1322,17 @@ package com.meng52.game.module.avatar
             skill1 = new SkillSet(mDestiny.skill1,this,1,true);
          }
       }
-      
+
       public function clearDNdata() : void
       {
          mDNdata = null;
       }
-      
+
       public function clearDestinydata() : void
       {
          mDestiny = null;
       }
-      
+
       public function setEquips(param1:Array = null, param2:Boolean = true, param3:Object = null) : void
       {
          var _loc6_:Array = null;
@@ -1401,13 +1401,13 @@ package com.meng52.game.module.avatar
          }
          skill2 = getBookSkill();
       }
-      
+
       public function getIndex() : int
       {
          var _loc1_:Array = GlobalData.$userData.team[0];
          return _loc1_.indexOf(id);
       }
-      
+
       public function get avatarData() : AvatarData
       {
          return m_data as AvatarData;
@@ -1417,24 +1417,24 @@ package com.meng52.game.module.avatar
       {
          return manualActionTypeOverride >= 1 && manualActionTypeOverride <= 4 ? manualActionTypeOverride : avatarData.actionType;
       }
-      
+
       public function get otherTeam() : int
       {
          return 3 - team;
       }
-      
+
       public function get posPer() : Number
       {
          return getPosPer(pos,team);
       }
-      
+
       public function refreshReline(param1:int = -1, param2:int = -1, param3:int = -1) : void
       {
          var _loc4_:GameMapLayer = GameMapLayer.gl;
          _loc4_.addAvatar(this,-1);
          refreshPos(param1,param2,param3);
       }
-      
+
       public function refreshPos(param1:int = -1, param2:int = -1, param3:int = -1) : void
       {
          var _loc4_:DisplayObject = null;
@@ -1454,7 +1454,7 @@ package com.meng52.game.module.avatar
          _loc4_.x = GameMapConfig.offsetToPixel(param3);
          _loc4_.y = GameMapConfig.posToPixel(param2);
       }
-      
+
       public function hideRange() : void
       {
          if(m_fightRange)
@@ -1464,7 +1464,7 @@ package com.meng52.game.module.avatar
          fightRes.rotation = 0;
          fightRes.scaleX = fightRes.scaleY = getScale();
       }
-      
+
       public function getAvatarRes(param1:Boolean = false, param2:Boolean = false, param3:Boolean = false) : Sprite
       {
          if(!m_avatarRes)
@@ -1474,12 +1474,12 @@ package com.meng52.game.module.avatar
          m_avatarRes.flatten();
          return m_avatarRes;
       }
-      
+
       public function getPithNum() : int
       {
          return hpP + apP + deMaP + dePhP;
       }
-      
+
       public function newAvatarRes(param1:Sprite = null, param2:Boolean = false, param3:Boolean = false, param4:Boolean = false) : Sprite
       {
          var _loc6_:Image = null;
@@ -1567,7 +1567,7 @@ package com.meng52.game.module.avatar
          }
          return param1;
       }
-      
+
       public function refreshIcon() : void
       {
          if(m_icon && m_icon.filter)
@@ -1575,7 +1575,7 @@ package com.meng52.game.module.avatar
             m_icon.filter.cache();
          }
       }
-      
+
       public function newFightRes(param1:Sprite = null) : Sprite
       {
          var _loc2_:String = null;
@@ -1701,7 +1701,7 @@ package com.meng52.game.module.avatar
          param1.touchable = true;
          return param1;
       }
-      
+
       public function get fightRes() : Sprite
       {
          if(!m_fightRes)
@@ -1710,7 +1710,7 @@ package com.meng52.game.module.avatar
          }
          return m_fightRes;
       }
-      
+
       public function onTouch(param1:TouchEvent) : void
       {
          var _loc2_:Touch = param1.getTouch(m_fightRes,"began");
@@ -1732,7 +1732,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       public function touchDetaiAvatar(param1:TouchEvent) : void
       {
          var _loc3_:* = undefined;
@@ -1744,7 +1744,7 @@ package com.meng52.game.module.avatar
             GlobalFunction.setDetaiAvatar(_loc3_);
          }
       }
-      
+
       public function hideActionNum() : void
       {
          if(m_actionNum)
@@ -1757,7 +1757,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       public function reInit(param1:Object) : void
       {
          var _loc2_:int = 0;
@@ -1789,7 +1789,7 @@ package com.meng52.game.module.avatar
          pos = _loc4_;
          actionNum = _loc3_;
       }
-      
+
       public function init(param1:Object) : void
       {
          var _loc3_:Array = null;
@@ -1933,7 +1933,7 @@ package com.meng52.game.module.avatar
             equips = new Vector.<Equip>();
          }
       }
-      
+
       private function initHalo(param1:Object) : void
       {
          if(param1)
@@ -1951,7 +1951,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       public function toDataNormalObj() : Object
       {
          var _loc1_:Object = toDataObj();
@@ -1964,7 +1964,7 @@ package com.meng52.game.module.avatar
          _loc1_.phase = phase;
          return _loc1_;
       }
-      
+
       public function toDataObj() : Object
       {
          var _loc1_:Object = {};
@@ -2048,7 +2048,7 @@ package com.meng52.game.module.avatar
          }
          return _loc1_;
       }
-      
+
       protected function initSkills() : void
       {
          var _loc1_:String = null;
@@ -2078,7 +2078,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       protected function initbuffs() : void
       {
          buffs = {};
@@ -2281,7 +2281,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       protected function showBuff(param1:Buff) : void
       {
          if(!m_buff)
@@ -2293,7 +2293,7 @@ package com.meng52.game.module.avatar
             m_buff.addChild(param1.displayObject);
          }
       }
-      
+
       public function addBuff(param1:String, param2:int, param3:Number = 0, param4:Number = 0, param5:int = -1) : void
       {
          var _loc8_:* = 0;
@@ -2560,7 +2560,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       public function resetBuff() : void
       {
          var _loc1_:String = null;
@@ -2588,7 +2588,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       public function removeAllBuff() : void
       {
          var _loc1_:String = null;
@@ -2611,7 +2611,7 @@ package com.meng52.game.module.avatar
       {
          removeAllGoodBuff();
       }
-      
+
       protected function removeAllGoodBuff() : void
       {
          abilityClearStates(false);
@@ -2624,7 +2624,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       protected function removeAllDebuff() : void
       {
          abilityClearStates(true);
@@ -2638,7 +2638,7 @@ package com.meng52.game.module.avatar
          }
          clearManualSkillDots();
       }
-      
+
       protected function removeBuff(param1:String) : void
       {
          if(param1 == "root") delete abilityState.root;
@@ -2654,7 +2654,7 @@ package com.meng52.game.module.avatar
          }
          delete buffs[param1];
       }
-      
+
       protected function checkBuff() : Boolean
       {
          var _loc1_:Buff = null;
@@ -2779,13 +2779,13 @@ package com.meng52.game.module.avatar
          }
          return false;
       }
-      
+
       public function activateTryndUndying(param1:int) : void
       {
          tryndUndyingRounds = Math.max(0,param1);
          tryndUndyingActive = tryndUndyingRounds > 0;
       }
-      
+
       public function getScale() : Number
       {
          if(isBoss)
@@ -2802,7 +2802,7 @@ package com.meng52.game.module.avatar
          }
          return 1;
       }
-      
+
       public function getBookSkill() : SkillSet
       {
          var _loc2_:SkillSet = null;
@@ -2817,7 +2817,7 @@ package com.meng52.game.module.avatar
          }
          return null;
       }
-      
+
       public function getSymp() : Array
       {
          var _loc1_:* = null;
@@ -2831,7 +2831,7 @@ package com.meng52.game.module.avatar
          }
          return _loc2_;
       }
-      
+
       public function getSympType() : Array
       {
          var _loc2_:Array = getSymp();
@@ -2854,7 +2854,7 @@ package com.meng52.game.module.avatar
          }
          return _loc1_;
       }
-      
+
       private function getCultivationGainFromSlope(param1:Number, param2:int) : int
       {
          var _loc3_:Number = Number(GlobalData.$mConfig_simple.culture.pith_growth_rate);
@@ -2864,7 +2864,7 @@ package com.meng52.game.module.avatar
          }
          return int(param1 * param2 * _loc3_);
       }
-      
+
       public function getCultivationStatGain(param1:String, param2:int) : int
       {
          var _loc3_:AvatarData = avatarData;
@@ -2887,7 +2887,7 @@ package com.meng52.game.module.avatar
          }
          return getCultivationGainFromSlope(_loc4_,param2);
       }
-      
+
       private function applyOwnedGuildResearch(param1:String, param2:int) : int
       {
          var _loc3_:Object = null;
@@ -2958,7 +2958,7 @@ package com.meng52.game.module.avatar
          }
          return param2;
       }
-      
+
       public function getHpMax(param1:int = -1, param2:int = -1, param3:Boolean = false) : int
       {
          var _loc4_:int = 0;
@@ -3017,7 +3017,7 @@ package com.meng52.game.module.avatar
          _loc4_ = applyOwnedGuildResearch("hp",_loc4_);
          return Math.max(_loc4_,0);
       }
-      
+
       public function getDamage(param1:int = -1, param2:int = -1, param3:Boolean = false) : int
       {
          var _loc6_:int = 0;
@@ -3097,7 +3097,7 @@ package com.meng52.game.module.avatar
          if(hpMax && abilityEntryAttack > 0) _loc6_ += int(abilityEntryAttack * 0.03 * int(abilityState.evilStacks));
          return Math.max(_loc6_,0);
       }
-      
+
       public function getDePh(param1:int = -1, param2:int = -1, param3:Boolean = false) : int
       {
          var _loc4_:int = 0;
@@ -3176,7 +3176,7 @@ package com.meng52.game.module.avatar
           _loc4_ = Tools.toInt(_loc4_ * (1 + getManualBattleStack("defense")) * _loc5_);
          return Math.max(Tools.toInt(_loc4_ * (buffs && buffs["armor"] ? 1 + Number(buffs["armor"].value) : 1)),0);
       }
-      
+
       public function getDeMa(param1:int = -1, param2:int = -1, param3:Boolean = false) : int
       {
          var _loc4_:int = 0;
@@ -3255,7 +3255,7 @@ package com.meng52.game.module.avatar
           _loc4_ = Tools.toInt(_loc4_ * (1 + getManualBattleStack("defense")) * _loc5_);
          return Math.max(_loc4_,0);
       }
-      
+
       public function getSpeed(param1:Boolean = false) : int
       {
          var _loc5_:int = 0;
@@ -3292,7 +3292,7 @@ package com.meng52.game.module.avatar
          }
          return Tools.toInt(_loc5_ * _loc2_);
       }
-      
+
       public function getRange(param1:Boolean = false) : int
       {
          var _loc3_:int = 0;
@@ -3315,7 +3315,7 @@ package com.meng52.game.module.avatar
          }
          return _loc3_;
       }
-      
+
       public function getHit() : int
       {
          var _loc2_:* = null;
@@ -3353,7 +3353,7 @@ package com.meng52.game.module.avatar
          }
          return _loc3_;
       }
-      
+
       public function getFlee() : int
       {
          var _loc3_:* = null;
@@ -3391,7 +3391,7 @@ package com.meng52.game.module.avatar
          }
          return _loc2_ + int(getManualBattleStack("flee"));
       }
-      
+
       public function getCrit() : int
       {
          var _loc3_:* = null;
@@ -3429,7 +3429,7 @@ package com.meng52.game.module.avatar
          }
          return _loc2_;
       }
-      
+
       public function getTough() : int
       {
          var _loc3_:* = null;
@@ -3467,7 +3467,7 @@ package com.meng52.game.module.avatar
          }
          return _loc2_;
       }
-      
+
       public function getLoveList() : Array
       {
          var _loc3_:int = 0;
@@ -3495,20 +3495,20 @@ package com.meng52.game.module.avatar
          }
          return _loc2_;
       }
-      
+
       public function getSkillPro() : Number
       {
          var _loc1_:int = this.skill0 ? this.skill0.lv : 0;
          var _loc2_:Number = avatarData ? avatarData.skillUpP : 1;
          return _loc1_ * getStar() * _loc2_;
       }
-      
+
       public function getSkillProMother() : Number
       {
          var _loc1_:int = this.skill0 ? this.skill0.lv : 0;
          return (_loc1_ + 1) * getStar();
       }
-      
+
       public function getAllExp(param1:int = -1, param2:Boolean = false) : int
       {
          var _loc3_:int = 0;
@@ -3541,7 +3541,7 @@ package com.meng52.game.module.avatar
          }
          return _loc3_ + _loc6_;
       }
-      
+
       public function getOfferExp(param1:int = -1) : int
       {
          var _loc2_:int = getAllExp(param1);
@@ -3549,7 +3549,7 @@ package com.meng52.game.module.avatar
          var _loc3_:int = avatarData.offerExp;
          return _loc2_ * _loc4_ + _loc3_;
       }
-      
+
       public function getNextExp(param1:int = -1) : int
       {
          if(param1 < 0)
@@ -3571,12 +3571,12 @@ package com.meng52.game.module.avatar
          }
          return avatarData.expRate * (_loc4_ * param1 * param1 + _loc3_ * param1 + _loc5_);
       }
-      
+
       public function getIdValue() : Number
       {
          return 0.001 * avatarData.id.split("_")[1];
       }
-      
+
       public function isSwallowProtect(param1:Avatar) : Boolean
       {
          var _loc6_:Boolean = false;
@@ -3627,7 +3627,7 @@ package com.meng52.game.module.avatar
          }
          return false;
       }
-      
+
       public function getSwallowValue(param1:Avatar) : Number
       {
          var _loc9_:Boolean = false;
@@ -3719,7 +3719,7 @@ package com.meng52.game.module.avatar
          }
          return _loc4_ + getIdValue();
       }
-      
+
       public function getExpeditionValue() : Number
       {
          var _loc2_:Number = 0;
@@ -3747,7 +3747,7 @@ package com.meng52.game.module.avatar
          }
          return _loc2_ + getIdValue();
       }
-      
+
       public function getSellValue() : Number
       {
          var _loc2_:Number = 0;
@@ -3794,7 +3794,7 @@ package com.meng52.game.module.avatar
          }
          return _loc2_ + getIdValue();
       }
-      
+
       public function getPower(param1:Boolean = false, param2:int = -1, param3:Boolean = false) : Number
       {
          var _loc10_:Number = skill0 ? skill0.getPower() : 0;
@@ -3811,7 +3811,7 @@ package com.meng52.game.module.avatar
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
       }
-      
+
       public function getLvMax() : int
       {
          if(morph == 0)
@@ -3821,28 +3821,28 @@ package com.meng52.game.module.avatar
          var _loc1_:* = GlobalData.$mConfig_ploy_system_simple.morph;
          return avatarData.lvMax + morph * _loc1_.attr[0];
       }
-      
+
       public function getStar() : int
       {
          return avatarData.id.split("_")[2];
       }
-      
+
       public function getStarMax() : int
       {
          return 6;
       }
-      
+
       public function getType() : int
       {
          return int(avatarData.id.slice(2,3));
       }
-      
+
       public function isStarUpStuff() : Boolean
       {
          var _loc1_:String = avatarData.id.slice(2,4);
          return _loc1_ == "60" || _loc1_ == "61";
       }
-      
+
       public function getLeadership(param1:Boolean = false) : int
       {
          var _loc3_:int = 0;
@@ -3872,12 +3872,12 @@ package com.meng52.game.module.avatar
          }
          return _loc4_;
       }
-      
+
       public function getPhase() : int
       {
          return avatarData.id.split("_")[2];
       }
-      
+
       public function getPhaseList() : Array
       {
          var _loc4_:* = null;
@@ -3895,7 +3895,7 @@ package com.meng52.game.module.avatar
          }
          return _loc2_[String(_loc3_)];
       }
-      
+
       public function getPhaseLv() : int
       {
          if(phase == 0)
@@ -3909,7 +3909,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       public function getPhasePith() : int
       {
          if(phase == 0)
@@ -3923,7 +3923,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       public function getPhaseType() : int
       {
          var _loc4_:Array = null;
@@ -3958,7 +3958,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       public function goFight(param1:int, param2:int, param3:Number, param4:Boolean = true) : void
       {
          abilityState = {}; abilitySerial = 0; abilityIndex = ++abilityNextIndex;
@@ -3987,7 +3987,7 @@ package com.meng52.game.module.avatar
          abilityEntryAttack = ap;
          ready();
       }
-      
+
       public function initFightAttr() : void
       {
          if(!(mData && mData.tpl))
@@ -4009,7 +4009,7 @@ package com.meng52.game.module.avatar
             hp = hpMax;
          }
       }
-      
+
       public function checkAction() : Boolean
       {
          var _currentMap:GameMap;
@@ -4210,7 +4210,7 @@ package com.meng52.game.module.avatar
          _gl.delayCall(_currentMap.endAction,GameMap.actionDelay);
          return true;
       }
-      
+
       private function checkBuffOfSkillB() : Boolean
       {
          var _loc1_:Boolean = false;
@@ -4313,7 +4313,7 @@ package com.meng52.game.module.avatar
          }
          return _loc1_;
       }
-      
+
       public function showMove(param1:Number = -1) : void
       {
          var _loc9_:int = 0;
@@ -4354,7 +4354,7 @@ package com.meng52.game.module.avatar
             _loc6_.delayCall(resBounce,param1,_loc7_,_loc10_,1.15,0.4 * 0.8,_loc8_);
          }
       }
-      
+
       public function checkMove(param1:Boolean, param2:int = 0, param3:Avatar = null, param4:Number = -1, param5:Boolean = false, param6:String = null) : Number
       {
          if(abilityState.root && !param5) return 0;
@@ -4470,7 +4470,7 @@ package com.meng52.game.module.avatar
          }
          return _loc14_;
       }
-      
+
       public function resSpeak() : void
       {
          var _loc1_:Tween = null;
@@ -4494,7 +4494,7 @@ package com.meng52.game.module.avatar
          _loc1_.scaleTo(_loc2_.scaleX);
          _loc3_.addTween(_loc1_);
       }
-      
+
       public function resBounce(param1:int, param2:int, param3:Number, param4:Number, param5:Number) : void
       {
          var _loc11_:int = 0;
@@ -4522,7 +4522,7 @@ package com.meng52.game.module.avatar
             _loc11_++;
          }
       }
-      
+
       public function resSwing(param1:Number, param2:Number) : void
       {
          var _loc9_:int = 0;
@@ -4548,7 +4548,7 @@ package com.meng52.game.module.avatar
             _loc9_++;
          }
       }
-      
+
       public function reline(param1:int, param2:int = -2147483648, param3:int = -2147483648, param4:Number = 0, param5:Number = 0, forced:Boolean = false) : void
       {
          if(abilityState.root && !forced) return;
@@ -4599,7 +4599,7 @@ package com.meng52.game.module.avatar
          _loc10_.par = _loc7_.effectLayer;
          _loc7_.delayCall(DisplayTools.addEffects,GameMap.actionDelay + param4 + param5 + 2.8 / 2,_loc10_);
       }
-      
+
       public function checkAttack(param1:Vector.<Avatar>, param2:Function, param3:int = -1, param4:Boolean = false, param5:int = -1, param6:Number = 1, param7:int = 0, param8:String = null, param9:Buff = null, param10:Number = 1) : Avatar
       {
          var _aim:Avatar;
@@ -4614,7 +4614,7 @@ package com.meng52.game.module.avatar
          }
          return _aim;
       }
-      
+
       public function checkAllAttack(param1:Vector.<Avatar>, param2:Function, param3:int = -1, param4:Boolean = false, param5:int = -1, param6:Number = 1, param7:int = 0, param8:String = null, param9:Buff = null, param10:Number = 1) : Avatar
       {
          var _loc11_:* = undefined;
@@ -4626,7 +4626,7 @@ package com.meng52.game.module.avatar
          }
          return null;
       }
-      
+
       public function checkMiss(param1:Avatar, param2:Avatar, param3:* = null) : Boolean
       {
          if(param2.getEffectiveActionType() == 3)
@@ -4665,7 +4665,7 @@ package com.meng52.game.module.avatar
          }
          return _loc4_;
       }
-      
+
       public function checkTalent(param1:int, param2:Boolean = false) : Number
       {
          var _loc9_:int = 0;
@@ -4748,7 +4748,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       public function getTeamHp() : void
       {
          var _loc1_:* = 0;
@@ -4770,7 +4770,7 @@ package com.meng52.game.module.avatar
             _loc1_++;
          }
       }
-      
+
       public function attackAimList(param1:Vector.<Avatar>, param2:int = -1, param3:Number = 1, param4:int = 0, param5:String = null, param6:Boolean = false, param7:Buff = null, param8:int = -1, param9:Number = 1) : int
       {
          if(param2 < 0 || param2 >= 1 && param2 <= 4) param3 *= purpleBondMultiplier();
@@ -5177,7 +5177,7 @@ package com.meng52.game.module.avatar
             }
          }
          return _loc21_;
-      
+
          }
          finally
          {
@@ -5188,7 +5188,7 @@ package com.meng52.game.module.avatar
             }
          }
       }
-      
+
       public function checkDangerous() : Boolean
       {
          var _loc2_:* = undefined;
@@ -5201,12 +5201,12 @@ package com.meng52.game.module.avatar
          }
          return true;
       }
-      
+
       public function get hpRate() : Number
       {
          return hp / hpMax;
       }
-      
+
       public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null) : int
       {
          var abilityHpBefore:int = hp;
@@ -5548,7 +5548,7 @@ package com.meng52.game.module.avatar
          if(param4 != 4) abilityRecordDamage(param7,param4,abilityHpBefore,abilityDamageTaken);
          return param1;
       }
-      
+
       public function ready() : void
       {
          var _loc1_:GameMapLayer = GameMapLayer.gl;
@@ -5591,7 +5591,7 @@ package com.meng52.game.module.avatar
          }
          resetBuff();
       }
-      
+
       public function refreshHp(param1:int, param2:Boolean = false) : void
       {
          var _loc5_:int = 0;
@@ -5635,7 +5635,7 @@ package com.meng52.game.module.avatar
          }
          mBloodSpr.refresh(param1 / hpMax);
       }
-      
+
       public function dead(param1:Avatar = null) : void
       {
          if(hp <= 0) abilityDeath();
@@ -5655,14 +5655,14 @@ package com.meng52.game.module.avatar
             GameMap.currentMap.checkEnd();
          }
       }
-      
+
       public function deadFast() : void
       {
          var _loc1_:GameMapLayer = GameMapLayer.gl;
          _loc1_.juggler.removeTweens(fightRes);
          fightRes.visible = false;
       }
-      
+
       public function drop() : void
       {
          var _loc3_:Tween = null;
@@ -5689,7 +5689,7 @@ package com.meng52.game.module.avatar
          SoundManager.getOnlyExample().playSound("drop");
          _loc4_.delayCall(dropFade,1.5);
       }
-      
+
       public function dropFade() : void
       {
          var _gl:GameMapLayer;
@@ -5732,7 +5732,7 @@ package com.meng52.game.module.avatar
          _tween.animate("x",_x2);
          _gl.addTween(_tween);
       }
-      
+
       public function blessFade() : void
       {
          var _loc1_:Tween = null;
@@ -5745,7 +5745,7 @@ package com.meng52.game.module.avatar
             _loc2_.addTween(_loc1_);
          }
       }
-      
+
       public function blessCure(param1:int) : void
       {
          var _loc4_:String = null;
@@ -5767,7 +5767,7 @@ package com.meng52.game.module.avatar
          DisplayTools.addEffects(_loc5_);
          _loc3_.infoLayer.popInjuredForAvatar(_loc4_,this,65280,35,0.75);
       }
-      
+
       public function deadFade(param1:Avatar = null) : void
       {
          var _tween:Tween;
@@ -5861,7 +5861,7 @@ package com.meng52.game.module.avatar
          _tween.animate("y",fightRes.y - 30);
          _gl.addTween(_tween);
       }
-      
+
       public function checkSkillB() : void
       {
          if(skillB && GlobalData.skillBoo)
@@ -5874,7 +5874,7 @@ package com.meng52.game.module.avatar
             skillB.checkUse();
          }
       }
-      
+
       public function checkSkill() : Boolean
       {
          var _loc1_:Boolean = false;
@@ -5917,7 +5917,7 @@ package com.meng52.game.module.avatar
          }
          return _loc1_;
       }
-      
+
       public function findAimList(param1:Vector.<Avatar>, param2:Function = null, param3:int = -1, param4:Boolean = false) : Vector.<Avatar>
       {
          var _loc7_:int = 0;
@@ -5974,7 +5974,7 @@ package com.meng52.game.module.avatar
          }
          return _loc6_;
       }
-      
+
       public function findAim(param1:Vector.<Avatar>, param2:Function = null, param3:int = -1, param4:Boolean = false) : Avatar
       {
          param1 = findAimList(param1,param2,param3,param4);
@@ -5984,7 +5984,7 @@ package com.meng52.game.module.avatar
          }
          return null;
       }
-      
+
       public function getSortOnFun() : Function
       {
          var _loc1_:AvatarData = avatarData;
@@ -6027,7 +6027,7 @@ package com.meng52.game.module.avatar
             manualFocusTarget = null;
          }
       }
-      
+
       protected function sortOnPos(param1:Avatar, param2:Avatar) : int
       {
          if(param1 == this)
@@ -6061,7 +6061,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       protected function sortOnHpLoss(param1:Avatar, param2:Avatar) : int
       {
          if(param1.team != team)
@@ -6094,7 +6094,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       protected function sortOnDamage(param1:Avatar, param2:Avatar) : int
       {
          if(param1.team != team)
@@ -6120,7 +6120,7 @@ package com.meng52.game.module.avatar
          }
          return 0;
       }
-      
+
       public function clearUI() : void
       {
          if(m_avatarRes)
@@ -6130,7 +6130,7 @@ package com.meng52.game.module.avatar
             m_avatarRes = null;
          }
       }
-      
+
       public function clearRes() : void
       {
          var _loc1_:* = null;
@@ -6168,7 +6168,7 @@ package com.meng52.game.module.avatar
             m_tf = null;
          }
       }
-      
+
       public function clearData() : void
       {
          if(skill0)
@@ -6199,13 +6199,13 @@ package com.meng52.game.module.avatar
          skillB = null;
          buffs = null;
       }
-      
+
       public function clear() : void
       {
          this.clearUI();
          this.clearData();
       }
-      
+
       public function allClear() : void
       {
          clearUI();
@@ -6214,4 +6214,3 @@ package com.meng52.game.module.avatar
       }
    }
 }
-

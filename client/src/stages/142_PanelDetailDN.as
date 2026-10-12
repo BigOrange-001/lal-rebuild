@@ -25,28 +25,28 @@ package com.meng52.game.ui.panel
    import starling.display.Sprite;
    import starling.events.Event;
    import starling.text.TextField;
-   
+
    public class PanelDetailDN extends PanelDetailAll
    {
-      
+
       private var mIcon_dn:Image;
-      
+
       private var mTxt_dnLv:TextFieldHtmlRenderer;
-      
+
       private var mData_noChange:Object;
 
       private var mDNViewEpoch:uint = 0;
 
       private var mDNOperation:uint = 0;
 
-      
+
       private var _rec:Rectangle;
-      
+
       public function PanelDetailDN()
       {
          super();
       }
-      
+
       public static function getDNattrName(param1:String, param2:int = 0) : String
       {
          var _loc3_:String = "";
@@ -92,7 +92,7 @@ package com.meng52.game.ui.panel
          }
          return _loc3_;
       }
-      
+
       public static function getDNAttrsAllValue(param1:Object = null) : Object
       {
          var _loc14_:Array = null;
@@ -157,7 +157,7 @@ package com.meng52.game.ui.panel
             "de_ma":_loc7_
          };
       }
-      
+
       public static function getDNaddValue(param1:String, param2:Array) : Object
       {
          var _loc5_:Array = GlobalData.$mConfig_simple.dn[param1] as Array;
@@ -179,7 +179,7 @@ package com.meng52.game.ui.panel
             "type":_loc5_[5]
          };
       }
-      
+
       override protected function initializeHandler(param1:Event) : void
       {
          mDNViewEpoch++;
@@ -262,7 +262,7 @@ package com.meng52.game.ui.panel
          GlobalData.$mEventDispatcher.addEventListener("change_team_member",CHANGE_TEAM_MEMBER);
          update();
       }
-      
+
       protected function updateUI() : void
       {
          var _loc12_:Object = null;
@@ -366,7 +366,7 @@ package com.meng52.game.ui.panel
             _uiMain.addChild(_loc7_);
          }
       }
-      
+
       private function role1_Triggered(param1:Event) : void
       {
          GlobalData.$tempChangeAvatarTitle = GlobalLanguageStr.getLanguageStr(90452);
@@ -374,7 +374,7 @@ package com.meng52.game.ui.panel
          PanelTeamAvatar.$tabBarSelectedIndex = 1;
          GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("panel_team_avatar",false,true,"dn");
       }
-      
+
       override protected function up_Triggered(param1:Event) : void
       {
          var _loc5_:Object = null;
@@ -404,7 +404,7 @@ package com.meng52.game.ui.panel
             GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90431,_loc9_.stone));
          }
       }
-      
+
       private function sendService_lvup() : void
       {
          if(stage == null || mData_noChange == null || SendAndSelect.checkRepeat("user.dn_lvup",""))
@@ -421,7 +421,7 @@ package com.meng52.game.ui.panel
             re_dn_lvup(param1,_op,_epoch,_key,_requestedLv);
          },{"key":_key,"lv":_requestedLv});
       }
-      
+
       private function re_dn_lvup(param1:Object, param2:uint, param3:uint, param4:String, param5:int) : void
       {
          if(GlobalFunction.isMalformedProfileReceipt(param1))
@@ -465,20 +465,20 @@ package com.meng52.game.ui.panel
          mDNOperation++;
          super.onREMOVED_FROM_STAGE(param1);
       }
-      
+
       override protected function update() : void
       {
          updateDN_lv();
          updateUI();
       }
-      
+
       override protected function CHANGE_TEAM_MEMBER(param1:Event) : void
       {
          GlobalData.$tempTeamSelect = mData_noChange = GlobalData.$userData.attrs.dn[mData_noChange["indexID_s"]];
          GlobalData.$mEventDispatcher.dispatchEventWith("update_dn_team_ui");
          super.onCLOSE_PANEL_SELF();
       }
-      
+
       private function updateDN_lv() : void
       {
          var _maxLv:int = int(GlobalData.$mConfig_simple.dn_lv);
@@ -505,4 +505,3 @@ package com.meng52.game.ui.panel
       }
    }
 }
-

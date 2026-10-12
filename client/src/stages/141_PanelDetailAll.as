@@ -34,84 +34,84 @@ package com.meng52.game.ui.panel
    import starling.events.Event;
    import starling.events.Touch;
    import starling.events.TouchEvent;
-   
+
    public class PanelDetailAll extends PanelCenterMainAvatar
    {
-      
+
       protected var _data:*;
-      
+
       protected var _avatar:Avatar;
 
       private static const AVATAR_VOICE_FAMILY_IDS:String = "|A_1001|A_1002|A_1003|A_1004|A_1005|A_1006|A_1007|A_1008|A_1009|A_1010|A_1011|A_1012|A_1013|A_1014|A_1015|A_1016|A_1017|A_1018|A_1019|A_1020|A_1021|A_1022|A_1023|A_1024|A_1025|A_1026|A_1027|A_1028|A_1029|A_1030|A_1032|A_1033|A_1036|A_1040|A_1041|A_1045|A_1049|A_1052|A_1053|A_1054|A_1056|A_1060|A_1063|A_1066|A_1068|A_1071|A_1073|A_1074|A_1077|A_1078|A_1079|A_1081|A_1082|A_1083|A_1085|A_1086|A_1090|A_1093|A_1094|A_1095|A_1096|A_1097|A_1098|A_1099|A_1101|A_1103|A_1105|A_1106|A_1108|A_1109|A_1112|A_1113|A_1114|A_1115|A_1117|A_1119|A_1120|A_1123|A_1124|A_1125|A_1126|A_1127|A_1128|A_1129|A_1130|A_1131|A_1132|A_1133|A_1134|A_1135|A_1136|A_1137|A_1138|A_1139|A_1140|A_1142|A_1143|A_1201|A_1202|A_1203|A_1204|A_1205|A_1206|A_1207|A_1208|A_1209|A_1210|A_1211|A_1212|A_1215|A_1216|A_1217|A_1218|A_1219|A_1220|A_1221|A_1222|A_1223|A_1224|A_1225|A_1226|A_1227|A_1228|A_1309|A_1310|A_1311|A_1900|A_1901|A_1902|A_1903|A_1904|A_1905|A_1906|A_1907|A_1908|A_1909|A_1910|A_1998|A_1999|A_2012|";
       private var _detailVoicePlayed:Boolean = false;
       private var _detailVoiceAvatarId:String = "";
-      
+
       protected var _topBg:Image;
-      
+
       protected var _bg1:Image;
-      
+
       protected var _bg2:Scale9Image;
-      
+
       protected var _uiMain:Sprite;
-      
+
       protected var _euqipMain:Sprite;
-      
+
       protected var _icon:Image;
-      
+
       protected var _iconBg:Scale9Image;
-      
+
       protected var _rise:LOL_Scale9Button;
-      
+
       protected var _up:LOL_Scale9Button;
-      
+
       protected var _reset:LOL_Scale9Button;
-      
+
       protected var _foster:LOL_Scale9Button;
-      
+
       public var mTxt_destiny:ScrollScreenForTxt;
-      
+
       private var _roleMain:Sprite;
-      
+
       private var mBox_P:Sprite;
-      
+
       protected var _width:int;
-      
+
       protected var _height:int;
-      
+
       private var _bg1Spr:Sprite;
-      
+
       private var _lockImg:LOL_Button;
-      
+
       private var _lock:Boolean = false;
-      
+
       private var _quadPith:Quad;
-      
+
       private var _quadSkill1:Quad;
-      
+
       private var _quadSkill2:Quad;
-      
+
       private var _quadType:Quad;
-      
+
       private var _quadFoster1:Quad;
-      
+
       private var mFoster:LOL_TextField;
-      
+
       private var _isGuide:Boolean = true;
-      
+
       private var skillPassiveBtn:LOL_Scale9Button;
-      
+
       private var skillPassiveTxt:LOL_TextField;
-      
+
       private var _quadSkillPassive:Quad;
-      
+
       private var txtSkillDescPassive:LOL_TextField;
-      
+
       private var talentSp:Sprite;
-      
+
       private var talentQuad:Quad;
-      
+
       private var _glowMc:MovieClip;
-      
+
       public function PanelDetailAll()
       {
          super();
@@ -154,13 +154,13 @@ package com.meng52.game.ui.panel
          }
          return _loc2_;
       }
-      
+
       override public function onTRIGGERED_closePanel(param1:Event) : void
       {
          GlobalData.$mGameClassObject.mLayoutUICenter.reSetLastPanel_ID();
          super.onTRIGGERED_closePanel(null);
       }
-      
+
       override protected function initializeHandler(param1:Event) : void
       {
          _width = 575;
@@ -266,7 +266,7 @@ package com.meng52.game.ui.panel
          GlobalData.$mEventDispatcher.addEventListener("change_team_member",CHANGE_TEAM_MEMBER);
          GlobalData.$mEventDispatcher.addEventListener("update_avatar_foster",UPDATE_AVATAR_FOSTER);
       }
-      
+
       private function showGlow() : void
       {
          var _loc1_:int = 0;
@@ -279,7 +279,7 @@ package com.meng52.game.ui.panel
          this.addChild(_glowMc);
          _loc2_.add(_glowMc);
       }
-      
+
       private function talentTouch(param1:TouchEvent) : void
       {
          var _loc4_:Talent = null;
@@ -298,13 +298,13 @@ package com.meng52.game.ui.panel
             GlobalFunction.popAlert(_loc5_,_loc2_,{"res":_avatar.resId});
          }
       }
-      
+
       private function UPDATE_AVATAR_FOSTER(param1:Event) : void
       {
          data(param1.data.data);
          update();
       }
-      
+
       protected function data(param1:*) : void
       {
          var _loc2_:String = param1 != null && param1.id != null ? String(param1.id) : "";
@@ -326,7 +326,7 @@ package com.meng52.game.ui.panel
             }
          }
       }
-      
+
       private function getDisplayAvatarName() : String
       {
          var _name:String = _avatar && _avatar.avatarData ? _avatar.avatarData.name : "";
@@ -861,7 +861,7 @@ package com.meng52.game.ui.panel
             _uiMain.addChild(txtSkillDescPassive);
          }
       }
-      
+
       private function maze_Touch(param1:TouchEvent) : void
       {
          var _loc2_:Touch = param1.getTouch(this,"ended");
@@ -874,7 +874,7 @@ package com.meng52.game.ui.panel
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pve",false,false,null,true);
          }
       }
-      
+
       private function onTRIGGERED_btn(param1:Event) : void
       {
          var _loc3_:String = null;
@@ -895,7 +895,7 @@ package com.meng52.game.ui.panel
             GlobalFunction.popAlert(_loc4_,_loc2_,{"res":_avatar.resId});
          }
       }
-      
+
       private function quadSkill_Touch(param1:TouchEvent) : void
       {
          var _loc4_:String = null;
@@ -920,7 +920,7 @@ package com.meng52.game.ui.panel
             }
          }
       }
-      
+
       private function quadPith_Touch(param1:TouchEvent) : void
       {
          var _loc2_:String = null;
@@ -955,7 +955,7 @@ package com.meng52.game.ui.panel
             }
          }
       }
-      
+
       private function onTRIGGERED_lock(param1:Event) : void
       {
          _lock = !_lock;
@@ -997,7 +997,7 @@ package com.meng52.game.ui.panel
          }
          LayoutUIAnimation.getOnlyExample().popWords(_loc2_);
       }
-      
+
       protected function rise_Triggered(param1:Event) : void
       {
          var _loc2_:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
@@ -1025,7 +1025,7 @@ package com.meng52.game.ui.panel
          GlobalData.$tempAvatarBetter = GlobalData.$tempTeamSelect;
          GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_better_start",false,true);
       }
-      
+
       protected function up_Triggered(param1:Event) : void
       {
          if(_avatar && _avatar.getPhaseType() == 0)
@@ -1043,7 +1043,7 @@ package com.meng52.game.ui.panel
          GlobalData.$tempAvatarStarUp = GlobalData.$tempTeamSelect;
          GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_starup_start",false,true);
       }
-      
+
       protected function foster_Triggered(param1:Event) : void
       {
          var _loc3_:Object = GlobalData.$mConfig_simple.culture;
@@ -1067,17 +1067,17 @@ package com.meng52.game.ui.panel
          this.onCLOSE_PANEL_SELF(null);
          GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_avatar_foster",false,true,GlobalData.$tempTeamSelect);
       }
-      
+
       protected function reset_Triggered(param1:Event) : void
       {
          GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("panel_team_avatar",false,true);
       }
-      
+
       protected function CHANGE_TEAM_MEMBER(param1:Event) : void
       {
          super.onCLOSE_PANEL_SELF();
       }
-      
+
       private function onType(param1:TouchEvent) : void
       {
          var _loc2_:String = null;
@@ -1141,7 +1141,7 @@ package com.meng52.game.ui.panel
             }
          }
       }
-      
+
       protected function onTRIGGERED_love(param1:Event) : void
       {
          var _loc3_:Array = null;
@@ -1158,7 +1158,7 @@ package com.meng52.game.ui.panel
             GlobalFunction.popAlert("",_loc4_,{"aid":_loc2_});
          }
       }
-      
+
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
          var _loc3_:LOL_HtmlText = null;
@@ -1248,5 +1248,3 @@ package com.meng52.game.ui.panel
       }
    }
 }
-
-

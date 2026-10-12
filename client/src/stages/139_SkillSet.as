@@ -13,20 +13,20 @@ package com.meng52.game.module.skill
    import com.meng52.game.ui.map.AvatarLayer;
    import com.meng52.game.ui.map.GameMapLayer;
    import com.meng52.utils.Tools;
-   
+
    public class SkillSet extends BaseModule
    {
-      
+
       public static const SKILL_LV_MAX:int = 10;
-      
+
       public var skills:Array;
-      
+
       public var avatar:Avatar;
-      
+
       public var lv:int;
-      
+
       public var isSuper:Boolean;
-      
+
       public var m_cooldownNum:int;
       public var abilityCooldownOverride:int = -1;
       public var abilityHasCast:Boolean = false;
@@ -44,7 +44,7 @@ package com.meng52.game.module.skill
       private var currentActionTargets:Array;
       private var currentTargetGroups:Object;
       private var sortAnchor:Avatar;
-      
+
       public function SkillSet(param1:String, param2:Avatar, param3:int = 1, param4:Boolean = false)
       {
          super();
@@ -54,22 +54,22 @@ package com.meng52.game.module.skill
          isSuper = param4;
          init();
       }
-      
+
       public function get skillSetData() : SkillSetData
       {
          return m_data as SkillSetData;
       }
-      
+
       public function getStar() : int
       {
          return skillSetData.id.split("_")[2];
       }
-      
+
       public function isActive() : Boolean
       {
          return skillSetData.pl != null;
       }
-      
+
       public function getEquipRate(param1:String) : Number
       {
          var _loc2_:Array = null;
@@ -86,7 +86,7 @@ package com.meng52.game.module.skill
          }
          return 1;
       }
-      
+
       public function getEquipUpKind() : String
       {
          var _loc1_:Array = null;
@@ -100,7 +100,7 @@ package com.meng52.game.module.skill
          }
          return "";
       }
-      
+
       public function getInfo() : String
       {
          var _loc5_:Array = null;
@@ -163,7 +163,7 @@ package com.meng52.game.module.skill
          }
          return _loc4_.info + (avatar ? avatar.getPurpleBondDescription() : "");
       }
-      
+
       public function getInfoDetails() : String
       {
          var _loc3_:String = null;
@@ -228,7 +228,7 @@ package com.meng52.game.module.skill
          }
          return _loc3_ + getSkillActionInfo();
       }
-      
+
       public function getSkillActionInfo() : String
       {
          var _loc2_:int = 0;
@@ -321,7 +321,7 @@ package com.meng52.game.module.skill
          }
          return _loc3_;
       }
-      
+
       public function getInfoAll() : String
       {
          var _loc1_:SkillSetData = skillSetData;
@@ -334,18 +334,18 @@ package com.meng52.game.module.skill
          }
          return getInfo();
       }
-      
+
       public function getInfoDesc() : String
       {
          var _loc1_:SkillSetData = skillSetData;
          return GlobalLanguageStr.getLanguageStr(25021,_loc1_.warmup,_loc1_.cooldown);
       }
-      
+
       public function get isBookSkill() : Boolean
       {
          return skillSetData.id.slice(0,1) == "K";
       }
-      
+
       public function getPassiveType() : String
       {
          var _loc2_:Array = null;
@@ -360,7 +360,7 @@ package com.meng52.game.module.skill
          }
          return null;
       }
-      
+
       public function getPassiveValue() : Number
       {
          var _loc2_:Array = null;
@@ -375,7 +375,7 @@ package com.meng52.game.module.skill
          }
          return null;
       }
-      
+
       public function get isEquipUp() : Boolean
       {
          var _loc2_:Array = null;
@@ -390,7 +390,7 @@ package com.meng52.game.module.skill
          }
          return false;
       }
-      
+
       public function getPower() : Number
       {
          var _loc1_:int = getStar();
@@ -408,7 +408,7 @@ package com.meng52.game.module.skill
          }
          return _loc1_ * Avatar.POWER_SKILL_1_STAR;
       }
-      
+
       public function init() : void
       {
          var _loc2_:SkillSetData = skillSetData;
@@ -504,7 +504,7 @@ package com.meng52.game.module.skill
             skills = skillSetData.skills;
          }
       }
-      
+
       public function ready() : void
       {
          if(isActive())
@@ -516,13 +516,13 @@ package com.meng52.game.module.skill
             m_cooldownNum = 2147483647;
          }
       }
-      
+
       public function cooldown() : int
       {
          m_cooldownNum = m_cooldownNum - 1;
          return m_cooldownNum;
       }
-      
+
       private function canEvent() : Boolean
       {
          var _loc1_:* = null;
@@ -609,7 +609,7 @@ package com.meng52.game.module.skill
       {
          return param1 == "damage" || param1 == "true_damage" || param1 == "conditional_damage" || param1 == "stun_by_condition" || param1 == "damage_chain" || param1 == "locked_sequence" || param1 == "locked_sequence_area" || param1 == "locked_combo_group" || param1 == "locked_combo_weak" || param1 == "combo" || param1 == "stun" || param1 == "silence" || param1 == "weak" || param1 == "weak_percent" || param1 == "sunder" || param1 == "sunder_percent" || param1 == "poison" || param1 == "burn" || param1 == "evil" || param1 == "pull" || param1 == "pull_group" || param1 == "push" || param1 == "push_aoe" || param1 == "move_to_target" || param1 == "move_enemy_side_target" || param1 == "shield_dispel" || param1 == "focus_fire" || param1 == "dash_group_strike";
       }
-      
+
       public function checkUse() : Boolean
       {
          var _loc1_:Boolean = false;
@@ -622,7 +622,7 @@ package com.meng52.game.module.skill
          }
          return _loc1_;
       }
-      
+
       public function useSkill() : Boolean
       {
          var wholeAttack:Object = Avatar.beginAbilityAttack(avatar,"active");
@@ -2101,14 +2101,14 @@ package com.meng52.game.module.skill
          currentActionTargets = null;
          currentTargetGroups = null;
          return _loc4_;
-      
+
          }
          finally
          {
             Avatar.endAbilityAttack(wholeAttack);
          }
       }
-      
+
       public function clear() : void
       {
          pendingShieldFollowupTarget = null;
@@ -3278,4 +3278,3 @@ package com.meng52.game.module.skill
       }
    }
 }
-

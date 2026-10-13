@@ -1,7 +1,7 @@
 """Persistent local economy, payment, daily sign-in, and task handlers."""
 from __future__ import annotations
 import copy, datetime, hashlib, math, random
-from gameplay_common import game_day, grant_reward
+from gameplay_common import game_day, grant_reward, skin_acquisition_blocked_ids
 from gameplay_energy import energy_state
 from player_store import GameplayFault, native_dates
 
@@ -1104,10 +1104,11 @@ class GameplayEconomy:
             raise GameplayFault("LotteryUnavailable", "VIP activity pool is not configured")
         valid=[]; weight_total=0
         avatar_defs=self.config.get("avatar",{})
+        blocked=skin_acquisition_blocked_ids(self.config)
         for row in pool:
             if not isinstance(row,dict) or row.get("kind") not in {"avatar","avatar_soul"}: continue
             aid=row.get("aid"); weight=row.get("weight",0)
-            if not isinstance(aid,str) or aid not in avatar_defs or type(weight) is not int or weight<=0: continue
+            if not isinstance(aid,str) or aid not in avatar_defs or aid in blocked or type(weight) is not int or weight<=0: continue
             valid.append((row,weight));weight_total+=weight
         if not valid or weight_total<=0: raise GameplayFault("LotteryUnavailable", "VIP activity pool has no valid hero records")
         key=self._op_key("user.get_lottery_activity",params)

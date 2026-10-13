@@ -8,7 +8,7 @@
       "index": 1,
       "class": "com.meng52.game.global.GlobalData",
       "source": "client/src/stages/001_GlobalData.as",
-      "source_sha256": "d3199204ff3f31d656e2862bf5da449cdf614934b4c5e95a05104eb6f4b5007e"
+      "source_sha256": "94b8ac5a7f3e7ad7535b7f0145d8a283a1842a27c8e75f7583a7b2ef416913ce"
     },
     {
       "index": 2,
@@ -614,7 +614,7 @@
       "index": 102,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "94a46bf5e01e54f2b079bc99cb61d82751095005ff383c714633f59dffbe71ad"
+      "source_sha256": "6b3acfa6b24316f11d97a9bab47913a117a81a898b67f40e6326dc2b3da78b92"
     },
     {
       "index": 103,
@@ -746,7 +746,7 @@
       "index": 124,
       "class": "com.meng52.game.ui.panel.PanelStarUpStart",
       "source": "client/src/stages/124_PanelStarUpStart.as",
-      "source_sha256": "4ae2aebc372b65f21fed6a1a371f30b28053371d3464d9a6d2c039df7f1dc6dc"
+      "source_sha256": "e63f75329e3ba567afd84b23802c6c8e7a9f14a870afeee0cf94f8f1c4c57bc9"
     },
     {
       "index": 125,
@@ -824,7 +824,7 @@
       "index": 137,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "0292190253f15b9ad8aa97fe78a0e0b577dd8b9d324dd74ac1c1d11a50954eae"
+      "source_sha256": "3caa4c4c04fe9432afe9e7888f1bf479a59e731657cfb8844f5628425b1c6e4b"
     },
     {
       "index": 138,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "ce6815d211a832bad308311b498256ed997713fc2afbe89e42dedd71619fe974"
+      "source_sha256": "348a0e1d8da16bacdc6124de46b8677f17f9c4114204fcdba5b86e780debd89f"
     },
     {
       "index": 140,

@@ -704,6 +704,12 @@ package com.meng52.game.global
          return true;
       }
 
+      public static function isCurrentProfileSyncEnvelope(param1:Object) : Boolean
+      {
+         return isValidProfileSyncEnvelope(param1) && String(param1.uid) == $profileSyncUid
+            && Number(param1.revision) == $profileSyncRevision;
+      }
+
       public static function wasProfileSyncApplied(param1:Object) : Boolean
       {
          return param1 != null && param1 === $profileSyncAppliedEnvelope;

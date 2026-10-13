@@ -721,6 +721,10 @@ package com.meng52.game.ui.panel
                _loc7_++;
             }
             _loc14_ = GlobalFunction.getPhaseUpItems(GlobalData.$tempAvatarStarUp);
+            for(var materialIndex:int = _loc14_.length - 1; materialIndex >= 0; materialIndex--)
+            {
+               if(int(_loc14_[materialIndex].phase) != 0) _loc14_.splice(materialIndex,1);
+            }
          }
          else
          {
@@ -773,7 +777,7 @@ package com.meng52.game.ui.panel
             if(isPhaseUp)
             {
                _loc13_["isPhase"] = 1;
-               _loc13_["phase"] = _loc1_.phase;
+               _loc13_["phase"] = 0;
             }
             _loc12_.data = _loc13_;
             this.mList_avatars.addChild(_loc12_);

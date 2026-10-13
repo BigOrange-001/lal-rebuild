@@ -75,7 +75,7 @@ package com.meng52.game.module.avatar
          var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
          if(!definitions) return "";
          var family:String = String(id).split("|")[0].split("_").slice(0,2).join("_");
-         for each(var bond:Object in definitions) if(bond.families.indexOf(family)>=0) return "<br/><font color=\"#FFD266\">"+bond.name+"</font><br/>"+bond.info;
+         for each(var bond:Object in definitions) if(bond.families.indexOf(family)>=0) return "<br/>"+Tools.formatHtmlText(String(bond.name),16765542,true,22)+"<br/>"+Tools.formatHtmlText(String(bond.info),16777215,false,20);
          return "";
       }
 
@@ -212,9 +212,9 @@ package com.meng52.game.module.avatar
             var context:Object = currentAbilityAttack();
             if(context && context.owner === this && context.kind == "active" && context.skill)
             {
-               var configured:int = Math.abs(context.skill.skillSetData.range);
+               var configured:int = context.skill.getCastRange();
                if(configured > 0) distance = configured;
-               if(context.skill.skills[0][1] == "jayce_n") distance = abilityState.form && abilityState.form.hammer ? 1500 : 600;
+               if(context.skill.skills[0][1] == "jayce_n") distance = abilityState.form && abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
             }
          }
          if(center != null || maximum != 1) distance = skillAreaRadius(distance);
@@ -254,7 +254,9 @@ package com.meng52.game.module.avatar
 
       private function abilityMarkedTarget(mark:String, distance:Number, order:String = "nearest") : Avatar
       {
-         var list:Array = abilityEnemies(distance,null,-1,true,order);
+         var context:Object = currentAbilityAttack();
+         if(context && context.owner === this && context.skill) distance = context.skill.getCastRange();
+         var list:Array = abilityCandidates(otherTeam,line,pos,distance,-1,true,order);
          for each(var target:Avatar in list) if(target.abilityHasMark(this,mark)) return target;
          return list.length ? list[0] as Avatar : null;
       }
@@ -479,12 +481,15 @@ package com.meng52.game.module.avatar
             case "alistar_c":
             case "tahm_c": return true;
             case "nunu_c": return abilityEnemies(skillAreaRadius(400)).length > 0;
+            case "illaoi_c": return abilityEnemies(350,null,3).length > 0;
             case "orianna_c":
                center = abilityState.ball as Avatar;
                if(!center || center.hp <= 0 || center.line != line) center = this;
-               return abilityEnemies(skillAreaRadius(350),center).length > 0;
-            case "jayce_n": distance = abilityState.form && abilityState.form.hammer ? 1500 : 600; break;
+               return abilityEnemies(350,center,3).length > 0;
+            case "jayce_n": distance = abilityState.form && abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS; break;
             case "elise_c":
+            case "nidalee_c":
+            case "caitlyn_c":
             case "khazix_c":
             case "jinx_c": return abilityEnemies(distance,null,1,true).length > 0;
             case "maokai_c":
@@ -544,7 +549,11 @@ package com.meng52.game.module.avatar
                enemies=abilityEnemies(700); if(!enemies.length) return false; primary=enemies[0];
                targets=[primary].concat(abilityEnemies(250,primary,3,false,"nearest",[primary]));
                for each(target in targets) abilityHit(target,1.6,1,effect,target===primary ? 3 : 0);
-               if(primary.hp > 0 && abilityDash(primary)) if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);
+               if(primary.hp > 0)
+               {
+                  if(!abilityState.root) abilityDash(primary);
+                  if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);
+               }
                abilityState.form = {hammer:false};
                break;
             case "nidalee_n":
@@ -1017,6 +1026,7 @@ package com.meng52.game.module.avatar
       public var currentSkillKillContext:Object;
       public var manualFocusTarget:Avatar;
       public var manualSkillDots:Object;
+      private var manualDotSerial:uint = 0;
       public var manualBattleStacks:Object;
       public var manualTimedStacks:Array;
       public var manualOwnerActionSerial:int = 0;
@@ -2173,10 +2183,12 @@ package com.meng52.game.module.avatar
       public function addManualBattleStack(param1:String, param2:Number, param3:int) : void
       {
          if(!manualBattleStacks) manualBattleStacks = {};
-         if(param1 != "attack" && param1 != "defense") return;
+         if(["attack","defense","flee"].indexOf(param1) < 0) return;
          if(!isFinite(param2) || param2 <= 0 || param3 < 1) return;
          manualBattleStacks[param1] = Math.min(Number(param3) * param2,getManualBattleStack(param1) + param2);
-         abilityFeedback("永久成长："+Math.round(getManualBattleStack(param1)*100)+"%","FX_S9160_STRONG");
+         var flat:Boolean = ["hit","flee","crit","tough"].indexOf(param1) >= 0;
+         var labels:Object = {hit:"精准",flee:"闪避",crit:"暴击",tough:"韧性"};
+         abilityFeedback(flat ? labels[param1]+"叠加：+"+Math.round(getManualBattleStack(param1)) : "永久成长："+Math.round(getManualBattleStack(param1)*100)+"%",flat ? "FX_S9140_FLEE" : "FX_S9160_STRONG");
       }
 
       public function getManualTimedStack(param1:String) : Number
@@ -2267,7 +2279,7 @@ package com.meng52.game.module.avatar
          return true;
       }
 
-      public function addManualSkillDot(param1:String, param2:String, param3:Number, param4:Number, param5:int, param6:Avatar = null, param7:int = 0) : void
+      public function addManualSkillDot(param1:String, param2:String, param3:Number, param4:Number, param5:int, param6:Avatar = null, param7:int = 0, stack:Boolean = false) : void
       {
          var _loc1_:Object = null;
          var _loc2_:Buff = null;
@@ -2278,6 +2290,7 @@ package com.meng52.game.module.avatar
             return;
          }
          if(!manualSkillDots) manualSkillDots = {};
+         if(stack) param1 += ":layer:" + (++manualDotSerial);
          _loc1_ = {"kind":param2,"apTick":Math.max(0,int(param3)),"hpMaxFraction":param4,"damageType":param7,"round":param5,"source":param6};
          _loc2_ = new Buff(param2 == "bleed" ? "poison" : param2,param5,Number(_loc1_.apTick));
          _loc1_.visual = _loc2_;
@@ -3606,7 +3619,7 @@ package com.meng52.game.module.avatar
                _loc6_ = 0;
             }
          }
-         var _loc10_:Array = GlobalData.$mConfig_simple.avatar_exp_curve as Array;
+         var _loc10_:Array = getExperienceCurve();
          if(_loc10_ != null && param1 >= 1 && param1 <= _loc10_.length)
          {
             _loc3_ = int(_loc10_[param1 - 1] * avatarData.expRate);
@@ -3640,7 +3653,7 @@ package com.meng52.game.module.avatar
          var _loc4_:int = int(_loc2_[0]);
          var _loc3_:int = int(_loc2_[1]);
          var _loc5_:int = int(_loc2_[2]);
-         var _loc6_:Array = GlobalData.$mConfig_simple.avatar_exp_curve as Array;
+         var _loc6_:Array = getExperienceCurve();
          if(_loc6_ != null && param1 >= 1 && param1 < _loc6_.length)
          {
             return int(_loc6_[param1] * avatarData.expRate) - int(_loc6_[param1 - 1] * avatarData.expRate);
@@ -3651,6 +3664,13 @@ package com.meng52.game.module.avatar
       public function getIdValue() : Number
       {
          return 0.001 * avatarData.id.split("_")[1];
+      }
+
+      private function getExperienceCurve() : Array
+      {
+         var curves:Object = GlobalData.$mConfig_simple.avatar_exp_curves;
+         var curve:Array = curves ? curves[String(getStar())] as Array : null;
+         return curve || GlobalData.$mConfig_simple.avatar_exp_curve as Array;
       }
 
       public function isSwallowProtect(param1:Avatar) : Boolean
@@ -3886,6 +3906,15 @@ package com.meng52.game.module.avatar
          var _loc5_:Number = Math.pow(getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA,2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed() + getRange()) * (1 + Math.pow(getHit() + getFlee() + getCrit() + getTough(),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
+      }
+
+      public function isRangedSkillCaster() : Boolean
+      {
+         if(getType() != 1) return false;
+         var definition:Object = GlobalData.$mConfig_avatar[avatarData.id];
+         var ranged:Boolean = definition && typeof definition.ranged_skill == "boolean" ? Boolean(definition.ranged_skill) : avatarData.range >= 500;
+         if(!ranged) return false;
+         return avatarData.id.indexOf("A_1041_") != 0 || !abilityState.form || !abilityState.form.hammer;
       }
 
       public function getLvMax() : int
@@ -4676,10 +4705,16 @@ package com.meng52.game.module.avatar
          _loc7_.delayCall(DisplayTools.addEffects,GameMap.actionDelay + param4 + param5 + 2.8 / 2,_loc10_);
       }
 
+      public function isResolvingSkill() : Boolean
+      {
+         var context:Object = currentAbilityAttack();
+         return context && context.owner === this && context.kind == "active";
+      }
+
       public function checkAttack(param1:Vector.<Avatar>, param2:Function, param3:int = -1, param4:Boolean = false, param5:int = -1, param6:Number = 1, param7:int = 0, param8:String = null, param9:Buff = null, param10:Number = 1) : Avatar
       {
          var _aim:Avatar;
-         if(GameMap.currentMap.isEnd(line))
+         if(GameMap.currentMap.isEnd(line) && !isResolvingSkill())
          {
             return null;
          }

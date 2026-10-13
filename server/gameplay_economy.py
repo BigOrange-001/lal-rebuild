@@ -2,7 +2,7 @@
 from __future__ import annotations
 import copy, datetime, hashlib, math, random
 from gameplay_common import game_day, grant_reward, skin_acquisition_blocked_ids
-from gameplay_energy import energy_state
+from gameplay_energy import energy_state, normalize_energy_purchase_day
 from player_store import GameplayFault, native_dates
 from vip_campaign import credit_vip_gift, normalize_vip_profile
 
@@ -438,7 +438,7 @@ class GameplayEconomy:
             now = self._now(); state = energy_state(p, self.config, now)
             maximum, current = state["max"], state["current"]
             if current >= maximum: raise GameplayFault("EnergyFull", "Energy is already full")
-            used = int(records.get("energy_times", 0)); vip = (self.config.get("vip") or {}).get(str(p.get("vip_lv", 0)), {})
+            used = normalize_energy_purchase_day(p, now); vip = (self.config.get("vip") or {}).get(str(p.get("vip_lv", 0)), {})
             limit = int(cfg[5]) + int(vip.get("buy_energy", 0))
             if used >= limit: raise GameplayFault("EnergyPurchaseLimit", "Energy purchase limit reached")
             price = int(cfg[4]) + int(cfg[7]) * used

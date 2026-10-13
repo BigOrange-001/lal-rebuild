@@ -409,6 +409,12 @@ def apply_campaign_workbook(full_config: dict, workbook: Path) -> tuple[dict, di
               "power": {mode: {"min": min(a for _, _, a in values), "max": max(a for _, _, a in values),
                                "max_target_error_pct": round(max(abs(a - t) / t for _, t, a in values) * 100, 4)}
                         for mode, values in power_stats.items()}}
+    # Config is served from cfg.* while gameplay historically resolves the
+    # top-level tables first. Publish the authored PVE tables to both native
+    # consumers; otherwise they silently keep the pre-workbook enemy rosters.
+    for table in ("battle_main", "combat_main", "battle_ploy", "combat_ploy"):
+        output[table] = copy.deepcopy(pve[table])
+        cfg[table] = copy.deepcopy(pve[table])
     return output, report
 
 

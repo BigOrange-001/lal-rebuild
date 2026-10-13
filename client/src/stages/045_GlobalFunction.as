@@ -3979,12 +3979,26 @@ package com.meng52.game.global
          };
          var _loc1_:int = int(_loc3_[5]);
          _loc1_ += int(GlobalFunction.getVipLv() > 0 ? GlobalFunction.getVipObj().buy_energy : 0);
-         var _loc2_:int = _loc1_ - GlobalData.$userData.records.energy_times;
-         var _loc6_:int = _loc3_[4] + _loc3_[7] * GlobalData.$userData.records.energy_times;
+         var _used:int = getEnergyPurchaseCountToday();
+         var _loc2_:int = Math.max(0,_loc1_ - _used);
+         var _loc6_:int = _loc3_[4] + _loc3_[7] * _used;
          var _loc4_:String = Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90002,_loc6_,_loc1_,_loc2_),GlobalTextStyle.COLOR_W_Y_Y_G);
          GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(20095),_loc4_,_loc5_);
       }
       
+      private static function getEnergyPurchaseCountToday() : int
+      {
+         var records:Object = GlobalData.$userData.records;
+         var now:Date = new Date(SendAndSelect.$systemTimer_nowSecond * 1000 + 28800000);
+         var month:String = String(now.getUTCMonth() + 1);
+         var day:String = String(now.getUTCDate());
+         if(month.length < 2) month = "0" + month;
+         if(day.length < 2) day = "0" + day;
+         var today:String = now.getUTCFullYear() + "-" + month + "-" + day;
+         if(records.energy_purchase_day && String(records.energy_purchase_day) != today) return 0;
+         return Math.max(0,int(records.energy_times));
+      }
+
       public static function popAskMorph(param1:Boolean = false) : void
       {
          var _show_id:String;

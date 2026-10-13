@@ -139,6 +139,7 @@ package com.meng52.game.module.avatar
                   if(guardOwner && guardOwner.hp > 0)
                   {
                      var swordContext:Object = beginAbilityAttack(guardOwner,"response");
+                     swordContext.manualDamageMultiplier = guard.manualDamageMultiplier;
                      for each(var swordTarget:Avatar in guardOwner.abilityEnemies(300,target,3)) guardOwner.abilityHit(swordTarget,1.5,2,"FX_A_1120_MAGIC");
                      endAbilityAttack(swordContext);
                   }
@@ -157,6 +158,7 @@ package com.meng52.game.module.avatar
                --state.left;
                state.seen[String(owner.abilityIndex)] = true;
                var counterContext:Object = beginAbilityAttack(target,"response");
+               counterContext.manualDamageMultiplier = state.manualDamageMultiplier;
                if(target.abilityHit(owner,1,1,"FX_A_1143_PHYSICAL")) target.abilityHeal(target,0.2);
                endAbilityAttack(counterContext);
             }
@@ -280,6 +282,12 @@ package com.meng52.game.module.avatar
          var context:Object = currentAbilityAttack();
          var hitCount:int = context ? int(context.hitSerial) : 0;
          var one:Vector.<Avatar> = new Vector.<Avatar>(); one.push(target);
+         // The profile multiplier belongs to this manual action's damage,
+         // not to its healing, shield, debuff or a nested normal skill.
+         var manualFactor:Number = context && context.owner === this ? Number(context.manualDamageMultiplier) : 1;
+         if(!isFinite(manualFactor) || manualFactor <= 0) manualFactor = 1;
+         coefficient *= manualFactor;
+         if(sharedTotal > 0) sharedTotal *= manualFactor;
          if(kind == 3) coefficient /= REAL_DAMAGE_RATE;
          var total:Number = sharedTotal > 0 ? sharedTotal : coefficient;
          var q:Number = sharedTotal > 0 ? coefficient/sharedTotal : 1;
@@ -369,6 +377,7 @@ package com.meng52.game.module.avatar
          var owner:Avatar = bomb.owner as Avatar;
          if(!owner || owner.hp <= 0) return;
          var context:Object = beginAbilityAttack(owner,"active");
+         context.manualDamageMultiplier = bomb.manualDamageMultiplier;
          var targets:Array = owner.abilityCandidates(owner.otherTeam,line,pos,250,4);
          if(hp > 0 && targets.indexOf(this) < 0) { targets.unshift(this); targets = targets.slice(0,4); }
          for each(var target:Avatar in targets) owner.abilityHit(target,Number(bomb.coefficient),2,"FX_A_1098_MAGIC");
@@ -426,6 +435,7 @@ package com.meng52.game.module.avatar
          if(state && hp > 0)
          {
             var zoneContext:Object = beginAbilityAttack(this,"active");
+            zoneContext.manualDamageMultiplier = state.manualDamageMultiplier;
             for each(var enemy:Avatar in abilityCandidates(otherTeam,state.line,state.pos,350,3))
             {
                if(abilityHit(enemy,1.2,1,"FX_A_1011_PHYSICAL")) abilityControl(enemy,"weak",1,0.2);
@@ -440,6 +450,7 @@ package com.meng52.game.module.avatar
             if(hp > 0 && !buffs.stun && !buffs.silence && pos == state.pos && line == state.line)
             {
                var channelContext:Object = beginAbilityAttack(this,"active");
+               channelContext.manualDamageMultiplier = state.manualDamageMultiplier;
                for each(enemy in abilityEnemies(400,null,3)) if(abilityHit(enemy,3.6,2,"FX_A_1073_MAGIC")) abilityControl(enemy,"weak",2,0.3);
                endAbilityAttack(channelContext);
                return true;
@@ -519,6 +530,16 @@ package com.meng52.game.module.avatar
          var i:int;
          var count:int;
          var context:Object = currentAbilityAttack();
+         var manualConfig:Object = sourceSkill && sourceSkill.skillSetData && GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[sourceSkill.skillSetData.id] : null;
+         var manualDamageMultiplier:Number = manualConfig ? Number(manualConfig.manualDamageMultiplier) : 1;
+         var manualDefenseBuffMultiplier:Number = manualConfig ? Number(manualConfig.manualDefenseBuffMultiplier) : 1;
+         if(!isFinite(manualDamageMultiplier) || manualDamageMultiplier <= 0) manualDamageMultiplier = 1;
+         if(!isFinite(manualDefenseBuffMultiplier) || manualDefenseBuffMultiplier <= 0) manualDefenseBuffMultiplier = 1;
+         var hadManualFactor:Boolean = context != null && context.hasOwnProperty("manualDamageMultiplier");
+         var previousManualFactor:Object = hadManualFactor ? context.manualDamageMultiplier : null;
+         if(context && context.owner === this) context.manualDamageMultiplier = manualDamageMultiplier;
+         try
+         {
          switch(kind)
          {
             case "illaoi_n":
@@ -529,7 +550,7 @@ package com.meng52.game.module.avatar
                break;
             case "illaoi_c":
                for each(target in abilityEnemies(350,null,3)) abilityHit(target,2,1,effect);
-               abilityState.counter = {until:abilitySerial+2,left:2,seen:{},debuff:false};
+               abilityState.counter = {until:abilitySerial+2,left:2,seen:{},manualDamageMultiplier:manualDamageMultiplier,debuff:false};
                break;
             case "jayce_n":
                state = abilityState.form || {hammer:false}; abilityState.form = state;
@@ -578,7 +599,7 @@ package com.meng52.game.module.avatar
                break;
             case "kayle_c":
                ally=abilityAlly(600); if(!ally) return false;
-               ally.abilityState.guard={kind:"kayle",charges:1,until:ally.abilitySerial+2,owner:this,debuff:false};
+               ally.abilityState.guard={kind:"kayle",charges:1,until:ally.abilitySerial+2,owner:this,manualDamageMultiplier:manualDamageMultiplier,debuff:false};
                break;
             case "maokai_n":
                enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false;
@@ -598,7 +619,7 @@ package com.meng52.game.module.avatar
                enemies=abilityEnemies(700); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
                targets=[primary].concat(abilityEnemies(300,primary,3,false,"nearest",[primary]));
                for(i=0;i<2;i++) for each(target in targets) if(abilityHit(target,1.3,1,effect,2.6) && i==0) abilityControl(target,"stun",1);
-               addBuff("steel",2,0.4);
+               addBuff("steel",2,0.4*manualDefenseBuffMultiplier);
                break;
             case "gangplank_n":
                marked=hp/hpMax < 0.5; enemies=abilityEnemies(600); if(!enemies.length) return false;
@@ -607,7 +628,7 @@ package com.meng52.game.module.avatar
                break;
             case "gangplank_c":
                enemies=abilityEnemies(800); if(!enemies.length) return false; primary=enemies[0];
-               abilityState.zone={line:primary.line,pos:primary.pos,left:2};
+               abilityState.zone={line:primary.line,pos:primary.pos,left:2,manualDamageMultiplier:manualDamageMultiplier};
                for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,"weak",1,0.2);
                break;
             case "yi_n":
@@ -667,7 +688,7 @@ package com.meng52.game.module.avatar
                abilityHeal(this,0.7*scale);
                break;
             case "nunu_c":
-               abilityShield(this,1.2); abilityState.channel={pos:pos,line:line}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
+               abilityShield(this,1.2); abilityState.channel={pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
                break;
             case "alistar_n":
                enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
@@ -708,7 +729,7 @@ package com.meng52.game.module.avatar
             case "malzahar_n":
                enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];
                if(target.buffs.purify) {target.removeBuff("purify"); break;}
-               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale,hops:0,debuff:true};
+               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale*manualDamageMultiplier,hops:0,debuff:true};
                break;
             case "malzahar_c":
                enemies=abilityEnemies(650); if(!enemies.length) return false; target=enemies[0];
@@ -735,7 +756,7 @@ package com.meng52.game.module.avatar
             case "tahm_c":
                ally=abilityAlly(500,"ratio",true) || this;
                if(ally!==this) ally.reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,pos+(team==1 ? 100 : -100))),-2147483648,0,0,true);
-               abilityShield(ally,1.6); ally.addBuff("purify",2); addBuff("taunt",2); addBuff("steel",2,0.4);
+               abilityShield(ally,1.6); ally.addBuff("purify",2); addBuff("taunt",2); addBuff("steel",2,0.4*manualDefenseBuffMultiplier);
                break;
             case "caitlyn_n":
                enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];
@@ -753,7 +774,7 @@ package com.meng52.game.module.avatar
                break;
             case "kaelthas_n":
                enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,0.8*scale,2,effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={owner:this,until:target.abilitySerial+1,coefficient:1.2*scale,debuff:true};
+               if(abilityHit(target,0.8*scale,2,effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={owner:this,until:target.abilitySerial+1,coefficient:1.2*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
                break;
             case "kaelthas_c":
                enemies=abilityEnemies(700); if(!enemies.length) return false; primary=enemies[0];
@@ -789,6 +810,15 @@ package com.meng52.game.module.avatar
             default: return false;
          }
          return true;
+         }
+         finally
+         {
+            if(context && context.owner === this)
+            {
+               if(hadManualFactor) context.manualDamageMultiplier = previousManualFactor;
+               else delete context.manualDamageMultiplier;
+            }
+         }
       }
 
       public function get isManualSummonUnit() : Boolean
@@ -2698,7 +2728,7 @@ package com.meng52.game.module.avatar
                   break;
                case "bless":
                   _loc8_ = 16777164;
-                  _loc13_ = GlobalLanguageStr.getLanguageStr(30081) + _loc11_.round + GlobalLanguageStr.getLanguageStr(30002);
+                  _loc13_ = GlobalLanguageStr.getLanguageStr(30081);
                   break;
                case "hitup":
                   _loc8_ = 10526975;
@@ -2851,6 +2881,8 @@ package com.meng52.game.module.avatar
          for(_loc3_ in buffs)
          {
             _loc1_ = buffs[_loc3_];
+            // Bless stays armed until its one lethal-hit revival consumes it.
+            if(_loc3_ == "bless") continue;
             --_loc1_.round;
             switch(_loc3_)
             {
@@ -5676,7 +5708,7 @@ package com.meng52.game.module.avatar
          {
             removeAllDebuff();
             removeBuff("bless");
-            hp = Tools.toInt(hpMax * GlobalData.$mConfig_simple.attack[20]);
+            hp = Math.max(1,Tools.toInt(hpMax * GlobalData.$mConfig_simple.attack[20]));
             GameMapTools.gameTrace(id + "之后神佑+" + hp);
             _loc19_.delayCall(blessFade,GameMap.actionDelay);
             _loc19_.delayCall(blessCure,GameMap.actionDelay + 1,hp);

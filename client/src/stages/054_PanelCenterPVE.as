@@ -634,7 +634,9 @@ package com.meng52.game.ui.screen
             mList_h.width = 600;
             mList_h.layout = _loc1_;
             mList_h.snapScrollPositionsToPixels = true;
-            mList_h.verticalScrollPolicy = "off";
+            // Ten activity chapters need an independently scrollable chooser;
+            // an unbounded header would push the stage list off screen.
+            mList_h.verticalScrollPolicy = "auto";
             addChild(mList_h);
             _loc2_ = null;
             _loc1_ = null;
@@ -1018,7 +1020,7 @@ package com.meng52.game.ui.screen
             {
                _loc10_ += 1;
             }
-            mImg9_info.height = (int(_loc2_.length / 3) + _loc10_) * 80 + (int(_loc2_.length / 3) + _loc10_ - 1) * 5 + 20;
+            mImg9_info.height = Math.min(190,(int(_loc2_.length / 3) + _loc10_) * 80 + (int(_loc2_.length / 3) + _loc10_ - 1) * 5 + 20);
             mList_h.height = mImg9_info.height;
          }
          else
@@ -1225,7 +1227,14 @@ package com.meng52.game.ui.screen
                   }
                   else
                   {
-                     _loc2_.push(_loc16_);
+                     // The tower uses the normal activity list, but only the
+                     // persisted frontier is selectable. Older floors remain
+                     // visible for repeat runs after they are unlocked.
+                     if(_loc15_ != "P_200" ||
+                        _loc4_ <= Math.max(1,int(GlobalData.$userData.records.tower_floor)))
+                     {
+                        _loc2_.push(_loc16_);
+                     }
                   }
                }
             }

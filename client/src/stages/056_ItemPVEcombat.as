@@ -12,6 +12,7 @@ package com.meng52.game.ui.element
    import com.meng52.game.module.map.GameMap;
    import com.meng52.game.module.map.GameMapTools;
    import com.meng52.net.RpcStaticCall;
+   import com.meng52.net.SendAndSelect;
    import com.meng52.utils.Tools;
    import feathers.controls.List;
    import feathers.controls.renderers.IListItemRenderer;
@@ -357,6 +358,16 @@ package com.meng52.game.ui.element
          this.mLimit = GlobalFunction.getUserCombat(GlobalData.$tempPVE_type,this.data.id);
          this.mLimit = _loc13_.getLimit(diff) - this.mLimit;
          this.mLimit = this.mLimit < 0 ? 0 : this.mLimit;
+         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
+         {
+            var _materialDay:Date = new Date(Number(SendAndSelect.$systemTimer_nowSecond) * 1000 + 28800000);
+            var _month:int = _materialDay.getUTCMonth() + 1;
+            var _day:int = _materialDay.getUTCDate();
+            var _today:String = String(_materialDay.getUTCFullYear()) + "-" + (_month < 10 ? "0" : "") + String(_month) + "-" + (_day < 10 ? "0" : "") + String(_day);
+            var _daily:Object = GlobalData.$userData.records.material_activity;
+            var _used:int = _daily != null && String(_daily.day) == _today && _daily.uses != null ? int(_daily.uses[String(this.data.id).substring(0,String(this.data.id).lastIndexOf("_"))]) : 0;
+            this.mLimit = Math.max(0,2 + int((Math.max(0,GlobalFunction.getVipLv()) + 1) / 2) - _used);
+         }
          var _loc37_:Number = 140;
          this.mTxt_str0 = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20032,_loc13_.getEnergy(diff)),20,_loc27_,"left",_loc37_,35);
          this.mTxt_str0.touchable = false;

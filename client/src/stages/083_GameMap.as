@@ -582,6 +582,14 @@ package com.meng52.game.module.map
             if(_loc8_ != null)
             {
                _loc2_ = new Avatar(_loc8_[0],_loc8_.slice(0,11));
+               // Stage-only advancement metadata lives after offset/range.
+               // Keep the constructor row short so Avatar.init never treats
+               // it as an arena compact snapshot.
+               if(_loc8_.length > 14 && int(_loc8_[13]) == 1)
+               {
+                  _loc2_.limitBreak = 1;
+                  _loc2_.phase = int(_loc8_[14]);
+               }
                _loc2_.dropRate = _loc8_[6];
                _loc2_.dropId = _loc8_[8];
                if(_loc8_[9])

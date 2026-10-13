@@ -98,7 +98,7 @@ def validate_team_lane_coverage(team, lane_count, side="team"):
 
 def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1,
               instance_id=None, overrides=None, *, enforce_avatar_level_cap=True,
-              limit_break=False):
+              limit_break=False, npc_limit_break=False):
     avatar = config.get("avatar", {}).get(str(aid))
     if not avatar:
         raise ValueError(f"unknown combat avatar id: {aid}")
@@ -108,6 +108,10 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
         raise ValueError("combatant level must be positive")
     limit_break = bool(limit_break and int(team) == 1 and instance_id
                        and str(aid).rsplit("_", 1)[-1] in ("5", "6"))
+    npc_limit_break = bool(npc_limit_break and int(team) == 2 and not instance_id
+                           and str(aid).rsplit("_", 1)[-1] == "6")
+    if npc_limit_break and (enforce_avatar_level_cap or not 100 <= level <= 125):
+        raise ValueError("limit-broken NPC requires an authored level 100..125 stage row")
     if limit_break and level > 125:
         raise ValueError("limit-broken player level exceeds 125")
     if enforce_avatar_level_cap and not limit_break:
@@ -115,7 +119,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
         # tuples carry their own battle level and native Avatar.init accepts
         # that explicit value even when it exceeds the avatar progression cap.
         level = min(level, int(tl[4] if len(tl) > 4 else 99))
-    elif not limit_break and level > 99:
+    elif not limit_break and not npc_limit_break and level > 99:
         # All reconstructed stage/activity/arena/fragment NPC rows are authored
         # at level 60 or below. Reject accidental/unbounded NPC data without
         # imposing this bound on player-owned levels or changing their cap.
@@ -135,7 +139,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     skill_b = _native_skill_snapshot(config, pl[13] if len(pl) > 13 else None)
     result = {"aid":str(aid),"ap":stats["attack"],"morph":0,"buffs":{},"de_ma":stats["magic_defense"],"de_ph":stats["physical_defense"],"hp":stats["health"],"hp_max":stats["health"],"isme":team==1,"leader":1 if leader else 0,"line":int(line),"lv":level,"new_4attrs":{"hit":0,"flee":0,"crit":0,"tough":0},"pos":native_pos,"slv":int(slv),"tpl":[int(tl[i]) if len(tl)>i else 0 for i in range(3)]+[int(pl[8]) if len(pl)>8 else 0,int(pl[9]) if len(pl)>9 else 0],"talent":None,"skill":skill,"leader_skill":leader_skill,"book_skill":None,"skillB":skill_b}
     if instance_id: result["instance_id"] = instance_id
-    if limit_break: result["limit_break"] = 1
+    if limit_break or npc_limit_break: result["limit_break"] = 1
     if overrides:
         for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph"):
             if key in overrides: result[key] = overrides[key]
@@ -146,8 +150,24 @@ def serialize_stage_team(config, entries, team=2):
     result=[]
     for i,entry in enumerate(entries or []):
         if not isinstance(entry,(list,tuple)) or not entry: continue
+        # Indexes 13/14 are trusted stage-only NPC advancement markers. They
+        # are never read from submitted player formations.
+        tower_break = len(entry) > 13 and entry[13] == 1
+        if tower_break:
+            star = str(entry[0]).rsplit("_", 1)[-1]
+            if star != "6":
+                raise ValueError("limit-broken NPC must be an orange hero")
+            phase_rows = config.get("system_simple", {}).get("phase_config", [])
+            try:
+                phase_cap = int(phase_rows[0][star][1])
+            except (IndexError, KeyError, TypeError, ValueError) as exc:
+                raise ValueError("missing authored NPC phase cap") from exc
+            if len(entry) < 15 or type(entry[14]) is not int or not 0 <= entry[14] <= phase_cap:
+                raise ValueError("invalid authored NPC phase")
         unit=base_unit(config,str(entry[0]),int(entry[1]) if len(entry)>1 else 1,int(entry[2]) if len(entry)>2 else 1,int(entry[3]) if len(entry)>3 else i%3,float(entry[4]) if len(entry)>4 else .2+.16*i,bool(int(entry[5])) if len(entry)>5 else i==0,team,
-                       enforce_avatar_level_cap=False)
+                       enforce_avatar_level_cap=False,npc_limit_break=tower_break)
+        if tower_break:
+            unit["phase"] = entry[14]
         # Campaign workbook extensions follow the native tuple's equipment
         # fields at indexes 9/10. Side offset is a fraction of sideOffset.
         if len(entry)>11 and entry[11] is not None:

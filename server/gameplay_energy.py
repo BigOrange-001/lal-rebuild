@@ -9,6 +9,24 @@ from __future__ import annotations
 import math
 
 
+def normalize_energy_purchase_day(profile, now=None):
+    """Reset only the daily energy-purchase counter, using Shanghai dates."""
+    from gameplay_common import game_day
+    today = game_day(now)
+    records = profile.setdefault("records", {})
+    previous = records.get("energy_purchase_day")
+    # A legacy save has no day marker. Preserve its confirmed count for the
+    # migration day; all later day boundaries reset it normally.
+    if isinstance(previous, str) and previous != today:
+        records["energy_times"] = 0
+    used = records.get("energy_times", 0)
+    if type(used) is not int or used < 0:
+        used = 0
+    records["energy_times"] = used
+    records["energy_purchase_day"] = today
+    return used
+
+
 def energy_parameters(profile, config):
     """Return the native max and interval using ``cfg.system_simple`` data."""
     config = config if isinstance(config, dict) else {}

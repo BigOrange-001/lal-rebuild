@@ -143,10 +143,12 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     # attributes already contain its stat bonus; the snapshot must also carry
     # the stored phase so origin checks compare the same progression state.
     result["phase"] = 0
+    result["culture_schema"] = ""
     if limit_break or npc_limit_break: result["limit_break"] = 1
     if overrides:
-        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase"):
+        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema"):
             if key in overrides: result[key] = overrides[key]
+    result["culture_schema"] = str(result.get("culture_schema") or "")
     return result
 
 
@@ -210,6 +212,7 @@ def serialize_player_team(config, profile, team_num, submitted_team, attributes_
                                 limit_break=instance.get("limit_break") == 1))
         # Read progression from the owned roster, never from submitted tuples.
         result[-1]["phase"] = max(0, int(instance.get("phase", 0)))
+        result[-1]["culture_schema"] = str(raw.get("culture_schema", instance.get("culture_schema", "")) or "")
     if not result: raise ValueError("battle requires at least one saved formation avatar")
     return result
 

@@ -41,8 +41,6 @@ package com.meng52.game.ui.panel
       
       private var mArr_icon:Array;
       
-      private var mStatus_toMagic:Boolean;
-      
       private var _txt:LOL_IconText;
       
       private var _spRule:Sprite;
@@ -73,6 +71,12 @@ package com.meng52.game.ui.panel
          while(_loc15_ < _loc10_)
          {
             _loc17_ = int(param2[_loc15_]);
+            var _loc19_:Object = GlobalData.$mConfig_simple.equipment_magic;
+            var _loc20_:Array = _loc19_ == null ? null : _loc19_.stat_per_level as Array;
+            if(_loc20_ != null && _loc15_ < _loc20_.length)
+            {
+               _loc17_ *= Math.max(0,int(_loc20_[_loc15_]));
+            }
             if(_loc17_ > 0)
             {
                _loc18_ = GlobalFunction.createImage(_loc16_ + _loc15_);
@@ -161,7 +165,6 @@ package com.meng52.game.ui.panel
       
       override public function initOtherUIs() : void
       {
-         mStatus_toMagic = false;
          mPrice_num = 0;
          mCurr_lv = 0;
          var _loc3_:Number = 150;
@@ -246,7 +249,7 @@ package com.meng52.game.ui.panel
          var _loc6_:TextField = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20079,_loc9_),20,16777215,"left",_loc10_,46);
          _loc6_.y = _loc11_.y + _loc12_;
          param1.addChild(_loc6_);
-         if(_loc7_.symp >= 0)
+         if(_loc7_.magic != null)
          {
             _loc5_ = getMagicUIs(_loc7_.symp,_loc7_.magic,false);
             _loc5_.y = _loc6_.y + _loc12_;
@@ -291,27 +294,23 @@ package com.meng52.game.ui.panel
             _loc6_ = new Equip(_loc11_,_loc9_);
          }
          var _loc4_:Array = [0,0,0,0];
-         if(_loc6_ != null)
+         if(_loc6_ != null && _loc6_.magic is Array)
          {
-            _loc4_ = _loc6_.magic;
+            _loc4_ = _loc6_.magic as Array;
          }
          var _loc8_:int = 0;
-         var _loc7_:int = int(_loc4_.length);
+         var _loc7_:int = 4;
          var _loc12_:Number = 150;
          var _loc5_:int = 0;
          var _loc13_:int = 0;
          _loc8_ = 0;
          while(_loc8_ < _loc7_)
          {
-            _loc5_ = _loc8_ - 1;
-            if(_loc5_ < 0 || _loc5_ >= 0 && _loc4_[_loc5_] > 0)
-            {
-               _loc14_ = new LOL_MagicButton(_loc8_,_loc4_,toMagic,param2,param3);
-               _loc14_.x = _loc8_ * _loc12_;
-               _loc14_.y = 0;
-               param1.addChild(_loc14_);
-               _loc13_ += 1;
-            }
+            _loc14_ = new LOL_MagicButton(_loc8_,_loc4_,toMagic,param2,param3);
+            _loc14_.x = _loc8_ * _loc12_;
+            _loc14_.y = 0;
+            param1.addChild(_loc14_);
+            _loc13_ += 1;
             _loc8_++;
          }
          param1.x = int((GlobalData.$mStageWidth - _loc12_ * _loc13_ + _loc12_) * 0.5);
@@ -340,28 +339,40 @@ package com.meng52.game.ui.panel
          };
          var _eid:String = GlobalData.$tempEquipCurrSelected;
          var _equipData:Object = GlobalData.$userData.my_equips[_eid];
+         if(_equipData == null || _index < 0 || _index >= 4)
+         {
+            return;
+         }
+         var _magic:Array = _equipData.magic == null ? [0,0,0,0] : _equipData.magic as Array;
+         if(_magic == null || _index > 0 && int(_magic[_index - 1]) <= 0)
+         {
+            return;
+         }
+         var _level:int = int(_magic[_index]);
+         if(_level >= int(GlobalData.$mConfig_simple.dust.max[_index]))
+         {
+            return;
+         }
          var _pay:int = int(GlobalData.$mConfig_simple.dust.add_magic[0][_index]);
+         var _magicRules:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var _growthEvery:int = _magicRules == null ? 0 : int(_magicRules.cost_growth_every);
+         if(_growthEvery > 0)
+         {
+            _pay += Math.floor(_level / _growthEvery);
+         }
          var _myDust:int = int(GlobalData.$userData.attrs.dust[_index]);
          var _dustStr:Array = GlobalLanguageStr.getLanguageStr(90197).split("$");
          var _color:uint = uint(LOL_MagicButton.TXT_COLOR[_index]);
          var _str:String = "";
          if(_myDust >= _pay)
          {
-            if(!mStatus_toMagic)
-            {
-               mStatus_toMagic = true;
-               _str = GlobalLanguageStr.getLanguageStr(90202,_pay,_dustStr[_index],GlobalLanguageStr.getLanguageStr(LOL_MagicButton.TXT_STR[_index]));
-               _fun = {
-                  "ok":gotoEquipMagic,
-                  "no":GlobalFunction.functionNull,
-                  "aid":"A_1098_6"
-               };
-               GlobalFunction.popAlert("",Tools.formatLineX(_str,[16777215,_color,_color,_color]),_fun);
-            }
-            else
-            {
-               gotoEquipMagic();
-            }
+            _str = GlobalLanguageStr.getLanguageStr(90202,_pay,_dustStr[_index],"附魔");
+            _fun = {
+               "ok":gotoEquipMagic,
+               "no":GlobalFunction.functionNull,
+               "aid":"A_1098_6"
+            };
+            GlobalFunction.popAlert("",Tools.formatLineX(_str,[16777215,_color,_color,_color]),_fun);
          }
          else
          {
@@ -393,8 +404,6 @@ package com.meng52.game.ui.panel
          }
          var _loc18_:Object = null;
          var _loc16_:Boolean = false;
-         var _loc6_:Equip = new Equip(mCurrEquip.data.id);
-         var _loc14_:int = _loc6_.symp;
          SoundManager.getOnlyExample().playSound("E_9020",1.5);
          var _loc15_:Object = param1["params"];
          var _loc5_:int = int(_loc15_["color"]);
@@ -430,8 +439,7 @@ package com.meng52.game.ui.panel
             mBox_equip.addChildAt(mCurrEquip,0);
          }
          GlobalData.$tempTeamPowerTemp = GlobalFunction.getTeamPower(GlobalData.$userData.team[0]);
-         _loc6_ = new Equip(mCurrEquip.data.id);
-         if(_loc6_.symp != _loc14_)
+         if(mBox_icon != null && mArr_icon != null && mArr_icon.length == 5)
          {
             showSymp();
          }

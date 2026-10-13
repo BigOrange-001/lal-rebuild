@@ -648,7 +648,7 @@ package com.meng52.game.ui.panel
             _lockImg.addEventListener("triggered",onTRIGGERED_lock);
             _uiMain.addChild(_lockImg);
          }
-         var _loc46_:int = int(GlobalData.$mConfig_simple.culture.culture_pith);
+         var _loc46_:int = _avatar.getCultivationDisplayScale();
          mFoster = new LOL_TextField(GlobalLanguageStr.getLanguageStr(90652,_avatar.getPithNum() * _loc46_),180,30);
          mFoster.fontColor = 16764006;
          mFoster.fontSize = 20;
@@ -925,7 +925,7 @@ package com.meng52.game.ui.panel
       {
          var _loc2_:String = null;
          var _loc3_:String = null;
-         var _loc8_:int = int(GlobalData.$mConfig_simple.culture.culture_pith);
+         var _loc8_:int = _avatar.getCultivationDisplayScale();
          var _loc4_:Touch = param1.getTouch(this,"ended");
          var _loc7_:String = _avatar.id.split("|")[0];
          var _loc5_:Object = GlobalData.$userData.avatars[_avatar.id];
@@ -942,6 +942,7 @@ package com.meng52.game.ui.panel
          {
             _loc6_ = int(GlobalData.$mConfig_simple.culture.max_pith);
          }
+         _loc6_ = _avatar.getCultivationCap();
          if(_loc4_)
          {
             if(_avatar)

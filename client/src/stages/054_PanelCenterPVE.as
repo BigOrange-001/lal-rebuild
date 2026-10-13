@@ -318,7 +318,7 @@ package com.meng52.game.ui.screen
             _loc3_ = false;
          }
          var _loc1_:Number = 155;
-         _getAward = GlobalFunction.createButton_normal(GlobalLanguageStr.getLanguageStr(!_starObj.getGift ? 90239 : 20377));
+         _getAward = GlobalFunction.createButton_normal(!_starObj.getGift ? "领取" : "已领取");
          _getAward.enabled = _loc3_;
          _getAward.x = _txtStar.x + _loc4_ + 12;
          _getAward.y = 10;
@@ -367,7 +367,8 @@ package com.meng52.game.ui.screen
             }
             SendServiceAMFFun.send_user_get_pass_battle_gift(reFun,{
                "bid":GlobalData.$tempPVE_battleID,
-               "diff":_loc1_
+               "diff":_loc1_,
+               "actionID":"chapter-gift-" + GlobalData.$tempPVE_battleID + "-" + String(_loc1_) + "-" + String(Math.random())
             });
          };
          ItemBase.soundTriggered();
@@ -378,11 +379,11 @@ package com.meng52.game.ui.screen
          }
          else
          {
-            if(_btn.text == GlobalLanguageStr.getStr(20377))
+            if(_btn.text == "已领取")
             {
                GlobalFunction.popAlert("",GlobalLanguageStr.getStr(90244));
             }
-            if(_btn.text == GlobalLanguageStr.getStr(90239))
+            if(_btn.text == "领取")
             {
                GlobalFunction.popAlert("",GlobalLanguageStr.getStr(90245));
             }
@@ -402,7 +403,7 @@ package com.meng52.game.ui.screen
          {
             _loc7_ = param1.data;
             _loc4_ = int(_loc7_.coin);
-            _loc5_ = _loc4_ - GlobalData.$userData.coin;
+            _loc5_ = _loc7_.chapter_reward != null ? int(_loc7_.chapter_reward.coin) : _loc4_ - GlobalData.$userData.coin;
             _loc3_ = GlobalFunction.getAwardByType("coin",_loc5_);
             _loc2_ = _loc3_.msg;
             if(!GlobalFunction.isVersionedProfileReceipt(param1))
@@ -414,7 +415,7 @@ package com.meng52.game.ui.screen
             GlobalData.$userData.combat_score = _loc7_.combat_score;
             }
             GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
-            this._getAward.text = GlobalLanguageStr.getLanguageStr(20377);
+            this._getAward.text = "已领取";
             this._getAward.enabled = false;
             _loc6_ = "sound03";
             SoundManager.getOnlyExample().playSound(_loc6_);

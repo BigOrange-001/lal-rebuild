@@ -838,7 +838,7 @@ package com.meng52.game.ui.panel
             mAtt_ap = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20025,_loc2_.getDamage(-1,0)),20,4926491,"left",_loc18_ + 20,35,GlobalConfig.FONT_1);
             mAtt_d0 = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20026,_loc2_.getDePh(-1,0)),20,4926491,"left",_loc18_ + 20,35,GlobalConfig.FONT_1);
             mAtt_d1 = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20027,_loc2_.getDeMa(-1,0)),20,4926491,"left",_loc18_ + 20,35,GlobalConfig.FONT_1);
-            _loc23_ = int(GlobalData.$mConfig_simple.culture.culture_pith);
+            _loc23_ = _loc2_.getCultivationDisplayScale();
             mFoster = new LOL_TextField(GlobalLanguageStr.getLanguageStr(90652,_loc2_.getPithNum() * _loc23_),_loc18_ + 50,30);
             mFoster.fontSize = 20;
             mFoster.fontColor = 4926491;
@@ -913,7 +913,7 @@ package com.meng52.game.ui.panel
             mAtt_ap.text = GlobalLanguageStr.getLanguageStr(20025,_loc2_.getDamage(-1,0));
             mAtt_d0.text = GlobalLanguageStr.getLanguageStr(20026,_loc2_.getDePh(-1,0));
             mAtt_d1.text = GlobalLanguageStr.getLanguageStr(20027,_loc2_.getDeMa(-1,0));
-            _loc23_ = int(GlobalData.$mConfig_simple.culture.culture_pith);
+            _loc23_ = _loc2_.getCultivationDisplayScale();
             mFoster.text = GlobalLanguageStr.getLanguageStr(90652,_loc2_.getPithNum() * _loc23_);
             mExp_old = this.mAvatar.getAllExp(-1,true);
             _loc13_ = this.mAvatar.skill0 ? this.mAvatar.skill0.skillSetData.name + "    " + GlobalLanguageStr.getLanguageStr(20079,this.mAvatar.skill0.lv) : GlobalLanguageStr.getLanguageStr(90021);

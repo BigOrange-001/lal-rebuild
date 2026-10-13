@@ -1917,7 +1917,7 @@ package com.meng52.game.global
             {
                _loc3_ = new Avatar(_loc4_);
                _loc3_.setEquips(_loc5_[_loc9_]);
-               _loc3_.setDestinyAndDN();
+               _loc3_.setDestinyAndDN(_loc4_,param1);
                _loc3_.initFightAttr();
                _loc8_ += _loc3_.getPower(_loc9_ == 0,-1,true);
                _loc3_.clear();

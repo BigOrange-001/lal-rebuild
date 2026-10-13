@@ -2,6 +2,7 @@
 from __future__ import annotations
 import copy, json, time
 from pathlib import Path
+from bot_names import bot_name_for_uid
 from player_store import GameplayFault, native_dates
 from gameplay_roster import GameplayRosterEquipment
 
@@ -34,7 +35,7 @@ class GameplaySocial:
 
     def _make_bot(self, source, index):
         uid = str(BOT_UID_START + index + 1)
-        name = str(source.get("name") or f"峡谷旅人 {index + 1}")
+        name = bot_name_for_uid(uid)
         level = max(1, int(source.get("lv", 1)))
         raw_team = source.get("team", [])
         units = []
@@ -61,7 +62,7 @@ class GameplaySocial:
                               "de_ph":0,"de_ma":0,"phase":0,"morph":0,"equips":[]})
         team_ids = [u["id"] for u in units] + [None] * max(0, 6-len(units))
         return {"uid":uid,"name":name,"lv":level,"vip_lv":int(source.get("vip_lv",0)),
-                "login_time":{"$date":int(time.time())},"current_rank":int(source.get("rank",index+1)),
+                "login_time":{"$date":int(self.store.clock.now())},"current_rank":int(source.get("rank",index+1)),
                 "team":[team_ids], "my_equips":{}, "as_equips":[[] for _ in team_ids],
                 "attrs":{"team_num":0,"friend_len":30},"records":{"current_rank":int(source.get("rank",index+1)),"help_suids":{},"help_fuids":{}},
                 "avatars":{u["id"]:copy.deepcopy(u) for u in units}}
@@ -75,7 +76,7 @@ class GameplaySocial:
             "aid": str(hero.get("aid", instance_id)).split("|")[0],
             "buffs": {}, "isme": False, "leader": 1 if slot == 0 else 0,
             "line": int(hero.get("line", 0)), "pos": float(hero.get("pos", slot)),
-            "new_4attrs": {key: int(hero.get(key, 0)) for key in ("hit", "flee", "crit", "tough")},
+            "new_4attrs": {key: int(avatar.get(key, 0)) for key in ("hit", "flee", "crit", "tough")},
         })
         if slot != 0:
             avatar["leader_skill"] = None
@@ -141,7 +142,7 @@ class GameplaySocial:
         if method == "user.del_friend": return self._delete(uid, params)
         if method == "user.unapply_friend": return self._ignore(uid, params)
         if method == "user.get_radio":
-            return native_dates({"self":[],"bugle":[],"sys":[{"rtype":"95018","time":{"$date":int(time.time())}}]})
+            return native_dates({"self":[],"bugle":[],"sys":[{"rtype":"95018","time":{"$date":int(self.store.clock.now())}}]})
         if method == "user.send_bugle_radio":
             self._fail("LocalModeUnavailable", "本地重构模式不提供向其他玩家广播的功能")
         self._fail("NotImplemented", method)

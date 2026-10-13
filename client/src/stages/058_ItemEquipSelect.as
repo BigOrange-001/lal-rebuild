@@ -66,7 +66,9 @@ package com.meng52.game.ui.element
          var _loc7_:Sprite = new Sprite();
          var _loc18_:String = "UI_magic_icon_lv_000";
          var _loc17_:int = 0;
-         var _loc13_:int = int(param2.length);
+         var _loc13_:int = param2 == null ? 0 : int(param2.length);
+         var _loc21_:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var _loc22_:Array = _loc21_ == null ? null : _loc21_.stat_per_level as Array;
          var _loc19_:int = 0;
          var _loc14_:Boolean = false;
          var _loc12_:Boolean = false;
@@ -80,6 +82,10 @@ package com.meng52.game.ui.element
          while(_loc17_ < _loc13_)
          {
             _loc19_ = int(param2[_loc17_]);
+            if(_loc22_ != null && _loc17_ < _loc22_.length)
+            {
+               _loc19_ *= Math.max(0,int(_loc22_[_loc17_]));
+            }
             if(_loc19_ > 0)
             {
                _loc20_ = GlobalFunction.createImage(_loc18_ + _loc17_);

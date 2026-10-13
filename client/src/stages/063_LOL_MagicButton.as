@@ -51,7 +51,7 @@ package com.meng52.game.ui.element
       {
          super();
          mIndex = param1;
-         mMagic = param2;
+         mMagic = param2 == null ? [0,0,0,0] : param2;
          mFun = param3;
          mUpdate = param4;
          mUpdateID = param5;
@@ -60,40 +60,58 @@ package com.meng52.game.ui.element
       
       private function init() : void
       {
-         var _loc3_:String = GlobalLanguageStr.getLanguageStr(98140 + mIndex);
-         var _loc2_:Number = 140;
-         mTxt_attr = GlobalTextStyle.getTextField(_loc3_ + "+" + mMagic[mIndex],20,TXT_COLOR[mIndex],"center",140,35);
+         var _loc1_:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var _loc2_:Array = _loc1_ == null ? null : _loc1_.stat_per_level as Array;
+         var _loc3_:Array = _loc1_ == null ? null : _loc1_.names as Array;
+         var _loc4_:int = Math.max(0,int(mMagic[mIndex]));
+         var _loc5_:int = _loc2_ == null || mIndex >= _loc2_.length ? 1 : Math.max(0,int(_loc2_[mIndex]));
+         var _loc6_:String = _loc3_ == null || mIndex >= _loc3_.length ? GlobalLanguageStr.getLanguageStr(98140 + mIndex) : String(_loc3_[mIndex]);
+         var _loc7_:Array = GlobalData.$mConfig_simple.dust.max as Array;
+         var _loc8_:int = _loc7_ == null || mIndex >= _loc7_.length ? 100 : int(_loc7_[mIndex]);
+         var _loc9_:Boolean = mIndex > 0 && int(mMagic[mIndex - 1]) <= 0;
+         var _loc10_:Boolean = _loc4_ >= _loc8_;
+         var _loc11_:int = int(GlobalData.$mConfig_simple.dust.add_magic[0][mIndex]);
+         var _loc12_:int = _loc1_ == null ? 0 : int(_loc1_.cost_growth_every);
+         if(_loc12_ > 0)
+         {
+            _loc11_ += Math.floor(_loc4_ / _loc12_);
+         }
+         mTxt_attr = GlobalTextStyle.getTextField(_loc6_ + " Lv." + _loc4_,18,TXT_COLOR[mIndex],"center",140,30);
          addChild(mTxt_attr);
-         var _loc1_:int = int(GlobalData.$mConfig_simple.dust.max[mIndex]);
-         mTxt_max = GlobalTextStyle.getTextField("(MAX" + _loc1_ + ")",20,16763955,"center",140,35);
+         mTxt_info = GlobalTextStyle.getTextField((mIndex % 2 == 0 ? "生命 +" : "攻击 +") + (_loc4_ * _loc5_),18,16777215,"center",140,30);
+         mTxt_info.y = 28;
+         addChild(mTxt_info);
+         mTxt_max = GlobalTextStyle.getTextField(_loc10_ ? "已达上限" : "等级上限 " + _loc8_,16,16763955,"center",140,30);
+         mTxt_max.y = 55;
          addChild(mTxt_max);
-         mBtn = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(TXT_STR[mIndex]),135,65,"UI_btn_normalFun_0000");
+         mBtn = new LOL_Scale9Button(_loc10_ ? "已满级" : _loc9_ ? "未解锁" : "附魔",135,65,"UI_btn_normalFun_0000");
          if(MainConfig.$isEnglish)
          {
             mBtn.fontSize = 18;
          }
          mBtn.shadowFilter();
-         mBtn.addEventListener("triggered",onTRIGGERED);
+         if(_loc9_ || _loc10_)
+         {
+            mBtn.touchable = false;
+            mBtn.alpha = 0.5;
+         }
+         else
+         {
+            mBtn.addEventListener("triggered",onTRIGGERED);
+         }
          addChild(mBtn);
+         mBtn.x = -mBtn.width * 0.5;
+         mBtn.y = 82;
          mImg_icon = GlobalFunction.createImage("UI_magic_money_000" + mIndex);
          mImg_icon.scaleX = mImg_icon.scaleY = 0.6;
-         mTxt_num = GlobalTextStyle.getTextField(GlobalData.$mConfig_simple.dust.add_magic[0][mIndex] + "",20,TXT_COLOR[mIndex],"left",42,35);
-         var _loc4_:LOL_MutilTextFieldIcon = new LOL_MutilTextFieldIcon(GlobalLanguageStr.getLanguageStr(90493)," " + GlobalData.$mConfig_simple.dust.add_magic[0][mIndex],"UI_magic_money_000" + mIndex,TXT_COLOR[mIndex],TXT_COLOR[mIndex]);
-         _loc4_.iconScale = 0.6;
-         if(MainConfig.$isEA)
-         {
-            _loc4_.fontSize = 16;
-         }
-         addChild(_loc4_);
-         mTxt_attr.x = mTxt_max.x = -_loc2_ * 0.5;
-         mBtn.x = -mBtn.width * 0.5;
-         mImg_icon.x = -mImg_icon.width;
-         _loc4_.x = MainConfig.$isEA ? -mImg_icon.width - 48 : -mImg_icon.width - 30;
-         _loc4_.y = mBtn.y + mBtn.height - 10 + 67;
-         mTxt_max.y = 30;
-         mBtn.y = mTxt_max.y + 35 - 10;
-         mImg_icon.y = mBtn.y + mBtn.height - 10 + 12;
-         mTxt_num.y = mImg_icon.y;
+         mImg_icon.x = -54;
+         mImg_icon.y = 154;
+         addChild(mImg_icon);
+         mTxt_num = GlobalTextStyle.getTextField("粉尘 " + _loc11_,18,TXT_COLOR[mIndex],"left",105,30);
+         mTxt_num.x = -20;
+         mTxt_num.y = 156;
+         addChild(mTxt_num);
+         mTxt_attr.x = mTxt_info.x = mTxt_max.x = -70;
          addEventListener("removedFromStage",onREMOVED_FROM_STAGE);
          if(mUpdate && mUpdateID == mIndex)
          {

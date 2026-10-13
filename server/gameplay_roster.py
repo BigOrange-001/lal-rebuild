@@ -11,6 +11,10 @@ from typing import Any
 from player_store import GameplayFault
 from gameplay_common import grant_reward, ensure_hero_acquirable, skin_acquisition_blocked_ids, equipment_exclusive_ids
 from pve_modes import exploration_stages
+from equipment_magic import (
+    stat_bonus as magic_stat_bonus, symp_bonuses as magic_symp_bonuses,
+    upgrade_cost as magic_upgrade_cost,
+)
 from equipment_growth_v2 import (
     alchemy_upgrade_steps as equipment_alchemy_upgrade_steps,
     effective_cap as equipment_effective_cap,
@@ -21,6 +25,19 @@ from equipment_growth_v2 import (
     upgrade_result as equipment_upgrade_result,
     wash_roll as equipment_wash_roll,
     wash_stats as equipment_wash_stats,
+)
+from cultivation_rules import (
+    SCHEMA as WEIGHTED_CULTURE_SCHEMA,
+    active as weighted_culture_active,
+    actual_material_gain as culture_actual_material_gain,
+    actual_to_legacy_raw as culture_actual_to_legacy_raw,
+    cap as weighted_culture_cap,
+    clamp_gain as clamp_weighted_culture_gain,
+    migrate_hero as migrate_weighted_culture_hero,
+    normalize_profile as normalize_culture_profile,
+    roll as roll_weighted_culture,
+    used as weighted_culture_used,
+    weighted_feed as feed_weighted_culture,
 )
 
 class GameplayRosterEquipment:
@@ -133,6 +150,7 @@ class GameplayRosterEquipment:
         key = f"{method}:{action}" if isinstance(action, (str, int)) else None
         def mutate(profile):
             self._migrate_hero_level_caps(profile)
+            normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
             self._normalize_profile_equips(profile)
             result = change(profile) or {}
             self._normalize_profile_equips(profile)
@@ -154,6 +172,7 @@ class GameplayRosterEquipment:
             # run the normal roster-cap migration.
             if method != "user.morph":
                 self._migrate_hero_level_caps(profile)
+            normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
             self._normalize_profile_equips(profile)
             result = change(profile)
             self._normalize_profile_equips(profile)
@@ -426,10 +445,9 @@ class GameplayRosterEquipment:
                 return True
         return False
 
-    @staticmethod
-    def _hero_is_in_active_pve(p, hero_id):
+    def _hero_is_in_active_pve(self, p, hero_id):
         """Check the exact owned instance in a live legacy mainline intent."""
-        now = int(time.time())
+        now = self.store.clock.now()
         pending_pve = p.get("pending_pve", {})
         if isinstance(pending_pve, dict):
             for pending in pending_pve.values():
@@ -470,6 +488,8 @@ class GameplayRosterEquipment:
             self._fail("HeroInDestiny", "Remove the hero from its destiny node first")
 
     def _culture_cap(self, hero):
+        if weighted_culture_active(self.simple, hero):
+            return weighted_culture_cap(hero, self.simple)
         culture = self.simple.get("culture", {}) if isinstance(self.simple, dict) else {}
         base = max(0, int(culture.get("max_pith_base", 0)))
         absolute = max(0, int(culture.get("max_pith", base)))
@@ -477,6 +497,8 @@ class GameplayRosterEquipment:
         return min(absolute, base + bonus)
 
     def _culture_pith(self, hero):
+        if weighted_culture_active(self.simple, hero):
+            return weighted_culture_used(hero, self.simple)
         return sum(max(0, int(hero.get(key, 0) or 0)) for key in ("hp", "ap", "de_ph", "de_ma"))
 
     def _clamp_culture_roll(self, hero, roll):
@@ -485,6 +507,8 @@ class GameplayRosterEquipment:
         Existing over-cap profiles are preserved; no old stat is reduced.
         Stat insertion order matches the client display/save field order.
         """
+        if weighted_culture_active(self.simple, hero):
+            return clamp_weighted_culture_gain(hero, roll, self.simple)
         cap = self._culture_cap(hero)
         remaining = max(0, cap - self._culture_pith(hero))
         amounts = {}
@@ -511,6 +535,38 @@ class GameplayRosterEquipment:
         Values stored on Avatar are raw points; culture_pith is display scale.
         """
         keys = ("hp", "ap", "de_ph", "de_ma")
+        if weighted_culture_active(self.simple, target):
+            sources = []
+            for material in materials:
+                aid = str(material.get("aid", "")).split("|", 1)[0]
+                row = self.heroes.get(aid)
+                if not isinstance(row, dict):
+                    self._fail("InvalidMaterials", "Cultivation material has no avatar configuration")
+                sources.append((material, row))
+            feed_weighted_culture(target, sources, self.simple)
+            return {key: target[key] for key in keys}
+        # Old 2-4-star targets retain raw-point allocation. A new weighted
+        # material holds actual stat gains, so convert it conservatively to
+        # this target's old raw-point scale before the original two-pass rule.
+        if any(material.get("culture_schema") == WEIGHTED_CULTURE_SCHEMA for material in materials):
+            target_aid = str(target.get("aid", "")).split("|", 1)[0]
+            target_row = self.heroes.get(target_aid)
+            if not isinstance(target_row, dict):
+                self._fail("InvalidTarget", "Cultivation target has no avatar configuration")
+            converted = []
+            for material in materials:
+                if material.get("culture_schema") == WEIGHTED_CULTURE_SCHEMA:
+                    source_aid = str(material.get("aid", "")).split("|", 1)[0]
+                    source_row = self.heroes.get(source_aid)
+                    if not isinstance(source_row, dict):
+                        self._fail("InvalidMaterials", "Cultivation material has no avatar configuration")
+                    actual = culture_actual_material_gain(material, source_row, self.simple)
+                    item = dict(material)
+                    item.update(culture_actual_to_legacy_raw(actual, target_row, self.simple))
+                    converted.append(item)
+                else:
+                    converted.append(material)
+            materials = converted
         totals = [sum(max(0, int(material.get(key, 0) or 0)) for material in materials)
                   for key in keys]
         culture = self.simple.get("culture", {}) if isinstance(self.simple, dict) else {}
@@ -758,8 +814,15 @@ class GameplayRosterEquipment:
             _, hero = self._hero(p, pending.get("aid", pending.get("eqid")))
             rolled = pending.get("rolled", pending.get("save_status", {}))
             # Historical pending rolls were not capped. Apply only their
-            # remaining capacity while leaving all already-owned stats intact.
-            accepted = self._clamp_culture_roll(hero, rolled if isinstance(rolled, dict) else {})
+            # already-paid incremental stat gain once, even if the new cap is
+            # below the migrated old balance. New rolls obey remaining room.
+            if (weighted_culture_active(self.simple, hero)
+                    and pending.get("schema") == WEIGHTED_CULTURE_SCHEMA
+                    and isinstance(pending.get("legacy_rolled_raw"), dict)):
+                accepted = {key: max(0, int(rolled.get(key, 0) or 0))
+                            for key in ("hp", "ap", "de_ph", "de_ma")}
+            else:
+                accepted = self._clamp_culture_roll(hero, rolled if isinstance(rolled, dict) else {})
             for key, amount in accepted.items():
                 hero[key] = max(0, int(hero.get(key, 0) or 0)) + amount
             # Native callback iterates param.data and merges these stat keys into the hero.
@@ -782,6 +845,9 @@ class GameplayRosterEquipment:
 
     def _get_newzone_ranks(self, uid):
         """Return local NPC leaderboards in PanelActivityRankList's [uid,name,vip,score] schema."""
+        from gameplay_competition import GameplayCompetition
+        from bot_names import bot_name_for_uid
+
         profile = self._profile(uid)
         competition_path = __import__("pathlib").Path(__file__).resolve().parents[1] / "config/reconstruction/competition-config.json"
         competition = json.loads(competition_path.read_text(encoding="utf-8")) if competition_path.exists() else {}
@@ -790,34 +856,35 @@ class GameplayRosterEquipment:
         player_uid = str(profile.get("uid", uid))
         attrs = profile.get("attrs", {})
         records = profile.get("records", {})
+        competition_power = GameplayCompetition(self.store, self.full_config)
+        bot_powers = {}
 
         def player_power():
-            total = 0
             team = profile.get("team", [])
             selected = team[0] if isinstance(team, list) and team and isinstance(team[0], list) else []
-            hero_ids = [hero_id for hero_id in selected if isinstance(hero_id, str) and hero_id]
-            if not hero_ids:
-                hero_ids = list(profile.get("avatars", {}))
-            for hero_id in hero_ids:
-                try:
-                    stats = self.battle_attributes(profile, hero_id)
-                    total += sum(int(stats.get(k, 0)) for k in ("hp", "ap", "de_ph", "de_ma"))
-                except (GameplayFault, TypeError, ValueError):
-                    continue
-            return total
+            if not selected:
+                return 0
+            # Rank-list power must use the same owned lineup and native power
+            # calculation as arena previews, including gear, DN, skills and
+            # captain/talent multipliers. Keep original slots: only slot zero
+            # receives the leader skill in Avatar.getTeamPower.
+            from battle_engine import serialize_player_team
+            submitted = [[iid, slot % 3, 0.2] if isinstance(iid, str) and iid else None
+                         for slot, iid in enumerate(selected[:6])]
+            try:
+                units = serialize_player_team(self.full_config.get("cfg", self.full_config),
+                                              profile, 0, submitted, self.battle_attributes)
+            except (GameplayFault, TypeError, ValueError):
+                return 0
+            return competition_power._team_power(units)
 
         def bot_power(bot):
-            total = 0
-            for member in bot.get("team", []):
-                if not isinstance(member, (list, tuple)) or not member:
-                    continue
-                row = self.heroes.get(str(member[0]), {})
-                pl = row.get("pl", [])
-                if len(pl) < 8:
-                    continue
-                level = max(1, int(member[1] if len(member) > 1 else bot.get("lv", 1)))
-                total += sum(int(float(pl[base]) + float(pl[base + 1]) * (level - 1)) for base in (0, 2, 4, 6))
-            return total
+            bot_uid = str(bot.get("uid", ""))
+            if bot_uid not in bot_powers:
+                # Arena previews and fights apply authored gear, advancement
+                # and stable NPC progression before evaluating native power.
+                bot_powers[bot_uid] = competition_power._team_power(competition_power._bot_units(bot))
+            return bot_powers[bot_uid]
 
         def score_for(kind, level, rank=0, bot=None):
             key = str(kind).lower()
@@ -843,7 +910,8 @@ class GameplayRosterEquipment:
             entries = []
             for idx, bot in enumerate(bots):
                 level = int(bot.get("lv", 1))
-                entries.append([str(bot.get("uid", f"localrank_{idx+1:03d}")), str(bot.get("name", f"本地对手 {idx+1}")), int(bot.get("vip_lv", 0)), score_for(rank_id, level, int(bot.get("rank", idx+1)), bot)])
+                bot_uid = str(bot.get("uid", f"localrank_{idx+1:03d}"))
+                entries.append([bot_uid, bot_name_for_uid(bot_uid), int(bot.get("vip_lv", 0)), score_for(rank_id, level, int(bot.get("rank", idx+1)), bot)])
             level = int(profile.get("lv", 1))
             entries.append([player_uid, name, int(profile.get("vip_lv", 0)), score_for(rank_id, level)])
             entries.sort(key=lambda row: (-int(row[3]), str(row[0])))
@@ -1018,15 +1086,21 @@ class GameplayRosterEquipment:
             magic = list(item.get("magic") or [0, 0, 0, 0])
             magic = (magic + [0, 0, 0, 0])[:4]
             if int(magic[color]) >= int(caps[color]): self._fail("MagicAtMaximum", "This equipment magic stat is already at maximum")
+            if color > 0 and int(magic[color - 1]) <= 0:
+                self._fail("MagicLocked", "Upgrade the preceding enchantment tier first")
             dust = p.setdefault("attrs", {}).setdefault("dust", [0, 0, 0, 0])
             if not isinstance(dust, list): dust = [int(dust), 0, 0, 0]; p["attrs"]["dust"] = dust
             while len(dust) < 4: dust.append(0)
-            cost = max(0, int(costs[color]))
+            cost = magic_upgrade_cost(self.simple, color, int(magic[color]))
             if int(dust[color]) < cost: self._fail("InsufficientResource", "Not enough dust")
             dust[color] = int(dust[color]) - cost
             magic[color] = int(magic[color]) + 1
             item["magic"] = magic
-            item.setdefault("symp", -1)
+            # The native center wheel has four elemental runes plus an
+            # unassigned question mark. Reveal one on the first successful
+            # enchantment and retain it for all later upgrades/replays.
+            if item.get("symp", -1) in (None, -1):
+                item["symp"] = random.randrange(4)
             return copy.deepcopy(item)
         if m == "user.wager_avatar":
             kind, times = x.get("wager_type", "coin"), self._num(x.get("times", 1), "times", 1, 10)
@@ -1045,7 +1119,7 @@ class GameplayRosterEquipment:
             price_index = (0 if times == 1 else 1) if kind == "coin" else (2 if times == 1 else 3)
             price = 0 if free else max(0, int(wager_cfg[price_index]))
             if p.get(kind, 0) < price: self._fail("InsufficientResource", f"Not enough {kind}")
-            now = int(time.time())
+            now = self.store.clock.now()
             if free:
                 attrs = p.setdefault("attrs", {})
                 records = p.setdefault("records", {})
@@ -1277,6 +1351,10 @@ class GameplayRosterEquipment:
                 total_exp, self._hero_level_cap(next_aid, replacement), next_aid, promoted_rate
             )
             replacement.update({"id": promoted_id, "aid": promoted_id})
+            # A 4->5 promotion crosses into weighted cultivation. Convert its
+            # carried raw points using the promoted template once; an already
+            # weighted 5->6 hero keeps its actual gains unchanged.
+            migrate_weighted_culture_hero(replacement, promoted_row, self.simple)
             p["avatars"][promoted_id] = replacement
             del p["avatars"][tid]
             for hid in ids: del p["avatars"][hid]
@@ -1333,16 +1411,23 @@ class GameplayRosterEquipment:
                 self._fail("MaxCulture", "Hero cultivation points are already at the configured maximum")
             spent = {kind: self._num(prices[str(n)], "culture price", 0, 10_000_000)}
             self._cost(p, spent)
-            raw_roll = {key: 0 for key in ("hp", "ap", "de_ph", "de_ma")}
-            for _ in range(n):
-                key = self.rng.choice(tuple(raw_roll))
-                raw_roll[key] += self.rng.randint(1, 3)
-            rolled = self._clamp_culture_roll(hero, raw_roll)
+            if weighted_culture_active(self.simple, hero):
+                rolled = roll_weighted_culture(hero, n, self.simple, self.rng)
+            else:
+                raw_roll = {key: 0 for key in ("hp", "ap", "de_ph", "de_ma")}
+                for _ in range(n):
+                    key = self.rng.choice(tuple(raw_roll))
+                    raw_roll[key] += self.rng.randint(1, 3)
+                rolled = self._clamp_culture_roll(hero, raw_roll)
             attrs["avatar_culture"] = {
                 "eqid": tid, "aid": tid, "num": n, "type": kind,
                 "save_status": rolled, "rolled": rolled, "spent": spent,
             }
+            if weighted_culture_active(self.simple, hero):
+                attrs["avatar_culture"]["schema"] = WEIGHTED_CULTURE_SCHEMA
             culture_view = {"aid": tid, "save_status": rolled}
+            if weighted_culture_active(self.simple, hero):
+                culture_view["schema"] = WEIGHTED_CULTURE_SCHEMA
             return {
                 "avatar_culture": culture_view, "coin": p.get("coin", 0),
                 "culture_book": attrs.get("culture_book", 0),
@@ -1414,10 +1499,23 @@ class GameplayRosterEquipment:
                 window_minutes = float(window_minutes)
             except (TypeError, ValueError):
                 window_minutes = 10080
-            if window_minutes <= 0 or time.time() > float(chance) + window_minutes * 60:
+            if window_minutes <= 0 or self.store.clock.now() > float(chance) + window_minutes * 60:
                 self._fail("MorphUnavailable", "Transformation opportunity has expired")
 
             culture_cfg = self.simple.get("culture", {}) if isinstance(self.simple, dict) else {}
+            if weighted_culture_active(self.simple, hero):
+                # Morph keeps its small AP reward but never raises the new
+                # phase-only capacity through the obsolete pith_max field.
+                requested = max(0, int(self.rules.get("morph_pith_bonus", 2)))
+                gained = clamp_weighted_culture_gain(hero, {"ap": requested}, self.simple)["ap"]
+                if gained <= 0:
+                    self._fail("MaxCulture", "Cultivation is already at the maximum")
+                self._cost(p, self.rules.get("morph_cost", {}))
+                hero["morph"] = 1
+                hero["ap"] = max(0, int(hero.get("ap", 0) or 0)) + gained
+                attrs_morph["chance"] = 0
+                return {"avatar": copy.deepcopy(hero), "attr_morph": copy.deepcopy(attrs_morph),
+                        "coin": p.get("coin", 0), "dust": copy.deepcopy(attrs.get("dust", [0, 0, 0, 0]))}
             absolute_pith = max(0, int(culture_cfg.get("max_pith", 30))) if isinstance(culture_cfg, dict) else 30
             base_pith = max(0, int(culture_cfg.get("max_pith_base", 10))) if isinstance(culture_cfg, dict) else 10
             old_pith_bonus = max(0, int(hero.get("pith_max", 0) or 0))
@@ -1797,12 +1895,13 @@ class GameplayRosterEquipment:
         )
         if curve_active:
             self._migrate_hero_level_caps(profile)
+        culture_changed = normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
         equipment_changed = self._normalize_profile_equips(profile)
         after = (
             profile.get("attrs", {}).get("avatar_exp_curve_version"),
             profile.get("attrs", {}).get("roster_caps_version"),
         )
-        return before != after or equipment_changed
+        return before != after or culture_changed or equipment_changed
 
     def _legacy_exp_requirement(self, aid, level, exp_rate=None):
         """Old native polynomial cumulative XP, used for migration/fallback."""
@@ -1882,6 +1981,37 @@ class GameplayRosterEquipment:
             level += 1
         return level, amount - self._exp_requirement(aid, level, exp_rate)
 
+    def _apply_owned_guild_research(self, profile, stats):
+        """Match Avatar's per-stat guild research after other flat bonuses."""
+        guild_table = (self.full_config.get("cfg", {}).get("association_simple", {})
+                       .get("guild_graduate", {}).get("guild_graduate_skill", {}))
+        learned = profile.get("attrs", {}).get("guild_graduate_skill", {})
+        if not isinstance(guild_table, dict) or not isinstance(learned, dict):
+            return
+        for skill_id, raw_level in learned.items():
+            definition = guild_table.get(str(skill_id))
+            if not isinstance(definition, dict):
+                continue
+            try:
+                level = max(0, int(raw_level))
+            except (TypeError, ValueError):
+                continue
+            level_row = definition.get("level", {}).get(str(level)) if level > 0 else None
+            if not isinstance(level_row, dict):
+                continue
+            try:
+                percent = max(0.0, min(100.0, float(level_row.get("value", 0))))
+            except (TypeError, ValueError):
+                continue
+            targets = definition.get("effect_attributes", [])
+            if isinstance(targets, str):
+                targets = [targets]
+            if not isinstance(targets, list):
+                continue
+            for target_stat in targets:
+                if target_stat in ("hp", "ap", "de_ph", "de_ma"):
+                    stats[target_stat] = self._native_tools_to_int(stats[target_stat] * (1 + percent / 100.0))
+
     def _destiny_team_bonuses(self, profile):
         """Resolve the native DN tree's flat team-wide stat bonuses.
 
@@ -1935,11 +2065,12 @@ class GameplayRosterEquipment:
             # client prefers that snapshot over the current roster instance.
             if len(node) > 2 and isinstance(node[2], (list, tuple)) and len(node[2]) >= 6:
                 try:
-                    bound.update({
-                        "lv": int(node[2][0]), "hp": int(node[2][1]),
-                        "ap": int(node[2][2]), "de_ph": int(node[2][3]),
-                        "de_ma": int(node[2][4]), "phase": int(node[2][5]),
-                    })
+                    snapshot = {"lv": int(node[2][0]), "phase": int(node[2][5])}
+                    if not (weighted_culture_active(self.simple, bound)
+                            and bound.get("culture_schema") == WEIGHTED_CULTURE_SCHEMA):
+                        snapshot.update({"hp": int(node[2][1]), "ap": int(node[2][2]),
+                                         "de_ph": int(node[2][3]), "de_ma": int(node[2][4])})
+                    bound.update(snapshot)
                 except (TypeError, ValueError):
                     continue
             aid = str(bound.get("aid", node[1])).split("|")[0]
@@ -1972,15 +2103,22 @@ class GameplayRosterEquipment:
                     ap_base = int(ap_base * phase_rate)
                     de_ph_base = int(de_ph_base * phase_rate)
                     de_ma_base = int(de_ma_base * phase_rate)
-                base_stats = {
-                    "hp": int(hp_base) + int(int(bound.get("hp", 0) or 0) * float(pl[1]) * growth_rate),
-                    "ap": int(ap_base) + int(int(bound.get("ap", 0) or 0) * float(pl[3]) * growth_rate),
-                    "de_ph": int(de_ph_base) + int(int(bound.get("de_ph", 0) or 0) * float(pl[5]) * growth_rate),
-                    "de_ma": int(de_ma_base) + int(int(bound.get("de_ma", 0) or 0) * float(pl[7]) * growth_rate),
-                }
+                weighted_bound = (weighted_culture_active(self.simple, bound)
+                                  and bound.get("culture_schema") == WEIGHTED_CULTURE_SCHEMA)
+                base_stats = {}
+                for field, base_value, slope in (("hp", hp_base, pl[1]), ("ap", ap_base, pl[3]),
+                                                  ("de_ph", de_ph_base, pl[5]), ("de_ma", de_ma_base, pl[7])):
+                    raw = int(bound.get(field, 0) or 0)
+                    gain = raw if weighted_bound else int(raw * float(slope) * growth_rate)
+                    base_stats[field] = int(base_value) + gain
             except (TypeError, ValueError):
                 continue
 
+            # PanelDetailDN constructs an owned Avatar for the bound node.
+            # Its bare getters apply that hero's guild research before the
+            # node percentage is floored. The receiving team applies research
+            # again after all DN flat values have been added.
+            self._apply_owned_guild_research(profile, base_stats)
             attribute = str(config[5])
             targets = base_stats.keys() if attribute == "all" else (attribute,)
             for stat in targets:
@@ -2028,9 +2166,12 @@ class GameplayRosterEquipment:
             growth_rate = 0.1
         if growth_rate <= 0:
             growth_rate = 0.1
+        weighted_hero = (weighted_culture_active(self.simple, hero)
+                         and hero.get("culture_schema") == WEIGHTED_CULTURE_SCHEMA)
         for stat_key, slope_index in (("hp", 1), ("ap", 3), ("de_ph", 5), ("de_ma", 7)):
             raw_points = max(0, int(hero.get(stat_key, 0) or 0))
-            stats[stat_key] += int(float(pl[slope_index]) * raw_points * growth_rate)
+            stats[stat_key] += (raw_points if weighted_hero
+                                else int(float(pl[slope_index]) * raw_points * growth_rate))
         # Native Avatar.initFightAttr builds ap/hp/defense from its level,
         # cultivation, equipment, destiny and DN getters. Talent effects are
         # percentage modifiers applied by Avatar.checkTalent during combat,
@@ -2050,10 +2191,14 @@ class GameplayRosterEquipment:
         equip_wash = equip_simple.get("equipwash", [])
         slot = next((i for squad in profile.get("team", []) for i, member in enumerate(squad) if member == key), None)
         book_skill = None
+        symp_counts = [0, 0, 0, 0]
         if slot is not None and slot < len(groups):
             for eqid in groups[slot] or []:
                 if not eqid or eqid not in equips: continue
                 inst = equips[eqid]; ecfg = self.equipment.get(inst.get("eid"), {})
+                symp = inst.get("symp", -1)
+                if type(symp) is int and 0 <= symp < 4:
+                    symp_counts[symp] += 1
                 vals = ecfg.get("pl", [])
                 equipment_level = max(1, int(inst.get("lv", 1)))
                 halo = inst.get("halo", {}) if isinstance(inst.get("halo"), dict) else {}
@@ -2067,7 +2212,7 @@ class GameplayRosterEquipment:
                         if idx in (0, 1):
                             magic = inst.get("magic", [0, 0, 0, 0])
                             if isinstance(magic, list) and len(magic) >= 4:
-                                base += int(magic[0] + magic[2]) if idx == 0 else int(magic[1] + magic[3])
+                                base += magic_stat_bonus(self.simple, magic)[k]
                         stats[k] += base
                 wash = equipment_wash_stats(inst, ecfg, equip_simple)
                 for stat_key in ("hit", "flee", "crit", "tough"):
@@ -2078,6 +2223,8 @@ class GameplayRosterEquipment:
                     book_skill = self._skill(skill_id, book_slv)
                     book_skill["slv"] = book_slv
                     break
+        for stat_key, amount in magic_symp_bonuses(self.simple, symp_counts).items():
+            stats[stat_key] += amount
         for k in ("hp", "ap", "de_ph", "de_ma"): stats[k] = max(0, self._equip_to_int(stats[k]))
         dn_bonus = self._destiny_team_bonuses(profile)
         for k in ("hp", "ap", "de_ph", "de_ma"):
@@ -2086,36 +2233,10 @@ class GameplayRosterEquipment:
         # `@0%` template. The recovered production effect code is absent, so
         # the local guild table records percentage points and this adapter
         # applies the same value as a bounded percentage to battle stats.
-        guild_table = (self.full_config.get("cfg", {}).get("association_simple", {})
-                       .get("guild_graduate", {}).get("guild_graduate_skill", {}))
-        learned_guild = profile.get("attrs", {}).get("guild_graduate_skill", {})
-        if isinstance(guild_table, dict) and isinstance(learned_guild, dict):
-            for skill_id, raw_level in learned_guild.items():
-                definition = guild_table.get(str(skill_id))
-                if not isinstance(definition, dict):
-                    continue
-                try:
-                    level = max(0, int(raw_level))
-                except (TypeError, ValueError):
-                    continue
-                level_row = definition.get("level", {}).get(str(level)) if level > 0 else None
-                if not isinstance(level_row, dict):
-                    continue
-                try:
-                    percent = max(0.0, min(100.0, float(level_row.get("value", 0))))
-                except (TypeError, ValueError):
-                    continue
-                targets = definition.get("effect_attributes", [])
-                if isinstance(targets, str):
-                    targets = [targets]
-                if not isinstance(targets, list):
-                    continue
-                for target_stat in targets:
-                    if target_stat in ("hp", "ap", "de_ph", "de_ma"):
-                        stats[target_stat] = self._native_tools_to_int(stats[target_stat] * (1 + percent / 100.0))
+        self._apply_owned_guild_research(profile, stats)
         skill0 = self._skill(pl[10], max(1, int(hero.get("slv", 1))))
         skill1 = self._skill(pl[11]); skillb = self._skill(pl[13]) if len(pl) > 13 else None
-        return {"aid": aid, **stats, "hp_max": stats["hp"], "sign_type": int(tl[0]), "action_type": int(tl[1]), "damage_type": int(tl[2]), "skill": skill0, "leader_skill": skill1, "book_skill": book_skill, "skillB": skillb, "talent": talent_id, "phase": phase, "morph": int(hero.get("morph", 0)), "lv": lv, "slv": int(hero.get("slv", 1)), "tpl": [int(tl[i]) for i in (0, 1, 2)] + [stats["speed"], stats["range"]]}
+        return {"aid": aid, **stats, "hp_max": stats["hp"], "sign_type": int(tl[0]), "action_type": int(tl[1]), "damage_type": int(tl[2]), "skill": skill0, "leader_skill": skill1, "book_skill": book_skill, "skillB": skillb, "talent": talent_id, "phase": phase, "morph": int(hero.get("morph", 0)), "lv": lv, "slv": int(hero.get("slv", 1)), "culture_schema": hero.get("culture_schema") if weighted_hero else None, "tpl": [int(tl[i]) for i in (0, 1, 2)] + [stats["speed"], stats["range"]]}
 
     def _skill(self, skill_id, level=1):
         row = self.skills.get(skill_id)

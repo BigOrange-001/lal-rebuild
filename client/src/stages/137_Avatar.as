@@ -52,22 +52,57 @@ package com.meng52.game.module.avatar
          if(!definitions) return;
          for(var side:int=1;side<=2;side++)
          {
-            var units:Vector.<Avatar> = map.getAliveList(side) as Vector.<Avatar>;
+            var units:Vector.<Avatar> = side == 1 ? map.team1List : map.team2List;
+            if(!units) continue;
+            for each(var original:Avatar in units) if(original && original.abilityState) delete original.abilityState.bond;
             for each(var bond:Object in definitions)
             {
+               if(!(bond.families is Array) || bond.families.length == 0) continue;
                var families:Array = [];
                var members:Array = [];
                for each(var unit:Avatar in units)
                {
-                  if(unit.getStar()!=5 || unit.getType()!=1 || unit.isManualSummonUnit) continue;
+                  if(!unit || unit.getStar()!=5 || unit.getType()!=1 || unit.isManualSummonUnit) continue;
                   var family:String = String(unit.id).split("|")[0].split("_").slice(0,2).join("_");
-                  if(bond.families.indexOf(family)<0) continue;
+                  if(bond.families.indexOf(family)<0 || families.indexOf(family)>=0) continue;
                   members.push(unit);
-                  if(families.indexOf(family)<0) families.push(family);
+                  families.push(family);
                }
-               if(families.length>=int(bond.required)) for each(unit in members) unit.abilityState.bond=String(bond.id);
+               if(families.length==bond.families.length) for each(unit in members) unit.abilityState.bond=String(bond.id);
             }
          }
+      }
+
+      public function getPurpleBondIsActive() : Boolean
+      {
+         if(getStar()!=5 || getType()!=1 || !GlobalData.$userData || !GlobalData.$userData.team || !GlobalData.$userData.avatars) return false;
+         var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
+         if(!definitions) return false;
+         var family:String = String(id).split("|")[0].split("_").slice(0,2).join("_");
+         var teamIndex:int = GlobalData.$userData.attrs && GlobalData.$userData.attrs.team_num != null ? int(GlobalData.$userData.attrs.team_num) : 0;
+         var teams:Array = GlobalData.$userData.team as Array;
+         var lineup:Array = teams && teamIndex >= 0 && teamIndex < teams.length ? teams[teamIndex] as Array : null;
+         if(!lineup) return false;
+         for each(var bond:Object in definitions)
+         {
+            if(!(bond.families is Array) || bond.families.indexOf(family)<0) continue;
+            var found:Array = [];
+            var selfInLineup:Boolean = false;
+            for each(var instanceId:Object in lineup)
+            {
+               var instance:String = String(instanceId);
+               var hero:Object = GlobalData.$userData.avatars[instance];
+               if(!hero) continue;
+               var aid:String = String(hero.aid != null ? hero.aid : instance).split("|")[0];
+               var parts:Array = aid.split("_");
+               if(parts.length != 3 || parts[0] != "A" || parts[1].charAt(0) != "1" || int(parts[2]) != 5) continue;
+               if(instance == id) selfInLineup = true;
+               var memberFamily:String = parts[0] + "_" + parts[1];
+               if(bond.families.indexOf(memberFamily)>=0 && found.indexOf(memberFamily)<0) found.push(memberFamily);
+            }
+            if(selfInLineup && found.length == bond.families.length) return true;
+         }
+         return false;
       }
 
       public function getPurpleBondDescription() : String
@@ -76,7 +111,20 @@ package com.meng52.game.module.avatar
          var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
          if(!definitions) return "";
          var family:String = String(id).split("|")[0].split("_").slice(0,2).join("_");
-         for each(var bond:Object in definitions) if(bond.families.indexOf(family)>=0) return "<br/>"+Tools.formatHtmlText(String(bond.name),16765542,true,22)+"<br/>"+Tools.formatHtmlText(String(bond.info),16777215,false,20);
+         for each(var bond:Object in definitions)
+         {
+            if(bond.families.indexOf(family)<0) continue;
+            var color:uint = getPurpleBondIsActive() ? 0x55E889 : 0xFFD45C;
+            var concise:String = bond.short_info != null ? String(bond.short_info) : String(bond.name) + "\n" + String(bond.info);
+            var lines:Array = concise.split(/\r?\n/);
+            var html:String = "<br/>";
+            for(var i:int=0;i<lines.length;i++)
+            {
+               if(i>0) html += "<br/>";
+               html += Tools.formatHtmlText(String(lines[i]),color,i==0,i==0 ? 16 : 15,"",0);
+            }
+            return html;
+         }
          return "";
       }
 
@@ -1093,6 +1141,8 @@ package com.meng52.game.module.avatar
 
       public var limitBreak:int;
 
+      public var cultureSchema:String = "";
+
       public var equips:Vector.<Equip>;
 
       protected var m_buff:Sprite;
@@ -1596,7 +1646,39 @@ package com.meng52.game.module.avatar
 
       public function getPithNum() : int
       {
+         if(isWeightedCultivation())
+         {
+            var weights:Object = GlobalData.$mConfig_simple && GlobalData.$mConfig_simple.culture && GlobalData.$mConfig_simple.culture.weighted ? GlobalData.$mConfig_simple.culture.weighted.weights : null;
+            return Math.max(0,hpP) * (weights && weights.hp != null ? int(weights.hp) : 1) + Math.max(0,apP) * (weights && weights.ap != null ? int(weights.ap) : 12) + Math.max(0,dePhP) * (weights && weights.de_ph != null ? int(weights.de_ph) : 10) + Math.max(0,deMaP) * (weights && weights.de_ma != null ? int(weights.de_ma) : 10);
+         }
          return hpP + apP + deMaP + dePhP;
+      }
+
+      public function isWeightedCultivation() : Boolean
+      {
+         return cultureSchema == "weighted-v2" && getType() == 1 && (getStar() == 5 || getStar() == 6);
+      }
+
+      public function getCultivationCap() : int
+      {
+         var culture:Object = GlobalData.$mConfig_simple ? GlobalData.$mConfig_simple.culture : null;
+         if(!culture) return 0;
+         if(isWeightedCultivation())
+         {
+            var weighted:Object = culture.weighted;
+            var star:Object = weighted && weighted.stars ? weighted.stars[String(getStar())] : null;
+            if(!star) return 0;
+            return Math.max(0,int(star.cap_base) + Math.min(3,Math.max(0,phase)) * int(star.cap_per_phase));
+         }
+         var base:int = Math.max(0,int(culture.max_pith_base));
+         var absolute:int = culture.max_pith != null ? Math.max(0,int(culture.max_pith)) : base;
+         var bonus:int = mData && mData.pith_max != null ? Math.max(0,int(mData.pith_max)) : 0;
+         return Math.min(absolute,base + bonus);
+      }
+
+      public function getCultivationDisplayScale() : int
+      {
+         return isWeightedCultivation() ? 1 : int(GlobalData.$mConfig_simple.culture.culture_pith);
       }
 
       public function newAvatarRes(param1:Sprite = null, param2:Boolean = false, param3:Boolean = false, param4:Boolean = false) : Sprite
@@ -1953,6 +2035,7 @@ package com.meng52.game.module.avatar
          skillB = null;
          talent = null;
          limitBreak = 0;
+         cultureSchema = "";
          if(param1 == null)
          {
             mData = {
@@ -1968,6 +2051,7 @@ package com.meng52.game.module.avatar
                "love_exp":0,
                "phase":0,
                "limit_break":0,
+               "culture_schema":"",
                "morph":0
             };
             lv = mData.lv;
@@ -1980,6 +2064,7 @@ package com.meng52.game.module.avatar
             loveExp = mData.love_exp;
             phase = mData.phase;
             limitBreak = mData.limit_break;
+            cultureSchema = mData.culture_schema;
             morph = mData.morph;
             id = mData.id;
          }
@@ -2013,8 +2098,10 @@ package com.meng52.game.module.avatar
          }
          else
          {
+            cultureSchema = param1.culture_schema != null ? String(param1.culture_schema) : "";
             if(param1.hp_max)
             {
+               hpP = apP = dePhP = deMaP = 0;
                lv = param1.lv;
                slv = param1.slv;
                hpMax = param1.hp_max;
@@ -2128,6 +2215,7 @@ package com.meng52.game.module.avatar
          _loc1_.love_exp = loveExp;
          _loc1_.phase = phase;
          _loc1_.limit_break = limitBreak;
+         _loc1_.culture_schema = cultureSchema;
          return _loc1_;
       }
 
@@ -2139,6 +2227,7 @@ package com.meng52.game.module.avatar
          _loc1_.morph = morph;
          _loc1_.phase = phase;
          _loc1_.limit_break = limitBreak;
+         _loc1_.culture_schema = cultureSchema;
          _loc1_.buffs = {};
          _loc1_.de_ma = deMa;
          _loc1_.de_ph = dePh;
@@ -3032,6 +3121,7 @@ package com.meng52.game.module.avatar
 
       private function getCultivationGainFromSlope(param1:Number, param2:int) : int
       {
+         if(isWeightedCultivation()) return param2;
          var _loc3_:Number = Number(GlobalData.$mConfig_simple.culture.pith_growth_rate);
          if(isNaN(_loc3_) || _loc3_ <= 0)
          {

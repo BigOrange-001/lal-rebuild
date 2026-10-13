@@ -28,9 +28,9 @@ class GameplayGuildBoss:
         if create and not guild.get('id'):
             me=self._me(p); uid_text=str(me['uid']); uid_num=int(uid_text) if uid_text.isdigit() else sum(ord(ch) for ch in uid_text); gid=str(10000+(uid_num%80000))
             members=[]
-            for i in range(6): members.append({'uid':f'npc-{gid}-{i+1}','zone':'local','name':['守望者','远征者','星火','小队长','旅人','影刃'][i],'lv':max(1,int(p.get('lv',1))-i),'vip_lv':0,'association_lv':3,'contribute':(6-i)*100,'power':10000*(6-i),'status':1,'worship_info':{'member_worship_count':0,'member_worship_user_list':[],'member_worship_day':game_day()}})
-            members.insert(0,{**me,'association_lv':0,'contribute':int(p.get('attrs',{}).get('guild_contribute',0)),'status':1,'worship_info':{'member_worship_count':0,'member_worship_user_list':[],'member_worship_day':game_day()}})
-            guild.update({'id':gid,'name':'本地守望者','icon':0,'level':1,'exp':0,'total_alive':0,'notice':'欢迎加入本地公会','created':int(time.time()),'members':members,'guild_graduate_skill_list':[],'boss':{},'logs':[],'shop':{},'fund':0})
+            for i in range(6): members.append({'uid':f'npc-{gid}-{i+1}','zone':'local','name':['守望者','远征者','星火','小队长','旅人','影刃'][i],'lv':max(1,int(p.get('lv',1))-i),'vip_lv':0,'association_lv':3,'contribute':(6-i)*100,'power':10000*(6-i),'status':1,'worship_info':{'member_worship_count':0,'member_worship_user_list':[],'member_worship_day':game_day(self.store.clock.now())}})
+            members.insert(0,{**me,'association_lv':0,'contribute':int(p.get('attrs',{}).get('guild_contribute',0)),'status':1,'worship_info':{'member_worship_count':0,'member_worship_user_list':[],'member_worship_day':game_day(self.store.clock.now())}})
+            guild.update({'id':gid,'name':'本地守望者','icon':0,'level':1,'exp':0,'total_alive':0,'notice':'欢迎加入本地公会','created':int(self.store.clock.now()),'members':members,'guild_graduate_skill_list':[],'boss':{},'logs':[],'shop':{},'fund':0})
             attrs=p.setdefault('attrs',{}); attrs.setdefault('association_gold',0); attrs.setdefault('guild_graduate_skill',{}); attrs.update({'association_id':gid,'association_lv':0,'guild_contribute':int(attrs.get('guild_contribute',0))})
         return guild if guild.get('id') else None
     def _guild_response(self,p,flag=1,user_extra=None):
@@ -54,7 +54,7 @@ class GameplayGuildBoss:
         return {'flag':flag,'association_info':assoc,'member_list':members,'user':{**me,**user,**(user_extra or {})},'logs':copy.deepcopy(g.get('logs',[])),'guild_boss':copy.deepcopy(g.get('boss',{}))}
     def _guild_member_rows(self,g,p=None):
         """Return renderer-safe member rows and refresh the current user's snapshot."""
-        today=game_day(); rows=[]
+        today=game_day(self.store.clock.now()); rows=[]
         me=self._me(p) if isinstance(p,dict) else None
         attrs=p.get('attrs',{}) if isinstance(p,dict) else {}
         for source in g.get('members',[]):
@@ -118,7 +118,7 @@ class GameplayGuildBoss:
     @staticmethod
     def _daily_record(p,key):
         record=p.setdefault('records',{}).setdefault('guild_daily',{})
-        if record.get('day')!=game_day(): record.clear(); record['day']=game_day()
+        if record.get('day')!=game_day(self.store.clock.now()): record.clear(); record['day']=game_day(self.store.clock.now())
         return int(record.get(key,0))
     def _update_guild_level(self,g):
         rows=self.simple.get('guild_level',{}); level=max(1,int(g.get('level',1)))
@@ -309,7 +309,7 @@ class GameplayGuildBoss:
         rec['member_worship_count']=count+1
         target_info=target_member.get('worship_info')
         if not isinstance(target_info,dict):target_info={}
-        today=game_day()
+        today=game_day(self.store.clock.now())
         if target_info.get('member_worship_day')!=today:
             target_info.update({'member_worship_day':today,'member_worship_count':0,'member_worship_user_list':[]})
         worshipers=target_info.get('member_worship_user_list')
@@ -321,10 +321,10 @@ class GameplayGuildBoss:
         target_info['member_worship_count']=len(worshipers)
         target_info['member_worship_user_list']=worshipers
         target_member['worship_info']=target_info
-        attrs=p.setdefault('attrs',{}); stamp=p.get('energy',{'$date':int(time.time())}); stamp=int(stamp.get('$date',int(time.time()))) if isinstance(stamp,dict) else int(time.time())
+        attrs=p.setdefault('attrs',{}); stamp=p.get('energy',{'$date':int(self.store.clock.now())}); stamp=int(stamp.get('$date',int(self.store.clock.now()))) if isinstance(stamp,dict) else int(self.store.clock.now())
         cfg=self.cfg.get('system_simple',{}).get('energy_config',[100,0,5,130])
         max_energy=min(int(cfg[3]) if len(cfg)>3 else int(cfg[0]),int(cfg[0])+int(p.get('lv',1)*cfg[1] if len(cfg)>1 else 0))+int(attrs.get('energy_extra',0))
-        interval=max(1,int(cfg[2]) if len(cfg)>2 else 5)*60; now=int(time.time())
+        interval=max(1,int(cfg[2]) if len(cfg)>2 else 5)*60; now=int(self.store.clock.now())
         current=min(max_energy,max(0,(now-stamp)//interval)); gained=min(amount,max(0,max_energy-current))
         new_energy=current+gained; p['energy']={'$date':max(0,stamp-gained*interval)}
         self._append_guild_log(g,f"{self._me(p)['name']}供奉了公会成员{target}")
@@ -460,7 +460,7 @@ class GameplayGuildBoss:
         return p,{'res_code':1,'user_data':user_data,'attrs':copy.deepcopy(attrs)}
     def _day_record(self,p):
         records=p.setdefault('records',{}).setdefault('guild_daily',{})
-        today=game_day()
+        today=game_day(self.store.clock.now())
         if records.get('day')!=today: records.clear(); records['day']=today
         return records
     def _assocication_sever_shop_info(self,p,x):
@@ -525,7 +525,7 @@ class GameplayGuildBoss:
             p.setdefault('records',{}).pop('guild_applications',None)
             return p,{'res_code':1,'join_flag':True,'user_dict':self._wallet(p),'association':copy.deepcopy(guild)}
         applications=p.setdefault('records',{}).setdefault('guild_applications',{})
-        applications[guild_id]={'id':guild_id,'status':'pending','submitted_day':game_day(),'npc':True}
+        applications[guild_id]={'id':guild_id,'status':'pending','submitted_day':game_day(self.store.clock.now()),'npc':True}
         return p,{'res_code':1,'join_flag':False,'apply_list':copy.deepcopy(list(applications.values())),'user_dict':self._wallet(p)}
     def _calcel_member(self,p,x):
         guild_id=str(x.get('id',''))
@@ -553,7 +553,7 @@ class GameplayGuildBoss:
     def _boss_template(self,kind,stage):
         table=self.rules.get(kind,{}) if isinstance(self.rules,dict) else {}; rows=table.get('bosses',[])
         return copy.deepcopy(rows[(max(1,int(stage))-1)%len(rows)]) if rows else {'id':1,'name':'模拟Boss','max_hp':1000000,'ap':1000,'defense':0,'reward':{'gold':1000}}
-    def _now(self): return int(time.time())
+    def _now(self): return int(self.store.clock.now())
     def _boss_window_open(self,kind,now=None):
         """Use the same local-time, minute-based windows as the original panels."""
         if kind=='guild_boss':
@@ -590,9 +590,9 @@ class GameplayGuildBoss:
             raise GameplayFault('BossClosed','This boss event is outside its configured open time')
     def _boss_state(self,p,kind):
         state=p.setdefault('boss_state',{}).setdefault(kind,{})
-        if state.get('day')!=game_day():
+        if state.get('day')!=game_day(self.store.clock.now()):
             stage=max(1,int(state.get('stage',1))); tpl=self._boss_template(kind,stage)
-            state.update({'day':game_day(),'boss':{'id':tpl['id'],'name':tpl['name'],'max_hp':tpl['max_hp'],'current_hp':tpl['max_hp'],'kill_num':stage-1,'is_end':False,'add_time':{'$date':int(time.time())}},'attack_log':{'attack_num':0,'attack_hp':0,'next_attack_time':{'$date':0},'enhance':0,'gifts':{}},'free_num':int(self.rules.get(kind,{}).get('attack',{}).get('free_per_day',3)),'vip_free_num':0,'rank_list':[],'report_list':[],'damage':0,'stage':stage})
+            state.update({'day':game_day(self.store.clock.now()),'boss':{'id':tpl['id'],'name':tpl['name'],'max_hp':tpl['max_hp'],'current_hp':tpl['max_hp'],'kill_num':stage-1,'is_end':False,'add_time':{'$date':int(self.store.clock.now())}},'attack_log':{'attack_num':0,'attack_hp':0,'next_attack_time':{'$date':0},'enhance':0,'gifts':{}},'free_num':int(self.rules.get(kind,{}).get('attack',{}).get('free_per_day',3)),'vip_free_num':0,'rank_list':[],'report_list':[],'damage':0,'stage':stage})
         # Same-day profiles may have been created by an earlier server version.
         # Normalize fields consumed unconditionally by the native Boss panels.
         boss=state.setdefault('boss',{})
@@ -658,7 +658,7 @@ class GameplayGuildBoss:
         if state['boss'].get('is_end'):
             raise GameplayFault('BossDefeated','This boss has already been defeated for the current cycle')
         if state['free_num']<=0: raise GameplayFault('DailyLimit','No boss attacks remain today')
-        now=int(time.time()); ready=state['attack_log'].get('next_attack_time',{}).get('$date',0)
+        now=int(self.store.clock.now()); ready=state['attack_log'].get('next_attack_time',{}).get('$date',0)
         if isinstance(ready,int) and ready>now: raise GameplayFault('BossCooldown','Boss attack is on cooldown')
         power=0
         from gameplay_roster import GameplayRosterEquipment
@@ -705,7 +705,7 @@ class GameplayGuildBoss:
                 # never invent kill_log.eid (the native panel treats it as an Equip ID).
                 state['attack_log']['gifts']={k:int(reward.get(k,0)) for k in ('gold','coin','mark','medal') if int(reward.get(k,0))>0}
                 grant_reward(p,reward,self.full)
-            kill_gifts={'medal':p.get('medal',0),'lv':p.get('lv',1),'exp':p.get('exp',0),'energy':copy.deepcopy(p.get('energy',{'$date':int(time.time())})),'association_gold':p.get('attrs',{}).get('association_gold',0)}
+            kill_gifts={'medal':p.get('medal',0),'lv':p.get('lv',1),'exp':p.get('exp',0),'energy':copy.deepcopy(p.get('energy',{'$date':int(self.store.clock.now())})),'association_gold':p.get('attrs',{}).get('association_gold',0)}
         elif kind=='guild_boss':
             state['attack_log']['gifts']=copy.deepcopy(guild_display_reward)
         state['damage']=int(state.get('damage',0))+damage
@@ -729,7 +729,7 @@ class GameplayGuildBoss:
             raise GameplayFault('BossDefeated','A defeated boss cannot be revived')
         attack_log=state['attack_log']; stamp=attack_log.get('next_attack_time',{'$date':0})
         ready=int(stamp.get('$date',0)) if isinstance(stamp,dict) else 0
-        if int(attack_log.get('attack_num',0))<=0 or ready<=int(time.time()):
+        if int(attack_log.get('attack_num',0))<=0 or ready<=int(self.store.clock.now()):
             raise GameplayFault('BossNotRecoverable','There is no active attack cooldown to recover')
         if p.get('coin',0)<cost: raise GameplayFault('InsufficientResource','Not enough coin')
         p['coin']-=cost

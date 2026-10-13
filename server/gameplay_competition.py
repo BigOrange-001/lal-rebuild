@@ -2,12 +2,14 @@
 from __future__ import annotations
 import copy, hashlib, json, math, time
 import datetime
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from player_store import GameplayFault
 from gameplay_common import grant_reward, game_day, equipment_exclusive_ids
 from battle_intents import create_intent, consume_intent
 from battle_engine import serialize_player_team, serialize_stage_team, validate_team_lane_coverage
 from solo_progression import arena_equipment
+from arena_opponents import generate_opponents
 
 class GameplayCompetition:
     METHODS={"user.get_rank_list","user.refresh_pvp_opponents","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
@@ -121,9 +123,14 @@ class GameplayCompetition:
             return serialize_player_team(self.cfg,p,params.get("team_num",0),params.get("team",[]),self._attr)
         except GameplayFault: raise
         except Exception as exc: raise GameplayFault("InvalidFormation",str(exc)) from exc
-    def _bot(self,uid,fragment=False):
+    def _bot(self,uid,fragment=False,profile=None):
         if fragment:
             return next((b for b in self.fragment_bots if b.get("uid")==uid),None)
+        if str(uid).startswith("n"):
+            records=profile.get("records",{}) if isinstance(profile,dict) else {}
+            batch=records.get("pvp_opponents",{}) if isinstance(records,dict) else {}
+            bots=batch.get("bots",[]) if isinstance(batch,dict) else []
+            return next((b for b in bots if isinstance(b,dict) and b.get("uid")==uid),None)
         if uid=="r999999999_6_0":
             # PanelCenterPVP hardcodes this id for the first-match robot.
             # Its visual/team data comes from pvp_robot group 6, row 0.
@@ -142,6 +149,8 @@ class GameplayCompetition:
         except ValueError: return None
         return next((b for b in self.pvp_bots if int(b.get("group",-1))==group and int(b.get("index",-1))==index),None)
     def _bot_units(self,bot):
+        if bot and isinstance(bot.get("units"),list):
+            return copy.deepcopy(bot["units"])
         team=bot.get("team",[]) if bot else []
         units=arena_equipment(self.full_config,bot or {},serialize_stage_team(self.cfg,team,team=2))
         if not str((bot or {}).get("uid","")).startswith("r"):
@@ -194,8 +203,9 @@ class GameplayCompetition:
         start response and passes both directly to number formatting. Reuse
         Avatar.getPower's documented stat weighting on the exact serialized
         team snapshots, including native power constants and skill factors.
-        The result is presentation/turn-order metadata only; combat results
-        remain client-authoritative and this estimate never gates a battle.
+        Talent uses the native additive term after the first floor, including
+        both five-decimal rounding stages. The result also decides turn order;
+        combat results remain client-authoritative.
         """
         power_cfg=self.simple.get("power",[]) if isinstance(self.simple,dict) else []
         if not isinstance(power_cfg,list) or len(power_cfg)<13:
@@ -214,6 +224,21 @@ class GameplayCompetition:
                 return star*float(power_cfg[11])+lv*float(power_cfg[12])
             if super_skill: return star*0.5
             return star*0.1+lv*0.1
+        def talent_factor(talent):
+            if isinstance(talent,dict): talent=talent.get("id")
+            if not isinstance(talent,str) or talent not in self.cfg.get("talent",{}): return 0.0
+            # TalentData.getStar reads the ID suffix, not its combat effect
+            # percentage. Talent.getPower indexes talent_power[star - 2].
+            try: index=int(talent.rsplit("_",1)[-1])-2
+            except ValueError: return 0.0
+            weights=self.simple.get("talent_power",[])
+            if not isinstance(weights,list) or not 0<=index<len(weights): return 0.0
+            try: factor=float(weights[index])
+            except (TypeError,ValueError): return 0.0
+            return factor if math.isfinite(factor) else 0.0
+        def native_floor(value):
+            rounded=Decimal(str(value)).quantize(Decimal("0.00001"),rounding=ROUND_HALF_UP)
+            return math.floor(rounded)
         total=0
         for unit in units if isinstance(units,list) else []:
             if not isinstance(unit,dict): continue
@@ -235,7 +260,9 @@ class GameplayCompetition:
             weighted=hp*float(power_cfg[1])+ap*float(power_cfg[2])+de_ph*float(power_cfg[3])+de_ma*float(power_cfg[4])
             stat_multiplier=1.0+math.pow(max(0.0,substats),1.0/float(power_cfg[10]))*float(power_cfg[9]) if float(power_cfg[10])>0 else 1.0
             value=(weighted**2)*multiplier*(float(power_cfg[5])+speed+reach)*stat_multiplier*float(power_cfg[0])
-            if math.isfinite(value) and value>0: total+=math.floor(value)
+            if math.isfinite(value) and value>0:
+                value=native_floor(value)+value*talent_factor(unit.get("talent"))
+                if math.isfinite(value) and value>0: total+=native_floor(value)
         return int(total)
     @staticmethod
     def _pvp_def_th(my_power, enemy_power):
@@ -332,18 +359,40 @@ class GameplayCompetition:
                 rec=p.setdefault("records",{}); self._record_rank_day(rec,day)
                 return p,{"settled_day":day,"participated":True,"rank":rank,"mail_id":mail_id,"already_settled":False}
             return self.store.atomic_update(uid,mark_settled)[0]
+    def _current_arena_team(self,profile):
+        teams=profile.get("team",[])
+        team_num=max(0,min(int(profile.get("attrs",{}).get("team_num",0)),len(teams)-1)) if teams else 0
+        saved=teams[team_num] if teams else []
+        submitted=[[iid,slot%3,.2 if slot<3 else .1] if iid else None
+                   for slot,iid in enumerate(saved[:6])]
+        return self._own_team(profile,{"team_num":team_num,"team":submitted})
+    def _ensure_opponents(self,profile,uid,*,refresh=False):
+        records=profile.setdefault("records",{})
+        batch=records.get("pvp_opponents")
+        if (not refresh and isinstance(batch,dict) and batch.get("player_rank")==self._rank(profile)
+                and isinstance(batch.get("bots"),list) and len(batch["bots"])==9):
+            return batch
+        old_generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
+        generation=old_generation+1 if refresh or old_generation else 1
+        own=self._current_arena_team(profile)
+        batch=generate_opponents(self.cfg,str(uid),generation,self._rank(profile),own,self._team_power)
+        records["pvp_opponents"]=batch
+        records["pvp_opponent_generation"]=generation
+        return batch
     def _rank_list(self,uid):
-        p=self.store.profile_raw(uid); rank=self._rank(p)
+        def change(profile):
+            self._ensure_opponents(profile,uid)
+            return profile,self._rank_payload(uid,profile)
+        return self.store.atomic_update(uid,change)[0]
+    def _rank_payload(self,uid,p):
+        rank=self._rank(p)
         mark=p.get("mark",0)
         try: mark=max(0,int(mark))
         except (TypeError,ValueError): mark=0
         # Keep the native five fields and append this account's actual score;
         # ItemPVP uses its rank formula only for reconstructed NPC rows.
         selfrow=[rank,uid,p.get("name","玩家"),self._own_compact(p),p.get("lv",1),mark]
-        def rank_key(bot):
-            try: return int(bot.get("rank",0))
-            except (TypeError,ValueError): return 2_147_483_647
-        bots=sorted((b for b in self.pvp_bots if isinstance(b,dict)),key=rank_key)
+        bots=p.get("records",{}).get("pvp_opponents",{}).get("bots",[])
         rows=[]
         shown_uids={str(uid)}
         shown_ranks={rank}
@@ -365,36 +414,13 @@ class GameplayCompetition:
                 # A malformed local NPC has no valid rank-list entry or battle
                 # target. Skip that row instead of rendering it as a duplicate.
                 return False
-        records=p.get("records",{}) if isinstance(p.get("records"),dict) else {}
-        generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
-        if generation:
-            nearby=[]
-            for b in bots:
-                try: br=int(b.get("rank",0))
-                except (TypeError,ValueError): continue
-                if max(1,rank-24)<=br<=rank+8:
-                    nearby.append(b)
-            if nearby:
-                nearby.sort(key=lambda b:hashlib.sha256(f'{uid}:{generation}:{b.get("uid","")}'.encode()).digest())
-                for b in nearby[:8]: append_bot(b)
-        else:
-            for b in bots:
-                try: br=int(b.get("rank",0))
-                except (TypeError,ValueError): continue
-                if br>=max(1,rank-4) and br<=rank+8:
-                    append_bot(b)
-        # When the player's rank is outside configured NPC bands, offer the
-        # nearest valid NPCs without manufacturing duplicate ranks or UIDs.
-        if not rows:
-            for b in bots:
-                if len(rows)>=8: break
-                append_bot(b)
+        for b in bots:
+            append_bot(b)
         records=p.get("records",{})
         # PanelCenterPVP.addList/getListData reads history entries as
         # [rank, uid, name] arrays. Older reconstructed profiles may contain
         # object rows, so normalize at the RPC boundary without losing them.
         history_uids=set(shown_uids)
-        history_ranks=set(shown_ranks)
         def history_rows(values):
             out=[]
             for row in values if isinstance(values,list) else []:
@@ -402,38 +428,38 @@ class GameplayCompetition:
                     try: hist_rank=int(row[0])
                     except (TypeError,ValueError): continue
                     hist_uid=str(row[1]); hist_name=str(row[2])
+                    compact=row[3] if len(row)>3 and isinstance(row[3],list) else None
+                    hist_lv=row[4] if len(row)>4 else None
                 elif isinstance(row,dict) and row.get("uid") is not None:
                     try: hist_rank=int(row.get("rank",rank))
                     except (TypeError,ValueError): continue
                     hist_uid=str(row["uid"]); hist_name=str(row.get("name","竞技对手"))
+                    compact=row.get("data") if isinstance(row.get("data"),list) else None
+                    hist_lv=row.get("lv")
                 else:
                     continue
-                if hist_rank<1 or hist_uid in history_uids or hist_rank in history_ranks:
+                if hist_rank<1 or hist_uid in history_uids:
                     continue
-                bot=self._bot(hist_uid)
-                if not bot:
-                    continue
-                try:
-                    if not self._bot_units(bot):
-                        continue
-                except (GameplayFault,KeyError,IndexError,TypeError,ValueError):
-                    continue
-                out.append([hist_rank,hist_uid,hist_name])
-                history_uids.add(hist_uid); history_ranks.add(hist_rank)
+                if compact is None:
+                    bot=self._bot(hist_uid,profile=p)
+                    if not bot: continue
+                    try: compact=self._compact(self._bot_units(bot))
+                    except (GameplayFault,KeyError,IndexError,TypeError,ValueError): continue
+                    hist_lv=bot.get("lv",1)
+                if not compact: continue
+                out.append([hist_rank,hist_uid,hist_name,compact,hist_lv or 1])
+                history_uids.add(hist_uid)
             return sorted(out,key=lambda item:(item[0],item[1]))
         wins=history_rows(records.get("pvp_history_win",[])); losses=history_rows(records.get("pvp_history_loss",[]))
-        today=game_day()
+        today=game_day(self.store.clock.now())
         day_entry=records.get("local_pvp_rank_days",{}).get(today,{}) if isinstance(records.get("local_pvp_rank_days",{}),dict) else {}
         today_count=int(day_entry.get("count",0)) if isinstance(day_entry,dict) else 0
         return [rank,[selfrow],rows,wins,losses,int(p.get("mark",0)),today_count]
     def _refresh_pvp_opponents(self,uid,params):
         def change(profile):
-            records=profile.setdefault("records",{})
-            generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
-            records["pvp_opponent_generation"]=generation+1
-            return {"generation":generation+1}
-        self._write(uid,"user.refresh_pvp_opponents",params,change)
-        return self._rank_list(uid)
+            self._ensure_opponents(profile,uid,refresh=True)
+            return {"rank_list":self._rank_payload(uid,profile)}
+        return self._write(uid,"user.refresh_pvp_opponents",params,change)["rank_list"]
     def _fragment_state(self,p):
         frag=p.setdefault("fragment",{}).setdefault("equips",{})
         blocked=equipment_exclusive_ids(self.full_config)
@@ -461,64 +487,82 @@ class GameplayCompetition:
         users=params.get("users",[])
         if not isinstance(users,list) or len(users)>50: self._fail("InvalidParameter","users must be a short list")
         out={}
+        p=self.store.profile_raw(uid)
         for row in users:
             if not isinstance(row,(list,tuple)) or not row or not isinstance(row[0],str): continue
             target=row[0]
             if target==uid:
-                p=self.store.profile_raw(uid); out[target]={"data":self._own_compact(p),"as_equips":p.get("as_equips",[]),"my_equips":p.get("my_equips",{})}
+                out[target]={"data":self._own_compact(p),"as_equips":p.get("as_equips",[]),"my_equips":p.get("my_equips",{})}
             else:
-                bot=self._bot(target) or self._bot(target,True)
-                if bot: out[target]={"data":self._compact(self._bot_units(bot)),"as_equips":[],"my_equips":{}}
+                bot=self._bot(target,profile=p) or self._bot(target,True)
+                if bot:
+                    out[target]={"data":self._compact(self._bot_units(bot)),"as_equips":[],"my_equips":{}}
+                    continue
+                histories=p.get("records",{})
+                for key in ("pvp_history_win","pvp_history_loss"):
+                    history=histories.get(key,[]) if isinstance(histories,dict) else []
+                    found=next((entry for entry in history if isinstance(entry,list) and len(entry)>3
+                                and entry[1]==target and isinstance(entry[3],list)),None)
+                    if found:
+                        out[target]={"data":copy.deepcopy(found[3]),"as_equips":[],"my_equips":{}}
+                        break
         return out
     def _start(self,uid,params,kind):
-        p=self.store.profile_raw(uid); own=self._own_team(p,params)
-        target_uid=str(params.get("uid","")); bot=self._bot(target_uid,kind=="fragment")
-        if not bot: self._fail("UnknownOpponent","Opponent is unavailable")
-        if kind=="fragment":
-            eid=str(params.get("eid","")); idx=self._num(params.get("fragment_index"),"fragment_index",0,63)
-            if eid not in self.equipment: self._fail("UnknownEquipment","Fragment equipment is unavailable")
-            if eid in equipment_exclusive_ids(self.full_config):
-                self._fail("ExclusiveEquipmentRestricted","This equipment is available only through authorized mail")
-            frag=self._fragment_state(p); values=frag.get(eid,[0]*max(1,int(eid.rsplit("_",1)[-1])))
-            if not isinstance(values,list) or idx>=len(values): self._fail("InvalidFragment","Fragment index is outside the equipment piece set")
-            if values[idx]>0: self._fail("FragmentOwned","You already have this fragment")
-            energy=self._fragment_energy(p)
-            if energy["energy"]<1: self._fail("InsufficientFragmentEnergy","Not enough fragment raid energy")
-            metadata={"uid":target_uid,"target_uid":target_uid,"eid":eid,"fragment_index":idx,"team_num":self._num(params.get("team_num",0),"team_num",0,2)}
-        else:
-            requested_rank=self._num(params.get("rank",0),"rank",0,2_000_000_000)
-            if requested_rank==0 and int(p.get("attrs",{}).get("pvp_count",0))!=0: self._fail("InvalidOpponent","First-match robot is only available for the first arena battle")
-            if requested_rank!=0 and requested_rank!=int(bot.get("rank",-1)): self._fail("InvalidOpponent","Opponent rank does not match the selected robot")
-            metadata={"uid":target_uid,"target_uid":target_uid,"rank":requested_rank,"team_num":self._num(params.get("team_num",0),"team_num",0,2)}
-        enemy=self._bot_units(bot)
-        # GameMapManager builds GameMapData.line from the background list
-        # stored in the selected native pvp_line/frag_line row.
-        map_rows=self.simple.get("frag_line" if kind=="fragment" else "pvp_line",[])
-        map_row=map_rows[0] if isinstance(map_rows,list) and map_rows else None
-        backgrounds=map_row[1] if isinstance(map_row,list) and len(map_row)>1 else None
-        lane_count=len(backgrounds) if isinstance(backgrounds,list) else 0
-        try:
-            validate_team_lane_coverage(own,lane_count,"player formation")
-        except ValueError as exc:
-            raise GameplayFault("InvalidFormation", f"Every route needs a hero; this map requires at least {lane_count} heroes") from exc
-        try:
-            validate_team_lane_coverage(enemy,lane_count,"NPC formation")
-        except ValueError as exc:
-            raise GameplayFault("InvalidOpponent", "NPC formation must cover every native route") from exc
-        my_power=self._team_power(own)
-        enemy_power=self._team_power(enemy)
-        def_th=self._pvp_def_th(my_power,enemy_power) if kind=="pvp" else 0
-        response={}
         def mutate(profile):
+            own=self._own_team(profile,params)
+            target_uid=str(params.get("uid",""))
+            bot=self._bot(target_uid,kind=="fragment",profile=profile)
+            if not bot: self._fail("UnknownOpponent","Opponent is unavailable")
+            if kind=="fragment":
+                eid=str(params.get("eid","")); idx=self._num(params.get("fragment_index"),"fragment_index",0,63)
+                if eid not in self.equipment: self._fail("UnknownEquipment","Fragment equipment is unavailable")
+                if eid in equipment_exclusive_ids(self.full_config):
+                    self._fail("ExclusiveEquipmentRestricted","This equipment is available only through authorized mail")
+                frag=self._fragment_state(profile); values=frag.get(eid,[0]*max(1,int(eid.rsplit("_",1)[-1])))
+                if not isinstance(values,list) or idx>=len(values): self._fail("InvalidFragment","Fragment index is outside the equipment piece set")
+                if values[idx]>0: self._fail("FragmentOwned","You already have this fragment")
+                if self._fragment_energy(profile)["energy"]<1:
+                    self._fail("InsufficientFragmentEnergy","Not enough fragment raid energy")
+                metadata={"uid":target_uid,"target_uid":target_uid,"eid":eid,"fragment_index":idx,
+                          "team_num":self._num(params.get("team_num",0),"team_num",0,2)}
+            else:
+                requested_rank=self._num(params.get("rank",0),"rank",0,2_000_000_000)
+                if target_uid=="r999999999_6_0":
+                    first_rank=max(1,self._rank(profile)-1)
+                    if (int(profile.get("attrs",{}).get("pvp_count",0))!=0
+                            or requested_rank not in (0,first_rank,int(bot.get("rank",-1)))):
+                        self._fail("InvalidOpponent","First-match robot is only available for the first arena battle")
+                elif requested_rank==0 or requested_rank!=int(bot.get("rank",-1)):
+                    self._fail("InvalidOpponent","Opponent rank does not match the selected robot")
+                metadata={"uid":target_uid,"target_uid":target_uid,"rank":requested_rank,
+                          "team_num":self._num(params.get("team_num",0),"team_num",0,2),
+                          "opponent_name":str(bot.get("name") or "竞技对手"),"opponent_lv":int(bot.get("lv",1))}
+            enemy=self._bot_units(bot)
+            # GameMapManager takes the native lane count from pvp_line or
+            # frag_line. Validate the exact snapshots persisted in the intent.
+            map_rows=self.simple.get("frag_line" if kind=="fragment" else "pvp_line",[])
+            map_row=map_rows[0] if isinstance(map_rows,list) and map_rows else None
+            backgrounds=map_row[1] if isinstance(map_row,list) and len(map_row)>1 else None
+            lane_count=len(backgrounds) if isinstance(backgrounds,list) else 0
+            try:
+                validate_team_lane_coverage(own,lane_count,"player formation")
+            except ValueError as exc:
+                raise GameplayFault("InvalidFormation",f"Every route needs a hero; this map requires at least {lane_count} heroes") from exc
+            try:
+                validate_team_lane_coverage(enemy,lane_count,"NPC formation")
+            except ValueError as exc:
+                raise GameplayFault("InvalidOpponent","NPC formation must cover every native route") from exc
+            my_power=self._team_power(own)
+            enemy_power=self._team_power(enemy)
+            def_th=self._pvp_def_th(my_power,enemy_power) if kind=="pvp" else 0
             if kind=="fragment":
                 self._spend_fragment_energy(profile)
-            token=create_intent(profile,kind,metadata,own,enemy,int(self.rules.get("intent_ttl",3600)))
+            token=create_intent(profile,kind,metadata,own,enemy,int(self.rules.get("intent_ttl",3600)),now=self.store.clock.now())
             if kind=="pvp":
                 intent=profile["pending_battles"][kind][token["fight_id"]]
                 intent["arena_my_pr_power"]=my_power
                 intent["arena_pr_power"]=enemy_power
                 intent["arena_def_th"]=def_th
-            response.update(token)
             poke_currency="gold" if kind=="pvp" else "coin"
             poke_data={"gift_list":[{poke_currency:0},{poke_currency:0},{poke_currency:0}],"poke_gift_index":0,"user_gift":{poke_currency:0}}
             data={"fight_kind":kind,"fight_id":token["fight_id"],"seed":token["seed"],"metadata":metadata,"cid":"V_000_0" if kind=="pvp" else "V_001_0","def_th":def_th,"orgin_team_a":own,"orgin_team_b":enemy,"team1":[],"team2":[],"poke_data":poke_data,"sign":0,"my_pr_power":my_power,"pr_power":enemy_power,"attr_fragment_energy":profile.get("attrs",{}).get("fragment_energy"),"attr_fragment_energy_extra":profile.get("attrs",{}).get("fragment_energy_extra",0)}
@@ -536,7 +580,7 @@ class GameplayCompetition:
         if isinstance(value,(int,float)): return int(value)
         return int(default)
     def _fragment_energy(self,p,now=None):
-        now=int(time.time() if now is None else now); attrs=p.setdefault("attrs",{})
+        now=int(self.store.clock.now() if now is None else now); attrs=p.setdefault("attrs",{})
         cap=int(self.simple.get("capacity_config",[self.rules.get("fragment_energy_cap",12),self.rules.get("fragment_regen_minutes",30)])[0]); minutes=int(self.simple.get("capacity_config",[12,30])[1])
         interval=max(60,minutes*60); last=self._date_seconds(attrs.get("fragment_energy"),now-cap*interval)
         count=max(0,(now-last)//interval)
@@ -554,8 +598,8 @@ class GameplayCompetition:
         kind=params.get("fight_kind")
         if kind not in ("pvp","fragment"): self._fail("InvalidBattle","Unsupported competition battle kind")
         def change(p):
-            intent=consume_intent(p,kind,params,metadata_keys=("target_uid","rank","eid","fragment_index","team_num"))
-            sign=intent["sign"]; metadata=intent["metadata"]; now=int(time.time())
+            intent=consume_intent(p,kind,params,metadata_keys=("target_uid","rank","eid","fragment_index","team_num"),now=self.store.clock.now())
+            sign=intent["sign"]; metadata=intent["metadata"]; now=self.store.clock.now()
             records=p.setdefault("records",{}); attrs=p.setdefault("attrs",{})
             if kind=="pvp":
                 rank=self._rank(p); old_count=int(attrs.get("pvp_count",0)); win=sign==1
@@ -576,8 +620,12 @@ class GameplayCompetition:
                 cutoff=(datetime.date.fromisoformat(played_day)-datetime.timedelta(days=90)).isoformat()
                 records["local_pvp_rank_days"]={d:v for d,v in rank_days.items() if isinstance(d,str) and d>=cutoff}
                 key="pvp_history_win" if win else "pvp_history_loss"
-                bot=self._bot(str(metadata["target_uid"]))
-                history_row=[max(1,int(metadata.get("rank",0))),str(metadata["target_uid"]),str(bot.get("name","竞技对手") if bot else "竞技对手")]
+                bot=self._bot(str(metadata["target_uid"]),profile=p)
+                opponent_name=str(metadata.get("opponent_name") or
+                                  (bot.get("name") if bot else "竞技对手"))
+                opponent_lv=int(metadata.get("opponent_lv") or (bot.get("lv",1) if bot else 1))
+                history_row=[max(1,int(metadata.get("rank",0))),str(metadata["target_uid"]),
+                             opponent_name,self._compact(intent["team_b"]),opponent_lv]
                 records[key]=([history_row]+list(records.get(key,[])))[:20]
                 # Keep only the initial, server-issued intent snapshots. The
                 # submitted ending snapshots are validation diagnostics and
@@ -607,7 +655,7 @@ class GameplayCompetition:
                         "orgin_team_a":copy.deepcopy(intent["team_a"]),
                         "orgin_team_b":copy.deepcopy(intent["team_b"]),
                         "users":{"user_a":[str(uid),int(rank),str(p.get("name","玩家"))],
-                                 "user_b":[str(metadata["target_uid"]),int(metadata.get("rank",0)),str(bot.get("name","竞技对手") if bot else "竞技对手")]},
+                                 "user_b":[str(metadata["target_uid"]),int(metadata.get("rank",0)),opponent_name]},
                         "my_pr_power":report_my_power,
                         "pr_power":report_enemy_power,
                         "def_th":report_def_th,

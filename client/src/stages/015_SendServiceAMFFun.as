@@ -936,6 +936,16 @@ package com.meng52.net
       {
          SendAndSelect.sendAndSelectService("user.get_rank_list",param2,param1);
       }
+
+      public static function send_user_refresh_pvp_opponents(param1:Function = null, param2:Object = null) : void
+      {
+         SendAndSelect.sendAndSelectService("user.refresh_pvp_opponents",param2,param1);
+      }
+
+      public static function send_user_avatar_limit_break(param1:Function = null, param2:Object = null) : void
+      {
+         SendAndSelect.sendAndSelectService("user.avatar_limit_break",param2,param1);
+      }
       
       public static function send_user_buy_pvp_count(param1:Function = null, param2:Object = null) : void
       {

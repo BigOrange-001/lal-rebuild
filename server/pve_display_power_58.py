@@ -28,6 +28,17 @@ def exploration_opponent_power(full_config: dict, stage: dict) -> int:
     # passing it to the shared power estimator.
     for unit in units:
         unit["line"] = 0
+    overrides = stage.get("enemy_unit_stats_by_diff", {}).get("0")
+    if overrides is not None:
+        if not isinstance(overrides, list) or len(overrides) != len(units):
+            raise ValueError("exploration enemy snapshot length does not match roster")
+        for index, (unit, row) in enumerate(zip(units, overrides)):
+            if not isinstance(row, dict) or row.get("index") != index or row.get("aid") != unit["aid"]:
+                raise ValueError("exploration enemy snapshot order does not match roster")
+            for key in ("hp", "ap", "de_ph", "de_ma"):
+                unit[key] = max(1, int(row[key]))
+            unit["hp_max"] = unit["hp"]
+            unit["new_4attrs"] = {key: max(0, int(row[key])) for key in ("hit", "flee", "crit", "tough")}
     from gameplay_competition import GameplayCompetition
 
     estimator = SimpleNamespace(

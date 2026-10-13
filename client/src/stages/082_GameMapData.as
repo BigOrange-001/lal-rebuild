@@ -60,6 +60,8 @@ package com.meng52.game.command.map
       
       public var equipDrop:Array;
       public var enemyUnitStatsByDiff:Object;
+      public var team2ByDiff:Object;
+      public var recommendedPowerByDiff:Object;
       
       public function GameMapData(param1:*)
       {
@@ -79,6 +81,18 @@ package com.meng52.game.command.map
          new4attrs = param1["new_4attrs"];
          equipDrop = param1["equip_drop"];
          enemyUnitStatsByDiff = param1["enemy_unit_stats_by_diff"];
+         team2ByDiff = param1["team2_by_diff"];
+         recommendedPowerByDiff = param1["recommended_power_by_diff"];
+      }
+
+      public function getTeam2List(param1:int = 0) : Array
+      {
+         var _loc2_:Array = null;
+         if(team2ByDiff)
+         {
+            _loc2_ = team2ByDiff[String(param1)] as Array;
+         }
+         return _loc2_ ? _loc2_ : team2List;
       }
       
       public static function getDiffConfig(param1:int = 0) : Array
@@ -99,6 +113,11 @@ package com.meng52.game.command.map
          var _loc8_:int = 0;
          var _loc2_:Avatar = null;
          var _loc3_:Number = NaN;
+         var _loc10_:Array = null;
+         if(recommendedPowerByDiff && recommendedPowerByDiff[String(param1)] != null)
+         {
+            return Tools.toEffectiveInt(int(recommendedPowerByDiff[String(param1)]),2);
+         }
          if(param1 == 0)
          {
             return Tools.toEffectiveInt(userPower,2);
@@ -112,20 +131,22 @@ package com.meng52.game.command.map
             _loc9_ = team2List[_loc8_];
             if(_loc9_ != null)
             {
-               _loc2_ = new Avatar(_loc9_[0],_loc9_);
+               _loc2_ = new Avatar(_loc9_[0],_loc9_.slice(0,11));
                _loc7_ += getAvatarPower(_loc2_,0,getEnemyStatOverride(_loc8_,0,String(_loc9_[0])));
                _loc2_.clear();
             }
             _loc8_++;
          }
          _loc3_ = userPower / _loc7_;
+         _loc10_ = getTeam2List(param1);
+         _loc4_ = int(_loc10_.length);
          _loc8_ = 0;
          while(_loc8_ < _loc4_)
          {
-            _loc9_ = team2List[_loc8_];
+            _loc9_ = _loc10_[_loc8_];
             if(_loc9_ != null)
             {
-               _loc2_ = new Avatar(_loc9_[0],_loc9_);
+               _loc2_ = new Avatar(_loc9_[0],_loc9_.slice(0,11));
                _loc5_ += getAvatarPower(_loc2_,param1,getEnemyStatOverride(_loc8_,param1,String(_loc9_[0])));
                _loc2_.clear();
             }

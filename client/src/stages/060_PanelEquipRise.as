@@ -430,9 +430,9 @@ package com.meng52.game.ui.panel
                   mSpr_ = null;
                   _type = _upLvGrade == 1 ? 1 : 2;
                   _list = _type == 1 ? "50004" : "50003";
-                  mSpr_ = LayoutUIAnimation.getOnlyExample().popSuperWord(_list,_type,0.65);
+                  mSpr_ = LayoutUIAnimation.getOnlyExample().popSuperWord(_list,_type,0.65,0,0,5);
                }
-               mJuggler_upLv.tween(mBox_dataUp,1,{
+               mJuggler_upLv.tween(mBox_dataUp,1 / 5,{
                   "onComplete":tweenComplete,
                   "transition":"easeOut",
                   "alpha":1,
@@ -654,9 +654,10 @@ package com.meng52.game.ui.panel
                "id":"e016",
                "x":_x,
                "y":_y,
-               "sc":2
+               "sc":2,
+               "rate":5
             });
-            Starling.juggler.delayCall(delaycall,1.5);
+            Starling.juggler.delayCall(delaycall,1.5 / 5);
          }
          else
          {

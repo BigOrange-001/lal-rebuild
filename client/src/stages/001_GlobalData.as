@@ -670,6 +670,14 @@ package com.meng52.game.global
          {
             delete _data.pending_pve;
          }
+         if(_profile.hasOwnProperty("pending_limit_break"))
+         {
+            _data.pending_limit_break = _profile.pending_limit_break;
+         }
+         else
+         {
+            delete _data.pending_limit_break;
+         }
          _data.pf_info = _profile.pf_info;
          _data.login_time = _profile.login_time;
          _data.create_time = _profile.create_time;

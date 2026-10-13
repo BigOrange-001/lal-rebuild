@@ -1,5 +1,6 @@
 """Persistent local players and original-client resource gift mail RPCs."""
 import datetime,hashlib,hmac,json,secrets,time,sqlite3,threading
+from vip_campaign import normalize_vip_profile,legacy_first_bonus_from_receipts
 
 class GameplayFault(Exception):
  def __init__(self,code,message):self.code,self.message=code,message
@@ -21,7 +22,7 @@ CLIENT_PROFILE_SYNC_REQUIRED_FIELDS = (
  'create_time','add_time','friends','combat_main','combat_score','ploy_cids','tasks',
  'association','check_in','title','zone',
 )
-CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','task','boss_state')
+CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','pending_limit_break','task','boss_state')
 
 class PlayerStore:
  def __init__(self,db,config):
@@ -157,6 +158,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   token=secrets.token_urlsafe(32)
   self.db.execute('INSERT INTO sessions VALUES(?,?,?)',(token,uid,int(time.time())+86400*30));self.db.commit()
   def track_login(p):
+   receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
+   normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
    attrs=p.setdefault('attrs',{});attrs['login_total']=int(attrs.get('login_total',0))+1
    attrs.setdefault('sign_in',{'k':1,'n':0,'t':None})
    p['login_time']={'$date':int(time.time())}
@@ -376,6 +379,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   p['attrs'].setdefault('pay_count',0)
   p['attrs'].setdefault('pay_first',0)
   p['attrs'].setdefault('pay_first_gift',0)
+  receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
+  normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
   p['attrs'].setdefault('rank_lv',[])
   p['attrs'].setdefault('mon_card',{})
   p['attrs'].setdefault('mon_card_claim_day',{})

@@ -4,6 +4,7 @@ import copy, datetime, hashlib, math, random
 from gameplay_common import game_day, grant_reward, skin_acquisition_blocked_ids
 from gameplay_energy import energy_state
 from player_store import GameplayFault, native_dates
+from vip_campaign import credit_vip_gift, normalize_vip_profile
 
 # Local test-gift denominations, in game currency (coin / 金砖).
 PACKS = {f"local_{amount}": amount for amount in (60, 120, 300, 680, 980, 1280, 3280, 6480, 10000)}
@@ -97,6 +98,9 @@ class GameplayEconomy:
             raise GameplayFault("InvalidPayProduct", "Unknown local gift pack")
         base = PACKS.get(pid, MONTHLY_PACKS.get(pid))
         def mutate(p):
+            # Migrate the old base/10 EXP before incrementing historical pay
+            # counters, so this transaction contributes exactly once.
+            normalize_vip_profile(p)
             attrs = p.setdefault("attrs", {})
             now = self._now()
             first = int(attrs.get("pay_first_gift", 0)) == 0
@@ -134,12 +138,8 @@ class GameplayEconomy:
                 except (TypeError, ValueError): previous = 0
                 cards[pid] = {"$date": max(now, previous) + card_days * 86400}
                 attrs.setdefault("mon_card_claim_day", {})
-            p["vip_exp"] = int(p.get("vip_exp", 0)) + base // 10
-            vip = (self.config.get("vip") or {})
-            next_lv = int(p.get("vip_lv", 0))
-            while str(next_lv + 1) in vip and int(p["vip_exp"]) >= int(vip[str(next_lv + 1)].get("exp", 10**18)):
-                next_lv += 1
-            p["vip_lv"] = next_lv
+            gift_total = credit_vip_gift(p, granted)
+            next_lv = p["vip_lv"]
             records = p.setdefault("records", {})
             pay = records.setdefault("pay", {})
             if not isinstance(pay, dict): pay = records["pay"] = {}
@@ -147,7 +147,9 @@ class GameplayEconomy:
             pay["coin"] = int(pay.get("coin", 0)) + base
             pay["last_day"] = game_day()
             p.setdefault("task", {})["pay_total"] = int(p.get("task", {}).get("pay_total", 0)) + base // 10
-            return p, {"ok": True, "pid": pid, "base_coin": base, "granted_coin": granted, "first_double": first, "vip_lv": next_lv}
+            return p, {"ok": True, "pid": pid, "base_coin": base, "granted_coin": granted,
+                       "first_double": first, "vip_lv": next_lv, "vip_exp": p["vip_exp"],
+                       "vip_gift_total_coin": gift_total}
         key = self._op_key("user.local_pay_test", params)
         result, replayed = self.store.atomic_update(uid, mutate, key, {"pid": pid})
         return {**result, "replayed": replayed}

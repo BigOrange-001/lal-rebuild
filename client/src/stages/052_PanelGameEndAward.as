@@ -35,6 +35,7 @@ package com.meng52.game.ui.panel
    import flash.geom.Rectangle;
    import flash.utils.setTimeout;
    import starling.display.DisplayObject;
+   import starling.display.Quad;
    import starling.display.Sprite;
    import starling.events.Event;
    import starling.text.TextField;
@@ -105,6 +106,10 @@ package com.meng52.game.ui.panel
       private var mTxt:TextField;
       
       private var _lvOld:int = 0;
+
+      private var mLimitBreakPanel:Sprite;
+      private var mLimitBreakEncounter:Object;
+      private var mLimitBreakBusy:Boolean = false;
       
       public function PanelGameEndAward()
       {
@@ -153,6 +158,7 @@ package com.meng52.game.ui.panel
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         closeLimitBreakPanel(null);
          GlobalData.$mEventDispatcher.removeEventListener("update_fightaward",UPDATE_FIGHTAWARD);
          GlobalData.$mEventDispatcher.removeEventListener("autoOff",autoOff);
          GlobalData.$mGameClassObject.mLayoutUIBottom.visible = true;
@@ -1308,6 +1314,11 @@ package com.meng52.game.ui.panel
             return;
          }
          give_avatar_equip_fragment(_awardData);
+         if(_awardData.sign == 1 && _awardData.limit_break_encounter)
+         {
+            var breakOpportunity:Object = _awardData.limit_break_encounter;
+            setTimeout(function():void { showLimitBreakPanel(breakOpportunity); },350);
+         }
          _oldPassData = GlobalFunction.passBattleInfo(GlobalData.$tempPVE_battleID);
          _lvOld = 0;
          _lvNew = 0;
@@ -2227,6 +2238,84 @@ package com.meng52.game.ui.panel
       private function shareTriggered(param1:Event) : void
       {
          GlobalPFANE.pfShare(4);
+      }
+
+      private function showLimitBreakPanel(opportunity:Object) : void
+      {
+         if(!stage || !opportunity || !(opportunity.candidate_ids is Array) || mLimitBreakPanel) return;
+         var current:Object = GlobalData.$userData ? GlobalData.$userData.pending_limit_break : null;
+         if(!current || current.fight_id != opportunity.fight_id) return;
+         var candidates:Array = opportunity.candidate_ids as Array;
+         if(candidates.length == 0) return;
+         mLimitBreakEncounter = opportunity;
+         mLimitBreakPanel = new Sprite();
+         var shade:Quad = new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0x000000);
+         shade.alpha = 0.72;
+         mLimitBreakPanel.addChild(shade);
+         var width:Number = Math.min(500,GlobalData.$mStageWidth - 30);
+         var height:Number = 132 + candidates.length * 55;
+         var box:Quad = new Quad(width,height,0x282239);
+         box.x = (GlobalData.$mStageWidth - width) * 0.5;
+         box.y = (GlobalData.$mStageHeight - height) * 0.5;
+         mLimitBreakPanel.addChild(box);
+         var heading:TextField = GlobalTextStyle.getTextField("基兰：选择一张卡突破极限",24,0xFFD46D,"center",width - 20,42);
+         heading.x = box.x + 10;
+         heading.y = box.y + 10;
+         mLimitBreakPanel.addChild(heading);
+         for(var i:int = 0;i < candidates.length;i++)
+         {
+            var iid:String = String(candidates[i]);
+            var hero:Object = GlobalData.$userData.avatars[iid];
+            if(!hero) continue;
+            var aid:String = iid.split("|")[0];
+            var definition:Object = GlobalData.$mConfig_avatar[aid];
+            var heroName:String = definition && definition.name ? String(definition.name) : aid;
+            var choice:LOL_Scale9Button = new LOL_Scale9Button(heroName + "  Lv." + hero.lv + "（上限→125）",width - 40,49,"UI_btn_normalFun_0000");
+            choice.name = iid;
+            choice.x = box.x + 20;
+            choice.y = box.y + 54 + i * 55;
+            choice.addEventListener("triggered",onLimitBreakChoice);
+            mLimitBreakPanel.addChild(choice);
+         }
+         var later:LOL_Scale9Button = new LOL_Scale9Button("稍后",150,46,"UI_btn_normalFun_0000");
+         later.x = box.x + (width - later.width) * 0.5;
+         later.y = box.y + height - 54;
+         later.addEventListener("triggered",closeLimitBreakPanel);
+         mLimitBreakPanel.addChild(later);
+         addChild(mLimitBreakPanel);
+      }
+
+      private function onLimitBreakChoice(event:Event) : void
+      {
+         if(mLimitBreakBusy || !mLimitBreakEncounter) return;
+         var iid:String = String((event.currentTarget as LOL_Scale9Button).name);
+         if((mLimitBreakEncounter.candidate_ids as Array).indexOf(iid) < 0) return;
+         mLimitBreakBusy = true;
+         SendServiceAMFFun.send_user_avatar_limit_break(function(reply:Object):void
+         {
+            mLimitBreakBusy = false;
+            if(GlobalFunction.isMalformedProfileReceipt(reply) || !reply || int(reply.return_code) != 0) return;
+            if(reply.data && reply.data.ok === false)
+            {
+               closeLimitBreakPanel(null);
+               if(stage) GlobalFunction.popAlert("","符合条件的卡牌已不在背包中，本次机会已结束。");
+               return;
+            }
+            closeLimitBreakPanel(null);
+            if(stage) GlobalFunction.popAlert("","突破极限成功，等级上限已提升至125。");
+         },{"aid":iid});
+         setTimeout(function():void { mLimitBreakBusy = false; },5000);
+      }
+
+      private function closeLimitBreakPanel(event:Event) : void
+      {
+         if(mLimitBreakPanel)
+         {
+            mLimitBreakPanel.removeFromParent(true);
+            mLimitBreakPanel = null;
+         }
+         mLimitBreakEncounter = null;
+         mLimitBreakBusy = false;
       }
       
       private function close_Trigered(param1:Event) : void

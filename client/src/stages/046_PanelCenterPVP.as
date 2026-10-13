@@ -53,6 +53,10 @@ package com.meng52.game.ui.screen
       public var mTxt_pkTimes:TextField;
       
       public var mBtn_re:LOL_Scale9Button;
+
+      private var mBtn_change:LOL_Scale9Button;
+
+      private var mChange_s:Number = -100;
       
       public var mPVP_list:Array;
       
@@ -668,6 +672,11 @@ package com.meng52.game.ui.screen
          {
             mBtn_re.removeFromParent(true);
          }
+         if(mBtn_change)
+         {
+            mBtn_change.removeEventListener("triggered",changeOpponents);
+            mBtn_change.removeFromParent(true);
+         }
          if(mBg_list)
          {
             mBg_list.removeFromParent(true);
@@ -689,6 +698,7 @@ package com.meng52.game.ui.screen
          mTxt_pkTimes = null;
          _txt_coin = null;
          mBtn_re = null;
+         mBtn_change = null;
          mBg_list = null;
          mBg_number = null;
          headImg = null;
@@ -750,6 +760,15 @@ package com.meng52.game.ui.screen
          this.mBtn_re.y = mBg_list.y - 50 - 20;
          this.addChild(this.mBtn_re);
          mBtn_re.visible = !GlobalFunction.checkIsFirstPVP();
+         if(this.mTabBar.selectedIndex == 1 && !GlobalFunction.checkIsFirstPVP())
+         {
+            mBtn_change = new LOL_Scale9Button("换一批",135,70,"UI_btn_normalFun_0000");
+            mBtn_change.x = mBg_list.x + 165;
+            mBtn_change.y = mBg_list.y - 70;
+            mBtn_change.visible = !mFun_status;
+            mBtn_change.addEventListener("triggered",changeOpponents);
+            addChild(mBtn_change);
+         }
          if(mBox_info)
          {
             mBox_info.flatten();
@@ -773,6 +792,7 @@ package com.meng52.game.ui.screen
       private function onTRIGGERED_btns(param1:Event) : void
       {
          mFun_status = !mFun_status;
+         if(mBtn_change) mBtn_change.visible = !mFun_status;
          if(mFun_status)
          {
             mBtn_re.text = GlobalLanguageStr.getLanguageStr(98124);
@@ -783,6 +803,15 @@ package com.meng52.game.ui.screen
             mBtn_re.text = GlobalLanguageStr.getLanguageStr(98123);
             selectList(true);
          }
+      }
+
+      private function changeOpponents(param1:Event) : void
+      {
+         if(mFun_status || this.mTabBar.selectedIndex != 1) return;
+         var now:Number = SendAndSelect.$systemTimer_nowSecond;
+         if(now - mChange_s < 2 || SendAndSelect.checkRepeat("user.refresh_pvp_opponents","")) return;
+         mChange_s = now;
+         SendServiceAMFFun.send_user_refresh_pvp_opponents(re_get_rank_list);
       }
       
       public function selectList(param1:Boolean) : void

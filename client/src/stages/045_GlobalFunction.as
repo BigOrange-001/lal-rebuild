@@ -1297,22 +1297,11 @@ package com.meng52.game.global
       
       public static function getAllVipExp() : int
       {
-         var _loc5_:int = 0;
-         var _loc4_:int = getVipLv();
-         if(_loc4_ == 0)
-         {
-            return 0;
-         }
-         var _loc2_:int = int(GlobalData.$userData.vip_exp);
-         var _loc1_:int = geVipMaxLv();
-         var _loc3_:Object = GlobalData.$mConfig_vip;
-         _loc5_ = 1;
-         while(_loc5_ < _loc4_)
-         {
-            _loc2_ += _loc3_[_loc5_].need_exp;
-            _loc5_++;
-         }
-         return _loc2_;
+         var _loc1_:int = getVipLv();
+         var _loc2_:Object = GlobalData.$mConfig_vip[_loc1_.toString()];
+         // The server sends progress within the current tier.  The row's exp
+         // is its cumulative gift-coin threshold, including VIP1's first 60.
+         return int(_loc2_ ? _loc2_.exp : 0) + int(GlobalData.$userData.vip_exp);
       }
       
       public static function geVipMaxLv() : int
@@ -1367,27 +1356,8 @@ package com.meng52.game.global
       
       public static function getVipEXP(param1:int) : Number
       {
-         var _loc2_:Object = null;
-         var _loc4_:int = 0;
-         var _loc3_:Number = 0;
-         if(param1 <= 1)
-         {
-            _loc3_ = 0;
-         }
-         else
-         {
-            _loc4_ = param1 - 1;
-            while(_loc4_ > 0)
-            {
-               _loc2_ = GlobalData.$mConfig_vip[_loc4_.toString()];
-               if(_loc2_)
-               {
-                  _loc3_ += int(_loc2_.need_exp);
-               }
-               _loc4_--;
-            }
-         }
-         return _loc3_;
+         var _loc1_:Object = GlobalData.$mConfig_vip[param1.toString()];
+         return _loc1_ ? Number(_loc1_.exp) : 0;
       }
       
       public static function getVIPTimeS() : Number

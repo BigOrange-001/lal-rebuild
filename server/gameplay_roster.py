@@ -12,6 +12,7 @@ from player_store import GameplayFault
 from gameplay_common import grant_reward, ensure_hero_acquirable, skin_acquisition_blocked_ids, equipment_exclusive_ids
 from pve_modes import exploration_stages
 from equipment_growth_v2 import (
+    alchemy_upgrade_steps as equipment_alchemy_upgrade_steps,
     effective_cap as equipment_effective_cap,
     main_stat as equipment_main_stat,
     migrate_item_wash,
@@ -25,7 +26,7 @@ from equipment_growth_v2 import (
 class GameplayRosterEquipment:
     HERO_METHODS = {
         "user.wager_avatar", "user.fix_team", "user.swallow_avatar", "user.swallow_skillbook",
-        "user.star_up", "user.phase_up", "user.sell_avatars", "user.avatar_culture",
+        "user.star_up", "user.phase_up", "user.avatar_limit_break", "user.sell_avatars", "user.avatar_culture",
         "user.avatar_culture_save", "user.avatar_culture_cancel", "user.get_avatar_talent",
         "user.save_talent", "user.dn_unlock", "user.dn_lvup", "user.morph",
         "user.soul_exchange_avatar",
@@ -919,6 +920,34 @@ class GameplayRosterEquipment:
         return p["gold"]
 
     def _mutate(self, p, m, x):
+        if m == "user.avatar_limit_break":
+            pending = p.get("pending_limit_break")
+            if not isinstance(pending, dict) or not isinstance(pending.get("candidate_ids"), list):
+                self._fail("NoLimitBreakEncounter", "No breakthrough encounter is available")
+            requested = self._id(x.get("aid"), "aid")
+            candidates = pending["candidate_ids"]
+            if requested not in candidates:
+                self._fail("InvalidLimitBreakCandidate", "Hero was not offered in this encounter")
+            owned = p.get("avatars", {})
+            valid = []
+            for candidate_id in candidates:
+                hero = owned.get(candidate_id) if isinstance(owned, dict) else None
+                aid = str(hero.get("aid", candidate_id)).split("|")[0] if isinstance(hero, dict) else ""
+                if (isinstance(hero, dict) and aid.startswith("A_1")
+                        and aid.rsplit("_", 1)[-1] in ("5", "6")
+                        and int(hero.get("lv", 1)) >= 99
+                        and not int(hero.get("limit_break", 0) or 0)):
+                    valid.append(candidate_id)
+            if not valid:
+                p.pop("pending_limit_break", None)
+                return {"ok": False, "reason": "NoEligibleHero", "pending_limit_break": None}
+            if requested not in valid:
+                self._fail("InvalidLimitBreakCandidate", "Selected hero is no longer eligible")
+            hero = owned[requested]
+            hero["limit_break"] = 1
+            p.pop("pending_limit_break", None)
+            return {"ok": True, "aid": requested, "limit_break_hero": requested,
+                    "pending_limit_break": None}
         if m == "user.set_defensive_squad":
             teams = x.get("teams")
             if not isinstance(teams, list) or len(teams) != 3 or any(not isinstance(team, list) or len(team) != 5 for team in teams):
@@ -1085,7 +1114,7 @@ class GameplayRosterEquipment:
                     if hid == tid or hid in ids: self._fail("InvalidMaterials", "Target and duplicate heroes cannot be consumed")
                     self._check_not_team(p, hid); self._check_not_dn(p, hid); ids.append(hid); materials.append(material)
                 target_aid = target.get("aid", tid).split("|")[0]
-                level_cap = self._hero_level_cap(target_aid)
+                level_cap = self._hero_level_cap(target_aid, target)
                 at_level_cap = int(target.get("lv", 1)) >= level_cap
                 award_exp = sum(self._hero_offer_exp(p["avatars"][i]) for i in ids)
                 # PanelBetterStart.getBetterGive sets both give.exp and
@@ -1211,7 +1240,7 @@ class GameplayRosterEquipment:
                 # path and remains available without this level requirement.
                 # Keep this after material validation so existing assignment
                 # protections retain their more useful, specific error.
-                level_cap = self._hero_level_cap(base)
+                level_cap = self._hero_level_cap(base, target)
                 if int(target.get("lv", 1)) < level_cap:
                     self._fail("MaxLevel", "Hero must reach its level cap before star-up")
             else:
@@ -1245,7 +1274,7 @@ class GameplayRosterEquipment:
             promoted_tl = promoted_row.get("tl", [0] * 8)
             promoted_rate = float(promoted_tl[5]) if len(promoted_tl) > 5 else 1.0
             replacement["lv"], replacement["exp"] = self._level_from_exp(
-                total_exp, self._hero_level_cap(next_aid), next_aid, promoted_rate
+                total_exp, self._hero_level_cap(next_aid, replacement), next_aid, promoted_rate
             )
             replacement.update({"id": promoted_id, "aid": promoted_id})
             p["avatars"][promoted_id] = replacement
@@ -1362,7 +1391,7 @@ class GameplayRosterEquipment:
             min_star = int(morph_attr[2]) if len(morph_attr) > 2 else 5
             if unit_type != 1 or star < min_star:
                 self._fail("MorphRequirements", "This hero does not meet the transformation requirements")
-            level_cap = self._hero_level_cap(morph_aid)
+            level_cap = self._hero_level_cap(morph_aid, hero)
             if int(hero.get("lv", 1)) < level_cap:
                 self._fail("MorphRequirements", "Hero must reach its level limit before transformation")
 
@@ -1621,11 +1650,20 @@ class GameplayRosterEquipment:
             # gold fee; return those exact amounts in the normal profile-data
             # envelope consumed by GlobalFunction.update_UserData.
             gold_gain, mark_gain, dust_gain = self._equip_sell_rewards(mat)
-            if "alchemy" in target:
-                phase, extra = [int(v) for v in target["alchemy"]]
-                target["alchemy"] = [phase + 1, extra] if phase < 2 else [0, extra + 1]
-            else:
-                target["alchemy"] = [1, 0]
+            alchemy = target.get("alchemy", [0, 0])
+            if not isinstance(alchemy, list) or len(alchemy) != 2:
+                self._fail("InvalidEquipment", "Equipment alchemy state is invalid")
+            phase, extra = [int(v) for v in alchemy]
+            if phase not in (0, 1, 2) or extra < 0:
+                self._fail("InvalidEquipment", "Equipment alchemy state is invalid")
+            base_star = int(str(target["eid"]).rsplit("_", 1)[-1])
+            steps = equipment_alchemy_upgrade_steps(int(p.get("vip_lv", 0)), self.rng)
+            max_steps = 3 * (max_star - base_star)
+            old_steps = 3 * extra + phase
+            final_steps = min(max_steps, old_steps + steps)
+            bonus_applied = max(0, final_steps - min(max_steps, old_steps + 1))
+            next_extra, next_phase = divmod(final_steps, 3)
+            target["alchemy"] = [next_phase, next_extra]
             del p["my_equips"][mat_id]
             p["gold"] = int(p.get("gold", 0)) + gold_gain
             p["mark"] = int(p.get("mark", 0)) + mark_gain
@@ -1634,7 +1672,8 @@ class GameplayRosterEquipment:
             while len(dust) < 4: dust.append(0)
             dust = [int(a) + int(b) for a, b in zip(dust, dust_gain)]
             p["attrs"]["dust"] = dust
-            return {"my_equips": p["my_equips"], "gold": p["gold"], "mark": p["mark"], "attrs": p["attrs"]}
+            return {"my_equips": p["my_equips"], "gold": p["gold"], "mark": p["mark"],
+                    "attrs": p["attrs"], "alchemy_bonus_step": bonus_applied}
         self._fail("NotImplemented", f"Method not reconstructed: {m}")
 
     def _new_hero(self, p, aid, retain=None):
@@ -1644,7 +1683,7 @@ class GameplayRosterEquipment:
         if len(p.setdefault("avatars", {})) >= cap: self._fail("RosterFull", "Hero roster is full")
         seq = max([int(v.get("id", "|0").rsplit("|", 1)[-1]) for v in p.setdefault("avatars", {}).values() if "|" in str(v.get("id", ""))] or [-1]) + 1
         iid = f"{aid}|{seq}"
-        obj = copy.deepcopy(retain) if retain else {"lv": 1, "slv": 1, "exp": 0, "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0, "phase": 0, "morph": 0, "love_exp": 0, "equips": []}
+        obj = copy.deepcopy(retain) if retain else {"lv": 1, "slv": 1, "exp": 0, "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0, "phase": 0, "morph": 0, "limit_break": 0, "love_exp": 0, "equips": []}
         obj.update({"id": iid, "aid": iid})
         p["avatars"][iid] = obj
         return obj
@@ -1676,7 +1715,7 @@ class GameplayRosterEquipment:
         }
         return key
 
-    def _hero_level_cap(self, aid):
+    def _hero_level_cap(self, aid, hero=None):
         try:
             star = int(str(aid).rsplit("_", 1)[-1])
             unit_type = int(str(aid).split("_")[1][:1])
@@ -1685,6 +1724,12 @@ class GameplayRosterEquipment:
             unit_type = 1
         tier_cap = ({2: 20, 3: 30, 4: 60, 5: 99}.get(star, 99)
                     if unit_type == 1 else 1)
+        if unit_type == 1 and star in (5, 6) and isinstance(hero, dict):
+            try:
+                if int(hero.get("limit_break", 0) or 0) == 1:
+                    return 125
+            except (TypeError, ValueError, OverflowError):
+                pass
         tl = self.heroes.get(aid, {}).get("tl", [])
         configured_cap = int(tl[4]) if isinstance(tl, list) and len(tl) > 4 else tier_cap
         return min(99, tier_cap, max(1, configured_cap))
@@ -1700,7 +1745,7 @@ class GameplayRosterEquipment:
             return
         for hero in profile.setdefault("avatars", {}).values():
             aid = str(hero.get("aid", hero.get("id", ""))).split("|")[0]
-            cap = self._hero_level_cap(aid)
+            cap = self._hero_level_cap(aid, hero)
             level = max(1, int(hero.get("lv", 1)))
             row = self.heroes.get(aid, {})
             tl = row.get("tl", [])
@@ -1942,7 +1987,7 @@ class GameplayRosterEquipment:
         if not row: self._fail("UnknownHero", f"No combat config for {aid}")
         tl, pl = row.get("tl", []), row.get("pl", [])
         if len(pl) < 13: self._fail("InvalidConfig", f"Hero {aid} has incomplete attributes")
-        lv = max(1, int(hero.get("lv", 1))); lv = min(lv, self._hero_level_cap(aid))
+        lv = max(1, int(hero.get("lv", 1))); lv = min(lv, self._hero_level_cap(aid, hero))
         phase = max(0, int(hero.get("phase", 0)))
         phase_rows = self.simple.get("phase_config", [])
         hero_type = int(aid[2]) if len(aid) > 2 and aid[2].isdigit() else 1

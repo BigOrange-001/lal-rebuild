@@ -187,7 +187,13 @@ def apply_activity_tower(full_config: dict) -> tuple[dict, dict]:
                                   "daily_attempts": "ceil(2+VIP/2) shared by material chapter",
                                   "energy": 10, "tower_ordered": True,
                                   "tower_soul_reward": 120}
-    for table in ("battle_ploy", "combat_ploy"):
+    # Generated material/tower rosters use the same NPC level policy as a
+    # feedback pass over an already published config.
+    from pve_feedback_overlay import retune_campaign_tables, retune_tower_tables
+    report["feedback_campaign"] = retune_campaign_tables(pve, cfg)
+    report["feedback_tower"] = retune_tower_tables(pve, cfg)
+    pve.setdefault("feedback_overlay", {})["schema"] = "lateral-stagger-and-npc-skills-v1"
+    for table in ("battle_main", "combat_main", "battle_ploy", "combat_ploy"):
         output[table] = copy.deepcopy(pve[table])
         cfg[table] = copy.deepcopy(pve[table])
     report["chapters"] = len(pve["battle_ploy"])

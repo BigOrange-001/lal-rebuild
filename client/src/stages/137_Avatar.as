@@ -30,7 +30,6 @@ package com.meng52.game.module.avatar
    import starling.animation.Tween;
    import starling.display.DisplayObject;
    import starling.display.Image;
-   import starling.display.Quad;
    import starling.display.Sprite;
    import starling.events.Touch;
    import starling.events.TouchEvent;
@@ -985,7 +984,7 @@ package com.meng52.game.module.avatar
 
       public var m_icon:Image;
 
-      private var mLimitBreakEdge:Sprite;
+      private var mLimitBreakEdges:Vector.<Image> = new Vector.<Image>();
 
       public var isOthers:Boolean;
 
@@ -1591,7 +1590,7 @@ package com.meng52.game.module.avatar
          {
             m_avatarRes = newAvatarRes(null,param1,param2,param3);
          }
-         if(limitBreak == 0) m_avatarRes.flatten();
+         if(!m_avatarRes.getChildByName("limitBreakEdge")) m_avatarRes.flatten();
          return m_avatarRes;
       }
 
@@ -1602,7 +1601,7 @@ package com.meng52.game.module.avatar
 
       public function newAvatarRes(param1:Sprite = null, param2:Boolean = false, param3:Boolean = false, param4:Boolean = false) : Sprite
       {
-         clearLimitBreakEdge();
+         if(param1) clearLimitBreakEdge(param1);
          var _loc6_:Image = null;
          var _loc9_:Boolean = false;
          var _loc11_:Image = null;
@@ -1645,7 +1644,27 @@ package com.meng52.game.module.avatar
          }
          m_icon.touchable = true;
          param1.addChild(m_icon);
-         if(limitBreak > 0 && getType() == 1 && getStar() >= 5)
+         var hasLimitBreakVisual:Boolean = limitBreak > 0 && getType() == 1 && (getStar() == 5 || getStar() == 6);
+         if(hasLimitBreakVisual || morph > 0)
+         {
+            _loc14_ = Math.min(1,Math.max(0,getStar() - 5));
+            _loc11_ = GlobalFunction.createImage("UI_bg_card_4_2_ 000" + String(_loc14_));
+            _loc11_.touchable = false;
+            _loc11_.x = m_icon.x - 3;
+            _loc11_.y = m_icon.y - 1;
+            param1.addChild(_loc11_);
+            if(hasLimitBreakVisual)
+            {
+               _loc11_.name = "limitBreakEdge";
+               mLimitBreakEdges.push(_loc11_);
+               var pulse:Tween = new Tween(_loc11_,0.85,"easeInOut");
+               pulse.animate("alpha",0.45);
+               pulse.reverse = true;
+               pulse.repeatCount = 0;
+               if(GlobalData.$mStarling) GlobalData.$mStarling.juggler.add(pulse);
+            }
+         }
+         if(hasLimitBreakVisual)
          {
             var breakColor:uint = getStar() == 5 ? 0xB561F1 : 0xFF9B32;
             var breakLabel:TextField = GlobalTextStyle.getTextField("突破极限",15,breakColor,"center",m_icon.width,20);
@@ -1653,44 +1672,6 @@ package com.meng52.game.module.avatar
             breakLabel.y = m_icon.y - 21;
             breakLabel.touchable = false;
             param1.addChild(breakLabel);
-            mLimitBreakEdge = new Sprite();
-            mLimitBreakEdge.touchable = false;
-            var bx:Number = m_icon.x + 1;
-            var by:Number = m_icon.y + 1;
-            var bw:Number = m_icon.width - 2;
-            var bh:Number = m_icon.height - 2;
-            for(var edge:int = 0; edge < 4; edge++)
-            {
-               var span:Number = edge % 2 == 0 ? bw : bh;
-               var steps:int = Math.max(6,int(span / 9));
-               var fromX:Number = edge == 0 || edge == 3 ? bx : bx + bw;
-               var fromY:Number = edge < 2 ? by : by + bh;
-               for(var segment:int = 1; segment <= steps; segment++)
-               {
-                  var t:Number = segment / steps;
-                  var zig:Number = segment == steps ? 0 : (segment % 2 == 0 ? 3 : -3);
-                  var toX:Number = edge == 0 ? bx + t * bw : edge == 1 ? bx + bw + zig : edge == 2 ? bx + bw - t * bw : bx + zig;
-                  var toY:Number = edge == 0 ? by + zig : edge == 1 ? by + t * bh : edge == 2 ? by + bh + zig : by + bh - t * bh;
-                  addLimitBreakSegment(mLimitBreakEdge,fromX,fromY,toX,toY,breakColor);
-                  fromX = toX;
-                  fromY = toY;
-               }
-            }
-            param1.addChild(mLimitBreakEdge);
-            var pulse:Tween = new Tween(mLimitBreakEdge,0.85,"easeInOut");
-            pulse.animate("alpha",0.45);
-            pulse.reverse = true;
-            pulse.repeatCount = 0;
-            GlobalData.$mStarling.juggler.add(pulse);
-         }
-         if(morph > 0)
-         {
-            _loc14_ = Math.max(0,getStar() - 5);
-            _loc11_ = GlobalFunction.createImage("UI_bg_card_4_2_ 000" + String(_loc14_));
-            _loc11_.touchable = false;
-            _loc11_.x = m_icon.x - 3;
-            _loc11_.y = m_icon.y - 1;
-            param1.addChild(_loc11_);
          }
          var _loc10_:Image = GlobalFunction.createImage("UI_tag_0_000" + (String(this.avatarData.damageType - 1)));
          _loc10_.touchable = false;
@@ -1727,23 +1708,15 @@ package com.meng52.game.module.avatar
          return param1;
       }
 
-      private function addLimitBreakSegment(target:Sprite,x0:Number,y0:Number,x1:Number,y1:Number,color:uint) : void
+      private function clearLimitBreakEdge(container:Sprite = null) : void
       {
-         var dx:Number = x1 - x0;
-         var dy:Number = y1 - y0;
-         var segment:Quad = new Quad(Math.sqrt(dx * dx + dy * dy),2.5,color);
-         segment.x = x0;
-         segment.y = y0;
-         segment.rotation = Math.atan2(dy,dx);
-         segment.touchable = false;
-         target.addChild(segment);
-      }
-
-      private function clearLimitBreakEdge() : void
-      {
-         if(!mLimitBreakEdge) return;
-         if(GlobalData.$mStarling) GlobalData.$mStarling.juggler.removeTweens(mLimitBreakEdge);
-         mLimitBreakEdge = null;
+         for(var i:int = mLimitBreakEdges.length - 1; i >= 0; i--)
+         {
+            var image:Image = mLimitBreakEdges[i];
+            if(container && image.parent != container) continue;
+            if(GlobalData.$mStarling) GlobalData.$mStarling.juggler.removeTweens(image);
+            mLimitBreakEdges.splice(i,1);
+         }
       }
 
       public function refreshIcon() : void
@@ -1973,6 +1946,7 @@ package com.meng52.game.module.avatar
          var _loc3_:Array = null;
          var _loc2_:Boolean = false;
          var previousLimitBreak:int = limitBreak;
+         var previousMorph:int = morph;
          skill0 = null;
          skill1 = null;
          skill2 = null;
@@ -2112,7 +2086,7 @@ package com.meng52.game.module.avatar
          }
          initHalo(param1);
          initSkills();
-         if(m_avatarRes && previousLimitBreak != limitBreak)
+         if(m_avatarRes && (previousLimitBreak != limitBreak || previousMorph != morph))
          {
             m_avatarRes.unflatten();
             newAvatarRes(m_avatarRes);
@@ -6347,7 +6321,7 @@ package com.meng52.game.module.avatar
 
       public function clearUI() : void
       {
-         clearLimitBreakEdge();
+         clearLimitBreakEdge(m_avatarRes);
          if(m_avatarRes)
          {
             StarlingTools.removeChildrenClear(m_avatarRes);

@@ -333,7 +333,7 @@ class GameplayCombat:
             line = max(0, min(2, int(row[1]))) if len(row) > 2 else 0
             pos = max(0.0, min(1.0, float(row[2]))) if len(row) > 2 else 0.5
             overrides = {key: avatar.get(key) for key in (
-                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph",
+                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase",
                 "skill", "leader_skill", "book_skill", "skillB")}
             overrides["leader_skill"] = avatar.get("leader_skill") if is_friend else None
             overrides["new_4attrs"] = {
@@ -871,7 +871,7 @@ class GameplayCombat:
                     # retain stale multi-lane indices from another mode.
                     _, pos = (int(row[1]), float(row[2])) if len(row) >= 3 else (0, .2 + .24 * i)
                     line = 0
-                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "skill", "leader_skill", "book_skill", "skillB")}
+                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "skill", "leader_skill", "book_skill", "skillB")}
                     # Avatar.toDataObj serializes leader_skill only for the
                     # actual team leader. Exploration's first selected unit
                     # is the sole leader, just like other local battles.

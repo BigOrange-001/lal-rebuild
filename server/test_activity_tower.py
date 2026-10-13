@@ -51,13 +51,13 @@ class ActivityTowerTest(unittest.TestCase):
                 self.assertEqual(stage["team2"][0][14], 3)
                 advanced = serialize_stage_team(self.config["cfg"], stage["team2"])
                 self.assertEqual((advanced[0]["phase"], advanced[0]["limit_break"]), (3, 1))
-        for floor, star, phase in ((1, 4, None), (21, 5, None), (41, 6, None),
-                                   (61, 6, None), (81, 6, 3), (100, 6, 3)):
+        for floor, star, phase in ((1, 4, 0), (21, 5, 0), (41, 6, 0),
+                                   (61, 6, 0), (81, 6, 3), (100, 6, 3)):
             stage = pve["combat_ploy"][f"P_200_{floor}"]
             self.assertTrue(all(row[0].endswith(f"_{star}") for row in stage["team2"]))
             snapshots = serialize_stage_team(self.config["cfg"], stage["team2"])
             self.assertEqual((snapshots[0].get("phase"), snapshots[0].get("limit_break")),
-                             (phase, 1 if phase is not None else None))
+                             (phase, 1 if phase == 3 else None))
             self.assertEqual(stage["recommended_power"], _power(
                 self.config["cfg"], stage["team2"], stage["enemy_unit_stats_by_diff"]["0"]))
         self.assertLess(abs(pve["combat_ploy"]["P_200_1"]["recommended_power"] - 100000), 100)

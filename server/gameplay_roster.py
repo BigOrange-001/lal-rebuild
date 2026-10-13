@@ -2160,6 +2160,25 @@ class GameplayRosterEquipment:
             action_index = int(skill_up[0])
             if 0 <= action_index < len(actions) and isinstance(actions[action_index], list) and len(actions[action_index]) > 1:
                 actions[action_index][1] += float(skill_up[1]) * (skill_level - 1)
+        # SkillSet.init also grows nested coefficients (for example a DOT
+        # payload). Player attributes override base_unit's skill snapshot, so
+        # this roster path must apply the same authored rank paths as NPCs.
+        for entry in row.get("skillUpPaths", []) or []:
+            if not isinstance(entry, list) or len(entry) != 3 or not isinstance(entry[1], list) or not entry[1]:
+                continue
+            action_index, path, step = entry
+            if type(action_index) is not int or not 0 <= action_index < len(actions) or not isinstance(step, (int, float)) or not math.isfinite(step):
+                continue
+            target = actions[action_index]
+            valid = True
+            for index in path[:-1]:
+                if type(index) is not int or not isinstance(target, list) or not 0 <= index < len(target):
+                    valid = False
+                    break
+                target = target[index]
+            leaf = path[-1]
+            if valid and isinstance(target, list) and type(leaf) is int and 0 <= leaf < len(target) and isinstance(target[leaf], (int, float)):
+                target[leaf] += step * (min(10, skill_level) - 1)
         return {"cd": int(pl[0]) if pl else 0, "pl": copy.deepcopy(pl), "skid": skill_id, "skills": actions}
 
     def _native_skill_level_cap(self):

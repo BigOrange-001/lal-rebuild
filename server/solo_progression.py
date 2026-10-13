@@ -5,6 +5,7 @@ import hashlib
 import math
 import random
 import copy
+from pve_formation import stagger_lane_offsets
 
 
 def arena_equipment(config: dict, bot: dict, units: list[dict]) -> list[dict]:
@@ -71,7 +72,11 @@ def exploration_encounter(config: dict, profile: dict, state: dict, stage: int, 
     selected = candidates[:3]
     if len(selected) < 3:
         selected = [row[0] for row in template["team2"]][:3]
-    team = [[aid, level, min(10, 1 + stage // 3), 0, 0.08 + i * 0.12, int(i == 0)] for i, aid in enumerate(selected)]
+    team = [[aid, level, 4, 0, 0.08 + i * 0.12, int(i == 0)] for i, aid in enumerate(selected)]
+    # Refreshed exploration maps are generated at runtime rather than read
+    # from the published stage table. Apply the same per-lane placement policy
+    # as authored PVE so all three enemies do not land on one side.
+    stagger_lane_offsets(team)
     reward = {"gold": 12000 + stage * 4000, "exp": 60 + stage * 12,
               "attrs": {"dn_stone": 20 + stage * 10, "culture_book": 1 if stage % 3 == 0 else 0,
                         "dust": [int(stage % 4 == i) for i in range(4)]}}

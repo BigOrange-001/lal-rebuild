@@ -409,6 +409,11 @@ def apply_campaign_workbook(full_config: dict, workbook: Path) -> tuple[dict, di
               "power": {mode: {"min": min(a for _, _, a in values), "max": max(a for _, _, a in values),
                                "max_target_error_pct": round(max(abs(a - t) / t for _, t, a in values) * 100, 4)}
                         for mode, values in power_stats.items()}}
+    # Rebuilds of the authored workbook must publish the same reviewed NPC
+    # skill levels and lateral staggering as the standalone feedback overlay.
+    from pve_feedback_overlay import retune_campaign_tables
+    report["feedback"] = retune_campaign_tables(pve, cfg)
+    pve.setdefault("feedback_overlay", {})["schema"] = "lateral-stagger-and-npc-skills-v1"
     # Config is served from cfg.* while gameplay historically resolves the
     # top-level tables first. Publish the authored PVE tables to both native
     # consumers; otherwise they silently keep the pre-workbook enemy rosters.

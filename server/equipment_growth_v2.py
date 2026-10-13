@@ -59,8 +59,27 @@ def effective_cap(account_level: int, vip_equip_bonus: int) -> int:
 
 
 def vip_crit_probabilities(vip_level: int) -> dict[int, float]:
+    """Mutually exclusive paid upgrade outcomes, linear from VIP0 to VIP15.
+
+    VIP15: 2x 50%, 3x 20%, 5x 15%, 10x 5%, otherwise 1x 10%.
+    Every tier raises (or preserves) each bonus probability monotonically.
+    """
     t = max(0, min(15, int(vip_level))) / 15.0
-    return {2: 0.08 * t, 3: 0.03 * t, 5: 0.01 * t, 10: 0.002 * t}
+    return {2: 0.50 * t, 3: 0.20 * t, 5: 0.15 * t, 10: 0.05 * t}
+
+
+def alchemy_bonus_probability(vip_level: int) -> float:
+    """Chance that one equipment alchemy consumes one item for two steps.
+
+    The native baseline is a guaranteed single step, with one star every
+    three steps. VIP0 keeps that behavior; VIP15 has a 30% bonus-step chance.
+    """
+    return 0.02 * max(0, min(15, int(vip_level)))
+
+
+def alchemy_upgrade_steps(vip_level: int, rng) -> int:
+    chance = alchemy_bonus_probability(vip_level)
+    return 2 if chance > 0 and float(rng.random()) < chance else 1
 
 
 def upgrade_result(old_level: int, cap: int, vip_level: int, rng) -> int:

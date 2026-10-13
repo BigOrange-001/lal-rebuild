@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import math
 import random
+import copy
 
 
 def arena_equipment(config: dict, bot: dict, units: list[dict]) -> list[dict]:
@@ -48,6 +49,10 @@ def expedition_stones(hero: dict) -> int:
 
 
 def exploration_encounter(config: dict, profile: dict, state: dict, stage: int, template: dict) -> dict:
+    # The narrative workbook authors the first/current twelve-stage map. A
+    # refresh increments map_revision and still generates a new seeded map.
+    if template.get("campaign_workbook_fixed") and int(state.get("map_revision", 0)) == 0:
+        return copy.deepcopy(template)
     cfg = config.get("cfg", config)
     families = cfg.get("system_simple", {}).get("solo_hero_families", [])
     avatars = cfg.get("avatar", {})

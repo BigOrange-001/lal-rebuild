@@ -10,7 +10,7 @@ from battle_engine import serialize_player_team, serialize_stage_team, validate_
 from solo_progression import arena_equipment
 
 class GameplayCompetition:
-    METHODS={"user.get_rank_list","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
+    METHODS={"user.get_rank_list","user.refresh_pvp_opponents","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
     def __init__(self,store,full_config):
         self.store=store
         self.full_config=full_config if isinstance(full_config,dict) else {}
@@ -45,6 +45,7 @@ class GameplayCompetition:
         if method not in self.METHODS: self._fail("NotImplemented",f"Competition method not reconstructed: {method}")
         if not isinstance(params,dict): self._fail("InvalidParameter","Expected an object")
         if method=="user.get_rank_list": return self._rank_list(uid)
+        if method=="user.refresh_pvp_opponents": return self._refresh_pvp_opponents(uid,params)
         if method=="user.get_fragment_users": return self._fragment_users(uid)
         if method=="user.get_battle_users": return self._battle_users(uid,params)
         if method=="user.get_my_fragments": return self._my_fragments(uid)
@@ -142,10 +143,50 @@ class GameplayCompetition:
         return next((b for b in self.pvp_bots if int(b.get("group",-1))==group and int(b.get("index",-1))==index),None)
     def _bot_units(self,bot):
         team=bot.get("team",[]) if bot else []
-        return arena_equipment(self.full_config,bot or {},serialize_stage_team(self.cfg,team,team=2))
+        units=arena_equipment(self.full_config,bot or {},serialize_stage_team(self.cfg,team,team=2))
+        if not str((bot or {}).get("uid","")).startswith("r"):
+            return units
+        # Stable per-NPC traits keep preview, battle start and replay identical.
+        phase_config=self.simple.get("phase_config",[])
+        for index,unit in enumerate(units):
+            aid=unit.get("aid","")
+            try: star=int(aid.rsplit("_",1)[-1])
+            except (TypeError,ValueError): continue
+            if not aid.startswith("A_1") or star not in (5,6):
+                continue
+            digest=hashlib.sha256(f'{bot["uid"]}:progression:{index}'.encode()).digest()
+            row=self.heroes.get(aid,{})
+            pl=row.get("pl",[])
+            if digest[2]<38:
+                unit["limit_break"]=1
+                # Strong arena bands can draw an actual post-breakthrough
+                # level. The same stable NPC snapshot is used by the list,
+                # battle start and retained replay.
+                if int(bot.get("rank",999999))<=20 and len(pl)>=8:
+                    old_level=int(unit["lv"])
+                    new_level=max(old_level,100+digest[3]%26)
+                    for key,slope in zip(("hp","ap","de_ph","de_ma"),(1,3,5,7)):
+                        unit[key]=max(1,int(unit[key])+int(float(pl[slope])*(new_level-old_level)))
+                    unit["hp_max"]=unit["hp"]
+                    unit["lv"]=new_level
+            phase=1+digest[1]%2 if digest[0]<64 else 0
+            if phase:
+                if len(pl)>=8:
+                    if star==6:
+                        bonus=[int((float(pl[i])+float(pl[i+1])*(int(unit["lv"])-1))*(1.12**phase-1)) for i in (0,2,4,6)]
+                    else:
+                        table=phase_config[0] if isinstance(phase_config,list) and phase_config else {}
+                        spec=table.get(str(star),[]) if isinstance(table,dict) else []
+                        extra_levels=int(spec[2])*phase if isinstance(spec,list) and len(spec)>2 else 0
+                        bonus=[int(float(pl[i+1])*extra_levels) for i in (0,2,4,6)]
+                    for key,extra in zip(("hp","ap","de_ph","de_ma"),bonus):
+                        unit[key]=max(1,int(unit[key])+extra)
+                    unit["hp_max"]=unit["hp"]
+                    unit["phase"]=phase
+        return units
     @staticmethod
     def _compact(units):
-        return [[u.get("aid"),int(u.get("lv",1)),int(u.get("slv",1)),int(u.get("hp",0)),int(u.get("ap",0)),int(u.get("de_ph",0)),int(u.get("de_ma",0)),int(u.get("phase",0)),int(u.get("line",0)),float(u.get("pos",0)),u.get("talent"),int(u.get("morph",0))] for u in units]
+        return [[u.get("aid"),int(u.get("lv",1)),int(u.get("slv",1)),int(u.get("hp",0)),int(u.get("ap",0)),int(u.get("de_ph",0)),int(u.get("de_ma",0)),int(u.get("phase",0)),int(u.get("line",0)),float(u.get("pos",0)),u.get("talent"),int(u.get("morph",0)),int(u.get("limit_break",0))] for u in units]
     def _team_power(self, units):
         """Compute the finite battle-power value consumed by DoorLayer.
 
@@ -210,7 +251,7 @@ class GameplayCompetition:
         for slot,iid in enumerate(ids):
             if not iid or iid not in p.get("avatars",{}): continue
             raw=self._attr(p,iid); hero=p["avatars"][iid]
-            out.append([raw["aid"],raw["lv"],raw["slv"],raw["hp"],raw["ap"],raw["de_ph"],raw["de_ma"],raw["phase"],slot%3,slot/6,raw["talent"],raw["morph"]])
+            out.append([raw["aid"],raw["lv"],raw["slv"],raw["hp"],raw["ap"],raw["de_ph"],raw["de_ma"],raw["phase"],slot%3,slot/6,raw["talent"],raw["morph"],int(hero.get("limit_break",0) or 0)])
         return out
     def _rank(self,p):
         attrs=p.setdefault("attrs",{}); records=p.setdefault("records",{})
@@ -324,11 +365,24 @@ class GameplayCompetition:
                 # A malformed local NPC has no valid rank-list entry or battle
                 # target. Skip that row instead of rendering it as a duplicate.
                 return False
-        for b in bots:
-            try: br=int(b.get("rank",0))
-            except (TypeError,ValueError): continue
-            if br>=max(1,rank-4) and br<=rank+8:
-                append_bot(b)
+        records=p.get("records",{}) if isinstance(p.get("records"),dict) else {}
+        generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
+        if generation:
+            nearby=[]
+            for b in bots:
+                try: br=int(b.get("rank",0))
+                except (TypeError,ValueError): continue
+                if max(1,rank-24)<=br<=rank+8:
+                    nearby.append(b)
+            if nearby:
+                nearby.sort(key=lambda b:hashlib.sha256(f'{uid}:{generation}:{b.get("uid","")}'.encode()).digest())
+                for b in nearby[:8]: append_bot(b)
+        else:
+            for b in bots:
+                try: br=int(b.get("rank",0))
+                except (TypeError,ValueError): continue
+                if br>=max(1,rank-4) and br<=rank+8:
+                    append_bot(b)
         # When the player's rank is outside configured NPC bands, offer the
         # nearest valid NPCs without manufacturing duplicate ranks or UIDs.
         if not rows:
@@ -372,6 +426,14 @@ class GameplayCompetition:
         day_entry=records.get("local_pvp_rank_days",{}).get(today,{}) if isinstance(records.get("local_pvp_rank_days",{}),dict) else {}
         today_count=int(day_entry.get("count",0)) if isinstance(day_entry,dict) else 0
         return [rank,[selfrow],rows,wins,losses,int(p.get("mark",0)),today_count]
+    def _refresh_pvp_opponents(self,uid,params):
+        def change(profile):
+            records=profile.setdefault("records",{})
+            generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
+            records["pvp_opponent_generation"]=generation+1
+            return {"generation":generation+1}
+        self._write(uid,"user.refresh_pvp_opponents",params,change)
+        return self._rank_list(uid)
     def _fragment_state(self,p):
         frag=p.setdefault("fragment",{}).setdefault("equips",{})
         blocked=equipment_exclusive_ids(self.full_config)

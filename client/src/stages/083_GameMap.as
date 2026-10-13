@@ -424,6 +424,7 @@ package com.meng52.game.module.map
             return;
          }
          var _loc4_:GameMapData = gameMapData;
+         var campaignEnemyRows:Array = _loc4_.getTeam2List(diff);
          if(param1 || !teamMyList)
          {
             teamMyList = new Vector.<Avatar>();
@@ -549,7 +550,10 @@ package com.meng52.game.module.map
             _loc8_ = _loc4_.team1List[_loc9_];
             if(_loc8_ != null)
             {
-               _loc2_ = new Avatar(_loc8_[0],_loc8_);
+               // Avatar.init treats arrays of length >= 12 as arena compact
+               // snapshots. Stage tuple extensions at 11/12 are metadata,
+               // never compact hp/phase/morph/limit-break fields.
+               _loc2_ = new Avatar(_loc8_[0],_loc8_.slice(0,11));
                _loc2_.actionNum = team1List.length;
                if(param1)
                {
@@ -570,14 +574,14 @@ package com.meng52.game.module.map
             }
             _loc9_++;
          }
-         _loc5_ = int(_loc4_.team2List.length);
+         _loc5_ = int(campaignEnemyRows.length);
          _loc9_ = 0;
          while(_loc9_ < _loc5_)
          {
-            _loc8_ = _loc4_.team2List[_loc9_];
+            _loc8_ = campaignEnemyRows[_loc9_];
             if(_loc8_ != null)
             {
-               _loc2_ = new Avatar(_loc8_[0],_loc8_);
+               _loc2_ = new Avatar(_loc8_[0],_loc8_.slice(0,11));
                _loc2_.dropRate = _loc8_[6];
                _loc2_.dropId = _loc8_[8];
                if(_loc8_[9])
@@ -588,10 +592,15 @@ package com.meng52.game.module.map
                   }],false);
                }
                _loc2_.goFight(2,_loc8_[3],_loc8_[4],_loc8_[5]);
-               _loc2_.offset = ((_loc9_ + 1) / (_loc5_ + 1) - 0.5) * GameMapConfig.sideOffset;
+               _loc2_.offset = _loc8_.length > 11 && _loc8_[11] != null ? Number(_loc8_[11]) * GameMapConfig.sideOffset : ((_loc9_ + 1) / (_loc5_ + 1) - 0.5) * GameMapConfig.sideOffset;
                _loc4_.initAvatarNew4attrs(_loc2_);
                GameMapTools.initAvatarDiff(_loc2_,diff);
                GameMapTools.applyEnemyStatOverride(_loc2_,_loc4_.getEnemyStatOverride(_loc9_,diff,String(_loc8_[0])));
+               if(_loc8_.length > 12 && _loc8_[12] != null)
+               {
+                  _loc2_.manualAttackRangeOverride = Number(_loc8_[12]);
+                  _loc2_.range = int(_loc8_[12]);
+               }
                team2List.push(_loc2_);
                alive2List.push(_loc2_);
                _loc2_.refreshPos();
@@ -1759,7 +1768,12 @@ package com.meng52.game.module.map
             _loc7_ = _loc8_[_loc10_];
             _loc2_ = new Avatar(_loc7_.aid,_loc7_);
             _loc2_.goFight(2,_loc7_.line,_loc7_.pos / GameMapConfig.LINE_POS,_loc7_.leader);
-            _loc2_.offset = ((_loc10_ + 1) / (_loc5_ + 1) - 0.5) * GameMapConfig.sideOffset;
+            _loc2_.offset = _loc7_.side_offset != null ? Number(_loc7_.side_offset) * GameMapConfig.sideOffset : ((_loc10_ + 1) / (_loc5_ + 1) - 0.5) * GameMapConfig.sideOffset;
+            if(_loc7_.manual_attack_range != null)
+            {
+               _loc2_.manualAttackRangeOverride = Number(_loc7_.manual_attack_range);
+               _loc2_.range = int(_loc7_.manual_attack_range);
+            }
             team2List.push(_loc2_);
             alive2List.push(_loc2_);
             _loc2_.refreshPos();

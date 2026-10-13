@@ -5,6 +5,7 @@ package com.meng52.game.module.avatar
    import com.meng52.game.global.GlobalData;
    import com.meng52.game.global.GlobalFunction;
    import com.meng52.game.global.GlobalLanguageStr;
+   import com.meng52.game.global.GlobalTextStyle;
    import com.meng52.game.module.BaseDisplayModule;
    import com.meng52.game.module.equip.Equip;
    import com.meng52.game.module.guide.GuideMaster;
@@ -29,6 +30,7 @@ package com.meng52.game.module.avatar
    import starling.animation.Tween;
    import starling.display.DisplayObject;
    import starling.display.Image;
+   import starling.display.Quad;
    import starling.display.Sprite;
    import starling.events.Touch;
    import starling.events.TouchEvent;
@@ -953,6 +955,8 @@ package com.meng52.game.module.avatar
 
       public var m_icon:Image;
 
+      private var mLimitBreakEdge:Sprite;
+
       public var isOthers:Boolean;
 
       public var actionNum:int;
@@ -1057,6 +1061,8 @@ package com.meng52.game.module.avatar
       public var deMaP:int;
 
       public var phase:int;
+
+      public var limitBreak:int;
 
       public var equips:Vector.<Equip>;
 
@@ -1555,7 +1561,7 @@ package com.meng52.game.module.avatar
          {
             m_avatarRes = newAvatarRes(null,param1,param2,param3);
          }
-         m_avatarRes.flatten();
+         if(limitBreak == 0) m_avatarRes.flatten();
          return m_avatarRes;
       }
 
@@ -1566,6 +1572,7 @@ package com.meng52.game.module.avatar
 
       public function newAvatarRes(param1:Sprite = null, param2:Boolean = false, param3:Boolean = false, param4:Boolean = false) : Sprite
       {
+         clearLimitBreakEdge();
          var _loc6_:Image = null;
          var _loc9_:Boolean = false;
          var _loc11_:Image = null;
@@ -1608,6 +1615,44 @@ package com.meng52.game.module.avatar
          }
          m_icon.touchable = true;
          param1.addChild(m_icon);
+         if(limitBreak > 0 && getType() == 1 && getStar() >= 5)
+         {
+            var breakColor:uint = getStar() == 5 ? 0xB561F1 : 0xFF9B32;
+            var breakLabel:TextField = GlobalTextStyle.getTextField("突破极限",15,breakColor,"center",m_icon.width,20);
+            breakLabel.x = m_icon.x;
+            breakLabel.y = m_icon.y - 21;
+            breakLabel.touchable = false;
+            param1.addChild(breakLabel);
+            mLimitBreakEdge = new Sprite();
+            mLimitBreakEdge.touchable = false;
+            var bx:Number = m_icon.x + 1;
+            var by:Number = m_icon.y + 1;
+            var bw:Number = m_icon.width - 2;
+            var bh:Number = m_icon.height - 2;
+            for(var edge:int = 0; edge < 4; edge++)
+            {
+               var span:Number = edge % 2 == 0 ? bw : bh;
+               var steps:int = Math.max(6,int(span / 9));
+               var fromX:Number = edge == 0 || edge == 3 ? bx : bx + bw;
+               var fromY:Number = edge < 2 ? by : by + bh;
+               for(var segment:int = 1; segment <= steps; segment++)
+               {
+                  var t:Number = segment / steps;
+                  var zig:Number = segment == steps ? 0 : (segment % 2 == 0 ? 3 : -3);
+                  var toX:Number = edge == 0 ? bx + t * bw : edge == 1 ? bx + bw + zig : edge == 2 ? bx + bw - t * bw : bx + zig;
+                  var toY:Number = edge == 0 ? by + zig : edge == 1 ? by + t * bh : edge == 2 ? by + bh + zig : by + bh - t * bh;
+                  addLimitBreakSegment(mLimitBreakEdge,fromX,fromY,toX,toY,breakColor);
+                  fromX = toX;
+                  fromY = toY;
+               }
+            }
+            param1.addChild(mLimitBreakEdge);
+            var pulse:Tween = new Tween(mLimitBreakEdge,0.85,"easeInOut");
+            pulse.animate("alpha",0.45);
+            pulse.reverse = true;
+            pulse.repeatCount = 0;
+            GlobalData.$mStarling.juggler.add(pulse);
+         }
          if(morph > 0)
          {
             _loc14_ = Math.max(0,getStar() - 5);
@@ -1650,6 +1695,25 @@ package com.meng52.game.module.avatar
             _loc12_ = _loc10_.y;
          }
          return param1;
+      }
+
+      private function addLimitBreakSegment(target:Sprite,x0:Number,y0:Number,x1:Number,y1:Number,color:uint) : void
+      {
+         var dx:Number = x1 - x0;
+         var dy:Number = y1 - y0;
+         var segment:Quad = new Quad(Math.sqrt(dx * dx + dy * dy),2.5,color);
+         segment.x = x0;
+         segment.y = y0;
+         segment.rotation = Math.atan2(dy,dx);
+         segment.touchable = false;
+         target.addChild(segment);
+      }
+
+      private function clearLimitBreakEdge() : void
+      {
+         if(!mLimitBreakEdge) return;
+         if(GlobalData.$mStarling) GlobalData.$mStarling.juggler.removeTweens(mLimitBreakEdge);
+         mLimitBreakEdge = null;
       }
 
       public function refreshIcon() : void
@@ -1878,11 +1942,13 @@ package com.meng52.game.module.avatar
       {
          var _loc3_:Array = null;
          var _loc2_:Boolean = false;
+         var previousLimitBreak:int = limitBreak;
          skill0 = null;
          skill1 = null;
          skill2 = null;
          skillB = null;
          talent = null;
+         limitBreak = 0;
          if(param1 == null)
          {
             mData = {
@@ -1897,6 +1963,7 @@ package com.meng52.game.module.avatar
                "slv":1,
                "love_exp":0,
                "phase":0,
+               "limit_break":0,
                "morph":0
             };
             lv = mData.lv;
@@ -1908,6 +1975,7 @@ package com.meng52.game.module.avatar
             deMaP = mData.de_ma;
             loveExp = mData.love_exp;
             phase = mData.phase;
+            limitBreak = mData.limit_break;
             morph = mData.morph;
             id = mData.id;
          }
@@ -1923,6 +1991,7 @@ package com.meng52.game.module.avatar
                dePhP = _loc3_[5];
                deMaP = _loc3_[6];
                phase = _loc3_[7];
+               limitBreak = _loc3_.length > 12 ? int(_loc3_[12]) : 0;
                line = _loc3_[8];
                pos = _loc3_[9];
                setEquips(_loc3_[10],false);
@@ -1950,6 +2019,8 @@ package com.meng52.game.module.avatar
                dePh = param1.de_ph;
                deMa = param1.de_ma;
                morph = param1.morph;
+               phase = param1.phase;
+               limitBreak = int(param1.limit_break);
                if(param1.book_skill)
                {
                   skill2 = new SkillSet(param1.book_skill.skid,this,param1.book_skill.slv);
@@ -1994,6 +2065,7 @@ package com.meng52.game.module.avatar
                deMaP = param1.de_ma;
                loveExp = param1.love_exp;
                phase = param1.phase;
+               limitBreak = int(param1.limit_break);
                morph = param1.morph;
                id = param1.id ? param1.id : param1.aid;
             }
@@ -2010,6 +2082,11 @@ package com.meng52.game.module.avatar
          }
          initHalo(param1);
          initSkills();
+         if(m_avatarRes && previousLimitBreak != limitBreak)
+         {
+            m_avatarRes.unflatten();
+            newAvatarRes(m_avatarRes);
+         }
          actionNum = -1;
          line = -1;
          if(!_loc2_)
@@ -2046,6 +2123,7 @@ package com.meng52.game.module.avatar
          _loc1_.de_ph = dePhP;
          _loc1_.love_exp = loveExp;
          _loc1_.phase = phase;
+         _loc1_.limit_break = limitBreak;
          return _loc1_;
       }
 
@@ -2055,6 +2133,8 @@ package com.meng52.game.module.avatar
          _loc1_.aid = avatarData.id;
          _loc1_.ap = ap;
          _loc1_.morph = morph;
+         _loc1_.phase = phase;
+         _loc1_.limit_break = limitBreak;
          _loc1_.buffs = {};
          _loc1_.de_ma = deMa;
          _loc1_.de_ph = dePh;
@@ -3919,6 +3999,7 @@ package com.meng52.game.module.avatar
 
       public function getLvMax() : int
       {
+         if(limitBreak > 0 && getType() == 1 && (getStar() == 5 || getStar() == 6)) return 125;
          if(morph == 0)
          {
             return avatarData.lvMax;
@@ -6234,6 +6315,7 @@ package com.meng52.game.module.avatar
 
       public function clearUI() : void
       {
+         clearLimitBreakEdge();
          if(m_avatarRes)
          {
             StarlingTools.removeChildrenClear(m_avatarRes);
@@ -6244,6 +6326,7 @@ package com.meng52.game.module.avatar
 
       public function clearRes() : void
       {
+         clearLimitBreakEdge();
          var _loc1_:* = null;
          if(m_fightRes)
          {

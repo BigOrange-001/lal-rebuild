@@ -132,7 +132,14 @@ class GameplayCombat:
                     # snapshot separately as the sixth member.
                     client_team_a.append(copy.deepcopy(assist["battle_snapshot"]))
                 map_team_a = serialize_stage_team(self.config, stage.get("team1", []), team=1)
-                enemy = serialize_stage_team(self.config, stage.get("team2", []), team=2)
+                # Mainline difficulty may have a separately authored formation.
+                # Activity stages continue to use their original team2 roster.
+                enemy_entries = stage.get("team2", [])
+                if not is_activity:
+                    by_diff = stage.get("team2_by_diff", {})
+                    if isinstance(by_diff, dict):
+                        enemy_entries = by_diff.get(str(diff), enemy_entries)
+                enemy = serialize_stage_team(self.config, enemy_entries, team=2)
 
                 # Native GameMapRuntime applies difficulty only to configured
                 # map units (GameMapData.team1List/team2List), after applying
@@ -160,7 +167,7 @@ class GameplayCombat:
                 # are sent in orgin_team_b below. Other modes keep their
                 # native combat_diff path.
                 scale_rows = (stage.get("enemy_unit_stats_by_diff", {})
-                              if not is_activity and cid.startswith("M_") else {})
+                              if is_activity or cid.startswith("M_") else {})
                 if isinstance(scale_rows, dict) and str(diff) in scale_rows:
                     overrides = scale_rows[str(diff)]
                     if not isinstance(overrides, list) or len(overrides) != len(enemy):
@@ -204,6 +211,7 @@ class GameplayCombat:
                 stage_copy = copy.deepcopy(stage)
                 stage_copy["line"] = map_line
                 stage_copy["id"] = cid
+                stage_copy["team2"] = copy.deepcopy(enemy_entries)
                 pending = {"fight_id": fight_id, "cid": cid, "diff": diff, "seed": seed,
                            # Private settlement entropy is persisted with the
                            # intent. A capacity failure rolls the transaction
@@ -354,6 +362,7 @@ class GameplayCombat:
         score = max(0, min(3, int(params.get("combat_star", 3 if sign == 1 else 0)))) if sign == 1 else 0
         def mutate(profile):
             first_clear = False
+            encounter = None
             pending_map = profile.setdefault("pending_pve", {})
             pending = pending_map.get(fight_id)
             if not pending or pending.get("cid") != cid or int(pending.get("diff", -1)) != diff or int(pending.get("expires", 0)) < int(time.time()):
@@ -464,6 +473,23 @@ class GameplayCombat:
                             if isinstance(first.get(key), list): reward.setdefault(key, []).extend(first[key])
                 before_avatars=set(profile.get("avatars",{})); before_equips=set(profile.get("my_equips",{}))
                 grant_reward(profile, reward, self.full_config)
+                encounter = profile.get("pending_limit_break")
+                if not isinstance(encounter, dict):
+                    encounter = None
+                if encounter is not None:
+                    still_valid = self._limit_break_candidates(profile, encounter.get("candidate_ids", []))
+                    if still_valid:
+                        encounter["candidate_ids"] = still_valid
+                    else:
+                        profile.pop("pending_limit_break", None)
+                        encounter = None
+                if encounter is None:
+                    ids = [unit.get("instance_id") for unit in pending.get("team_a", [])
+                           if isinstance(unit, dict)]
+                    candidates = self._limit_break_candidates(profile, ids)
+                    if (candidates and self._reward_rng(uid, fight_id, pending, "limit-break").random() < 0.05):
+                        encounter = {"fight_id": fight_id, "candidate_ids": candidates, "created": int(time.time())}
+                        profile["pending_limit_break"] = encounter
                 # A mainline chapter-finale win grants one native-shaped,
                 # time-limited morph chance per chapter across normal/hard.
                 # Preserve a still-live chance instead of shortening its
@@ -549,10 +575,31 @@ class GameplayCombat:
                 return_data["score"] = profile.get("score", 0)
             if sign == 1 and chapter_final:
                 return_data["attr_morph"] = chapter_morph
+            if sign == 1 and encounter is not None:
+                return_data["limit_break_encounter"] = copy.deepcopy(encounter)
             return profile, return_data
         data, replayed = self.store.atomic_update(uid, mutate, self._operation_key("user.pve_finish", params), params)
         data["fight_id"] = fight_id; data["replayed"] = replayed
         return data
+
+    @staticmethod
+    def _limit_break_candidates(profile, ids):
+        avatars = profile.get("avatars", {})
+        candidates = []
+        if not isinstance(ids, list) or not isinstance(avatars, dict):
+            return candidates
+        for iid in ids:
+            if not isinstance(iid, str) or iid in candidates:
+                continue
+            hero = avatars.get(iid)
+            if not isinstance(hero, dict):
+                continue
+            aid = str(hero.get("aid", iid)).split("|")[0]
+            if (aid.startswith("A_1") and aid.rsplit("_", 1)[-1] in {"5", "6"}
+                    and int(hero.get("lv", 1)) >= 99
+                    and int(hero.get("limit_break", 0) or 0) == 0):
+                candidates.append(iid)
+        return candidates
 
     @staticmethod
     def _reward_rng(uid, fight_id, pending, domain):
@@ -764,7 +811,8 @@ class GameplayCombat:
                     overrides["leader_skill"] = raw.get("leader_skill") if i == 0 else None
                     overrides["hp"] = current_hp
                     overrides["new_4attrs"] = {k: raw.get(k, 0) for k in ("hit", "flee", "crit", "tough")}
-                    own.append(base_unit(self.config, hero.get("aid", iid).split("|")[0], hero.get("lv", 1), hero.get("slv", 1), max(0,min(2,line)), max(0,min(1,pos)), i == 0, 1, iid, overrides))
+                    own.append(base_unit(self.config, hero.get("aid", iid).split("|")[0], hero.get("lv", 1), hero.get("slv", 1), max(0,min(2,line)), max(0,min(1,pos)), i == 0, 1, iid, overrides,
+                                         limit_break=hero.get("limit_break") == 1))
                     own[-1]["aid"] = iid
                 mode = state.get("stage_mode", [])
                 if isinstance(mode, list) and len(mode) == 4:
@@ -779,6 +827,29 @@ class GameplayCombat:
                         elif stat in ("hit", "flee", "crit", "tough") and percentage == 0:
                             unit["new_4attrs"][stat] += int(amount)
                 enemy = serialize_stage_team(self.config, stage_cfg.get("team2", []), team=2)
+                stat_rows = stage_cfg.get("enemy_unit_stats_by_diff", {})
+                if isinstance(stat_rows, dict) and "0" in stat_rows:
+                    overrides = stat_rows["0"]
+                    if not isinstance(overrides, list) or len(overrides) != len(enemy):
+                        raise GameplayFault("InvalidStage", "Exploration enemy snapshot has the wrong team2 length")
+                    for index, override in enumerate(overrides):
+                        if override is None:
+                            continue
+                        unit = enemy[index]
+                        if (not isinstance(override, dict) or override.get("index") != index
+                                or override.get("aid") != unit.get("aid")):
+                            raise GameplayFault("InvalidStage", "Exploration enemy snapshot does not match team2 order")
+                        try:
+                            hp = max(0, int(override["hp"]))
+                            for key in ("ap", "de_ph", "de_ma"):
+                                unit[key] = max(0, int(override[key]))
+                            affixes = {key: max(0, int(override[key]))
+                                       for key in ("hit", "flee", "crit", "tough")}
+                        except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                            raise GameplayFault("InvalidStage", "Exploration enemy snapshot has invalid stats") from exc
+                        unit["hp"] = hp
+                        unit["hp_max"] = hp
+                        unit["new_4attrs"] = affixes
                 # Exploration uses a single-lane GameMapData. Normalize
                 # generated opponents to that lane before serializing native
                 # Avatar.toDataObj snapshots.

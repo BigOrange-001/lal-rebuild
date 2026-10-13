@@ -362,7 +362,7 @@ package com.meng52.game.ui.panel
             if(_loc3_.data["id"] != null)
             {
                _loc1_ = _loc4_.getBounds(_loc3_);
-               _loc3_.setClipFun(_loc1_,setClip_b,_loc5_ * 3);
+               _loc3_.setClipFun(_loc1_,setClip_b,_loc5_ * 3,5);
             }
             _loc5_++;
          }
@@ -407,7 +407,8 @@ package com.meng52.game.ui.panel
                "x":5,
                "y":0,
                "sc":1.4,
-               "a":0.5
+               "a":0.5,
+               "rate":5
             };
             _attrs.par = this.mJugglerBox;
             DisplayTools.addEffectOne(_attrs);
@@ -437,11 +438,22 @@ package com.meng52.game.ui.panel
             "x":_loc1_,
             "y":_loc2_,
             "sc":_loc4_,
-            "s":{"id":"skill2"}
+            "s":{"id":"skill2"},
+            "rate":5
          });
       }
       
       override public function onENTER_FRAME_juggler(param1:EnterFrameEvent) : void
+      {
+         var step:int = 0;
+         while(step < 5 && this.mJuggler && stage != null)
+         {
+            advanceUpgradeFrame(param1);
+            step++;
+         }
+      }
+
+      private function advanceUpgradeFrame(param1:EnterFrameEvent) : void
       {
          var _loc6_:Boolean = false;
          var _loc3_:int = 0;
@@ -470,7 +482,7 @@ package com.meng52.game.ui.panel
             }
             if(this.mClip_statusB == 3)
             {
-               if(this.mClip_spr.stage == null)
+               if(this.mClip_spr == null || this.mClip_spr.stage == null)
                {
                   this.mClip_statusB = 4;
                }
@@ -493,7 +505,7 @@ package com.meng52.game.ui.panel
                {
                   _loc3_ = mMultiple == 3 ? 2 : 1;
                   _loc7_ = _loc3_ == 2 ? "50003" : "50004";
-                  mClip_spr = LayoutUIAnimation.getOnlyExample().popSuperWord(_loc7_,_loc3_,0.65);
+                  mClip_spr = LayoutUIAnimation.getOnlyExample().popSuperWord(_loc7_,_loc3_,0.65,0,0,5);
                   this.mClip_statusB += 1;
                }
             }
@@ -750,7 +762,7 @@ package com.meng52.game.ui.panel
             {
                if(mAvatar.lv >= mAvatar.getLvMax())
                {
-                  LayoutUIAnimation.getOnlyExample().popSuperWord("50005",1,0.64,_loc16_);
+                  LayoutUIAnimation.getOnlyExample().popSuperWord("50005",1,0.64,_loc16_,0,5);
                   _loc16_ += 0.6;
                }
             }
@@ -762,11 +774,11 @@ package com.meng52.game.ui.panel
             {
                if(mAvatar.slv >= GlobalData.$mConfig_simple.slv_config[0])
                {
-                  LayoutUIAnimation.getOnlyExample().popSuperWord("50011",2,0.52,_loc16_);
+                  LayoutUIAnimation.getOnlyExample().popSuperWord("50011",2,0.52,_loc16_,0,5);
                }
                else
                {
-                  LayoutUIAnimation.getOnlyExample().popSuperWord("50010",2,0.52,_loc16_);
+                  LayoutUIAnimation.getOnlyExample().popSuperWord("50010",2,0.52,_loc16_,0,5);
                }
                _loc16_ += 1.2;
             }
@@ -774,11 +786,11 @@ package com.meng52.game.ui.panel
             {
                if(mAvatar.getLoveList()[0] >= GlobalData.$mConfig_simple.love_up[0])
                {
-                  LayoutUIAnimation.getOnlyExample().popSuperWord("50013",2,0.44,_loc16_);
+                  LayoutUIAnimation.getOnlyExample().popSuperWord("50013",2,0.44,_loc16_,0,5);
                }
                else
                {
-                  LayoutUIAnimation.getOnlyExample().popSuperWord("50012",2,0.44,_loc16_);
+                  LayoutUIAnimation.getOnlyExample().popSuperWord("50012",2,0.44,_loc16_,0,5);
                }
                _loc16_ += 1.2;
             }

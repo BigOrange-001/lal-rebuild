@@ -1,8 +1,8 @@
 {
   "schema": "lal-client-build-v2",
   "version": "1.0.0",
-  "stage_count": 136,
-  "unique_class_count": 124,
+  "stage_count": 142,
+  "unique_class_count": 125,
   "stages": [
     {
       "index": 1,
@@ -819,6 +819,42 @@
       "class": "MainLLOL",
       "source": "client/src/stages/136_MainLLOL.as",
       "source_sha256": "3759fe75eed9a956b308db1ae5cc69af9e69c073d102ca9ab32c51bd7c0a7aae"
+    },
+    {
+      "index": 137,
+      "class": "com.meng52.game.module.avatar.Avatar",
+      "source": "client/src/stages/137_Avatar.as",
+      "source_sha256": "b7774f59ea9644b2e07edc61603d82653fba1b2e1e3684d6c38e7da77dcb7152"
+    },
+    {
+      "index": 138,
+      "class": "com.meng52.game.command.skill.SkillSetData",
+      "source": "client/src/stages/138_SkillSetData.as",
+      "source_sha256": "51d791dc0b4a8688498d7a985ccf48b3e82dd1e50bcea94d6b0ae7f69384f53d"
+    },
+    {
+      "index": 139,
+      "class": "com.meng52.game.module.skill.SkillSet",
+      "source": "client/src/stages/139_SkillSet.as",
+      "source_sha256": "2c5e5ca52476a516de886f36c98aff756091e977c846f33b99546c8f46277e15"
+    },
+    {
+      "index": 140,
+      "class": "com.meng52.game.module.skill.Buff",
+      "source": "client/src/stages/140_Buff.as",
+      "source_sha256": "68cb329341a5291365b19e7df0e3271536472c97281ac8e5f99404374fb889c6"
+    },
+    {
+      "index": 141,
+      "class": "com.meng52.game.ui.panel.PanelDetailAll",
+      "source": "client/src/stages/141_PanelDetailAll.as",
+      "source_sha256": "c931b957195a4e3ac2f099fa684605e643e74be6251d6bad72769766216bea89"
+    },
+    {
+      "index": 142,
+      "class": "com.meng52.game.ui.panel.PanelDetailDN",
+      "source": "client/src/stages/142_PanelDetailDN.as",
+      "source_sha256": "d77c4d98bbff75b871fb3c9916c1630666681366df46fad43d6ac87f34ffdb05"
     }
   ],
   "template_swf": {

@@ -486,13 +486,19 @@ class GameplayRosterEquipment:
         """
         cap = self._culture_cap(hero)
         remaining = max(0, cap - self._culture_pith(hero))
-        clamped = {}
+        amounts = {}
         for key in ("hp", "ap", "de_ph", "de_ma"):
             try: amount = max(0, int(roll.get(key, 0)))
             except (TypeError, ValueError): amount = 0
-            accepted = min(amount, remaining)
-            clamped[key] = accepted
-            remaining -= accepted
+            amounts[key] = amount
+        total = sum(amounts.values())
+        if total <= remaining:
+            return amounts
+        clamped = {key: amount * remaining // total for key, amount in amounts.items()}
+        left = remaining - sum(clamped.values())
+        order = sorted(amounts, key=lambda key: amounts[key] * remaining % total, reverse=True)
+        for key in order[:left]:
+            clamped[key] += 1
         return clamped
 
     def _feed_cultivation(self, target, materials):
@@ -1291,7 +1297,10 @@ class GameplayRosterEquipment:
                 self._fail("MaxCulture", "Hero cultivation points are already at the configured maximum")
             spent = {kind: self._num(prices[str(n)], "culture price", 0, 10_000_000)}
             self._cost(p, spent)
-            raw_roll = {k: self.rng.randint(n, n * (4 + int(hero.get("lv", 1)) // 10)) for k in ("hp", "ap", "de_ph", "de_ma")}
+            raw_roll = {key: 0 for key in ("hp", "ap", "de_ph", "de_ma")}
+            for _ in range(n):
+                key = self.rng.choice(tuple(raw_roll))
+                raw_roll[key] += self.rng.randint(1, 3)
             rolled = self._clamp_culture_roll(hero, raw_roll)
             attrs["avatar_culture"] = {
                 "eqid": tid, "aid": tid, "num": n, "type": kind,
@@ -1558,7 +1567,7 @@ class GameplayRosterEquipment:
             pair = tuple(v for v in pl[6:8] if v in ("hit", "tough", "crit", "flee")) if len(pl) >= 8 else ()
             if len(pair) != 2:
                 self._fail("InvalidConfig", "Equipment wash pair is invalid")
-            rolled = equipment_wash_roll(old, pair, point_cap, n, self.rng)
+            rolled = equipment_wash_roll(old, pair, point_cap, n, self.rng, star=star, level=level)
             if not any(rolled.values()):
                 rolled[pair[0]] = 1
             attrs["equip_wash"] = {"eqid": eqid, "rolled": rolled, "old": old, "spent": spent, "ttype": kind, "num": n}

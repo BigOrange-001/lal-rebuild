@@ -6,6 +6,7 @@ from gameplay_common import grant_reward, game_day
 from battle_engine import base_unit, serialize_player_team, serialize_stage_team, validate_team_lane_coverage
 from battle_intents import create_intent, consume_intent
 from pve_modes import exploration_stages, expedition_reward_per_hero
+from solo_progression import expedition_stones, exploration_encounter, exploration_difficulty
 from gameplay_energy import energy_state, write_energy_after_spend
 from equipment_elite_drop import roll_elite_drop
 from hero_drop import roll_campaign_hero_drop
@@ -634,11 +635,11 @@ class GameplayCombat:
             talent = profile.get("attrs", {}).get("avatar_talent")
             if isinstance(talent, str) and talent.split("`", 1)[0] in aids:
                 raise GameplayFault("InvalidTeam", "The active talent hero cannot be sacrificed")
+            gained = sum(expedition_stones(roster[aid]) for aid in aids)
             for aid in aids:
                 roster.pop(aid)
             attrs = profile.setdefault("attrs", {})
             expedition = attrs.setdefault("expedition", {})
-            gained = len(aids) * expedition_reward_per_hero(self.full_config)
             attrs["dn_stone"] = int(attrs.get("dn_stone", 0)) + gained
             day = game_day()
             expedition.update({"day": day, "sent": list(aids), "reward_claimed": True})
@@ -683,6 +684,7 @@ class GameplayCombat:
                 raise GameplayFault("ExplorationComplete", "All configured exploration stages are complete")
             stage_no = max(1, min(raw_stage, len(stages) or 1))
             stage_cfg = stages[stage_no - 1] if stages else {}
+            stage_cfg = exploration_encounter(self.full_config, profile, state, stage_no, stage_cfg)
             if method == "user.exploration_start":
                 # The original client does not serialize/reopen an in-progress
                 # GameMap fight after an app restart. Entering exploration
@@ -702,16 +704,20 @@ class GameplayCombat:
                 from gameplay_roster import GameplayRosterEquipment
                 attributes = GameplayRosterEquipment(self.store, self.full_config).battle_attributes
                 previous_army = state.get("army", {}) if isinstance(state.get("army"), dict) else {}
+                health_ledger = state.setdefault("health_ledger", {})
                 selected = {}
                 for aid in aids:
                     hero = copy.deepcopy(roster[aid])
                     maximum = max(1, int(attributes(profile, aid).get("hp_max", 1)))
-                    prior = previous_army.get(aid, {})
+                    prior = previous_army.get(aid, health_ledger.get(aid, {}))
                     current = int(prior.get("current_hp", maximum)) if isinstance(prior, dict) else maximum
                     hero["current_hp"] = max(0, min(maximum, current))
                     hero["max_hp"] = maximum
                     selected[aid] = hero
+                    health_ledger[aid] = {"current_hp": hero["current_hp"], "max_hp": maximum}
                 state["army"] = selected
+                if not state.get("difficulty"):
+                    state["difficulty"] = exploration_difficulty(profile, aids)
                 return profile, self._exploration_response(profile)
             if method == "user.exploration_opponent":
                 from pve_display_power_58 import exploration_opponent_power
@@ -759,6 +765,19 @@ class GameplayCombat:
                     overrides["hp"] = current_hp
                     overrides["new_4attrs"] = {k: raw.get(k, 0) for k in ("hit", "flee", "crit", "tough")}
                     own.append(base_unit(self.config, hero.get("aid", iid).split("|")[0], hero.get("lv", 1), hero.get("slv", 1), max(0,min(2,line)), max(0,min(1,pos)), i == 0, 1, iid, overrides))
+                    own[-1]["aid"] = iid
+                mode = state.get("stage_mode", [])
+                if isinstance(mode, list) and len(mode) == 4:
+                    stat, _, amount, percentage = mode
+                    for unit in own:
+                        if stat in ("hp", "ap", "de_ph", "de_ma") and percentage == 1:
+                            if stat == "hp":
+                                unit["hp_max"] = max(1, int(unit["hp_max"] * amount))
+                                unit["hp"] = max(1, int(unit["hp"] * amount))
+                            else:
+                                unit[stat] = max(1, int(unit[stat] * amount))
+                        elif stat in ("hit", "flee", "crit", "tough") and percentage == 0:
+                            unit["new_4attrs"][stat] += int(amount)
                 enemy = serialize_stage_team(self.config, stage_cfg.get("team2", []), team=2)
                 # Exploration uses a single-lane GameMapData. Normalize
                 # generated opponents to that lane before serializing native
@@ -798,7 +817,9 @@ class GameplayCombat:
                     # Release the old lineup so these heroes can be used for
                     # roster growth; the response carries the empty army too.
                     state["army"] = {}
-                gifts = [{key: value} for key, value in reward.items() if key != "attrs"]
+                gifts = [{key: value} for key, value in reward.items() if key not in {"attrs", "heroes", "items"}]
+                gifts.extend({row["aid"]: row.get("num", 1)} for row in reward.get("heroes", []))
+                gifts.extend({row["eid"]: row.get("num", 1)} for row in reward.get("items", []))
                 if isinstance(reward.get("attrs"), dict):
                     gifts.extend({key: value} for key, value in reward["attrs"].items())
                 return profile, {**self._exploration_response(profile), "gifts": gifts,
@@ -823,6 +844,9 @@ class GameplayCombat:
                     profile["coin"] = int(profile.get("coin", 0)) - cost
                     times["refresh_buy"] = int(times.get("refresh_buy", 0)) + 1
                 state["stage"] = 1
+                state["map_revision"] = int(state.get("map_revision", 0)) + 1
+                state.pop("difficulty", None)
+                state["health_ledger"] = {}
                 state["current_stage_finish"] = 0; state["combat_army"] = []
                 # A confirmed map reset abandons only an in-flight battle
                 # intent. It keeps the selected exploration roster and its
@@ -833,6 +857,8 @@ class GameplayCombat:
                 for hero in state.get("army", {}).values():
                     if isinstance(hero, dict) and hero.get("max_hp"):
                         hero["current_hp"] = hero["max_hp"]
+                if state.get("army"):
+                    state["difficulty"] = exploration_difficulty(profile, list(state["army"]))
                 return profile, {**self._exploration_response(profile), "coin": profile.get("coin",0), "gold": profile.get("gold",0), "attrs": profile.get("attrs",{})}
             if method == "user.exploration_relive":
                 aid = str(params.get("aid", "")); hero = state.get("army", {}).get(aid)
@@ -850,6 +876,7 @@ class GameplayCombat:
                 times["relive_buy"] = int(times.get("relive_buy", 0)) + 1
                 times["vip_relive"] = int(times.get("vip_relive", 0)) - 1
                 hero["current_hp"] = max(1, int(hero.get("max_hp", 1)))
+                state.setdefault("health_ledger", {})[aid] = {"current_hp": hero["current_hp"], "max_hp": hero["max_hp"]}
                 return profile, {**self._exploration_response(profile), "aid": aid, "info": copy.deepcopy(hero), "coin": profile.get("coin",0), "vip_relive": times["vip_relive"], "relive_buy": times["relive_buy"], "attrs": profile.get("attrs",{})}
             if method == "user.exploration_buy_mode":
                 explore_cfg = self.config.get("system_simple", {}).get("explore", {})
@@ -860,7 +887,7 @@ class GameplayCombat:
                     raise GameplayFault("InsufficientCoin", "Not enough coins to change exploration mode")
                 profile["coin"] = int(profile.get("coin", 0)) - cost
                 modes = [["ap", "all", 1.05, 1], ["hp", "all", 1.05, 1], ["de_ph", "all", 1.05, 1], ["de_ma", "all", 1.05, 1], ["hit", "all", 5, 0], ["flee", "all", 5, 0], ["crit", "all", 5, 0], ["tough", "all", 5, 0]]
-                state["stage_mode"] = copy.deepcopy(modes[int(times.get("mode_buy", 0)) % len(modes)])
+                state["stage_mode"] = copy.deepcopy(modes[(int(times.get("mode_buy", 0)) + 1) % len(modes)])
                 times["mode_buy"] = int(times.get("mode_buy", 0)) + 1
                 return profile, {**self._exploration_response(profile), "coin": profile.get("coin",0), "attrs": profile.get("attrs",{})}
             raise GameplayFault("NotImplemented", "Unsupported exploration request")
@@ -876,12 +903,23 @@ class GameplayCombat:
             sign = intent["sign"]
             if sign == 1: state["current_stage_finish"] = 1
             else: state["current_stage_finish"] = 0
+            snapshot = intent.get("snapshots", {}).get("team_a", [])
+            by_instance = {row["aid"]: row for row in snapshot if isinstance(row, dict) and isinstance(row.get("aid"), str)}
             for index, iid in enumerate(state.get("combat_army", [])):
                 hero = state.get("army", {}).get(iid)
-                snapshot = intent.get("snapshots", {}).get("team_a", [])
-                if isinstance(hero, dict) and index < len(snapshot):
-                    hero["current_hp"] = max(0, int(snapshot[index].get("hp", 0)))
-                    hero["max_hp"] = max(1, int(snapshot[index].get("hp_max", hero.get("max_hp", 1))))
+                final = by_instance.get(iid)
+                if final is None and index < len(snapshot) and snapshot[index].get("aid") == iid.split("|")[0]:
+                    final = snapshot[index]
+                if isinstance(hero, dict):
+                    final = final or {"hp": 0, "hp_max": hero.get("max_hp", 1)}
+                    hero["current_hp"] = max(0, int(final.get("hp", 0)))
+                    hero["max_hp"] = max(1, int(final.get("hp_max", hero.get("max_hp", 1))))
+                    # Store the unmodified health scale used by roster selection.
+                    base_maximum = int(state.get("health_ledger", {}).get(iid, {}).get("max_hp", hero["max_hp"]))
+                    fraction = hero["current_hp"] / max(1, hero["max_hp"])
+                    hero["max_hp"] = base_maximum
+                    hero["current_hp"] = int(base_maximum * fraction)
+                    state.setdefault("health_ledger", {})[iid] = {"current_hp": hero["current_hp"], "max_hp": base_maximum}
             return profile, {"sign": sign, "combat_star": max(0,min(3,int(params.get("combat_star", 3)))) if sign == 1 else 0,
                 "fight_id": intent["fight_id"], "fight_kind": "exploration", "metadata": intent["metadata"],
                 **self._exploration_response(profile), "attrs": profile.get("attrs",{})}

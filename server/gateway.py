@@ -190,7 +190,8 @@ class Handler(BaseHTTPRequestHandler):
   path=urlsplit(self.path).path
   if path=='/health':
    config_loaded=self.server.backend.config is not None
-   data={'status':'ok' if config_loaded else 'degraded','service':'lal-rebuild','config_loaded':config_loaded,'cfg_version':(self.server.backend.config or {}).get('cfg_version'),'gameplay_ready':False,'local_login_ready':True,'gift_mail_ready':True,'payment':'test-gift-only-no-external-charge'}
+   gameplay_ready=config_loaded and len(self.server.backend.players.gameplay_handlers)>=5
+   data={'status':'ok' if gameplay_ready else 'degraded','service':'lal-rebuild','config_loaded':config_loaded,'cfg_version':(self.server.backend.config or {}).get('cfg_version'),'gameplay_ready':gameplay_ready,'local_login_ready':True,'gift_mail_ready':True,'payment':'test-gift-only-no-external-charge'}
    self.send_body(200,json.dumps(data).encode(),'application/json')
   elif path.rstrip('/')=='/notice':
    self.send_body(200,render_notice(),'text/html; charset=utf-8')

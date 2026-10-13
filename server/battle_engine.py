@@ -64,7 +64,7 @@ def _native_skill_snapshot(config, skill_id, level=1):
             target = target[index]
         leaf = path[-1]
         if valid and isinstance(target, list) and type(leaf) is int and 0 <= leaf < len(target) and isinstance(target[leaf], (int, float)):
-            target[leaf] += step * (max(1, int(level)) - 1)
+            target[leaf] += step * (max(1, min(10, int(level))) - 1)
     return {
         "cd": int(pl[0]) if isinstance(pl, list) and pl and pl[0] is not None else 0,
         "pl": copy.deepcopy(pl),
@@ -139,9 +139,13 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     skill_b = _native_skill_snapshot(config, pl[13] if len(pl) > 13 else None)
     result = {"aid":str(aid),"ap":stats["attack"],"morph":0,"buffs":{},"de_ma":stats["magic_defense"],"de_ph":stats["physical_defense"],"hp":stats["health"],"hp_max":stats["health"],"isme":team==1,"leader":1 if leader else 0,"line":int(line),"lv":level,"new_4attrs":{"hit":0,"flee":0,"crit":0,"tough":0},"pos":native_pos,"slv":int(slv),"tpl":[int(tl[i]) if len(tl)>i else 0 for i in range(3)]+[int(pl[8]) if len(pl)>8 else 0,int(pl[9]) if len(pl)>9 else 0],"talent":None,"skill":skill,"leader_skill":leader_skill,"book_skill":None,"skillB":skill_b}
     if instance_id: result["instance_id"] = instance_id
+    # Avatar.toDataObj includes advancement even when it is zero. Player
+    # attributes already contain its stat bonus; the snapshot must also carry
+    # the stored phase so origin checks compare the same progression state.
+    result["phase"] = 0
     if limit_break or npc_limit_break: result["limit_break"] = 1
     if overrides:
-        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph"):
+        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase"):
             if key in overrides: result[key] = overrides[key]
     return result
 
@@ -204,6 +208,8 @@ def serialize_player_team(config, profile, team_num, submitted_team, attributes_
         overrides={"hp":raw.get("hp"),"hp_max":raw.get("hp_max",raw.get("hp")),"ap":raw.get("ap"),"de_ph":raw.get("de_ph"),"de_ma":raw.get("de_ma"),"tpl":raw.get("tpl"),"talent":raw.get("talent"),"morph":raw.get("morph"),"skill":raw.get("skill"),"leader_skill":raw.get("leader_skill") if slot == 0 else None,"book_skill":raw.get("book_skill"),"skillB":raw.get("skillB"),"new_4attrs":{"hit":raw.get("hit",0),"flee":raw.get("flee",0),"crit":raw.get("crit",0),"tough":raw.get("tough",0)}} if attributes_fn else None
         result.append(base_unit(config,aid,int(instance.get("lv",1)),int(instance.get("slv",1)),line,max(0.0,min(1.0,pos)),slot==0,1,iid,overrides,
                                 limit_break=instance.get("limit_break") == 1))
+        # Read progression from the owned roster, never from submitted tuples.
+        result[-1]["phase"] = max(0, int(instance.get("phase", 0)))
     if not result: raise ValueError("battle requires at least one saved formation avatar")
     return result
 

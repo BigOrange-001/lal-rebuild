@@ -437,7 +437,7 @@ package com.meng52.game.ui.panel
          _quadPith.alpha = 0.01;
          _uiMain.addChild(_quadPith);
          mTxt_destiny.reInit("");
-         mTxt_destiny.reInit(Tools.formatHtmlTextBr(_avatar.mDestiny.htmlArr));
+         mTxt_destiny.reInit(_avatar.getDestinyDescription());
          var _loc14_:Sprite = new Sprite();
          _loc14_.touchable = false;
          _loc14_.x = -5;
@@ -678,8 +678,8 @@ package com.meng52.game.ui.panel
          var _loc3_:String = _avatar.skill0 ? _avatar.skill0.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
          var _loc26_:String = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(20492,_avatar.skill0.lv) : "";
          var _loc5_:String = _avatar.skill1 ? _avatar.skill1.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
-         var _loc42_:String = _avatar.skill0 ? _avatar.skill0.getInfo() : "";
-         var _loc38_:String = _avatar.skill1 ? _avatar.skill1.getInfo() : "";
+         var _loc42_:String = "";
+         var _loc38_:String = "";
          var _loc36_:String = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(25021,_avatar.skill0.skillSetData.warmup,_avatar.skill0.skillSetData.cooldown) : "";
          var _loc37_:String = _avatar.skill1 ? GlobalLanguageStr.getLanguageStr(25021,_avatar.skill1.skillSetData.warmup,_avatar.skill1.skillSetData.cooldown) : "";
          if(_avatar.skill0 == null && _avatar.skill1 == null && _avatar.avatarData.info != null)

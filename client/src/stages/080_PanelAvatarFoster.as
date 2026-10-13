@@ -321,6 +321,8 @@ package com.meng52.game.ui.panel
          mTxt_dema_up = new LOL_TextField("",180,30);
          mTxt_dema_up.fontSize = 20;
          mInfo.addChild(mTxt_dema_up);
+         mAvatar = new Avatar(mCurrentId);
+         old_power = mAvatar.getPower(mData["index"] == 0,-1,true);
          mObj = GlobalData.$userData.attrs.avatar_culture;
          if(mObj != null)
          {

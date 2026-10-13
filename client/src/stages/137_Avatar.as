@@ -75,8 +75,16 @@ package com.meng52.game.module.avatar
          var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
          if(!definitions) return "";
          var family:String = String(id).split("|")[0].split("_").slice(0,2).join("_");
-         for each(var bond:Object in definitions) if(bond.families.indexOf(family)>=0) return "\n羁绊："+bond.name+"\n"+bond.info;
+         for each(var bond:Object in definitions) if(bond.families.indexOf(family)>=0) return "<br/>"+Tools.formatHtmlText(String(bond.name),16765542,true,22)+"<br/>"+Tools.formatHtmlText(String(bond.info),16777215,false,20);
          return "";
+      }
+
+      public function getDestinyDescription() : String
+      {
+         var original:String = mDestiny && mDestiny.htmlArr ? Tools.formatHtmlTextBr(mDestiny.htmlArr) : (mDestiny ? mDestiny.nameStr : "");
+         var bond:String = getPurpleBondDescription();
+         if(bond && original.indexOf("暂无命运关系") >= 0) original = "";
+         return original + bond;
       }
 
       private function purpleBondMultiplier() : Number
@@ -185,7 +193,7 @@ package com.meng52.game.module.avatar
       {
          var context:Object = currentAbilityAttack();
          var actual:Number = damageTaken >= 0 ? damageTaken : Math.max(0,before-Math.max(0,hp));
-         if(abilityState.grey && actual > 0 && damageType != 4) abilityState.grey.value = Math.min(hpMax*0.2,abilityState.grey.value+actual*0.4);
+         if(abilityState.grey && actual > 0 && damageType != 4) { abilityState.grey.value = Math.min(hpMax*0.2,abilityState.grey.value+actual*0.4); abilityFeedback("灰色生命："+int(abilityState.grey.value),"",10066329); }
          if(!context || !source || context.owner !== source || damageType < 1 || damageType > 3) return;
          var record:Object = null;
          for each(var entry:Object in context.targets) if(entry.target === this) record = entry;
@@ -199,6 +207,17 @@ package com.meng52.game.module.avatar
 
       private function abilityEnemies(distance:Number, center:Avatar = null, maximum:int = 1, heroOnly:Boolean = false, order:String = "nearest", excluded:Array = null, forward:Boolean = false) : Array
       {
+         if(center == null)
+         {
+            var context:Object = currentAbilityAttack();
+            if(context && context.owner === this && context.kind == "active" && context.skill)
+            {
+               var configured:int = context.skill.getCastRange();
+               if(configured > 0) distance = configured;
+               if(context.skill.skills[0][1] == "jayce_n") distance = abilityState.form && abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
+            }
+         }
+         if(center != null || maximum != 1) distance = skillAreaRadius(distance);
          center = center || this;
          return abilityCandidates(otherTeam,center.line,center.pos,distance,maximum,heroOnly,order,excluded,forward);
       }
@@ -235,7 +254,9 @@ package com.meng52.game.module.avatar
 
       private function abilityMarkedTarget(mark:String, distance:Number, order:String = "nearest") : Avatar
       {
-         var list:Array = abilityEnemies(distance,null,-1,true,order);
+         var context:Object = currentAbilityAttack();
+         if(context && context.owner === this && context.skill) distance = context.skill.getCastRange();
+         var list:Array = abilityCandidates(otherTeam,line,pos,distance,-1,true,order);
          for each(var target:Avatar in list) if(target.abilityHasMark(this,mark)) return target;
          return list.length ? list[0] as Avatar : null;
       }
@@ -251,7 +272,7 @@ package com.meng52.game.module.avatar
          if(target && target.hp > 0) target.abilityState["mark_"+kind+"_"+abilityIndex] = {until:target.abilitySerial+duration,owner:this,debuff:true,scale:scale};
       }
 
-      private function abilityHit(target:Avatar, coefficient:Number, kind:int, effect:String, sharedTotal:Number = 0) : Boolean
+      private function abilityHit(target:Avatar, coefficient:Number, kind:int, effect:String, sharedTotal:Number = 0, visualSource:Avatar = null) : Boolean
       {
          if(!target || target.hp <= 0 || hp <= 0) return false;
          var context:Object = currentAbilityAttack();
@@ -260,7 +281,7 @@ package com.meng52.game.module.avatar
          if(kind == 3) coefficient /= REAL_DAMAGE_RATE;
          var total:Number = sharedTotal > 0 ? sharedTotal : coefficient;
          var q:Number = sharedTotal > 0 ? coefficient/sharedTotal : 1;
-         attackAimList(one,kind,total,0,effect,false,null,-1,q);
+         attackAimList(one,kind,total,0,effect,false,null,-1,q,visualSource);
          return context && (int(context.hitSerial) > hitCount);
       }
 
@@ -395,7 +416,7 @@ package com.meng52.game.module.avatar
             else if(key == "grey" && abilitySerial >= state.until)
             {
                delete abilityState.grey;
-               if(hp > 0 && state.value > 0) addBuff("shield",2,int(state.value));
+               if(hp > 0 && state.value > 0) { addBuff("shield",2,int(state.value)); abilityFeedback("灰色生命转护盾："+int(state.value),"FX_S9160_SHIELD"); }
             }
             else if(state.until != undefined && abilitySerial > state.until) delete abilityState[key];
          }
@@ -424,6 +445,63 @@ package com.meng52.game.module.avatar
          }
          return hp <= 0;
       }
+      public static function skillAreaRadius(value:Number) : int
+      {
+         var scale:Number = Number(GlobalData.$mConfig_simple.skill_effect_radius_scale);
+         return Math.round(value*(isFinite(scale) && scale > 0 ? scale : 1));
+      }
+
+      private function abilityFeedback(label:String, effect:String = "", color:uint = 16764006) : void
+      {
+         var layer:GameMapLayer = GameMapLayer.gl;
+         if(!layer || !fightRes || !fightRes.parent) return;
+         layer.delayCall(layer.infoLayer.popTextForAvatar,GameMap.actionDelay,label,this,color,22,1);
+         if(effect.length > 0)
+         {
+            var attributes:Object = DisplayTools.getAttrs(effect);
+            if(attributes)
+            {
+               attributes = Tools.clone(attributes);
+               attributes.a1 = this;
+               attributes.par = layer.effectLayer;
+               layer.delayCall(DisplayTools.addEffects,GameMap.actionDelay,attributes);
+            }
+         }
+      }
+
+      public function abilityCanCast(kind:String, distance:int) : Boolean
+      {
+         if(hp <= 0 || !GameMap.currentMap) return false;
+         var center:Avatar;
+         switch(kind)
+         {
+            case "kayle_c": return abilityAlly(600) != null;
+            case "yi_c":
+            case "orianna_n":
+            case "alistar_c":
+            case "tahm_c": return true;
+            case "nunu_c": return abilityEnemies(skillAreaRadius(400)).length > 0;
+            case "illaoi_c": return abilityEnemies(350,null,3).length > 0;
+            case "orianna_c":
+               center = abilityState.ball as Avatar;
+               if(!center || center.hp <= 0 || center.line != line) center = this;
+               return abilityEnemies(350,center,3).length > 0;
+            case "jayce_n": distance = abilityState.form && abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS; break;
+            case "elise_c":
+            case "nidalee_c":
+            case "caitlyn_c":
+            case "khazix_c":
+            case "jinx_c": return abilityEnemies(distance,null,1,true).length > 0;
+            case "maokai_c":
+            case "riven_c": return abilityEnemies(distance,null,1,false,"nearest",null,true).length > 0;
+            case "aoxing_c":
+               for(var lane:int = 0; lane < 3; lane++)
+                  if(abilityCandidates(otherTeam,lane,pos,3001,1).length > 0) return true;
+               return false;
+         }
+         return abilityEnemies(distance).length > 0;
+      }
+
       public function executeAbility(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
          var enemies:Array;
@@ -471,12 +549,16 @@ package com.meng52.game.module.avatar
                enemies=abilityEnemies(700); if(!enemies.length) return false; primary=enemies[0];
                targets=[primary].concat(abilityEnemies(250,primary,3,false,"nearest",[primary]));
                for each(target in targets) abilityHit(target,1.6,1,effect,target===primary ? 3 : 0);
-               if(primary.hp > 0 && abilityDash(primary)) if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);
+               if(primary.hp > 0)
+               {
+                  if(!abilityState.root) abilityDash(primary);
+                  if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);
+               }
                abilityState.form = {hammer:false};
                break;
             case "nidalee_n":
                enemies=abilityEnemies(650,null,1,false,"farthest"); if(!enemies.length) return false; target=enemies[0];
-               coefficient=(1+Math.min(650,Math.abs(pos-target.pos))/650)*scale;
+               coefficient=(1+Math.min(sourceSkill.skillSetData.range,Math.abs(pos-target.pos))/Math.max(1,sourceSkill.skillSetData.range))*scale;
                if(abilityHit(target,coefficient,2,effect)) abilityMark(target,"hunt",3);
                break;
             case "nidalee_c":
@@ -539,7 +621,7 @@ package com.meng52.game.module.avatar
                break;
             case "veigar_n":
                enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,1.2*scale,2,effect) && target.getType()==1 && !target.isManualSummonUnit) abilityState.evilStacks=Math.min(10,int(abilityState.evilStacks)+1);
+               if(abilityHit(target,1.2*scale,2,effect) && target.getType()==1 && !target.isManualSummonUnit) { abilityState.evilStacks=Math.min(10,int(abilityState.evilStacks)+1); abilityFeedback("邪恶之力："+int(abilityState.evilStacks)+"/10","FX_S9160_STRONG"); }
                break;
             case "veigar_c":
                enemies=abilityEnemies(700,null,1,true,"ratio"); if(!enemies.length) enemies=abilityEnemies(700);
@@ -557,7 +639,7 @@ package com.meng52.game.module.avatar
                break;
             case "riven_n":
                enemies=abilityEnemies(450); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
-               count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3;
+               count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback("折翼之舞：第"+count+"式");
                for each(target in [primary].concat(abilityEnemies(200,primary,2,false,"nearest",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,"stun",1);
                if(count==2) abilityShield(this,0.6*scale);
                break;
@@ -583,7 +665,7 @@ package com.meng52.game.module.avatar
                abilityHeal(this,0.7*scale);
                break;
             case "nunu_c":
-               abilityShield(this,1.2); abilityState.channel={pos:pos,line:line};
+               abilityShield(this,1.2); abilityState.channel={pos:pos,line:line}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
                break;
             case "alistar_n":
                enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
@@ -646,7 +728,7 @@ package com.meng52.game.module.avatar
             case "tahm_n":
                enemies=abilityEnemies(500); if(!enemies.length) return false;
                if(abilityHit(enemies[0],1.1*scale,2,effect)) abilityControl(enemies[0],"stun",1);
-               abilityState.grey={until:abilitySerial+1,value:0};
+               abilityState.grey={until:abilitySerial+1,value:0}; abilityFeedback("灰色生命：开始储存","FX_S9160_SHIELD");
                break;
             case "tahm_c":
                ally=abilityAlly(500,"ratio",true) || this;
@@ -686,13 +768,14 @@ package com.meng52.game.module.avatar
                enemies=abilityEnemies(650); if(!enemies.length) return false; primary=enemies[0]; targets=[primary]; marked=false;
                for(i=0;i<3;i++)
                {
+                  var bounceSource:Avatar = i == 0 ? this : primary;
                   if(i>0) { enemies=abilityEnemies(300,primary,1,false,"nearest",targets); if(!enemies.length) break; primary=enemies[0]; targets.push(primary); }
-                  if(abilityHit(primary,(i==0 ? 1.4 : 1)*scale,2,effect) && primary.getType()==1 && !primary.isManualSummonUnit) marked=true;
+                  if(abilityHit(primary,(i==0 ? 1.4 : 1)*scale,2,effect,0,bounceSource) && primary.getType()==1 && !primary.isManualSummonUnit) marked=true;
                }
-               if(marked) abilityState.thunder=Math.min(3,int(abilityState.thunder)+1);
+               if(marked) { abilityState.thunder=Math.min(3,int(abilityState.thunder)+1); abilityFeedback("风暴电荷："+int(abilityState.thunder)+"/3","FX_A_1114_MAGIC"); }
                break;
             case "aoxing_c":
-               count=int(abilityState.thunder); abilityState.thunder=0; i=-1; targets=[];
+               count=int(abilityState.thunder); abilityState.thunder=0; if(count > 0) abilityFeedback("释放风暴电荷："+count); i=-1; targets=[];
                for(var lane:int=0;lane<3;lane++)
                {
                   enemies=abilityCandidates(otherTeam,lane,pos,GameMapConfig.LINE_POS,-1,true,"front");
@@ -943,6 +1026,7 @@ package com.meng52.game.module.avatar
       public var currentSkillKillContext:Object;
       public var manualFocusTarget:Avatar;
       public var manualSkillDots:Object;
+      private var manualDotSerial:uint = 0;
       public var manualBattleStacks:Object;
       public var manualTimedStacks:Array;
       public var manualOwnerActionSerial:int = 0;
@@ -2099,9 +2183,12 @@ package com.meng52.game.module.avatar
       public function addManualBattleStack(param1:String, param2:Number, param3:int) : void
       {
          if(!manualBattleStacks) manualBattleStacks = {};
-         if(param1 != "attack" && param1 != "defense") return;
+         if(["attack","defense","flee"].indexOf(param1) < 0) return;
          if(!isFinite(param2) || param2 <= 0 || param3 < 1) return;
          manualBattleStacks[param1] = Math.min(Number(param3) * param2,getManualBattleStack(param1) + param2);
+         var flat:Boolean = ["hit","flee","crit","tough"].indexOf(param1) >= 0;
+         var labels:Object = {hit:"精准",flee:"闪避",crit:"暴击",tough:"韧性"};
+         abilityFeedback(flat ? labels[param1]+"叠加：+"+Math.round(getManualBattleStack(param1)) : "永久成长："+Math.round(getManualBattleStack(param1)*100)+"%",flat ? "FX_S9140_FLEE" : "FX_S9160_STRONG");
       }
 
       public function getManualTimedStack(param1:String) : Number
@@ -2136,6 +2223,7 @@ package com.meng52.game.module.avatar
          manualTimedStacks = _loc3_;
          if(_loc2_ >= param3) return;
          manualTimedStacks.push({"stat":param1,"value":param2,"expiresAt":manualOwnerActionSerial + param4});
+         abilityFeedback("力量叠层："+(_loc2_+1)+"/"+param3,"FX_S9160_STRONG");
       }
 
       private function advanceManualOwnerAction() : void
@@ -2191,7 +2279,7 @@ package com.meng52.game.module.avatar
          return true;
       }
 
-      public function addManualSkillDot(param1:String, param2:String, param3:Number, param4:Number, param5:int, param6:Avatar = null, param7:int = 0) : void
+      public function addManualSkillDot(param1:String, param2:String, param3:Number, param4:Number, param5:int, param6:Avatar = null, param7:int = 0, stack:Boolean = false) : void
       {
          var _loc1_:Object = null;
          var _loc2_:Buff = null;
@@ -2202,6 +2290,7 @@ package com.meng52.game.module.avatar
             return;
          }
          if(!manualSkillDots) manualSkillDots = {};
+         if(stack) param1 += ":layer:" + (++manualDotSerial);
          _loc1_ = {"kind":param2,"apTick":Math.max(0,int(param3)),"hpMaxFraction":param4,"damageType":param7,"round":param5,"source":param6};
          _loc2_ = new Buff(param2 == "bleed" ? "poison" : param2,param5,Number(_loc1_.apTick));
          _loc1_.visual = _loc2_;
@@ -3530,7 +3619,7 @@ package com.meng52.game.module.avatar
                _loc6_ = 0;
             }
          }
-         var _loc10_:Array = GlobalData.$mConfig_simple.avatar_exp_curve as Array;
+         var _loc10_:Array = getExperienceCurve();
          if(_loc10_ != null && param1 >= 1 && param1 <= _loc10_.length)
          {
             _loc3_ = int(_loc10_[param1 - 1] * avatarData.expRate);
@@ -3564,7 +3653,7 @@ package com.meng52.game.module.avatar
          var _loc4_:int = int(_loc2_[0]);
          var _loc3_:int = int(_loc2_[1]);
          var _loc5_:int = int(_loc2_[2]);
-         var _loc6_:Array = GlobalData.$mConfig_simple.avatar_exp_curve as Array;
+         var _loc6_:Array = getExperienceCurve();
          if(_loc6_ != null && param1 >= 1 && param1 < _loc6_.length)
          {
             return int(_loc6_[param1] * avatarData.expRate) - int(_loc6_[param1 - 1] * avatarData.expRate);
@@ -3575,6 +3664,13 @@ package com.meng52.game.module.avatar
       public function getIdValue() : Number
       {
          return 0.001 * avatarData.id.split("_")[1];
+      }
+
+      private function getExperienceCurve() : Array
+      {
+         var curves:Object = GlobalData.$mConfig_simple.avatar_exp_curves;
+         var curve:Array = curves ? curves[String(getStar())] as Array : null;
+         return curve || GlobalData.$mConfig_simple.avatar_exp_curve as Array;
       }
 
       public function isSwallowProtect(param1:Avatar) : Boolean
@@ -3810,6 +3906,15 @@ package com.meng52.game.module.avatar
          var _loc5_:Number = Math.pow(getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA,2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed() + getRange()) * (1 + Math.pow(getHit() + getFlee() + getCrit() + getTough(),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
+      }
+
+      public function isRangedSkillCaster() : Boolean
+      {
+         if(getType() != 1) return false;
+         var definition:Object = GlobalData.$mConfig_avatar[avatarData.id];
+         var ranged:Boolean = definition && typeof definition.ranged_skill == "boolean" ? Boolean(definition.ranged_skill) : avatarData.range >= 500;
+         if(!ranged) return false;
+         return avatarData.id.indexOf("A_1041_") != 0 || !abilityState.form || !abilityState.form.hammer;
       }
 
       public function getLvMax() : int
@@ -4600,10 +4705,16 @@ package com.meng52.game.module.avatar
          _loc7_.delayCall(DisplayTools.addEffects,GameMap.actionDelay + param4 + param5 + 2.8 / 2,_loc10_);
       }
 
+      public function isResolvingSkill() : Boolean
+      {
+         var context:Object = currentAbilityAttack();
+         return context && context.owner === this && context.kind == "active";
+      }
+
       public function checkAttack(param1:Vector.<Avatar>, param2:Function, param3:int = -1, param4:Boolean = false, param5:int = -1, param6:Number = 1, param7:int = 0, param8:String = null, param9:Buff = null, param10:Number = 1) : Avatar
       {
          var _aim:Avatar;
-         if(GameMap.currentMap.isEnd(line))
+         if(GameMap.currentMap.isEnd(line) && !isResolvingSkill())
          {
             return null;
          }
@@ -4771,7 +4882,7 @@ package com.meng52.game.module.avatar
          }
       }
 
-      public function attackAimList(param1:Vector.<Avatar>, param2:int = -1, param3:Number = 1, param4:int = 0, param5:String = null, param6:Boolean = false, param7:Buff = null, param8:int = -1, param9:Number = 1) : int
+      public function attackAimList(param1:Vector.<Avatar>, param2:int = -1, param3:Number = 1, param4:int = 0, param5:String = null, param6:Boolean = false, param7:Buff = null, param8:int = -1, param9:Number = 1, effectSource:Avatar = null) : int
       {
          if(param2 < 0 || param2 >= 1 && param2 <= 4) param3 *= purpleBondMultiplier();
          if(param7 && param7.type == "shield") param7.value *= purpleBondMultiplier();
@@ -4878,15 +4989,15 @@ package com.meng52.game.module.avatar
          }
          _loc25_.par = _loc30_.effectLayer;
          GameMap.actionDelay += 0.3;
-         if(fightRes.parent)
+         if((!effectSource || effectSource === this) && fightRes.parent)
          {
             _loc30_.delayCall((fightRes.parent as AvatarLayer).setFirst,GameMap.actionDelay,fightRes);
          }
          _loc27_ = Tools.clone(_loc41_.pre);
-         if(_loc27_)
+         if(_loc27_ && (!effectSource || effectSource === this))
          {
             _loc23_ = 0.05;
-            _loc27_.a1 = this;
+            _loc27_.a1 = effectSource || this;
             _loc27_.par = _loc30_.effectLayer;
             _loc30_.delayCall(DisplayTools.addEffects,GameMap.actionDelay - 0.3 / 2,_loc27_);
             GameMap.actionDelay += _loc23_;
@@ -4898,7 +5009,7 @@ package com.meng52.game.module.avatar
             _loc34_ = Math.max(-400,Math.min(GameMapConfig.LINE_POS + 400,team == 1 ? pos - _loc34_ : pos + _loc34_));
             _loc48_ = GameMapConfig.posToPixel(_loc34_);
             _loc27_ = Tools.clone(_loc41_);
-            _loc27_.a1 = this;
+            _loc27_.a1 = effectSource || this;
             _loc27_.x1 = _loc26_;
             _loc27_.x2 = _loc24_;
             _loc27_.y1 = _loc35_;
@@ -4980,7 +5091,7 @@ package com.meng52.game.module.avatar
             }
             _loc48_ = GameMapConfig.posToPixel(_loc10_.pos);
             _loc27_ = Tools.clone(_loc41_);
-            _loc27_.a1 = this;
+            _loc27_.a1 = effectSource || this;
             _loc27_.x1 = _loc26_;
             _loc27_.x2 = _loc24_;
             _loc27_.y1 = _loc35_;
@@ -4991,7 +5102,7 @@ package com.meng52.game.module.avatar
             delete _loc27_.check;
             _loc27_.par = _loc30_.effectLayer;
             _loc30_.delayCall(DisplayTools.addBullet,GameMap.actionDelay,_loc27_);
-            if(param4 != GameMapConfig.MIN_SPACE_POS - 1 && _loc34_ == 0)
+            if((!effectSource || effectSource === this) && param4 != GameMapConfig.MIN_SPACE_POS - 1 && _loc34_ == 0)
             {
                _loc30_.delayCall(attackTween,GameMap.actionDelay,this,_loc10_);
             }
@@ -5041,7 +5152,7 @@ package com.meng52.game.module.avatar
                   _loc24_ = _loc26_ + _loc18_.x;
                   _loc48_ = _loc35_ + _loc18_.y;
                   _loc27_ = Tools.clone(_loc41_);
-                  _loc27_.a1 = this;
+                  _loc27_.a1 = effectSource || this;
                   _loc27_.x1 = _loc26_;
                   _loc27_.x2 = _loc24_;
                   _loc27_.y1 = _loc35_;
@@ -5133,7 +5244,7 @@ package com.meng52.game.module.avatar
                   _loc24_ = GameMapConfig.lineToPixel(GameMap.currentMap.getShowLine(_loc12_.line),_loc12_.offset);
                   _loc48_ = GameMapConfig.posToPixel(_loc12_.pos);
                   _loc27_ = Tools.clone(_loc41_);
-                  _loc27_.a1 = this;
+                  _loc27_.a1 = effectSource || this;
                   _loc27_.x1 = _loc26_;
                   _loc27_.x2 = _loc24_;
                   _loc27_.y1 = _loc35_;

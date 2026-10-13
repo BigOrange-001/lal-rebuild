@@ -303,7 +303,8 @@ package com.meng52.game.ui.panel
          var _loc4_:Array = param1["params"].aids as Array;
          var _loc5_:Object = param1.data;
          GlobalFunction.clearExpeditionItems();
-         mDnStone = _loc5_.dn_stone - GlobalData.$userData.attrs.dn_stone;
+         mDnStone = Number(_loc5_.gained_dn_stone);
+         if(!isFinite(mDnStone)) mDnStone = _loc5_.dn_stone - GlobalData.$userData.attrs.dn_stone;
          GlobalData.$tempExpeditionDnStone = mDnStone > 0 ? mDnStone : 0;
          if(!GlobalFunction.isVersionedProfileReceipt(param1))
          {

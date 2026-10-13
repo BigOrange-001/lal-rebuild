@@ -17,6 +17,7 @@ class RpcFault(Exception):
 # Exact business-code translations for the native client popup. Unknown codes
 # retain the originating module message instead of receiving a generic label.
 GAMEPLAY_ERROR_MESSAGES_ZH={
+ 'SkinAcquisitionRestricted':'该英雄形态暂时仅能通过邮件获得。',
  'InsufficientCoin':'金砖不足','InsufficientResource':'资源不足','InsufficientDust':'对应尘埃不足','InsufficientMedal':'勋章不足','InsufficientBoxKey':'宝箱钥匙不足','InsufficientContribution':'公会贡献不足','InsufficientEnergy':'体力不足',
  'EnergyFull':'体力已满','EnergyPurchaseLimit':'今日体力购买次数已用完','FragmentEnergyFull':'碎片体力已满','FragmentEnergyPurchaseLimit':'今日碎片体力购买次数已用完',
  'VipLevelRequired':'VIP等级不足，暂时无法领取该礼包','VipRequired':'需要达到指定VIP等级','LevelRequired':'等级不足，暂时无法进行此操作','RankLevelLow':'等级不足，暂时无法领取该奖励','StageLocked':'该关卡尚未解锁','UnavailableDifficulty':'该难度暂不可挑战',

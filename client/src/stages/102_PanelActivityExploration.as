@@ -189,7 +189,7 @@ package com.meng52.game.ui.panel
          var _armyCount:int = 0;
          if(param1.data && GlobalFunction.isVersionedProfileReceipt(param1) && this.stage)
          {
-            if(!GlobalFunction.didApplyProfileStateSync(param1))
+            if(!GlobalData.isCurrentProfileSyncEnvelope(param1.state_sync))
             {
                LayoutUIAnimation.getOnlyExample().popWords("探索状态已更新，请重新确认队伍。");
                return;

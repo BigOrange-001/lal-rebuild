@@ -874,7 +874,7 @@ package com.meng52.game.ui.panel
             _txtSkillA.x = skillImg.x + skillImg.width + 3;
             _txtSkillA.y = skillImg.y + 5;
             mBox_info.addChild(_txtSkillA);
-            _loc13_ = this.mAvatar.skill0 ? this.mAvatar.skill0.getInfo() : GlobalLanguageStr.getLanguageStr(90021);
+            _loc13_ = "";
             _loc7_ = mImg_info_bg.width * 0.5;
             _infoSkillA = GlobalTextStyle.getTextField(_loc13_,15,4926491,"left",_loc7_,24 * 3,GlobalConfig.FONT_1);
             _infoSkillA.x = skillImg.x + 20 - 20;
@@ -906,7 +906,7 @@ package com.meng52.game.ui.panel
             mExp_old = this.mAvatar.getAllExp(-1,true);
             _loc13_ = this.mAvatar.skill0 ? this.mAvatar.skill0.skillSetData.name + "    " + GlobalLanguageStr.getLanguageStr(20079,this.mAvatar.skill0.lv) : GlobalLanguageStr.getLanguageStr(90021);
             _txtSkillA.text = _loc13_;
-            _loc13_ = this.mAvatar.skill0 ? this.mAvatar.skill0.getInfo() : GlobalLanguageStr.getLanguageStr(90021);
+            _loc13_ = "";
             _infoSkillA.text = _loc13_;
             _infoSkillA.visible = this.mAvatar.skill0 != null;
             _loc13_ = this.mAvatar.skill0 ? GlobalLanguageStr.getLanguageStr(25021,this.mAvatar.skill0.skillSetData.warmup,this.mAvatar.skill0.skillSetData.cooldown) : GlobalLanguageStr.getLanguageStr(90021);
@@ -1088,7 +1088,7 @@ package com.meng52.game.ui.panel
          var _loc3_:String = (param1.currentTarget as LOL_Button).name;
          if(_loc3_ && _loc3_.length > 0)
          {
-            _loc5_ = new SkillSet(_loc3_,null);
+            _loc5_ = new SkillSet(_loc3_,mAvatar,mAvatar.slv,false);
             _loc4_ = _loc5_.skillSetData.name;
             _loc2_ = _loc5_.getInfoDetails() + "\n";
             _loc2_ = Tools.formatLineX(_loc2_,GlobalTextStyle.COLOR_W_W_Y_G);

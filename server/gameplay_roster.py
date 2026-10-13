@@ -1171,13 +1171,17 @@ class GameplayRosterEquipment:
             target_id = self._id(x.get("aid"), "aid"); consumed = x.get("aids", [])
             if not isinstance(consumed, list) or not consumed: self._fail("InvalidMaterials", "Select required hero material")
             tid, target = self._hero(p, target_id)
+            self._check_not_pending_culture(p, tid)
             ids = []
             for v in consumed:
                 hid, mat = self._hero(p, v)
                 if hid == tid or hid in ids: self._fail("InvalidMaterials", "Target and duplicate heroes cannot be consumed")
                 self._check_not_team(p, hid)
                 self._check_not_dn(p, hid)
-                if m == "user.phase_up" and (int(mat.get("phase", 0)) != int(target.get("phase", 0)) or int(mat.get("morph", 0)) != 0): self._fail("IncompatibleMaterial", "Phase ascension materials must have the same phase and no morph")
+                if m == "user.phase_up":
+                    if (mat.get("aid", hid).split("|")[0] != target.get("aid", tid).split("|")[0]
+                            or int(mat.get("morph", 0)) != 0 or int(mat.get("phase", 0)) != 0):
+                        self._fail("IncompatibleMaterial", "Phase ascension requires an unadvanced copy of the same hero and quality")
                 ids.append(hid)
             base = target.get("aid", tid).split("|")[0]
             row = self.heroes.get(base)
@@ -1217,10 +1221,13 @@ class GameplayRosterEquipment:
                 phase_row = phase_table.get(str(star)) if isinstance(phase_table, dict) else None
                 if not isinstance(phase_row, list) or len(phase_row) < 2:
                     self._fail("InvalidConfig", "Missing phase configuration for this hero")
-                required = self._num(phase_row[0], "phase material count", 1, 5)
+                if int(target.get("phase", 0)) >= int(phase_row[1]):
+                    self._fail("MaxGrowth", "This hero has reached its phase limit")
+                required = self._num(int(target.get("phase", 0)) + 1, "phase material count", 1, 5)
                 if len(ids) != required:
                     self._fail("InsufficientMaterials", "Select exactly the configured phase-up materials")
-            self._cost(p, self.rules.get("star_cost" if m == "user.star_up" else "phase_cost", {}))
+            if m == "user.star_up":
+                self._cost(p, self.rules.get("star_cost", {}))
             if m == "user.phase_up":
                 if int(target.get("phase", 0)) >= int(phase_row[1]):
                     self._fail("MaxGrowth", "This hero has reached its phase limit")
@@ -1601,6 +1608,12 @@ class GameplayRosterEquipment:
             ids = x.get("eqids")
             if not isinstance(ids, list) or len(ids) != 2 or ids[0] == ids[1]: self._fail("InvalidSelection", "Select two different equipment")
             target_id, target = self._equip(p, ids[0]); mat_id, mat = self._equip(p, ids[1])
+            pending_wash = p.get("attrs", {}).get("equip_wash")
+            if isinstance(pending_wash, dict) and pending_wash.get("eqid") in (target_id, mat_id):
+                self._fail("PendingOperation", "Save or cancel the equipment wash before alchemy")
+            max_star = int(self.simple.get("equip_alchemy", {}).get("star_lv", 7))
+            if self._equip_star(target) >= max_star:
+                self._fail("MaxGrowth", "Equipment has reached its alchemy limit")
             if any(mat_id in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip material first")
             if target.get("eid") != mat.get("eid"): self._fail("IncompatibleEquipment", "Only matching equipment can be combined")
             # The alchemy panel explicitly previews the sacrifice's ordinary
@@ -1670,7 +1683,7 @@ class GameplayRosterEquipment:
         except (IndexError, TypeError, ValueError):
             star = 6
             unit_type = 1
-        tier_cap = ({2: 20, 3: 30, 4: 60, 5: 90}.get(star, 99)
+        tier_cap = ({2: 20, 3: 30, 4: 60, 5: 99}.get(star, 99)
                     if unit_type == 1 else 1)
         tl = self.heroes.get(aid, {}).get("tl", [])
         configured_cap = int(tl[4]) if isinstance(tl, list) and len(tl) > 4 else tier_cap
@@ -1678,6 +1691,7 @@ class GameplayRosterEquipment:
 
     def _migrate_hero_level_caps(self, profile):
         attrs = profile.setdefault("attrs", {})
+        self._migrate_hero_experience(profile)
         curve = self.simple.get("avatar_exp_curve")
         curve_active = isinstance(curve, list) and len(curve) >= 2
         caps_done = int(attrs.get("roster_caps_version", 0) or 0) >= 1
@@ -1758,12 +1772,41 @@ class GameplayRosterEquipment:
         row = self.heroes.get(aid, {})
         tl = row.get("tl", [])
         rate = float(tl[5]) if exp_rate is None and len(tl) > 5 else (1.0 if exp_rate is None else float(exp_rate))
-        curve = self.simple.get("avatar_exp_curve")
+        curve = self._experience_curve(aid)
         if isinstance(curve, list) and 0 <= level - 1 < len(curve):
             return int(int(curve[level - 1]) * rate)
         a, b, c = (float(coefficients[i]) for i in range(3))
         required = (a / 3 * level ** 3 + (b - a) / 2 * level ** 2 + (a / 6 - b / 2 + c) * level - c) * rate
         return int(required)
+
+    def _experience_curve(self, aid):
+        curves = self.simple.get("avatar_exp_curves", {})
+        quality = str(aid).split("|")[0].rsplit("_", 1)[-1]
+        if isinstance(curves, dict) and isinstance(curves.get(quality), list):
+            return curves[quality]
+        return self.simple.get("avatar_exp_curve")
+
+    def _migrate_hero_experience(self, profile):
+        attrs = profile.setdefault("attrs", {})
+        if not self.simple.get("avatar_exp_curves") or int(attrs.get("avatar_exp_curve_version", 0) or 0) >= 2:
+            return
+        old_curve = self.simple.get("avatar_exp_curve", [])
+        old_version = int(attrs.get("avatar_exp_curve_version", 0) or 0)
+        for hero in profile.get("avatars", {}).values():
+            aid = str(hero.get("aid", hero.get("id", ""))).split("|")[0]
+            quality = aid.rsplit("_", 1)[-1]
+            if not aid.startswith("A_1") or quality not in self.simple["avatar_exp_curves"]:
+                continue
+            level = max(1, int(hero.get("lv", 1)))
+            rate = float(self.heroes.get(aid, {}).get("tl", [0] * 6)[5])
+            if old_version >= 1 and 1 <= level < len(old_curve):
+                old_step = int(old_curve[level] * rate) - int(old_curve[level - 1] * rate)
+            else:
+                old_step = self._legacy_exp_requirement(aid, level + 1, rate) - self._legacy_exp_requirement(aid, level, rate)
+            new_step = self._exp_requirement(aid, level + 1, rate) - self._exp_requirement(aid, level, rate)
+            if old_step > 0 and new_step > 0:
+                hero["exp"] = max(0, int(hero.get("exp", 0))) * new_step // old_step
+        attrs["avatar_exp_curve_version"] = 2
 
     def _hero_all_exp(self, hero, aid=None):
         aid = (aid or hero.get("aid", "")).split("|")[0]

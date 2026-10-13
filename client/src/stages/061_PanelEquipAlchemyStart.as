@@ -226,7 +226,7 @@ package com.meng52.game.ui.panel
          m_equip_add_img.y = m_bg.y + m_bg.height * 0.5;
          m_equip_add_img.addEventListener("touch",onTouch);
          this.addChild(m_equip_add_img);
-         m_empty_info = GlobalFunction.createTextField(MainConfig.$isEA ? 410 : 390,MainConfig.$isEA ? 70 : 60,GlobalLanguageStr.getStr(98202),"",20,4926491);
+         m_empty_info = GlobalFunction.createTextField(MainConfig.$isEA ? 410 : 390,MainConfig.$isEA ? 70 : 60,"请选择同名闲置装备\n每次炼金主属性×1.12\n强化等级保持不变","",20,4926491);
          m_empty_info.x = MainConfig.$isEA ? m_equip_add_img.x + m_equip_add_img.width + 5 : (MainConfig.$isEnglish ? m_equip_add_img.x + m_equip_add_img.width + 25 : m_equip_add_img.x + m_equip_add_img.width + 40);
          m_empty_info.y = m_equip_add_img.y - m_empty_info.height * 0.5;
          m_empty_info.hAlign = "left";

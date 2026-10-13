@@ -30,6 +30,7 @@ package com.meng52.game.module.skill
       public var m_cooldownNum:int;
       public var abilityCooldownOverride:int = -1;
       public var abilityHasCast:Boolean = false;
+      private var preparingCast:Boolean = false;
       private var boundedSummons:Vector.<Avatar>;
       private var pendingShieldFollowupTarget:Avatar;
       private var pendingShieldFollowupBuff:Object;
@@ -161,7 +162,31 @@ package com.meng52.game.module.skill
                }
             }
          }
-         return _loc4_.info + (avatar ? avatar.getPurpleBondDescription() : "");
+         return getLevelInfo();
+      }
+
+      private function getLevelInfo() : String
+      {
+         var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         if(!row || !row.rankInfoTemplate || isSuper) return skillSetData.info;
+         var actions:Array = skills;
+         return String(row.rankInfoTemplate).replace(/\{rank:(\d+):([0-9.]+)\}|\{scale:([0-9.]+):([0-9.]+)\}|\{flat:(\d+):([0-9.]+)\}/g,function(...parts):String
+         {
+            var value:*;
+            if(parts[5] !== undefined && parts[5] !== null && parts[5] != "")
+            {
+               value = actions[int(parts[5])];
+               for each(var flatIndex:String in String(parts[6]).split(".")) value = value[int(flatIndex)];
+               return Math.round(Number(value)).toString();
+            }
+            if(parts[1] !== undefined && parts[1] !== null && parts[1] != "")
+            {
+               value = actions[int(parts[1])];
+               for each(var index:String in String(parts[2]).split(".")) value = value[int(index)];
+               return (Math.round(Number(value)*10000)/100).toString()+"%";
+            }
+            return (Math.round((Number(parts[3])+Number(parts[4])*Number(actions[0][2]))*100)/100).toString()+"%";
+         });
       }
 
       public function getInfoDetails() : String
@@ -519,7 +544,7 @@ package com.meng52.game.module.skill
 
       public function cooldown() : int
       {
-         m_cooldownNum = m_cooldownNum - 1;
+         m_cooldownNum = Math.max(-1,m_cooldownNum - 1);
          return m_cooldownNum;
       }
 
@@ -566,20 +591,49 @@ package com.meng52.game.module.skill
                return false;
             }
          }
-         if(_loc3_ <= 0)
+         return hasCastTargets();
+      }
+
+      private function hasCastTargets() : Boolean
+      {
+         if(!avatar || avatar.hp <= 0 || !GameMap.currentMap || !skills || skills.length == 0) return false;
+         var actions:Array = [];
+         var groups:Object = {};
+         var oldActions:Array = currentActionTargets;
+         var oldGroups:Object = currentTargetGroups;
+         var oldPreparing:Boolean = preparingCast;
+         preparingCast = true;
+         currentActionTargets = actions;
+         currentTargetGroups = groups;
+         var allyPrimary:Boolean = false;
+         try
          {
-            return true;
+            for(var index:int = 0; index < skills.length; index++)
+            {
+               var action:Array = skills[index];
+               var kind:String = String(action[0]);
+               if(kind == "manual_ability") return avatar.abilityCanCast(String(action[1]),getCastRange());
+               var policy:String = getActionPolicy(index);
+               var ally:Boolean = policy && policy.indexOf("ally_") == 0;
+               var targeted:Boolean = isEnemyTargetAction(kind) || kind == "manual_dot" || kind == "suck" || kind == "dispel_good" || kind == "pending_area_strike" || kind == "move_to_target_lane";
+               if(kind == "select_target" || targeted || ally)
+               {
+                  var candidates:Vector.<Avatar> = getCustomActionTargets(index,actions,groups,ally);
+                  if(candidates.length == 0) return allyPrimary;
+                  actions[index] = candidates[0];
+                  if(ally && index == 0 && kind == "cure") allyPrimary = true;
+                  if(targeted) return true;
+               }
+            }
+            if(allyPrimary || canUseAllyOnlyTargetPolicy(getCastRange())) return true;
+            return skillSetData.range <= 0 || avatar.findAim(GameMap.currentMap.getAliveList(avatar.otherTeam),null,getCastRange(),skillSetData.banStand) != null;
          }
-         _loc2_ = GameMap.currentMap.getAliveList(avatar.otherTeam);
-         if(avatar.findAim(_loc2_,null,_loc3_,_loc4_.banStand) != null)
+         finally
          {
-            return true;
+            preparingCast = oldPreparing;
+            currentActionTargets = oldActions;
+            currentTargetGroups = oldGroups;
          }
-         if(canUseAllyOnlyTargetPolicy(_loc3_))
-         {
-            return true;
-         }
-         return false;
       }
 
       private function canUseAllyOnlyTargetPolicy(param1:int) : Boolean
@@ -607,7 +661,7 @@ package com.meng52.game.module.skill
 
       private function isEnemyTargetAction(param1:String) : Boolean
       {
-         return param1 == "damage" || param1 == "true_damage" || param1 == "conditional_damage" || param1 == "stun_by_condition" || param1 == "damage_chain" || param1 == "locked_sequence" || param1 == "locked_sequence_area" || param1 == "locked_combo_group" || param1 == "locked_combo_weak" || param1 == "combo" || param1 == "stun" || param1 == "silence" || param1 == "weak" || param1 == "weak_percent" || param1 == "sunder" || param1 == "sunder_percent" || param1 == "poison" || param1 == "burn" || param1 == "evil" || param1 == "pull" || param1 == "pull_group" || param1 == "push" || param1 == "push_aoe" || param1 == "move_to_target" || param1 == "move_enemy_side_target" || param1 == "shield_dispel" || param1 == "focus_fire" || param1 == "dash_group_strike";
+         return param1 == "ricochet_bursts" || param1 == "damage" || param1 == "true_damage" || param1 == "conditional_damage" || param1 == "stun_by_condition" || param1 == "damage_chain" || param1 == "locked_sequence" || param1 == "locked_sequence_area" || param1 == "locked_combo_group" || param1 == "locked_combo_weak" || param1 == "combo" || param1 == "stun" || param1 == "silence" || param1 == "weak" || param1 == "weak_percent" || param1 == "sunder" || param1 == "sunder_percent" || param1 == "poison" || param1 == "burn" || param1 == "evil" || param1 == "pull" || param1 == "pull_group" || param1 == "push" || param1 == "push_aoe" || param1 == "move_to_target" || param1 == "move_enemy_side_target" || param1 == "shield_dispel" || param1 == "focus_fire" || param1 == "dash_group_strike";
       }
 
       public function checkUse() : Boolean
@@ -617,7 +671,6 @@ package com.meng52.game.module.skill
          {
             abilityCooldownOverride = -1;
             _loc1_ = useSkill();
-            m_cooldownNum = abilityCooldownOverride >= 0 ? abilityCooldownOverride : skillSetData.cooldown;
             return _loc1_;
          }
          return _loc1_;
@@ -625,8 +678,12 @@ package com.meng52.game.module.skill
 
       public function useSkill() : Boolean
       {
+         if(!hasCastTargets()) return false;
          var wholeAttack:Object = Avatar.beginAbilityAttack(avatar,"active");
+         wholeAttack.skill = this;
          abilityHasCast = true;
+         abilityCooldownOverride = -1;
+         m_cooldownNum = skillSetData.cooldown;
          try
          {
 
@@ -649,7 +706,7 @@ package com.meng52.game.module.skill
          var limitedSummon:Boolean = false;
          var summonApFactor:Number = 0;
          var _loc19_:SkillSetData = skillSetData;
-         var _loc24_:int = Math.abs(_loc19_.range);
+         var _loc24_:int = getCastRange();
          var _loc7_:int = _loc19_.aoe;
          var _loc26_:GameMap = GameMap.currentMap;
          var _loc16_:GameMapLayer = GameMapLayer.gl;
@@ -724,7 +781,7 @@ package com.meng52.game.module.skill
          while(_loc14_ < skills.length)
          {
             _loc20_ = skills[_loc14_];
-            if(avatar.hp <= 0 || GameMap.currentMap.isEnd(avatar.line))
+            if(avatar.hp <= 0)
             {
                currentActionTargets = null;
                currentTargetGroups = null;
@@ -817,7 +874,7 @@ package com.meng52.game.module.skill
                         {
                            inKillRecast = true;
                            avatar.skill0.useSkill();
-                           avatar.skill0.m_cooldownNum = avatar.skill0.skillSetData.cooldown;
+
                            inKillRecast = false;
                            break;
                         }
@@ -869,7 +926,7 @@ package com.meng52.game.module.skill
                      var dotIndex:int = 0;
                      while(dotIndex < _loc3_.length)
                      {
-                        _loc3_[dotIndex].addManualSkillDot(String(avatar.id) + ":" + manualDotRefreshKey,String(_loc20_[1]),Number(_loc20_[2]) * avatar.getDamage(),Number(_loc20_[3]),int(_loc20_[4]),avatar,manualDotDamageType);
+                        _loc3_[dotIndex].addManualSkillDot(String(avatar.id) + ":" + manualDotRefreshKey,String(_loc20_[1]),Number(_loc20_[2]) * avatar.getDamage(),Number(_loc20_[3]),int(_loc20_[4]),avatar,manualDotDamageType,_loc20_.length >= 9 && Boolean(_loc20_[7]));
                         dotIndex++;
                      }
                      queueDirectActionEffect(manualDotEffect,_loc3_[0],"b");
@@ -902,12 +959,15 @@ package com.meng52.game.module.skill
                      }
                   }
                   break;
+               case "ricochet_bursts":
+                  castRicochetBursts(_loc14_,_loc20_);
+                  break;
                case "damage_chain":
                   if(_loc20_.length >= 12 && _loc20_[2] is Array)
                   {
                      var chainCoefficients:Array = _loc20_[2] as Array;
                      var chainDamageType:int = int(_loc20_[3]);
-                     var chainRadius:int = Math.max(0,int(_loc20_[4]));
+                     var chainRadius:int = Avatar.skillAreaRadius(Math.max(0,int(_loc20_[4])));
                      var chainVictimCap:int = Math.max(1,int(_loc20_[5]));
                      var chainPolicy:String = String(_loc20_[6]);
                      var chainPrimaryBonus:Number = Number(_loc20_[7]);
@@ -961,7 +1021,7 @@ package com.meng52.game.module.skill
                                  chainCandidate = chainAlternatives[chainCandidateIndex];
                                   var chainCandidateIndexInPlan:int = chainCandidate ? chainVictimTargets.indexOf(chainCandidate) : -1;
                                   var chainCandidateVisits:int = chainCandidateIndexInPlan >= 0 ? int(chainVictimCounts[chainCandidateIndexInPlan]) : 0;
-                                  if(chainCandidate && chainCandidate != chainPrevious && chainCandidate.line == chainPrimary.line && chainCandidate.hp > 0 && Math.abs(chainCandidate.pos - chainPrevious.pos) <= chainRadius && (chainPolicy != "enemy_lane_behind_primary" || (avatar.team == 1 ? chainCandidate.pos > chainPrimary.pos : chainCandidate.pos < chainPrimary.pos)) && chainCandidateVisits < chainVictimCap)
+                                  if(chainCandidate && chainCandidate != chainPrevious && chainCandidate.line == chainPrimary.line && chainCandidate.hp > 0 && Math.abs(chainCandidate.pos - chainPrevious.pos) <= chainRadius && (chainPolicy != "enemy_lane_behind_primary" || isForwardOf(chainCandidate,chainPrimary)) && chainCandidateVisits < chainVictimCap)
                                  {
                                     chainTarget = chainCandidate;
                                     break;
@@ -1011,7 +1071,7 @@ package com.meng52.game.module.skill
                                      var chainNextCandidate:Avatar = chainNextAlternatives[chainAlternativeIndex];
                                      var chainNextPlanIndex:int = chainVictimTargets.indexOf(chainNextCandidate);
                                      var chainNextVisits:int = chainNextPlanIndex >= 0 ? int(chainVictimCounts[chainNextPlanIndex]) : 0;
-                                     if(chainNextCandidate && chainNextCandidate !== chainTarget && chainNextCandidate.hp > 0 && chainNextCandidate.line == chainTarget.line && Math.abs(chainNextCandidate.pos - chainTarget.pos) <= chainRadius && (chainPolicy != "enemy_lane_behind_primary" || (avatar.team == 1 ? chainNextCandidate.pos > chainPrimary.pos : chainNextCandidate.pos < chainPrimary.pos)) && chainNextVisits < chainVictimCap)
+                                     if(chainNextCandidate && chainNextCandidate !== chainTarget && chainNextCandidate.hp > 0 && chainNextCandidate.line == chainTarget.line && Math.abs(chainNextCandidate.pos - chainTarget.pos) <= chainRadius && (chainPolicy != "enemy_lane_behind_primary" || isForwardOf(chainNextCandidate,chainPrimary)) && chainNextVisits < chainVictimCap)
                                      {
                                         chainHasNextTarget = true;
                                         break;
@@ -1040,7 +1100,7 @@ package com.meng52.game.module.skill
                             }
                             var chainHitPreviously:Boolean = killContext ? Boolean(killContext.hit) : false;
                             if(killContext) killContext.hit = false;
-                            avatar.attackAimList(chainOne,chainDamageType,chainShareTotal,0,String(_loc20_[11]),_loc2_,null,getActionRange(_loc14_,_loc24_),damageShareWeight(chainCoeff,chainShareTotal));
+                            avatar.attackAimList(chainOne,chainDamageType,chainShareTotal,0,String(_loc20_[11]),_loc2_,null,getActionRange(_loc14_,_loc24_),damageShareWeight(chainCoeff,chainShareTotal),chainHit == 0 ? avatar : chainPrevious);
                             if(skillSetData.chainDot && skillSetData.chainDot.length == 5 && chainTarget.hp > 0 && killContext && killContext.hit)
                             {
                                var chainDotRow:Array = skillSetData.chainDot;
@@ -1326,7 +1386,7 @@ package com.meng52.game.module.skill
                   if(_loc20_.length >= 8 && pendingSourceIndex >= 0 && pendingSourceIndex < actionTargets.length && actionTargets[pendingSourceIndex] is Avatar && Number(_loc20_[2]) >= 0 && Number(_loc20_[4]) > 0 && int(_loc20_[5]) > 0 && int(_loc20_[6]) == 1)
                   {
                      var pendingOrigin:Avatar = actionTargets[pendingSourceIndex] as Avatar;
-                     pendingAreaStrike = {"target":pendingOrigin,"line":pendingOrigin.line,"pos":pendingOrigin.pos,"coeff":Number(_loc20_[2]),"type":int(_loc20_[3]),"radius":int(_loc20_[4]),"maxTargets":int(_loc20_[5]),"rounds":int(_loc20_[6]),"effect":String(_loc20_[7])};
+                     pendingAreaStrike = {"target":pendingOrigin,"line":pendingOrigin.line,"pos":pendingOrigin.pos,"coeff":Number(_loc20_[2]),"type":int(_loc20_[3]),"radius":Avatar.skillAreaRadius(Number(_loc20_[4])),"maxTargets":int(_loc20_[5]),"rounds":int(_loc20_[6]),"effect":String(_loc20_[7])};
                   }
                   break;
                case "recast_on_kill":
@@ -1338,7 +1398,7 @@ package com.meng52.game.module.skill
                   {
                      killRecastRemaining--;
                      this.useSkill();
-                     m_cooldownNum = skillSetData.cooldown;
+
                      recastUsed = true;
                   }
                   if(ownsKillRecastBudget) killRecastRemaining = -1;
@@ -1423,7 +1483,7 @@ package com.meng52.game.module.skill
                         var areaSelection:Vector.<Avatar> = _loc3_.concat();
                         var areaAll:Vector.<Avatar> = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                         var areaIndex:int = 0;
-                        var areaRadius:Number = Math.max(0,Number(_loc20_[4 + areaHitCount]));
+                        var areaRadius:Number = Avatar.skillAreaRadius(Math.max(0,Number(_loc20_[4 + areaHitCount])));
                         while(areaIndex < areaAll.length)
                         {
                            _loc13_ = areaAll[areaIndex];
@@ -1539,7 +1599,7 @@ package com.meng52.game.module.skill
                case "shield_dispel":
                   _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                   _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
-                  _loc3_ = avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),int(_loc20_[1]),_loc2_);
+                  _loc3_ = avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),Avatar.skillAreaRadius(Number(_loc20_[1])),_loc2_);
                   _loc21_ = 0;
                   while(_loc21_ < _loc3_.length)
                   {
@@ -1559,7 +1619,7 @@ package com.meng52.game.module.skill
                   _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                   _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
                   var pushAnchor:Avatar = getActionCenter(_loc14_);
-                  _loc3_ = pushAnchor ? _loc3_.concat() as Vector.<Avatar> : avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),int(_loc20_[1]),_loc2_);
+                  _loc3_ = pushAnchor ? _loc3_.concat() as Vector.<Avatar> : avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),Avatar.skillAreaRadius(Number(_loc20_[1])),_loc2_);
                   _loc21_ = 0;
                   while(_loc21_ < _loc3_.length)
                   {
@@ -2092,7 +2152,7 @@ package com.meng52.game.module.skill
                recastUsed = true;
                inKillRecast = true;
                avatar.skill0.useSkill();
-               avatar.skill0.m_cooldownNum = avatar.skill0.skillSetData.cooldown;
+
                inKillRecast = false;
             }
             _loc14_++;
@@ -2106,6 +2166,7 @@ package com.meng52.game.module.skill
          finally
          {
             Avatar.endAbilityAttack(wholeAttack);
+            if(abilityCooldownOverride >= 0) m_cooldownNum = abilityCooldownOverride;
          }
       }
 
@@ -2324,7 +2385,7 @@ package com.meng52.game.module.skill
          _loc1_ = GameMap.currentMap.getAliveList(param4 ? avatar.team : avatar.otherTeam) as Vector.<Avatar>;
          _loc1_ = applyActionTargetLinks(applyActionTargetPolicy(_loc1_,param1),param1,param2,param3);
          if(hasActionCenter(param1)) return _loc1_;
-         return avatar.findAimList(_loc1_,getActionSortFunction(param1,avatar.getSortOnFun()),getActionRange(param1,Math.abs(skillSetData.range)),skillSetData.banStand);
+         return avatar.findAimList(_loc1_,getActionSortFunction(param1,avatar.getSortOnFun()),getActionRange(param1,getCastRange()),skillSetData.banStand);
       }
 
       private function conditionMatches(param1:String, param2:Avatar, param3:Vector.<Avatar>, param4:Vector.<Avatar>, param5:Array = null, param6:int = -1) : Boolean
@@ -2415,7 +2476,7 @@ package com.meng52.game.module.skill
          var _loc3_:int = 0;
          var _loc4_:int = 0;
          if(!param1) return new Vector.<Avatar>();
-         _loc1_ = hasActionCenter(param2) ? param1.concat() as Vector.<Avatar> : avatar.findAimList(param1,getActionSortFunction(param2,avatar.getSortOnFun()),getActionRange(param2,Math.abs(skillSetData.range)),skillSetData.banStand);
+         _loc1_ = hasActionCenter(param2) ? param1.concat() as Vector.<Avatar> : avatar.findAimList(param1,getActionSortFunction(param2,avatar.getSortOnFun()),getActionRange(param2,getCastRange()),skillSetData.banStand);
          if(_loc2_ && param2 >= 0 && param2 < _loc2_.length && _loc2_[param2] !== null && _loc2_[param2] !== undefined)
          {
             if(typeof _loc2_[param2] != "number" || !isFinite(Number(_loc2_[param2])) || Math.floor(Number(_loc2_[param2])) != Number(_loc2_[param2]))
@@ -2464,6 +2525,61 @@ package com.meng52.game.module.skill
          return _loc1_ / (1 - _loc1_);
       }
 
+      private function planRicochetBursts(param1:int, action:Array) : Array
+      {
+         var initial:Vector.<Avatar> = getCustomActionTargets(param1,currentActionTargets,currentTargetGroups,false);
+         var primary:Avatar = initial.length > 0 ? initial[0] : null;
+         var result:Array = [];
+         if(!primary || action.length != 6 || !(action[2] is Array)) return result;
+         var coefficients:Array = action[2];
+         var radius:int = Avatar.skillAreaRadius(Number(action[3]));
+         for(var burst:int=0;burst<int(action[1]);burst++)
+         {
+            var previous:Avatar = primary;
+            var visited:Array = [primary];
+            result.push({target:primary,source:avatar,coefficient:Number(coefficients[0]),burst:burst});
+            for(var hop:int=1;hop<coefficients.length;hop++)
+            {
+               var candidates:Array = [];
+               for each(var candidate:Avatar in GameMap.currentMap.getAliveList(avatar.otherTeam))
+               {
+                  if(candidate && candidate.hp > 0 && candidate !== previous && candidate.line == primary.line && Math.abs(candidate.pos-previous.pos)<=radius) candidates.push(candidate);
+               }
+               if(candidates.length==0) break;
+               candidates.sort(function(a:Avatar,b:Avatar):Number
+               {
+                  var aUsed:int = visited.indexOf(a)>=0 ? 1 : 0;
+                  var bUsed:int = visited.indexOf(b)>=0 ? 1 : 0;
+                  return aUsed-bUsed || Math.abs(a.pos-previous.pos)-Math.abs(b.pos-previous.pos) || (a.id<b.id ? -1 : (a.id>b.id ? 1 : 0));
+               });
+               var next:Avatar = candidates[0] as Avatar;
+               result.push({target:next,source:previous,coefficient:Number(coefficients[hop]),burst:burst});
+               visited.push(next);previous=next;
+            }
+         }
+         return result;
+      }
+
+      private function castRicochetBursts(param1:int, action:Array) : void
+      {
+         var plan:Array = planRicochetBursts(param1,action);
+         if(plan.length==0) return;
+         var primary:Avatar = plan[0].target as Avatar;
+         currentActionTargets[param1] = primary;
+         var totals:Object = {};
+         for each(var planned:Object in plan) totals[planned.target.id] = Number(totals[planned.target.id] || 0)+Number(planned.coefficient);
+         for each(var hit:Object in plan)
+         {
+            if(hit.source === avatar && primary.hp<=0) break;
+            var target:Avatar = hit.target as Avatar;
+            if(!target || target.hp<=0) continue;
+            var one:Vector.<Avatar> = new Vector.<Avatar>();one.push(target);
+            var total:Number = Number(totals[target.id]);
+            avatar.attackAimList(one,int(action[4]),total,0,String(action[5]),false,null,getCastRange(),Number(hit.coefficient)/total,hit.source as Avatar);
+            GameMap.actionDelay += 0.15;
+         }
+      }
+
       private function getActionPolicy(param1:int, param2:String = null) : String
       {
          if(param2 != null && param2.length > 0) return param2;
@@ -2472,11 +2588,37 @@ package com.meng52.game.module.skill
          return null;
       }
 
+      public function getCastRange() : int
+      {
+         var distance:int = Math.abs(skillSetData.range);
+         if(avatar && skills && skills.length > 0 && skills[0][0] == "manual_ability" && skills[0][1] == "jayce_n") return avatar.abilityState.form && avatar.abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
+         if(distance > 0 && distance <= GameMapConfig.LINE_POS && avatar && avatar.isRangedSkillCaster()) return GameMapConfig.LINE_POS;
+         return distance;
+      }
+
       private function getActionPolicyArgs(param1:int) : Object
       {
          var _loc1_:Array = skillSetData.actionTargetPolicyArgs;
          if(!_loc1_ || param1 < 0 || param1 >= _loc1_.length || !_loc1_[param1] || !(_loc1_[param1] is Object)) return null;
-         return _loc1_[param1] as Object;
+         var args:Object = Tools.clone(_loc1_[param1]);
+         var policy:String = getActionPolicy(param1);
+         var cap:Object = skillSetData.actionTargetMaxTargets && param1 < skillSetData.actionTargetMaxTargets.length ? skillSetData.actionTargetMaxTargets[param1] : null;
+         if(avatar && avatar.isRangedSkillCaster() && !args.hasOwnProperty("centerActionIndex"))
+         {
+            if(typeof args.maxRange == "number") args.maxRange = getCastRange();
+            if(typeof args.radius == "number") args.radius = getCastRange();
+         }
+         var area:Boolean = policy && policy.indexOf("enemy_") == 0 && (cap == -1 || cap > 1 || args.hasOwnProperty("centerActionIndex"));
+         if(area && typeof args.radius == "number" && !(avatar && avatar.isRangedSkillCaster() && !args.hasOwnProperty("centerActionIndex")))
+         {
+            args.radius = Avatar.skillAreaRadius(Number(args.radius));
+            if(!preparingCast && !args.hasOwnProperty("centerActionIndex"))
+            {
+               args.effectRange = args.radius;
+               if(typeof args.maxRange == "number") args.maxRange = Math.max(args.maxRange,args.radius);
+            }
+         }
+         return args;
       }
 
       private function getActionCenter(param1:int) : Avatar
@@ -2511,6 +2653,7 @@ package com.meng52.game.module.skill
       {
          if(hasActionCenter(param1)) return GameMapConfig.LINE_POS * 2 + 1;
          var explicitRange:Object = getActionPolicyArgs(param1);
+         if(!preparingCast && explicitRange && typeof explicitRange.effectRange == "number") return int(explicitRange.effectRange);
          if(explicitRange && typeof explicitRange.maxRange == "number" && isFinite(Number(explicitRange.maxRange)) && Number(explicitRange.maxRange) >= 0) return int(explicitRange.maxRange);
          var rangeGroup:String = skillSetData.actionTargetGroups && param1 < skillSetData.actionTargetGroups.length ? String(skillSetData.actionTargetGroups[param1]) : "";
          if(rangeGroup && rangeGroup != "null" && currentTargetGroups && currentTargetGroups[rangeGroup] is Vector.<Avatar>) return GameMapConfig.LINE_POS * 2 + 1;
@@ -2551,7 +2694,7 @@ package com.meng52.game.module.skill
       private function isForwardOf(param1:Avatar, param2:Avatar) : Boolean
       {
          if(!param1 || !param2 || param1.line != param2.line) return false;
-         return avatar.team == 1 ? param1.pos > param2.pos : param1.pos < param2.pos;
+         return avatar.isRangedSkillCaster() || (avatar.team == 1 ? param1.pos <= param2.pos : param1.pos >= param2.pos);
       }
 
       private function sortOnNearestActionAnchor(param1:Avatar, param2:Avatar) : int
@@ -2635,11 +2778,11 @@ package com.meng52.game.module.skill
          if(_loc5_ == "enemy_lane_highest_attack_hero_fallback_any" || _loc5_ == "enemy_lane_stunned_hero_fallback_any")
          {
             var heroPreferenceSort:Function = _loc5_ == "enemy_lane_highest_attack_hero_fallback_any" ? sortOnHighestAttack : avatar.getSortOnFun();
-            _loc4_ = avatar.findAimList(_loc4_,heroPreferenceSort,getActionRange(param2,Math.abs(skillSetData.range)),skillSetData.banStand);
+            _loc4_ = avatar.findAimList(_loc4_,heroPreferenceSort,getActionRange(param2,getCastRange()),skillSetData.banStand);
          }
          if((_loc5_ == "enemy_lane_highest_attack_hero_fallback_any" || _loc5_ == "enemy_lane_stunned_hero_fallback_any") && _loc4_.length == 0)
          {
-            var ordinaryCandidates:Vector.<Avatar> = avatar.findAimList(param1,avatar.getSortOnFun(),getActionRange(param2,Math.abs(skillSetData.range)),skillSetData.banStand);
+            var ordinaryCandidates:Vector.<Avatar> = avatar.findAimList(param1,avatar.getSortOnFun(),getActionRange(param2,getCastRange()),skillSetData.banStand);
             var ordinaryOne:Vector.<Avatar> = new Vector.<Avatar>();
             if(ordinaryCandidates.length > 0) ordinaryOne.push(ordinaryCandidates[0]);
             return ordinaryOne;
@@ -2907,6 +3050,8 @@ package com.meng52.game.module.skill
          }
          switch(_loc1_[1])
          {
+            case "621014":
+            case "631014":
             case "303014":
             case "203014":
             case "303029":
@@ -2925,6 +3070,14 @@ package com.meng52.game.module.skill
       {
          switch(skillSetData.id)
          {
+            case "S_621014_3":
+            case "S_621014_4":
+            case "S_621014_5":
+            case "S_621014_6":
+            case "S_631014_3":
+            case "S_631014_4":
+            case "S_631014_5":
+            case "S_631014_6":
             case "S_203014_3":
             case "S_203014_4":
             case "S_203014_5":
@@ -3135,10 +3288,9 @@ package com.meng52.game.module.skill
          if(_loc2_.indexOf(_loc1_) < 0 || !skillSetData.manualSummonPolicy) return false;
          if(String(skillSetData.manualSummonPolicy.skillId) != _loc1_) return false;
          if(_loc1_.indexOf("1029_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == "A_2002_5" && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1029-tibbers" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.attackRange) == 125 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
-         if(_loc1_.indexOf("1029_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == "A_2002_5" && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1029-tibbers" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.attackRange) == 125 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
          if(_loc1_.indexOf("1124_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == "A_3002_2" && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1124-soldier" && int(skillSetData.manualSummonPolicy.maxAlive) == 2 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.attackRange) == 175 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
-         if(_loc1_.indexOf("1127_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == String(avatar.id) && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1127-clone" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.hpRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.attackRange) == 0 && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == 3 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
-         if(_loc1_.indexOf("1128_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == String(avatar.id) && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1128-clone" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.attackRange) == 125 && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == 3 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
+         if(_loc1_.indexOf("1127_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == String(avatar.avatarData.id) && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1127-clone" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.hpRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.attackRange) == 0 && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == 3 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
+         if(_loc1_.indexOf("1128_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == String(avatar.avatarData.id) && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1128-clone" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.attackRange) == 125 && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == 3 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
          return String(skillSetData.manualSummonPolicy.unitId) == "A_2326_5" && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1040-plant" && int(skillSetData.manualSummonPolicy.maxAlive) == 3 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.attackRange) == 550 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
       }
 
@@ -3165,7 +3317,7 @@ package com.meng52.game.module.skill
          var oldSkillId:String = "";
          var targetPos:int = 0;
          var cloneEffect:Object = null;
-         if(!policy || allowedIds.indexOf(skillSetData.id) < 0 || String(policy.skillId) != skillSetData.id || familyKey != "manual-1132-shadow-clone" || capacity != 1 || ratio != 1.0 || !isFinite(ratio) || ttl < 1 || ttl > 4 || policy.replaceOldest !== true || !avatar.skill0 || !avatar.skill0.isActive())
+         if(!policy || allowedIds.indexOf(skillSetData.id) < 0 || String(policy.skillId) != skillSetData.id || familyKey != "manual-1132-shadow-clone" || capacity != 1 || !isFinite(ratio) || ratio <= 0 || ratio > 1 || ttl < 1 || ttl > 4 || policy.replaceOldest !== true || !avatar.skill0 || !avatar.skill0.isActive())
          {
             GameMapTools.gameTrace("拒绝未授权普通技能分身",skillSetData.id);
             return;

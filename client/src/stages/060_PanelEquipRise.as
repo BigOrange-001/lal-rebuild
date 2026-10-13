@@ -82,6 +82,7 @@ package com.meng52.game.ui.panel
       private var _btn_status:Boolean = false;
 
       private var _riseBatchRemaining:int = 0;
+      private var riseBefore:Object;
       
       private const MBTN_TO:String = "mbtn_to";
       
@@ -96,7 +97,7 @@ package com.meng52.game.ui.panel
       private function onProfileStateSync(param1:Event) : void
       {
          var _selectedEid:String = GlobalData.$tempEquipCurrSelected;
-         if(stage == null || mBox_equip == null || _selectedEid == "" || _btn_status || _riseBatchRemaining > 0 || mStatus_up)
+         if(stage == null || mBox_equip == null || _selectedEid == "" || _btn_status || _riseBatchRemaining > 0 || mStatus_up || riseBefore != null)
          {
             return;
          }
@@ -251,7 +252,7 @@ package com.meng52.game.ui.panel
          var _loc2_:Number = GlobalData.$center_height_curr - 121;
          var _loc1_:Number = 0;
          var _loc3_:Number = 0;
-         mBtn_to = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20259),155,70,"UI_btn_normalFun_0000");
+         mBtn_to = new LOL_Scale9Button("强化一次",155,70,"UI_btn_normalFun_0000");
          mBtn_to.addEventListener("triggered",onTRIGGERED_up);
          mBtn_to.name = "mbtn_to";
          mBtn_to.enabled = _btn_status;
@@ -262,7 +263,7 @@ package com.meng52.game.ui.panel
          // affects the server-side probability of a critical upgrade.
          if(mBtn_to != null)
          {
-            mBtn_riseByonce = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(90689),155,70,"UI_btn_normalFun_0000");
+            mBtn_riseByonce = new LOL_Scale9Button("强化十次",155,70,"UI_btn_normalFun_0000");
             mBtn_riseByonce.addEventListener("triggered",onTRIGGERED_up);
             mBtn_riseByonce.name = "mbtn_risebyonce";
             if(MainConfig.$isEA)
@@ -403,6 +404,7 @@ package com.meng52.game.ui.panel
                tweenComplete = function():void
                {
                   mStatus_up = false;
+                  riseBefore = null;
                   updateAttUIs();
                   GlobalData.$mGameClassObject.touchable = true;
                   GuideMaster.getOnlyExample().checkGuide("M4_2",checkGuide);
@@ -470,7 +472,7 @@ package com.meng52.game.ui.panel
             _riseBatchRemaining = 0;
             if(mBtn_riseByonce)
             {
-               mBtn_riseByonce.text = GlobalLanguageStr.getStr(90689);
+               mBtn_riseByonce.text = "强化十次";
             }
          };
          var _b:Boolean = true;
@@ -498,6 +500,7 @@ package com.meng52.game.ui.panel
          }
          if(_b == true)
          {
+            riseBefore = Tools.clone(_data);
             SendServiceAMFFun.send_user_equip_rise(re_equip_rise,{
                "eqid":GlobalData.$tempEquipCurrSelected,
                "lv":mCurr_lv
@@ -513,19 +516,20 @@ package com.meng52.game.ui.panel
          {
             case "mbtn_to":
                _btn_status = false;
-               if(_loc3_.enabled)
+               if(_loc3_.enabled && riseBefore == null && !mStatus_up)
                {
                   send_rise_fun();
                }
                break;
             case "mbtn_risebyonce":
+               if(!_btn_status && (riseBefore != null || mStatus_up)) return;
                _btn_status = !_btn_status;
                if(_btn_status)
                {
                   _riseBatchRemaining = 10;
                   chengeStutes();
                   mBtn_to.touchable = false;
-                  _loc3_.text = GlobalLanguageStr.getStr(90690);
+                  _loc3_.text = "停止强化";
                   send_rise_fun();
                }
                else
@@ -533,7 +537,7 @@ package com.meng52.game.ui.panel
                   _riseBatchRemaining = 0;
                   chengeStutes(true);
                   mBtn_to.touchable = true;
-                  _loc3_.text = GlobalLanguageStr.getStr(90689);
+                  _loc3_.text = "强化十次";
                }
          }
       }
@@ -561,8 +565,14 @@ package com.meng52.game.ui.panel
          var delaycall:*;
          var _re:Object = param1;
          var _eid:String = _re["params"]["eqid"];
+         if(stage == null || _eid != GlobalData.$tempEquipCurrSelected) return;
          if(GlobalFunction.isMalformedProfileReceipt(_re))
          {
+            riseBefore = null;
+            mStatus_up = false;
+            _btn_status = false;
+            _riseBatchRemaining = 0;
+            chengeStutes(true);
             return;
          }
          if(GlobalFunction.isLegacyProfileReceipt(_re))
@@ -591,7 +601,7 @@ package com.meng52.game.ui.panel
                   }
                   if(mBtn_riseByonce)
                   {
-                     mBtn_riseByonce.text = GlobalLanguageStr.getStr(90689);
+                     mBtn_riseByonce.text = "强化十次";
                   }
                }
             };
@@ -608,7 +618,7 @@ package com.meng52.game.ui.panel
                }
                if(mBtn_riseByonce)
                {
-                  mBtn_riseByonce.text = GlobalLanguageStr.getStr(90689);
+                  mBtn_riseByonce.text = "强化十次";
                }
                return;
             }
@@ -623,6 +633,7 @@ package com.meng52.game.ui.panel
             _index = 0;
             _index = _multipleArr.indexOf(_lvPv);
             updateAttUIs(false,_index,_lvPv);
+            if(_lvPv > 1) LayoutUIAnimation.getOnlyExample().popWords("强化暴击：提升" + _lvPv + "级",2,GlobalData.$mStageHeight * 0.38);
             if(_btn_status && _riseBatchRemaining > 0)
             {
                _riseBatchRemaining--;
@@ -647,10 +658,10 @@ package com.meng52.game.ui.panel
             });
             Starling.juggler.delayCall(delaycall,1.5);
          }
-         else if(_btn_status)
+         else
          {
-            // A failed request must stop the batch; never retry or keep the
-            // panel controls locked after a rejected upgrade.
+            riseBefore = null;
+            mStatus_up = false;
             _btn_status = false;
             _riseBatchRemaining = 0;
             chengeStutes(true);
@@ -660,7 +671,7 @@ package com.meng52.game.ui.panel
             }
             if(mBtn_riseByonce)
             {
-               mBtn_riseByonce.text = GlobalLanguageStr.getStr(90689);
+               mBtn_riseByonce.text = "强化十次";
             }
          }
       }
@@ -714,7 +725,7 @@ package com.meng52.game.ui.panel
             }
          };
          var _box:Sprite = new Sprite();
-         var _equipData:Object = GlobalData.$userData.my_equips[_eid];
+         var _equipData:Object = !_isUp && mStatus_up && riseBefore != null ? riseBefore : GlobalData.$userData.my_equips[_eid];
          var _txtGap:int = 34;
          var _txtW:int = GlobalData.$mStageWidth * 0.5;
          var _color:uint = _isUp ? 52275 : 16777215;
@@ -728,7 +739,7 @@ package com.meng52.game.ui.panel
             return _box;
          }
          _equip = new Equip(_eid,_equipData);
-         _equipLv = int(_isUp ? _equip.lv + _lv : _equip.lv);
+         _equipLv = int(_equip.lv);
          if(!_isUp)
          {
             _tName = GlobalTextStyle.getTextField(_equip.equipData.name,20,_color,"left",_txtW,_h_txt_h);

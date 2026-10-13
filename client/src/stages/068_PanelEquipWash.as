@@ -160,7 +160,7 @@ package com.meng52.game.ui.panel
          var _loc3_:String = GuideTools.checkGuideType();
          if(mCurrEquip && mCurrEquip.data && mCurrEquip.data.id != "")
          {
-            if(!GlobalData.$userData.attrs.equip_forge)
+            if(!GlobalData.$userData.attrs.equip_wash)
             {
                GuideMaster.getOnlyExample().checkGuide("M6_1",checkGuide);
             }
@@ -171,7 +171,7 @@ package com.meng52.game.ui.panel
             {
                _loc1_ = GlobalData.$userData;
                _loc2_ = new Equip(mCurrEquip.data.id);
-               if(GlobalData.$userData.attrs.equip_forge)
+               if(GlobalData.$userData.attrs.equip_wash)
                {
                   LayoutUIAnimation.getOnlyExample().addArrowhead(463,774,50);
                }
@@ -457,7 +457,7 @@ package com.meng52.game.ui.panel
       
       private function checkBtns() : void
       {
-         var _loc2_:Boolean = GlobalData.$userData.attrs.equip_forge == null;
+         var _loc2_:Boolean = GlobalData.$userData.attrs.equip_wash == null;
          mBtn_wash.visible = _loc2_;
          mBtn_save.visible = !_loc2_;
          mBtn_back.visible = !_loc2_;
@@ -710,7 +710,7 @@ package com.meng52.game.ui.panel
       
       private function checkIsWash() : Boolean
       {
-         var _loc1_:Object = GlobalData.$userData.attrs.equip_forge;
+         var _loc1_:Object = GlobalData.$userData.attrs.equip_wash;
          if(_loc1_)
          {
             mCurr_eid = _loc1_.eqid;
@@ -760,7 +760,7 @@ package com.meng52.game.ui.panel
             mCurrEquip.clear();
          }
          mCurrEquip = null;
-         var _loc3_:Object = GlobalData.$userData.attrs.equip_forge;
+         var _loc3_:Object = GlobalData.$userData.attrs.equip_wash;
          if(_loc3_)
          {
             mCurr_eid = _loc3_.eqid;
@@ -962,7 +962,7 @@ package com.meng52.game.ui.panel
          var _loc3_:Equip = null;
          var _loc2_:int = 0;
          var _loc4_:Boolean = true;
-         if(GlobalData.$userData.attrs.equip_forge != null)
+         if(GlobalData.$userData.attrs.equip_wash != null)
          {
             GlobalFunction.popAlert("",GlobalLanguageStr.getLanguageStr(10061));
          }
@@ -1005,7 +1005,7 @@ package com.meng52.game.ui.panel
          {
             return;
          }
-         if(GlobalData.$userData.attrs.equip_forge != null && param2)
+         if(GlobalData.$userData.attrs.equip_wash != null && param2)
          {
             GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90113));
             return;
@@ -1052,8 +1052,8 @@ package com.meng52.game.ui.panel
             return;
          }
          var equip:Equip = new Equip(eqid,item);
-         var pending:Object = GlobalData.$userData.attrs.equip_forge;
-         var changes:Object = pending != null && pending.eqid == eqid ? pending.save_status : null;
+         var pending:Object = GlobalData.$userData.attrs.equip_wash;
+         var changes:Object = pending != null && pending.eqid == eqid ? pending.rolled : null;
          var keys:Array = ["hit","flee","crit","tough"];
          var labels:Array = [30021,30022,30023,30024];
          // The wash API exchanges persisted new_4attrs counters. Equip.getHit/

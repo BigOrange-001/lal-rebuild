@@ -253,13 +253,13 @@ package com.meng52.game.ui.panel
          {
             if(GlobalData.$userData.attrs.avatar_culture.aid)
             {
-               _id = GlobalData.$userData.attrs.avatar_culture.aid.split("|")[0];
+               _id = GlobalData.$userData.attrs.avatar_culture.aid;
             }
             else
             {
-               _id = GlobalData.$userData.attrs.avatar_culture.eqid.split("|")[0];
+               _id = GlobalData.$userData.attrs.avatar_culture.eqid;
             }
-            if(_id == GlobalData.$tempAvatarStarUp.id.split("|")[0] || _id == GlobalData.$tempAvatarStarUp.id.split("|")[0])
+            if(_id == GlobalData.$tempAvatarStarUp.id)
             {
                GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(10165));
                return;
@@ -715,12 +715,16 @@ package com.meng52.game.ui.panel
             _loc11_ = _loc1_.avatarData.phaseUpList;
             _loc3_ = [];
             _loc7_ = 0;
-            while(_loc7_ < _loc11_[0])
+            while(_loc7_ < _loc1_.phase + 1)
             {
                _loc3_.push(_loc1_.avatarData.id);
                _loc7_++;
             }
             _loc14_ = GlobalFunction.getPhaseUpItems(GlobalData.$tempAvatarStarUp);
+            for(var materialIndex:int = _loc14_.length - 1; materialIndex >= 0; materialIndex--)
+            {
+               if(int(_loc14_[materialIndex].phase) != 0) _loc14_.splice(materialIndex,1);
+            }
          }
          else
          {
@@ -752,7 +756,7 @@ package com.meng52.game.ui.panel
                   _loc4_ = _loc14_[_loc5_].id;
                   if(_loc4_.indexOf(_loc8_) > -1)
                   {
-                     _loc13_ = _loc14_[_loc5_];
+                     _loc13_ = Tools.clone(_loc14_[_loc5_]);
                      _loc13_["had"] = 1;
                      _loc13_["id"] = _loc4_;
                      _loc14_.splice(_loc5_,1);
@@ -773,7 +777,7 @@ package com.meng52.game.ui.panel
             if(isPhaseUp)
             {
                _loc13_["isPhase"] = 1;
-               _loc13_["phase"] = _loc1_.phase;
+               _loc13_["phase"] = 0;
             }
             _loc12_.data = _loc13_;
             this.mList_avatars.addChild(_loc12_);

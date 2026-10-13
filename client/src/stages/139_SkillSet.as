@@ -2657,6 +2657,11 @@ package com.meng52.game.module.skill
          if(explicitRange && typeof explicitRange.maxRange == "number" && isFinite(Number(explicitRange.maxRange)) && Number(explicitRange.maxRange) >= 0) return int(explicitRange.maxRange);
          var rangeGroup:String = skillSetData.actionTargetGroups && param1 < skillSetData.actionTargetGroups.length ? String(skillSetData.actionTargetGroups[param1]) : "";
          if(rangeGroup && rangeGroup != "null" && currentTargetGroups && currentTargetGroups[rangeGroup] is Vector.<Avatar>) return GameMapConfig.LINE_POS * 2 + 1;
+         // Avatar.findAimList treats ranges through LINE_POS as same-route
+         // only. Global policies must remain eligible across routes even when
+         // their configured casting distance is shorter than that sentinel.
+         var routePolicy:String = getActionPolicy(param1);
+         if(routePolicy && (routePolicy.indexOf("enemy_global_") == 0 || routePolicy == "enemy_adaptive_route_lowest_hp_ratio_hero")) return Math.max(param2,GameMapConfig.LINE_POS + 1);
          return param2;
       }
 
@@ -2729,7 +2734,7 @@ package com.meng52.game.module.skill
          var _loc4_:Vector.<Avatar> = new Vector.<Avatar>();
          var _loc5_:String = getActionPolicy(param2,param3);
          if(!_loc5_) return param1;
-         if(_loc5_ != "enemy_lane_frontmost" && _loc5_ != "enemy_lane_farthest" && _loc5_ != "enemy_lane_lowest_current_hp_hero" && _loc5_ != "enemy_global_lowest_current_hp" && _loc5_ != "enemy_global_lowest_hpmax" && _loc5_ != "enemy_global_highest_hpmax_hero" && _loc5_ != "enemy_global_lowest_hp_ratio_hero" && _loc5_ != "enemy_global_highest_attack_hero" && _loc5_ != "enemy_lane_highest_attack_hero" && _loc5_ != "enemy_lane_highest_attack_hero_fallback_any" && _loc5_ != "enemy_lane_stunned_hero_fallback_any" && _loc5_ != "enemy_lane_lowest_hp_ratio_hero_fallback_any" && _loc5_ != "enemy_lane_lowest_hp_ratio_any" && _loc5_ != "enemy_lane_lowest_hp_ratio_n" && _loc5_ != "enemy_lane_all" && _loc5_ != "enemy_lane_all_in_radius" && _loc5_ != "enemy_lane_around_primary_300" && _loc5_ != "enemy_lane_behind_primary_nearest" && _loc5_ != "ally_self" && _loc5_ != "ally_all" && _loc5_ != "ally_lane_all" && _loc5_ != "ally_lane_lowest_current_hp_hero" && _loc5_ != "ally_lane_lowest_current_hp_any" && _loc5_ != "ally_lane_highest_attack_any" && _loc5_ != "ally_lane_lowest_hp_ratio_hero" && _loc5_ != "ally_lane_lowest_hp_ratio_heroes" && _loc5_ != "ally_lane_lowest_hp_ratio_any" && _loc5_ != "ally_lane_lowest_hp_ratio_n" && _loc5_ != "ally_all_lowest_hp_ratio") return _loc4_;
+         if(_loc5_ != "enemy_lane_frontmost" && _loc5_ != "enemy_lane_farthest" && _loc5_ != "enemy_lane_lowest_current_hp_hero" && _loc5_ != "enemy_global_lowest_current_hp" && _loc5_ != "enemy_global_lowest_hpmax" && _loc5_ != "enemy_global_highest_hpmax_hero" && _loc5_ != "enemy_global_lowest_hp_ratio_hero" && _loc5_ != "enemy_adaptive_route_lowest_hp_ratio_hero" && _loc5_ != "enemy_global_highest_attack_hero" && _loc5_ != "enemy_lane_highest_attack_hero" && _loc5_ != "enemy_lane_highest_attack_hero_fallback_any" && _loc5_ != "enemy_lane_stunned_hero_fallback_any" && _loc5_ != "enemy_lane_lowest_hp_ratio_hero_fallback_any" && _loc5_ != "enemy_lane_lowest_hp_ratio_any" && _loc5_ != "enemy_lane_lowest_hp_ratio_n" && _loc5_ != "enemy_lane_all" && _loc5_ != "enemy_lane_all_in_radius" && _loc5_ != "enemy_lane_around_primary_300" && _loc5_ != "enemy_lane_behind_primary_nearest" && _loc5_ != "ally_self" && _loc5_ != "ally_all" && _loc5_ != "ally_lane_all" && _loc5_ != "ally_lane_lowest_current_hp_hero" && _loc5_ != "ally_lane_lowest_current_hp_any" && _loc5_ != "ally_lane_highest_attack_any" && _loc5_ != "ally_lane_lowest_hp_ratio_hero" && _loc5_ != "ally_lane_lowest_hp_ratio_heroes" && _loc5_ != "ally_lane_lowest_hp_ratio_any" && _loc5_ != "ally_lane_lowest_hp_ratio_n" && _loc5_ != "ally_all_lowest_hp_ratio") return _loc4_;
          var policyArgs:Object = getActionPolicyArgs(param2);
          var policyCenter:Avatar = avatar;
          var laneFilter:String = policyArgs && policyArgs.hasOwnProperty("laneFilter") ? String(policyArgs.laneFilter) : "";
@@ -2761,6 +2766,7 @@ package com.meng52.game.module.skill
                if(laneFilter != "all" && _loc5_.indexOf("_lane_") >= 0 && _avatar.line != policyCenter.line) { _loc6_++; continue; }
                if((_loc5_ == "enemy_lane_around_primary_300" || _loc5_ == "enemy_lane_behind_primary_nearest") && _avatar.line != policyCenter.line) { _loc6_++; continue; }
                if((_loc5_.indexOf("_hero") >= 0 || _loc5_.indexOf("_heroes") >= 0 || _loc5_ == "enemy_global_lowest_current_hp") && _loc5_ != "enemy_lane_highest_attack_hero_fallback_any" && _loc5_ != "enemy_lane_stunned_hero_fallback_any" && _avatar.getType() != 1) { _loc6_++; continue; }
+               if(_loc5_ == "enemy_adaptive_route_lowest_hp_ratio_hero" && skillSetData.banStand && _avatar.getEffectiveActionType() == 3) { _loc6_++; continue; }
                if(_loc5_ == "enemy_lane_stunned_hero_fallback_any" && (_avatar.getType() != 1 || !_avatar.buffs["stun"])) { _loc6_++; continue; }
                if(policyArgs && policyArgs.forwardOnly === true && !isForwardOf(_avatar,policyCenter)) { _loc6_++; continue; }
                if(policyArgs && typeof policyArgs.maxForwardDistance == "number" && isFinite(Number(policyArgs.maxForwardDistance)) && Number(policyArgs.maxForwardDistance) > 0 && Math.abs(_avatar.pos - policyCenter.pos) > Number(policyArgs.maxForwardDistance)) { _loc6_++; continue; }
@@ -2774,6 +2780,30 @@ package com.meng52.game.module.skill
                _loc4_.push(_avatar);
             }
             _loc6_++;
+         }
+         if(_loc5_ == "enemy_adaptive_route_lowest_hp_ratio_hero" && _loc4_.length > 0)
+         {
+            // With another living hero on this route, go to a different
+            // route if one has an eligible enemy hero. Alone, prefer a local
+            // opponent. In both cases the remaining group is a real fallback.
+            var routeAllies:Vector.<Avatar> = GameMap.currentMap.getLineAliveList(avatar.team,avatar.line) as Vector.<Avatar>;
+            var hasOtherHero:Boolean = false;
+            for each(var routeAlly:Avatar in routeAllies)
+            {
+               if(routeAlly != avatar && routeAlly.hp > 0 && routeAlly.getType() == 1)
+               {
+                  hasOtherHero = true;
+                  break;
+               }
+            }
+            var preferredRouteTargets:Vector.<Avatar> = new Vector.<Avatar>();
+            var fallbackRouteTargets:Vector.<Avatar> = new Vector.<Avatar>();
+            for each(var routeTarget:Avatar in _loc4_)
+            {
+               if((routeTarget.line != avatar.line) == hasOtherHero) preferredRouteTargets.push(routeTarget);
+               else fallbackRouteTargets.push(routeTarget);
+            }
+            _loc4_ = preferredRouteTargets.length > 0 ? preferredRouteTargets : fallbackRouteTargets;
          }
          if(_loc5_ == "enemy_lane_highest_attack_hero_fallback_any" || _loc5_ == "enemy_lane_stunned_hero_fallback_any")
          {
@@ -2829,6 +2859,7 @@ package com.meng52.game.module.skill
             case "enemy_global_lowest_hpmax": return sortOnLowestHpMax;
             case "enemy_global_highest_hpmax_hero": return sortOnHighestHpMax;
             case "enemy_global_lowest_hp_ratio_hero": return sortOnLowestHpRatio;
+            case "enemy_adaptive_route_lowest_hp_ratio_hero": return sortOnLowestHpRatio;
             case "enemy_lane_lowest_hp_ratio_hero_fallback_any":
             case "enemy_lane_lowest_hp_ratio_any": return sortOnLowestHpRatio;
             case "enemy_global_highest_attack_hero":

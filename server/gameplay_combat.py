@@ -98,6 +98,7 @@ class GameplayCombat:
     def _start_main(self, uid, params):
         cid = str(params.get("cid", "")); diff = int(params.get("diff", 0)); chapter, stage = self._stage(cid, diff)
         is_activity = cid in self._cfg("combat_ploy") and diff == 0
+        activity_kind = stage.get("activity_kind") if is_activity else None
         seed = secrets.randbelow(2**31-1)+1
         fight_id = secrets.token_urlsafe(18)
         try:
@@ -110,6 +111,24 @@ class GameplayCombat:
             def mutate(profile):
                 profile.setdefault("cid", "M_001_1"); profile.setdefault("hid", "M_001_1")
                 progress = profile["hid"] if diff else profile["cid"]
+                if activity_kind == "tower":
+                    floor = int(stage.get("tower_floor", 0))
+                    frontier = max(1, int(profile.setdefault("records", {}).get("tower_floor", 1)))
+                    if floor < 1 or floor > 100 or floor > frontier:
+                        raise GameplayFault("TowerFloorLocked", "Complete the preceding tower floor first")
+                elif activity_kind == "material":
+                    records = profile.setdefault("records", {})
+                    daily = records.setdefault("material_activity", {})
+                    today = game_day()
+                    if daily.get("day") != today:
+                        daily.clear()
+                        daily.update({"day": today, "uses": {}})
+                    uses = daily.setdefault("uses", {})
+                    if not isinstance(uses, dict):
+                        raise GameplayFault("InvalidProfile", "Material activity attempts are malformed")
+                    daily_limit = 2 + (max(0, int(profile.get("vip_lv", 0))) + 1) // 2
+                    if int(uses.get(cid.rsplit("_", 1)[0], 0)) >= daily_limit:
+                        raise GameplayFault("ActivityAttemptsExhausted", "This material activity has no shared attempts remaining today")
                 if not is_activity and int(profile.get("lv", 1)) < int(chapter.get("ulv", 1)):
                     raise GameplayFault("StageLocked", "Player level is below this chapter's unlock requirement")
                 if not is_activity and not self._is_unlocked(cid, progress):
@@ -208,6 +227,9 @@ class GameplayCombat:
                     raise GameplayFault("InvalidStage", "Stage enemies must cover every native route") from exc
                 energy_cost=max(0,int(stage.get('energy',0)))
                 energy_state=self._spend_energy(profile,energy_cost)
+                if activity_kind == "material":
+                    chapter_key = cid.rsplit("_", 1)[0]
+                    uses[chapter_key] = int(uses.get(chapter_key, 0)) + 1
                 stage_copy = copy.deepcopy(stage)
                 stage_copy["line"] = map_line
                 stage_copy["id"] = cid
@@ -431,6 +453,19 @@ class GameplayCombat:
                 reward = copy.deepcopy({k:v for k,v in authored_reward.items() if k in {"gold","coin","score","medal","mark","attrs","avatar_exp","items","heroes"}})
                 reward["gold"] = amount_gold
                 reward["exp"] = exp_gain
+                if is_activity and stage.get("activity_kind") == "material" and stage.get("activity_avatar_exp"):
+                    leader = next((unit.get("instance_id") for unit in pending.get("team_a", [])
+                                   if isinstance(unit, dict) and unit.get("instance_id") in profile.get("avatars", {})), None)
+                    if not leader:
+                        raise GameplayFault("InvalidTeam", "Material hero experience has no owned battle leader")
+                    reward["avatar_exp"] = {"hero_id": leader, "amount": int(stage["activity_avatar_exp"])}
+                tower_soul = None
+                if is_activity and stage.get("activity_kind") == "tower":
+                    candidates = stage.get("soul_candidates", [])
+                    if not isinstance(candidates, list) or not candidates or any(aid not in self.config.get("avatar", {}) for aid in candidates):
+                        raise GameplayFault("InvalidStage", "Tower soul pool is invalid")
+                    tower_soul = self._reward_rng(uid, fight_id, pending, "tower-soul").choice(candidates)
+                    reward["avatar_soul"] = {tower_soul: int(stage.get("soul_amount", 120))}
                 # The config-gated elite gear rule rolls only on successful
                 # hard-mode mainline wins. It appends into
                 # this same reward object before the atomic grant_reward call,
@@ -473,6 +508,25 @@ class GameplayCombat:
                             if isinstance(first.get(key), list): reward.setdefault(key, []).extend(first[key])
                 before_avatars=set(profile.get("avatars",{})); before_equips=set(profile.get("my_equips",{}))
                 grant_reward(profile, reward, self.full_config)
+                if reward.get("avatar_exp"):
+                    from gameplay_roster import GameplayRosterEquipment
+                    roster_rules = GameplayRosterEquipment(self.store, self.full_config)
+                    hero_id = reward["avatar_exp"]["hero_id"]
+                    hero = profile["avatars"][hero_id]
+                    hero_aid = str(hero.get("aid", hero_id)).split("|")[0]
+                    total_exp = roster_rules._hero_all_exp(hero, hero_aid)
+                    cap = roster_rules._hero_level_cap(hero_aid, hero)
+                    hero["lv"], hero["exp"] = roster_rules._level_from_exp(total_exp, cap, hero_aid)
+                if tower_soul is not None:
+                    # Only tower-issued restricted souls authorize the later
+                    # exchange. A transaction replay cannot reach this block.
+                    from gameplay_common import skin_acquisition_blocked_ids
+                    if tower_soul in skin_acquisition_blocked_ids(self.full_config):
+                        credit = profile.setdefault("attrs", {}).setdefault("tower_skin_soul_credit", {})
+                        credit[tower_soul] = int(credit.get(tower_soul, 0)) + int(stage.get("soul_amount", 120))
+                    floor = int(stage["tower_floor"])
+                    records = profile.setdefault("records", {})
+                    records["tower_floor"] = max(1, int(records.get("tower_floor", 1)), min(101, floor + 1))
                 encounter = profile.get("pending_limit_break")
                 if not isinstance(encounter, dict):
                     encounter = None
@@ -577,6 +631,10 @@ class GameplayCombat:
                 return_data["attr_morph"] = chapter_morph
             if sign == 1 and encounter is not None:
                 return_data["limit_break_encounter"] = copy.deepcopy(encounter)
+            if sign == 1 and is_activity and stage.get("activity_kind") == "tower":
+                return_data["tower_soul_reward"] = {tower_soul: int(stage.get("soul_amount", 120))}
+                return_data["avatar_soul"] = copy.deepcopy(profile.get("avatar_soul", {}))
+                return_data["tower_floor"] = profile.get("records", {}).get("tower_floor", 1)
             return profile, return_data
         data, replayed = self.store.atomic_update(uid, mutate, self._operation_key("user.pve_finish", params), params)
         data["fight_id"] = fight_id; data["replayed"] = replayed
@@ -738,6 +796,15 @@ class GameplayCombat:
                 # again abandons an unreported battle instead of leaving a stale
                 # intent that could settle after a later encounter.
                 profile.setdefault("pending_battles", {}).pop("exploration", None)
+                if raw_stage > len(stages) and int(state.get("current_stage_finish", 0)) == 0 and stages:
+                    # A completed map stores map_max+1 as a sentinel. Starting
+                    # a new outing must create a fresh map before hero choice;
+                    # the native map paints every chest as opened otherwise.
+                    state["stage"] = 1
+                    state["map_revision"] = int(state.get("map_revision", 0)) + 1
+                    state.pop("difficulty", None)
+                    state["health_ledger"] = {}
+                    state["combat_army"] = []
                 return profile, self._exploration_response(profile)
             if method == "user.exploration_make_army":
                 aids = params.get("aids", [])

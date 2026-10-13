@@ -1478,11 +1478,18 @@ class GameplayRosterEquipment:
             if len(avatars) + count > cap:
                 self._fail("RosterFull", "Hero roster is full")
 
-            # All validations are complete; the enclosing atomic_update rolls
-            # this deduction and each issued hero back together on any failure.
+            restricted_skin = aid in skin_acquisition_blocked_ids(self.full_config)
+            credits = attrs.get("tower_skin_soul_credit", {}) if isinstance(attrs, dict) else {}
+            if restricted_skin:
+                if not isinstance(credits, dict) or type(credits.get(aid)) is not int or credits[aid] < need:
+                    self._fail("SkinAcquisitionRestricted", "Earn this skin's souls in the tower before exchanging it")
+            # Wallet, roster capacity, and tower provenance are all validated
+            # before either currency or the tower's skin entitlement is spent.
             p["avatar_soul"] = souls
             souls[aid] = current_souls - need
-            made = [self._new_hero(p, aid) for _ in range(count)]
+            if restricted_skin:
+                credits[aid] -= need
+            made = [self._new_hero(p, aid, allow_skin=restricted_skin) for _ in range(count)]
             return {"avatars": p["avatars"], "avatar_soul": souls, "new_avatars": made}
         if m == "user.soul_exchange_equip":
             eid = self._id(x.get("eid"), "eid")
@@ -1676,9 +1683,9 @@ class GameplayRosterEquipment:
                     "attrs": p["attrs"], "alchemy_bonus_step": bonus_applied}
         self._fail("NotImplemented", f"Method not reconstructed: {m}")
 
-    def _new_hero(self, p, aid, retain=None):
+    def _new_hero(self, p, aid, retain=None, *, allow_skin=False):
         if aid not in self.heroes: self._fail("UnknownHero", "Hero does not exist in roster config")
-        ensure_hero_acquirable(aid, self.full_config)
+        ensure_hero_acquirable(aid, self.full_config, allow_skin=allow_skin)
         cap = self._num(p.setdefault("attrs", {}).get("avatar_len", 1000), "avatar_len", 1, 10_000_000)
         if len(p.setdefault("avatars", {})) >= cap: self._fail("RosterFull", "Hero roster is full")
         seq = max([int(v.get("id", "|0").rsplit("|", 1)[-1]) for v in p.setdefault("avatars", {}).values() if "|" in str(v.get("id", ""))] or [-1]) + 1

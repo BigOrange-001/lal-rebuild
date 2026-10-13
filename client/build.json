@@ -284,7 +284,7 @@
       "index": 47,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/045_GlobalFunction.as",
-      "source_sha256": "bcbb367c873703f40e0a69fbf5013e2d16615c84b271664f2acad89d361b76d5"
+      "source_sha256": "8caa99eee89dc615c8b766f95086e905146e6678c126441c94cd951d04f0e22f"
     },
     {
       "index": 48,
@@ -338,7 +338,7 @@
       "index": 56,
       "class": "com.meng52.game.ui.screen.PanelCenterPVE",
       "source": "client/src/stages/054_PanelCenterPVE.as",
-      "source_sha256": "63429271d11a88d662e8f525e33ac71550014b4f1a41c06e66e39e9785d5739c"
+      "source_sha256": "40e465a75dcacc4581b957197914e84b17555f5bd1624ac0e629d7d6184dfce1"
     },
     {
       "index": 57,
@@ -350,7 +350,7 @@
       "index": 58,
       "class": "com.meng52.game.ui.element.ItemPVEcombat",
       "source": "client/src/stages/056_ItemPVEcombat.as",
-      "source_sha256": "5eebabc944ae089a1e1f9cbcb77850ddf1ec78ec6aa0af07f212438475cb4177"
+      "source_sha256": "ab0c051150f26c3d4d72e5686bae32297bbd55a53b43979465d53ae2865c9590"
     },
     {
       "index": 59,
@@ -512,7 +512,7 @@
       "index": 85,
       "class": "com.meng52.game.module.map.GameMap",
       "source": "client/src/stages/083_GameMap.as",
-      "source_sha256": "0d5cee95e63bc1b831be6f2f2462ea3d34d3171edbf780720b0f757ea24a99a1"
+      "source_sha256": "ff2a3a00e62a30e073b1c44c741ceffbcc3fffd3b1eeaafd081f201bb8016c91"
     },
     {
       "index": 86,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "b51d79ee282df270f3789650cd4f55b5be2c6289e2fea44bcfbd70f1e63a9d3a"
+      "source_sha256": "c08c2102f57fb6bad83cf708b6568b2dde5886d6e8313492efb311ef42451932"
     },
     {
       "index": 140,
@@ -848,7 +848,7 @@
       "index": 141,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "348a0e1d8da16bacdc6124de46b8677f17f9c4114204fcdba5b86e780debd89f"
+      "source_sha256": "ca5eddeb8d49b83d895f33096b0f9926d24a49869ce58e69bf207a5aaaebb005"
     },
     {
       "index": 142,

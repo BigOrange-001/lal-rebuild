@@ -1,6 +1,7 @@
 """Persistent local players and original-client resource gift mail RPCs."""
 import datetime,hashlib,hmac,json,secrets,time,sqlite3,threading
 from vip_campaign import normalize_vip_profile,legacy_first_bonus_from_receipts
+from gameplay_energy import normalize_energy_purchase_day
 
 class GameplayFault(Exception):
  def __init__(self,code,message):self.code,self.message=code,message
@@ -158,6 +159,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   token=secrets.token_urlsafe(32)
   self.db.execute('INSERT INTO sessions VALUES(?,?,?)',(token,uid,int(time.time())+86400*30));self.db.commit()
   def track_login(p):
+   normalize_energy_purchase_day(p)
    receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
    normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
    attrs=p.setdefault('attrs',{});attrs['login_total']=int(attrs.get('login_total',0))+1
@@ -373,6 +375,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   for difficulty in ('normal','hard','ploy'):p['combat_score'].setdefault(difficulty,{})
   p.setdefault('task',{})
   p['records'].setdefault('everyday_gift',[])
+  normalize_energy_purchase_day(p)
   p['attrs'].setdefault('login_total',0)
   p['attrs'].setdefault('pay_money',0)
   p['attrs'].setdefault('pay_total',0)

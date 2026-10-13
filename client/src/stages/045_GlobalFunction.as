@@ -2893,7 +2893,7 @@ package com.meng52.game.global
             _loc8_["id"] = _loc4_;
             _loc6_ = checkIsTeamMember(_loc4_) || checkIsActiveExplorationMember(_loc4_);
             _loc3_ = PanelCenterDNTeam.checkIsInDn(_loc4_) != null;
-            if(_loc4_ != param1.id && !_loc6_ && !_loc3_ && !checkLock(_loc4_) && param1.phase == _loc8_.phase)
+            if(_loc4_ != param1.id && !_loc6_ && !_loc3_ && !checkLock(_loc4_) )
             {
                _loc2_ = new Avatar(_loc4_);
                if(_loc2_.morph == 0)

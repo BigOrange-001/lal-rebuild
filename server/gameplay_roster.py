@@ -1171,13 +1171,16 @@ class GameplayRosterEquipment:
             target_id = self._id(x.get("aid"), "aid"); consumed = x.get("aids", [])
             if not isinstance(consumed, list) or not consumed: self._fail("InvalidMaterials", "Select required hero material")
             tid, target = self._hero(p, target_id)
+            self._check_not_pending_culture(p, tid)
             ids = []
             for v in consumed:
                 hid, mat = self._hero(p, v)
                 if hid == tid or hid in ids: self._fail("InvalidMaterials", "Target and duplicate heroes cannot be consumed")
                 self._check_not_team(p, hid)
                 self._check_not_dn(p, hid)
-                if m == "user.phase_up" and (int(mat.get("phase", 0)) != int(target.get("phase", 0)) or int(mat.get("morph", 0)) != 0): self._fail("IncompatibleMaterial", "Phase ascension materials must have the same phase and no morph")
+                if m == "user.phase_up":
+                    if mat.get("aid", hid).split("|")[0] != target.get("aid", tid).split("|")[0] or int(mat.get("morph", 0)) != 0:
+                        self._fail("IncompatibleMaterial", "Phase ascension requires the same hero and quality without morph")
                 ids.append(hid)
             base = target.get("aid", tid).split("|")[0]
             row = self.heroes.get(base)
@@ -1217,10 +1220,13 @@ class GameplayRosterEquipment:
                 phase_row = phase_table.get(str(star)) if isinstance(phase_table, dict) else None
                 if not isinstance(phase_row, list) or len(phase_row) < 2:
                     self._fail("InvalidConfig", "Missing phase configuration for this hero")
-                required = self._num(phase_row[0], "phase material count", 1, 5)
+                if int(target.get("phase", 0)) >= int(phase_row[1]):
+                    self._fail("MaxGrowth", "This hero has reached its phase limit")
+                required = self._num(int(target.get("phase", 0)) + 1, "phase material count", 1, 5)
                 if len(ids) != required:
                     self._fail("InsufficientMaterials", "Select exactly the configured phase-up materials")
-            self._cost(p, self.rules.get("star_cost" if m == "user.star_up" else "phase_cost", {}))
+            if m == "user.star_up":
+                self._cost(p, self.rules.get("star_cost", {}))
             if m == "user.phase_up":
                 if int(target.get("phase", 0)) >= int(phase_row[1]):
                     self._fail("MaxGrowth", "This hero has reached its phase limit")
@@ -1601,6 +1607,12 @@ class GameplayRosterEquipment:
             ids = x.get("eqids")
             if not isinstance(ids, list) or len(ids) != 2 or ids[0] == ids[1]: self._fail("InvalidSelection", "Select two different equipment")
             target_id, target = self._equip(p, ids[0]); mat_id, mat = self._equip(p, ids[1])
+            pending_wash = p.get("attrs", {}).get("equip_wash")
+            if isinstance(pending_wash, dict) and pending_wash.get("eqid") in (target_id, mat_id):
+                self._fail("PendingOperation", "Save or cancel the equipment wash before alchemy")
+            max_star = int(self.simple.get("equip_alchemy", {}).get("star_lv", 7))
+            if self._equip_star(target) >= max_star:
+                self._fail("MaxGrowth", "Equipment has reached its alchemy limit")
             if any(mat_id in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip material first")
             if target.get("eid") != mat.get("eid"): self._fail("IncompatibleEquipment", "Only matching equipment can be combined")
             # The alchemy panel explicitly previews the sacrifice's ordinary

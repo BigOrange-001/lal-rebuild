@@ -643,7 +643,7 @@ class GameplayCombat:
             attrs["dn_stone"] = int(attrs.get("dn_stone", 0)) + gained
             day = game_day()
             expedition.update({"day": day, "sent": list(aids), "reward_claimed": True})
-            result = {"dn_stone": attrs["dn_stone"], "get_avatars": {}, "attrs": copy.deepcopy(attrs),
+            result = {"dn_stone": attrs["dn_stone"], "gained_dn_stone": gained, "get_avatars": {}, "attrs": copy.deepcopy(attrs),
                 "gold": profile.get("gold",0), "coin": profile.get("coin",0),
                 "avatar_len": attrs.get("avatar_len",100), "attr_expedition": copy.deepcopy(expedition),
                 "team": copy.deepcopy(profile.get("team", [])),

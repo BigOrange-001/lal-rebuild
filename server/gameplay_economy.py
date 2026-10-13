@@ -145,7 +145,7 @@ class GameplayEconomy:
             if not isinstance(pay, dict): pay = records["pay"] = {}
             pay["count"] = int(pay.get("count", 0)) + 1
             pay["coin"] = int(pay.get("coin", 0)) + base
-            pay["last_day"] = game_day()
+            pay["last_day"] = game_day(self._now())
             p.setdefault("task", {})["pay_total"] = int(p.get("task", {}).get("pay_total", 0)) + base // 10
             return p, {"ok": True, "pid": pid, "base_coin": base, "granted_coin": granted,
                        "first_double": first, "vip_lv": next_lv, "vip_exp": p["vip_exp"],
@@ -155,7 +155,7 @@ class GameplayEconomy:
         return {**result, "replayed": replayed}
 
     def get_coin(self, uid, params):
-        today = game_day()
+        today = game_day(self._now())
         now = self._now()
         cards_cfg = (self.config.get("system_simple") or {}).get("mon_card", {})
         def mutate(p):
@@ -186,12 +186,12 @@ class GameplayEconomy:
     def task_info(self, uid, params):
         p = self.store.profile(uid)
         attrs = p.setdefault("attrs", {})
-        if "time_consumecoin" not in attrs: attrs["time_consumecoin"] = {"num": 0, "time": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)}
+        if "time_consumecoin" not in attrs: attrs["time_consumecoin"] = {"num": 0, "time": datetime.datetime.fromtimestamp(self._now(),datetime.timezone.utc).replace(tzinfo=None)}
         return {"hero_score": int(p.get("score", 0)), "time_consumecoin": native_dates(attrs["time_consumecoin"])}
 
     def check_in(self, uid, params):
         key = self._op_key("user.check_in", params)
-        today = game_day()
+        today = game_day(self._now())
         config = self.config.get("check_in") or {}
         month = int(today[5:7])
         month_key = today[:7]
@@ -342,7 +342,7 @@ class GameplayEconomy:
         return (self.config.get("system_simple") or {}).get(key, default)
 
     def _now(self):
-        return int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+        return self.store.clock.now()
 
     def _add_local_pay_progress(self, attrs, units, now):
         if type(units) is not int or units <= 0:
@@ -565,7 +565,7 @@ class GameplayEconomy:
 
     def sign_in(self, uid, params):
         key = self._op_key("user.sign_in", params)
-        today = game_day()
+        today = game_day(self._now())
         def mutate(p):
             attrs = p.setdefault("attrs", {})
             state = attrs.setdefault("sign_in", {"k":1,"n":0,"t":None})
@@ -592,7 +592,7 @@ class GameplayEconomy:
 
     def sign_reward(self, uid, params):
         key = self._op_key("user.sign_reward", params)
-        today = game_day()
+        today = game_day(self._now())
         def mutate(p):
             attrs = p.setdefault("attrs", {})
             state = attrs.setdefault("sign_in", {"k":1,"n":0,"t":None})
@@ -746,7 +746,7 @@ class GameplayEconomy:
             p["coin"] = int(p.get("coin", 0)) + amount
             state["last_time"] = {"$date":now}
             return p, int(p["coin"])
-        result, replayed = self.store.atomic_update(uid, mutate, key, {"method":"fund","day":game_day()})
+        result, replayed = self.store.atomic_update(uid, mutate, key, {"method":"fund","day":game_day(self._now())})
         return result
 
     def _economy_profile_response(self, profile, **extra):
@@ -826,6 +826,9 @@ class GameplayEconomy:
             # chapter panels send M_001 / P_001, so new configs use the branch
             # below and are checked against their configured chapter length.
             chapter = None
+        is_tower_completion = is_activity and bid == "P_200"
+        if is_tower_completion and chapter_count != 100:
+            raise GameplayFault("InvalidConfig", "The tower completion reward requires exactly 100 floors")
         key = self._op_key("user.get_pass_battle_gift", params)
         def mutate(p):
             mode = "normal" if diff == 0 else "hard" if diff == 1 else "ploy"
@@ -843,12 +846,25 @@ class GameplayEconomy:
                 if len(stars) < chapter_count:
                     raise GameplayFault("StageRewardLocked", "Complete every stage in this chapter with three stars")
                 try:
-                    total_stars = sum(max(0, min(3, int(value))) for value in stars[:chapter_count])
+                    stage_stars = [max(0, min(3, int(value))) for value in stars[:chapter_count]]
                 except (TypeError, ValueError, OverflowError):
                     raise GameplayFault("InvalidProfile", "Chapter star progress is malformed")
+                total_stars = sum(stage_stars)
                 required_stars = max(chapter_count * 3, int(row.get("need_star", 0)))
                 if total_stars < required_stars:
                     raise GameplayFault("StageRewardLocked", "Complete every stage in this chapter with three stars")
+                if is_tower_completion:
+                    # The frontier or a single aggregate star count cannot
+                    # prove that all 100 distinct floors were actually won.
+                    expected = {f"P_200_{index}" for index in range(1, 101)}
+                    cleared = p.get("ploy_cids", {}).get(bid, [])
+                    wins = p.get("records", {}).get("combat_ploy", {})
+                    if (not isinstance(cleared, list) or not expected.issubset(
+                            {cid for cid in cleared if isinstance(cid, str)})
+                            or not isinstance(wins, dict)
+                            or any(type(wins.get(cid)) is not int or wins[cid] < 1 for cid in expected)
+                            or any(star != 3 for star in stage_stars)):
+                        raise GameplayFault("StageRewardLocked", "Earn three stars on each of the 100 tower floors")
 
                 # Match the native combat_score marker as well as the durable
                 # record list, so the panel immediately disables its button.
@@ -864,7 +880,7 @@ class GameplayEconomy:
             if bid in claimed: raise GameplayFault("AlreadyClaimed", "Stage reward already claimed")
             reward = row.get("gift")
             grant_reward(p, reward, {"cfg":self.config}); claimed.append(bid)
-            return p, self._economy_profile_response(p, records=p.get("records", {}))
+            return p, self._economy_profile_response(p, records=p.get("records", {}), chapter_reward=copy.deepcopy(reward))
         result, replayed = self.store.atomic_update(uid, mutate, key, {"bid":bid,"diff":diff})
         result["replayed"] = replayed
         return result
@@ -916,7 +932,7 @@ class GameplayEconomy:
         # The native screen requests this snapshot on entry. Treat the daily
         # claim flags as empty after midnight without mutating the profile on
         # this read RPC; the claim RPC performs the reset.
-        if state.get("day") != game_day():
+        if state.get("day") != game_day(self._now()):
             state = {"had_reward": [0] * count, "coin_times": 0}
         info = [[int(x) for x in range(int(config.get("number_pool", 8)))] for _ in range(count)]
         return {"info":info,"welfare_times":list(records.get("welfare_times", [0]*count)),"had_reward":list(state.get("had_reward",[0]*count)),
@@ -946,7 +962,7 @@ class GameplayEconomy:
             if not isinstance(used,list): raise GameplayFault("InvalidWelfare", "Welfare usage record is invalid")
             while len(used)<len(prices): used.append(0)
             rec=p["records"].setdefault("welfare",{})
-            today=game_day()
+            today=game_day(self._now())
             if rec.get("day")!=today:
                 rec.update(day=today,had_reward=[0]*len(prices),coin_times=0)
             free_limit=config.get("free_times",[0]*len(prices))
@@ -977,7 +993,7 @@ class GameplayEconomy:
         key=self._op_key("user.welfare_get_reward",params)
         def mutate(p):
             attrs=p.setdefault("attrs",{}); dust=attrs.setdefault("dust",[0,0,0,0]); cost=int(config.get("draw_dust",1))
-            records=p.setdefault("records",{}); state=records.setdefault("welfare",{}); today=game_day()
+            records=p.setdefault("records",{}); state=records.setdefault("welfare",{}); today=game_day(self._now())
             if state.get("day")!=today: state.update(day=today,free_used=[0]*len(rewards),had_reward=[0]*len(rewards),coin_times=0)
             if state.setdefault("had_reward",[0]*len(rewards))[color]: raise GameplayFault("AlreadyClaimed", "This welfare reward was already claimed today")
             if int(dust[color])<cost: raise GameplayFault("InsufficientDust", "Collect enough matching dust before drawing")
@@ -1030,7 +1046,7 @@ class GameplayEconomy:
             if not isinstance(fixed_draw,dict):fixed_draw={}
             for tier in config.get("fixed_gift",{}):fixed_draw.setdefault(str(tier),0)
             state["fixed_draw"]=fixed_draw
-            today=game_day(); last=state.get("last_time")
+            today=game_day(self._now()); last=state.get("last_time")
             if isinstance(last,dict) and "$date" in last: last=last["$date"]
             free=not last or game_day(last)!=today
             if free and num != 1:
@@ -1282,7 +1298,7 @@ class GameplayEconomy:
         def mutate(p):
             state=self._box_state(p); entry=state[what]; last=entry.get("last_time")
             if isinstance(last,dict) and "$date" in last: last=last["$date"]
-            if last and game_day(last)==game_day(): raise GameplayFault("DailyLimit", "This daily box or key was already claimed")
+            if last and game_day(last)==game_day(self._now()): raise GameplayFault("DailyLimit", "This daily box or key was already claimed")
             entry["num"]=int(entry.get("num",0))+1;entry["last_time"]={"$date":self._now()}
             return p,self._box_response(p)
         result,replayed=self.store.atomic_update(uid,mutate,key,{"what":what,"window":active[0]})

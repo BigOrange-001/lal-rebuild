@@ -163,6 +163,12 @@ package com.meng52.game.ui.panel
       
       private function gotoStartBetter() : void
       {
+         var weightedTarget:Avatar = new Avatar(GlobalData.$tempAvatarBetter.id);
+         if(weightedTarget.isWeightedCultivation())
+         {
+            confirmWeightedFeed(weightedTarget);
+            return;
+         }
          var meanNum:int;
          var _arr:Array;
          var _arr2:Array;
@@ -228,6 +234,7 @@ package com.meng52.game.ui.panel
          var pithAdd:int = int(GlobalData.$mConfig_simple.culture.culture_pith);
          if(avatarArr.length > 0)
          {
+            mainAvatar = weightedTarget;
             i = 0;
             while(i < avatarArr.length)
             {
@@ -267,27 +274,14 @@ package com.meng52.game.ui.panel
                {
                   showAvatar = _avatar;
                }
-               if(_avatar.hpP)
-               {
-                  hpP += _avatar.hpP;
-               }
-               if(_avatar.apP)
-               {
-                  apP += _avatar.apP;
-               }
-               if(_avatar.dePhP)
-               {
-                  de_phP += _avatar.dePhP;
-               }
-               if(_avatar.deMaP)
-               {
-                  de_maP += _avatar.deMaP;
-               }
+               hpP += _avatar.isWeightedCultivation() ? legacyCulturePointEquivalent(mainAvatar,"hp",_avatar.hpP) : _avatar.hpP;
+               apP += _avatar.isWeightedCultivation() ? legacyCulturePointEquivalent(mainAvatar,"ap",_avatar.apP) : _avatar.apP;
+               de_phP += _avatar.isWeightedCultivation() ? legacyCulturePointEquivalent(mainAvatar,"de_ph",_avatar.dePhP) : _avatar.dePhP;
+               de_maP += _avatar.isWeightedCultivation() ? legacyCulturePointEquivalent(mainAvatar,"de_ma",_avatar.deMaP) : _avatar.deMaP;
                i = i + 1;
             }
             _arr = [hpP,apP,de_phP,de_maP];
             _arr2 = [hpP,apP,de_phP,de_maP];
-            mainAvatar = new Avatar(GlobalData.$tempAvatarBetter.id);
             mainAvatar2 = mainAvatar;
             obj = GlobalData.$userData.avatars[GlobalData.$tempAvatarBetter.id];
             maxP = 0;
@@ -406,6 +400,78 @@ package com.meng52.game.ui.panel
          {
             gotoFun();
          }
+      }
+
+      private function legacyCulturePointEquivalent(target:Avatar,stat:String,actual:int) : int
+      {
+         if(actual <= 0) return 0;
+         var slope:Number = stat == "hp" ? target.avatarData.hp1 : stat == "ap" ? target.avatarData.ap1 : stat == "de_ph" ? target.avatarData.d11 : target.avatarData.d21;
+         var rate:Number = Number(GlobalData.$mConfig_simple.culture.pith_growth_rate);
+         if(isNaN(rate) || rate <= 0) rate = 0.1;
+         return slope > 0 ? Math.max(0,int(actual / (slope * rate))) : 0;
+      }
+
+      private function confirmWeightedFeed(target:Avatar) : void
+      {
+         var selected:Array = GlobalData.$tempAvatarBetterArr;
+         var weightConfig:Object = GlobalData.$mConfig_simple.culture.weighted.weights;
+         var weights:Array = [int(weightConfig.hp),int(weightConfig.ap),int(weightConfig.de_ph),int(weightConfig.de_ma)];
+         var requested:Array = [0,0,0,0];
+         for each(var instanceId:String in selected)
+         {
+            var material:Avatar = new Avatar(instanceId);
+            requested[0] += Math.max(0,material.getCultivationStatGain("hp",material.hpP));
+            requested[1] += Math.max(0,material.getCultivationStatGain("ap",material.apP));
+            requested[2] += Math.max(0,material.getCultivationStatGain("de_ph",material.dePhP));
+            requested[3] += Math.max(0,material.getCultivationStatGain("de_ma",material.deMaP));
+         }
+         var room:int = Math.max(0,target.getCultivationCap() - target.getPithNum());
+         var totalWeighted:int = 0;
+         var i:int;
+         for(i=0;i<4;i++) totalWeighted += int(requested[i]) * int(weights[i]);
+         var gains:Array = [0,0,0,0];
+         if(totalWeighted <= room)
+         {
+            gains = requested.concat();
+         }
+         else if(totalWeighted > 0)
+         {
+            var used:int = 0;
+            for(i=0;i<4;i++)
+            {
+               gains[i] = Math.min(int(requested[i]),int(Number(requested[i]) * room / totalWeighted));
+               used += int(gains[i]) * int(weights[i]);
+            }
+            for(i=0;i<4;i++)
+            {
+               var extra:int = Math.min(int(requested[i]) - int(gains[i]),int((room - used) / int(weights[i])));
+               gains[i] = int(gains[i]) + extra;
+               used += extra * int(weights[i]);
+            }
+         }
+         var error:Object = GlobalFunction.formateBetterItemsError(selected);
+         var finish:Function = function():void
+         {
+            onCLOSE_PANEL_SELF();
+            GlobalData.$mEventDispatcher.dispatchEventWith("update_avatar_better_start");
+            GlobalData.$tempAvatarChoose = [];
+         };
+         if(!error.s)
+         {
+            finish();
+            return;
+         }
+         var cancel:Function = function():void { GlobalData.$tempAvatarChoose = []; };
+         var message:String = "";
+         if(int(gains[0]) > 0 || int(gains[1]) > 0 || int(gains[2]) > 0 || int(gains[3]) > 0) message = GlobalLanguageStr.getLanguageStr(90661);
+         if(int(gains[0]) > 0) message += GlobalLanguageStr.getLanguageStr(90662,gains[0]);
+         if(int(gains[1]) > 0) message += GlobalLanguageStr.getLanguageStr(90663,gains[1]);
+         if(int(gains[2]) > 0) message += GlobalLanguageStr.getLanguageStr(90664,gains[2]);
+         if(int(gains[3]) > 0) message += GlobalLanguageStr.getLanguageStr(90665,gains[3]);
+         for(i=0;i<4;i++) if(int(gains[i]) < int(requested[i])) { message += "{" + GlobalLanguageStr.getLanguageStr(90666) + "}"; break; }
+         var intro:String = error.name ? GlobalLanguageStr.getLanguageStr(90076,int(error.s),error.name) : GlobalLanguageStr.getLanguageStr(90016,int(error.s));
+         var actions:Object = {"ok":finish,"no":cancel,"aid":GlobalData.$mConfig_simple.show_id[0]};
+         GlobalFunction.popAlert("",Tools.formatLineX(intro + message,[16777215,10526880,16764006,13777209]),actions);
       }
       
       override public function formatTxtInfo() : void

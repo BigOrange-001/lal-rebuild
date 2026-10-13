@@ -84,6 +84,18 @@ adb reverse --list
 
 ## 5. 服务器控制台
 
+游戏时间独立保存在同一个 SQLite 数据库中，正常运行时随单调计时器前进，修改系统日期不会改变游戏天数。在服务器控制台输入 `time` 查看游戏时间，`time hours 6` 推进六小时，`time days 1` 过一天。
+
+也可以在另一个 PowerShell 窗口推进游戏时间；`--database` 必须指向启动服务器时使用的数据库：
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\game_time.py --database .\data\local.sqlite3 show
+.\.venv\Scripts\python.exe .\scripts\game_time.py --database .\data\local.sqlite3 advance --hours 6
+.\.venv\Scripts\python.exe .\scripts\game_time.py --database .\data\local.sqlite3 advance --days 1
+```
+
+每次只指定小时或天数，时长必须为正数，允许换算为整数秒的小数小时。推进后下一次游戏请求会读取新时间，每日次数、体力恢复和游戏内冷却按新时间结算。登录会话的安全有效期仍使用真实时间。重启操作系统后从最近保存的游戏时间继续，关机时间不累计。
+
 在服务器窗口输入 `help` 查看命令：
 
 | 命令 | 用途 |

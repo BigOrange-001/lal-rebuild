@@ -255,7 +255,7 @@ package com.meng52.game.ui.element
          var _loc4_:String = null;
          var _loc10_:String = null;
          var _loc2_:String = null;
-         var _loc11_:int = int(GlobalData.$mConfig_simple.culture.culture_pith);
+         var _loc11_:int = _avatar.getCultivationDisplayScale();
          var _loc5_:Touch = param1.getTouch(this,"ended");
          var _loc9_:String = _avatar.id.split("|")[0];
          var _loc6_:Object = GlobalData.$userData.avatars[_avatar.id];
@@ -282,12 +282,13 @@ package com.meng52.game.ui.element
             {
                _loc8_ = int(GlobalData.$mConfig_simple.culture.max_pith);
             }
+            _loc8_ = _avatar.getCultivationCap();
             if(_loc6_)
             {
                if(_avatar)
                {
                   _loc3_ = GlobalLanguageStr.getLanguageStr(20226);
-                  _loc4_ = GlobalLanguageStr.getLanguageStr(90521,_avatar.getHpMax(-1,-1,true),_avatar.hpP * _loc11_,_avatar.getDamage(-1,-1,true),_avatar.apP * _loc11_,_avatar.getDePh(-1,-1,true),_avatar.dePhP * _loc11_,_avatar.getDeMa(-1,-1,true),_avatar.deMaP * _loc11_,_avatar.getPithNum() * _loc11_,_loc8_ * _loc11_);
+                  _loc4_ = GlobalLanguageStr.getLanguageStr(90521,_avatar.getHpMax(-1,-1,true),_avatar.getCultivationStatGain("hp",_avatar.hpP),_avatar.getDamage(-1,-1,true),_avatar.getCultivationStatGain("ap",_avatar.apP),_avatar.getDePh(-1,-1,true),_avatar.getCultivationStatGain("de_ph",_avatar.dePhP),_avatar.getDeMa(-1,-1,true),_avatar.getCultivationStatGain("de_ma",_avatar.deMaP),_avatar.getPithNum() * _loc11_,_loc8_ * _loc11_);
                   _loc3_ += "\n" + _loc4_;
                   _loc3_ = Tools.formatLineX(_loc3_,GlobalTextStyle.COLOR_W_Y_Y_G);
                   GlobalFunction.popAlert("",_loc3_,{"aid":_loc9_},false);
@@ -738,7 +739,7 @@ package com.meng52.game.ui.element
                   showGlow();
                }
             }
-            _loc33_ = int(GlobalData.$mConfig_simple.culture.culture_pith);
+            _loc33_ = _avatar.getCultivationDisplayScale();
             mFoster = new LOL_TextField(GlobalLanguageStr.getLanguageStr(90652,_avatar.getPithNum() * _loc33_),180,30);
             mFoster.fontColor = 16764006;
             mFoster.fontSize = 20;
@@ -1317,7 +1318,7 @@ package com.meng52.game.ui.element
                   showGlow();
                }
             }
-            _loc60_ = int(GlobalData.$mConfig_simple.culture.culture_pith);
+            _loc60_ = _avatar.getCultivationDisplayScale();
             mFoster2 = new LOL_TextField(GlobalLanguageStr.getLanguageStr(90652,_avatar.getPithNum() * _loc60_),180,30);
             mFoster2.fontColor = 16764006;
             mFoster2.fontSize = 20;

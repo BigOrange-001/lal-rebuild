@@ -645,6 +645,19 @@ package com.meng52.game.module.equip
          return _loc1_ / 1000000;
       }
 
+      public function getMagicBonus(param1:int) : int
+      {
+         if(param1 < 0 || param1 >= 4 || magic == null || param1 >= magic.length)
+         {
+            return 0;
+         }
+         var _loc1_:int = Math.max(0,int(magic[param1]));
+         var _loc2_:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var _loc3_:Array = _loc2_ == null ? null : _loc2_.stat_per_level as Array;
+         var _loc4_:int = _loc3_ == null || param1 >= _loc3_.length ? 1 : Math.max(0,int(_loc3_[param1]));
+         return _loc1_ * _loc4_;
+      }
+
       public function getHpMax(param1:int = -1, param2:Boolean = false) : int
       {
          if(param1 < 0)
@@ -655,7 +668,7 @@ package com.meng52.game.module.equip
          var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.hp0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate);
          if(param2)
          {
-            _loc4_ += magic[0] + magic[2];
+            _loc4_ += getMagicBonus(0) + getMagicBonus(2);
          }
          return _loc4_;
       }
@@ -670,7 +683,7 @@ package com.meng52.game.module.equip
          var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.ap0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate);
          if(param2)
          {
-            _loc4_ += magic[1] + magic[3];
+            _loc4_ += getMagicBonus(1) + getMagicBonus(3);
          }
          return _loc4_;
       }

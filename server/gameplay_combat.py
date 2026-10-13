@@ -87,7 +87,7 @@ class GameplayCombat:
         return int(value)
 
     def _activity_is_open(self, chapter, now=None):
-        now=int(time.time() if now is None else now)
+        now=int(self.store.clock.now() if now is None else now)
         start=self._config_epoch(chapter.get("start_time"),0)
         end=self._config_epoch(chapter.get("end_time"),2**31-1)
         if now < start or now >= end: return False
@@ -119,7 +119,7 @@ class GameplayCombat:
                 elif activity_kind == "material":
                     records = profile.setdefault("records", {})
                     daily = records.setdefault("material_activity", {})
-                    today = game_day()
+                    today = game_day(self.store.clock.now())
                     if daily.get("day") != today:
                         daily.clear()
                         daily.update({"day": today, "uses": {}})
@@ -240,10 +240,10 @@ class GameplayCombat:
                            # back, so retries must reproduce this fight's
                            # optional drops instead of rerolling them.
                            "reward_seed": secrets.token_hex(32),
-                           "kind":"activity" if is_activity else "main","stage": stage_copy, "created": int(time.time()), "expires": int(time.time())+3600,
+                           "kind":"activity" if is_activity else "main","stage": stage_copy, "created": int(self.store.clock.now()), "expires": int(self.store.clock.now())+3600,
                            "team_a": client_team_a, "team_b": enemy, "assist": copy.deepcopy(assist), "settled": False}
                 profile.setdefault("pending_pve", {})[fight_id] = pending
-                profile["pending_pve"] = {k:v for k,v in profile["pending_pve"].items() if int(v.get("expires", 0)) > int(time.time())}
+                profile["pending_pve"] = {k:v for k,v in profile["pending_pve"].items() if int(v.get("expires", 0)) > int(self.store.clock.now())}
                 data = {"fight_id": fight_id, "fight_kind": "activity" if is_activity else "main_hard" if diff else "main", "metadata": {"cid": cid, "diff": diff}, "seed": seed, "poke_data": {}, "cid": cid, "diff": diff,
                         "line": stage_copy["line"], "team1": stage_copy.get("team1", []), "team2": stage_copy["team2"],
                         # Native GameMap.checkOrginTeam compares its locally
@@ -257,7 +257,7 @@ class GameplayCombat:
                         "medal": profile.get("medal", 0), "mark": profile.get("mark", 0),
                         "exp": profile.get("exp", 0), "lv": profile.get("lv", 1),
                         "combat_score": profile.get("combat_score", {"normal":{},"hard":{},"ploy":{}}),
-                        "energy": profile.get("energy", {"$date":int(time.time())}),
+                        "energy": profile.get("energy", {"$date":int(self.store.clock.now())}),
                         "attr_energy_extra": profile.get("attrs", {}).get("energy_extra", 0),"energy_cost":energy_cost,"energy_now":energy_state}
                 if assist:
                     data["friend_avatar"] = copy.deepcopy(assist["friend_avatar"])
@@ -309,7 +309,7 @@ class GameplayCombat:
             friend_ids = set()
         if is_friend and uid not in friend_ids:
             raise GameplayFault("InvalidAssist", "Selected helper is not in the player's friend list")
-        now = int(time.time())
+        now = int(self.store.clock.now())
         simple = self.config.get("system_simple", {})
         friend_cd = simple.get("friend_cd", [0, 0, 60, 5])
         cd_seconds = max(0, int(friend_cd[2] if isinstance(friend_cd, list) and len(friend_cd) > 2 else 60)) * 60
@@ -333,7 +333,7 @@ class GameplayCombat:
             line = max(0, min(2, int(row[1]))) if len(row) > 2 else 0
             pos = max(0.0, min(1.0, float(row[2]))) if len(row) > 2 else 0.5
             overrides = {key: avatar.get(key) for key in (
-                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase",
+                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema",
                 "skill", "leader_skill", "book_skill", "skillB")}
             overrides["leader_skill"] = avatar.get("leader_skill") if is_friend else None
             overrides["new_4attrs"] = {
@@ -350,7 +350,7 @@ class GameplayCombat:
                 "battle_snapshot": battle_snapshot}
 
     def _spend_energy(self,profile,cost):
-        now=int(time.time())
+        now=int(self.store.clock.now())
         state=energy_state(profile,self.full_config,now)
         current=state['current']
         if current<cost:
@@ -387,7 +387,7 @@ class GameplayCombat:
             encounter = None
             pending_map = profile.setdefault("pending_pve", {})
             pending = pending_map.get(fight_id)
-            if not pending or pending.get("cid") != cid or int(pending.get("diff", -1)) != diff or int(pending.get("expires", 0)) < int(time.time()):
+            if not pending or pending.get("cid") != cid or int(pending.get("diff", -1)) != diff or int(pending.get("expires", 0)) < int(self.store.clock.now()):
                 raise GameplayFault("UnknownFight", "Battle is expired or does not belong to this player")
             stage = pending["stage"]
             if pending.get("settled"):
@@ -432,7 +432,11 @@ class GameplayCombat:
                     profile[progress_key] = self._furthest(profile.get(progress_key, "M_001_1"), next_cid)
                     counter_key = "combat_main_hard" if diff else "combat_main"
                 stars[stage_index] = max(previous, score)
-                scores[chapter_key] = ["0", stars]
+                claim_mode = "-1" if is_activity else str(diff)
+                previous_chapter = scores.get(chapter_key, [])
+                claimed = (chapter_key in profile.get("records", {}).get("pass_battle_gift", {}).get(claim_mode, [])
+                           or isinstance(previous_chapter, list) and previous_chapter and str(previous_chapter[0]) == "1")
+                scores[chapter_key] = ["1" if claimed else "0", stars]
                 for index in range(stage_count):
                     scores.pop(f"{chapter_key}_{index + 1}", None)
                 record_bucket = profile.setdefault("records", {}).setdefault(counter_key, {})
@@ -542,7 +546,7 @@ class GameplayCombat:
                            if isinstance(unit, dict)]
                     candidates = self._limit_break_candidates(profile, ids)
                     if (candidates and self._reward_rng(uid, fight_id, pending, "limit-break").random() < 0.05):
-                        encounter = {"fight_id": fight_id, "candidate_ids": candidates, "created": int(time.time())}
+                        encounter = {"fight_id": fight_id, "candidate_ids": candidates, "created": int(self.store.clock.now())}
                         profile["pending_limit_break"] = encounter
                 # A mainline chapter-finale win grants one native-shaped,
                 # time-limited morph chance per chapter across normal/hard.
@@ -578,7 +582,7 @@ class GameplayCombat:
                             # Keep compatibility with a partial legacy config;
                             # the configured duration is seven days.
                             window_seconds = 7 * 24 * 60 * 60
-                        now = int(time.time())
+                        now = int(self.store.clock.now())
                         chance_is_live = chance_time > 0 and now - chance_time <= window_seconds
                         if not chance_is_live:
                             morph["chance"] = {"$date": now}
@@ -606,7 +610,7 @@ class GameplayCombat:
                 amount_gold = 0; exp_gain = 0
             pending["settled"] = True
             pending["result"] = sign
-            pending["finished"] = int(time.time())
+            pending["finished"] = int(self.store.clock.now())
             profile["pending_pve"].pop(fight_id, None)
             if sign == 1:
                 cfg_scores = profile["combat_score"]
@@ -614,7 +618,7 @@ class GameplayCombat:
                 return_data = {"sign":1,"combat_star":score,"next_cid":next_cid,"gold":profile.get("gold",0),
                     "coin":profile.get("coin",0),"score":profile.get("score",0),"medal":profile.get("medal",0),"mark":profile.get("mark",0),
                     "combat_score":cfg_scores,"ploy_cids":profile.get("ploy_cids",{}),"exp":profile.get("exp",0),"lv":profile.get("lv",1),
-                    "energy":profile.get("energy",{"$date":int(time.time())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
+                    "energy":profile.get("energy",{"$date":int(self.store.clock.now())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
                     "attrs":profile.get("attrs",{}),"sp":profile.get("attrs",{}).get("sp",[0,0,0,0]),"records":profile.get("records",{}),"gold_reward":amount_gold,"exp_reward":exp_gain,
                     "get_avatars":granted_avatars,"get_equips":granted_equips,"culture_book":profile.get("attrs",{}).get("culture_book",0),"box_key":profile.get("attrs",{}).get("box_key",0),"dust":profile.get("attrs",{}).get("dust",[0,0,0,0]),"dn_stone":profile.get("attrs",{}).get("dn_stone",0),
                     "battle_teams":snapshots,"first_clear":first_clear}
@@ -622,7 +626,7 @@ class GameplayCombat:
                 return_data = {"sign":2,"combat_star":0,"next_cid":profile.get("hid" if diff else "cid","M_001_1"),
                     "gold":profile.get("gold",0),"coin":profile.get("coin",0),"score":profile.get("score",0),
                     "combat_score":profile.get("combat_score",{}),"ploy_cids":profile.get("ploy_cids",{}),"exp":profile.get("exp",0),"lv":profile.get("lv",1),
-                    "energy":profile.get("energy",{"$date":int(time.time())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
+                    "energy":profile.get("energy",{"$date":int(self.store.clock.now())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
                     "attrs":profile.get("attrs",{}),"sp":profile.get("attrs",{}).get("sp",[0,0,0,0]),"records":profile.get("records",{}),"get_avatars":{},"get_equips":{},"culture_book":profile.get("attrs",{}).get("culture_book",0),"box_key":profile.get("attrs",{}).get("box_key",0),"dust":profile.get("attrs",{}).get("dust",[0,0,0,0]),"dn_stone":profile.get("attrs",{}).get("dn_stone",0),"battle_teams":snapshots,"first_clear":False}
             if pending.get("assist"):
                 return_data["friend_avatar"] = copy.deepcopy(pending["assist"]["friend_avatar"])
@@ -746,7 +750,7 @@ class GameplayCombat:
             attrs = profile.setdefault("attrs", {})
             expedition = attrs.setdefault("expedition", {})
             attrs["dn_stone"] = int(attrs.get("dn_stone", 0)) + gained
-            day = game_day()
+            day = game_day(self.store.clock.now())
             expedition.update({"day": day, "sent": list(aids), "reward_claimed": True})
             result = {"dn_stone": attrs["dn_stone"], "gained_dn_stone": gained, "get_avatars": {}, "attrs": copy.deepcopy(attrs),
                 "gold": profile.get("gold",0), "coin": profile.get("coin",0),
@@ -764,7 +768,7 @@ class GameplayCombat:
         state.setdefault("current_stage_finish", 0); state.setdefault("army", {})
         state.setdefault("combat_army", [])
         times = profile.setdefault("records", {}).setdefault("exploration_times", {})
-        today = game_day()
+        today = game_day(self.store.clock.now())
         if times.get("day") != today:
             times.update({"day": today, "refresh_count": 3, "refresh_buy": 0, "relive_buy": 0, "mode_buy": 0, "vip_relive": 1})
         else:
@@ -841,7 +845,7 @@ class GameplayCombat:
                 if int(state.get("current_stage_finish", 0)) == 1:
                     raise GameplayFault("ExplorationRewardPending", "Claim the completed stage before fighting again")
                 pending = profile.setdefault("pending_battles", {}).setdefault("exploration", {})
-                now = int(time.time())
+                now = int(self.store.clock.now())
                 pending = {key: value for key, value in pending.items()
                            if isinstance(value, dict) and int(value.get("expires", 0)) > now}
                 if pending:
@@ -871,7 +875,7 @@ class GameplayCombat:
                     # retain stale multi-lane indices from another mode.
                     _, pos = (int(row[1]), float(row[2])) if len(row) >= 3 else (0, .2 + .24 * i)
                     line = 0
-                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "skill", "leader_skill", "book_skill", "skillB")}
+                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "skill", "leader_skill", "book_skill", "skillB")}
                     # Avatar.toDataObj serializes leader_skill only for the
                     # actual team leader. Exploration's first selected unit
                     # is the sole leader, just like other local battles.
@@ -929,7 +933,7 @@ class GameplayCombat:
                 except ValueError as exc:
                     raise GameplayFault("InvalidFormation", "Every exploration route needs at least one hero or enemy") from exc
                 metadata = {"stage": stage_no}
-                intent = create_intent(profile, "exploration", metadata, own, enemy)
+                intent = create_intent(profile, "exploration", metadata, own, enemy, now=self.store.clock.now())
                 state["combat_army"] = ids
                 return profile, {**self._exploration_response(profile), **intent, "fight_kind": "exploration",
                     "metadata": metadata, "seed": intent["seed"], "poke_data": {}, "cid": f"E_{stage_no:03d}_1",
@@ -1034,7 +1038,7 @@ class GameplayCombat:
 
     def _finish_exploration(self, uid, params):
         def mutate(profile):
-            intent = consume_intent(profile, "exploration", params, metadata_keys=("stage",))
+            intent = consume_intent(profile, "exploration", params, metadata_keys=("stage",), now=self.store.clock.now())
             state, _ = self._exploration_defaults(profile)
             if int(intent.get("metadata", {}).get("stage", -1)) != int(state.get("stage", 1)):
                 raise GameplayFault("InvalidBattle", "Exploration stage changed during battle")

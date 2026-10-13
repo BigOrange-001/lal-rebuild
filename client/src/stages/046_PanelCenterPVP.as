@@ -811,7 +811,9 @@ package com.meng52.game.ui.screen
          var now:Number = SendAndSelect.$systemTimer_nowSecond;
          if(now - mChange_s < 2 || SendAndSelect.checkRepeat("user.refresh_pvp_opponents","")) return;
          mChange_s = now;
-         SendServiceAMFFun.send_user_refresh_pvp_opponents(re_get_rank_list);
+         SendServiceAMFFun.send_user_refresh_pvp_opponents(re_get_rank_list,{
+            "actionID":"arena-refresh-" + String(now) + "-" + String(Math.random())
+         });
       }
       
       public function selectList(param1:Boolean) : void

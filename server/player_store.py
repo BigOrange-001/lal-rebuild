@@ -2,6 +2,8 @@
 import datetime,hashlib,hmac,json,secrets,time,sqlite3,threading
 from vip_campaign import normalize_vip_profile,legacy_first_bonus_from_receipts
 from gameplay_energy import normalize_energy_purchase_day
+from cultivation_rules import normalize_profile as normalize_culture_profile
+from game_clock import GameClock
 
 class GameplayFault(Exception):
  def __init__(self,code,message):self.code,self.message=code,message
@@ -26,8 +28,9 @@ CLIENT_PROFILE_SYNC_REQUIRED_FIELDS = (
 CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','pending_limit_break','task','boss_state')
 
 class PlayerStore:
- def __init__(self,db,config):
+ def __init__(self,db,config,clock=None):
   self.db,self.config=db,config
+  self.clock=clock if clock is not None else GameClock(db)
   db.executescript('''CREATE TABLE IF NOT EXISTS players(uid TEXT PRIMARY KEY,account TEXT UNIQUE NOT NULL,profile TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,uid TEXT NOT NULL,expires INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS operation_ledger(uid TEXT NOT NULL,operation_key TEXT NOT NULL,payload_hash TEXT NOT NULL,result TEXT NOT NULL,created INTEGER NOT NULL,PRIMARY KEY(uid,operation_key));
@@ -69,7 +72,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   start=extract.get('start_time')
   if isinstance(start,dict) and type(start.get('$date')) is int: start={'$date':start['$date']}
   elif type(start) is int: start={'$date':start}
-  else: start={'$date':int(time.time())}
+  else: start={'$date':self.clock.now()}
   return {'score':0,'last_time':None,'start_time':start}
  def _default_roulette_state(self):
   cfg=self.config.get('cfg',self.config) if isinstance(self.config,dict) else {}
@@ -134,7 +137,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   table=simple.get('talent_config') if isinstance(simple,dict) else None
   return max(4,len(table)) if isinstance(table,(list,tuple)) else 4
  def initial_profile(self,uid,account):
-  now=int(time.time());available=self.config.get('cfg',{}).get('avatar',{}) if self.config else {}
+  now=self.clock.now();available=self.config.get('cfg',{}).get('avatar',{}) if self.config else {}
   simple=self.config.get('cfg',{}).get('system_simple',{}) if isinstance(self.config,dict) else {}
   blocked_skin=set(simple.get('skin_acquisition_blocked_heroes',[])) if isinstance(simple,dict) and isinstance(simple.get('skin_acquisition_blocked_heroes',[]),list) else set()
   start_gifts=self.config.get('cfg',{}).get('everyday_gifts',{}).get('start_lv',{}) if self.config else {}
@@ -159,12 +162,12 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   token=secrets.token_urlsafe(32)
   self.db.execute('INSERT INTO sessions VALUES(?,?,?)',(token,uid,int(time.time())+86400*30));self.db.commit()
   def track_login(p):
-   normalize_energy_purchase_day(p)
+   normalize_energy_purchase_day(p,self.clock.now())
    receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
    normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
    attrs=p.setdefault('attrs',{});attrs['login_total']=int(attrs.get('login_total',0))+1
    attrs.setdefault('sign_in',{'k':1,'n':0,'t':None})
-   p['login_time']={'$date':int(time.time())}
+   p['login_time']={'$date':self.clock.now()}
    # Keep profile migrations in this transaction so a client never receives
    # new curve metadata with legacy hero XP (or vice versa). Handlers that do
    # not have an active migration leave the profile untouched.
@@ -185,7 +188,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   for handler in self.gameplay_handlers:
    settle=getattr(handler,'settle_daily_rank',None)
    if callable(settle):
-    settle(uid,game_day())
+    settle(uid,game_day(self.clock.now()))
     break
   profile=self.profile(uid);profile['sessionid']=token
   return profile
@@ -333,7 +336,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    p['exploration'].setdefault(key,value)
   times=p['records'].get('exploration_times')
   if not isinstance(times,dict):times={}
-  today=time.strftime('%Y-%m-%d',time.gmtime(int(time.time())+8*3600))
+  today=time.strftime('%Y-%m-%d',time.gmtime(self.clock.now()+8*3600))
   if times.get('day')!=today:
    times.update({'day':today,'refresh_count':3,'refresh_buy':0,'relive_buy':0,'mode_buy':0,'vip_relive':1})
   else:
@@ -361,21 +364,23 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    mapping={k:v['aid']+'|'+str(int(k)-1) for k,v in p['avatars'].items() if k in legacy}
    p['avatars']={mapping.get(k,k):{**v,'id':mapping.get(k,k),'aid':mapping.get(k,v['aid'])} for k,v in p['avatars'].items()}
    p['team']=[[mapping.get(a,a) for a in team] for team in p['team']]
-  for k in ['wager_free_score','wager_free_coin']:p['attrs'].setdefault(k,{'$date':int(time.time())})
+  cfg=self.config.get('cfg',self.config) if isinstance(self.config,dict) else {}
+  normalize_culture_profile(p,cfg)
+  for k in ['wager_free_score','wager_free_coin']:p['attrs'].setdefault(k,{'$date':self.clock.now()})
   p['records'].setdefault('free_wager_count',0)
   p.setdefault('as_equips',[[] for _ in range(6)])
   p.setdefault('cid','M_001_1');p.setdefault('hid','M_001_1')
-  p.setdefault('add_time',p.get('create_time',{'$date':int(time.time())}))
+  p.setdefault('add_time',p.get('create_time',{'$date':self.clock.now()}))
   p['attrs'].setdefault('gamble_index',0)
   if type(p['attrs'].get('wager_coin_1_count')) is not int or p['attrs']['wager_coin_1_count']<0:p['attrs']['wager_coin_1_count']=0
   p['attrs'].setdefault('fund',{'key':'1','money':10,'last_time':None})
-  p['attrs'].setdefault('fund_add_time',p.get('add_time',{'$date':int(time.time())}))
+  p['attrs'].setdefault('fund_add_time',p.get('add_time',{'$date':self.clock.now()}))
   p.setdefault('combat_score',{'normal':{},'hard':{},'ploy':{}})
   if not isinstance(p['combat_score'],dict):p['combat_score']={'normal':{},'hard':{},'ploy':{}}
   for difficulty in ('normal','hard','ploy'):p['combat_score'].setdefault(difficulty,{})
   p.setdefault('task',{})
   p['records'].setdefault('everyday_gift',[])
-  normalize_energy_purchase_day(p)
+  normalize_energy_purchase_day(p,self.clock.now())
   p['attrs'].setdefault('login_total',0)
   p['attrs'].setdefault('pay_money',0)
   p['attrs'].setdefault('pay_total',0)
@@ -497,7 +502,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   return state
  def _check_in_today(self):
   tz=datetime.timezone(datetime.timedelta(hours=8))
-  return datetime.datetime.now(tz).date().isoformat()
+  return datetime.datetime.fromtimestamp(self.clock.now(),tz).date().isoformat()
  @staticmethod
  def _check_in_date(value):
   if isinstance(value,str):
@@ -578,7 +583,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
      self.db.execute('UPDATE players SET profile=? WHERE uid=?',(updated_json,uid))
      self._bump_revision(uid)
     if idempotency_key is not None:
-     self.db.execute('INSERT INTO operation_ledger(uid,operation_key,payload_hash,result,created) VALUES(?,?,?,?,?)',(uid,idempotency_key,payload_hash,response_json,int(time.time())))
+     self.db.execute('INSERT INTO operation_ledger(uid,operation_key,payload_hash,result,created) VALUES(?,?,?,?,?)',(uid,idempotency_key,payload_hash,response_json,self.clock.now()))
     self.db.commit();return native_dates(json.loads(response_json)),False
    except Exception:self.db.rollback();raise
  @staticmethod
@@ -643,7 +648,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
     if existing[1:]!=(row[0],title,payload,int(allow_skin)):raise GameplayFault('RequestKeyConflict','Request key was used for different mail')
     mail_id=existing[0]
    else:
-    mail_id=self.db.execute('INSERT INTO gift_mail(uid,title,gifts,created,request_key,allow_skin) VALUES(?,?,?,?,?,?)',(row[0],title,payload,int(time.time()),request_key,int(allow_skin))).lastrowid
+    mail_id=self.db.execute('INSERT INTO gift_mail(uid,title,gifts,created,request_key,allow_skin) VALUES(?,?,?,?,?,?)',(row[0],title,payload,self.clock.now(),request_key,int(allow_skin))).lastrowid
    self.db.commit();return str(mail_id)
   except Exception:self.db.rollback();raise
  def mails(self,uid):
@@ -746,7 +751,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    return {'friends_list':[],'apply_list':[]}
   if method=='user.get_msg':return self.mails(uid)
   if method=='user.read_msg':
-   self.db.execute('UPDATE gift_mail SET read_at=? WHERE uid=? AND claimed=1 AND read_at=0',(int(time.time()),uid));self.db.commit()
+   self.db.execute('UPDATE gift_mail SET read_at=? WHERE uid=? AND claimed=1 AND read_at=0',(self.clock.now(),uid));self.db.commit()
    return {'msg_num':self.profile(uid)['msg_num']}
   if method=='user.get_gift_msg':return self.claim(uid,params.get('gk'))
   if method=='user.del_msg':return self.delete_mail(uid,params)

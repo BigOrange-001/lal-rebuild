@@ -408,24 +408,11 @@ package com.meng52.game.ui.panel
       {
          var _loc2_:String = null;
          var _loc3_:String = null;
-         var _loc9_:int = int(GlobalData.$mConfig_simple.culture.culture_pith);
          var _loc4_:Touch = param1.getTouch(this,"ended");
          var _loc7_:Avatar = new Avatar(mCurrentId);
          var _loc8_:String = mCurrentId.split("|")[0];
-         var _loc5_:Object = GlobalData.$userData.avatars[_loc7_.id];
-         var _loc6_:int = 0;
-         if(_loc5_.pith_max)
-         {
-            _loc6_ = GlobalData.$mConfig_simple.culture.max_pith_base + _loc5_.pith_max;
-         }
-         else
-         {
-            _loc6_ = int(GlobalData.$mConfig_simple.culture.max_pith_base);
-         }
-         if(_loc6_ >= GlobalData.$mConfig_simple.culture.max_pith)
-         {
-            _loc6_ = int(GlobalData.$mConfig_simple.culture.max_pith);
-         }
+         var _loc6_:int = _loc7_.getCultivationCap();
+         var _loc9_:int = _loc7_.getCultivationDisplayScale();
          if(_loc4_)
          {
             if(_loc7_)
@@ -452,11 +439,8 @@ package com.meng52.game.ui.panel
       private function checkBtns() : void
       {
          var _hero:Object;
-         var _culture:Object;
+         var _avatar:Avatar;
          var _totalPith:int;
-         var _baseCap:int;
-         var _absoluteCap:int;
-         var _bonusCap:int;
          var _currentCap:int;
          var _loc2_:Boolean = GlobalData.$userData.attrs.avatar_culture == null || GlobalData.$userData.attrs.avatar_culture == {};
          mBtn_foster.visible = _loc2_;
@@ -467,20 +451,16 @@ package com.meng52.game.ui.panel
          {
             _loc1_ = true;
          }
-         // Match the server's raw-pith rule. Only disable starting a new roll;
-         // an existing preview must remain saveable or cancellable.
+         // A pending preview remains saveable or cancellable even at the cap.
          if(_loc2_ && _loc1_ && GlobalData.$userData.avatars != null && GlobalData.$mConfig_simple.culture != null)
          {
             _hero = GlobalData.$userData.avatars[mCurrentId];
-            _culture = GlobalData.$mConfig_simple.culture;
             if(_hero != null)
             {
-               _totalPith = Math.max(0,int(_hero.hp)) + Math.max(0,int(_hero.ap)) + Math.max(0,int(_hero.de_ph)) + Math.max(0,int(_hero.de_ma));
-               _baseCap = Math.max(0,int(_culture.max_pith_base));
-               _absoluteCap = _culture.max_pith != null ? Math.max(0,int(_culture.max_pith)) : _baseCap;
-               _bonusCap = Math.max(0,int(_hero.pith_max));
-               _currentCap = Math.min(_absoluteCap,_baseCap + _bonusCap);
-               if(_totalPith >= _currentCap)
+               _avatar = new Avatar(mCurrentId,_hero);
+               _totalPith = _avatar.getPithNum();
+               _currentCap = _avatar.getCultivationCap();
+               if(_currentCap <= 0 || _totalPith >= _currentCap)
                {
                   _loc1_ = false;
                }
@@ -497,7 +477,6 @@ package com.meng52.game.ui.panel
          var sendWash:*;
          var _event:Event = param1;
          var _btn:LOL_Scale9Button = _event.currentTarget as LOL_Scale9Button;
-         var _avatarData:Object = GlobalData.$userData.avatars[mCurrentId];
          var avatar:Avatar = new Avatar(mCurrentId);
          if(_btn.name == "btn_foster")
          {
@@ -535,19 +514,7 @@ package com.meng52.game.ui.panel
                      }
                   }
                };
-               mPith = 0;
-               if(_avatarData.pith_max)
-               {
-                  mPith = GlobalData.$mConfig_simple.culture.max_pith_base + _avatarData.pith_max;
-               }
-               else
-               {
-                  mPith = int(GlobalData.$mConfig_simple.culture.max_pith_base);
-               }
-               if(mPith >= GlobalData.$mConfig_simple.culture.max_pith)
-               {
-                  mPith = int(GlobalData.$mConfig_simple.culture.max_pith);
-               }
+               mPith = avatar.getCultivationCap();
                _fun = {
                   "ok":sendWash,
                   "no":GlobalFunction.functionNull
@@ -559,7 +526,7 @@ package com.meng52.game.ui.panel
                   {
                      _boo = true;
                      _fun.aid = resId;
-                     if(mPith == GlobalData.$mConfig_simple.culture.max_pith)
+                     if(avatar.isWeightedCultivation() || mPith == GlobalData.$mConfig_simple.culture.max_pith)
                      {
                         GlobalFunction.popAlert("",Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90678)),_fun);
                      }
@@ -717,6 +684,7 @@ package com.meng52.game.ui.panel
             return;
          }
          var _previewData:Object = Tools.clone(mOld_data);
+         if(_loc11_.schema == "weighted-v2") _previewData.culture_schema = "weighted-v2";
          var _loc2_:Avatar = new Avatar(mCurrentId,_previewData);
          if(_loc11_.save_status.ap)
          {
@@ -809,7 +777,8 @@ package com.meng52.game.ui.panel
       
       private function checkNum(param1:Object) : void
       {
-         var _loc2_:int = int(GlobalData.$mConfig_simple.culture.culture_pith);
+         var _displayAvatar:Avatar = new Avatar(mCurrentId);
+         var _weightedPreview:Boolean = param1 && param1.schema == "weighted-v2";
          if(param1)
          {
             if(param1.save_status.ap)
@@ -817,12 +786,12 @@ package com.meng52.game.ui.panel
                if(param1.save_status.ap > 0)
                {
                   mTxt_damage_up.fontColor = 65280;
-                  mTxt_damage_up.text = "+" + mAvatar.getCultivationStatGain("ap",int(param1.save_status.ap));
+                  mTxt_damage_up.text = "+" + (_weightedPreview ? int(param1.save_status.ap) : _displayAvatar.getCultivationStatGain("ap",int(param1.save_status.ap)));
                }
                else if(param1.save_status.ap < 0)
                {
                   mTxt_damage_up.fontColor = 16711680;
-                  mTxt_damage_up.text = "" + mAvatar.getCultivationStatGain("ap",int(param1.save_status.ap));
+                  mTxt_damage_up.text = "" + (_weightedPreview ? int(param1.save_status.ap) : _displayAvatar.getCultivationStatGain("ap",int(param1.save_status.ap)));
                }
                else
                {
@@ -838,12 +807,12 @@ package com.meng52.game.ui.panel
                if(param1.save_status.hp > 0)
                {
                   mTxt_hp_up.fontColor = 65280;
-                  mTxt_hp_up.text = "+" + mAvatar.getCultivationStatGain("hp",int(param1.save_status.hp));
+                  mTxt_hp_up.text = "+" + (_weightedPreview ? int(param1.save_status.hp) : _displayAvatar.getCultivationStatGain("hp",int(param1.save_status.hp)));
                }
                else if(param1.save_status.hp < 0)
                {
                   mTxt_hp_up.fontColor = 16711680;
-                  mTxt_hp_up.text = "" + mAvatar.getCultivationStatGain("hp",int(param1.save_status.hp));
+                  mTxt_hp_up.text = "" + (_weightedPreview ? int(param1.save_status.hp) : _displayAvatar.getCultivationStatGain("hp",int(param1.save_status.hp)));
                }
                else
                {
@@ -859,12 +828,12 @@ package com.meng52.game.ui.panel
                if(param1.save_status.de_ph > 0)
                {
                   mTxt_deph_up.fontColor = 65280;
-                  mTxt_deph_up.text = "+" + mAvatar.getCultivationStatGain("de_ph",int(param1.save_status.de_ph));
+                  mTxt_deph_up.text = "+" + (_weightedPreview ? int(param1.save_status.de_ph) : _displayAvatar.getCultivationStatGain("de_ph",int(param1.save_status.de_ph)));
                }
                else if(param1.save_status.de_ph < 0)
                {
                   mTxt_deph_up.fontColor = 16711680;
-                  mTxt_deph_up.text = "" + mAvatar.getCultivationStatGain("de_ph",int(param1.save_status.de_ph));
+                  mTxt_deph_up.text = "" + (_weightedPreview ? int(param1.save_status.de_ph) : _displayAvatar.getCultivationStatGain("de_ph",int(param1.save_status.de_ph)));
                }
                else
                {
@@ -880,12 +849,12 @@ package com.meng52.game.ui.panel
                if(param1.save_status.de_ma > 0)
                {
                   mTxt_dema_up.fontColor = 65280;
-                  mTxt_dema_up.text = "+" + mAvatar.getCultivationStatGain("de_ma",int(param1.save_status.de_ma));
+                  mTxt_dema_up.text = "+" + (_weightedPreview ? int(param1.save_status.de_ma) : _displayAvatar.getCultivationStatGain("de_ma",int(param1.save_status.de_ma)));
                }
                else if(param1.save_status.de_ma < 0)
                {
                   mTxt_dema_up.fontColor = 16711680;
-                  mTxt_dema_up.text = "" + mAvatar.getCultivationStatGain("de_ma",int(param1.save_status.de_ma));
+                  mTxt_dema_up.text = "" + (_weightedPreview ? int(param1.save_status.de_ma) : _displayAvatar.getCultivationStatGain("de_ma",int(param1.save_status.de_ma)));
                }
                else
                {
@@ -1156,15 +1125,11 @@ package com.meng52.game.ui.panel
       public function setHaloExp() : void
       {
          var _loc3_:ProgressBar = null;
-         var _loc10_:Number = NaN;
          var _loc2_:Avatar = null;
-         var _loc6_:Object = null;
-         var _loc1_:Number = NaN;
-         var _loc9_:Number = NaN;
          var _loc7_:Number = NaN;
-         var _loc4_:Number = NaN;
-         var _loc5_:Number = NaN;
-         var _loc8_:int = 0;
+         var used:int = 0;
+         var cap:int = 0;
+         var displayScale:int = 1;
          if(mData)
          {
             if(mBox_exp)
@@ -1174,28 +1139,11 @@ package com.meng52.game.ui.panel
                if(mData.id != null && mData.id != "")
                {
                   mBox_exp.visible = true;
-                  _loc10_ = Number(GlobalData.$mConfig_simple.culture.max_pith_base);
                   _loc2_ = new Avatar(mCurrentId,GlobalData.$userData.avatars[mCurrentId]);
-                  _loc6_ = GlobalData.$userData.avatars[mCurrentId];
-                  _loc1_ = 0;
-                  if(_loc6_.pith_max)
-                  {
-                     _loc1_ = _loc10_ + _loc6_.pith_max;
-                  }
-                  else
-                  {
-                     _loc1_ = _loc10_;
-                  }
-                  _loc9_ = _loc2_.getPithNum();
-                  if(_loc1_ >= GlobalData.$mConfig_simple.culture.max_pith)
-                  {
-                     _loc1_ = Number(GlobalData.$mConfig_simple.culture.max_pith);
-                  }
-                  if(_loc9_ >= _loc1_)
-                  {
-                     _loc9_ = _loc1_;
-                  }
-                  _loc7_ = _loc1_ < 0 ? 1 : _loc9_ / _loc1_;
+                  cap = _loc2_.getCultivationCap();
+                  used = Math.min(cap,_loc2_.getPithNum());
+                  displayScale = _loc2_.getCultivationDisplayScale();
+                  _loc7_ = cap > 0 ? Number(used) / cap : 0;
                   _loc3_.mMax = _loc3_.mBg.width;
                   _loc3_.ratio = _loc7_;
                   if(mTxt_progress)
@@ -1203,26 +1151,7 @@ package com.meng52.game.ui.panel
                      mTxt_progress.removeFromParent(true);
                      mTxt_progress = null;
                   }
-                  _loc4_ = _loc2_.getPithNum();
-                  _loc5_ = 0;
-                  if(_loc6_.pith_max)
-                  {
-                     _loc5_ = _loc10_ + _loc6_.pith_max;
-                  }
-                  else
-                  {
-                     _loc5_ = _loc10_;
-                  }
-                  if(_loc5_ >= GlobalData.$mConfig_simple.culture.max_pith)
-                  {
-                     _loc5_ = Number(GlobalData.$mConfig_simple.culture.max_pith);
-                  }
-                  if(_loc4_ >= _loc5_)
-                  {
-                     _loc4_ = _loc5_;
-                  }
-                  _loc8_ = int(GlobalData.$mConfig_simple.culture.culture_pith);
-                  mTxt_progress = new LOL_TextField(GlobalLanguageStr.getLanguageStr(20005,_loc4_ * _loc8_,_loc5_ * _loc8_),180,30);
+                  mTxt_progress = new LOL_TextField(GlobalLanguageStr.getLanguageStr(20005,used * displayScale,cap * displayScale),180,30);
                   mTxt_progress.fontSize = 15;
                   mTxt_progress.fontColor = 16777215;
                   mTxt_progress.hAlign = "center";

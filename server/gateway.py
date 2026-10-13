@@ -9,6 +9,7 @@ if not PROJECT_VERSION:
  raise RuntimeError('VERSION must contain a project version')
 from pyamf import remoting
 from player_store import PlayerStore,GameplayFault,native_dates
+from game_clock import GameClock,utc_datetime,duration_seconds
 from help_pages import render_help,render_notice
 
 class RpcFault(Exception):
@@ -66,6 +67,7 @@ class Backend:
   if database_path!=':memory:':
    pathlib.Path(database_path).expanduser().resolve().parent.mkdir(parents=True,exist_ok=True)
   self.db=sqlite3.connect(database_path,check_same_thread=False)
+  self.clock=GameClock(database_path if database_path!=':memory:' else self.db)
   self.lock=threading.RLock()
   self.retry_cache={}
   self.db.execute('CREATE TABLE IF NOT EXISTS accounts (name TEXT PRIMARY KEY,salt TEXT NOT NULL,password_hash TEXT NOT NULL)')
@@ -76,7 +78,7 @@ class Backend:
    if not isinstance(self.config,dict) or not isinstance(self.config.get('cfg'),dict):
     raise ValueError('Config file must contain {cfg_version, cfg: {...}, ...}')
    self.config=native_dates(self.config)
-  self.players=PlayerStore(self.db,self.config)
+  self.players=PlayerStore(self.db,self.config,self.clock)
   self.players.lock=self.lock
  def password_hash(self,password,salt):
   return hashlib.pbkdf2_hmac('sha256',password.encode(),bytes.fromhex(salt),100000).hex()
@@ -122,12 +124,12 @@ class Backend:
     try:data=self.players.dispatch(request)
     except GameplayFault as error:
      data={'msg':gameplay_fault_message(error),'error_code':error.code}
-     reply={'method':method,'params':params,'return_code':1,'server_now':datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None),'data':data}
+     reply={'method':method,'params':params,'return_code':1,'server_now':utc_datetime(self.clock.now()),'data':data}
      return reply
    else:
     raise RpcFault('NotImplemented','Method not reconstructed: '+method)
   # A native AMF Date is mandatory; the client casts server_now to flash Date.
-   reply={'method':method,'params':params,'return_code':0,'server_now':datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None),'data':data}
+   reply={'method':method,'params':params,'return_code':0,'server_now':utc_datetime(self.clock.now()),'data':data}
    if isinstance(method,str) and method.startswith('user.'):
     state_uid=None
     if method=='user.login' and isinstance(data,dict):state_uid=data.get('uid')
@@ -241,7 +243,7 @@ def make_server(host,port,backend):
  return service
 
 def _console_help():
- print('Server commands: help | status | accounts | mail ACCOUNT REQUEST_ID "TITLE" \'{"coin":100,"gold":500}\' | exit',flush=True)
+ print('Server commands: help | status | time | time hours N | time days N | accounts | mail ACCOUNT REQUEST_ID "TITLE" \'{"coin":100,"gold":500}\' | exit',flush=True)
  print('mail gifts must be a JSON object accepted by the configured gift-mail rules; use a single-quoted JSON argument.',flush=True)
 
 def _console_status(service):
@@ -274,6 +276,17 @@ def _console_loop(service):
    _console_help()
   elif command=='status' and len(parts)==1:
    _console_status(service)
+  elif command=='time':
+   try:
+    if len(parts)==1:
+     print('Game time (UTC): '+str(utc_datetime(service.backend.clock.now())),flush=True)
+    elif len(parts)==3 and parts[1] in ('hours','days'):
+     seconds=duration_seconds(parts[2],3600 if parts[1]=='hours' else 86400)
+     before,after=service.backend.clock.advance(seconds)
+     print(f'Game time (UTC): {utc_datetime(before)} -> {utc_datetime(after)}',flush=True)
+    else: raise ValueError('usage: time | time hours N | time days N')
+   except (ValueError,OverflowError,sqlite3.Error) as error:
+    print(f'Game time failed: {error}',flush=True)
   elif command=='accounts' and len(parts)==1:
    with service.backend.lock:
     total=service.backend.db.execute('SELECT COUNT(*) FROM accounts').fetchone()[0]
@@ -312,6 +325,8 @@ def main():
  except KeyboardInterrupt: pass
  finally:
   service.server_close()
-  with backend.lock: backend.db.close()
+  with backend.lock:
+   backend.db.close()
+   backend.clock.close()
 if __name__=='__main__': main()
 

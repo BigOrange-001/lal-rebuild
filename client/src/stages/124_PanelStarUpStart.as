@@ -85,6 +85,8 @@ package com.meng52.game.ui.panel
       private var mStarUpReceiptRequestId:uint = 0;
       
       private var isPhaseUp:Boolean = false;
+
+      private var mGrowthType:int = 0;
       
       private var isStartUp:Boolean = false;
       
@@ -247,6 +249,10 @@ package com.meng52.game.ui.panel
          var _str:String;
          var _teamName:Array;
          var _event:Event = param1;
+         if(mGrowthType == 0)
+         {
+            return;
+         }
          var a:Object = GlobalData.$userData;
          var o:* = GlobalData.$tempAvatarStarUp;
          if(GlobalData.$userData.attrs.avatar_culture != null)
@@ -642,6 +648,7 @@ package com.meng52.game.ui.panel
          this.mOK_c = false;
          var _loc1_:Avatar = new Avatar(GlobalData.$tempAvatarStarUp.id,GlobalData.$tempAvatarStarUp);
          var _loc2_:int = _loc1_.getPhaseType();
+         mGrowthType = _loc2_;
          if(_loc2_ == 1)
          {
             isPhaseUp = true;
@@ -651,6 +658,15 @@ package com.meng52.game.ui.panel
             isPhaseUp = false;
          }
          this.setUIGroup(this.mBox_a,"a","UI_bg_bar_2_0000",0);
+         if(mGrowthType == 0)
+         {
+            this.delUIList();
+            StarlingTools.removeChildrenClear(this.mBox_b);
+            mAvatar_b = null;
+            mBtn_up.enabled = false;
+            mBtn_up.text = "已达上限";
+            return;
+         }
          this.checkOK_c();
          this.setUIList();
          this.setUIGroup(this.mBox_b,"b","UI_bg_bar_2_0000",1);
@@ -785,7 +801,7 @@ package com.meng52.game.ui.panel
             mList_avatars.y = this.mBottom_clip.height - mList_avatars.height - 10;
             _loc7_++;
          }
-         if(_loc9_ <= 0)
+         if(_loc9_ <= 0 && mGrowthType > 0)
          {
             this.mOK_a = true;
          }
@@ -795,6 +811,10 @@ package com.meng52.game.ui.panel
             _loc10_ = 1;
          }
          this.mBtn_up.enabled = _loc10_ >= 1;
+         if(mGrowthType > 0)
+         {
+            mBtn_up.text = _loc9_ > 0 ? "缺材料 " + _loc9_ : (!mOK_b ? "等级未满" : (!mOK_c ? "统率不足" : (isPhaseUp ? "进阶 " + (_loc1_.phase + 1) + "/3" : "升星")));
+         }
       }
       
       public function setUIGroup(param1:Sprite, param2:String, param3:String = "", param4:int = 0) : void

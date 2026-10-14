@@ -256,7 +256,7 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
                     policy = simple.get("equipment_roll_policy", {}) if isinstance(simple, dict) else {}
                     exclusive = set(policy.get("exclusive_ids", [])) if isinstance(policy, dict) else set()
                     from equipment_growth_v2 import roll_for_new_item
-                    equipment[f"eq{index}"] = {"eid":eid,"lv":1,"slv":0,"sexp":0,"new_4attrs":{"hit":0,"flee":0,"crit":0,"tough":0},"halo":{"lv":0,"exp":0},"haloLv":0,"haloExp":0,"alchemy":[0,0],"stat_roll_ppm":1_000_000 if is_book else roll_for_new_item(random.SystemRandom(), eid in exclusive),"equipment_v2_version":1,"wash_schema_version":1}
+                    equipment[f"eq{index}"] = {"eid":eid,"lv":1,"slv":0,"sexp":0,"new_4attrs":{"hit":0,"flee":0,"crit":0,"tough":0},"halo":{"lv":0,"exp":0},"haloLv":0,"haloExp":0,"alchemy":[0,0],"rune_lv":0,"magic_stage5":0,"stat_roll_ppm":1_000_000 if is_book else roll_for_new_item(random.SystemRandom(), eid in exclusive),"equipment_v2_version":1,"wash_schema_version":1}
         elif key == "avatar_exp":
             if not isinstance(value, dict) or not isinstance(value.get("hero_id"), str) or type(value.get("amount")) is not int or value["amount"] < 0:
                 raise GameplayFault("InvalidReward", "avatar_exp requires hero_id and a nonnegative amount")

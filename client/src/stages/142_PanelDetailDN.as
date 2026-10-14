@@ -195,6 +195,7 @@ package com.meng52.game.ui.panel
       {
          mDNViewEpoch++;
          mData_noChange = GlobalData.$tempTeamSelect;
+         syncNodeFromProfile();
          _width = 578;
          _height = 855;
          setPopPanelBg(GlobalLanguageStr.getLanguageStr(_data["data_base"][0]),_height);
@@ -390,6 +391,10 @@ package com.meng52.game.ui.panel
       {
          var _loc5_:Object = null;
          var _loc4_:String = null;
+         if(!syncNodeFromProfile())
+         {
+            return;
+         }
          var _loc3_:int = int(GlobalData.$mConfig_simple.dn_lv);
          var _loc8_:int = int(mData_noChange["dnlv"]);
          var _loc7_:Boolean = _loc8_ >= _loc3_;
@@ -418,7 +423,7 @@ package com.meng52.game.ui.panel
 
       private function sendService_lvup() : void
       {
-         if(stage == null || mData_noChange == null || SendAndSelect.checkRepeat("user.dn_lvup",""))
+         if(stage == null || !syncNodeFromProfile() || SendAndSelect.checkRepeat("user.dn_lvup",""))
          {
             return;
          }
@@ -444,6 +449,10 @@ package com.meng52.game.ui.panel
             RpcStaticCall.$remoting.reportDiagnostic("PROFILE_RECEIPT_LEGACY|method=user.dn_lvup");
          }
          if(param2 != mDNOperation || param3 != mDNViewEpoch || mData_noChange == null || param4 != String(mData_noChange["indexID_s"]))
+         {
+            return;
+         }
+         if(!syncNodeFromProfile())
          {
             return;
          }
@@ -485,9 +494,29 @@ package com.meng52.game.ui.panel
 
       override protected function CHANGE_TEAM_MEMBER(param1:Event) : void
       {
-         GlobalData.$tempTeamSelect = mData_noChange = GlobalData.$userData.attrs.dn[mData_noChange["indexID_s"]];
+         syncNodeFromProfile();
+         GlobalData.$tempTeamSelect = mData_noChange;
          GlobalData.$mEventDispatcher.dispatchEventWith("update_dn_team_ui");
          super.onCLOSE_PANEL_SELF();
+      }
+
+      private function syncNodeFromProfile() : Boolean
+      {
+         if(mData_noChange == null || GlobalData.$userData == null || GlobalData.$userData.attrs == null
+            || GlobalData.$userData.attrs.dn == null)
+         {
+            return false;
+         }
+         var _key:String = String(mData_noChange["indexID_s"]);
+         var _node:Array = GlobalData.$userData.attrs.dn[_key] as Array;
+         if(_node == null)
+         {
+            return false;
+         }
+         mData_noChange["dnlv"] = int(_node[0]);
+         mData_noChange["aid"] = _node[1];
+         mData_noChange["id"] = _node[1];
+         return true;
       }
 
       private function updateDN_lv() : void

@@ -407,6 +407,8 @@ package com.meng52.net
       public static const ACTION_5101:String = "user.get_server_pvp_playback";
       
       public static const ACTION_5102:String = "user.get_server_pvp_userinfo";
+
+      public static const ACTION_5103:String = "user.equip_rune_up";
       
       public static const ACTION_7001:String = "user.kt_pay";
       
@@ -1105,6 +1107,11 @@ package com.meng52.net
       public static function send_user_add_magic(param1:Function = null, param2:Object = null) : void
       {
          SendAndSelect.sendAndSelectService("user.add_magic",param2,param1);
+      }
+
+      public static function send_user_equip_rune_up(param1:Function = null, param2:Object = null) : void
+      {
+         SendAndSelect.sendAndSelectService("user.equip_rune_up",param2,param1);
       }
       
       public static function send_user_box_key_exchange(param1:Function = null, param2:Object = null) : void

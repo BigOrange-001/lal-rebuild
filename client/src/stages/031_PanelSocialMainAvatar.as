@@ -47,6 +47,10 @@ package com.meng52.game.ui.screen
       public var mBtn_clear:LOL_Scale9Button;
       
       public var mBtn_sell:LOL_Scale9Button;
+
+      private var mBtn_smart:LOL_Scale9Button;
+
+      private var mSmartSort:Boolean = true;
       
       public var mTxt_info:TextFieldHtmlRenderer;
       
@@ -90,6 +94,12 @@ package com.meng52.game.ui.screen
          GlobalData.$mEventDispatcher.removeEventListener("update_avatar_starup",onMainEvent);
          GlobalData.$mEventDispatcher.removeEventListener("update_avatar_sell_data",onUPDATE_AVATAR_DATA);
          removeRarityFilters();
+         if(mBtn_smart)
+         {
+            mBtn_smart.removeEventListener("triggered",onSmartSort);
+            mBtn_smart.removeFromParent(true);
+            mBtn_smart = null;
+         }
          super.onREMOVED_FROM_STAGE(param1);
       }
       
@@ -124,6 +134,47 @@ package com.meng52.game.ui.screen
          mImg3_info.y = mTabBar.y + 55;
          mImg3_info.height = 80;
          addChild(mImg3_info);
+         mBtn_smart = new LOL_Scale9Button("智能排序：开",136,34,"UI_btn_enterGame_0_0000");
+         mBtn_smart.x = GlobalData.$mStageWidth - mBtn_smart.width - 20;
+         mBtn_smart.y = mImg3_info.y + mImg3_info.height - mBtn_smart.height - 3;
+         mBtn_smart.visible = mTabBar == null || mTabBar.selectedIndex != 4;
+         mBtn_smart.addEventListener("triggered",onSmartSort);
+         addChild(mBtn_smart);
+      }
+
+      private function onSmartSort(param1:Event) : void
+      {
+         mSmartSort = !mSmartSort;
+         mBtn_smart.text = mSmartSort ? "智能排序：开" : "智能排序：关";
+         update();
+      }
+
+      private function compareSmartAvatars(param1:Object, param2:Object) : int
+      {
+         var _keys:Array = ["star","limit_break","phase","lv","power"];
+         var _key:String = null;
+         var _a:Number = 0;
+         var _b:Number = 0;
+         for each(_key in _keys)
+         {
+            _a = param1[_key] == null ? 0 : Number(param1[_key]);
+            _b = param2[_key] == null ? 0 : Number(param2[_key]);
+            if(_a != _b)
+            {
+               return _a > _b ? -1 : 1;
+            }
+         }
+         var _idA:String = String(param1.id);
+         var _idB:String = String(param2.id);
+         return _idA < _idB ? -1 : (_idA > _idB ? 1 : 0);
+      }
+
+      private function sortBarracks(param1:Array) : void
+      {
+         if(mSmartSort && !_boo)
+         {
+            param1.sort(compareSmartAvatars);
+         }
       }
       
       private function CHANGE_TEAM_MEMBER_LOCK(param1:Event) : void
@@ -468,6 +519,7 @@ package com.meng52.game.ui.screen
                }
             }
             _loc10_.sortOn(["teamNum","indn","lock","power","id"],[0x10 | 2,0x10 | 2,0x10 | 2,0x10 | 2,1]);
+            sortBarracks(_loc10_);
             this.setListTimer(mList,_loc10_,ItemAvatarBetter);
             this.setPageColorNumXY(GlobalLanguageStr.getLanguageStr(97005),null);
             if(_loc10_.length <= 0)
@@ -521,6 +573,7 @@ package com.meng52.game.ui.screen
                }
             }
             _itemArr.sortOn(["teamNum","indn","lock","sort_1","power","id"],[0x10 | 2,0x10 | 2,0x10 | 2,16,0x10 | 2,1]);
+            sortBarracks(_itemArr);
             this.setListTimer(mList,_itemArr,ItemAvatarBetter);
             this.setPageColorNumXY(GlobalLanguageStr.getLanguageStr(97005),null);
             if(_itemArr.length <= 0)
@@ -571,6 +624,7 @@ package com.meng52.game.ui.screen
                }
             }
             _itemArr.sortOn(["teamNum","indn","lock","starType","power","id"],[0x10 | 2,0x10 | 2,0x10 | 2,0x10 | 2,0x10 | 2,1]);
+            sortBarracks(_itemArr);
             this.setListTimer(mList,_itemArr,ItemAvatarStarUp);
             this.setPageColorNumXY(GlobalLanguageStr.getLanguageStr(97005),null);
             if(_itemArr.length <= 0)
@@ -628,6 +682,7 @@ package com.meng52.game.ui.screen
             {
                _itemArr.sortOn(["isHero","star","starType","teamNum","indn","lock","power","id"],[0x10 | 2,0x10 | 2,0x10 | 2,0x10 | 2,0x10 | 2,0x10 | 2,0x10 | 2,1]);
             }
+            sortBarracks(_itemArr);
             this.setListTimer(mList,_itemArr,ItemAvatarFoster);
             this.setPageColorNumXY(GlobalLanguageStr.getLanguageStr(97005),null);
             if(_itemArr.length <= 0)
@@ -776,6 +831,10 @@ package com.meng52.game.ui.screen
       {
          $tabBarSelectedIndex = mTabBar.selectedIndex;
          var _loc2_:int = mTabBar.selectedIndex;
+         if(mBtn_smart)
+         {
+            mBtn_smart.visible = _loc2_ != 4;
+         }
          if(MainConfig.$isHasBuilding)
          {
             this.mRadioBar.setChildStatus(3,!($tabBarSelectedIndex == 1 || $tabBarSelectedIndex == 2 || $tabBarSelectedIndex == 3));
@@ -835,7 +894,7 @@ package com.meng52.game.ui.screen
             }
             else
             {
-               tempSelect = 10;
+               tempSelect = PanelAvatarSell.SELL_BATCH_MAX;
             }
             GlobalData.$tempSellItem = {};
             GlobalData.$tempSell = [];
@@ -892,12 +951,12 @@ package com.meng52.game.ui.screen
       
       private function service_sell() : void
       {
-         if(stage == null || SendAndSelect.checkRepeat("user.sell_avatar",""))
+         if(stage == null || SendAndSelect.checkRepeat("user.sell_avatars",""))
          {
             return;
          }
          var _loc1_:Array = GlobalData.$tempSell.concat();
-         if(_loc1_.length == 0)
+         if(_loc1_.length == 0 || _loc1_.length > PanelAvatarSell.SELL_BATCH_MAX)
          {
             return;
          }
@@ -967,7 +1026,7 @@ package com.meng52.game.ui.screen
          var _loc3_:Number = GlobalData.$tempSell.length;
          var _loc2_:Number = GlobalData.$userData_avatarNum;
          var _loc1_:Number = Number(GlobalData.$userData.attrs.avatar_len);
-         this.setTxtInfo(GlobalLanguageStr.getLanguageStr(20073,_loc3_),GlobalLanguageStr.getLanguageStr(20074,_loc3_,10),GlobalLanguageStr.getLanguageStr(98133,this.mGold_all,_loc2_,_loc1_));
+         this.setTxtInfo(GlobalLanguageStr.getLanguageStr(20073,_loc3_),GlobalLanguageStr.getLanguageStr(20074,_loc3_,PanelAvatarSell.SELL_BATCH_MAX),GlobalLanguageStr.getLanguageStr(98133,this.mGold_all,_loc2_,_loc1_));
          if(GlobalData.$tempSell.length > 0)
          {
             this.mBtn_sell.enabled = true;

@@ -1,5 +1,6 @@
 package com.meng52.game.global
 {
+   import com.meng52.events.NetEvent;
    import com.meng52.game.command.avatar.AvatarManager;
    import com.meng52.game.command.effect.EffectManager;
    import com.meng52.game.command.equip.EquipManager;
@@ -1575,6 +1576,12 @@ package com.meng52.game.global
          var _loc5_:int = 0;
          var _loc8_:int = 0;
          var _loc7_:String = null;
+         if(param4 && SendAndSelect.checkRepeat("user.fix_team",""))
+         {
+            return false;
+         }
+         var _previousTeam:Array = param4 ? copyDnSaveTeam(GlobalData.$userData.team) : null;
+         var _previousDn:Object = param4 ? copyDnSaveNodes(GlobalData.$userData.attrs.dn) : null;
          if(Tools.strIsNull(param3))
          {
             if(param2 != 0)
@@ -1617,11 +1624,7 @@ package com.meng52.game.global
          formateTeamToObj();
          if(param4)
          {
-            SendServiceAMFFun.send_user_fix_team(re_fix_team,{
-               "team":GlobalData.$userData.team,
-               "team_num":GlobalData.$tempTeamID,
-               "dn":GlobalData.$userData.attrs.dn
-            });
+            sendFixTeamWithRollback(_previousTeam,_previousDn,true);
          }
          return true;
       }
@@ -1633,6 +1636,17 @@ package com.meng52.game.global
       
       public static function changeDNteam(param1:String, param2:String, param3:Boolean = true) : Boolean
       {
+         if(param3 && SendAndSelect.checkRepeat("user.fix_team",""))
+         {
+            return false;
+         }
+         if(GlobalData.$userData == null || GlobalData.$userData.attrs == null
+            || GlobalData.$userData.attrs.dn == null || !(GlobalData.$userData.attrs.dn[param1] is Array))
+         {
+            return false;
+         }
+         var _previousTeam:Array = param3 ? copyDnSaveTeam(GlobalData.$userData.team) : null;
+         var _previousDn:Object = param3 ? copyDnSaveNodes(GlobalData.$userData.attrs.dn) : null;
          var _loc7_:Boolean = false;
          var _loc6_:int = 0;
          var _loc4_:Avatar = null;
@@ -1722,14 +1736,107 @@ package com.meng52.game.global
             formateTeamToObj();
             if(param3)
             {
-               SendServiceAMFFun.send_user_fix_team(null,{
-                  "team":GlobalData.$userData.team,
-                  "team_num":GlobalData.$tempTeamID,
-                  "dn":GlobalData.$userData.attrs.dn
-               });
+               sendFixTeamWithRollback(_previousTeam,_previousDn,false);
             }
          }
          return _loc5_;
+      }
+
+      private static function copyDnSaveTeam(param1:Array) : Array
+      {
+         var _copy:Array = [];
+         if(param1 != null)
+         {
+            for(var _i:int = 0; _i < param1.length; _i++)
+            {
+               _copy[_i] = param1[_i] is Array ? (param1[_i] as Array).concat() : param1[_i];
+            }
+         }
+         return _copy;
+      }
+
+      private static function copyDnSaveNodes(param1:Object) : Object
+      {
+         var _copy:Object = {};
+         if(param1 != null)
+         {
+            for(var _key:String in param1)
+            {
+               _copy[_key] = param1[_key] is Array ? (param1[_key] as Array).concat() : param1[_key];
+            }
+         }
+         return _copy;
+      }
+
+      private static function sendFixTeamWithRollback(param1:Array, param2:Object, param3:Boolean) : void
+      {
+         var _teamRef:Array = GlobalData.$userData.team;
+         var _dnRef:Object = GlobalData.$userData.attrs.dn;
+         var _uid:String = String(GlobalData.$userData.uid);
+         var _tempTeamRef:Array = GlobalData.$tempTeam;
+         var _tempTeamIndex:int = GlobalData.$tempTeamID;
+         var _params:Object = {
+            "team":copyDnSaveTeam(_teamRef),
+            "team_num":GlobalData.$tempTeamID,
+            "dn":copyDnSaveNodes(_dnRef)
+         };
+         var _actionID:String = "";
+         var _onError:Function = null;
+         _onError = function(_event:NetEvent):void
+         {
+            var _error:Object = _event.data;
+            if(_error == null || String(_error.method) != "user.fix_team"
+               && !(Boolean(_error.profile_sync_error) && String(_error.receipt_method) == "user.fix_team"))
+            {
+               return;
+            }
+            var _receipt:Object = _error.profile_receipt != null ? _error.profile_receipt : _error;
+            if(_receipt.params != null && String(_receipt.params.actionID) != _actionID)
+            {
+               return;
+            }
+            SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",_onError);
+            // A later successful profile snapshot replaces both references;
+            // never roll back that newer authoritative state.
+            if(GlobalData.$userData != null && String(GlobalData.$userData.uid) == _uid
+               && GlobalData.$userData.team === _teamRef
+               && GlobalData.$userData.attrs != null && GlobalData.$userData.attrs.dn === _dnRef)
+            {
+               GlobalData.$userData.team = param1;
+               GlobalData.$userData.attrs.dn = param2;
+               if(_tempTeamIndex >= 0 && _tempTeamIndex < _teamRef.length
+                  && _tempTeamRef === _teamRef[_tempTeamIndex] && GlobalData.$tempTeam === _tempTeamRef)
+               {
+                  GlobalData.$tempTeam = param1[_tempTeamIndex];
+               }
+               formateTeamToObj();
+               GlobalData.$mEventDispatcher.dispatchEventWith("update_dn_team_ui");
+               GlobalData.$mEventDispatcher.dispatchEventWith("update_team_power");
+            }
+         };
+         SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",_onError);
+         SendServiceAMFFun.send_user_fix_team(function(_response:Object):void
+         {
+            SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",_onError);
+            if(GlobalData.$userData == null || String(GlobalData.$userData.uid) != _uid)
+            {
+               return;
+            }
+            if(_tempTeamIndex >= 0
+               && _tempTeamIndex < GlobalData.$userData.team.length
+               && _tempTeamRef === _teamRef[_tempTeamIndex] && GlobalData.$tempTeam === _tempTeamRef)
+            {
+               GlobalData.$tempTeam = GlobalData.$userData.team[_tempTeamIndex];
+            }
+            formateTeamToObj();
+            if(param3)
+            {
+               re_fix_team(_response);
+            }
+            GlobalData.$mEventDispatcher.dispatchEventWith("update_dn_team_ui");
+            GlobalData.$mEventDispatcher.dispatchEventWith("update_team_power");
+         },_params);
+         _actionID = String(_params.actionID);
       }
       
       public static function check_dn_had_avatarID(param1:String) : int
@@ -4202,7 +4309,7 @@ package com.meng52.game.global
       {
          var disassemble:* = function():void
          {
-            GlobalData.$tempEquipFunId = 4;
+            GlobalData.$tempEquipFunId = 5;
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_change_base");
             GlobalData.$mGameClassObject.closePopForPanel();
          };

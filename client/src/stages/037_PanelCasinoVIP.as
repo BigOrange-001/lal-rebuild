@@ -15,10 +15,12 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendAndSelect;
    import com.meng52.net.SendServiceAMFFun;
+   import com.meng52.net.RpcStaticCall;
    import com.meng52.utils.Tools;
    import feathers.display.Scale9Image;
    import flash.geom.Point;
    import flash.geom.Rectangle;
+   import flash.utils.getTimer;
    import starling.display.Image;
    import starling.display.MovieClip;
    import starling.display.Quad;
@@ -367,10 +369,13 @@ package com.meng52.game.ui.panel
       
       private function onAvatar(param1:Object) : void
       {
-         if(this.stage == null) return;
+         // The profile receipt has already been applied by SendAndSelect.
+         // A successful draw belongs to the request, even if its panel closed.
+         if(!claimRecruitmentReceipt(param1)) return;
+         var _panelVisible:Boolean = this.stage != null;
          if(param1.data.score)
          {
-            if(!GlobalFunction.isVersionedProfileReceipt(param1))
+            if(!GlobalFunction.isVersionedProfileReceipt(param1) && GlobalData.$userData.attrs.lottery_activity != null)
             {
             GlobalData.$userData.attrs.lottery_activity.score = param1.data.score;
             }
@@ -387,6 +392,7 @@ package com.meng52.game.ui.panel
          {
             if(!GlobalFunction.isVersionedProfileReceipt(param1))
             {
+            GlobalData.$userData.attrs["lottery_activity"] = {};
             GlobalData.$userData.attrs["lottery_activity"].score = param1.data.score ? param1.data.score : 0;
             }
             if(!GlobalFunction.isVersionedProfileReceipt(param1))
@@ -408,16 +414,25 @@ package com.meng52.game.ui.panel
          }
          GlobalFunction.updateVip();
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
-         _txt_coin.txt2 = GlobalData.$userData.coin;
-         param1.payType = payType;
-         onCLOSE_PANEL_SELF();
-         GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_main");
+         if(_panelVisible && _txt_coin != null)
+         {
+            _txt_coin.txt2 = GlobalData.$userData.coin;
+         }
+         if(param1.payType == null)
+         {
+            param1.payType = param1.params != null ? int(param1.params.flag) : payType;
+         }
+         if(_panelVisible)
+         {
+            onCLOSE_PANEL_SELF();
+            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_main");
+         }
          isAvatar(param1);
       }
       
       private function isAvatar(param1:Object) : void
       {
-         if(this.stage == null) return;
+         // Reward presentation lives in LayoutUIAnimation, not the old panel.
          var _loc10_:Object = null;
          var _loc11_:* = 0;
          var _loc2_:String = null;
@@ -450,7 +465,7 @@ package com.meng52.game.ui.panel
                      LayoutUIAnimation.getOnlyExample().popCasino(_loc6_,6,0,MainConfig.$casionBgUiName,{
                         "type":"avatar",
                         "score":param1.data.score,
-                        "isActivity":getVipTime().can
+                        "isActivity":Boolean(param1._vip_activity_request)
                      });
                   }
                   _loc9_ = GlobalData.$userData.avatar_soul;
@@ -475,7 +490,7 @@ package com.meng52.game.ui.panel
                      LayoutUIAnimation.getOnlyExample().popCasino(_loc6_,6,0,MainConfig.$casionBgUiName,{
                         "type":"avatar_soul",
                         "score":param1.data.score,
-                        "isActivity":getVipTime().can
+                        "isActivity":Boolean(param1._vip_activity_request)
                      });
                   }
                   _loc11_++;
@@ -534,7 +549,7 @@ package com.meng52.game.ui.panel
             }
             LayoutUIAnimation.getOnlyExample().popCasino(_loc4_,6,0,MainConfig.$casionBgUiName,{
                "score":param1.data.score,
-               "isActivity":getVipTime().can
+               "isActivity":Boolean(param1._vip_activity_request)
             });
          }
          if(!GlobalData.$isForceGuide)
@@ -623,13 +638,51 @@ package com.meng52.game.ui.panel
       }
       private var _vipTransitionReceipts:Array = [];
 
+      private static var _recruitmentReceipts:Array = [];
+
+      private static function claimRecruitmentReceipt(param1:Object) : Boolean
+      {
+         if(param1 == null || param1.data == null || param1.data.avatars == null)
+         {
+            return false;
+         }
+         if(GlobalData.$userData == null || param1.state_sync != null
+            && String(param1.state_sync.uid) != String(GlobalData.$userData.uid))
+         {
+            return false;
+         }
+         var _key:String = "";
+         if(param1.params != null && param1.params.actionID != null)
+         {
+            _key = String(param1.params.actionID);
+         }
+         else if(param1.state_sync != null && param1.state_sync.uid != null && param1.state_sync.revision != null)
+         {
+            _key = String(param1.state_sync.uid) + ":" + String(param1.state_sync.revision);
+         }
+         if(_key == "") return true;
+         if(_recruitmentReceipts.indexOf(_key) >= 0) return false;
+         _recruitmentReceipts.push(_key);
+         if(_recruitmentReceipts.length > 64) _recruitmentReceipts.shift();
+         return true;
+      }
+
       private function captureVipBefore(param1:Function) : Function
       {
          var _beforeVip:int = int(GlobalData.$userData.vip_lv);
+         var _requestPayType:int = payType;
+         var _requestActivity:Boolean = Boolean(getVipTime().can);
+         var _started:int = getTimer();
          return function(param2:Object):void
          {
             param2._vip_before_request = _beforeVip;
             param2._vip_after_request = param2.data.user_dict != null ? int(param2.data.user_dict.vip_lv) : int(param2.data.vip_lv);
+            param2.payType = _requestPayType;
+            param2._vip_activity_request = _requestActivity;
+            if(RpcStaticCall.$remoting != null)
+            {
+               RpcStaticCall.$remoting.reportDiagnostic("RECRUITMENT_RESPONSE|vip=1|times=" + (_requestPayType == 1 ? 10 : 1) + "|elapsed_ms=" + (getTimer() - _started));
+            }
             param1(param2);
          };
       }

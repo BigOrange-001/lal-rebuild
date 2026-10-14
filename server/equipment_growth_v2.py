@@ -210,10 +210,11 @@ def level_growth_from_simple(simple: dict, level: int) -> float:
 
 
 def main_stat(base: float, level: int, simple: dict, item: dict,
-              halo_rate: float = 1.0, alchemy_rate: float = 1.0) -> int:
-    """Native Tools.toInt( base * growth * halo * alchemy * persisted roll )."""
+              halo_rate: float = 1.0, alchemy_rate: float = 1.0,
+              magic_rate: float = 1.0) -> int:
+    """Native Tools.toInt after all equipment main-stat multipliers."""
     value = float(base) * level_growth_from_simple(simple, level) * stat_roll_rate(item)
-    value *= float(halo_rate) * float(alchemy_rate)
+    value *= float(halo_rate) * float(alchemy_rate) * float(magic_rate)
     return to_int(value)
 
 

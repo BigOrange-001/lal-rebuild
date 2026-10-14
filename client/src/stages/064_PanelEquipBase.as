@@ -68,7 +68,8 @@ package com.meng52.game.ui.screen
             "indexID":4
          }],tabBar_Change,tabBar_CREATION_COMPLETE);
          this.mTabBar.y = 17;
-         this.mTabBar.selectedIndex = GlobalData.$tempEquipFunId;
+         // The shared function id is one-based; tab selection is zero-based.
+         this.mTabBar.selectedIndex = GlobalData.$tempEquipFunId > 0 ? Math.min(4,GlobalData.$tempEquipFunId - 1) : 0;
          tabBar_Change(null);
          _bg1 = getImg_headBg(-50);
          addChildAt(_bg1,0);
@@ -116,7 +117,7 @@ package com.meng52.game.ui.screen
       {
          if(mTabBar)
          {
-            mTabBar.selectedIndex = GlobalData.$tempEquipFunId;
+            mTabBar.selectedIndex = GlobalData.$tempEquipFunId > 0 ? Math.min(4,GlobalData.$tempEquipFunId - 1) : 0;
          }
       }
       

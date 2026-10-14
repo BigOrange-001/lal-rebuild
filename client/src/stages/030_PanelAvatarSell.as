@@ -19,6 +19,8 @@ package com.meng52.game.ui.screen
    
    public class PanelAvatarSell extends PanelCenterMainAvatar
    {
+
+      public static const SELL_BATCH_MAX:int = 100;
       
       public static var $tabBarSelectedIndex:int = 0;
       
@@ -404,7 +406,7 @@ package com.meng52.game.ui.screen
             }
             else
             {
-               tempSelect = 10;
+               tempSelect = SELL_BATCH_MAX;
             }
             GlobalData.$tempSellItem = {};
             GlobalData.$tempSell = [];
@@ -468,7 +470,7 @@ package com.meng52.game.ui.screen
       {
          var _loc1_:Array = GlobalData.$tempSell.concat();
          var _loc2_:uint = mSellViewEpoch;
-         if(_loc1_.length == 0)
+         if(_loc1_.length == 0 || _loc1_.length > SELL_BATCH_MAX)
          {
             return;
          }
@@ -587,7 +589,7 @@ package com.meng52.game.ui.screen
          var _loc3_:Number = GlobalData.$tempSell.length;
          var _loc2_:Number = GlobalData.$userData_avatarNum;
          var _loc1_:Number = Number(GlobalData.$userData.attrs.avatar_len);
-         this.setTxtInfo(GlobalLanguageStr.getLanguageStr(20073,_loc3_),GlobalLanguageStr.getLanguageStr(20074,_loc3_,10),GlobalLanguageStr.getLanguageStr(98133,_loc4_,_loc2_,_loc1_));
+         this.setTxtInfo(GlobalLanguageStr.getLanguageStr(20073,_loc3_),GlobalLanguageStr.getLanguageStr(20074,_loc3_,SELL_BATCH_MAX),GlobalLanguageStr.getLanguageStr(98133,_loc4_,_loc2_,_loc1_));
          if(GlobalData.$tempSell.length > 0)
          {
             this.mBtn_sell.enabled = true;

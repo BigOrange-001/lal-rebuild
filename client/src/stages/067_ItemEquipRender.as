@@ -81,7 +81,6 @@ package com.meng52.game.ui.element
                field.height = 27;
                field.fontSize = 17;
                field.autoScale = true;
-               field.wordWrap = false;
                field.hAlign = "left";
             }
             else if(field.text == stepText && stepText != "")

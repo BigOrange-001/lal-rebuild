@@ -23,64 +23,64 @@ package com.meng52.game.ui.screen
    import starling.events.Touch;
    import starling.events.TouchEvent;
    import starling.text.TextField;
-   
+
    public class PanelCenterDNTeam extends PanelBase
    {
-      
+
       public static const DN_XY:Object = {};
-      
+
       private var mTeam:LOL_TeamSet;
-      
+
       private var mTxt_title:TextField;
-      
+
       private var mTxt_HpMax:TextField;
-      
+
       private var mTxt_Damage:TextField;
-      
+
       private var mTxt_DePh:TextField;
-      
+
       private var mTxt_DeMa:TextField;
-      
+
       private var mTxt_dnStone:TextField;
-      
+
       private var mTxt_help:TextField;
-      
+
       private var mStr_HpMax:String = "";
-      
+
       private var mStr_Damage:String = "";
-      
+
       private var mStr_DePh:String = "";
-      
+
       private var mStr_DeMa:String = "";
-      
+
       private var mStr_dnStone:String = "";
-      
+
       private var _txt_coin:LOL_MutilTextFieldIcon;
-      
+
       private var mImg_stone:Image;
-      
+
       private var mBtn_list:LOL_Button;
-      
+
       private var mDN_data:Object;
-      
+
       private var mBox:Sprite;
-      
+
       private var mH_ruler:Number;
-      
+
       private var mData_other:Object;
-      
+
       private var mOther_team:Array;
-      
+
       private var mOther_avatars:Object;
-      
+
       private var mOther_dn:Object;
-      
+
       private var mDnDataPrev:Object;
-      
+
       private var _speakDN:Boolean = true;
-      
+
       private const _DN:String = "dn_";
-      
+
       public function PanelCenterDNTeam(param1:Object = null, param2:Boolean = true)
       {
          setConstXY();
@@ -95,11 +95,11 @@ package com.meng52.game.ui.screen
          }
          super();
       }
-      
+
       public static function check_ndStatus() : void
       {
       }
-      
+
       public static function getDestinyMyAll(param1:String, param2:Array = null, param3:Array = null, param4:Object = null, param5:Object = null, param6:Boolean = false) : Object
       {
          var _loc23_:Object = null;
@@ -224,7 +224,7 @@ package com.meng52.game.ui.screen
             "nameArr":_loc28_
          };
       }
-      
+
       public static function getDestinyMyEvery(param1:String, param2:String, param3:Array, param4:Array = null, param5:Array = null, param6:Object = null, param7:Object = null, param8:Boolean = false) : Object
       {
          var _loc56_:Object = null;
@@ -544,7 +544,7 @@ package com.meng52.game.ui.screen
             "str":_loc21_
          };
       }
-      
+
       public static function getDestinyByDN(param1:String) : Object
       {
          var _loc13_:Array = null;
@@ -664,7 +664,7 @@ package com.meng52.game.ui.screen
          }
          return {"htmlArr":_loc25_};
       }
-      
+
       public static function getDestinyByEquip(param1:String) : Object
       {
          var _loc13_:Object = null;
@@ -740,7 +740,7 @@ package com.meng52.game.ui.screen
          }
          return {"htmlArr":_loc7_};
       }
-      
+
       public static function checkIsInDn(param1:String) : Object
       {
          var _loc3_:Object = null;
@@ -759,7 +759,7 @@ package com.meng52.game.ui.screen
          }
          return _loc2_;
       }
-      
+
       private function setConstXY() : void
       {
          var _loc4_:String = null;
@@ -782,7 +782,7 @@ package com.meng52.game.ui.screen
             }
          }
       }
-      
+
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
          GlobalData.$mEventDispatcher.removeEventListener("update_dn_team_ui",onUPDATE_DN_TEAM_UI);
@@ -845,7 +845,7 @@ package com.meng52.game.ui.screen
          mTxt_help = null;
          GlobalFunction.delTextureByBD("png_team_append_bg");
       }
-      
+
       override protected function initializeHandler(param1:Event) : void
       {
          GlobalData.$mEventDispatcher.addEventListener("update_dn_team_ui",onUPDATE_DN_TEAM_UI);
@@ -869,7 +869,7 @@ package com.meng52.game.ui.screen
             LayoutUIAnimation.getOnlyExample().clearIfNoGuide();
          }
       }
-      
+
       private function setTxtUI() : void
       {
          var _loc1_:Number = 140;
@@ -923,7 +923,7 @@ package com.meng52.game.ui.screen
          check_myDN();
          updateTxt();
       }
-      
+
       private function onTOUCH_help(param1:TouchEvent) : void
       {
          var _loc2_:Touch = null;
@@ -939,12 +939,12 @@ package com.meng52.game.ui.screen
             }
          }
       }
-      
+
       private function onTRIGGERED_list(param1:Event) : void
       {
          GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_PanelDestinyList",false,true);
       }
-      
+
       private function updateTxt() : void
       {
          mDnDataPrev = PanelDetailDN.getDNAttrsAllValue(mData_other == null ? null : mOther_dn);
@@ -969,7 +969,7 @@ package com.meng52.game.ui.screen
             _txt_coin.txt2 = GlobalData.$userData.attrs.dn_stone;
          }
       }
-      
+
       private function onUPDATE_DN_TEAM_UI(param1:Event) : void
       {
          var _loc4_:Number = NaN;
@@ -1033,7 +1033,7 @@ package com.meng52.game.ui.screen
             }
          }
       }
-      
+
       private function check_myDN() : void
       {
          var _loc8_:Object = null;
@@ -1127,7 +1127,7 @@ package com.meng52.game.ui.screen
             }
          }
       }
-      
+
       public function getBettrGiveOther(param1:String) : Object
       {
          var _loc2_:Avatar = new Avatar(param1);
@@ -1141,4 +1141,3 @@ package com.meng52.game.ui.screen
       }
    }
 }
-

@@ -890,13 +890,13 @@
       "index": 148,
       "class": "com.meng52.game.ui.screen.PanelCenterDNTeam",
       "source": "client/src/stages/146_PanelCenterDNTeam.as",
-      "source_sha256": "5fac4135d8e4cc81981164b287c2dfca4bae13681e736fe558c3b5bb646e1492"
+      "source_sha256": "ab80a4786099eefbb172d2c88c4b30d43691db16d46548a0094924e8e181f66b"
     },
     {
       "index": 149,
       "class": "com.meng52.game.ui.element.ItemDNavatar",
       "source": "client/src/stages/147_ItemDNavatar.as",
-      "source_sha256": "36621cca65ef834f51c874466a0e81c8ab5010d66b5f7e960449c365355fb73c"
+      "source_sha256": "cd48c966cf10e9a83731b9ff2725521d619c373c07dc130b9981626d9e165da1"
     }
   ],
   "template_swf": {

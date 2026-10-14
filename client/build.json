@@ -386,7 +386,7 @@
       "index": 64,
       "class": "com.meng52.game.ui.panel.PanelEquipMagic",
       "source": "client/src/stages/062_PanelEquipMagic.as",
-      "source_sha256": "2bfa5c5ab2404e0f64549b1ced3e63ec97f73bc57759910e38fd6f5e0803be2d"
+      "source_sha256": "bfe1687f4ccd810341025a482114474c3b4303b918a80c032ab2f7f0f09bef27"
     },
     {
       "index": 65,
@@ -416,7 +416,7 @@
       "index": 69,
       "class": "com.meng52.game.ui.element.ItemEquipRender",
       "source": "client/src/stages/067_ItemEquipRender.as",
-      "source_sha256": "04c60a10967dba2d62cb337715afccfdefe30a08136cda6c0567c962e7700047"
+      "source_sha256": "06d9bab8c88e60c47fd3c7fb1ab63ba4f6fb7a80690cdc4632030594be837f7b"
     },
     {
       "index": 70,

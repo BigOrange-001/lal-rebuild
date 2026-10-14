@@ -268,7 +268,7 @@ package com.meng52.game.ui.panel
          if(_stage >= 4)
          {
             var _stageButton:LOL_Scale9Button = new LOL_Scale9Button(_stage >= 5 ? "第五阶段已解锁" : "解锁第五阶段",200,48,"UI_btn_normalFun_0000");
-            _stageButton.y = 144;
+            _stageButton.y = 300;
             _stageButton.enabled = _stage < 5;
             if(_stage < 5)
             {
@@ -285,7 +285,7 @@ package com.meng52.game.ui.panel
          param1.addChild(_runeInfo);
          var _runeButton:LOL_Scale9Button = new LOL_Scale9Button(_loc7_.symp < 0 ? "先揭示符文" : _loc7_.runeLv >= _runeMax ? "符文已满级" : "强化符文",200,48,"UI_btn_normalFun_0000");
          _runeButton.x = 210;
-         _runeButton.y = 144;
+         _runeButton.y = 300;
          _runeButton.enabled = _loc7_.symp >= 0 && _loc7_.runeLv < _runeMax;
          if(_runeButton.enabled)
          {

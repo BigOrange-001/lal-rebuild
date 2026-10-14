@@ -29,24 +29,25 @@ package com.meng52.game.ui.panel
 
       public static function autoMaterialPriority(param1:String) : int
       {
-         var _base:String = param1.split("|")[0];
-         switch(_base)
+         return isAutoMinion(param1) ? 0 : 1;
+      }
+
+      public static function isAutoMinion(param1:String) : Boolean
+      {
+         if(param1 == null || GlobalData.$mConfig_avatar == null)
          {
-            case "A_6996_5":
-            case "A_6997_5":
-            case "A_6998_5":
-               return 0;
-            case "A_3001_2":
-            case "A_3002_2":
-            case "A_3003_3":
-            case "A_3004_3":
-               return 1;
-            case "A_4014_5":
-            case "A_4015_6":
-               return 2;
-            default:
-               return 3;
+            return false;
          }
+         var _base:String = param1.split("|")[0];
+         var _parts:Array = _base.split("_");
+         if(_parts.length != 3 || _parts[0] != "A" || GlobalData.$mConfig_avatar[_base] == null)
+         {
+            return false;
+         }
+         // The configured A_3001..A_3008 families are lane minions,
+         // cannon minions and super minions. A_3009/3010 are buildings.
+         var _family:int = int(_parts[1]);
+         return _family >= 3001 && _family <= 3008;
       }
       
       public var mNum_select:int = 0;
@@ -600,7 +601,7 @@ package com.meng52.game.ui.panel
                break;
             }
             _loc14_ = _autoCandidates[_loc8_];
-            if(!matchesBetterRarity(_loc14_["id"]) || _loc14_["auto_blocked"])
+            if(!isAutoMinion(_loc14_["id"]) || !matchesBetterRarity(_loc14_["id"]) || _loc14_["auto_blocked"])
             {
                _loc8_++;
                continue;

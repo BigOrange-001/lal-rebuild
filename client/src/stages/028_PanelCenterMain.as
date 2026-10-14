@@ -1323,9 +1323,19 @@ package com.meng52.game.ui.screen
          }
          else if(_loc5_.name == "center_rune")
          {
-            GlobalData.$shopInByMain = true;
-            GlobalData.$shopType = 2;
-            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_shop_coin");
+            _loc7_ = GlobalFunction.checkGameFunIsOpenByType("equip_fun_magic");
+            if(_loc7_ < 0)
+            {
+               // The center rune entrance selects equipment enchantment, where
+               // the independent elemental-rune upgrade button is available.
+               GlobalData.$tempEquipFunId = 4;
+               GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_change_base");
+            }
+            else
+            {
+               _show_id = GlobalData.$mConfig_simple.show_id[8];
+               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90129,_loc7_),false,_show_id);
+            }
          }
          else if(_loc5_.name == "center_scence")
          {

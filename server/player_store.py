@@ -455,6 +455,9 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    if type(exp) is not int or exp<0:exp=0
    item['halo']={'lv':lv,'exp':exp}
    item['haloLv']=lv;item['haloExp']=exp
+   rune_level=item.get('rune_lv',0)
+   item['rune_lv']=rune_level if type(rune_level) is int and 0<=rune_level<=10 else 0
+   item['magic_stage5']=1 if item.get('magic_stage5')==1 else 0
  def _normalize_check_in_state(self,value):
   """Migrate legacy sign-in state to the fields directly indexed by the client UI."""
   state=dict(value) if isinstance(value,dict) else {}
@@ -707,7 +710,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
      for eid,amount in equipment_rewards.items():
       for _ in range(amount):
        while f'eq{next_index}' in owned:next_index+=1
-       owned[f'eq{next_index}']={'eid':eid,'lv':1,'slv':0,'sexp':0,'new_4attrs':{'hit':0,'flee':0,'crit':0,'tough':0},'halo':{'lv':0,'exp':0},'haloLv':0,'haloExp':0,'alchemy':[0,0]}
+       owned[f'eq{next_index}']={'eid':eid,'lv':1,'slv':0,'sexp':0,'new_4attrs':{'hit':0,'flee':0,'crit':0,'tough':0},'halo':{'lv':0,'exp':0},'haloLv':0,'haloExp':0,'alchemy':[0,0],'rune_lv':0,'magic_stage5':0}
        next_index+=1
     attrs=p.setdefault('attrs',{})
     for key,value in mail_gifts.items():

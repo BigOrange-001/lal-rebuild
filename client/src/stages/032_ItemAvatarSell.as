@@ -88,8 +88,9 @@ package com.meng52.game.ui.element
       {
          if(this.data.status == 0)
          {
-            if(GlobalData.$tempSell.length >= 10)
+            if(GlobalData.$tempSell.length >= PanelAvatarSell.SELL_BATCH_MAX)
             {
+               GlobalFunction.popError("单次最多选择" + PanelAvatarSell.SELL_BATCH_MAX + "个英雄");
                return;
             }
             this.data.status = -1;

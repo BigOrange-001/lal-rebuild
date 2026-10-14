@@ -407,6 +407,18 @@ package com.meng52.game.ui.panel
       
       private function re_equip_sell(param1:Object) : void
       {
+         if(GlobalFunction.isMalformedProfileReceipt(param1))
+         {
+            return;
+         }
+         if(GlobalFunction.isVersionedProfileReceipt(param1) && !GlobalFunction.didApplyProfileStateSync(param1))
+         {
+            return;
+         }
+         if(param1["params"] == null || !(param1["params"]["eqids"] is Array))
+         {
+            return;
+         }
          var _loc5_:int = 0;
          SoundManager.getOnlyExample().playSound("E_9005",0.2);
          SoundManager.getOnlyExample().playSound("E_9021",0.4);

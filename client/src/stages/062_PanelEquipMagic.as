@@ -10,6 +10,8 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.element.LOL_Button;
    import com.meng52.game.ui.element.LOL_IconText;
    import com.meng52.game.ui.element.LOL_MagicButton;
+   import com.meng52.game.ui.element.LOL_Scale9Button;
+   import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendServiceAMFFun;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.StarlingTools;
@@ -192,7 +194,7 @@ package com.meng52.game.ui.panel
          }
          setMyDustUIs();
          mBox_data = new Sprite();
-         mBox_data.touchable = false;
+         mBox_data.touchable = true;
          mBox_data.x = 125;
          mBox_equip.addChild(mBox_data);
          setTxt(mBox_data);
@@ -241,6 +243,7 @@ package com.meng52.game.ui.panel
          var _loc12_:int = 34;
          var _loc10_:int = GlobalData.$mStageWidth * 0.8;
          var _loc11_:TextField = GlobalTextStyle.getTextField(_loc8_,20,16777215,"left",_loc10_,46);
+         _loc11_.touchable = false;
          param1.addChild(_loc11_);
          if(_loc3_ == null)
          {
@@ -248,13 +251,153 @@ package com.meng52.game.ui.panel
          }
          var _loc6_:TextField = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20079,_loc9_),20,16777215,"left",_loc10_,46);
          _loc6_.y = _loc11_.y + _loc12_;
+         _loc6_.touchable = false;
          param1.addChild(_loc6_);
          if(_loc7_.magic != null)
          {
             _loc5_ = getMagicUIs(_loc7_.symp,_loc7_.magic,false);
             _loc5_.y = _loc6_.y + _loc12_;
+            _loc5_.touchable = false;
             param1.addChild(_loc5_);
          }
+         var _stage:int = _loc7_.getMagicStage();
+         var _stageInfo:TextField = GlobalTextStyle.getTextField("附魔 " + _stage + "/5  基础+" + (_stage * 10) + "%",18,16763955,"left",200,32);
+         _stageInfo.y = 108;
+         _stageInfo.touchable = false;
+         param1.addChild(_stageInfo);
+         if(_stage >= 4)
+         {
+            var _stageButton:LOL_Scale9Button = new LOL_Scale9Button(_stage >= 5 ? "第五阶段已解锁" : "解锁第五阶段",200,48,"UI_btn_normalFun_0000");
+            _stageButton.y = 144;
+            _stageButton.enabled = _stage < 5;
+            if(_stage < 5)
+            {
+               _stageButton.addEventListener("triggered",onTRIGGERED_stage5);
+            }
+            param1.addChild(_stageButton);
+         }
+         var _runeMax:int = GlobalData.$mConfig_simple.equipment_magic == null ? 10 : int(GlobalData.$mConfig_simple.equipment_magic.rune_max);
+         var _runeName:String = _loc7_.symp < 0 ? "未揭示" : _loc7_.getSympTypeStr();
+         var _runeInfo:TextField = GlobalTextStyle.getTextField("符文 " + _runeName + " Lv." + _loc7_.runeLv + "/" + _runeMax,18,16763955,"left",200,32);
+         _runeInfo.x = 210;
+         _runeInfo.y = 108;
+         _runeInfo.touchable = false;
+         param1.addChild(_runeInfo);
+         var _runeButton:LOL_Scale9Button = new LOL_Scale9Button(_loc7_.symp < 0 ? "先揭示符文" : _loc7_.runeLv >= _runeMax ? "符文已满级" : "强化符文",200,48,"UI_btn_normalFun_0000");
+         _runeButton.x = 210;
+         _runeButton.y = 144;
+         _runeButton.enabled = _loc7_.symp >= 0 && _loc7_.runeLv < _runeMax;
+         if(_runeButton.enabled)
+         {
+            _runeButton.addEventListener("triggered",onTRIGGERED_rune);
+         }
+         param1.addChild(_runeButton);
+      }
+
+      private function onTRIGGERED_rune(param1:Event) : void
+      {
+         var _eid:String = GlobalData.$tempEquipCurrSelected;
+         var _item:Object = GlobalData.$userData.my_equips[_eid];
+         if(_item == null)
+         {
+            return;
+         }
+         var _equip:Equip = new Equip(_eid,_item);
+         var _rules:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var _color:int = _equip.symp;
+         var _level:int = _equip.runeLv;
+         var _max:int = _rules == null ? 10 : int(_rules.rune_max);
+         if(_color < 0 || _color >= 4 || _level >= _max)
+         {
+            return;
+         }
+         var _dustCost:int = int(_rules.rune_dust_base) + _level;
+         var _markCost:int = int(_rules.rune_mark_step) * (_level + 1);
+         var _dust:Array = GlobalData.$userData.attrs.dust as Array;
+         var _name:Array = GlobalLanguageStr.getLanguageStr(90197).split("$");
+         var _gainNames:Array = ["生命","攻击","物抗","魔抗"];
+         var _gains:Array = _rules.rune_stat_per_level as Array;
+         var _gain:int = _gains == null || _gains.length <= _color ? 0 : int(_gains[_color]);
+         var _message:String = "强化" + _equip.getSympTypeStr() + "符文至 Lv." + (_level + 1) + "，本件" + _gainNames[_color] + "+" + _gain + "。消耗" + _name[_color] + "粉尘 " + _dustCost + "、炼金印记 " + _markCost + "。";
+         if(_dust == null || _dust.length <= _color || int(_dust[_color]) < _dustCost || int(GlobalData.$userData.mark) < _markCost)
+         {
+            GlobalFunction.popAlert("",_message + "\n材料不足。");
+            return;
+         }
+         GlobalFunction.popAlert("",_message,{
+            "ok":function():void
+            {
+               SendServiceAMFFun.send_user_equip_rune_up(re_equip_rune_up,{"eqid":_eid});
+            },
+            "no":GlobalFunction.functionNull
+         });
+      }
+
+      private function re_equip_rune_up(param1:Object) : void
+      {
+         if(GlobalFunction.isMalformedProfileReceipt(param1) || !GlobalFunction.didApplyProfileStateSync(param1))
+         {
+            return;
+         }
+         var _request:Object = param1["params"];
+         var _eid:String = _request == null ? "" : String(_request["eqid"]);
+         if(_eid == "" || mCurrEquip == null || mCurrEquip.data.id != _eid || GlobalData.$userData.my_equips[_eid] == null)
+         {
+            return;
+         }
+         setMyDustUIs(true);
+         setTxt(mBox_data,true);
+         setDustBtn(mBox_team,true);
+         var _updated:Object = GlobalData.$userData.my_equips[_eid];
+         _updated["id"] = _eid;
+         _updated["status"] = -1;
+         _updated["score"] = true;
+         mCurrEquip.data = _updated;
+         GlobalData.$tempTeamPowerTemp = GlobalFunction.getTeamPower(GlobalData.$userData.team[0]);
+         LayoutUIAnimation.getOnlyExample().popWords("符文强化成功 Lv." + int(_updated.rune_lv));
+      }
+
+      private function onTRIGGERED_stage5(param1:Event) : void
+      {
+         toMagic(4);
+      }
+
+      private function toStage5() : void
+      {
+         var _eid:String = GlobalData.$tempEquipCurrSelected;
+         var _item:Object = GlobalData.$userData.my_equips[_eid];
+         if(_item == null || new Equip(_eid,_item).getMagicStage() != 4)
+         {
+            return;
+         }
+         var _rules:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var _cost:Array = _rules == null ? null : _rules.stage5_cost as Array;
+         var _dust:Array = GlobalData.$userData.attrs.dust as Array;
+         if(_cost == null || _cost.length != 4 || _dust == null || _dust.length < 4)
+         {
+            return;
+         }
+         var _enough:Boolean = true;
+         for(var _i:int = 0; _i < 4; _i++)
+         {
+            if(int(_dust[_i]) < int(_cost[_i]))
+            {
+               _enough = false;
+            }
+         }
+         var _message:String = "第五阶段消耗绿/蓝/紫/橙粉尘 " + _cost.join("/") + "，基础主属性累计提升50%。";
+         if(!_enough)
+         {
+            GlobalFunction.popAlert("",_message + "\n粉尘不足。");
+            return;
+         }
+         GlobalFunction.popAlert("",_message,{
+            "ok":function():void
+            {
+               SendServiceAMFFun.send_user_add_magic(re_add_magic,{"eqid":_eid,"color":4,"dust":_cost});
+            },
+            "no":GlobalFunction.functionNull
+         });
       }
       
       private function setMyDustUIs(param1:Boolean = false) : void
@@ -320,12 +463,17 @@ package com.meng52.game.ui.panel
       
       public function toMagic(param1:int) : void
       {
+         if(param1 == 4)
+         {
+            toStage5();
+            return;
+         }
          var _fun:Object;
          var _index:int = param1;
          var gotoEquipSell:* = function():void
          {
             onCLOSE_PANEL_SELF(null);
-            GlobalData.$tempEquipFunId = 4;
+            GlobalData.$tempEquipFunId = 5;
             GlobalData.$mEventDispatcher.dispatchEventWith("update_panel_equipbase_index");
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_change_base");
          };
@@ -410,6 +558,20 @@ package com.meng52.game.ui.panel
          var _loc12_:String = _loc15_["eqid"];
          if(GlobalData.$userData.my_equips[_loc12_] == null)
          {
+            return;
+         }
+         if(_loc5_ == 4)
+         {
+            setMyDustUIs(true);
+            setTxt(mBox_data,true);
+            setDustBtn(mBox_team,true);
+            var _updated:Object = GlobalData.$userData.my_equips[_loc12_];
+            _updated["id"] = _loc12_;
+            _updated["status"] = -1;
+            _updated["score"] = true;
+            mCurrEquip.data = _updated;
+            GlobalData.$tempTeamPowerTemp = GlobalFunction.getTeamPower(GlobalData.$userData.team[0]);
+            LayoutUIAnimation.getOnlyExample().popWords("第五阶段已解锁，基础属性提升50%");
             return;
          }
          var _loc10_:int = int(GlobalData.$userData.my_equips[_loc12_]["symp"] == null ? -1 : GlobalData.$userData.my_equips[_loc12_]["symp"]);

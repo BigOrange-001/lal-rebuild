@@ -43,6 +43,10 @@ package com.meng52.game.module.equip
       public var symp:int;
       
       public var magic:Array;
+
+      public var magicStage5:int = 0;
+
+      public var runeLv:int = 0;
       
       public var mDestiny:Object;
       
@@ -56,7 +60,6 @@ package com.meng52.game.module.equip
          var _loc3_:Array = null;
          var _loc4_:String = null;
          super();
-         my_data = param2;
          if(param1.indexOf("_") >= 0)
          {
             m_data = EquipManager.getOnlyExample().getData(param1);
@@ -70,6 +73,7 @@ package com.meng52.game.module.equip
             id = param1;
             m_data = EquipManager.getOnlyExample().getData(param2.eid);
          }
+         my_data = param2;
          if(my_data != null && my_data.hasOwnProperty("alchemy"))
          {
             _loc5_ = GlobalData.$mConfig_simple.equip_alchemy;
@@ -658,6 +662,41 @@ package com.meng52.game.module.equip
          return _loc1_ * _loc4_;
       }
 
+      public function getMagicStage() : int
+      {
+         var _stage:int = 0;
+         if(magic == null)
+         {
+            return 0;
+         }
+         for(var _i:int = 0; _i < 4; _i++)
+         {
+            if(_i >= magic.length || int(magic[_i]) <= 0)
+            {
+               break;
+            }
+            _stage++;
+         }
+         return _stage == 4 && magicStage5 == 1 ? 5 : _stage;
+      }
+
+      public function getMagicMainStatRate() : Number
+      {
+         var _rules:Object = GlobalData.$mConfig_simple.equipment_magic;
+         return 1 + getMagicStage() * (_rules == null || _rules.stage_main_stat_step == undefined ? 0 : Number(_rules.stage_main_stat_step));
+      }
+
+      public function getRuneBonus(param1:int) : int
+      {
+         if(symp != param1 || runeLv <= 0)
+         {
+            return 0;
+         }
+         var _rules:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var _gains:Array = _rules == null ? null : _rules.rune_stat_per_level as Array;
+         return _gains == null || param1 >= _gains.length ? 0 : runeLv * Math.max(0,int(_gains[param1]));
+      }
+
       public function getHpMax(param1:int = -1, param2:Boolean = false) : int
       {
          if(param1 < 0)
@@ -665,10 +704,10 @@ package com.meng52.game.module.equip
             param1 = lv;
          }
          var _loc3_:EquipData = equipData;
-         var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.hp0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate);
+         var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.hp0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate * getMagicMainStatRate());
          if(param2)
          {
-            _loc4_ += getMagicBonus(0) + getMagicBonus(2);
+            _loc4_ += getMagicBonus(0) + getMagicBonus(2) + getRuneBonus(0);
          }
          return _loc4_;
       }
@@ -680,10 +719,10 @@ package com.meng52.game.module.equip
             param1 = lv;
          }
          var _loc3_:EquipData = equipData;
-         var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.ap0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate);
+         var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.ap0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate * getMagicMainStatRate());
          if(param2)
          {
-            _loc4_ += getMagicBonus(1) + getMagicBonus(3);
+            _loc4_ += getMagicBonus(1) + getMagicBonus(3) + getRuneBonus(1);
          }
          return _loc4_;
       }
@@ -695,7 +734,7 @@ package com.meng52.game.module.equip
             param1 = lv;
          }
          var _loc2_:EquipData = equipData;
-         return Tools.toInt(getNativeStatGrowth(param1) * _loc2_.d10 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate);
+         return Tools.toInt(getNativeStatGrowth(param1) * _loc2_.d10 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate * getMagicMainStatRate()) + getRuneBonus(2);
       }
       
       public function getDeMa(param1:int = -1) : int
@@ -705,7 +744,7 @@ package com.meng52.game.module.equip
             param1 = lv;
          }
          var _loc2_:EquipData = equipData;
-         return Tools.toInt(getNativeStatGrowth(param1) * _loc2_.d20 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate);
+         return Tools.toInt(getNativeStatGrowth(param1) * _loc2_.d20 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate * getMagicMainStatRate()) + getRuneBonus(3);
       }
       
       public function getSpeed() : int
@@ -739,6 +778,8 @@ package com.meng52.game.module.equip
             }
             symp = param1.symp == undefined ? -1 : param1.symp;
             magic = param1.magic == undefined ? [0,0,0,0] : param1.magic;
+            magicStage5 = param1.magic_stage5 == 1 ? 1 : 0;
+            runeLv = param1.rune_lv == undefined ? 0 : Math.max(0,int(param1.rune_lv));
          }
          else
          {
@@ -747,6 +788,8 @@ package com.meng52.game.module.equip
             sexp = 0;
             symp = -1;
             magic = [0,0,0,0];
+            magicStage5 = 0;
+            runeLv = 0;
          }
          if(lv <= 0)
          {

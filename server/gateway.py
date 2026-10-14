@@ -58,6 +58,15 @@ GAMEPLAY_ERROR_MESSAGES_ZH={
  'WagerCooldown':'免费招募尚未冷却完成。','WrongEquipmentSlot':'该装备不适用于所选槽位。',
  'CheckInUnavailable':'本月签到奖励暂不可用，请稍后再试。','FundUnavailable':'基金活动当前没有可用奖励。','GambleUnavailable':'当前抽奖活动暂不可用。','InvalidBattle':'探索状态已变化，请返回地图刷新后再试。','InvalidBoxExchange':'宝箱或钥匙兑换选项无效。','InvalidBoxKey':'宝箱或钥匙类型无效。','InvalidCode':'兑换码无效或已过期。','InvalidDifficulty':'关卡难度无效，请返回关卡列表重新选择。','InvalidExchange':'兑换选项无效，请刷新后重试。','InvalidGamble':'抽取档位无效，请重新选择。','InvalidShop':'商店选项无效，请重新打开商店。','InvalidShopItem':'商品信息已过期，请重新打开商店。','InvalidTeam':'队伍需由1至5名不同英雄组成。','UnknownExchange':'该兑换项目当前不可用。','PayGiftUnavailable':'充值赠送奖励配置暂不可用。','InvalidRankReward':'榜单奖励档位无效，请重新打开奖励面板。','InvalidStage':'关卡或难度信息无效，请返回关卡列表重试。','InvalidPayProduct':'充值档位无效，请重新打开充值页面。','UnknownStage':'关卡数据无效，请返回关卡列表刷新。','UnknownFight':'战斗记录已过期或不属于当前账号，请返回后重新挑战。','MissingFight':'缺少本场战斗记录，请重新开始挑战。'
 }
+GAMEPLAY_ERROR_MESSAGES_ZH.update({
+ 'EquipmentLocked':'装备已锁定，请先解锁后再操作。',
+ 'HeroLocked':'英雄已锁定，请先解锁后再出售。',
+ 'MagicLocked':'请先解锁前一附魔阶段。',
+ 'MagicAtMaximum':'该附魔阶段已达到上限。',
+ 'RuneLocked':'请先附魔装备，激活风林火山符文。',
+ 'RuneAtMaximum':'该装备符文已强化至满级。',
+})
+
 def gameplay_fault_message(error):
  return GAMEPLAY_ERROR_MESSAGES_ZH.get(error.code,error.message)
 

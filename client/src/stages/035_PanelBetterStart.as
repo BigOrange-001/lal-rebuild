@@ -1277,11 +1277,11 @@ package com.meng52.game.ui.panel
                break;
             }
             _loc17_ = _loc3_[_loc11_];
-         if(!PanelBetterSelect.matchesBetterRarity(_loc17_["id"]) || _loc17_["auto_blocked"])
-         {
-            _loc11_++;
-            continue;
-         }
+            if(!PanelBetterSelect.isAutoMinion(_loc17_["id"]) || !PanelBetterSelect.matchesBetterRarity(_loc17_["id"]) || _loc17_["auto_blocked"])
+            {
+               _loc11_++;
+               continue;
+            }
             if(!_loc17_["lock"])
             {
                _loc1_ = new Avatar(_loc17_["id"]);

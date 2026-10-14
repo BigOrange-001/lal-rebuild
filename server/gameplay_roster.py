@@ -13,7 +13,8 @@ from gameplay_common import grant_reward, ensure_hero_acquirable, skin_acquisiti
 from pve_modes import exploration_stages
 from equipment_magic import (
     stat_bonus as magic_stat_bonus, symp_bonuses as magic_symp_bonuses,
-    upgrade_cost as magic_upgrade_cost,
+    upgrade_cost as magic_upgrade_cost, main_stat_multiplier as magic_main_stat_multiplier,
+    rune_bonus as equipment_rune_bonus, rune_upgrade_cost as equipment_rune_upgrade_cost,
 )
 from equipment_growth_v2 import (
     alchemy_upgrade_steps as equipment_alchemy_upgrade_steps,
@@ -50,6 +51,7 @@ class GameplayRosterEquipment:
         "user.soul_exchange_equip", "user.compose_fragment", "user.equip_dress",
         "user.equip_rise", "user.equip_wash", "user.equip_wash_cancel",
         "user.equip_wash_save", "user.equip_sell", "user.equip_alchemy", "user.add_magic",
+        "user.equip_rune_up",
         "user.set_defensive_squad", "user.get_newzone_ranks",
     }
     CURRENCY = {"gold", "coin", "score", "medal", "mark"}
@@ -746,7 +748,7 @@ class GameplayRosterEquipment:
         raw_methods = {
             "user.sell_avatars", "user.swallow_avatar", "user.swallow_skillbook",
             "user.star_up", "user.phase_up", "user.morph", "user.equip_rise",
-            "user.equip_wash", "user.add_magic", "user.equip_sell",
+            "user.equip_wash", "user.add_magic", "user.equip_rune_up", "user.equip_sell",
             "user.equip_alchemy", "user.wager_avatar",
         }
         if method in raw_methods:
@@ -966,12 +968,15 @@ class GameplayRosterEquipment:
 
     def _sell_avatars(self, p, x):
         aids = x.get("aids", x.get("ids", []))
-        if not isinstance(aids, list) or not aids: self._fail("InvalidSelection", "Select at least one hero")
+        if not isinstance(aids, list) or not 1 <= len(aids) <= 100:
+            self._fail("InvalidSelection", "Select between one and 100 heroes")
         keys = []
         for aid in aids:
-            hid, _ = self._hero(p, aid)
+            hid, hero = self._hero(p, aid)
             self._check_not_pending_culture(p, hid)
             if hid in keys: self._fail("InvalidSelection", "Duplicate hero selection")
+            if hero.get("lock"):
+                self._fail("HeroLocked", "Unlock the hero before selling")
             self._check_not_team(p, hid)
             self._check_not_dn(p, hid)
             keys.append(hid)
@@ -1076,21 +1081,61 @@ class GameplayRosterEquipment:
                     if cfg and slot not in valid_slots: self._fail("WrongEquipmentSlot", "Equipment does not fit this slot")
             self._team_response(p); p["as_equips"] = copy.deepcopy(data)
             return {"as_equips": p["as_equips"], "my_equips": p["my_equips"]}
+        if m == "user.equip_rune_up":
+            eqid, item = self._equip(p, self._id(x.get("eqid"), "eqid"))
+            color = item.get("symp", -1)
+            if type(color) is not int or not 0 <= color < 4:
+                self._fail("RuneLocked", "Reveal this equipment's elemental rune by enchanting first")
+            try:
+                level = int(item.get("rune_lv", 0) or 0)
+            except (TypeError, ValueError, OverflowError):
+                self._fail("InvalidEquipment", "Equipment rune level is invalid")
+            max_level = int(self.simple.get("equipment_magic", {}).get("rune_max", 10))
+            if level < 0 or max_level < 1 or max_level > 100:
+                self._fail("InvalidConfig", "Equipment rune level configuration is invalid")
+            if level >= max_level:
+                self._fail("RuneAtMaximum", "Equipment rune is already at maximum level")
+            dust_cost, mark_cost = equipment_rune_upgrade_cost(self.simple, color, level)
+            attrs = p.setdefault("attrs", {})
+            dust = attrs.setdefault("dust", [0, 0, 0, 0])
+            if not isinstance(dust, list):
+                dust = [int(dust), 0, 0, 0]
+                attrs["dust"] = dust
+            while len(dust) < 4: dust.append(0)
+            if int(dust[color]) < dust_cost:
+                self._fail("InsufficientResource", "Not enough matching elemental dust")
+            self._cost(p, {"mark": mark_cost})
+            dust[color] = int(dust[color]) - dust_cost
+            item["rune_lv"] = level + 1
+            return copy.deepcopy(item)
         if m == "user.add_magic":
             eqid, item = self._equip(p, self._id(x.get("eqid"), "eqid"))
-            color = self._num(x.get("color"), "color", 0, 3)
+            color = self._num(x.get("color"), "color", 0, 4)
             dust_cfg = self.simple.get("dust", {})
             costs = ((dust_cfg.get("add_magic") or [[1, 1, 1, 1]])[0])
             caps = dust_cfg.get("max", [100, 100, 100, 100])
-            if color >= len(costs) or color >= len(caps): self._fail("InvalidConfig", "Equipment magic config is incomplete")
             magic = list(item.get("magic") or [0, 0, 0, 0])
             magic = (magic + [0, 0, 0, 0])[:4]
-            if int(magic[color]) >= int(caps[color]): self._fail("MagicAtMaximum", "This equipment magic stat is already at maximum")
-            if color > 0 and int(magic[color - 1]) <= 0:
-                self._fail("MagicLocked", "Upgrade the preceding enchantment tier first")
             dust = p.setdefault("attrs", {}).setdefault("dust", [0, 0, 0, 0])
             if not isinstance(dust, list): dust = [int(dust), 0, 0, 0]; p["attrs"]["dust"] = dust
             while len(dust) < 4: dust.append(0)
+            if color == 4:
+                if any(int(level) <= 0 for level in magic):
+                    self._fail("MagicLocked", "Unlock all four elemental stages first")
+                if item.get("magic_stage5") == 1:
+                    self._fail("MagicAtMaximum", "The fifth enchantment stage is already unlocked")
+                stage_cost = self.simple.get("equipment_magic", {}).get("stage5_cost")
+                if not isinstance(stage_cost, list) or len(stage_cost) != 4 or any(type(v) is not int or v <= 0 for v in stage_cost):
+                    self._fail("InvalidConfig", "Fifth-stage enchantment cost is invalid")
+                if any(int(dust[i]) < stage_cost[i] for i in range(4)):
+                    self._fail("InsufficientResource", "Not enough elemental dust")
+                for i in range(4): dust[i] = int(dust[i]) - stage_cost[i]
+                item["magic_stage5"] = 1
+                return copy.deepcopy(item)
+            if color >= len(costs) or color >= len(caps): self._fail("InvalidConfig", "Equipment magic config is incomplete")
+            if int(magic[color]) >= int(caps[color]): self._fail("MagicAtMaximum", "This equipment magic stat is already at maximum")
+            if color > 0 and int(magic[color - 1]) <= 0:
+                self._fail("MagicLocked", "Upgrade the preceding enchantment tier first")
             cost = magic_upgrade_cost(self.simple, color, int(magic[color]))
             if int(dust[color]) < cost: self._fail("InsufficientResource", "Not enough dust")
             dust[color] = int(dust[color]) - cost
@@ -1350,7 +1395,9 @@ class GameplayRosterEquipment:
             replacement["lv"], replacement["exp"] = self._level_from_exp(
                 total_exp, self._hero_level_cap(next_aid, replacement), next_aid, promoted_rate
             )
-            replacement.update({"id": promoted_id, "aid": promoted_id})
+            # Star promotion starts the new star at phase zero, as in the
+            # native promotion preview; ordinary phase ascension is separate.
+            replacement.update({"id": promoted_id, "aid": promoted_id, "phase": 0})
             # A 4->5 promotion crosses into weighted cultivation. Convert its
             # carried raw points using the promoted template once; an already
             # weighted 5->6 hero keeps its actual gains unchanged.
@@ -1373,12 +1420,15 @@ class GameplayRosterEquipment:
             return copy.deepcopy(replacement)
         if m == "user.sell_avatars":
             aids = x.get("aids", x.get("ids", []))
-            if not isinstance(aids, list) or not aids: self._fail("InvalidSelection", "Select at least one hero")
+            if not isinstance(aids, list) or not 1 <= len(aids) <= 100:
+                self._fail("InvalidSelection", "Select between one and 100 heroes")
             keys = []
             for aid in aids:
-                hid, _ = self._hero(p, aid)
+                hid, hero = self._hero(p, aid)
                 self._check_not_pending_culture(p, hid)
                 if hid in keys: self._fail("InvalidSelection", "Duplicate hero selection")
+                if hero.get("lock"):
+                    self._fail("HeroLocked", "Unlock the hero before selling")
                 self._check_not_team(p, hid); self._check_not_dn(p, hid); keys.append(hid)
             gain = 0
             for hid in keys:
@@ -1720,11 +1770,16 @@ class GameplayRosterEquipment:
             ids = x.get("eqids")
             if not isinstance(ids, list) or not ids: self._fail("InvalidSelection", "Select equipment to sell")
             unique = set(); gold_gain = 0; mark_gain = 0; dust_gain = [0, 0, 0, 0]
+            pending_wash = p.get("attrs", {}).get("equip_wash")
             for v in ids:
                 eqid, item = self._equip(p, v)
                 if eqid in unique: self._fail("InvalidSelection", "Duplicate equipment")
                 unique.add(eqid)
                 if any(eqid in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip an item before selling")
+                if item.get("lock"):
+                    self._fail("EquipmentLocked", "Unlock an item before selling")
+                if isinstance(pending_wash, dict) and pending_wash.get("eqid") == eqid:
+                    self._fail("PendingOperation", "Save or cancel the equipment wash before selling")
                 gold, mark, dust = self._equip_sell_rewards(item)
                 gold_gain += gold
                 mark_gain += mark
@@ -1749,7 +1804,12 @@ class GameplayRosterEquipment:
             if self._equip_star(target) >= max_star:
                 self._fail("MaxGrowth", "Equipment has reached its alchemy limit")
             if any(mat_id in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip material first")
+            if mat.get("lock"):
+                self._fail("EquipmentLocked", "Unlock material equipment before alchemy")
             if target.get("eid") != mat.get("eid"): self._fail("IncompatibleEquipment", "Only matching equipment can be combined")
+            min_star = int(self.simple.get("equip_alchemy", {}).get("equip_al", 0))
+            if self._equip_star(target) < min_star or self._equip_star(mat) != self._equip_star(target):
+                self._fail("IncompatibleEquipment", "Alchemy requires matching equipment at the same star")
             # The alchemy panel explicitly previews the sacrifice's ordinary
             # sale proceeds (gold, marks, and dust). It is a refund, not a
             # gold fee; return those exact amounts in the normal profile-data
@@ -1814,6 +1874,8 @@ class GameplayRosterEquipment:
             "haloLv": 0,
             "haloExp": 0,
             "alchemy": [0, 0],
+            "rune_lv": 0,
+            "magic_stage5": 0,
             "stat_roll_ppm": 1_000_000 if is_book else roll_for_new_item(self.rng, eid in exclusive_ids),
             "equipment_v2_version": 1,
             "wash_schema_version": 1,
@@ -2205,14 +2267,17 @@ class GameplayRosterEquipment:
                 halo_lv = max(0, int(halo.get("lv", inst.get("haloLv", 0))))
                 halo_rate = 1 + (float(equip_wash[4]) if isinstance(equip_wash, list) and len(equip_wash) > 4 else 0) * halo_lv
                 alchemy_rate = self._equip_alchemy_rate(inst, 0) if "alchemy" in inst else 1.0
+                rune_stats = equipment_rune_bonus(self.simple, inst)
                 for k, idx in (("hp", 0), ("ap", 1), ("de_ph", 2), ("de_ma", 3)):
                     if len(vals) > idx:
                         base = equipment_main_stat(float(vals[idx]), equipment_level, equip_simple, inst,
-                                                   halo_rate=halo_rate, alchemy_rate=alchemy_rate)
+                                                   halo_rate=halo_rate, alchemy_rate=alchemy_rate,
+                                                   magic_rate=magic_main_stat_multiplier(self.simple, inst))
                         if idx in (0, 1):
                             magic = inst.get("magic", [0, 0, 0, 0])
                             if isinstance(magic, list) and len(magic) >= 4:
                                 base += magic_stat_bonus(self.simple, magic)[k]
+                        base += rune_stats[k]
                         stats[k] += base
                 wash = equipment_wash_stats(inst, ecfg, equip_simple)
                 for stat_key in ("hit", "flee", "crit", "tough"):

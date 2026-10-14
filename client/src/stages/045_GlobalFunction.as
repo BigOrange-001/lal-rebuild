@@ -4309,7 +4309,7 @@ package com.meng52.game.global
       {
          var disassemble:* = function():void
          {
-            GlobalData.$tempEquipFunId = 4;
+            GlobalData.$tempEquipFunId = 5;
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_change_base");
             GlobalData.$mGameClassObject.closePopForPanel();
          };

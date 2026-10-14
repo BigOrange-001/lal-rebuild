@@ -128,7 +128,7 @@ package
             startupConfig.init();
             if(Capabilities.manufacturer.indexOf("Android") != -1)
             {
-               MainConfig.VERSION_CURR = "1.0.0";
+               MainConfig.VERSION_CURR = "1.0.1";
             }
             this.checkClearLocalStore();
             this.stage.quality = "low";
@@ -189,7 +189,7 @@ package
          }
          if($XML_init.hasOwnProperty("version"))
          {
-            MainConfig.VERSION_CURR = GlobalStaticConst.$isAndroid ? "1.0.0" : $XML_init.version;
+            MainConfig.VERSION_CURR = GlobalStaticConst.$isAndroid ? "1.0.1" : $XML_init.version;
          }
          if($XML_init.hasOwnProperty("height"))
          {
@@ -275,7 +275,7 @@ package
       {
          if(GlobalStaticConst.$isAndroid)
          {
-            MainConfig.VERSION_CURR = "1.0.0";
+            MainConfig.VERSION_CURR = "1.0.1";
             MainConfig.server_address_group();
          }
          if(MainConfig.$isTest)

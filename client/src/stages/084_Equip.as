@@ -707,9 +707,9 @@ package com.meng52.game.module.equip
          var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.hp0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate * getMagicMainStatRate());
          if(param2)
          {
-            _loc4_ += getMagicBonus(0) + getMagicBonus(2) + getRuneBonus(0);
+            _loc4_ += getMagicBonus(0) + getMagicBonus(2);
          }
-         return _loc4_;
+         return _loc4_ + getRuneBonus(0);
       }
       
       public function getDamage(param1:int = -1, param2:Boolean = false) : int
@@ -722,9 +722,9 @@ package com.meng52.game.module.equip
          var _loc4_:int = Tools.toInt(getNativeStatGrowth(param1) * _loc3_.ap0 * getPersistedStatRollRate() * getHaloUpAttrs() * _Properties_rate * getMagicMainStatRate());
          if(param2)
          {
-            _loc4_ += getMagicBonus(1) + getMagicBonus(3) + getRuneBonus(1);
+            _loc4_ += getMagicBonus(1) + getMagicBonus(3);
          }
-         return _loc4_;
+         return _loc4_ + getRuneBonus(1);
       }
       
       public function getDePh(param1:int = -1) : int

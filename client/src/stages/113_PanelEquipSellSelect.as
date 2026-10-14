@@ -402,16 +402,12 @@ package com.meng52.game.ui.panel
       
       private function service_sell() : void
       {
-         SendServiceAMFFun.send_user_equip_sell(re_equip_sell,{"eqids":GlobalData.$tempEquipSellArr});
+         SendServiceAMFFun.send_user_equip_sell(re_equip_sell,{"eqids":GlobalData.$tempEquipSellArr.concat()});
       }
       
       private function re_equip_sell(param1:Object) : void
       {
          if(GlobalFunction.isMalformedProfileReceipt(param1))
-         {
-            return;
-         }
-         if(GlobalFunction.isVersionedProfileReceipt(param1) && !GlobalFunction.didApplyProfileStateSync(param1))
          {
             return;
          }
@@ -424,7 +420,7 @@ package com.meng52.game.ui.panel
          SoundManager.getOnlyExample().playSound("E_9021",0.4);
          var _loc2_:Array = param1.data;
          var _loc4_:Object = param1["params"];
-         var _loc3_:Array = _loc4_["eqids"];
+         var _loc3_:Array = _loc4_["eqids"].concat();
          if(!GlobalFunction.isVersionedProfileReceipt(param1))
          {
             GlobalData.$userData.mark = _loc2_[0];
@@ -437,15 +433,16 @@ package com.meng52.game.ui.panel
             }
             GlobalData.$userData.attrs.dust = _loc2_[2];
          }
-         else
+         // Versioned receipts never write profile fields here. Even when a
+         // newer snapshot arrived first, this successful request must clear
+         // its sold IDs from transient selection and refresh the open view.
+         for each(var _soldId:String in _loc3_)
          {
-            for each(var _soldId:String in _loc3_)
+            var _selectedIndex:int = GlobalData.$tempEquipSellArr.indexOf(_soldId);
+            while(_selectedIndex >= 0)
             {
-               var _selectedIndex:int = GlobalData.$tempEquipSellArr.indexOf(_soldId);
-               if(_selectedIndex >= 0)
-               {
-                  GlobalData.$tempEquipSellArr.splice(_selectedIndex,1);
-               }
+               GlobalData.$tempEquipSellArr.splice(_selectedIndex,1);
+               _selectedIndex = GlobalData.$tempEquipSellArr.indexOf(_soldId);
             }
          }
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();

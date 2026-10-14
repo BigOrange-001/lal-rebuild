@@ -59,7 +59,7 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 
 脚本依次编译 `client/build.json` 声明的 ActionScript 类，将游戏资源与生成的 SWF 交给官方 ADT 打包，并验证 APK 签名与资源。首次打包需要网络获取工具链所需的依赖；构建结果留在被 Git 忽略的 `build` 目录；打包中间文件使用系统临时目录。
 
-默认输出为 `build/lal-rebuild-1.0.0.apk`，包含 ARM 32 位和 ARM 64 位运行库。模拟器需要支持其中一种 ABI；只支持 x86/x64 且没有 ARM 兼容层的模拟器不能直接运行这个包。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
+默认输出为 `build/lal-rebuild-1.0.1.apk`，包含 ARM 32 位和 ARM 64 位运行库。模拟器需要支持其中一种 ABI；只支持 x86/x64 且没有 ARM 兼容层的模拟器不能直接运行这个包。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
 
 需要自行签名时可使用 `--keystore`，并通过 `--storepass-env`、`--keypass-env` 指定保存密码的环境变量名称；省略时脚本交互询问密码。只有 SDK 需要外部 Android SDK 时才额外传入 `--android-sdk`。
 
@@ -71,14 +71,14 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 
 ```powershell
 adb devices
-adb install -r .\build\lal-rebuild-1.0.0.apk
+adb install -r .\build\lal-rebuild-1.0.1.apk
 adb reverse tcp:8080 tcp:8080
 adb reverse --list
 ```
 
 连接了多台设备时，为每条 ADB 命令添加 `-s 设备序列号`。
 
-此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.0。
+此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.1。
 
 保持服务器运行，打开游戏，在本地登录界面注册账号并登录即可开始游玩。设备断开或重启后重新执行端口映射。网络错误时依次检查服务器窗口、`/health` 和 `adb reverse --list`。
 

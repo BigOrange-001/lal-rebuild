@@ -69,18 +69,37 @@ def resolved_repo_path(value: str, label: str) -> Path:
     return require_file(path, label)
 
 
+def validate_runtime_version(source_text: str, version: str) -> None:
+    # Preserve strings while removing comments, so a commented assignment
+    # cannot stand in for a missing Android startup version.
+    code = re.sub(
+        r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|//[^\r\n]*|/\*[\s\S]*?\*/',
+        lambda match: "" if match.group().startswith(("//", "/*")) else match.group(),
+        source_text,
+    )
+    versions = re.findall(
+        r'^[ \t]*MainConfig\.VERSION_CURR\s*=\s*'
+        r'(?:GlobalStaticConst\.\$isAndroid\s*\?\s*)?["\']([^"\']+)["\']',
+        code,
+        flags=re.MULTILINE,
+    )
+    if len(versions) != 3 or any(value != version for value in versions):
+        raise ValueError(f"MainLLOL runtime versions must all match VERSION {version}; found {versions}")
+
+
 def read_build_config() -> tuple[dict, str, Path, Path, Path]:
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
     version = VERSION_FILE.read_text(encoding="utf-8").strip()
     if config.get("schema") != "lal-client-build-v2":
         raise ValueError("Unsupported client/build.json schema")
-    if config.get("version") != version or version != "1.0.0":
-        raise ValueError("This repository is pinned to VERSION 1.0.0")
+    if config.get("version") != version:
+        raise ValueError("client/build.json version must match VERSION")
     stages = config.get("stages", [])
     if not isinstance(stages, list) or not stages or config.get("stage_count") != len(stages):
         raise ValueError("stage_count must match the non-empty ordered stages list")
     if config.get("unique_class_count") != len({stage.get("class") for stage in stages}):
         raise ValueError("unique_class_count must match the qualified classes in stages")
+    runtime_source_text = None
     for index, stage in enumerate(stages, start=1):
         if stage.get("index") != index:
             raise ValueError(f"Build stage order is not contiguous at stage {index}")
@@ -95,6 +114,11 @@ def read_build_config() -> tuple[dict, str, Path, Path, Path]:
             raise ValueError(f"Stage {index} does not declare {stage['class']}")
         if (package_match.group(1) if package_match else "") != expected_package:
             raise ValueError(f"Stage {index} package mismatch for {stage['class']}")
+        if stage["class"] == "MainLLOL":
+            runtime_source_text = source_text
+    if runtime_source_text is None:
+        raise ValueError("client/build.json must declare the MainLLOL runtime source")
+    validate_runtime_version(runtime_source_text, version)
 
     template = resolved_repo_path(config["template_swf"]["path"], "SWF resource template")
     if sha256_file(template) != config["template_swf"]["sha256"]:
@@ -188,7 +212,7 @@ def main() -> int:
     parser.add_argument("--keypass-env", help="Environment variable holding the key password")
     parser.add_argument("--keytool", default="keytool")
     parser.add_argument("--jarsigner", default="jarsigner")
-    parser.add_argument("--output", type=Path, default=BUILD / "lal-rebuild-1.0.0.apk")
+    parser.add_argument("--output", type=Path, help="Output APK; defaults to build/lal-rebuild-<VERSION>.apk")
     parser.add_argument("--metadata", type=Path, default=BUILD / "build-metadata.json", help="Build attestation output path")
     parser.add_argument("--prebuilt-swf", type=Path, help="Package an already compiled SWF without rerunning FFDec stages")
     parser.add_argument("--skip-swf-build", action="store_true", help="Package the pinned template SWF; only for toolchain smoke tests")
@@ -265,7 +289,7 @@ def main() -> int:
     if root.find("air:extensions", namespaces=ns) is not None:
         raise ValueError("AIR descriptor must not reference unavailable legacy ANEs")
 
-    output_apk = args.output.expanduser().resolve()
+    output_apk = (args.output or BUILD / f"lal-rebuild-{version}.apk").expanduser().resolve()
     output_apk.parent.mkdir(parents=True, exist_ok=True)
     adt_output_apk = work / output_apk.name
     keystore, alias, storepass, keypass = signing_material(args)
@@ -303,9 +327,11 @@ def main() -> int:
                 raise RuntimeError(f"ADT package is missing required resource: {required}")
         if sha256_bytes(apk.read("assets/MainLLOL.swf")) != swf_hash:
             raise RuntimeError("Packaged APK SWF does not match the compiled SWF")
-        version_code, _ = read_binary_manifest_version(apk.read("AndroidManifest.xml"))
-        if version_code != 1_000_000:
-            raise RuntimeError(f"Android versionCode mismatch: expected 1000000, got {version_code}")
+        version_code, version_name = read_binary_manifest_version(apk.read("AndroidManifest.xml"))
+        if version_code != release["version_code"]:
+            raise RuntimeError(f"Android versionCode mismatch: expected {release['version_code']}, got {version_code}")
+        if version_name != release["version_name"]:
+            raise RuntimeError(f"Android versionName mismatch: expected {release['version_name']}, got {version_name}")
         if not read_binary_manifest_cleartext(apk.read("AndroidManifest.xml")):
             raise RuntimeError("Packaged Android manifest must allow the game's local HTTP endpoint")
         embedded_descriptor = ET.fromstring(apk.read("assets/META-INF/AIR/application.xml"))

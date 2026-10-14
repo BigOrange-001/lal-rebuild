@@ -1,6 +1,6 @@
 {
   "schema": "lal-client-build-v2",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "stage_count": 149,
   "unique_class_count": 131,
   "stages": [
@@ -830,7 +830,7 @@
       "index": 138,
       "class": "MainLLOL",
       "source": "client/src/stages/136_MainLLOL.as",
-      "source_sha256": "3759fe75eed9a956b308db1ae5cc69af9e69c073d102ca9ab32c51bd7c0a7aae"
+      "source_sha256": "d55ee38dbcd4505823d4178bd7f0f2fcaf00d1da39ebc8a80e51a6cf03694344"
     },
     {
       "index": 139,
@@ -905,7 +905,7 @@
   },
   "descriptor": {
     "path": "client/air/application.xml",
-    "sha256": "eebb587ef3ea7af3343a20241a6f540ffaf36890d975bb64f6a84990d4405eb8"
+    "sha256": "65ae7b699a330302234d1df071dbb510d50b678f91bcd3056735b8947b7c4902"
   },
   "assets_manifest": {
     "path": "client/resources/assets-manifest.json",

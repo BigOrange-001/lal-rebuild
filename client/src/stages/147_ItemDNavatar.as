@@ -14,41 +14,41 @@ package com.meng52.game.ui.element
    import flash.geom.Rectangle;
    import starling.display.Image;
    import starling.events.Event;
-   
+
    public class ItemDNavatar extends ItemBase
    {
-      
+
       private var mBg:Image;
-      
+
       private var mImg_lock:Image;
-      
+
       private var mTxt_name:LOL_TextField;
-      
+
       private var mTxt_lv:LOL_TextField;
-      
+
       private var mTxt_stone:LOL_TextField;
-      
+
       private var mImg_status:Image;
-      
+
       private var mTxt_status:LOL_TextField;
-      
+
       private var mImg_tag:Image;
-      
+
       private var _parent:PanelCenterDNTeam;
 
       private var mUnlockOperation:uint = 0;
-      
+
       public function ItemDNavatar(param1:PanelCenterDNTeam)
       {
          super();
          _parent = param1;
       }
-      
+
       override public function layoutWH() : void
       {
          this.width = this.height = 104;
       }
-      
+
       override public function init(param1:Object) : void
       {
          var _loc7_:* = 0;
@@ -160,12 +160,12 @@ package com.meng52.game.ui.element
          mTxt_status.y = mImg_status.y - 1;
          addChild(mTxt_status);
       }
-      
+
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
          this.clear();
       }
-      
+
       override public function onTRIGGERED(param1:Event) : void
       {
          var _loc2_:Array = null;
@@ -209,7 +209,7 @@ package com.meng52.game.ui.element
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("panel_detailDN",false,true);
          }
       }
-      
+
       private function sendService() : void
       {
          if(data == null || data["lock"] != 1 || data["dn_self"] == false || SendAndSelect.checkRepeat("user.dn_unlock",""))
@@ -230,7 +230,7 @@ package com.meng52.game.ui.element
             re_dn_unlock(param1,_key,_operation,_uid);
          },{"key":_key});
       }
-      
+
       private function re_dn_unlock(param1:Object, param2:String, param3:uint, param4:String) : void
       {
          var _loc2_:Rectangle = null;
@@ -257,7 +257,7 @@ package com.meng52.game.ui.element
          GlobalData.$mEventDispatcher.dispatchEventWith("update_dn_team_ui");
          GlobalData.$mEventDispatcher.dispatchEventWith("update_team_power");
       }
-      
+
       private function getAttrBgByType(param1:String) : String
       {
          var _loc2_:String = "";
@@ -285,4 +285,3 @@ package com.meng52.game.ui.element
       }
    }
 }
-

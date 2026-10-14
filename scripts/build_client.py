@@ -69,6 +69,24 @@ def resolved_repo_path(value: str, label: str) -> Path:
     return require_file(path, label)
 
 
+def validate_runtime_version(source_text: str, version: str) -> None:
+    # Preserve strings while removing comments, so a commented assignment
+    # cannot stand in for a missing Android startup version.
+    code = re.sub(
+        r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|//[^\r\n]*|/\*[\s\S]*?\*/',
+        lambda match: "" if match.group().startswith(("//", "/*")) else match.group(),
+        source_text,
+    )
+    versions = re.findall(
+        r'^[ \t]*MainConfig\.VERSION_CURR\s*=\s*'
+        r'(?:GlobalStaticConst\.\$isAndroid\s*\?\s*)?["\']([^"\']+)["\']',
+        code,
+        flags=re.MULTILINE,
+    )
+    if len(versions) != 3 or any(value != version for value in versions):
+        raise ValueError(f"MainLLOL runtime versions must all match VERSION {version}; found {versions}")
+
+
 def read_build_config() -> tuple[dict, str, Path, Path, Path]:
     config = json.loads(CONFIG.read_text(encoding="utf-8"))
     version = VERSION_FILE.read_text(encoding="utf-8").strip()
@@ -81,6 +99,7 @@ def read_build_config() -> tuple[dict, str, Path, Path, Path]:
         raise ValueError("stage_count must match the non-empty ordered stages list")
     if config.get("unique_class_count") != len({stage.get("class") for stage in stages}):
         raise ValueError("unique_class_count must match the qualified classes in stages")
+    runtime_source_text = None
     for index, stage in enumerate(stages, start=1):
         if stage.get("index") != index:
             raise ValueError(f"Build stage order is not contiguous at stage {index}")
@@ -95,6 +114,11 @@ def read_build_config() -> tuple[dict, str, Path, Path, Path]:
             raise ValueError(f"Stage {index} does not declare {stage['class']}")
         if (package_match.group(1) if package_match else "") != expected_package:
             raise ValueError(f"Stage {index} package mismatch for {stage['class']}")
+        if stage["class"] == "MainLLOL":
+            runtime_source_text = source_text
+    if runtime_source_text is None:
+        raise ValueError("client/build.json must declare the MainLLOL runtime source")
+    validate_runtime_version(runtime_source_text, version)
 
     template = resolved_repo_path(config["template_swf"]["path"], "SWF resource template")
     if sha256_file(template) != config["template_swf"]["sha256"]:

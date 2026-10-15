@@ -6155,7 +6155,9 @@ package com.meng52.game.module.avatar
          if(skillB && GlobalData.skillBoo)
          {
             GlobalData.skillBoo = false;
-            if(GameMap.currentMap.isEnd(line))
+            // A global passive can still have a valid target after this lane
+            // is cleared. Keep checking it when its cast range crosses lanes.
+            if(GameMap.currentMap.isEnd(line) && skillB.getCastRange() <= GameMapConfig.LINE_POS)
             {
                return;
             }

@@ -878,19 +878,21 @@ class ReferenceBattle:
         if isinstance(override, (int, float)) and not isinstance(override, bool) \
                 and math.isfinite(float(override)) and float(override) > 0:
             return _to_int(override)
-        if int(unit.get("hp_max", 0) or 0):
-            return _to_int(unit.get("range", 0))
+        # Native Avatar.init restores its cached range from snapshot.tpl[4].
+        # Serialized units have hp_max but need not carry a top-level range.
+        tpl = unit.get("tpl") or []
+        candidates = [unit.get("range")]
+        if isinstance(tpl, (list, tuple)) and len(tpl) > 4:
+            candidates.append(tpl[4])
+        for value in candidates:
+            if isinstance(value, (int, float)) and not isinstance(value, bool) \
+                    and math.isfinite(float(value)):
+                return _to_int(value)
         row = self._avatar_definition(unit)
         if isinstance(row, dict):
-            try:
-                return _to_int(row.get("range", 0))
-            except (TypeError, ValueError):
-                return 0
-        tpl = unit.get("tpl") or []
-        try:
-            return _to_int(tpl[4])
-        except (IndexError, TypeError, ValueError):
-            return 0
+            pl = row.get("pl") or []
+            return _to_int(row.get("range", pl[9] if len(pl) > 9 else 0))
+        return 0
 
     def _get_cast_range(self, unit, skill):
         """139_SkillSet.as:2591 getCastRange.
@@ -1658,7 +1660,7 @@ class ReferenceBattle:
         if count <= 0 or len(action) < 5 + count:
             raise ValueError("locked_sequence argument count does not match its hit count")
         pl = skill.get("pl") or []
-        targets = self._skill_targets(attacker, enemies, pl)
+        targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=index)
         if not targets:
             return
         primary = targets[0]
@@ -2359,13 +2361,13 @@ class ReferenceBattle:
         for ally in sorted(allies, key=lambda u: str(u.get("aid", ""))):
             if int(target.get("hp", 0)) <= 0:
                 break
-            if int(ally.get("hp", 0)) <= 0 or ally is attacker:
+            if int(ally.get("hp", 0)) <= 0:
                 continue
             if int(ally.get("line", -1)) != int(target.get("line", -2)):
                 continue
             if abs(_to_int(ally.get("pos", 0)) - _to_int(target.get("pos", 0))) > self._get_range(ally):
                 continue
-            self._injured_absolute(ally, self._get_damage(ally), 1)
+            self._injured_absolute(target, self._get_damage(ally), 1)
 
     def _act_dash_group_strike(self, attacker, enemies, allies, skill, action, index, context):
         """dash_group_strike (139_SkillSet.as:899): reline and strike each target."""

@@ -4318,7 +4318,9 @@ package com.meng52.game.module.avatar
          {
             manualFocusTarget = null;
          }
-         if(_currentMap.winnerList[line] != 0)
+         // A finished lane may still supply a global turn-start passive.
+         // The lane-end guard below stops normal attacks, skills and movement.
+         if(_currentMap.isEnd() || (_currentMap.winnerList[line] != 0 && (!skillB || skillB.getCastRange() <= GameMapConfig.LINE_POS)))
          {
             return false;
          }
@@ -6157,7 +6159,7 @@ package com.meng52.game.module.avatar
             GlobalData.skillBoo = false;
             // A global passive can still have a valid target after this lane
             // is cleared. Keep checking it when its cast range crosses lanes.
-            if(GameMap.currentMap.isEnd(line) && skillB.getCastRange() <= GameMapConfig.LINE_POS)
+            if(!GameMap.currentMap || GameMap.currentMap.isEnd() || (GameMap.currentMap.isEnd(line) && skillB.getCastRange() <= GameMapConfig.LINE_POS))
             {
                return;
             }

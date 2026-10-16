@@ -109,6 +109,109 @@ class ReferenceBattleActionTests(unittest.TestCase):
                             for enemy in battle.b))
         self.assertNotIn('curse', battle.a[0].get('_buffs', {}))
 
+    def test_thunder_force_hits_and_curses_all_three_lanes_from_either_team(self):
+        for team in (1, 2):
+            for caster_line in range(3):
+                with self.subTest(team=team, caster_line=caster_line):
+                    caster = self.unit(
+                        "A_1226_6", team, 1500, attack=100, line=caster_line)
+                    enemies = [self.unit(f"A_100{line + 1}_6", 3-team, 1000,
+                                         hp=100000, line=line)
+                               for line in range(3)]
+                    battle = ReferenceBattle(
+                        [caster] if team == 1 else enemies,
+                        enemies if team == 1 else [caster], config=self.config)
+                    owner_side, enemy_side = ((battle.a, battle.b) if team == 1
+                                              else (battle.b, battle.a))
+                    caster = owner_side[0]
+                    caster["_team"] = owner_side
+                    caster["skill"] = _native_skill_snapshot(
+                        self.config, "S_201226_6")
+                    hits = []
+                    injured = battle._injured
+
+                    def record_hit(target, amount, damage_type=0):
+                        hits.append((target["line"], amount, damage_type))
+                        return injured(target, amount, damage_type)
+
+                    battle._injured = record_hit
+                    self.assertTrue(battle._apply_native_skill(caster, enemy_side))
+                    self.assertEqual([enemy["hp"] for enemy in enemy_side],
+                                     [99544] * 3)
+                    self.assertEqual(Counter(hits), Counter(
+                        (line, damage, 2) for line in range(3)
+                        for damage in (306, 150)))
+                    for enemy in enemy_side:
+                        self.assertEqual(enemy["_buffs"]["curse"].round, 2)
+                        self.assertIn("weak", enemy["_buffs"])
+                    self.assertNotIn("curse", caster.get("_buffs", {}))
+
+    def test_lane_policy_all_keeps_radius_and_target_limit(self):
+        caster = self.unit("A_1226_6", 1, 1500, line=1)
+        enemies = [self.unit(f"A_100{line + 1}_6", 2, 1600, line=line)
+                   for line in range(3)]
+        enemies += [self.unit("A_1004_6", 2, 2200, line=2),
+                    self.unit("A_1005_6", 2, 1500, hp=0, line=0)]
+        battle = ReferenceBattle([caster], enemies, config=self.config)
+        for policy in ("enemy_lane_all", "enemy_lane_all_in_radius"):
+            for lane_filter in (None, "same_as_caster", "all"):
+                with self.subTest(policy=policy, lane_filter=lane_filter):
+                    args = {"radius": 200}
+                    if lane_filter is not None:
+                        args["laneFilter"] = lane_filter
+                    skill = {"actionTargetPolicies": [policy],
+                             "actionTargetPolicyArgs": [args],
+                             "actionTargetMaxTargets": [-1]}
+                    targets = battle._skill_targets(
+                        caster, battle.b, [0, 0, 1, 0, 0, 1],
+                        skill=skill, index=0)
+                    expected = ([0, 1, 2, 2] if policy == "enemy_lane_all"
+                                else [0, 1, 2]) if lane_filter == "all" else [1]
+                    self.assertEqual([u["line"] for u in targets], expected)
+                    skill["actionTargetMaxTargets"] = [1]
+                    self.assertEqual(len(battle._skill_targets(
+                        caster, battle.b, [0, 0, 1, 0, 0, 1],
+                        skill=skill, index=0)), 1)
+
+    def test_steel_wave_critical_buff_stays_on_caster_with_taunting_ally(self):
+        for star in (5, 6):
+            for team in (1, 2):
+                with self.subTest(star=star, team=team):
+                    caster = self.unit(f"A_1310_{star}", team, 1500, line=1)
+                    dog = self.unit("A_2024_6", team, 1400, line=1)
+                    enemy = self.unit("A_1001_6", 3-team, 1000, hp=10000, line=1)
+                    battle = ReferenceBattle(
+                        [caster, dog] if team == 1 else [enemy],
+                        [enemy] if team == 1 else [caster, dog], config=self.config)
+                    owner_side, enemy_side = ((battle.a, battle.b) if team == 1
+                                              else (battle.b, battle.a))
+                    caster, dog = owner_side
+                    caster["_team"] = owner_side
+                    caster["skill"] = _native_skill_snapshot(
+                        self.config, f"S_201310_{star}")
+                    battle._add_buff(dog, "taunt", 2)
+                    self.assertTrue(battle._apply_native_skill(caster, enemy_side))
+                    self.assertEqual(enemy_side[0]["hp"], 9700)
+                    self.assertEqual(caster["_buffs"]["critup"].value, 800)
+                    self.assertEqual(caster["_buffs"]["critup"].round, 2)
+                    self.assertNotIn("critup", dog.get("_buffs", {}))
+
+    def test_ally_self_bypasses_range_and_never_targets_a_dead_caster(self):
+        caster = self.unit("A_1310_6", 1, 1500, line=1)
+        dog = self.unit("A_2024_6", 1, 1400, line=1)
+        battle = ReferenceBattle([caster, dog], [], config=self.config)
+        battle._add_buff(dog, "taunt", 2)
+        skill = _native_skill_snapshot(self.config, "S_201310_6")
+        for reach in (0, 1, 3000):
+            with self.subTest(reach=reach):
+                pl = [0, 0, reach, 0, 0, 1]
+                self.assertEqual(battle._ally_buff_targets(
+                    caster, [dog], pl, skill=skill, index=3), [caster])
+                caster["hp"] = 0
+                self.assertEqual(battle._ally_buff_targets(
+                    caster, [dog], pl, skill=skill, index=3), [])
+                caster["hp"] = 1000
+
     def test_steel_wave_hits_every_lane_enemy_three_times_from_either_team(self):
         for star in (5, 6):
             for team in (1, 2):

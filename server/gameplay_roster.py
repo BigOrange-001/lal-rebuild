@@ -2371,6 +2371,7 @@ class GameplayRosterEquipment:
             "skid": skill_id,
             "skills": actions,
             "actionTargetPolicies": copy.deepcopy(row.get("actionTargetPolicies") or []),
+            "actionTargetPolicyArgs": copy.deepcopy(row.get("actionTargetPolicyArgs") or []),
             "actionTargetMaxTargets": copy.deepcopy(row.get("actionTargetMaxTargets") or []),
             "actionTargetGroups": copy.deepcopy(row.get("actionTargetGroups") or []),
         }

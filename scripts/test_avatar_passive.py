@@ -31,7 +31,10 @@ def method_body(source, name):
             if depth == 0:
                 body = source[start:token.start()]
                 body = re.sub(r'\s+as\s+(?:Vector\.<\w+>|\w+)', '', body)
-                return re.sub(r'(?<=[\w)])\s*:\s*(?:Vector\.<\w+>|\w+|\*)', '', body)
+                body = re.sub(r'(\bfunction\s*(?:\w+)?\s*\([^)]*\))\s*:\s*\w+', r'\1', body)
+                # Only declarations carry types. A broad colon matcher also
+                # erases the else arm of ordinary ternary expressions.
+                return re.sub(r'(\bvar\s+\w+)\s*:\s*(?:Vector\.<\w+>|\w+|\*)', r'\1', body)
     raise ValueError(f'Unclosed Avatar method: {name}')
 
 

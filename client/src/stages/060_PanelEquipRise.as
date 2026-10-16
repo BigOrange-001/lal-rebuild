@@ -13,6 +13,10 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.stage.GuideTools;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendServiceAMFFun;
+   import com.meng52.net.SendAndSelect;
+   import com.meng52.events.NetEvent;
+   import flash.utils.setTimeout;
+   import flash.utils.clearTimeout;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
@@ -83,6 +87,8 @@ package com.meng52.game.ui.panel
 
       private var _riseBatchRemaining:int = 0;
       private var riseBefore:Object;
+      private var riseInFlight:Boolean = false;
+      private var riseDelay:uint = 0;
       
       private const MBTN_TO:String = "mbtn_to";
       
@@ -92,6 +98,7 @@ package com.meng52.game.ui.panel
       {
          super();
          GlobalData.$mEventDispatcher.addEventListener("profile_state_sync",onProfileStateSync);
+         SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",onRiseError);
       }
 
       private function onProfileStateSync(param1:Event) : void
@@ -129,6 +136,11 @@ package com.meng52.game.ui.panel
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
          GlobalData.$mEventDispatcher.removeEventListener("profile_state_sync",onProfileStateSync);
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onRiseError);
+         clearTimeout(riseDelay);
+         riseInFlight = false;
+         riseBefore = null;
+         removeEventListener("enterFrame",onENTER_FRAME_clip);
          _btn_status = false;
          _riseBatchRemaining = 0;
          GlobalData.$mGameClassObject.touchable = true;
@@ -271,10 +283,10 @@ package com.meng52.game.ui.panel
                mBtn_riseByonce.fontSize = 22;
             }
             mBtn_riseByonce.x = mImg9_base.x + 70;
-            mBtn_riseByonce.y = 620;
+            mBtn_riseByonce.y = Math.min(620,GlobalData.$center_height_curr - 211);
             addChild(mBtn_riseByonce);
             mBtn_to.x = mImg9_base.x + mImg9_base.width - mBtn_to.width + 70;
-            mBtn_to.y = 620;
+            mBtn_to.y = mBtn_riseByonce.y;
             _mTxt_currentCoin.x = this.mImg9_baseBg.x + (this.mImg9_baseBg.width - _mTxt_currentCoin.textFieldWidth) * 0.5 - 25;
             _mTxt_currentCoin.y = mBtn_to.y - _mTxt_currentCoin.height;
          }
@@ -351,7 +363,7 @@ package com.meng52.game.ui.panel
             mJuggler_upLv.advanceTime(param1.passedTime);
             if(mSpr_)
             {
-               GlobalData.$mGameClassObject.touchable == false;
+               GlobalData.$mGameClassObject.touchable = false;
                if(!mSpr_.stage)
                {
                   mClip_pause += 1;
@@ -458,225 +470,125 @@ package com.meng52.game.ui.panel
          checkGuide();
       }
       
+      private function stopRiseBatch() : void
+      {
+         clearTimeout(riseDelay);
+         riseDelay = 0;
+         _btn_status = false;
+         _riseBatchRemaining = 0;
+         chengeStutes(true);
+         if(mBtn_to) mBtn_to.touchable = true;
+         if(mBtn_riseByonce) mBtn_riseByonce.text = "强化十次";
+      }
+
+      private function onRiseError(event:NetEvent) : void
+      {
+         var reply:Object = event.data;
+         if(!riseInFlight || reply == null) return;
+         if(reply.method != "user.equip_rise" && reply.receipt_method != "user.equip_rise") return;
+         riseInFlight = false;
+         riseBefore = null;
+         mStatus_up = false;
+         stopRiseBatch();
+         if(stage != null) updateAttUIs();
+      }
+
       private function send_rise_fun() : void
       {
-         var _data:Object;
-         var reSetStatus:* = function():void
-         {
-            chengeStutes(true);
-            if(mBtn_to)
-            {
-               mBtn_to.touchable = true;
-            }
-            _btn_status = false;
-            _riseBatchRemaining = 0;
-            if(mBtn_riseByonce)
-            {
-               mBtn_riseByonce.text = "强化十次";
-            }
-         };
-         var _b:Boolean = true;
-         if(GlobalData.$userData.gold < mPrice_num)
-         {
-            _b = false;
-            GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(10023),false,"A_6999_3");
-            reSetStatus();
-            return;
-         }
+         if(stage == null || riseInFlight) return;
+         var data:Object = GlobalData.$userData.my_equips[GlobalData.$tempEquipCurrSelected];
+         if(data == null) { stopRiseBatch(); return; }
+         mCurr_lv = int(data.lv);
+         var equip:Equip = new Equip(GlobalData.$tempEquipCurrSelected,data);
+         mPrice_num = equip.getRiseGold();
          if(mCurr_lv >= GlobalFunction.getEquipRiseMaxLv())
          {
-            _b = false;
+            stopRiseBatch();
             GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90083));
-            reSetStatus();
             return;
          }
-         _data = GlobalData.$userData.my_equips[GlobalData.$tempEquipCurrSelected];
-         if(_data == null)
+         if(GlobalData.$userData.gold < mPrice_num)
          {
-            _b = false;
-            GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90084));
-            reSetStatus();
+            stopRiseBatch();
+            GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(10023),false,"A_6999_3");
             return;
          }
-         if(_b == true)
-         {
-            riseBefore = Tools.clone(_data);
-            SendServiceAMFFun.send_user_equip_rise(re_equip_rise,{
-               "eqid":GlobalData.$tempEquipCurrSelected,
-               "lv":mCurr_lv
-            });
-         }
+         riseBefore = Tools.clone(data);
+         riseInFlight = true;
+         SendServiceAMFFun.send_user_equip_rise(re_equip_rise,{
+            "eqid":GlobalData.$tempEquipCurrSelected,
+            "lv":mCurr_lv
+         });
       }
-      
+
       private function onTRIGGERED_up(param1:Event) : void
       {
-         var _loc3_:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
-         var _loc2_:String = _loc3_.name;
-         switch(_loc2_)
+         var button:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
+         if(button.name == "mbtn_risebyonce" && _btn_status)
          {
-            case "mbtn_to":
-               _btn_status = false;
-               if(_loc3_.enabled && riseBefore == null && !mStatus_up)
-               {
-                  send_rise_fun();
-               }
-               break;
-            case "mbtn_risebyonce":
-               if(!_btn_status && (riseBefore != null || mStatus_up)) return;
-               _btn_status = !_btn_status;
-               if(_btn_status)
-               {
-                  _riseBatchRemaining = 10;
-                  chengeStutes();
-                  mBtn_to.touchable = false;
-                  _loc3_.text = "停止强化";
-                  send_rise_fun();
-               }
-               else
-               {
-                  _riseBatchRemaining = 0;
-                  chengeStutes(true);
-                  mBtn_to.touchable = true;
-                  _loc3_.text = "强化十次";
-               }
-         }
-      }
-      
-      private function chengeStutes(param1:Boolean = false) : void
-      {
-         mBox_equip.touchable = param1;
-         _spRule.touchable = param1;
-         mBtn_to.enabled = param1;
-      }
-      
-      private function re_equip_rise(param1:Object) : void
-      {
-         var _dataArr:Array;
-         var _data:Object;
-         var _lvPv:int;
-         var _multiple:Object;
-         var _multipleArr:Array;
-         var i:Object;
-         var _index:int;
-         var _arr:Object;
-         var _rec:Rectangle;
-         var _x:int;
-         var _y:int;
-         var delaycall:*;
-         var _re:Object = param1;
-         var _eid:String = _re["params"]["eqid"];
-         if(stage == null || _eid != GlobalData.$tempEquipCurrSelected) return;
-         if(GlobalFunction.isMalformedProfileReceipt(_re))
-         {
-            riseBefore = null;
-            mStatus_up = false;
-            _btn_status = false;
-            _riseBatchRemaining = 0;
-            chengeStutes(true);
+            stopRiseBatch();
             return;
          }
-         if(GlobalFunction.isLegacyProfileReceipt(_re))
+         if(riseInFlight) return;
+         if(button.name == "mbtn_risebyonce")
          {
-            RpcStaticCall.$remoting.reportDiagnostic("PROFILE_RECEIPT_LEGACY|method=user.equip_rise");
+            _btn_status = true;
+            _riseBatchRemaining = 10;
+            chengeStutes(false);
+            mBtn_to.touchable = false;
+            button.text = "停止强化";
          }
-         var _snapshotApplied:Boolean = GlobalFunction.didApplyProfileStateSync(_re);
-         mStatus_up = true;
-         if(_re.data)
-         {
-            delaycall = function():void
-            {
-               var _current:Object = GlobalData.$userData.my_equips[_eid];
-               if(_btn_status && _snapshotApplied && _riseBatchRemaining > 0 && _current != null && int(_current.lv) < GlobalFunction.getEquipRiseMaxLv())
-               {
-                  send_rise_fun();
-               }
-               else if(_btn_status)
-               {
-                  _btn_status = false;
-                  _riseBatchRemaining = 0;
-                  chengeStutes(true);
-                  if(mBtn_to)
-                  {
-                     mBtn_to.touchable = true;
-                  }
-                  if(mBtn_riseByonce)
-                  {
-                     mBtn_riseByonce.text = "强化十次";
-                  }
-               }
-            };
-            _dataArr = _re.data;
-            _data = GlobalData.$userData.my_equips[_eid];
-            if(!_snapshotApplied || _data == null)
-            {
-               _btn_status = false;
-               _riseBatchRemaining = 0;
-               chengeStutes(true);
-               if(mBtn_to)
-               {
-                  mBtn_to.touchable = true;
-               }
-               if(mBtn_riseByonce)
-               {
-                  mBtn_riseByonce.text = "强化十次";
-               }
-               return;
-            }
-            _lvPv = int(_dataArr[0]) - int(_re["params"]["lv"]);
-            _multiple = GlobalData.$mConfig_simple.equip_multiple;
-            _multipleArr = [];
-            for(i in _multiple)
-            {
-               _multipleArr.push(int(i));
-            }
-            _multipleArr.sort();
-            _index = 0;
-            _index = _multipleArr.indexOf(_lvPv);
-            updateAttUIs(false,_index,_lvPv);
-            if(_lvPv > 1) LayoutUIAnimation.getOnlyExample().popWords("强化暴击：提升" + _lvPv + "级",2,GlobalData.$mStageHeight * 0.38);
-            if(_btn_status && _riseBatchRemaining > 0)
-            {
-               _riseBatchRemaining--;
-            }
-            GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
-            _arr = GlobalData.$userData;
-            GlobalData.$tempTeamPowerTemp = GlobalFunction.getTeamPower(GlobalData.$userData.team[0]);
-            SoundManager.getOnlyExample().playSound("E_9008");
-            GuideTools.doModuleGuide("4",20);
-            if(!stage || !mCurrEquip)
-            {
-               return;
-            }
-            _rec = mCurrEquip.getBounds(stage);
-            _x = _rec.x + 51;
-            _y = _rec.y + 51;
-            LayoutUIAnimation.getOnlyExample().popEffect({
-               "id":"e016",
-               "x":_x,
-               "y":_y,
-               "sc":2,
-               "rate":5
-            });
-            Starling.juggler.delayCall(delaycall,1.5 / 5);
-         }
-         else
-         {
-            riseBefore = null;
-            mStatus_up = false;
-            _btn_status = false;
-            _riseBatchRemaining = 0;
-            chengeStutes(true);
-            if(mBtn_to)
-            {
-               mBtn_to.touchable = true;
-            }
-            if(mBtn_riseByonce)
-            {
-               mBtn_riseByonce.text = "强化十次";
-            }
-         }
+         else if(!button.enabled) return;
+         send_rise_fun();
       }
-      
+
+      private function chengeStutes(param1:Boolean = false) : void
+      {
+         if(mBox_equip) mBox_equip.touchable = param1;
+         if(_spRule) _spRule.touchable = param1;
+         if(mBtn_to) mBtn_to.enabled = param1;
+      }
+
+      private function continueRiseBatch() : void
+      {
+         riseDelay = 0;
+         if(stage == null || !_btn_status) return;
+         if(_riseBatchRemaining <= 0) { stopRiseBatch(); return; }
+         send_rise_fun();
+      }
+
+      private function re_equip_rise(reply:Object) : void
+      {
+         if(stage == null || reply == null || reply.params == null || reply.params.eqid != GlobalData.$tempEquipCurrSelected) return;
+         riseInFlight = false;
+         riseBefore = null;
+         mStatus_up = false;
+         var current:Object = GlobalData.$userData.my_equips[reply.params.eqid];
+         if(GlobalFunction.isMalformedProfileReceipt(reply) || !GlobalFunction.didApplyProfileStateSync(reply) || !(reply.data is Array) || current == null)
+         {
+            stopRiseBatch();
+            updateAttUIs();
+            return;
+         }
+         var gained:int = int(reply.data[0]) - int(reply.params.lv);
+         if(_btn_status && _riseBatchRemaining > 0) _riseBatchRemaining--;
+         // Receipt completion drives the batch. Rendering may pause or lose a
+         // tween on mobile without leaving the transaction marked as pending.
+         if(_btn_status) riseDelay = setTimeout(continueRiseBatch,150);
+         updateAttUIs();
+         GlobalData.$mGameClassObject.touchable = true;
+         GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
+         GlobalData.$tempTeamPowerTemp = GlobalFunction.getTeamPower(GlobalData.$userData.team[0]);
+         if(gained > 1) LayoutUIAnimation.getOnlyExample().popWords("强化暴击：提升" + gained + "级",2,GlobalData.$mStageHeight * 0.38);
+         SoundManager.getOnlyExample().playSound("E_9008");
+         if(stage && mCurrEquip)
+         {
+            var bounds:Rectangle = mCurrEquip.getBounds(stage);
+            LayoutUIAnimation.getOnlyExample().popEffect({"id":"e016","x":bounds.x + 51,"y":bounds.y + 51,"sc":2,"rate":5});
+         }
+         GuideTools.doModuleGuide("4",20);
+      }
+
       public function getAttBase(param1:String, param2:Boolean = false, param3:int = 1) : Sprite
       {
          var _tNo1:TextField;

@@ -3,6 +3,7 @@ package com.meng52.net
    import flash.net.Responder;
    import flash.net.URLLoader;
    import flash.net.URLRequest;
+   import flash.utils.setTimeout;
    
    public class RpcStaticCall
    {
@@ -27,10 +28,7 @@ package com.meng52.net
             $remoting.closeNet();
             $remoting = null;
          }
-         else
-         {
-            $remoting = new RemotingConnect(param1,param2);
-         }
+         $remoting = new RemotingConnect(param1,param2);
       }
       
       public static function toNet(param1:String) : void
@@ -48,11 +46,19 @@ package com.meng52.net
       
       public static function callService(param1:Object, param2:Function = null, param3:Function = null) : void
       {
+         try
+         {
          $remoting.call_service(new Responder(function(result:Object):void {
-            $remoting.reportDiagnostic("AMF result " + result.method);
             try { if(param2 != null) param2(result); }
             catch(error:Error) { $remoting.reportDiagnostic(String(error) + "\n" + error.getStackTrace()); throw error; }
          },function(status:Object):void { $remoting.reportDiagnostic("AMF status " + status.code); if(param3 != null) param3(status); }),param1);
+         }
+         catch(error:Error)
+         {
+            // Deliver transport faults after SendAndSelect has registered its
+            // loading state and retry timer, just like an asynchronous fault.
+            if(param3 != null) setTimeout(param3,1,{"code":"NetConnection.Call.Failed","description":String(error)});
+         }
       }
    }
 }

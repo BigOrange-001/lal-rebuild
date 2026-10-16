@@ -71,6 +71,7 @@ def _native_skill_snapshot(config, skill_id, level=1):
         "skid": str(skill_id),
         "skills": actions,
         "actionTargetPolicies": copy.deepcopy(row.get("actionTargetPolicies") or []),
+        "actionTargetPolicyArgs": copy.deepcopy(row.get("actionTargetPolicyArgs") or []),
         "actionTargetMaxTargets": copy.deepcopy(row.get("actionTargetMaxTargets") or []),
         "actionTargetGroups": copy.deepcopy(row.get("actionTargetGroups") or []),
     }
@@ -101,7 +102,7 @@ def validate_team_lane_coverage(team, lane_count, side="team"):
 
 def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1,
               instance_id=None, overrides=None, *, enforce_avatar_level_cap=True,
-              limit_break=False, npc_limit_break=False):
+              limit_break=False, npc_limit_break=False, summoned=False):
     avatar = config.get("avatar", {}).get(str(aid))
     if not avatar:
         raise ValueError(f"unknown combat avatar id: {aid}")
@@ -122,6 +123,11 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
         # tuples carry their own battle level and native Avatar.init accepts
         # that explicit value even when it exceeds the avatar progression cap.
         level = min(level, int(tl[4] if len(tl) > 4 else 99))
+    elif summoned:
+        # Native summon constructors accept the owner's explicit level, even
+        # for templates whose trainable level cap is 1.
+        if level > 125:
+            raise ValueError("summoned level exceeds the owner level bound")
     elif not limit_break and not npc_limit_break and level > 99:
         # All reconstructed stage/activity/arena/fragment NPC rows are authored
         # at level 60 or below. Reject accidental/unbounded NPC data without
@@ -227,7 +233,7 @@ _REAL_DAMAGE_RATE = 0.3
 # Buff.LIST_BUFF / Buff.LIST_DEBUFF (140_Buff.as:57/59).
 _GOOD_BUFFS = frozenset(["shield", "strong", "taunt", "bless", "steel", "armor",
                          "hitup", "fleeup", "critup", "toughup", "purify"])
-_DEBUFFS = frozenset(["root", "stun", "silence", "weak", "sunder", "poison", "burn", "evil"])
+_DEBUFFS = frozenset(["root", "stun", "silence", "weak", "sunder", "poison", "burn", "evil", "curse"])
 
 # checkBuffOfSkillB's literal OR list (079_Avatar.as:3547-3552). This is the
 # exact string set the client compares against, so it is NOT _GOOD_BUFFS:
@@ -237,7 +243,8 @@ _SKILL_B_GUARD_BUFFS = frozenset(["evil", "silence", "stun", "burn", "sunder", "
                                   "weak", "shield", "purify", "strong", "hitup", "fleeup",
                                   "critup", "toughup", "bless", "steel", "taunt"])
 # skill_diff 19's own gate (079_Avatar.as:3553): fire while any debuff is held.
-_SKILL_B_DEBUFF_TRIGGERS = frozenset(["evil", "silence", "stun", "burn", "sunder", "poison", "weak"])
+_SKILL_B_DEBUFF_TRIGGERS = frozenset(["root", "evil", "silence", "stun", "burn",
+                                     "sunder", "poison", "weak", "curse"])
 # skill_diff -> the single buff name that arms the passive (079_Avatar.as:3503-3545).
 _SKILL_B_BUFF_TRIGGERS = {4: "evil", 5: "silence", 6: "stun", 7: "burn", 8: "sunder",
                           9: "poison", 10: "weak", 11: "shield", 12: "purify", 13: "strong",
@@ -250,7 +257,7 @@ _BOUNDED_SUMMON_STARS = {"2061205": ("5", "6"), "32551036": ("4", "5", "6"),
                          "32551103": ("4", "5", "6")}
 # Families bounded at every star level the shape gate admits.
 _BOUNDED_SUMMON_FAMILIES = frozenset(["621014", "631014", "303014", "203014", "303029",
-                                      "303040", "303124", "305082", "305128", "301221",
+                                      "303040", "303124", "305082", "305128", "301209", "301221",
                                       "301310"])
 
 # Kinds whose resolved target is published to actionTargets[actionIndex] for a
@@ -300,10 +307,17 @@ class ReferenceBattle:
     """Approximate deterministic tuner; client results remain authoritative."""
     _LINE_POS = 3000
     _MIN_SPACE_POS = 200
+    _SUMMON_POS = 500
 
     def __init__(self, team_a, team_b, seed=82684, max_rounds=30, config=None):
         self.a = copy.deepcopy([dict(x) for x in team_a])
         self.b = copy.deepcopy([dict(x) for x in team_b])
+        # boundedSummons belongs to each SkillSet/Avatar instance. Keep the
+        # public aid for compatibility and add a private owner token so two
+        # copies of the same hero do not share one bounded summon slot.
+        for side, roster in ((1, self.a), (2, self.b)):
+            for index, unit in enumerate(roster):
+                unit.setdefault("_owner_token", unit.get("instance_id") or f"{side}:{index}")
         self.rng = CombatRandom(int(seed))
         self.max_rounds = max(1, int(max_rounds))
         # Kept for the avatar-table lookups the action handlers need (cast
@@ -324,6 +338,7 @@ class ReferenceBattle:
             self._MIN_SPACE_POS = int(battle[2])
         else:
             self._LINE_POS, self._MIN_SPACE_POS = 3000, 200
+        self._SUMMON_POS = int(battle[3]) if isinstance(battle, list) and len(battle) > 3 else 500
         # skillAreaRadius (137_Avatar.as:461) scales authored radii by
         # GlobalData.$mConfig_simple.skill_effect_radius_scale. The reconstructed
         # config authors 1.4; a missing/non-finite/non-positive value means 1.
@@ -366,9 +381,18 @@ class ReferenceBattle:
         container = unit.setdefault("_buffs", {})
         current = container.get(kind)
         incoming = _Buff(kind, rounds, value)
+        # Purify has priority over every debuff, including evil and curse. It
+        # must clear them before the one-shot evil/purify guards are checked.
+        if kind == "purify":
+            self._remove_all_debuff(unit)
+            unit.pop("_curse_window_started", None)
         if container.get("purify") is not None and kind in _DEBUFFS:
             # An armed purify refuses one incoming debuff and is consumed.
             del container["purify"]
+            return
+        if container.get("curse") is not None and kind in _GOOD_BUFFS and kind != "purify":
+            # Unlike evil's one-shot guard, curse rejects positive buffs while
+            # its normal owner-turn countdown remains active.
             return
         if container.get("evil") is not None and kind in _GOOD_BUFFS:
             del container["evil"]
@@ -380,7 +404,7 @@ class ReferenceBattle:
             elif kind == "evil":
                 self._remove_all_good(unit)
             return
-        if kind in ("stun", "silence", "purify", "evil", "taunt", "bless"):
+        if kind in ("stun", "silence", "purify", "evil", "curse", "taunt", "bless"):
             # Round-compare arm: the longer duration wins outright.
             if incoming.round >= current.round:
                 container[kind] = incoming
@@ -660,17 +684,37 @@ class ReferenceBattle:
             # (_avatar.getType() != 1 is skipped), then the survivors are
             # sorted by current hp ascending.
             heroes = [u for u in alive if _to_int(self._get_type(u)) == 1]
-            pool = heroes or alive
+            # This policy is explicitly hero-only.  The client does not fall
+            # back to a minion or summon when the opposing side has no hero.
+            if not heroes:
+                return []
+            pool = heroes
             pool = sorted(pool, key=lambda u: (int(u.get("hp", 0)), u.get("line", 0),
                                                float(u.get("pos", 0))))
             return pool[:max(1, self._policy_max_targets(skill, index, 1))]
         if policy == "ally_all":
             return sorted(alive, key=lambda u: (u is not attacker, u.get("line", 0),
                                                 float(u.get("pos", 0))))
+        if policy in ("enemy_lane_all", "enemy_lane_all_in_radius"):
+            alive = [u for u in alive
+                     if u.get("line") == attacker.get("line")]
+            args = self._policy_args(skill, index)
+            radius = args.get("radius") if isinstance(args, dict) else None
+            if policy == "enemy_lane_all_in_radius" and isinstance(radius, (int, float)):
+                alive = [u for u in alive
+                         if abs(float(u.get("pos", 0)) - float(attacker.get("pos", 0))) <= float(radius)]
+            alive.sort(key=lambda u: (abs(float(u.get("pos", 0)) - float(attacker.get("pos", 0))),
+                                     int(u.get("hp", 0))))
+            limit = self._policy_max_targets(skill, index, -1)
+            return alive if limit < 0 else alive[:limit]
         reach = abs(int(pl[2])) if len(pl) > 2 else 0
         if reach <= 0:
             return []
-        if reach <= 100:
+        # Avatar.findAimList keeps a finite cast range on the caster's lane
+        # through LINE_POS (3000); only ranges beyond the lane length may
+        # select across lanes.  The previous 100-unit cutoff made long-range
+        # lane-wide skills, including Steel Teemo's strike, hit every lane.
+        if reach <= self._LINE_POS:
             alive = [u for u in alive if u.get("line") == attacker.get("line")]
         alive = [u for u in alive
                  if abs(float(u.get("pos", 0)) - float(attacker.get("pos", 0))) <= reach]
@@ -695,7 +739,14 @@ class ReferenceBattle:
         if not isinstance(limits, list) or not 0 <= index < len(limits):
             return default
         value = _to_int(limits[index])
-        return value if value > 0 else default
+        return value if value > 0 or value == -1 else default
+
+    @staticmethod
+    def _policy_args(skill, index):
+        args = skill.get("actionTargetPolicyArgs") if isinstance(skill, dict) else None
+        if not isinstance(args, list) or not 0 <= index < len(args):
+            return None
+        return args[index] if isinstance(args[index], dict) else None
 
     # ------------------------------------------------- manual side tables
 
@@ -940,6 +991,11 @@ class ReferenceBattle:
             return min(int(self._LINE_POS), max(frontier, target))
         return max(0, min(frontier, target))
 
+    @staticmethod
+    def _team_number(unit):
+        """Convert Avatar.toDataObj's ``isme`` flag to its native team number."""
+        return 1 if bool(unit.get("isme")) else 2
+
     def _reline(self, unit, line, pos=None, offset=None, forced=False):
         """137_Avatar.as:4770 reline (the -2147483648 sentinels mean "default")."""
         if self._rooted(unit) and not forced:
@@ -948,7 +1004,7 @@ class ReferenceBattle:
         if pos is None:
             unit["pos"] = int(self._LINE_POS) if int(unit.get("isme")) else 0
         else:
-            unit["pos"] = self._get_final_pos(int(unit.get("isme")) + 1, line, pos)
+            unit["pos"] = self._get_final_pos(self._team_number(unit), line, pos)
         unit["offset"] = 0 if offset is None else offset
         return True
 
@@ -956,16 +1012,36 @@ class ReferenceBattle:
         """137_Avatar.as:4576 checkMove, reduced to the position update."""
         if self._rooted(unit) and not forced:
             return 0
+        normal_move = not distance and not forced
         amount = abs(_to_int(distance))
         if amount == 0:
             amount = self._get_speed(unit)
-        team = int(unit.get("isme")) + 1
+        team = self._team_number(unit)
         if bool(forward):
             delta = -amount if team == 1 else amount
         else:
             delta = amount if team == 1 else -amount
         before = _to_int(unit.get("pos", 0))
-        unit["pos"] = self._get_final_pos(team, int(unit.get("line", 0)), before + delta)
+        target = before + delta
+        if normal_move:
+            roster = self.a if team == 1 else self.b
+            owner_token = unit.get("summon_owner_token")
+            if unit.get("aid") in ("A_2003_2", "A_2018_2", "A_2024_6") and owner_token is not None:
+                owner = next((u for u in roster if u.get("_owner_token") == owner_token
+                              and u.get("hp", 0) > 0 and u.get("line") == unit.get("line")), None)
+                if owner:
+                    anchor = _to_int(owner.get("pos", 0))
+                    target = min(target, max(before, anchor - self._MIN_SPACE_POS)) if team == 1 else max(target, min(before, anchor + self._MIN_SPACE_POS))
+            if forward:
+                for summon in roster:
+                    if (summon.get("aid") not in ("A_2003_2", "A_2018_2", "A_2024_6")
+                            or summon.get("summon_owner_token") != unit.get("_owner_token")
+                            or unit.get("_owner_token") is None or summon.get("hp", 0) <= 0
+                            or summon.get("line") != unit.get("line")):
+                        continue
+                    anchor = _to_int(summon.get("pos", 0))
+                    target = max(target, min(before, anchor + self._MIN_SPACE_POS)) if team == 1 else min(target, max(before, anchor - self._MIN_SPACE_POS))
+        unit["pos"] = self._get_final_pos(team, int(unit.get("line", 0)), target)
         return abs(before - _to_int(unit.get("pos", 0)))
 
     def _rooted(self, unit):
@@ -996,7 +1072,9 @@ class ReferenceBattle:
         for unit in alive:
             if line_filter != -1 and int(unit.get("line", -1)) != line_filter:
                 continue
-            if ban_stand and int(unit.get("tpl", [0, 0, 0, 0, 0])[0] if unit.get("tpl") else 0) == 3:
+            # Avatar.getEffectiveActionType() is serialized as tpl[1].  tpl[0]
+            # is the role/action category and must not control banStand.
+            if ban_stand and int(unit.get("tpl", [0, 0, 0, 0, 0])[1] if unit.get("tpl") else 0) == 3:
                 continue
             if abs(_to_int(unit.get("pos", 0)) - apos) <= reach:
                 out.append(unit)
@@ -1133,7 +1211,7 @@ class ReferenceBattle:
         if len(action) < 3:
             raise ValueError("damage action needs a coefficient and a damage type")
         pl = skill.get("pl") or []
-        targets = self._skill_targets(attacker, enemies, pl)
+        targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=index)
         total = 0
         first = None
         for target in targets:
@@ -1392,6 +1470,25 @@ class ReferenceBattle:
         pl = skill.get("pl") or []
         for target in self._skill_targets(attacker, enemies, pl):
             self._add_buff(target, "evil", _to_int(action[1]), 0)
+
+    def _act_curse(self, attacker, enemies, allies, skill, action, index, context):
+        """Block positive buffs through the target's next owner-turn window."""
+        if len(action) < 2:
+            raise ValueError("curse action needs a round count")
+        # A zero-range curse is the one debuff action that targets its caster;
+        # 139_SkillSet.as builds a singleton vector instead of scanning enemies.
+        if self._get_cast_range(attacker, skill) == 0:
+            targets = [attacker] if int(attacker.get("hp", 0)) > 0 else []
+        else:
+            # Curse uses the same action-policy/link pipeline as other
+            # targeted actions.  Passing the skill/index is required for
+            # authored policies such as global-lowest-HP and target caps.
+            targets = self._skill_targets(
+                attacker, enemies, skill.get("pl") or [], skill=skill, index=index)
+        for target in targets:
+            self._add_buff(target, "curse", _to_int(action[1]), 0)
+        if targets:
+            context["targets"][index] = targets[0]
 
     def _act_taunt(self, attacker, enemies, allies, skill, action, index, context):
         self._add_buff(attacker, "taunt", _to_int(action[1]), 0)
@@ -1720,7 +1817,14 @@ class ReferenceBattle:
         coefficient = float(action[3])
         damage_type = int(action[4])
         lifesteal = float(action[5])
-        targets = self._skill_targets(attacker, enemies, pl)[:max(1, max_targets)]
+        # S_201310 stores pl[4] == 0 for its single-action metadata, while
+        # locked_combo_group itself carries the real six-target cap.  Feed the
+        # action cap into the native target resolver before it applies pl[4].
+        target_pl = list(pl)
+        while len(target_pl) <= 4:
+            target_pl.append(0)
+        target_pl[4] = max(0, max_targets - 1)
+        targets = self._skill_targets(attacker, enemies, target_pl)[:max(1, max_targets)]
         total = 0
         for target in targets:
             hit = 0
@@ -1919,7 +2023,7 @@ class ReferenceBattle:
             context["targets"][index] = candidates[0]
 
     def _act_move_self(self, attacker, enemies, allies, skill, action, index, context):
-        """move_self (139_SkillSet.as:936): signed distance, negative draws back."""
+        """move_self (139_SkillSet.as:936): signed distance, negative moves forward."""
         if len(action) < 3:
             raise ValueError("move_self needs a signed distance and a vfx")
         raw = action[1]
@@ -1966,7 +2070,7 @@ class ReferenceBattle:
         target = candidates[0]
         context["targets"][index] = target
         friendly_offset = _to_int(action[3])
-        side = int(attacker.get("isme")) + 1
+        side = self._team_number(attacker)
         requested = _to_int(target.get("pos", 0)) + (-friendly_offset if side == 1 else friendly_offset)
         destination = self._get_final_pos(side, int(target.get("line", 0)), requested)
         self._reline(attacker, int(target.get("line", 0)), destination, _to_int(action[2]), forced=False)
@@ -1987,7 +2091,7 @@ class ReferenceBattle:
             return
         target = candidates[0]
         context["targets"][index] = target
-        side = int(attacker.get("isme")) + 1
+        side = self._team_number(attacker)
         amount = _to_int(step)
         requested = _to_int(target.get("pos", 0)) + (-amount if side == 1 else amount)
         destination = self._get_final_pos(side, int(target.get("line", 0)), requested)
@@ -2004,7 +2108,7 @@ class ReferenceBattle:
         if int(ally.get("hp", 0)) <= 0:
             return
         context["targets"][index] = ally
-        side = int(attacker.get("isme")) + 1
+        side = self._team_number(attacker)
         destination = self._get_final_pos(side, int(ally.get("line", 0)), _to_int(ally.get("pos", 0)))
         self._reline(attacker, int(ally.get("line", 0)), destination, 0, forced=False)
 
@@ -2041,7 +2145,7 @@ class ReferenceBattle:
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(targets)
         context["targets"][index] = targets[0]
-        side = int(attacker.get("isme")) + 1
+        side = self._team_number(attacker)
         anchor = _to_int(attacker.get("pos", 0))
         for target in targets:
             if int(target.get("hp", 0)) <= 0:
@@ -2174,9 +2278,13 @@ class ReferenceBattle:
             level = max(1, level)
         elif level < 1:
             return
+        skill_id = str(skill.get("skid", ""))
+        if bounded and self._has_live_bounded_summon(attacker, skill_id):
+            return
         clone = self._spawn_summon(attacker, aid, float(fraction), rounds, level=level,
                                    bounded=bounded,
-                                   ap_factor=self._summon_ap_factor(skill.get("skid", "")))
+                                   bounded_skill_id=skill_id,
+                                   ap_factor=self._summon_ap_factor(skill_id))
         if clone is not None:
             context["targets"][index] = clone
 
@@ -2204,6 +2312,34 @@ class ReferenceBattle:
         return family in _BOUNDED_SUMMON_FAMILIES
 
     @staticmethod
+    def _has_live_bounded_summon(owner, skill_id):
+        """Match SkillSet.boundedSummons per owner and per skill instance."""
+        roster = owner.get("_team")
+        if not isinstance(roster, list):
+            return False
+        owner_id = owner.get("aid")
+        owner_token = owner.get("_owner_token")
+        for unit in roster:
+            if not isinstance(unit, dict) or int(unit.get("hp", 0)) <= 0:
+                continue
+            if not unit.get("_bounded_summon"):
+                continue
+            summon_token = unit.get("summon_owner_token")
+            if summon_token is not None:
+                if summon_token != owner_token:
+                    continue
+            elif unit.get("summon_owner") != owner_id:
+                # Accept old snapshots without a token through the legacy aid
+                # field, while tokenized summons remain instance-specific.
+                continue
+            # Older serialized summons may not carry the skill marker. Treat
+            # those as occupying the bounded slot rather than stacking them.
+            existing_skill = unit.get("_bounded_summon_skill")
+            if existing_skill is None or existing_skill == skill_id:
+                return True
+        return False
+
+    @staticmethod
     def _summon_ap_factor(skill_id):
         """139_SkillSet.as:3447 getSummonCombatSnapshotApFactor.
 
@@ -2221,7 +2357,7 @@ class ReferenceBattle:
         return 0.0
 
     def _spawn_summon(self, owner, aid, scale, rounds, level=None, bounded=False,
-                      ap_factor=None):
+                      bounded_skill_id=None, ap_factor=None):
         """Build one summoned unit from the owner's live stats (executeManualSummon).
 
         ``ap_factor`` selects the native stat model the caller is emulating.
@@ -2237,8 +2373,8 @@ class ReferenceBattle:
             unit = base_unit(self._config, aid, max(1, _to_int(level)),
                              max(1, _to_int(owner.get("slv", 1))),
                              int(owner.get("line", 0)), 0.0, False,
-                             int(owner.get("isme")) + 1,
-                             enforce_avatar_level_cap=False)
+                             self._team_number(owner),
+                             enforce_avatar_level_cap=False, summoned=True)
         except (ValueError, KeyError, TypeError, IndexError):
             return None
         if ap_factor is None:
@@ -2261,20 +2397,24 @@ class ReferenceBattle:
                 unit["de_ma"] = max(1, _to_int(_to_int(owner.get("de_ma", 0)) * 0.40))
                 unit["hp"] = unit["hp_max"]
             for key in ("hit", "flee", "crit", "tough"):
-                unit["new_4attrs"][key] = max(0, _to_int(self._raw_attr(owner, key)))
+                unit["new_4attrs"][key] = max(0, _to_int(self._stat_buff(owner, key)))
         if bounded:
             unit["_bounded_summon"] = True
+            if bounded_skill_id is not None:
+                unit["_bounded_summon_skill"] = str(bounded_skill_id)
         # The kit is kept: the generic summon path (139:1850) never nulls it,
         # so a summoned unit acts on its own pl slots. The turret path clears
         # them itself (139:3158).
         unit["_skill_cd"] = 0
         unit["_buffs"] = {}
         unit["summon_owner"] = owner.get("aid")
-        # SUMMON_POS is undetermined, so the unit shares the caster's line/slot.
-        unit["summon_unavailable_offset"] = True
+        unit["summon_owner_token"] = owner.get("_owner_token")
         unit["_team"] = owner.get("_team")
         unit["line"] = int(owner.get("line", 0))
-        unit["pos"] = _to_int(owner.get("pos", 0))
+        # Match the client's authored summon offset, not minimum unit spacing.
+        team = self._team_number(owner)
+        raw_pos = _to_int(owner.get("pos", 0)) + (-self._SUMMON_POS if team == 1 else self._SUMMON_POS)
+        unit["pos"] = self._get_final_pos(team, unit["line"], raw_pos)
         self._add_buff(unit, "summon", max(1, _to_int(rounds)), 0)
         roster = owner.get("_team")
         if isinstance(roster, list):
@@ -2313,7 +2453,7 @@ class ReferenceBattle:
                 return
         turret = self._spawn_summon(attacker, "A_2001_4", float(scale), rounds,
                                     level=max(1, _to_int(attacker.get("lv", 1))),
-                                    bounded=True)
+                                    bounded=True, bounded_skill_id=skid)
         if turret is None:
             return
         # executeHeimerTurretSummon scales all four secondary stats too, and
@@ -2378,7 +2518,7 @@ class ReferenceBattle:
         for target in targets:
             if int(target.get("hp", 0)) <= 0:
                 continue
-            side = int(attacker.get("isme")) + 1
+            side = self._team_number(attacker)
             requested = _to_int(target.get("pos", 0)) + (-125 if side == 1 else 125)
             destination = self._get_final_pos(side, int(target.get("line", 0)), requested)
             self._reline(attacker, int(target.get("line", 0)), destination, 0, forced=False)
@@ -2669,60 +2809,55 @@ class ReferenceBattle:
         for rounds in range(1, self.max_rounds + 1):
             for side in (1, 2):
                 for attacker in (x for x in sides[side] if x["hp"] > 0):
-                    attacker["_team"] = sides[side]
-                    # A queued area strike resolves at the top of the owner's
-                    # next turn (139_SkillSet.as:2990).
-                    self._resolve_pending_strike(attacker)
-                    if int(attacker.get("hp", 0)) <= 0:
-                        continue
-                    # checkBuff runs at the top of the owner's turn, before the
-                    # stun gate (137_Avatar.as:4322).
-                    if self._tick_buffs(attacker):
-                        continue
-                    if int(attacker.get("hp", 0)) <= 0:
-                        continue
-                    if self._buff(attacker, "stun") is not None:
-                        # The else block spans the whole action, so a stunned
-                        # unit performs nothing this turn.
-                        continue
-                    # skillB fires at the very top of the turn, before the stun
-                    # gate and outside checkSkill's silence check
-                    # (079_Avatar.as:3340, 5074). It does not consume the turn:
-                    # checkSkill() still runs afterwards.
-                    enemies = [x for x in sides[3 - side] if x["hp"] > 0]
-                    if not enemies:
+                    if not self._run_unit_turn(attacker, sides, side):
                         break
-                    # Every slot's cooldown ticks once per owner turn, whether or
-                    # not that slot is the one that acts (079_Avatar.as:3326).
-                    for _cd_key in ("_skill_cd", "_skill_cd_b", "_skill_cd_leader"):
-                        self._tick_slot_cd(attacker, _cd_key)
-                    self._use_turn_start_passive(attacker, enemies)
-                    if int(attacker.get("hp", 0)) <= 0:
-                        continue
-                    skill = attacker.get("skill")
-                    # silence returns false from checkSkill(), so the unit falls
-                    # through to a basic attack.
-                    silenced = self._buff(attacker, "silence") is not None
-                    acted = False
-                    if isinstance(skill, dict) and skill.get("skills") and not silenced:
-                        if self._use_skill_slot(attacker, enemies, "skill", "_skill_cd"):
-                            acted = True
-                    # checkSkill also runs the leader skill on a leader's turn
-                    # (079_Avatar.as:5089).
-                    if not acted and attacker.get("leader"):
-                        if self._use_skill_slot(attacker, enemies, "leader_skill", "_skill_cd_leader"):
-                            acted = True
-                    if acted:
-                        continue
-                    target = min(enemies, key=lambda x: (x.get("line") != attacker.get("line"), abs(float(x.get("pos", 0)) - float(attacker.get("pos", 0))), x["hp"]))
-                    if self.rng.get_random(100) < 80:
-                        self._basic_attack(attacker, target)
             if not any(x["hp"] > 0 for x in self.a) or not any(x["hp"] > 0 for x in self.b):
                 break
         aa, bb = sum(x["hp"] > 0 for x in self.a), sum(x["hp"] > 0 for x in self.b)
         sa, sb = sum(x["hp"] for x in self.a), sum(x["hp"] for x in self.b)
         winner = 1 if aa and (not bb or sa >= sb) else 2
         return {"winner": winner, "rounds": rounds, "team_a": self.a, "team_b": self.b, "rng_calls": self.rng.calls}
+
+    def _run_unit_turn(self, attacker, sides, side):
+        """Run one owner turn from its top-of-turn checks through its action."""
+        attacker["_team"] = sides[side]
+        # A queued area strike resolves at the top of the owner's next turn.
+        self._resolve_pending_strike(attacker)
+        if int(attacker.get("hp", 0)) <= 0:
+            return True
+        enemies = [x for x in sides[3 - side] if x["hp"] > 0]
+        if not enemies:
+            return False
+        for cd_key in ("_skill_cd", "_skill_cd_b", "_skill_cd_leader"):
+            self._tick_slot_cd(attacker, cd_key)
+        # Avatar.checkSkillB() runs after cooldowns and before checkBuff(). A
+        # passive such as Steel Teemo's purify therefore gets a chance to
+        # remove a stun on the same owner turn.
+        self._use_turn_start_passive(attacker, enemies)
+        if int(attacker.get("hp", 0)) <= 0:
+            return True
+        if self._tick_buffs(attacker):
+            return True
+        if int(attacker.get("hp", 0)) <= 0:
+            return True
+        if self._buff(attacker, "stun") is not None:
+            return True
+        skill = attacker.get("skill")
+        silenced = self._buff(attacker, "silence") is not None
+        acted = False
+        if isinstance(skill, dict) and skill.get("skills") and not silenced:
+            acted = self._use_skill_slot(attacker, enemies, "skill", "_skill_cd") or acted
+        # checkSkill() tries skill0 and then the leader skill independently;
+        # success of the ordinary skill does not suppress the leader cast.
+        if attacker.get("leader"):
+            acted = self._use_skill_slot(attacker, enemies, "leader_skill", "_skill_cd_leader") or acted
+        if not acted:
+            target = min(enemies, key=lambda x: (x.get("line") != attacker.get("line"),
+                                                  abs(float(x.get("pos", 0)) - float(attacker.get("pos", 0))),
+                                                  x["hp"]))
+            if self.rng.get_random(100) < 80:
+                self._basic_attack(attacker, target)
+        return True
 
     def _tick_slot_cd(self, attacker, cd_key):
         """Advance one skill slot's cooldown counter by a full owner turn.
@@ -2821,6 +2956,7 @@ _ACTION_HANDLERS = {
     "purify": ReferenceBattle._act_purify,
     "cure": ReferenceBattle._act_cure,
     "evil": ReferenceBattle._act_evil,
+    "curse": ReferenceBattle._act_curse,
     "taunt": ReferenceBattle._act_taunt,
     "attrup": ReferenceBattle._act_attrup,
     "stat_flat": ReferenceBattle._act_stat_flat,

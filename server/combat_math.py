@@ -37,4 +37,6 @@ def settle_damage(amount,critical_rate,toughness,shield,attack,talent_rate=0):
 def level_stats(avatar,level,*,enforce_cap=True):
  if not isinstance(level,int) or level<1 or (enforce_cap and level>avatar['tl'][4]):raise ValueError('level outside configured bounds')
  pl=avatar['pl']
- return {key:to_int(pl[i]+pl[i+1]*(level-1)) for i,key in [(0,'health'),(2,'attack'),(4,'physical_defense'),(6,'magic_defense')]}
+ # Avatar's base getters use int(), before their later Tools.toInt calls.
+ # Preserve that truncation for templates with fractional base/growth values.
+ return {key:int(pl[i]+pl[i+1]*(level-1)) for i,key in [(0,'health'),(2,'attack'),(4,'physical_defense'),(6,'magic_defense')]}

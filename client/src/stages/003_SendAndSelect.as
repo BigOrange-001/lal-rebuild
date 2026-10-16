@@ -466,6 +466,8 @@ package com.meng52.net
          _receiptKind = GlobalFunction.profileReceiptKind(param1);
          var _loc6_:Number = $systemTimeDate.time * 0.001;
          setSystem(_loc6_);
+         try
+         {
          if($serviceData[_loc3_] != null && $serviceData[_loc3_] != undefined && _loc2_ == 0 && (_loc7_ != "user.login" || _loc3_ == $profileBootstrapActionID))
          {
             if(_receiptKind < 0 || (_receiptKind == 0 && _loc7_.indexOf("user.") == 0 && !GlobalFunction.isProfileBootstrapMethod(_loc7_)))
@@ -523,8 +525,12 @@ package com.meng52.net
             _loc5_.data = param1;
             $SendServiceAMFDispatcher.dispatchEvent(_loc5_);
          }
-         delete $serviceData[_loc3_];
-         clearTimeOut();
+         }
+         finally
+         {
+            delete $serviceData[_loc3_];
+            clearTimeOut();
+         }
       }
       
       public static function reErrorCheckFun(param1:Object) : void

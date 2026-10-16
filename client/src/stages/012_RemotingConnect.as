@@ -52,6 +52,9 @@ package com.meng52.net
          }
          catch(e:Error)
          {
+            reportDiagnostic("AMF send failed: " + String(e));
+            dispatchEvent(new Event("NET_ERROR"));
+            throw e;
          }
       }
       
@@ -61,7 +64,8 @@ package com.meng52.net
          request.method = "POST"; request.data = message;
          var loader:URLLoader = new URLLoader();
          loader.addEventListener(IOErrorEvent.IO_ERROR,function(e:IOErrorEvent):void {});
-         loader.load(request);
+         try { loader.load(request); }
+         catch(error:Error) { }
       }
       public function closeNet() : void
       {

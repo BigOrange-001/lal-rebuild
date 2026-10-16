@@ -22,6 +22,8 @@ package com.meng52.game.module.skill
 
       public static const BUFF_EVIL:String = "evil";
 
+      public static const BUFF_CURSE:String = "curse";
+
       public static const BUFF_SUMMON:String = "summon";
 
       public static const BUFF_SHIELD:String = "shield";
@@ -54,7 +56,7 @@ package com.meng52.game.module.skill
 
       public static const BUFF_AVENGE:String = "avenge";
 
-      public static const LIST_DEBUFF:Array = ["root","stun","silence","weak","sunder","poison","burn","evil"];
+      public static const LIST_DEBUFF:Array = ["root","stun","silence","weak","sunder","poison","burn","evil","curse"];
 
       public static const LIST_BUFF:Array = ["shield","strong","taunt","bless","steel","armor","hitup","fleeup","critup","toughup","purify"];
 
@@ -80,9 +82,12 @@ package com.meng52.game.module.skill
          if(!m_do)
          {
             _loc1_ = DisplayTools.getAttrs(type);
+            // Use the same animated status-effect path as shield and bless.
             m_do = DisplayTools.newDisplayObject(_loc1_);
+            if(m_do && type == BUFF_CURSE) m_do.name = "curseSeal";
          }
          return m_do;
       }
+
    }
 }

@@ -290,6 +290,9 @@ package com.meng52.game.module.skill
                case "evil":
                   _loc1_["evil"] = GlobalLanguageStr.getLanguageStr(25017);
                   break;
+               case "curse":
+                  _loc1_["curse"] = "诅咒（无法获得正面增益）";
+                  break;
                case "summon":
                   _loc1_["summon"] = GlobalLanguageStr.getLanguageStr(25006);
                   break;
@@ -618,6 +621,14 @@ package com.meng52.game.module.skill
                var targeted:Boolean = isEnemyTargetAction(kind) || kind == "manual_dot" || kind == "suck" || kind == "dispel_good" || kind == "pending_area_strike" || kind == "move_to_target_lane";
                if(kind == "select_target" || targeted || ally)
                {
+                   // curse range 0 deliberately targets its caster (see the
+                   // execution branch below), so the preflight check must not
+                   // search the enemy list and reject an otherwise valid cast.
+                   if(kind == "curse" && getCastRange() == 0)
+                   {
+                      actions[index] = avatar;
+                      return true;
+                   }
                   var candidates:Vector.<Avatar> = getCustomActionTargets(index,actions,groups,ally);
                   if(candidates.length == 0) return allyPrimary;
                   actions[index] = candidates[0];
@@ -661,7 +672,7 @@ package com.meng52.game.module.skill
 
       private function isEnemyTargetAction(param1:String) : Boolean
       {
-         return param1 == "ricochet_bursts" || param1 == "damage" || param1 == "true_damage" || param1 == "conditional_damage" || param1 == "stun_by_condition" || param1 == "damage_chain" || param1 == "locked_sequence" || param1 == "locked_sequence_area" || param1 == "locked_combo_group" || param1 == "locked_combo_weak" || param1 == "combo" || param1 == "stun" || param1 == "silence" || param1 == "weak" || param1 == "weak_percent" || param1 == "sunder" || param1 == "sunder_percent" || param1 == "poison" || param1 == "burn" || param1 == "evil" || param1 == "pull" || param1 == "pull_group" || param1 == "push" || param1 == "push_aoe" || param1 == "move_to_target" || param1 == "move_enemy_side_target" || param1 == "shield_dispel" || param1 == "focus_fire" || param1 == "dash_group_strike";
+          return param1 == "ricochet_bursts" || param1 == "damage" || param1 == "true_damage" || param1 == "conditional_damage" || param1 == "stun_by_condition" || param1 == "damage_chain" || param1 == "locked_sequence" || param1 == "locked_sequence_area" || param1 == "locked_combo_group" || param1 == "locked_combo_weak" || param1 == "combo" || param1 == "stun" || param1 == "silence" || param1 == "weak" || param1 == "weak_percent" || param1 == "sunder" || param1 == "sunder_percent" || param1 == "poison" || param1 == "burn" || param1 == "evil" || param1 == "curse" || param1 == "pull" || param1 == "pull_group" || param1 == "push" || param1 == "push_aoe" || param1 == "move_to_target" || param1 == "move_enemy_side_target" || param1 == "shield_dispel" || param1 == "focus_fire" || param1 == "dash_group_strike";
       }
 
       public function checkUse() : Boolean
@@ -1810,6 +1821,24 @@ package com.meng52.game.module.skill
                   _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
                   avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,0,0,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],new Buff("evil",_loc20_[1]));
                   break;
+               case "curse":
+                  if(_loc24_ == 0)
+                  {
+                     _loc3_ = new Vector.<Avatar>();
+                     _loc3_.push(avatar);
+                  }
+                  else
+                  {
+                     _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
+                     _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
+                     _loc3_ = avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_);
+                  }
+                  if(_loc3_.length > 0)
+                  {
+                     _loc1_ = avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,0,0,getActionAoeIndex(_loc14_,_loc7_,_loc3_),String(_loc20_[_loc20_.length - 1]),new Buff("curse",int(_loc20_[1])));
+                     if(_loc1_) actionTargets[_loc14_] = _loc1_;
+                  }
+                  break;
                case "pull":
                   _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                   _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
@@ -1874,6 +1903,7 @@ package com.meng52.game.module.skill
                   });
                   _loc23_ = avatar.team == 1 ? avatar.pos - GameMapConfig.SUMMON_POS : avatar.pos + GameMapConfig.SUMMON_POS;
                   _loc1_.goFight(avatar.team,avatar.line,0,false);
+                   if(_loc20_[2] == "A_2003_2" || _loc20_[2] == "A_2018_2" || _loc20_[2] == "A_2024_6") _loc1_.formationOwner = avatar;
                   summonApFactor = getSummonCombatSnapshotApFactor();
                   if(summonApFactor > 0)
                   {
@@ -1887,10 +1917,10 @@ package com.meng52.game.module.skill
                      _loc1_.deMa = int(avatar.getDeMa() * 0.40);
                      if(_loc1_.deMa < 1) _loc1_.deMa = 1;
                   }
-                  _loc1_.hit = avatar.hit;
-                  _loc1_.flee = avatar.flee;
-                  _loc1_.crit = avatar.crit;
-                  _loc1_.tough = avatar.tough;
+                  _loc1_.hit = avatar.getHit();
+                  _loc1_.flee = avatar.getFlee();
+                  _loc1_.crit = avatar.getCrit();
+                  _loc1_.tough = avatar.getTough();
                   _loc1_.addBuff("summon",_loc20_[3]);
                   _loc12_ = DisplayTools.getAttrs(_loc20_[_loc20_.length - 1]);
                   if(!_loc12_)
@@ -3090,6 +3120,7 @@ package com.meng52.game.module.skill
             case "303124":
             case "305082":
             case "305128":
+            case "301209":
             case "301221":
             case "301310":
                return true;
@@ -3459,5 +3490,6 @@ package com.meng52.game.module.skill
          }
          return 0;
       }
+
    }
 }

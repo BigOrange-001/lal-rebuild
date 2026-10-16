@@ -2365,7 +2365,16 @@ class GameplayRosterEquipment:
             leaf = path[-1]
             if valid and isinstance(target, list) and type(leaf) is int and 0 <= leaf < len(target) and isinstance(target[leaf], (int, float)):
                 target[leaf] += step * (min(10, skill_level) - 1)
-        return {"cd": int(pl[0]) if pl else 0, "pl": copy.deepcopy(pl), "skid": skill_id, "skills": actions}
+        return {
+            "cd": int(pl[0]) if pl else 0,
+            "pl": copy.deepcopy(pl),
+            "skid": skill_id,
+            "skills": actions,
+            "actionTargetPolicies": copy.deepcopy(row.get("actionTargetPolicies") or []),
+            "actionTargetPolicyArgs": copy.deepcopy(row.get("actionTargetPolicyArgs") or []),
+            "actionTargetMaxTargets": copy.deepcopy(row.get("actionTargetMaxTargets") or []),
+            "actionTargetGroups": copy.deepcopy(row.get("actionTargetGroups") or []),
+        }
 
     def _native_skill_level_cap(self):
         config = self.simple.get("slv_config", [])

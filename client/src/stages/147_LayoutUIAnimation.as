@@ -1918,6 +1918,9 @@ package com.meng52.game.ui.stage
          {
             return null;
          }
+         // Page navigation can hide the previous reward layer. A new draw
+         // always owns a fresh, visible layer and its own animation timeline.
+         clearAnimationLayerForDraw();
          _maxStar = 0;
          if(_avatars is Array)
          {
@@ -2265,60 +2268,20 @@ package com.meng52.game.ui.stage
          {
             tempUIName = "center_shopAndVIP";
          }
+         // Tint preserves the rarity cue without allocating an offscreen
+         // filter texture at the end of every draw on mobile GPUs.
          _scale = 1;
-         if(_maxStar != 4)
-         {
-            if(_maxStar == 6)
-            {
-               _colorfilter = new ColorMatrixFilter();
-               _colorfilter.adjustBrightness(0.3);
-               _colorfilter.adjustHue(-0.85);
-               _scale = 1.2;
-            }
-            else if(_maxStar == 5)
-            {
-               _colorfilter = new ColorMatrixFilter();
-               _colorfilter.adjustHue(0.35);
-               _scale = 1.1;
-            }
-            else if(_maxStar == 3)
-            {
-               _colorfilter = new ColorMatrixFilter();
-               _colorfilter.adjustBrightness(-0.05);
-               _colorfilter.adjustHue(-0.3);
-               _scale = 0.9;
-            }
-            else if(_maxStar == 2)
-            {
-               _colorfilter = new ColorMatrixFilter();
-               _colorfilter.adjustBrightness(-0.2);
-               _colorfilter.adjustSaturation(-1);
-               _scale = 0.8;
-            }
-            else if(_maxStar == 1)
-            {
-               _colorfilter = new ColorMatrixFilter();
-               _colorfilter.adjustBrightness(-0.4);
-               _colorfilter.adjustSaturation(-1);
-               _scale = 0.7;
-            }
-            if(_colorfilter)
-            {
-               _halo.filter = _colorfilter;
-            }
-         }
+         _halo.color = 16777215;
+         if(_maxStar == 6) { _halo.color = 16760928; _scale = 1.2; }
+         else if(_maxStar == 5) { _halo.color = 13408767; _scale = 1.1; }
+         else if(_maxStar == 3) { _halo.color = 6736998; _scale = 0.9; }
+         else if(_maxStar == 2) { _halo.color = 11184810; _scale = 0.8; }
+         else if(_maxStar == 1) { _halo.color = 8947848; _scale = 0.7; }
          _halo.scaleX = _halo.scaleY = 0;
          _tween = new Tween(_halo,_time / 3,"easeOutBack");
          _tween.scaleTo(_scale);
          _tween.fadeTo(_scale);
          _tween.delay = l == 1 ? _allTime * 0.5 : _allTime - _time / 2;
-         _tween.onComplete = function():void
-         {
-            if(_halo.filter)
-            {
-               _halo.filter.cache();
-            }
-         };
          jugglerA.add(_tween);
          GuideMaster.getOnlyExample().guideWait();
          if(_type == 6)
@@ -2422,6 +2385,16 @@ package com.meng52.game.ui.stage
          clearAnimationLayer();
          GuideMaster.getOnlyExample().nextGuideStep();
          GlobalData.$mEventDispatcher.dispatchEventWith("update_avatar_starup");
+      }
+
+      private function clearAnimationLayerForDraw() : void
+      {
+         // Do not reopen the previous recruitment page while starting a draw.
+         tempUIName = null;
+         clearAnimationLayer();
+         visible = true;
+         touchable = true;
+         isPlay = true;
       }
       
       public function clearAnimationLayer(param1:Event = null) : void

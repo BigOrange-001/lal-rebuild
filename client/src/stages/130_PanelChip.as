@@ -87,8 +87,15 @@ package com.meng52.game.ui.panel
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         if(mTimer_fragment)
+         {
+            mTimer_fragment.stop();
+            mTimer_fragment.removeEventListener("timer",onTIMER_fragment);
+            mTimer_fragment = null;
+         }
          GlobalData.$mEventDispatcher.removeEventListener("update_fragment_list",onUPDATE_FRAGMENT_LIST);
          GlobalData.$mEventDispatcher.removeEventListener("update_fragment_child",setFragment_child);
+         super.onREMOVED_FROM_STAGE(param1);
       }
       
       private function onTIMER_fragment(param1:TimerEvent) : void

@@ -45,6 +45,34 @@ class RosterSalePromotionTest(unittest.TestCase):
         self.assertEqual(self.roster.dispatch(self.uid, 'user.sell_avatars', {'aids': ids[:100], 'actionID': 'sell100'}), sold)
         self.assertEqual(set(self.store.profile_raw(self.uid)['avatars']), {ids[100]})
 
+    def test_crocodile_second_phase_then_star_promotion(self):
+        target = 'A_1101_5|croc'
+        materials = [f'A_1101_5|copy{i}' for i in range(3)]
+        self.assertEqual(self.config['cfg']['avatar']['A_1101_5']['name'], '雷克顿')
+        def seed(profile):
+            profile['team'] = [[None] * 6 for _ in range(3)]
+            profile['avatars'] = {
+                aid: {'id': aid, 'aid': aid, 'lv': 99 if aid == target else 1,
+                      'exp': 0, 'phase': 1 if aid == target else 0, 'morph': 0,
+                      'hp': 11 if aid == target else 0, 'ap': 2 if aid == target else 0,
+                      'de_ph': 1 if aid == target else 0, 'de_ma': 1 if aid == target else 0}
+                for aid in [target] + materials
+            }
+            profile['coin'] = 100000
+            profile['gold'] = 10000000
+            profile['attrs']['dust'] = [10000] * 4
+            return profile, {}
+        self.store.atomic_update(self.uid, seed)
+        params = {'aid': target, 'aids': materials[:2], 'actionID': 'croc-phase2'}
+        advanced = self.roster.dispatch(self.uid, 'user.phase_up', params)
+        self.assertEqual(advanced['phase'], 2)
+        self.assertEqual(self.roster.dispatch(self.uid, 'user.phase_up', params), advanced)
+        promoted = self.roster.dispatch(self.uid, 'user.star_up',
+                         {'aid': target, 'aids': materials[2:], 'actionID': 'croc-star'})
+        self.assertEqual((promoted['id'], promoted['phase']), ('A_1101_6|croc', 0))
+        self.assertEqual(set(self.store.profile_raw(self.uid)['avatars']), {'A_1101_6|croc'})
+        self.assertGreater(promoted['hp'], 0)
+
     def test_star_promotion_resets_phase_and_keeps_cultivation(self):
         target = 'A_1101_5|r0'
         material = 'A_1101_5|r7'

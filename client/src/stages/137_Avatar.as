@@ -17,6 +17,7 @@ package com.meng52.game.module.avatar
    import com.meng52.game.module.skill.SkillSet;
    import com.meng52.game.module.talent.Talent;
    import com.meng52.game.ui.effect.DisplayTools;
+   import com.meng52.game.ui.effect.DragonBonesSprite;
    import com.meng52.game.ui.element.ProgressBar;
    import com.meng52.game.ui.map.AvatarLayer;
    import com.meng52.game.ui.map.GameMapLayer;
@@ -30,6 +31,7 @@ package com.meng52.game.module.avatar
    import starling.animation.Tween;
    import starling.display.DisplayObject;
    import starling.display.Image;
+   import starling.display.Quad;
    import starling.display.Sprite;
    import starling.events.Touch;
    import starling.events.TouchEvent;
@@ -140,6 +142,27 @@ package com.meng52.game.module.avatar
       {
          var context:Object = currentAbilityAttack();
          return abilityState.bond && context && context.owner===this && context.kind=="active" ? 1.3 : 1;
+      }
+
+      public var formationOwner:Avatar;
+
+      public function clampSummonFormation(targetPos:int) : int
+      {
+         if(!formationOwner || formationOwner.hp <= 0 || formationOwner.team != team || formationOwner.line != line) return targetPos;
+         // Keep a unit of visible spacing; never teleport displaced summons.
+         return team == 1 ? Math.min(targetPos,Math.max(pos,formationOwner.pos - GameMapConfig.MIN_SPACE_POS)) : Math.max(targetPos,Math.min(pos,formationOwner.pos + GameMapConfig.MIN_SPACE_POS));
+      }
+
+      private function clampOwnerAdvance(targetPos:int) : int
+      {
+         var units:Vector.<Avatar> = GameMap.currentMap.getAliveList(team) as Vector.<Avatar>;
+         for each(var unit:Avatar in units)
+         {
+            if(unit.formationOwner !== this || unit.hp <= 0 || unit.line != line) continue;
+            // Wait for the front summon instead of walking through it.
+            targetPos = team == 1 ? Math.max(targetPos,Math.min(pos,unit.pos + GameMapConfig.MIN_SPACE_POS)) : Math.min(targetPos,Math.max(pos,unit.pos - GameMapConfig.MIN_SPACE_POS));
+         }
+         return targetPos;
       }
 
       public var abilityState:Object = {};
@@ -2653,7 +2676,7 @@ package com.meng52.game.module.avatar
                return;
             }
          }
-         else if(buffs["evil"])
+         else if(buffs["evil"] && param1 != "purify")
          {
             if(Buff.LIST_BUFF.indexOf(param1) != -1)
             {
@@ -2663,6 +2686,13 @@ package com.meng52.game.module.avatar
                _loc7_.delayCall(_loc7_.infoLayer.popTextForAvatar,param4,_loc13_,this,_loc8_,param5,_loc14_);
                return;
             }
+         }
+         if(buffs["curse"] && Buff.LIST_BUFF.indexOf(param1) != -1 && param1 != "purify")
+         {
+            _loc8_ = 10526880;
+            _loc13_ = GlobalLanguageStr.getLanguageStr(30025);
+            _loc7_.delayCall(_loc7_.infoLayer.popTextForAvatar,param4,_loc13_,this,_loc8_,param5,_loc14_);
+            return;
          }
          if(param1 == "purify")
          {
@@ -2686,6 +2716,7 @@ package com.meng52.game.module.avatar
                case "silence":
                case "purify":
                case "evil":
+               case "curse":
                case "taunt":
                case "bless":
                   if(_loc11_.round >= _loc12_.round)
@@ -2788,6 +2819,10 @@ package com.meng52.game.module.avatar
                case "evil":
                   _loc8_ = 10053222;
                   _loc13_ = GlobalLanguageStr.getLanguageStr(30080) + _loc11_.round + GlobalLanguageStr.getLanguageStr(30002);
+                  break;
+               case "curse":
+                  _loc8_ = 10053222;
+                  _loc13_ = "诅咒" + _loc11_.round + GlobalLanguageStr.getLanguageStr(30002);
                   break;
                case "bless":
                   _loc8_ = 16777164;
@@ -4243,6 +4278,7 @@ package com.meng52.game.module.avatar
 
       public function goFight(param1:int, param2:int, param3:Number, param4:Boolean = true) : void
       {
+         formationOwner = null;
          abilityState = {}; abilitySerial = 0; abilityIndex = ++abilityNextIndex;
          abilityEntryAttack = 0;
          team = param1;
@@ -4318,7 +4354,9 @@ package com.meng52.game.module.avatar
          {
             manualFocusTarget = null;
          }
-         if(_currentMap.winnerList[line] != 0)
+         // A finished lane may still supply a global turn-start passive.
+         // The lane-end guard below stops normal attacks, skills and movement.
+         if(_currentMap.isEnd() || (_currentMap.winnerList[line] != 0 && (!skillB || skillB.getCastRange() <= GameMapConfig.LINE_POS)))
          {
             return false;
          }
@@ -4578,7 +4616,7 @@ package com.meng52.game.module.avatar
                GlobalData.skillBoo = false;
                return false;
             }
-            if((_loc2_ == "evil" || _loc2_ == "silence" || _loc2_ == "stun" || _loc2_ == "burn" || _loc2_ == "sunder" || _loc2_ == "poison" || _loc2_ == "weak") && this.avatarData.skill_diff == 19)
+            if((_loc2_ == "root" || _loc2_ == "evil" || _loc2_ == "silence" || _loc2_ == "stun" || _loc2_ == "burn" || _loc2_ == "sunder" || _loc2_ == "poison" || _loc2_ == "weak" || _loc2_ == "curse") && this.avatarData.skill_diff == 19)
             {
                _loc1_ = true;
                GlobalData.skillBoo = true;
@@ -4686,7 +4724,13 @@ package com.meng52.game.module.avatar
          {
             _loc18_ = -param2;
          }
-         pos = GameMap.currentMap.getFinalPos(team,line,pos + _loc18_);
+         var requestedPos:int = pos + _loc18_;
+         if(_loc7_ && !param5 && !param3)
+         {
+            requestedPos = clampSummonFormation(requestedPos);
+            if(param1) requestedPos = clampOwnerAdvance(requestedPos);
+         }
+         pos = GameMap.currentMap.getFinalPos(team,line,requestedPos);
          var _loc14_:Number = 0.4;
          param2 = Math.abs(_loc9_ - pos);
          if(param2 < 400)
@@ -5159,6 +5203,9 @@ package com.meng52.game.module.avatar
          {
             _loc41_ = {};
          }
+         // Keep the steel-impact presentation alive even when a device is
+         // running an older effect table that does not know the custom marker.
+         var isSteelLaneWave:Boolean = param5 == "FX_STEEL_LANE_WAVE";
          var _loc25_:* = _loc41_.h;
          if(!_loc25_)
          {
@@ -5178,6 +5225,36 @@ package com.meng52.game.module.avatar
             _loc27_.par = _loc30_.effectLayer;
             _loc30_.delayCall(DisplayTools.addEffects,GameMap.actionDelay - 0.3 / 2,_loc27_);
             GameMap.actionDelay += _loc23_;
+         }
+         if(_loc41_.laneWave || isSteelLaneWave)
+         {
+            _loc30_.delayCall(showLaneShockwave,GameMap.actionDelay,effectSource || this);
+            if(!effectSource || effectSource === this)
+            {
+               _loc30_.delayCall(attackTween,GameMap.actionDelay,this,param1[0]);
+            }
+            // One wave reaches the whole lane before any hit is presented.
+            // Keep the normal miss, crit, shield and injury paths for each unit.
+            var waveHitDelay:Number = GameMap.actionDelay + 0.18;
+            var waveEndDelay:Number = waveHitDelay;
+            for each(var waveTarget:Avatar in param1)
+            {
+               GameMap.actionDelay = waveHitDelay;
+               if(_loc42_ && checkMiss(this,waveTarget,_loc25_))
+               {
+                  if(skillB && avatarData.skill_diff == 1) GlobalData.skillBoo = true;
+               }
+               else
+               {
+                  _loc46_ = _loc42_ ? countDamage(this,waveTarget,_loc14_,param2,param9) : [_loc14_,false];
+                  _loc20_ = _loc42_ ? checkCrit(this,waveTarget) : 1;
+                  if(_loc20_ != 1 && skillB && avatarData.skill_diff == 2) GlobalData.skillBoo = true;
+                  _loc21_ += waveTarget.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+               }
+               waveEndDelay = Math.max(waveEndDelay,GameMap.actionDelay);
+            }
+            GameMap.actionDelay = Math.max(waveEndDelay,waveHitDelay + 0.32);
+            return _loc21_;
          }
          if(param4 == GameMapConfig.MIN_SPACE_POS - 1)
          {
@@ -5495,6 +5572,77 @@ package com.meng52.game.module.avatar
          return hp / hpMax;
       }
 
+      private static function showLaneShockwave(source:Avatar) : void
+      {
+         var layer:GameMapLayer = GameMapLayer.gl;
+         if(!layer || !source || !source.fightRes || !source.fightRes.parent) return;
+         // Resolve the rendered origin at playback, including the attack bounce,
+         // horizontal offset, lane translation and camera transformation.
+         var origin:Point = layer.effectLayer.globalToLocal(source.fightRes.localToGlobal(new Point(source.fightRes.pivotX,source.fightRes.pivotY)));
+         var endPos:int = source.team == 1 ? -150 : GameMapConfig.LINE_POS + 150;
+         var finish:Point = layer.effectLayer.globalToLocal(layer.getLineSpr(source.line).localToGlobal(new Point(0,GameMapConfig.posToPixel(endPos))));
+         var laneWidth:Number = Math.abs(GameMapConfig.offsetToPixel(GameMapConfig.lineOffset * 0.92));
+         var wave:Sprite = new Sprite();
+         wave.name = "steelLaneWave";
+         wave.touchable = false;
+         wave.x = origin.x;
+         wave.y = origin.y;
+         layer.effectLayer.addChild(wave);
+         // Hold a fully formed native ring frame. Its startup bounds are zero
+         // and its later swirl frames would shrink a lane wave into a dot.
+         for(var echo:int = 0;echo < 3;echo++)
+         {
+            var front:Sprite = new Sprite();
+            var art:DragonBonesSprite = DisplayTools.newDisplayObject({id:"e001",loop:true,m:"add"}) as DragonBonesSprite;
+            if(!art) continue;
+            wave.addChild(front);
+            front.addChild(art);
+            art.armature.advanceTime(0);
+            art.armature.advanceTime(0.52);
+            art.stop();
+            var artWidth:Number = Math.max(1,art.width);
+            var fullScale:Number = laneWidth / artWidth;
+            art.scaleX = fullScale;
+            art.scaleY = fullScale * 0.38;
+            // Keep only the forward half: a broad crescent, not a flat beam.
+            front.clipRect = new Rectangle(-laneWidth * 0.6,source.team == 1 ? -laneWidth * 0.26 : 0,laneWidth * 1.2,laneWidth * 0.26);
+            front.scaleX = 0.45;
+            front.scaleY = 0.65;
+            front.alpha = 0.8 - echo * 0.22;
+            var travel:Tween = new Tween(front,0.32,"easeOut");
+            travel.delay = echo * 0.035;
+            travel.moveTo(finish.x - origin.x,finish.y - origin.y);
+            travel.animate("scaleX",1);
+            travel.animate("scaleY",1);
+            layer.addTween(travel);
+         }
+         var fade:Tween = new Tween(wave,0.22,"easeOut");
+         fade.delay = 0.39;
+         fade.fadeTo(0);
+         fade.onComplete = wave.removeFromParent;
+         fade.onCompleteArgs = [true];
+         layer.addTween(fade);
+      }
+
+      private function showCurseImpact() : void
+      {
+         var layer:GameMapLayer = GameMapLayer.gl;
+         if(!layer || !fightRes || !fightRes.parent) return;
+         var impact:DisplayObject = DisplayTools.newDisplayObject(DisplayTools.getAttrs("CURSE_IMPACT"));
+         if(!impact) return;
+         impact.name = "curseImpact";
+         var origin:Point = layer.effectLayer.globalToLocal(fightRes.localToGlobal(new Point(fightRes.pivotX,fightRes.pivotY)));
+         impact.x = origin.x;
+         impact.y = origin.y;
+         layer.effectLayer.addChild(impact);
+         var pulse:Tween = new Tween(impact,0.35,"easeOut");
+         pulse.scaleTo(1.15);
+         pulse.fadeTo(0);
+         pulse.onComplete = impact.removeFromParent;
+         pulse.onCompleteArgs = [true];
+         layer.addTween(pulse);
+      }
+
       public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null) : int
       {
          var abilityHpBefore:int = hp;
@@ -5520,7 +5668,15 @@ package com.meng52.game.module.avatar
          {
             if(param8)
             {
+               var priorCurse:Buff = buffs["curse"];
                addBuff(param8.type,param8.round,param8.value);
+               // Zero-damage actions return before the normal hit VFX below.
+               // Show a burst only when the curse was actually accepted;
+               // purification and weaker reapplications must not fake a hit.
+               if(param8.type == "curse" && buffs["curse"] && buffs["curse"] !== priorCurse)
+               {
+                  GameMapLayer.gl.delayCall(showCurseImpact,GameMap.actionDelay);
+               }
             }
             return 0;
          }
@@ -6155,7 +6311,9 @@ package com.meng52.game.module.avatar
          if(skillB && GlobalData.skillBoo)
          {
             GlobalData.skillBoo = false;
-            if(GameMap.currentMap.isEnd(line))
+            // A global passive can still have a valid target after this lane
+            // is cleared. Keep checking it when its cast range crosses lanes.
+            if(!GameMap.currentMap || GameMap.currentMap.isEnd() || (GameMap.currentMap.isEnd(line) && skillB.getCastRange() <= GameMapConfig.LINE_POS))
             {
                return;
             }

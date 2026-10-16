@@ -696,10 +696,11 @@ class ReferenceBattle:
             return sorted(alive, key=lambda u: (u is not attacker, u.get("line", 0),
                                                 float(u.get("pos", 0))))
         if policy in ("enemy_lane_all", "enemy_lane_all_in_radius"):
-            alive = [u for u in alive
-                     if u.get("line") == attacker.get("line")]
-            args = self._policy_args(skill, index)
-            radius = args.get("radius") if isinstance(args, dict) else None
+            args = self._policy_args(skill, index) or {}
+            if args.get("laneFilter") != "all":
+                alive = [u for u in alive
+                         if u.get("line") == attacker.get("line")]
+            radius = args.get("radius")
             if policy == "enemy_lane_all_in_radius" and isinstance(radius, (int, float)):
                 alive = [u for u in alive
                          if abs(float(u.get("pos", 0)) - float(attacker.get("pos", 0))) <= float(radius)]
@@ -1972,9 +1973,14 @@ class ReferenceBattle:
         The client distinguishes self from team targets with the cast range:
         ``getCastRange() == 0`` means the effect is self-only, otherwise it is
         the same range/line filter applied against the caster's own team. An
-        action carrying an ally policy (``ally_all``) overrides that and
-        reaches every living ally regardless of range.
+        action carrying ``ally_self`` selects only the living caster before
+        range and taunt checks; ``ally_all`` reaches every living ally
+        regardless of range.
         """
+        policies = skill.get("actionTargetPolicies") if isinstance(skill, dict) else None
+        if (isinstance(policies, list) and index is not None
+                and 0 <= index < len(policies) and policies[index] == "ally_self"):
+            return [attacker] if int(attacker.get("hp", 0)) > 0 else []
         if len(pl) < 3 or abs(int(pl[2])) == 0:
             return [attacker]
         return self._skill_targets(attacker, allies, pl, skill=skill, index=index) or [attacker]

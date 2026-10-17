@@ -134,7 +134,7 @@ package com.meng52.game.ui.element
                this.addChild(_loc13_);
                _loc26_ = 1118481;
             }
-            _btn = new LOL_Scale9Button(isLocalMode() ? "点击即赠送" : GlobalLanguageStr.getStr(20224),126,47,"UI_btn_enterGame_0_0000");
+            _btn = new LOL_Scale9Button(payButtonLabel(isLocalMode(),GlobalData.$userData ? GlobalData.$userData.spending : null),126,47,"UI_btn_enterGame_0_0000");
             _btn.x = _loc13_.x + _loc13_.width - _btn.width;
             _btn.y = _loc13_.y - _btn.height;
             _btn.addEventListener("triggered",onTRIGGERED_btn);
@@ -157,10 +157,11 @@ package com.meng52.game.ui.element
                _loc24_ = 1;
             }
             _loc18_ = Math.ceil(_loc17_[0] * 10 * _loc24_);
+            if(isLocalMode()) _loc18_ = int(Number(_loc17_[0]) * 10);
             _loc9_ = Number(_loc17_[1]);
             if(isLocalMode())
             {
-               _loc9_ = GlobalData.$userData.attrs.pay_first_gift == 0 ? _loc18_ : 0;
+               _loc9_ = int(GlobalData.$userData.attrs.pay_first_gift) == 0 ? _loc18_ : 0;
             }
             _loc15_ = _loc18_ + _loc17_[1];
             _loc11_ = _loc6_ ? _loc18_ : _loc9_;
@@ -168,12 +169,8 @@ package com.meng52.game.ui.element
             _loc3_.x = _loc13_.x + 10;
             _loc3_.y = _loc13_.y + 5;
             this.addChild(_loc3_);
-            _loc33_ = isLocalMode() ? "点击即赠送" : GlobalLanguageStr.getLanguageStr(2006,_loc17_[0]);
+            _loc33_ = priceYuanLabel(_loc17_[0]);
             _loc37_ = 16777215;
-            if(GlobalLocalStore.$pf_type_curr.indexOf("91") > -1)
-            {
-               _loc33_ = _loc17_[0] + "个91豆";
-            }
             if(GlobalFunction.checkIsPayMon30(_data["id"]))
             {
                _loc37_ = 1513239;
@@ -357,6 +354,16 @@ package com.meng52.game.ui.element
       {
          var address:String = MainConfig.$SERVER_ADDRESS;
          return GlobalLocalStore.$pf_type_curr == "local" || address.indexOf("http://127.0.0.1") == 0 || address.indexOf("https://127.0.0.1") == 0 || address.indexOf("http://localhost") == 0 || address.indexOf("https://localhost") == 0;
+      }
+
+      public static function payButtonLabel(param1:Boolean, param2:Object) : String
+      {
+         return param1 && param2 != null && param2.is_gm === true ? "点击即送" : "充值";
+      }
+
+      public static function priceYuanLabel(param1:Number) : String
+      {
+         return String(param1) + "元";
       }
       
       private function onTRIGGERED_btn(param1:Event) : void

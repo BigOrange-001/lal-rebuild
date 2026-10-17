@@ -117,10 +117,11 @@ package com.meng52.game.ui.panel
          nt.assignFocus();
          nt.fontFamily = GlobalConfig.FONT_1;
          nt.text = "";
-         nt.width = Starling.current.nativeStage.stageWidth;
+         nt.width = Starling.current.viewPort.width;
          nt.height = 46 * 2 * GlobalData.$mStage$Starling_h;
          var _loc1_:Point = new Point(this._mBg_input.x,this._mBg_input.y);
-         nt.y = int((50 + _loc1_.y + 10) * GlobalData.$mStage$Starling_h);
+         nt.x = Starling.current.viewPort.x;
+         nt.y = int((50 + _loc1_.y + 10) * GlobalData.$mStage$Starling_h + Starling.current.viewPort.y);
          nt.addEventListener("focusIn",onFOCUS);
          GlobalData.$mStarling.nativeStage.addChild(nt);
          selectRandomName();

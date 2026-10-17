@@ -140,54 +140,21 @@ package com.meng52.game.module.equip
       
       public function getRes(param1:Sprite = null, param2:Number = 1) : Sprite
       {
-         var _loc3_:Sprite = null;
-         var _loc4_:Object = null;
-         var _loc5_:Array = null;
-         var _loc9_:Array = null;
-         var _loc8_:int = 0;
-         var _loc11_:String = null;
-         var _loc14_:String = null;
-         var _loc13_:Image = null;
-         var _loc7_:Image = null;
-         var _loc12_:Number = NaN;
-         var _loc10_:Number = NaN;
-         if(param1 == null)
-         {
-            _loc3_ = new Sprite();
-         }
-         else
-         {
-            _loc3_ = param1;
-         }
-         var _loc6_:Image = GlobalFunction.getEquipUI(equipData.res);
-         _loc6_.scaleX = _loc6_.scaleY = param2;
-         _loc3_.addChild(_loc6_);
-         if(my_data && my_data.hasOwnProperty("alchemy"))
-         {
-            _loc4_ = GlobalData.$mConfig_simple.equip_alchemy;
-            _loc5_ = my_data["alchemy"];
-            _loc9_ = (my_data.eid as String).split("_");
-            _loc8_ = int(_loc9_[_loc9_.length - 1]) - int(_loc4_.equip_al);
-            _loc11_ = (int(_loc5_[0]) + (int(_loc5_[1]) + _loc8_) * 3 - 1).toString();
-            if((int(_loc11_)) >= 0)
-            {
-               _loc14_ = "UI_equip_box_000" + _loc11_;
-               _loc13_ = GlobalFunction.createImage(_loc14_);
-               _loc13_.scaleX = _loc13_.scaleY = param2;
-               _loc3_.addChild(_loc13_);
-            }
-         }
+         var result:Sprite = param1 == null ? new Sprite() : param1;
+         var icon:Image = GlobalFunction.getEquipUI(equipData.res);
+         icon.scaleX = icon.scaleY = param2;
+         result.addChild(icon);
          if(symp >= 0)
          {
-            _loc7_ = GlobalFunction.getSympUI(symp,false);
-            _loc12_ = int(_loc7_.width * 0.5);
-            _loc10_ = int(_loc7_.height * 0.5);
-            _loc7_.name = "sympClip";
-            _loc3_.addChild(_loc7_);
-            _loc7_.x = 90 - _loc12_;
-            _loc7_.y = _loc10_;
+            var badge:Image = GlobalFunction.getSympUI(symp,false);
+            var halfWidth:Number = int(badge.width * 0.5);
+            var halfHeight:Number = int(badge.height * 0.5);
+            badge.name = "sympClip";
+            result.addChild(badge);
+            badge.x = 90 - halfWidth;
+            badge.y = halfHeight;
          }
-         return _loc3_;
+         return result;
       }
       
       public function getBookSkill(param1:Avatar = null) : SkillSet
@@ -226,6 +193,29 @@ package com.meng52.game.module.equip
          if(haloLv >= _loc1_[5])
          {
             return -1;
+         }
+         var itemLevel:int = Math.max(1,lv);
+         var attempts:int = Math.ceil(Number(GlobalData.$mConfig_simple.equip_config[3]) * itemLevel / Math.max(5,int(itemLevel / 10)));
+         var curve:Object = GlobalData.$mConfig_simple.wash_halo_curve;
+         if(curve && curve.schema == "weighted-five-rank-v1")
+         {
+            var totalExp:Number = attempts * Number(curve.wash_multiplier) * Number(curve.exp_per_wash);
+            var weights:Array = curve.rank_weights as Array;
+            var weightSum:Number = 0;
+            var weightBefore:Number = 0;
+            var weightAfter:Number = 0;
+            var rank:int = 0;
+            for(rank = 0; rank < weights.length; rank++)
+            {
+               weightSum += Number(weights[rank]);
+               if(rank < haloLv) weightBefore += Number(weights[rank]);
+               if(rank <= haloLv) weightAfter += Number(weights[rank]);
+            }
+            return Math.max(1,Math.ceil(totalExp * weightAfter / weightSum) - Math.ceil(totalExp * weightBefore / weightSum));
+         }
+         if(GlobalData.$mConfig_simple.wash_halo_sync)
+         {
+            return Math.max(1,Math.ceil(attempts / Math.max(1,int(GlobalData.$mConfig_simple.equipwash[5]))));
          }
          return _loc1_[0] * Math.pow(_loc1_[1],haloLv) * getStar();
       }
@@ -382,39 +372,33 @@ package com.meng52.game.module.equip
       
       public function getSellDust() : Array
       {
-         var _loc3_:Array = null;
-         var _loc5_:int = 0;
-         var _loc2_:Array = [0,0,0,0];
-         var _loc4_:int = getStar() - 3;
-         var _loc1_:int = getType();
-         if(_loc1_ == 1)
+         var result:Array = [0,0,0,0];
+         var offset:int = getStar() - 3;
+         var kind:int = getType();
+         var rowIndex:int = kind == 1 ? 0 : kind - 2;
+         var tear:Array = GlobalData.$mConfig_simple.dust.tear as Array;
+         var row:Array = tear != null && rowIndex >= 0 && rowIndex < tear.length ? tear[rowIndex] as Array : null;
+         if(row != null && offset >= 0 && offset < row.length)
          {
-            _loc1_ = 0;
+            if(offset < 4)
+            {
+               result[offset] = int(row[offset]);
+            }
+            else
+            {
+               var bonus:Array = row[offset] as Array;
+               if(bonus != null && bonus.length > 0) result[2] = int(bonus[0]);
+               if(bonus != null && bonus.length > 1) result[3] = int(bonus[1]);
+            }
          }
-         else
+         for(var index:int = 0; index < 4; index++)
          {
-            _loc1_ -= 2;
+            if(magic != null && index < magic.length)
+            {
+               result[index] += Math.ceil(magic[index] * GlobalData.$mConfig_simple.dust["return"]);
+            }
          }
-         if(_loc4_ >= 0 && _loc4_ < 4)
-         {
-            var _loc6_:* = _loc4_;
-            var _loc7_:* = _loc2_[_loc6_] + GlobalData.$mConfig_simple.dust.tear[_loc1_][_loc4_];
-            _loc2_[_loc6_] = _loc7_;
-         }
-         else if(_loc4_ >= 4)
-         {
-            _loc3_ = GlobalData.$mConfig_simple.dust.tear[_loc1_][_loc4_];
-            _loc2_ = [0,0,_loc3_[0],_loc3_[1]];
-         }
-         _loc5_ = 0;
-         while(_loc5_ < 4)
-         {
-            _loc7_ = _loc5_;
-            _loc6_ = _loc2_[_loc7_] + Math.ceil(magic[_loc5_] * GlobalData.$mConfig_simple.dust["return"]);
-            _loc2_[_loc7_] = _loc6_;
-            _loc5_++;
-         }
-         return _loc2_;
+         return result;
       }
       
       public function getPoint(param1:int = -1) : int
@@ -437,7 +421,7 @@ package com.meng52.game.module.equip
       
       public function getPoteNow(param1:int = -1) : int
       {
-         return int(getPoteMax(param1) - (getHit(param1) + getFlee(param1) + getCrit(param1) + getTough(param1)));
+         return Math.max(0,int(getPoteMax(param1) - (getHit(param1) + getFlee(param1) + getCrit(param1) + getTough(param1))));
       }
       
       public function getHit(param1:int = -1, param2:Boolean = false) : int
@@ -524,25 +508,8 @@ package com.meng52.game.module.equip
          {
             param1 = lv;
          }
-         var _loc4_:Object = GlobalData.$mConfig_simple.equip_alchemy.phase;
-         var _loc2_:Number = 1;
-         if(my_data && my_data.hasOwnProperty("alchemy"))
-         {
-            _loc2_ = getEquipAlchemyRate(my_data,2);
-         }
-         var _loc6_:Number = Number(GlobalData.$mConfig_simple.equip_config[4]);
-         var _loc5_:Number = Number(GlobalData.$mConfig_simple.equip_config[5]);
-         var _loc7_:Number = Number(GlobalData.$mConfig_simple.equipstar_gold[getStar() - 1]);
-         var _loc3_:Object = {
-            "a1":0,
-            "a2":0,
-            "a3":1,
-            "a4":2,
-            "a5":3
-         };
-         var _loc8_:Number = Number(GlobalData.$mConfig_simple.equipspace_gold[_loc3_["a" + getType()]]);
-         _loc3_ = null;
-         return Tools.toInt((_loc5_ + _loc6_ * param1 * param1 * param1) * _loc7_ * _loc8_ * _loc2_);
+         var prices:Array = GlobalData.$mConfig_simple.equip_rise_cost as Array;
+         return prices && param1 > 0 && param1 < prices.length ? int(prices[param1]) : 0;
       }
       
       public function getAlchemyGold(param1:String) : int
@@ -603,12 +570,14 @@ package com.meng52.game.module.equip
       
       public function getSellMark(param1:int = -1) : int
       {
-         return (hit + flee + crit + tough) / GlobalData.$mConfig_simple.equip_config[10] * getWashMark();
+         return (hit + flee + crit + tough) / GlobalData.$mConfig_simple.equip_config[10] * getStar() * GlobalData.$mConfig_simple.equip_config[7];
       }
       
       public function getWashMark(param1:int = -1, param2:int = 1) : int
       {
-         return getStar() * GlobalData.$mConfig_simple.equip_config[7] * param2;
+         var price:Number = Number(GlobalData.$mConfig_simple.equip_wash_mark_cost);
+         if(!isFinite(price) || price <= 0) price = 1000;
+         return int(price * param2);
       }
       
       public function getWashCoin(param1:int = -1, param2:int = 1) : int

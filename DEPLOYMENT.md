@@ -15,7 +15,7 @@ cd lal-rebuild
 - [Java JDK 17](https://adoptium.net/temurin/releases/?version=17)：将 JDK 的 `bin` 加入 PATH，确保 `java`、`keytool`、`jarsigner` 可执行。
 - [AIR SDK](https://airsdk.wxlift.com/download)：获取 Windows 版 51.4.1.1，遵循官方下载流程和许可。在 SDK Manager 中安装 Android 打包组件；SDK 目录需要包含 ADT 和 Android 运行时，单独的 AIR 桌面运行时不够。
 - [JPEXS FFDec](https://github.com/jindrapetrik/jpexs-decompiler/releases)：使用 26.3.0 完整发行包，解压后保留整个目录。构建参数指向其中的 `ffdec-cli.jar`。
-- [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools)：解压并将包含 `adb.exe` 的目录加入 PATH。
+- [Android SDK](https://developer.android.com/studio)：通过 SDK Manager 安装 Android 平台、Build-Tools 和 Platform-Tools，将包含 `adb.exe` 的目录加入 PATH。
 
 不需要下载原始游戏 APK。游戏素材和构建模板已经在 `client/resources` 中；AIR SDK 和其他工具不随仓库分发。
 
@@ -54,14 +54,15 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\build_client.py `
   --air-sdk C:\Tools\AIRSDK_51.4.1.1 `
+  --android-sdk "$env:LOCALAPPDATA\Android\Sdk" `
   --ffdec C:\Tools\ffdec\ffdec-cli.jar
 ```
 
 脚本依次编译 `client/build.json` 声明的 ActionScript 类，将游戏资源与生成的 SWF 交给官方 ADT 打包，并验证 APK 签名与资源。首次打包需要网络获取工具链所需的依赖；构建结果留在被 Git 忽略的 `build` 目录；打包中间文件使用系统临时目录。
 
-默认输出为 `build/lal-rebuild-1.0.1.apk`，包含 ARM 32 位和 ARM 64 位运行库。模拟器需要支持其中一种 ABI；只支持 x86/x64 且没有 ARM 兼容层的模拟器不能直接运行这个包。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
+默认输出为 `build/lal-rebuild-1.0.2.apk`，包含 ARM 与 ARM64 运行库；x86 模拟器需要启用 ARM 转译支持。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
 
-需要自行签名时可使用 `--keystore`，并通过 `--storepass-env`、`--keypass-env` 指定保存密码的环境变量名称；省略时脚本交互询问密码。只有 SDK 需要外部 Android SDK 时才额外传入 `--android-sdk`。
+需要自行签名时可使用 `--keystore`，并通过 `--storepass-env`、`--keypass-env` 指定保存密码的环境变量名称；省略时脚本交互询问密码。`--android-sdk` 应指向包含 `platforms`、`build-tools` 和 `platform-tools` 的 SDK 根目录。
 
 构建基于随仓库提供的原游戏 SWF 模板，重新编译并替换已提供的客户端类，随后由 AIR SDK 提供运行时和 Android 封装。模板中的未改动原游戏代码与资源仍是必要输入；这不是完全由原游戏源码重新生成所有资源的工程。
 
@@ -71,14 +72,14 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 
 ```powershell
 adb devices
-adb install -r .\build\lal-rebuild-1.0.1.apk
+adb install -r .\build\lal-rebuild-1.0.2.apk
 adb reverse tcp:8080 tcp:8080
 adb reverse --list
 ```
 
 连接了多台设备时，为每条 ADB 命令添加 `-s 设备序列号`。
 
-此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.1。
+此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.2。
 
 保持服务器运行，打开游戏，在本地登录界面注册账号并登录即可开始游玩。设备断开或重启后重新执行端口映射。网络错误时依次检查服务器窗口、`/health` 和 `adb reverse --list`。
 

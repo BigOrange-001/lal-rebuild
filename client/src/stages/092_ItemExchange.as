@@ -103,7 +103,7 @@ package com.meng52.game.ui.element
          var _loc13_:TextField = null;
          var _loc15_:TextField = null;
          var _loc22_:String = "";
-         mBtn_to = new LOL_Scale9Button(GlobalLanguageStr.getStr(20459),110,47,"UI_btn_enterGame_0_0000");
+         mBtn_to = new LOL_Scale9Button("兑换",110,47,"UI_btn_enterGame_0_0000");
          addChild(mBtn_to);
          mBtn_to.x = this.mScale9Image.x + this.mScale9Image.width - 30;
          mBtn_to.y = _loc21_ ? mScale9Image.y + mScale9Image.height - mBtn_to.height - 15 + 2 : mScale9Image.y + (mScale9Image.height - mBtn_to.height + 25) * 0.5;
@@ -274,12 +274,56 @@ package com.meng52.game.ui.element
       
       private function sendService() : void
       {
+         if(data["daily_recruit"] === true)
+         {
+            var chosenAid:String = String(data["id"]);
+            mBtn_to.enabled = false;
+            SendAndSelect.sendAndSelectService("user.recruit_medal_exchange",
+               {"aid":chosenAid,"day":String(data["day"])},function(result:Object):void
+               {
+                  re_recruit_exchange(result,chosenAid);
+               });
+            return;
+         }
          SendServiceAMFFun.send_user_medal_exchange(re_medal_exchange,{
             "exch_type":data["indexID_s"],
             "exch_id":data["id"],
             "medal":GlobalData.$userData.medal,
             "need_medal":data["medal"]
          });
+      }
+
+      private function re_recruit_exchange(result:Object, chosenAid:String) : void
+      {
+         if(stage == null)
+         {
+            return;
+         }
+         if(mBtn_to)
+         {
+            mBtn_to.enabled = true;
+         }
+         if(result == null || int(result.return_code) != 0 || result.data == null ||
+            result.data.aid != chosenAid || result.data.avatar == null ||
+            (result.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(result.state_sync)))
+         {
+            return;
+         }
+         if(!GlobalFunction.isVersionedProfileReceipt(result))
+         {
+            GlobalData.$userData.medal = result.data.medal;
+            GlobalData.$userData.avatars = result.data.avatars;
+         }
+         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         SoundManager.getOnlyExample().playSound("sound05");
+         var award:Object = GlobalFunction.getAwardByType("avatar",chosenAid);
+         GlobalFunction.popAward("avatar",GlobalLanguageStr.getLanguageStr(90062,award.msg),chosenAid,false);
+         if(GlobalData.$mGameClassObject && GlobalData.$mGameClassObject.mLayoutUICenter &&
+            GlobalData.$mGameClassObject.mLayoutUICenter.mPanelExchange &&
+            GlobalData.$mGameClassObject.mLayoutUICenter.mPanelExchange.stage)
+         {
+            GlobalData.$mGameClassObject.mLayoutUICenter.mPanelExchange.update();
+         }
       }
       
       private function re_medal_exchange(param1:Object) : void

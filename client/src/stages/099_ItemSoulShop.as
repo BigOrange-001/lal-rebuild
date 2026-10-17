@@ -80,15 +80,15 @@ package com.meng52.game.ui.element
          _txt.x = 120;
          _txt.y = _ui.y;
          addChild(_txt);
-         var _loc7_:LOL_TextField = new LOL_TextField(GlobalLanguageStr.getLanguageStr(90583),MainConfig.$isEA ? 50 : 100,MainConfig.$isEA ? 35 : 25);
+         var _loc7_:LOL_TextField = new LOL_TextField(GlobalLanguageStr.getLanguageStr(90583),45,25);
          _loc7_.fontColor = 16777215;
-         _loc7_.fontSize = 25;
-         _loc7_.x = _txt.x - 20;
-         _loc7_.y = MainConfig.$isEA ? _txt.y + _txt.height + 15 : _txt.y + _txt.height + 30;
+         _loc7_.fontSize = MainConfig.$isEA ? 18 : 20;
+         _loc7_.x = 100;
+         _loc7_.y = _txt.y + _txt.height + 20;
          addChild(_loc7_);
          _btn = new LOL_Scale9Button("",120,45,"UI_btn_enterGame_0_0000");
          _btn.fontSize = 20;
-         _btn.x = _txt.x + 25;
+         _btn.x = 150;
          _btn.y = _txt.y + _txt.height + 10;
          addChild(_btn);
          if(_type == "gold")

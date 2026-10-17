@@ -48,6 +48,7 @@ package com.meng52.game.ui.stage
    import starling.events.Touch;
    import starling.events.TouchEvent;
    import starling.filters.ColorMatrixFilter;
+   import starling.text.BitmapFont;
    import starling.text.TextField;
    
    public class LayoutUIAnimation extends BaseLayer
@@ -1613,6 +1614,16 @@ package com.meng52.game.ui.stage
          return _loc8_;
       }
       
+      private static function newSuperWordGlyph(char:String, size:Number, x:int, y:int) : TextField
+      {
+         var effectFont:BitmapFont = TextField.getBitmapFont("Font_numAndtag_3");
+         // The effect bitmap font was authored for a fixed phrase list.  A
+         // new localized phrase can have missing glyphs and look like a bare
+         // number; render only those missing glyphs with the normal CJK font.
+         var font:String = effectFont && effectFont.hasChars(char) ? "Font_numAndtag_3" : GlobalConfig.FONT_0;
+         return DisplayTools.newTextField(char,font,size,16777215,x,y);
+      }
+
       public function popSuperWord(param1:String, param2:int = 1, param3:Number = 0.5, param4:Number = 0, param5:Number = 0, param6:Number = 1) : Sprite
       {
          param6 = Math.max(1,param6);
@@ -1675,7 +1686,7 @@ package com.meng52.game.ui.stage
                _loc17_ = 0;
                _loc14_ = (_loc23_ - (_loc21_ - 1) / 2) * _loc12_;
                _loc24_ = -30;
-               _loc11_ = DisplayTools.newTextField(_loc7_,"Font_numAndtag_3",_loc9_,16777215,_loc17_,_loc24_);
+               _loc11_ = newSuperWordGlyph(_loc7_,_loc9_,_loc17_,_loc24_);
                _loc11_.alpha = 0;
                _loc11_.scaleX = _loc11_.scaleY = 0;
                _loc8_.addChild(_loc11_);
@@ -1711,7 +1722,7 @@ package com.meng52.game.ui.stage
                _loc14_ = (_loc23_ - (_loc21_ - 1) / 2) * _loc12_;
                _loc17_ = _loc14_ * 4;
                _loc24_ = _loc23_ % 2 * 300 - 150;
-               _loc11_ = DisplayTools.newTextField(_loc7_,"Font_numAndtag_3",_loc9_,16777215,_loc17_,_loc24_);
+               _loc11_ = newSuperWordGlyph(_loc7_,_loc9_,_loc17_,_loc24_);
                _loc11_.alpha = 0;
                _loc11_.color = 0;
                _loc11_.scaleX = _loc11_.scaleY = 2;
@@ -1754,7 +1765,7 @@ package com.meng52.game.ui.stage
             while(_loc23_ < _loc21_)
             {
                _loc7_ = _loc15_ + _loc13_[_loc23_];
-               _loc11_ = DisplayTools.newTextField(_loc7_,"Font_numAndtag_3",_loc9_,16777215,_loc17_,_loc24_);
+               _loc11_ = newSuperWordGlyph(_loc7_,_loc9_,_loc17_,_loc24_);
                _loc22_ = new AnimationSprite(_loc11_);
                _loc22_.scale = 0.8;
                _loc22_.alpha = 0;

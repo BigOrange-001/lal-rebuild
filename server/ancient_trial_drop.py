@@ -1,0 +1,51 @@
+"""Server-authoritative optional equipment roll for native P_001 victories."""
+from __future__ import annotations
+
+import random
+import re
+
+from gameplay_common import equipment_exclusive_ids
+from player_store import GameplayFault
+
+from ancient_trial_overlay import CHANCES_BP, EQUIPMENT_TYPES, QUALITIES, SCHEMA
+
+
+_STAGE_ID = re.compile(r"P_001_(10|[1-9])\Z")
+
+
+def roll_ancient_trial_drop(config: dict, stage: dict, stage_id: str,
+                            victory: bool, rng=None) -> str | None:
+    """Roll one validated EID; caller appends it before atomic grant_reward.
+
+    The caller must pass the stage copied into its pending battle intent, so a
+    configuration refresh cannot change the odds after a fight has started.
+    """
+    match = _STAGE_ID.fullmatch(str(stage_id))
+    if not victory or not match:
+        return None
+    tier = int(match.group(1))
+    policy = stage.get("ancient_equip_drop") if isinstance(stage, dict) else None
+    if not isinstance(policy, dict) or stage.get("id") != stage_id or policy.get("schema") != SCHEMA:
+        raise GameplayFault("InvalidStage", "Ancient trial equipment policy is missing")
+    quality, chance_bp = QUALITIES[tier - 1], CHANCES_BP[tier - 1]
+    pool = policy.get("pool")
+    if (type(policy.get("quality")) is not int or policy["quality"] != quality
+            or type(policy.get("chance_bp")) is not int or policy["chance_bp"] != chance_bp
+            or not isinstance(pool, list) or not pool
+            or any(not isinstance(eid, str) for eid in pool)
+            or len(pool) != len(set(pool))):
+        raise GameplayFault("InvalidStage", "Ancient trial equipment tier is malformed")
+    cfg = config.get("cfg", config) if isinstance(config, dict) else {}
+    definitions = cfg.get("equip", {}) if isinstance(cfg, dict) else {}
+    excluded = set(equipment_exclusive_ids(cfg))
+    for eid in pool:
+        row = definitions.get(eid) if isinstance(definitions, dict) else None
+        if (not isinstance(eid, str) or not re.fullmatch(rf"E_\d+_{quality}", eid)
+                or eid in excluded
+                or not isinstance(row, dict) or row.get("quality") != quality
+                or row.get("type") not in EQUIPMENT_TYPES):
+            raise GameplayFault("InvalidStage", "Ancient trial equipment pool has a blocked item")
+    source = rng if rng is not None else random.SystemRandom()
+    if source.randrange(10000) >= chance_bp:
+        return None
+    return source.choice(pool)

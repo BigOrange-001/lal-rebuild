@@ -2781,12 +2781,12 @@ package com.meng52.game.global
          {
             _loc10_ = _loc12_[_loc11_];
             _loc7_ += _loc10_["give"]["exp"];
-            _loc8_ += _loc10_["give"]["gold"];
             _loc6_ += _loc10_.hp;
             _loc4_ += _loc10_.ap;
             _loc3_ += _loc10_.de_ma;
             _loc9_ += _loc10_.de_ph;
          }
+         _loc8_ = Math.ceil(_loc7_ / 10);
          return {
             "exp":_loc7_,
             "gold":_loc8_,
@@ -2809,36 +2809,23 @@ package com.meng52.game.global
             _loc2_ = null;
             return _loc4_;
          }
-         var _loc6_:Number = _loc2_.getSkillProMother();
-         var _loc3_:Array = GlobalData.$mConfig_simple.slv_config as Array;
          _loc2_.clear();
          _loc2_ = null;
          var _loc10_:Object = GlobalData.$tempBetterElements;
-         var _loc7_:Number = 0;
          for(var _loc9_:Object in _loc10_)
          {
             _loc8_ = _loc10_[_loc9_];
-            _loc2_ = new Avatar(_loc8_.id,_loc8_);
-            if(_loc2_.avatarData.skillExp > 0)
+            var _materialAid:String = String(_loc8_.id).split("|")[0];
+            if(_materialAid == "A_6992_4" || _materialAid == "A_6992_5" || _materialAid == "A_6992_6")
             {
-               _loc7_ += _loc2_.avatarData.skillExp;
+               _loc4_ += 20;
             }
-            else if(_loc2_.skill0)
-            {
-               if(_loc2_.skill0.skillSetData.id == _loc5_)
-               {
-                  _loc7_ += _loc2_.getSkillPro();
-               }
-            }
-            _loc2_.clear();
-            _loc2_ = null;
          }
-         _loc4_ = _loc6_ <= 0 ? 0 : Math.floor(_loc7_ * _loc3_[1] / _loc6_ * 100);
          if(_loc4_ > 100)
          {
             _loc4_ = 100;
          }
-         return isNaN(_loc4_) ? 0 : _loc4_;
+         return _loc4_;
       }
       
       public static function formateBetterItemsError(param1:Array = null, param2:Boolean = true) : Object
@@ -3250,6 +3237,22 @@ package com.meng52.game.global
          }
       }
       
+      private static function getMissingTexture() : Texture
+      {
+         var name:String = "__missingTexture";
+         var texture:Texture = GlobalData.$assetManager.getTexture(name);
+         if(texture == null)
+         {
+            var reference:Texture = GlobalData.$assetManager.getTexture(TEXTURE_DEFAULT);
+            var frame:Rectangle = reference == null ? null : reference.frame;
+            var width:Number = reference == null ? 2 : frame == null ? reference.width : frame.width;
+            var height:Number = reference == null ? 2 : frame == null ? reference.height : frame.height;
+            texture = Texture.fromColor(width,height,0x00000000);
+            GlobalData.$assetManager.addTexture(name,texture);
+         }
+         return texture;
+      }
+
       public static function getTextureByBD(param1:String) : Texture
       {
          var _loc3_:Object = null;
@@ -3282,7 +3285,7 @@ package com.meng52.game.global
          }
          if(_loc4_ == null)
          {
-            _loc4_ = GlobalData.$assetManager.getTexture(TEXTURE_DEFAULT);
+            _loc4_ = getMissingTexture();
          }
          return _loc4_;
       }
@@ -3389,12 +3392,12 @@ package com.meng52.game.global
                }
                else
                {
-                  _loc12_ = GlobalData.$assetManager.getTexture(TEXTURE_DEFAULT);
+                  _loc12_ = getMissingTexture();
                }
             }
             catch(_error:Error)
             {
-               _loc12_ = GlobalData.$assetManager.getTexture(TEXTURE_DEFAULT);
+               _loc12_ = getMissingTexture();
             }
          }
          else if(_loc4_ == 3)
@@ -6234,7 +6237,7 @@ package com.meng52.game.global
             GlobalData.$mStarling.nativeStage.addChild(_webBg);
             _gap = 50;
             _h = GlobalData.$mStageHeight - _gap;
-            _rec = new Rectangle(GlobalData.$isNotFullScreenX,_gap * GlobalData.$mStage$Starling_h,GlobalData.$mStageWidth * GlobalData.$mStage$Starling_w,_h * GlobalData.$mStage$Starling_h);
+            _rec = new Rectangle(GlobalData.$mStarling.viewPort.x,_gap * GlobalData.$mStage$Starling_h + GlobalData.$mStarling.viewPort.y,GlobalData.$mStageWidth * GlobalData.$mStage$Starling_w,_h * GlobalData.$mStage$Starling_h);
             _btn.x = _gap;
             _btn.y = int((_gap - _btn.height) * 0.5);
             _btn.addEventListener("mouseDown",onMOUSE_DOWN);

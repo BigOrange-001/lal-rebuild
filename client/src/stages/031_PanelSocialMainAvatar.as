@@ -93,6 +93,7 @@ package com.meng52.game.ui.screen
          GlobalData.$mEventDispatcher.removeEventListener("update_avatar_better",onMainEvent);
          GlobalData.$mEventDispatcher.removeEventListener("update_avatar_starup",onMainEvent);
          GlobalData.$mEventDispatcher.removeEventListener("update_avatar_sell_data",onUPDATE_AVATAR_DATA);
+         GlobalData.$mEventDispatcher.removeEventListener("update_dn_team_ui",onMainEvent);
          removeRarityFilters();
          if(mBtn_smart)
          {
@@ -109,6 +110,7 @@ package com.meng52.game.ui.screen
          GlobalData.$mEventDispatcher.addEventListener("update_avatar_better",onMainEvent);
          GlobalData.$mEventDispatcher.addEventListener("update_avatar_starup",onMainEvent);
          GlobalData.$mEventDispatcher.addEventListener("update_avatar_sell_data",onUPDATE_AVATAR_DATA);
+         GlobalData.$mEventDispatcher.addEventListener("update_dn_team_ui",onMainEvent);
          GlobalData.$mEventDispatcher.addEventListener("change_team_member_lock",CHANGE_TEAM_MEMBER_LOCK);
          this.removeEventListener("addedToStage",initializeHandler);
          mImg_head = getImg_headBg(-50);
@@ -134,9 +136,10 @@ package com.meng52.game.ui.screen
          mImg3_info.y = mTabBar.y + 55;
          mImg3_info.height = 80;
          addChild(mImg3_info);
-         mBtn_smart = new LOL_Scale9Button("智能排序：开",136,34,"UI_btn_enterGame_0_0000");
+         mBtn_smart = new LOL_Scale9Button("智能排序：开",136,30,"UI_btn_enterGame_0_0000");
+         mBtn_smart.fontSize = 18;
          mBtn_smart.x = GlobalData.$mStageWidth - mBtn_smart.width - 20;
-         mBtn_smart.y = mImg3_info.y + mImg3_info.height - mBtn_smart.height - 3;
+         mBtn_smart.y = GlobalData.$center_height - mBtn_smart.height - 3;
          mBtn_smart.visible = mTabBar == null || mTabBar.selectedIndex != 4;
          mBtn_smart.addEventListener("triggered",onSmartSort);
          addChild(mBtn_smart);
@@ -366,6 +369,13 @@ package com.meng52.game.ui.screen
          var _loc1_:Avatar = null;
          setList();
          addList();
+         if(mBtn_smart && mBtn_smart.visible && mList)
+         {
+            // The hero grid ends 36px above the content edge. Keep sorting
+            // in that bottom control strip, away from radio tabs and cards.
+            mBtn_smart.y = mList.y + mList.height + 3;
+            setChildIndex(mBtn_smart,numChildren - 1);
+         }
          LayoutUIAnimation.getOnlyExample().clearIfNoGuide();
          if(this.mTabBar.selectedIndex == 4)
          {

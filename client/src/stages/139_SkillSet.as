@@ -717,6 +717,9 @@ package com.meng52.game.module.skill
          var limitedSummon:Boolean = false;
          var summonApFactor:Number = 0;
          var _loc19_:SkillSetData = skillSetData;
+         var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         var captainSummonMultiplier:Number = captainRow ? Number(captainRow.captainSummonMultiplier) : 1;
+         if(!isFinite(captainSummonMultiplier) || captainSummonMultiplier <= 0) captainSummonMultiplier = 1;
          var _loc24_:int = getCastRange();
          var _loc7_:int = _loc19_.aoe;
          var _loc26_:GameMap = GameMap.currentMap;
@@ -859,7 +862,7 @@ package com.meng52.game.module.skill
                      var healHitContext:Object = actionKillContexts[int(_loc20_[3])];
                      var healHitCount:int = healHitContext && healHitContext.hitHeroes is Array ? healHitContext.hitHeroes.length : 0;
                      var heroRefund:Number = castMissingHp * Math.min(Number(_loc20_[2]),healHitCount * Number(_loc20_[1]));
-                     if(heroRefund > 0) avatar.injured(Math.min(avatar.hpMax-avatar.hp,int(heroRefund)),1,DisplayTools.getAttrs(String(_loc20_[4])),4,avatar,false,avatar);
+                     if(heroRefund > 0) avatar.injured(Math.min(avatar.hpMax-avatar.hp,int(heroRefund * avatar.getRecoveryTalentMultiplier())),1,DisplayTools.getAttrs(String(_loc20_[4])),4,avatar,false,avatar);
                   }
                   break;
                case "kill_buff":
@@ -1244,7 +1247,7 @@ package com.meng52.game.module.skill
                         missingHealTarget = missingHealTargets[missingHealIndex];
                         if(missingHealTarget && missingHealTarget.hp > 0)
                         {
-                           missingHealAmount = Math.max(0,Math.min(missingHealTarget.hpMax - missingHealTarget.hp,int((missingHealTarget.hpMax - missingHealTarget.hp) * Number(_loc20_[1]))));
+                           missingHealAmount = Math.max(0,Math.min(missingHealTarget.hpMax - missingHealTarget.hp,int((missingHealTarget.hpMax - missingHealTarget.hp) * Number(_loc20_[1]) * avatar.getRecoveryTalentMultiplier())));
                            if(missingHealAmount > 0)
                            {
                               missingHealTarget.injured(missingHealAmount,1,DisplayTools.getAttrs(String(_loc20_[2])),4,avatar, false, avatar);
@@ -1882,6 +1885,11 @@ package com.meng52.game.module.skill
                      executeManualSummon(_loc20_,_loc14_,actionTargets,targetGroups);
                      break;
                   }
+                  if(!Avatar.isValidSummonMultiplier(Number(_loc20_[1])))
+                  {
+                     GameMapTools.gameTrace("召唤倍率无效",skillSetData.id);
+                     break;
+                  }
                   limitedSummon = hasBoundedSummonPolicy();
                   if(limitedSummon)
                   {
@@ -1921,6 +1929,18 @@ package com.meng52.game.module.skill
                   _loc1_.flee = avatar.getFlee();
                   _loc1_.crit = avatar.getCrit();
                   _loc1_.tough = avatar.getTough();
+                  if(captainSummonMultiplier != 1)
+                  {
+                     _loc1_.hpMax = Math.max(1,int(_loc1_.hpMax * captainSummonMultiplier));
+                     _loc1_.hp = _loc1_.hpMax;
+                     _loc1_.ap = Math.max(1,int(_loc1_.ap * captainSummonMultiplier));
+                     _loc1_.dePh = Math.max(1,int(_loc1_.dePh * captainSummonMultiplier));
+                     _loc1_.deMa = Math.max(1,int(_loc1_.deMa * captainSummonMultiplier));
+                     _loc1_.hit = Math.max(0,int(_loc1_.hit * captainSummonMultiplier));
+                     _loc1_.flee = Math.max(0,int(_loc1_.flee * captainSummonMultiplier));
+                     _loc1_.crit = Math.max(0,int(_loc1_.crit * captainSummonMultiplier));
+                     _loc1_.tough = Math.max(0,int(_loc1_.tough * captainSummonMultiplier));
+                  }
                   _loc1_.addBuff("summon",_loc20_[3]);
                   _loc12_ = DisplayTools.getAttrs(_loc20_[_loc20_.length - 1]);
                   if(!_loc12_)
@@ -2215,7 +2235,7 @@ package com.meng52.game.module.skill
        private function getActiveRecoveryMultiplier() : Number
        {
           var effectiveHit:Number = Tools.toInt(avatar.getHit() * (1 + avatar.checkTalent(4)));
-          return 1 + 0.5 * effectiveHit / (effectiveHit + 3000);
+          return (1 + 0.5 * effectiveHit / (effectiveHit + 3000)) * avatar.getRecoveryTalentMultiplier();
        }
 
        private function actionShareGroupFor(param1:int) : Array
@@ -3163,7 +3183,7 @@ package com.meng52.game.module.skill
             return;
          }
          turretScale = Number(param1[1]);
-         if(!isFinite(turretScale) || turretScale <= 0 || turretScale > 1 || int(param1[3]) < 1 || int(param1[4]) != 0 || int(param1[5]) != 0)
+         if(!Avatar.isValidSummonMultiplier(turretScale) || int(param1[3]) < 1 || int(param1[4]) != 0 || int(param1[5]) != 0)
          {
             GameMapTools.gameTrace("炮台召唤参数无效",skillSetData.id);
             return;
@@ -3215,6 +3235,9 @@ package com.meng52.game.module.skill
          var _loc6_:Number = NaN;
          var _loc7_:Object = null;
          var _loc8_:Number = 0;
+         var summonHpRatio:Number = NaN;
+         var summonDePhRatio:Number = NaN;
+         var summonDeMaRatio:Number = NaN;
          var summonTargets:Vector.<Avatar> = null;
          var summonTarget:Avatar = null;
          var summonLine:int = 0;
@@ -3254,7 +3277,11 @@ package com.meng52.game.module.skill
          _loc5_ = Number(_loc1_.apRatio);
          _loc6_ = Number(_loc1_.hpRatio);
          _loc8_ = Number(param1[1]);
-         if(!isFinite(_loc5_) || !isFinite(_loc6_) || _loc5_ <= 0 || _loc5_ > 1 || _loc6_ <= 0 || _loc6_ > 1 || !isFinite(Number(_loc1_.attackRange)) || Number(_loc1_.attackRange) < 0 || (Number(_loc1_.attackRange) == 0 && !isNativeCloneSummonSkill()) || !isFinite(_loc8_) || _loc8_ <= 0 || !isFinite(Number(_loc1_.dePhRatio)) || Number(_loc1_.dePhRatio) <= 0 || !isFinite(Number(_loc1_.deMaRatio)) || Number(_loc1_.deMaRatio) <= 0 || int(param1[3]) < 1 || int(param1[3]) != Number(param1[3]) || int(_loc1_.ttlOwnerTurns) != int(param1[3])) return;
+         if(!Avatar.isValidSummonMultiplier(_loc5_) || !Avatar.isValidSummonMultiplier(_loc6_) || !Avatar.isValidSummonMultiplier(Number(_loc1_.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(_loc1_.deMaRatio)) || !Avatar.isValidSummonMultiplier(_loc8_) || !isFinite(Number(_loc1_.attackRange)) || Number(_loc1_.attackRange) < 0 || (Number(_loc1_.attackRange) == 0 && !isNativeCloneSummonSkill()) || int(param1[3]) < 1 || int(param1[3]) != Number(param1[3]) || int(_loc1_.ttlOwnerTurns) != int(param1[3])) return;
+         summonHpRatio = _loc8_ * (_loc6_ / _loc5_);
+         summonDePhRatio = _loc8_ * (Number(_loc1_.dePhRatio) / _loc5_);
+         summonDeMaRatio = _loc8_ * (Number(_loc1_.deMaRatio) / _loc5_);
+         if(!Avatar.isValidSummonMultiplier(summonHpRatio) || !Avatar.isValidSummonMultiplier(summonDePhRatio) || !Avatar.isValidSummonMultiplier(summonDeMaRatio)) return;
          replacedSummons = new Vector.<Avatar>();
          if(avatar.getManualSummonSlots(_loc3_,_loc4_) <= 0)
          {
@@ -3294,11 +3321,11 @@ package com.meng52.game.module.skill
          }
          _loc2_ = new Avatar(String(param1[2]),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
          _loc2_.goFight(avatar.team,summonLine,0,false);
-         _loc2_.ap = Math.max(1,int(avatar.getDamage() * _loc5_ * (_loc8_ / _loc5_)));
-         _loc2_.hpMax = Math.max(1,int(avatar.getHpMax() * _loc6_ * (_loc8_ / _loc5_)));
+         _loc2_.ap = Math.max(1,int(avatar.getDamage() * _loc8_));
+         _loc2_.hpMax = Math.max(1,int(avatar.getHpMax() * summonHpRatio));
          _loc2_.hp = _loc2_.hpMax;
-         _loc2_.dePh = Math.max(1,int(avatar.getDePh() * Number(_loc1_.dePhRatio) * (_loc8_ / _loc5_)));
-         _loc2_.deMa = Math.max(1,int(avatar.getDeMa() * Number(_loc1_.deMaRatio) * (_loc8_ / _loc5_)));
+         _loc2_.dePh = Math.max(1,int(avatar.getDePh() * summonDePhRatio));
+         _loc2_.deMa = Math.max(1,int(avatar.getDeMa() * summonDeMaRatio));
          if(_loc1_.clearSkills === true)
          {
             _loc2_.skill0 = null;
@@ -3312,6 +3339,20 @@ package com.meng52.game.module.skill
          _loc2_.flee = avatar.flee;
          _loc2_.crit = avatar.crit;
          _loc2_.tough = avatar.tough;
+         var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         var captainFactor:Number = captainRow ? Number(captainRow.captainSummonMultiplier) : 1;
+         if(isFinite(captainFactor) && captainFactor > 0 && captainFactor != 1)
+         {
+            _loc2_.hpMax = Math.max(1,int(_loc2_.hpMax * captainFactor));
+            _loc2_.hp = _loc2_.hpMax;
+            _loc2_.ap = Math.max(1,int(_loc2_.ap * captainFactor));
+            _loc2_.dePh = Math.max(1,int(_loc2_.dePh * captainFactor));
+            _loc2_.deMa = Math.max(1,int(_loc2_.deMa * captainFactor));
+            _loc2_.hit = Math.max(0,int(_loc2_.hit * captainFactor));
+            _loc2_.flee = Math.max(0,int(_loc2_.flee * captainFactor));
+            _loc2_.crit = Math.max(0,int(_loc2_.crit * captainFactor));
+            _loc2_.tough = Math.max(0,int(_loc2_.tough * captainFactor));
+         }
          _loc2_.addBuff("summon",Math.max(1,int(_loc1_.ttlOwnerTurns)));
          _loc7_ = DisplayTools.getAttrs(String(param1[param1.length - 1]));
          if(!_loc7_) _loc7_ = DisplayTools.getAttrs("SUMMON_EFF");
@@ -3347,13 +3388,14 @@ package com.meng52.game.module.skill
       {
          var _loc1_:String = skillSetData.id;
          var _loc2_:Array = ["S_631029_5","S_631029_6","S_621040_4","S_621040_5","S_621040_6","S_631040_4","S_631040_5","S_631040_6","S_621124_5","S_621124_6","S_631124_5","S_631124_6","S_631127_5","S_631127_6","S_621128_5","S_621128_6","S_631128_5","S_631128_6"];
-         if(_loc2_.indexOf(_loc1_) < 0 || !skillSetData.manualSummonPolicy) return false;
-         if(String(skillSetData.manualSummonPolicy.skillId) != _loc1_) return false;
-         if(_loc1_.indexOf("1029_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == "A_2002_5" && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1029-tibbers" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.attackRange) == 125 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
-         if(_loc1_.indexOf("1124_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == "A_3002_2" && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1124-soldier" && int(skillSetData.manualSummonPolicy.maxAlive) == 2 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.45 && Number(skillSetData.manualSummonPolicy.attackRange) == 175 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
-         if(_loc1_.indexOf("1127_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == String(avatar.avatarData.id) && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1127-clone" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.hpRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 1.0 && Number(skillSetData.manualSummonPolicy.attackRange) == 0 && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == 3 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
-         if(_loc1_.indexOf("1128_") >= 0) return String(skillSetData.manualSummonPolicy.unitId) == String(avatar.avatarData.id) && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1128-clone" && int(skillSetData.manualSummonPolicy.maxAlive) == 1 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.80 && Number(skillSetData.manualSummonPolicy.attackRange) == 125 && int(skillSetData.manualSummonPolicy.ttlOwnerTurns) == 3 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
-         return String(skillSetData.manualSummonPolicy.unitId) == "A_2326_5" && String(skillSetData.manualSummonPolicy.familyKey) == "manual-1040-plant" && int(skillSetData.manualSummonPolicy.maxAlive) == 3 && Number(skillSetData.manualSummonPolicy.apRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.hpRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.dePhRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.deMaRatio) == 0.40 && Number(skillSetData.manualSummonPolicy.attackRange) == 550 && skillSetData.manualSummonPolicy.clearSkills === true && skillSetData.manualSummonPolicy.actionType == 1 && skillSetData.manualSummonPolicy.replaceOldest === true;
+         var policy:Object = skillSetData.manualSummonPolicy;
+         if(_loc2_.indexOf(_loc1_) < 0 || !policy) return false;
+         if(String(policy.skillId) != _loc1_ || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
+         if(_loc1_.indexOf("1029_") >= 0) return String(policy.unitId) == "A_2002_5" && String(policy.familyKey) == "manual-1029-tibbers" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
+         if(_loc1_.indexOf("1124_") >= 0) return String(policy.unitId) == "A_3002_2" && String(policy.familyKey) == "manual-1124-soldier" && int(policy.maxAlive) == 2 && Number(policy.attackRange) == 175 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true && int(policy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
+         if(_loc1_.indexOf("1127_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
+         if(_loc1_.indexOf("1128_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1128-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
+         return String(policy.unitId) == "A_2326_5" && String(policy.familyKey) == "manual-1040-plant" && int(policy.maxAlive) == 3 && Number(policy.attackRange) == 550 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
       }
 
       private function isNativeCloneSummonSkill() : Boolean
@@ -3379,7 +3421,7 @@ package com.meng52.game.module.skill
          var oldSkillId:String = "";
          var targetPos:int = 0;
          var cloneEffect:Object = null;
-         if(!policy || allowedIds.indexOf(skillSetData.id) < 0 || String(policy.skillId) != skillSetData.id || familyKey != "manual-1132-shadow-clone" || capacity != 1 || !isFinite(ratio) || ratio <= 0 || ratio > 1 || ttl < 1 || ttl > 4 || policy.replaceOldest !== true || !avatar.skill0 || !avatar.skill0.isActive())
+         if(!policy || allowedIds.indexOf(skillSetData.id) < 0 || String(policy.skillId) != skillSetData.id || familyKey != "manual-1132-shadow-clone" || capacity != 1 || !Avatar.isValidSummonMultiplier(ratio) || ttl < 1 || ttl > 4 || policy.replaceOldest !== true || !avatar.skill0 || !avatar.skill0.isActive())
          {
             GameMapTools.gameTrace("拒绝未授权普通技能分身",skillSetData.id);
             return;

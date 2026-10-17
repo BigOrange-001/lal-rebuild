@@ -1,21 +1,21 @@
 package com.meng52.game.global
 {
    import com.meng52.utils.Tools;
-   
+
    public class GlobalLanguageStr
    {
-      
+
       private static const ID:String = "id";
-      
+
       private static const re:String = "@";
-      
+
       public static var $_global_language_str:XML = null;
-      
+
       public function GlobalLanguageStr()
       {
          super();
       }
-      
+
       public static function getStr(param1:*, param2:String = "", ... rest) : String
       {
          var _loc5_:Array = [param1].concat(rest);
@@ -26,7 +26,7 @@ package com.meng52.game.global
          }
          return _loc4_;
       }
-      
+
       public static function getLanguageStr(param1:*, ... rest) : String
       {
          var _loc3_:Object = null;
@@ -56,7 +56,7 @@ package com.meng52.game.global
          }
          return replaceStrArr(_loc4_,rest);
       }
-      
+
       public static function replaceStrArr(param1:String, param2:Array) : String
       {
          var _loc3_:String = null;
@@ -79,7 +79,7 @@ package com.meng52.game.global
          }
          return param1;
       }
-      
+
       public static function replaceStrObj(param1:String, param2:*) : String
       {
          var _loc4_:* = undefined;
@@ -93,4 +93,3 @@ package com.meng52.game.global
       }
    }
 }
-

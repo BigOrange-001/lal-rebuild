@@ -1063,7 +1063,7 @@ package com.meng52.game.ui.panel
          // ledger; it remains part of combat stats and getPoteNow below.
          var raw:Object = item.new_4attrs is Object ? item.new_4attrs : item;
          var values:Array = [int(raw.hit || 0),int(raw.flee || 0),int(raw.crit || 0),int(raw.tough || 0)];
-         var remaining:int = equip.getPoteNow(equip.lv);
+         var remaining:int = Math.max(0,equip.getPoteNow(equip.lv));
          var added:int = 0;
          for(var i:int = 0; i < keys.length; i++)
          {

@@ -917,17 +917,15 @@ package com.meng52.game.ui.screen
          var _myRank:int;
          var _list_pk:Array;
          var _list_enemy:Array;
-         var _list_winner:Array;
          var _list_loser:Array;
          var _itemArr:Array;
          var _currCfg:Array;
-         var _123Obj:Object;
-         var _had123:Boolean;
-         var j:int;
          var _isFirstPVP:Boolean;
          var _itemData:Object;
          var _lv:int;
          var _listArr:Array;
+         var _seenIDs:Object;
+         var _seenRanks:Object;
          if(this.mTabBar)
          {
             $tabBarSelectedIndex = this.mTabBar.selectedIndex;
@@ -962,18 +960,24 @@ package com.meng52.game.ui.screen
             GlobalData.$userData.records.current_rank = _myRank;
             _list_pk = mPVP_list[1];
             _list_enemy = mPVP_list[2];
-            _list_winner = mPVP_list[3];
+            // History rows are reports, not members of the current challenge batch.
             _list_loser = mPVP_list[4];
             l = int(_list_pk.length);
             _itemArr = [];
+            _seenIDs = {};
+            _seenRanks = {};
+            _seenIDs[String(GlobalData.$userData.uid)] = true;
+            _seenRanks[String(_myRank)] = true;
             i = 0;
             while(i < l)
             {
                _currCfg = _list_pk[i];
-               if(GlobalData.$userData.uid != _currCfg[1])
+               if(hasArenaFormation(_currCfg) && !_seenIDs[String(_currCfg[1])] && !_seenRanks[String(_currCfg[0])])
                {
                   _data = getListData(_currCfg,0,_list_enemy);
                   _itemArr.push(_data);
+                  _seenIDs[String(_currCfg[1])] = true;
+                  _seenRanks[String(_currCfg[0])] = true;
                }
                i = i + 1;
             }
@@ -982,32 +986,12 @@ package com.meng52.game.ui.screen
             while(i < l)
             {
                _currCfg = _list_enemy[i];
-               _data = getListData(_currCfg,1);
-               _itemArr.push(_data);
-               i = i + 1;
-            }
-            l = int(_list_winner.length);
-            _had123 = false;
-            i = 0;
-            while(i < l)
-            {
-               _had123 = false;
-               _currCfg = _list_winner[i];
-               j = 0;
-               while(j < _itemArr.length)
+               if(hasArenaFormation(_currCfg) && !_seenIDs[String(_currCfg[1])] && !_seenRanks[String(_currCfg[0])])
                {
-                  _123Obj = _itemArr[j];
-                  if(_currCfg[1] == _123Obj["id"])
-                  {
-                     _had123 = true;
-                     break;
-                  }
-                  j = j + 1;
-               }
-               if(!_had123 && GlobalData.$userData.uid != _currCfg[1])
-               {
-                  _data = getListData(_currCfg,-1);
+                  _data = getListData(_currCfg,1);
                   _itemArr.push(_data);
+                  _seenIDs[String(_currCfg[1])] = true;
+                  _seenRanks[String(_currCfg[0])] = true;
                }
                i = i + 1;
             }
@@ -1036,15 +1020,6 @@ package com.meng52.game.ui.screen
             else
             {
                mList.verticalScrollPolicy = "on";
-               l = int(_list_loser.length);
-               i = 0;
-               while(i < l)
-               {
-                  _currCfg = _list_loser[i];
-                  _data = getListData(_currCfg,-1,null,1);
-                  _itemArr.push(_data);
-                  i = i + 1;
-               }
             }
             _itemArr.sortOn("indexID_s",16);
             l = int(_itemArr.length);
@@ -1098,6 +1073,22 @@ package com.meng52.game.ui.screen
          var _loc2_:Object = {};
          _loc2_["status"] = param1;
          return _loc2_;
+      }
+
+      private function hasArenaFormation(row:Array) : Boolean
+      {
+         if(row == null || row.length < 4 || int(row[0]) < 1 || row[1] == null || String(row[1]) == "" || !(row[3] is Array) || row[3].length == 0)
+         {
+            return false;
+         }
+         for each(var unit:Object in row[3])
+         {
+            if(!(unit is Array) || unit.length < 3 || !(unit[0] is String) || unit[0] == "")
+            {
+               return false;
+            }
+         }
+         return true;
       }
       
       private function getListData(param1:Array, param2:int, param3:Array = null, param4:int = 0) : Object

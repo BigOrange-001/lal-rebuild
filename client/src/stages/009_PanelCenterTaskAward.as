@@ -6,6 +6,10 @@ package com.meng52.game.ui.screen
    import com.meng52.game.module.guide.GuideMaster;
    import com.meng52.game.ui.element.ItemTaskAward;
    import com.meng52.net.SendAndSelect;
+   import com.meng52.events.NetEvent;
+   import com.meng52.game.ui.element.LOL_Scale9Button;
+   import flash.utils.Timer;
+   import starling.text.TextField;
    import com.meng52.net.SendServiceAMFFun;
    import com.meng52.utils.Tools;
    import feathers.controls.List;
@@ -17,6 +21,14 @@ package com.meng52.game.ui.screen
    {
       
       private static var mTaskData_need_hero_score:Number = 0;
+      private static var adventureReady:int = 0;
+      private var adventureData:Object;
+      private var adventureTab:int = 0;
+      private var adventureRequest:int = 0;
+      private var adventureClaiming:Boolean = false;
+      private var adventureButtons:Array = [];
+      private var adventureStatus:TextField;
+      private var adventureTimer:Timer;
       
       public function PanelCenterTaskAward()
       {
@@ -24,85 +36,13 @@ package com.meng52.game.ui.screen
          this.removeEventListener("addedToStage",initializeHandler);
          this.addEventListener("removedFromStage",this.onREMOVED_FROM_STAGE);
          GlobalData.$mEventDispatcher.addEventListener("update_shop_coin",onUPDATE_SHOP_COIN);
+         SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",onAdventureError);
+         this.addEventListener("adventure_task_claim",onAdventureClaim);
       }
       
       public static function checkTaskComplete() : Number
       {
-         var _loc9_:Object = null;
-         var _loc3_:Object = null;
-         var _loc23_:Object = null;
-         var _loc18_:Object = GlobalData.$mConfig.task;
-         var _loc1_:Array = GlobalData.$mConfig.everyday_gift as Array;
-         var _loc22_:Array = GlobalData.$userData.records.everyday_gift as Array;
-         var _loc7_:String = "";
-         var _loc12_:Array = [];
-         var _loc25_:Array = [];
-         var _loc4_:int = int(GlobalData.$userData.lv);
-         var _loc16_:int = 0;
-         var _loc15_:int = int(_loc1_.length);
-         var _loc24_:Number = 0;
-         _loc16_ = 0;
-         while(_loc16_ < _loc15_)
-         {
-            if(_loc22_.indexOf(_loc16_) < 0)
-            {
-               _loc24_ += 1;
-            }
-            _loc16_++;
-         }
-         var _loc21_:Object = GlobalData.$userData.task;
-         var _loc10_:int = 0;
-         var _loc6_:int = 0;
-         var _loc20_:Array = null;
-         for(var _loc19_:Object in _loc18_)
-         {
-            if(_loc19_.toString() != "time_pay")
-            {
-               _loc7_ = _loc19_.toString();
-               _loc9_ = _loc18_[_loc19_];
-               _loc10_ = int(_loc9_.content ? (_loc9_.content as Array).length : 0);
-               if(_loc4_ >= int(_loc9_.need_lv))
-               {
-                  if(_loc21_[_loc19_] != null)
-                  {
-                     _loc6_ = int(_loc21_[_loc19_]);
-                     if(_loc6_ < _loc10_)
-                     {
-                        _loc23_ = {};
-                        _loc20_ = _loc9_.content as Array;
-                        _loc23_["id"] = _loc7_;
-                        _loc23_["gift"] = _loc20_[_loc6_].gift;
-                        _loc23_["need"] = _loc20_[_loc6_].need;
-                        _loc23_["info"] = _loc9_.info;
-                        _loc3_ = checkTask(_loc7_,_loc23_,_loc9_);
-                        if(_loc3_)
-                        {
-                           if(_loc3_.ok)
-                           {
-                              _loc24_ += 1;
-                           }
-                        }
-                     }
-                  }
-               }
-            }
-         }
-         var _loc2_:int = GlobalFunction.getVipLv();
-         var _loc13_:Array = GlobalData.$mConfig_vip[_loc2_].gift as Array;
-         var _loc8_:Array = GlobalData.$userData.records.vip_gift as Array;
-         if(_loc13_)
-         {
-            _loc24_ += Math.abs(_loc13_.length - _loc8_.length);
-         }
-         var _loc17_:int = int(GlobalData.$userData.attrs.pay_gift);
-         var _loc14_:Array = GlobalData.$mConfig_simple.pay_gift as Array;
-         var _loc11_:Boolean = _loc17_ >= int(_loc14_[0]);
-         var _loc5_:int = Math.floor(_loc17_ / int(_loc14_[0]));
-         if(_loc11_)
-         {
-            _loc24_ += _loc5_;
-         }
-         return _loc24_;
+         return adventureReady;
       }
       
       public static function checkTask(param1:String, param2:Object, param3:Object) : Object
@@ -467,333 +407,186 @@ package com.meng52.game.ui.screen
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
-         this.removeEventListener("removedFromStage",this.onREMOVED_FROM_STAGE);
+         adventureRequest++;
+         if(adventureTimer)
+         {
+            adventureTimer.stop();
+            adventureTimer.removeEventListener("timer",onAdventureTimer);
+         }
          GlobalData.$mEventDispatcher.removeEventListener("update_shop_coin",onUPDATE_SHOP_COIN);
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onAdventureError);
+         this.removeEventListener("adventure_task_claim",onAdventureClaim);
          this.delList();
          this.clear();
       }
-      
+
+      private function buildAdventureUI() : void
+      {
+         if(adventureStatus) return;
+         var width:Number = GlobalData.$mStageWidth;
+         var title:TextField = GlobalFunction.createTextField(width - 24,44,"奇遇任务","",30,16764006,true);
+         title.x = 12;
+         title.hAlign = "center";
+         title.touchable = false;
+         addChild(title);
+         var labels:Array = ["日常任务","累计充值","循环奖励"];
+         var buttonWidth:Number = (width - 32) / 3;
+         for(var i:int = 0; i < labels.length; i++)
+         {
+            var button:LOL_Scale9Button = new LOL_Scale9Button(labels[i],buttonWidth,48,"UI_btn_enterGame_0_0000");
+            button.name = String(i);
+            button.x = 12 + i * (buttonWidth + 4);
+            button.y = 48;
+            button.addEventListener("triggered",onAdventureTab);
+            addChild(button);
+            adventureButtons.push(button);
+         }
+         adventureStatus = GlobalFunction.createTextField(width - 36,60,"正在加载任务…","",20,16777215);
+         adventureStatus.x = 18;
+         adventureStatus.y = 102;
+         adventureStatus.hAlign = "left";
+         adventureStatus.touchable = false;
+         addChild(adventureStatus);
+         setList();
+         adventureTimer = new Timer(60000);
+         adventureTimer.addEventListener("timer",onAdventureTimer);
+         adventureTimer.start();
+      }
+
+      private function onAdventureTimer(param1:flash.events.Event) : void
+      {
+         if(stage != null && !adventureClaiming) update();
+      }
+
+      private function onAdventureTab(param1:Event) : void
+      {
+         var button:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
+         if(button == null) return;
+         adventureTab = int(button.name);
+         if(mList) mList.verticalScrollPosition = 0;
+         addList();
+      }
+
       private function onUPDATE_SHOP_COIN(param1:Event) : void
       {
          update();
       }
-      
-      private function sendService() : void
-      {
-         SendServiceAMFFun.send_user_task_info(reService);
-      }
-      
-      private function reService(param1:Object) : void
-      {
-         if(this.stage == null) return;
-         mTaskData_need_hero_score = param1.data.hero_score;
-         if(!GlobalFunction.isVersionedProfileReceipt(param1))
-         {
-         GlobalData.$userData.attrs.time_consumecoin = param1.data.time_consumecoin;
-         }
-         this.setList();
-         this.addList();
-         GuideMaster.getOnlyExample().nextGuideStep();
-         GlobalFunction.$rndMCShow = false;
-         if(GlobalData.$currentGuide)
-         {
-            mList.verticalScrollPolicy = "off";
-         }
-      }
-      
+
       override public function update() : void
       {
-         sendService();
+         if(stage == null || adventureClaiming) return;
+         buildAdventureUI();
+         var request:int = ++adventureRequest;
+         SendAndSelect.sendAndSelectService("user.adventure_tasks_info",{},function(reply:Object):void
+         {
+            if(stage == null || request != adventureRequest || reply == null || int(reply.return_code) != 0) return;
+            if(reply.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(reply.state_sync)) return;
+            if(adventureData != null && JSON.stringify(adventureData) == JSON.stringify(reply.data)) return;
+            adventureData = reply.data;
+            addList();
+            GuideMaster.getOnlyExample().nextGuideStep();
+         });
       }
-      
+
       override public function setList() : void
       {
-         var settings:Object;
-         var _layout:VerticalLayout;
-         var tweenComplete:* = function():void
-         {
-            isReady = true;
-         };
-         isReady = false;
-         isOut = true;
-         GlobalData.$mStarling.juggler.tween(this,0.4,{"onComplete":tweenComplete});
-         this.delList();
-         if(this.mList == null)
-         {
-            settings = {
-               "paging":0,
-               "gap":5,
-               "horizontalGap":20,
-               "verticalGap":20,
-               "paddingTop":0,
-               "paddingRight":0,
-               "paddingBottom":0,
-               "paddingLeft":0,
-               "horizontalAlign":"center",
-               "verticalAlign":"top"
-            };
-            _layout = new VerticalLayout();
-            _layout.paddingTop = settings.paddingTop;
-            _layout.paddingRight = settings.paddingRight;
-            _layout.paddingBottom = settings.paddingBottom;
-            _layout.paddingLeft = settings.paddingLeft;
-            _layout.horizontalAlign = settings.horizontalAlign;
-            _layout.verticalAlign = settings.verticalAlign;
-            _layout.gap = settings.gap;
-            _layout.hasVariableItemDimensions = true;
-            this.mList = new List();
-            this.mList.isSelectable = false;
-            this.mList.width = GlobalData.$mStageWidth - 20;
-            this.mList.layout = _layout;
-            this.mList.verticalScrollBarFactory = GlobalData.verticalScrollBarFactory;
-            this.mList.x = int((GlobalData.$mStageWidth - this.mList.width) * 0.5);
-            this.mList.snapScrollPositionsToPixels = true;
-            this.addChild(this.mList);
-            settings = null;
-            _layout = null;
-            this.mList.dataProvider = new ListCollection();
-         }
+         if(mList) return;
+         var layout:VerticalLayout = new VerticalLayout();
+         layout.gap = 10;
+         layout.hasVariableItemDimensions = true;
+         layout.horizontalAlign = "center";
+         mList = new List();
+         mList.isSelectable = false;
+         mList.layout = layout;
+         mList.width = GlobalData.$mStageWidth;
+         mList.height = Math.max(180,GlobalData.$center_height_curr - 121 - 178);
+         mList.y = 166;
+         mList.verticalScrollBarFactory = GlobalData.verticalScrollBarFactory;
+         mList.snapScrollPositionsToPixels = true;
+         mList.dataProvider = new ListCollection();
+         addChild(mList);
       }
-      
+
       override public function addList() : void
       {
-         var _loc10_:Object = null;
-         var _loc28_:Object = null;
-         var _loc22_:String = null;
-         var _loc5_:Object = null;
-         var _loc21_:int = 0;
-         var _loc14_:Boolean = false;
-         var _loc24_:Object = GlobalData.$mConfig.task;
-         var _loc1_:Array = GlobalData.$mConfig.everyday_gift as Array;
-         var _loc8_:String = "";
-         var _loc15_:Array = [];
-         var _loc29_:Array = [];
-         var _loc6_:int = int(GlobalData.$userData.lv);
-         var _loc20_:int = 0;
-         var _loc18_:int = 0;
-         var _loc27_:Array = GlobalData.$userData.records.everyday_gift as Array;
-         var _loc25_:Array = null;
-         var _loc2_:int = GlobalFunction.getVipLv();
-         var _loc16_:Array = GlobalData.$mConfig_vip[_loc2_].gift as Array;
-         var _loc9_:Array = GlobalData.$userData.records.vip_gift as Array;
-         if(_loc16_ != null)
+         if(!adventureData || !mList) return;
+         var savedScroll:Number = mList.verticalScrollPosition;
+         var rows:Array = [];
+         var source:Array = adventureTab == 0 ? adventureData.daily as Array : adventureData.milestones as Array;
+         if(adventureTab == 2) source = [adventureData.repeat];
+         adventureReady = 0;
+         var item:Object;
+         for each(item in adventureData.daily) if(item.claimable) adventureReady++;
+         for each(item in adventureData.milestones) if(item.claimable) adventureReady++;
+         if(adventureData.repeat && adventureData.repeat.claimable) adventureReady++;
+         for each(item in source)
          {
-            _loc22_ = GlobalFunction.checkIOSvip() ? "(" + GlobalLanguageStr.getLanguageStr(20186) + _loc2_ + "  " + ")" + GlobalLanguageStr.getLanguageStr(70002) : GlobalLanguageStr.getLanguageStr(70002);
-            _loc18_ = int(_loc16_.length);
-            _loc20_ = 0;
-            while(_loc20_ < _loc18_)
+            var row:Object = Tools.clone(item);
+            row.adventure_task = true;
+            row.kind = adventureTab == 0 ? "daily" : adventureTab == 1 ? "milestone" : "repeat";
+            row.busy = adventureClaiming;
+            if(adventureTab == 0) row.progress_text = "进度：" + Math.min(Number(row.count),Number(row.goal)) + "/" + row.goal;
+            else if(adventureTab == 1)
             {
-               if(_loc9_.indexOf(_loc20_) < 0)
-               {
-                  _loc25_ = Tools.getObjectKeyValue(_loc16_[_loc20_]);
-                  _loc28_ = {};
-                  _loc28_[_loc25_[0]] = _loc25_[1];
-                  _loc10_ = {};
-                  _loc10_["id"] = "_$vip$_" + _loc20_;
-                  _loc10_["gift"] = _loc28_;
-                  _loc10_["need"] = 0;
-                  _loc10_["info"] = _loc22_;
-                  _loc10_["taskResult"] = 1;
-                  _loc15_.push(_loc10_);
-               }
-               _loc20_++;
+               row.title = "累计充值" + row.required_yuan + "元";
+               row.progress_text = "进度：" + Math.min(Number(adventureData.paid_yuan),Number(row.required_yuan)) + "/" + row.required_yuan + "元";
             }
-         }
-         _loc18_ = int(_loc1_.length);
-         _loc22_ = GlobalLanguageStr.getLanguageStr(20155);
-         var _loc12_:Object = GlobalData.$mConfig_simple.everyday_gifts.start_lv;
-         _loc20_ = 0;
-         for(; _loc20_ < _loc18_; _loc20_++)
-         {
-            if(_loc27_.indexOf(_loc20_) < 0)
+            else
             {
-               _loc25_ = Tools.getObjectKeyValue(_loc1_[_loc20_]);
-               _loc28_ = {};
-               _loc28_[_loc25_[0]] = _loc25_[1];
-               _loc10_ = {};
-               _loc10_["id"] = "_$everyday$_" + _loc20_;
-               _loc10_["gift"] = _loc28_;
-               _loc10_["need"] = 0;
-               _loc10_["info"] = _loc22_;
-               _loc10_["taskResult"] = 1;
-               if(_loc25_[0] == "avatar_soul" || _loc25_[0] == "equip_soul" || _loc25_[0] == "culture_book")
-               {
-                  if(GlobalData.$userData.lv < _loc12_[_loc25_[0]])
-                  {
-                     continue;
-                  }
-               }
-               _loc15_.push(_loc10_);
+               row.title = "每累计充值2000元，再领橙卡";
+               row.progress_text = "已领取" + row.claimed_count + "张，当前可领取" + row.available_count + "张";
             }
+            rows.push(row);
          }
-         var _loc26_:Object = GlobalData.$userData.task;
-         var _loc11_:int = 0;
-         var _loc7_:int = 0;
-         var _loc3_:Object = null;
-         var _loc19_:Number = 0;
-         var _loc4_:Number = 0;
-         var _loc13_:Boolean = false;
-         for(var _loc23_:Object in _loc24_)
+         for(var i:int = 0; i < adventureButtons.length; i++) adventureButtons[i].alpha = i == adventureTab ? 1 : 0.65;
+         adventureStatus.text = adventureTab == 0 ? "每日零点刷新；完成后分别领取奖励。" :
+            "累计充值：" + adventureData.paid_yuan + "元\n累计与循环奖励可同时领取，首充翻倍不计入累计金额。";
+         mList.dataProvider = new ListCollection();
+         setListTimer(mList,rows,ItemTaskAward,false);
+         mList.validate();
+         mList.verticalScrollPosition = savedScroll;
+         GlobalData.$mEventDispatcher.dispatchEventWith("update_activity_fun_task_num");
+      }
+
+      private function onAdventureClaim(param1:Event) : void
+      {
+         var row:Object = param1.data;
+         if(stage == null || adventureClaiming || row == null || !row.claimable) return;
+         adventureClaiming = true;
+         var rewardText:String = row.reward_text;
+         var request:int = ++adventureRequest;
+         addList();
+         SendAndSelect.sendAndSelectService("user.adventure_task_claim",{"kind":row.kind,"key":String(row.key)},function(reply:Object):void
          {
-            _loc8_ = _loc23_.toString();
-            _loc10_ = _loc24_[_loc23_];
-            _loc11_ = int(_loc10_.content ? (_loc10_.content as Array).length : 0);
-            if(_loc6_ >= int(_loc10_.need_lv) || _loc8_ == "pay")
+            if(stage == null || request != adventureRequest) return;
+            adventureClaiming = false;
+            if(reply == null || int(reply.return_code) != 0 || reply.data == null) { update(); return; }
+            if(reply.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(reply.state_sync)) { update(); return; }
+            adventureData = reply.data.tasks;
+            addList();
+            var lines:Array = [];
+            var award:Object = reply.data.award;
+            if(award)
             {
-               if(_loc26_[_loc23_] != null || _loc8_ == "time_pay_loop")
-               {
-                  if(_loc8_ == "time_pay_loop")
-                  {
-                     _loc7_ = 0;
-                  }
-                  else
-                  {
-                     _loc7_ = int(_loc26_[_loc23_]);
-                  }
-                  if(_loc7_ < _loc11_)
-                  {
-                     if(_loc8_ == "time_pay")
-                     {
-                        _loc19_ = (_loc10_.begin_time as Date).time * 0.001;
-                        _loc4_ = (_loc10_.end_time as Date).time * 0.001;
-                     }
-                     else
-                     {
-                        if(_loc8_ == "time_pay_loop")
-                        {
-                           _loc19_ = (_loc10_.begin_time as Date).time * 0.001;
-                           _loc4_ = (_loc10_.end_time as Date).time * 0.001;
-                           if(SendAndSelect.$systemTimer_nowSecond < _loc19_ || SendAndSelect.$systemTimer_nowSecond >= _loc4_)
-                           {
-                              continue;
-                           }
-                        }
-                        else if(_loc8_ == "have_avatar")
-                        {
-                           _loc19_ = (_loc10_.begin_time as Date).time * 0.001;
-                           _loc4_ = (_loc10_.end_time as Date).time * 0.001;
-                           if(SendAndSelect.$systemTimer_nowSecond < _loc19_ || SendAndSelect.$systemTimer_nowSecond >= _loc4_)
-                           {
-                              continue;
-                           }
-                        }
-                        else if(_loc8_ == "time_login")
-                        {
-                           _loc19_ = (_loc10_.begin_time as Date).time * 0.001;
-                           _loc4_ = (_loc10_.end_time as Date).time * 0.001;
-                           if(SendAndSelect.$systemTimer_nowSecond < _loc19_ || SendAndSelect.$systemTimer_nowSecond >= _loc4_)
-                           {
-                              continue;
-                           }
-                        }
-                        else if(_loc8_ == "time_consumecoin")
-                        {
-                           _loc19_ = (_loc10_.begin_time as Date).time * 0.001;
-                           _loc4_ = (_loc10_.end_time as Date).time * 0.001;
-                           if(SendAndSelect.$systemTimer_nowSecond < _loc19_ || SendAndSelect.$systemTimer_nowSecond >= _loc4_)
-                           {
-                              continue;
-                           }
-                        }
-                        _loc28_ = {};
-                        _loc25_ = _loc10_.content as Array;
-                        _loc28_["id"] = _loc8_;
-                        _loc28_["gift"] = _loc25_[_loc7_].gift;
-                        _loc28_["need"] = _loc25_[_loc7_].need;
-                        _loc28_["taskcode"] = _loc7_;
-                        _loc28_["info"] = GlobalLanguageStr.getLanguageStr(_loc10_.info);
-                        _loc28_["index"] = _loc10_.index;
-                        _loc28_["data_base"] = _loc10_;
-                        _loc28_["lvMax"] = int(_loc10_.need_lv);
-                        if(GlobalData.$currentGuide)
-                        {
-                           if(_loc8_ == "login_total")
-                           {
-                              _loc28_["index"] = -2;
-                           }
-                           else if(_loc8_ == "login_catena")
-                           {
-                              _loc28_["index"] = -1;
-                           }
-                        }
-                        _loc5_ = checkTask(_loc8_,_loc28_,_loc10_);
-                        if(_loc5_ != null)
-                        {
-                           if(_loc5_.ok)
-                           {
-                              _loc13_ = true;
-                           }
-                           if(_loc8_ == "have_avatar")
-                           {
-                              _loc28_["task_more_base"] = _loc5_["task_more_base"];
-                           }
-                           _loc28_["taskResult"] = _loc5_.ok ? 1 : 0;
-                           if(_loc8_ != "pay")
-                           {
-                              _loc29_.push(_loc28_);
-                           }
-                           else
-                           {
-                              _loc3_ = _loc28_;
-                           }
-                        }
-                     }
-                  }
-               }
+               for(var aid:String in award.avatar)
+                  lines.push((GlobalData.$mConfig_avatar[aid] ? GlobalData.$mConfig_avatar[aid].name : "橙色英雄") + "×" + award.avatar[aid]);
+               for(var eid:String in award.equip)
+                  lines.push((GlobalData.$mConfig_equip[eid] ? GlobalData.$mConfig_equip[eid].name : "橙色装备") + "×" + award.equip[eid]);
             }
-         }
-         GlobalData.$mGameClassObject.mLayoutUICenter.mPanelCenterMain.awardIcon();
-         if(_loc29_.length > 0)
+            GlobalFunction.popAlert("奖励已领取",lines.length > 0 ? lines.join("\n") : rewardText);
+         });
+      }
+
+      private function onAdventureError(param1:NetEvent) : void
+      {
+         var reply:Object = param1.data;
+         if(!reply || (reply.method != "user.adventure_task_claim" && reply.method != "user.adventure_tasks_info")) return;
+         adventureClaiming = false;
+         if(stage != null)
          {
-            _loc29_.sortOn(["taskResult","index"],[0x10 | 2,16]);
+            if(reply.method == "user.adventure_task_claim") update();
+            else if(adventureStatus) adventureStatus.text = "任务加载失败，请重新进入奇遇。";
          }
-         var _loc17_:Array = GlobalData.$mConfig_simple.pay_gift as Array;
-         _loc28_ = null;
-         if(_loc17_ != null && _loc17_.length > 1)
-         {
-            _loc21_ = int(GlobalData.$userData.attrs.pay_gift_count);
-            _loc14_ = _loc21_ <= 0;
-            _loc22_ = _loc14_ ? GlobalLanguageStr.getLanguageStr(20252) : GlobalLanguageStr.getLanguageStr(20428);
-            _loc28_ = {};
-            _loc28_["id"] = "_$paygift$_";
-            _loc28_["gift"] = _loc17_[1];
-            _loc28_["need"] = _loc14_ ? _loc17_[0] : _loc17_[2];
-            _loc28_["info"] = _loc22_;
-            _loc28_["taskResult"] = 0;
-         }
-         if(GlobalData.$currentGuide)
-         {
-            _loc15_ = _loc29_.slice(0,2).concat(_loc15_).concat(_loc29_.slice(2,-1));
-         }
-         else
-         {
-            _loc15_ = _loc15_.concat(_loc29_);
-            if(_loc3_ != null)
-            {
-               _loc15_.unshift(_loc3_);
-            }
-            if(_loc28_ != null)
-            {
-               _loc15_.unshift(_loc28_);
-            }
-         }
-         if(_loc15_.length > 0)
-         {
-            mList.y = 0;
-            mList.height = GlobalData.$center_height_curr - 121 - 145;
-            this.setListTimer(mList,_loc15_,ItemTaskAward,false);
-         }
-         _loc3_ = null;
-         _loc26_ = null;
-         _loc15_ = null;
-         _loc29_ = null;
-         _loc27_ = null;
-         _loc25_ = null;
-         _loc28_ = null;
-         _loc10_ = null;
-         _loc24_ = null;
-         _loc1_ = null;
       }
    }
 }
-

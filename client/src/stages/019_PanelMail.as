@@ -85,7 +85,7 @@ package com.meng52.game.ui.panel
          var _loc11_:Number = _loc12_.width - 10;
          var _loc6_:Number = mImg9_baseBg.height - 30 - 150;
          var _loc9_:Number = Starling.contentScaleFactor;
-         var _loc8_:Number = Starling.current.nativeStage.stageWidth - Starling.current.viewPort.width >> 1;
+         var _loc8_:Number = Starling.current.viewPort.x;
          this.nt = null;
          this.nt = new NativeText(5);
          this.nt.autoCorrect = true;
@@ -100,7 +100,7 @@ package com.meng52.game.ui.panel
          var _loc7_:Point = new Point(_loc12_.x + 10,_loc12_.y);
          _loc7_ = _loc3_.localToGlobal(_loc7_);
          this.nt.x = int(_loc7_.x * _loc9_ + _loc8_);
-         this.nt.y = int((GlobalData.$mStageHeight - _loc12_.height) * 0.5 * GlobalData.$mStage$Starling_h);
+         this.nt.y = int((GlobalData.$mStageHeight - _loc12_.height) * 0.5 * GlobalData.$mStage$Starling_h + Starling.current.viewPort.y);
          GlobalData.$mStarling.nativeStage.addChild(this.nt);
          var _loc5_:LOL_Scale9Button = new LOL_Scale9Button("",125,45,"UI_btn_enterGame_0_0000");
          _loc5_.name = "Btn_name_del";

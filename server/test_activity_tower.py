@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from activity_tower_overlay import apply_activity_tower
+from activity_tower_overlay import apply_resource_overhaul
 from battle_engine import serialize_stage_team
 from campaign_workbook_overlay import _power
 from gameplay_combat import GameplayCombat
@@ -20,7 +20,8 @@ class ActivityTowerTest(unittest.TestCase):
     def setUpClass(cls):
         source = json.loads((Path(__file__).resolve().parents[1] /
                              "config/reconstruction/full-config.json").read_text(encoding="utf-8"))
-        cls.config, cls.report = apply_activity_tower(source)
+        source["cfg"]["system_simple"].setdefault("skill_biscuit_avatar_id", "A_6992_4")
+        cls.config, cls.report = apply_resource_overhaul(source)
 
     def make_store(self, name):
         db = sqlite3.connect(":memory:", check_same_thread=False)
@@ -32,7 +33,7 @@ class ActivityTowerTest(unittest.TestCase):
         return store, uid, combat, team
 
     def test_color_tiers_native_power_and_three_table_publication(self):
-        self.assertEqual((self.report["chapters"], self.report["stages"]), (10, 135))
+        self.assertEqual((self.report["chapters"], self.report["stages"]), (11, 204))
         self.assertEqual(self.config["cfg_version"], (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip())
         pve = self.config["pve"]
         self.assertIn("P_001", pve["battle_ploy"])
@@ -40,19 +41,20 @@ class ActivityTowerTest(unittest.TestCase):
         for table in ("battle_ploy", "combat_ploy"):
             self.assertEqual(pve[table], self.config[table])
             self.assertEqual(pve[table], self.config["cfg"][table])
-        for tier, star in enumerate((4, 5, 6, 6), 1):
+        for tier, star in enumerate((4, 5, 6, 6, 6), 1):
             stage = pve["combat_ploy"][f"P_101_{tier}"]
             self.assertTrue(all(row[0].endswith(f"_{star}") for row in stage["team2"]))
             self.assertEqual(stage["energy"], 10)
             self.assertEqual({row[3] for row in stage["team2"]}, {0, 1, 2})
             self.assertEqual(len(stage["team2"]), 6)
-            self.assertEqual(stage["team2"][0][1], (60, 99, 99, 125)[tier - 1])
-            if tier == 4:
+            self.assertEqual(stage["team2"][0][1], (60, 99, 99, 125, 125)[tier - 1])
+            if tier >= 4:
                 self.assertEqual(stage["team2"][0][14], 3)
                 advanced = serialize_stage_team(self.config["cfg"], stage["team2"])
                 self.assertEqual((advanced[0]["phase"], advanced[0]["limit_break"]), (3, 1))
         for floor, star, phase in ((1, 4, 0), (21, 5, 0), (41, 6, 0),
-                                   (61, 6, 0), (81, 6, 3), (100, 6, 3)):
+                                   (61, 6, 0), (81, 6, 3), (100, 6, 3),
+                                   (101, 6, 3), (150, 6, 3)):
             stage = pve["combat_ploy"][f"P_200_{floor}"]
             self.assertTrue(all(row[0].endswith(f"_{star}") for row in stage["team2"]))
             snapshots = serialize_stage_team(self.config["cfg"], stage["team2"])
@@ -60,12 +62,19 @@ class ActivityTowerTest(unittest.TestCase):
                              (phase, 1 if phase == 3 else None))
             self.assertEqual(stage["recommended_power"], _power(
                 self.config["cfg"], stage["team2"], stage["enemy_unit_stats_by_diff"]["0"]))
-        self.assertLess(abs(pve["combat_ploy"]["P_200_1"]["recommended_power"] - 100000), 100)
-        self.assertLess(abs(pve["combat_ploy"]["P_200_100"]["recommended_power"] - 2000000000), 1000)
+        self.assertLess(abs(pve["combat_ploy"]["P_200_1"]["recommended_power"] - 10000), 100)
+        self.assertLess(abs(pve["combat_ploy"]["P_200_150"]["recommended_power"] - 10000000000), 10000)
         skin_blocked = set(self.config["cfg"]["system_simple"]["skin_acquisition_blocked_heroes"])
-        self.assertTrue(set(pve["combat_ploy"]["P_200_61"]["soul_candidates"]) <= skin_blocked)
-        for floor in (1, 21, 41):
+        for floor in (61, 80):
+            self.assertTrue(set(pve["combat_ploy"][f"P_200_{floor}"]["soul_candidates"]) <= skin_blocked)
+        for floor in (1, 20, 21, 40, 41, 60):
             self.assertFalse(set(pve["combat_ploy"][f"P_200_{floor}"]["soul_candidates"]) & skin_blocked)
+        self.assertNotIn("A_1226_6", pve["combat_ploy"]["P_200_41"]["soul_candidates"])
+        self.assertIn("A_1226_6", pve["combat_ploy"]["P_200_61"]["soul_candidates"])
+        for floor in (81, 100):
+            candidates = set(pve["combat_ploy"][f"P_200_{floor}"]["soul_candidates"])
+            self.assertTrue(candidates & skin_blocked)
+            self.assertTrue(candidates - skin_blocked)
         invalid = list(pve["combat_ploy"]["P_200_81"]["team2"][0])
         invalid[14] = 4
         with self.assertRaises(ValueError):
@@ -132,7 +141,7 @@ class ActivityTowerTest(unittest.TestCase):
 
     def test_experience_activity_grants_storable_feed_cards_once(self):
         stage = self.config["combat_ploy"]["P_101_4"]
-        self.assertEqual(stage["reward"]["heroes"], [{"aid": "A_6996_5", "num": 8}])
+        self.assertEqual(stage["reward"]["heroes"], [{"aid": "A_6996_5", "num": 20}])
         self.assertNotIn("activity_avatar_exp", stage)
         store, uid, combat, team = self.make_store("experience-book-reward")
         leader = team[0][0]
@@ -145,13 +154,13 @@ class ActivityTowerTest(unittest.TestCase):
         won = combat._finish(uid, finish)
         book_ids = [iid for iid, card in won["get_avatars"].items()
                     if card["aid"].split("|")[0] == "A_6996_5"]
-        self.assertEqual(len(book_ids), 1)
+        self.assertEqual(len(book_ids), 5)
         self.assertEqual(store.profile_raw(uid)["avatars"][leader]["exp"], before)
         roster = GameplayRosterEquipment(store, self.config)
         self.assertEqual(roster._hero_offer_exp(store.profile_raw(uid)["avatars"][book_ids[0]]), 50000)
         self.assertTrue(combat._finish(uid, finish)["replayed"])
         self.assertEqual(len([card for card in store.profile_raw(uid)["avatars"].values()
-                              if card["aid"].split("|")[0] == "A_6996_5"]), 1)
+                              if card["aid"].split("|")[0] == "A_6996_5"]), 5)
 
 
 if __name__ == "__main__":

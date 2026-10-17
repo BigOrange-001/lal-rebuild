@@ -383,7 +383,14 @@ package com.meng52.game.ui.panel
          {
             if(!this.mOK_b)
             {
-               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90018),false,"A_1001_5");
+               if(!isPhaseUp && GlobalData.$tempAvatarStarUp.id.split("|")[0].split("_")[2] == "5" && int(GlobalData.$tempAvatarStarUp.phase) < 2)
+               {
+                  GlobalFunction.popError("紫卡需达到二阶才能升橙",false);
+               }
+               else
+               {
+                  GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90018),false,"A_1001_5");
+               }
                return;
             }
             if(!this.mOK_a)
@@ -437,20 +444,12 @@ package com.meng52.game.ui.panel
       
       private function service_starUp() : void
       {
-         var _loc2_:int = 0;
-         var _loc1_:Array = [];
-         _loc2_ = 0;
-         while(_loc2_ < mStarUpArr.length)
-         {
-            _loc1_.push(mStarUpArr[_loc2_].id);
-            _loc2_++;
-         }
          if(SendAndSelect.checkRepeat("user.star_up",""))
          {
             return;
          }
          var _targetId:String = String(GlobalData.$tempAvatarStarUp.id);
-         var _materialIds:Array = _loc1_.concat();
+         var _materialIds:Array = [];
          var _op:uint = ++mStarUpRequestId;
          var _epoch:uint = mStarUpViewEpoch;
          var _owner:PanelStarUpStart = this;
@@ -664,7 +663,7 @@ package com.meng52.game.ui.panel
             StarlingTools.removeChildrenClear(this.mBox_b);
             mAvatar_b = null;
             mBtn_up.enabled = false;
-            mBtn_up.text = "已达上限";
+            mBtn_up.text = _loc1_.getStar() == 6 && _loc1_.phase >= 3 ? "满阶" : "已达上限";
             return;
          }
          this.checkOK_c();
@@ -680,11 +679,12 @@ package com.meng52.game.ui.panel
          var _loc1_:Avatar = null;
          var _loc3_:Number = NaN;
          var _loc5_:String = GlobalData.$tempAvatarStarUp.id;
-         var _loc2_:Avatar = new Avatar(GlobalData.$tempAvatarStarUp.id,GlobalData.$tempAvatarStarUp);
          if(!isPhaseUp)
          {
-            _loc5_ = GlobalFunction.getStarUpId(_loc5_);
+            this.mOK_c = true;
+            return;
          }
+         var _loc2_:Avatar = new Avatar(GlobalData.$tempAvatarStarUp.id,GlobalData.$tempAvatarStarUp);
          _loc1_ = new Avatar(_loc5_,GlobalData.$tempAvatarStarUp);
          if(isPhaseUp)
          {
@@ -725,6 +725,7 @@ package com.meng52.game.ui.panel
          var _loc11_:Array = null;
          var _loc7_:* = 0;
          var _loc12_:ItemStarUpElement = null;
+         this.delUIList();
          var _loc1_:Avatar = new Avatar(GlobalData.$tempAvatarStarUp.id,GlobalData.$tempAvatarStarUp);
          if(isPhaseUp)
          {
@@ -744,11 +745,11 @@ package com.meng52.game.ui.panel
          }
          else
          {
-            _loc3_ = _loc1_.avatarData.starUp as Array;
-            _loc14_ = GlobalFunction.getStarUpItems(GlobalData.$tempAvatarStarUp);
+            _loc3_ = [];
+            _loc14_ = [];
          }
          _loc7_ = 0;
-         var _loc2_:uint = 5;
+         var _loc2_:uint = isPhaseUp ? 5 : 0;
          var _loc8_:String = "";
          var _loc13_:Object = {};
          var _loc5_:uint = 0;
@@ -813,7 +814,7 @@ package com.meng52.game.ui.panel
          this.mBtn_up.enabled = _loc10_ >= 1;
          if(mGrowthType > 0)
          {
-            mBtn_up.text = _loc9_ > 0 ? "缺材料 " + _loc9_ : (!mOK_b ? "等级未满" : (!mOK_c ? "统率不足" : (isPhaseUp ? "进阶 " + (_loc1_.phase + 1) + "/3" : "升星")));
+            mBtn_up.text = _loc9_ > 0 ? "缺材料 " + _loc9_ : (!mOK_b ? (_loc1_.lv < _loc1_.getLvMax() ? "等级未满" : "需要二阶") : (!mOK_c ? "统率不足" : (isPhaseUp ? "进阶 " + (_loc1_.phase + 1) + "/3" : "升星")));
          }
       }
       
@@ -878,12 +879,20 @@ package com.meng52.game.ui.panel
          {
             this.mOK_b = true;
          }
+         if(!isPhaseUp && param4 == 0 && _loc5_.getStar() == 5 && _loc5_.phase < 2)
+         {
+            this.mOK_b = false;
+         }
          if(!isPhaseUp)
          {
             if(param4 == 1)
             {
-               _loc5_.lv = 1;
-               _loc5_.exp = 0;
+               _loc5_.lv = _loc33_.lv;
+               _loc5_.exp = _loc33_.exp;
+               if(_loc5_.lv < _loc5_.getLvMax())
+               {
+                  _loc5_.exp = Math.min(_loc5_.exp,Math.max(0,_loc5_.getNextExp() - 1));
+               }
                _loc5_.phase = 0;
             }
          }
@@ -1050,6 +1059,7 @@ package com.meng52.game.ui.panel
             _loc5_.mData.aid = _loc9_;
             _loc5_.mData.id = _loc9_;
             _loc5_.mData.lv = _loc5_.lv;
+            _loc5_.mData.exp = _loc5_.exp;
             _loc5_.mData.love_exp = _loc5_.loveExp;
             _loc5_.mData.phase = _loc5_.phase;
             _loc5_.mData.hp = _loc5_.hpP;

@@ -1189,7 +1189,10 @@ class ReferenceBattle:
             if not self._can_apply_dash(attacker, enemies):
                 return False
         allies = [u for u in attacker.get("_team", []) if int(u.get("hp", 0)) > 0]
-        context = {"targets": {}, "damage": {}, "kills": {}, "target_groups": {}}
+        context = {"targets": {}, "damage": {}, "kills": {}, "target_groups": {},
+                   "precast_dot": {id(u) for u in enemies if any(
+                       self._has_manual_dot_kind(u, kind) for kind in ("burn", "bleed", "poison"))},
+                   "precast_burn": {id(u) for u in enemies if self._has_manual_dot_kind(u, "burn")}}
         for index, action in enumerate(actions):
             if not isinstance(action, list) or not action:
                 return False
@@ -1266,7 +1269,7 @@ class ReferenceBattle:
         total = 0
         for target in self._skill_targets(attacker, enemies, pl):
             coefficient = base
-            if self._condition_matches(condition, target, context):
+            if self._condition_matches(condition, target, context, skill, index):
                 coefficient += bonus
             if damage_type == 3:
                 coefficient /= _REAL_DAMAGE_RATE
@@ -1275,19 +1278,25 @@ class ReferenceBattle:
         context["kills"][index] = self._kill_record(
             [u for u in enemies if int(u.get("hp", 0)) > 0])
 
-    def _condition_matches(self, condition, target, context):
+    def _condition_matches(self, condition, target, context, skill=None, index=-1):
         """conditionMatches (139_SkillSet.as:2391)."""
+        if not target or int(target.get("hp", 0)) <= 0:
+            return False
         if condition == "target_hp_below_50":
             hp_max = int(target.get("hp_max", 0))
             return hp_max > 0 and int(target.get("hp", 0)) / hp_max < 0.5
         if condition == "target_hp_below_50_percent":
             hp_max = int(target.get("hp_max", 0))
             return hp_max > 0 and int(target.get("hp", 0)) / hp_max < 0.5
-        if condition in ("primary_target", "prehit_burn", "prehit_bleed"):
-            issued = [i for i in sorted(context["targets"]) if i < index]
-            if not issued:
-                return False
-            return context["targets"].get(issued[-1]) is target
+        if condition in ("precast_dot", "precast_burn"):
+            return id(target) in context.get(condition, set())
+        if condition in ("prehit_burn", "prehit_bleed"):
+            return self._has_manual_dot_kind(target, condition.removeprefix("prehit_"))
+        if condition == "primary_target":
+            primary = (self._policy_args(skill, index) or {}).get("primaryActionIndex", 0)
+            return (type(primary) in (int, float) and math.isfinite(primary)
+                    and primary >= 0 and int(primary) == primary
+                    and context["targets"].get(int(primary)) is target)
         # primary_killed is hardcoded false in the client.
         return False
 
@@ -1308,7 +1317,7 @@ class ReferenceBattle:
         pl = skill.get("pl") or []
         for target in self._skill_targets(attacker, enemies, pl):
             rounds = int(action[3])
-            if self._condition_matches(str(action[4]), target, context):
+            if self._condition_matches(str(action[4]), target, context, skill, index):
                 rounds += int(action[5])
             self._native_damage(attacker, target, action[1], action[2])
             self._add_buff(target, "stun", rounds, 0)

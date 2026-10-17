@@ -32,6 +32,7 @@ package com.meng52.game.ui.panel
    
    public class PanelEquipMagic extends PanelEquipRise
    {
+      private static const RUNE_STAT_NAMES:Array = ["生命","攻击","物抗","魔抗"];
       
       private var mTxt_self:TextField;
       
@@ -209,6 +210,27 @@ package com.meng52.game.ui.panel
          addChild(_spRule);
          _spRule.addEventListener("touch",onTRIGGERED_help);
       }
+
+      override protected function refreshAfterProfileStateSync() : void
+      {
+         if(mBox_data == null || mBox_team == null || mCurrEquip == null)
+         {
+            return;
+         }
+         var _eid:String = GlobalData.$tempEquipCurrSelected;
+         var _item:Object = GlobalData.$userData.my_equips[_eid];
+         if(_item == null)
+         {
+            return;
+         }
+         setMyDustUIs(true);
+         setTxt(mBox_data,true);
+         setDustBtn(mBox_team,true);
+         _item["id"] = _eid;
+         _item["status"] = -1;
+         _item["score"] = true;
+         mCurrEquip.data = _item;
+      }
       
       private function onTRIGGERED_help(param1:TouchEvent) : void
       {
@@ -277,16 +299,21 @@ package com.meng52.game.ui.panel
             param1.addChild(_stageButton);
          }
          var _runeMax:int = GlobalData.$mConfig_simple.equipment_magic == null ? 10 : int(GlobalData.$mConfig_simple.equipment_magic.rune_max);
-         var _runeName:String = _loc7_.symp < 0 ? "未揭示" : _loc7_.getSympTypeStr();
+         var _runeName:String = _loc7_.symp < 0 || _loc7_.symp >= RUNE_STAT_NAMES.length ? "未揭示" : String(RUNE_STAT_NAMES[_loc7_.symp]);
          var _runeInfo:TextField = GlobalTextStyle.getTextField("符文 " + _runeName + " Lv." + _loc7_.runeLv + "/" + _runeMax,18,16763955,"left",200,32);
          _runeInfo.x = 210;
          _runeInfo.y = 108;
          _runeInfo.touchable = false;
          param1.addChild(_runeInfo);
-         var _runeButton:LOL_Scale9Button = new LOL_Scale9Button(_loc7_.symp < 0 ? "先揭示符文" : _loc7_.runeLv >= _runeMax ? "符文已满级" : "强化符文",200,48,"UI_btn_normalFun_0000");
+         var _magicMax:int = int(GlobalData.$mConfig_simple.dust.max[0]);
+         var _levelHint:TextField = GlobalTextStyle.getTextField("符文最高" + _runeMax + "级；各阶附魔独立升至" + _magicMax + "级",16,16777215,"left",440,32);
+         _levelHint.y = 145;
+         _levelHint.touchable = false;
+         param1.addChild(_levelHint);
+         var _runeButton:LOL_Scale9Button = new LOL_Scale9Button(_loc7_.symp < 0 || _loc7_.symp >= RUNE_STAT_NAMES.length ? "先揭示符文" : _loc7_.runeLv >= _runeMax ? "符文已满级" : "强化符文",200,48,"UI_btn_normalFun_0000");
          _runeButton.x = 210;
          _runeButton.y = 300;
-         _runeButton.enabled = _loc7_.symp >= 0 && _loc7_.runeLv < _runeMax;
+         _runeButton.enabled = _loc7_.symp >= 0 && _loc7_.symp < RUNE_STAT_NAMES.length && _loc7_.runeLv < _runeMax;
          if(_runeButton.enabled)
          {
             _runeButton.addEventListener("triggered",onTRIGGERED_rune);
@@ -307,7 +334,7 @@ package com.meng52.game.ui.panel
          var _color:int = _equip.symp;
          var _level:int = _equip.runeLv;
          var _max:int = _rules == null ? 10 : int(_rules.rune_max);
-         if(_color < 0 || _color >= 4 || _level >= _max)
+         if(_rules == null || _color < 0 || _color >= RUNE_STAT_NAMES.length || _level >= _max)
          {
             return;
          }
@@ -315,10 +342,9 @@ package com.meng52.game.ui.panel
          var _markCost:int = int(_rules.rune_mark_step) * (_level + 1);
          var _dust:Array = GlobalData.$userData.attrs.dust as Array;
          var _name:Array = GlobalLanguageStr.getLanguageStr(90197).split("$");
-         var _gainNames:Array = ["生命","攻击","物抗","魔抗"];
          var _gains:Array = _rules.rune_stat_per_level as Array;
          var _gain:int = _gains == null || _gains.length <= _color ? 0 : int(_gains[_color]);
-         var _message:String = "强化" + _equip.getSympTypeStr() + "符文至 Lv." + (_level + 1) + "，本件" + _gainNames[_color] + "+" + _gain + "。消耗" + _name[_color] + "粉尘 " + _dustCost + "、炼金印记 " + _markCost + "。";
+         var _message:String = "强化" + RUNE_STAT_NAMES[_color] + "符文至 Lv." + (_level + 1) + "，本件" + RUNE_STAT_NAMES[_color] + "+" + _gain + "。消耗" + _name[_color] + "粉尘 " + _dustCost + "、炼金印记 " + _markCost + "。";
          if(_dust == null || _dust.length <= _color || int(_dust[_color]) < _dustCost || int(GlobalData.$userData.mark) < _markCost)
          {
             GlobalFunction.popAlert("",_message + "\n材料不足。");
@@ -536,13 +562,9 @@ package com.meng52.game.ui.panel
       
       private function re_add_magic(param1:Object) : void
       {
-         if(GlobalFunction.isMalformedProfileReceipt(param1))
+         if(GlobalFunction.isMalformedProfileReceipt(param1) || !GlobalFunction.didApplyProfileStateSync(param1))
          {
             return;
-         }
-         if(GlobalFunction.isLegacyProfileReceipt(param1))
-         {
-            RpcStaticCall.$remoting.reportDiagnostic("PROFILE_RECEIPT_LEGACY|method=user.add_magic");
          }
          var _requestParams:Object = param1["params"];
          var _requestEquipId:String = _requestParams == null ? "" : String(_requestParams["eqid"]);
@@ -724,7 +746,7 @@ package com.meng52.game.ui.panel
                      _loc10_ = GlobalData.$tempEquipCurrSelected;
                      _loc4_ = new Equip(_loc10_);
                      _loc7_ = _loc4_.getSympStr();
-                     _loc5_ = _loc4_.getSympTypeStr();
+                     _loc5_ = _loc4_.symp < 0 || _loc4_.symp >= RUNE_STAT_NAMES.length ? "未揭示" : String(RUNE_STAT_NAMES[_loc4_.symp]);
                      _loc16_ = GlobalLanguageStr.getLanguageStr(90205,_loc7_);
                      _loc15_ = "";
                      _loc14_ = GlobalData.$mConfig_simple.dust.symp[1];

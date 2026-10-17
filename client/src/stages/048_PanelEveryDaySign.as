@@ -248,6 +248,8 @@ class ItemSign extends Sprite
    private var m_user_check_in:Object;
    
    private var m_double_need_vip:int = 0;
+
+   private var m_bonus_orange_cards:int = 0;
    
    private var m_get_status:Boolean = false;
    
@@ -290,14 +292,24 @@ class ItemSign extends Sprite
             m_user_check_in = GlobalData.$userData.attrs.check_in;
             var _loc1_:Array = m_user_check_in.had_check;
             var _loc2_:int = _loc1_[0] == 1 && _loc1_[1] == 1 ? int(m_user_check_in.n) - 1 : int(m_user_check_in.n);
+            var _loc3_:String = "金砖×" + Tools.formateNum(int(_AwardItem));
+            if(m_bonus_orange_cards > 0)
+            {
+               _loc3_ += "\n随机非皮肤橙色英雄×" + m_bonus_orange_cards + "（同一英雄）";
+            }
+            if(m_double_need_vip > 0)
+            {
+               _loc3_ += "\nVIP补领：金砖×" + Tools.formateNum(int(_AwardItem));
+            }
             if(m_id < _loc2_)
             {
-               LayoutUIAnimation.getOnlyExample().popWords("该日签到奖励已结束");
+               _loc3_ += "\n该日签到奖励已结束";
             }
             else
             {
-               LayoutUIAnimation.getOnlyExample().popWords("还没有到该签到日期");
+               _loc3_ += "\n还没有到该签到日期";
             }
+            GlobalFunction.popAlert("第" + (m_id + 1) + "天签到奖励",_loc3_,null,true,null,true);
          }
       }
    }
@@ -351,22 +363,33 @@ class ItemSign extends Sprite
    {
       var _loc2_:Object = null;
       var _loc4_:String = null;
+      var _reward:Object = null;
+      var _coin:int = 0;
+      var _cardId:String = null;
+      var _cardName:String = null;
       var _loc3_:String = "sound03";
       SoundManager.getOnlyExample().playSound(_loc3_);
       if(param1.data)
       {
+         _reward = param1.data.check_in_reward;
+         _coin = _reward && _reward.coin != null ? int(_reward.coin) : int(this._AwardItem);
+         _loc4_ = (_double_gift ? "VIP补领：" : "签到获得：") + "金砖×" + Tools.formateNum(_coin);
+         if(!_double_gift && _reward && _reward.avatar)
+         {
+            for(_cardId in _reward.avatar)
+            {
+               _cardName = GlobalData.$mConfig_avatar[_cardId] && GlobalData.$mConfig_avatar[_cardId].name ? String(GlobalData.$mConfig_avatar[_cardId].name) : _cardId;
+               _loc4_ += "\n" + _cardName + "×" + int(_reward.avatar[_cardId]);
+            }
+         }
          if(this.m_double_need_vip != 0)
          {
             _loc2_ = {"need_vip":this.m_double_need_vip};
-            // The VIP request grants only the second half. The normal message
-            // is the amount granted by this response; the prebuilt check-in
-            // message doubles it and would incorrectly report the total again.
-            _loc4_ = _double_gift ? "VIP追加奖励：" + this._msg : this._msg;
-            GlobalFunction.popAward(this._awardType,_loc4_,this._AwardItem,true,null,true,_loc2_);
+            GlobalFunction.popAward("coin",_loc4_,_coin,true,null,true,_loc2_);
          }
          else
          {
-            GlobalFunction.popAward(this._awardType,this._msg,this._AwardItem,true,null);
+            GlobalFunction.popAward("coin",_loc4_,_coin,true,null);
          }
          if(!GlobalFunction.isVersionedProfileReceipt(param1))
          {
@@ -393,6 +416,8 @@ class ItemSign extends Sprite
       var _giftObj:Object;
       var i:Object;
       var _awardUI:Object;
+      var _bonus_bg:Quad;
+      var _bonus_txt:TextField;
       var m_vip_info_spr:Sprite;
       var _rate:Number;
       m_all_spr = new Sprite();
@@ -410,6 +435,7 @@ class ItemSign extends Sprite
          m_config_chech_in = GlobalData.$mConfig_check_in;
          _config_gift = m_config_chech_in[m_user_check_in.m];
          _giftObj = _config_gift[m_id].reward;
+         m_bonus_orange_cards = Math.max(0,int(_config_gift[m_id].bonus_orange_cards));
          for(i in _giftObj)
          {
             _awardType = i.toString();
@@ -455,12 +481,27 @@ class ItemSign extends Sprite
             _gift_ui.y = m_background.height * 0.5 + 5;
          }
          m_all_spr.addChild(_gift_ui);
+         if(m_bonus_orange_cards > 0)
+         {
+            _gift_ui.y = Math.min(_gift_ui.y,67);
+            _bonus_bg = new Quad(108,25,3145734);
+            _bonus_bg.alpha = 0.85;
+            _bonus_bg.x = 4;
+            _bonus_bg.y = 122;
+            _bonus_bg.touchable = false;
+            m_all_spr.addChild(_bonus_bg);
+            _bonus_txt = GlobalTextStyle.getTextField("橙卡×" + m_bonus_orange_cards,16,16763904,"center",108,25);
+            _bonus_txt.x = 4;
+            _bonus_txt.y = 122;
+            _bonus_txt.touchable = false;
+            m_all_spr.addChild(_bonus_txt);
+         }
          m_vip_info_spr = new Sprite();
          m_all_spr.addChild(m_vip_info_spr);
          m_vip_info_bg = GlobalFunction.createImage("UI_checkin_vipinfo_0000");
          m_vip_info_spr.addChild(m_vip_info_bg);
          m_vip_info_txt = GlobalTextStyle.getHtmlTextRenderer();
-         m_vip_info_txt.text = Tools.formatLineX("VIP" + this.m_double_need_vip + "可双倍",GlobalTextStyle.COLOR_W_Y_R_Y,20,17,false,"center");
+         m_vip_info_txt.text = Tools.formatLineX("VIP" + this.m_double_need_vip + (m_bonus_orange_cards > 0 ? "金砖×2" : "可双倍"),GlobalTextStyle.COLOR_W_Y_R_Y,m_bonus_orange_cards > 0 ? 17 : 20,17,false,"center");
          m_vip_info_txt.mLayoutFun = function():void
          {
             var _loc1_:Rectangle = m_vip_info_txt.getTextSnapshotFrame();
@@ -511,7 +552,9 @@ class ItemSign extends Sprite
          this.m_get_status = false;
          this.m_info_status = true;
       }
-      _gift_ui.touchable = m_info_status;
+      // Let the whole tile show the complete reward list instead of opening
+      // the coin-only help popup attached to the icon.
+      _gift_ui.touchable = false;
       var _loc3_:int = 0;
       var _loc2_:Number = 0.5;
       if(m_get_status)

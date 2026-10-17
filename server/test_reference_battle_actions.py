@@ -8,6 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from battle_engine import ReferenceBattle, _native_skill_snapshot, base_unit
+from upstream_skill_priority import apply_upstream_skill_priority
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,8 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 class ReferenceBattleActionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.config = json.loads((ROOT / 'config/reconstruction/full-config.json')
-                                .read_text(encoding='utf-8'))['cfg']
+        document = json.loads((ROOT / 'config/reconstruction/full-config.json')
+                              .read_text(encoding='utf-8'))
+        apply_upstream_skill_priority(document)
+        cls.config = document['cfg']
 
     def unit(self, aid, team, pos, *, hp=1000, attack=100, line=0):
         return {'aid': aid, 'isme': team == 1, 'line': line, 'pos': pos,
@@ -31,6 +34,26 @@ class ReferenceBattleActionTests(unittest.TestCase):
         caster['skill'] = copy.deepcopy(skill)
         self.assertTrue(battle._apply_native_skill(caster, battle.b))
         return battle
+
+    def test_condition_uses_explicit_primary_action_and_current_dot_state(self):
+        battle = ReferenceBattle([self.unit('A_1001_6', 1, 500)],
+                                 [self.unit('A_1002_6', 2, 600),
+                                  self.unit('A_1003_6', 2, 650)], config=self.config)
+        first, second = battle.b
+        context = {'targets': {0: first, 1: second}, 'precast_burn': {id(first)}}
+        skill = {'actionTargetPolicyArgs': [None, None, {'primaryActionIndex': 0}]}
+        self.assertTrue(battle._condition_matches('primary_target', first, context, skill, 2))
+        self.assertFalse(battle._condition_matches('primary_target', second, context, skill, 2))
+        self.assertFalse(battle._condition_matches('primary_target', first, {'targets': {}}, None, 0))
+        self.assertTrue(battle._condition_matches('precast_burn', first, context))
+        self.assertFalse(battle._condition_matches('prehit_burn', first, context))
+        battle._add_buff(second, 'burn', 2, 10)
+        self.assertTrue(battle._condition_matches('prehit_burn', second, context))
+        self.assertFalse(battle._condition_matches('precast_burn', second, context))
+        second['_manual_dots'] = {'bleed': {'kind': 'bleed', 'round': 2}}
+        self.assertTrue(battle._condition_matches('prehit_bleed', second, context))
+        second['hp'] = 0
+        self.assertFalse(battle._condition_matches('prehit_bleed', second, context))
 
     def focus_skill(self):
         return {'pl': [0, 0, 1000, 0, 0, 1],

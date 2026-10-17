@@ -16,6 +16,7 @@ from pve_formation import stagger_lane_offsets
 
 
 TOWER_CHAPTER = "P_200"
+TOWER_MAX_FLOOR = 150
 
 
 def _retune_variant(cfg: dict, stage: dict, team: list[list], diff: str,
@@ -78,8 +79,8 @@ def retune_campaign_tables(pve: dict, cfg: dict) -> dict:
 
 
 def tower_skill_level(floor: int) -> int:
-    if not 1 <= floor <= 100:
-        raise ValueError("tower floor must be from 1 to 100")
+    if not 1 <= floor <= TOWER_MAX_FLOOR:
+        raise ValueError(f"tower floor must be from 1 to {TOWER_MAX_FLOOR}")
     if floor <= 10:
         return 2
     if floor <= 20:
@@ -93,7 +94,14 @@ def tower_skill_level(floor: int) -> int:
 
 def retune_tower_tables(pve: dict, cfg: dict) -> dict:
     result = {"floors": 0, "changed_rows": 0, "max_power_error_pct": 0.0}
-    for floor in range(1, 101):
+    tower_chapter = pve.get("battle_ploy", {}).get(TOWER_CHAPTER, {})
+    try:
+        floor_count = int(tower_chapter.get("combat", 0))
+    except (TypeError, ValueError):
+        floor_count = 0
+    if not 1 <= floor_count <= TOWER_MAX_FLOOR:
+        raise ValueError(f"tower chapter must configure 1 to {TOWER_MAX_FLOOR} floors")
+    for floor in range(1, floor_count + 1):
         stage = pve["combat_ploy"].get(f"{TOWER_CHAPTER}_{floor}")
         if stage is None:
             raise ValueError(f"missing tower floor {floor}")

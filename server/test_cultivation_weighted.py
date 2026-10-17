@@ -76,24 +76,32 @@ class WeightedCultivationTests(unittest.TestCase):
         self.assertEqual(pending["schema"], SCHEMA)
         self.assertGreaterEqual(used(old, simple), 0)
 
-    def test_roll_exact_budget_near_cap_and_existing_overcap(self):
+    def test_random_roll_allocates_exact_budget_and_respects_weighted_cap(self):
         class Deterministic:
-            def __init__(self): self.n = 0
-            def randrange(self, maximum):
-                self.n += 1
-                return maximum * self.n // 4
+            def choice(self, fields): return "ap"
+            def randint(self, minimum, maximum): return 2
         simple = self.cfg["system_simple"]
-        for aid, budget in (("A_1078_6", 500), ("A_1001_5", 250)):
+        for aid in ("A_1078_6", "A_1001_5"):
             hero = self.hero(aid, culture_schema=SCHEMA)
-            weights = simple["culture"]["weighted"]["weights"]
+            row = self.cfg["avatar"][aid]
             for count in (1, 10):
-                result = roll(hero, count, simple, Deterministic())
-                self.assertEqual(sum(result[key] * weights[key] for key in weights), budget * count)
-            hero["hp"] = cap(hero, simple) - 13
-            result = roll(hero, 10, simple, Deterministic())
-            self.assertEqual(sum(result[key] * weights[key] for key in weights), 13)
+                result, raw = roll(hero, count, simple, Deterministic(), row)
+                self.assertEqual(raw, {"hp": 0, "ap": 2 * count,
+                                       "de_ph": 0, "de_ma": 0})
+                self.assertEqual(sum(result[key] * simple["culture"]["weighted"]["weights"][key]
+                                     for key in result), 500 * count)
+                self.assertEqual(result["ap"], (500 * count) // 12)
+                self.assertEqual(result["hp"], (500 * count) % 12)
+            hero["hp"] = cap(hero, simple) - 1
+            result, _ = roll(hero, 10, simple, Deterministic(), row)
+            self.assertEqual(result, {"hp": 1, "ap": 0, "de_ph": 0, "de_ma": 0})
+            hero["hp"] = cap(hero, simple) - 2300
+            result, _ = roll(hero, 10, simple, Deterministic(), row)
+            self.assertEqual(sum(result[key] * simple["culture"]["weighted"]["weights"][key]
+                                 for key in result), 2300)
             hero["hp"] = cap(hero, simple) + 500
-            self.assertEqual(sum(roll(hero, 1, simple, Deterministic()).values()), 0)
+            result, _ = roll(hero, 1, simple, Deterministic(), row)
+            self.assertEqual(sum(result.values()), 0)
             self.assertEqual(hero["hp"], cap(hero, simple) + 500)
 
     def test_feed_uses_actual_gains_without_pith_max(self):
@@ -129,11 +137,15 @@ class WeightedCultivationTests(unittest.TestCase):
         pending = store.profile_raw(uid)["attrs"]["avatar_culture"]
         self.assertEqual(pending["schema"], SCHEMA)
         self.assertEqual(pending["spent"], {"culture_book": 10})
+        self.assertGreaterEqual(sum(pending["rolled_raw"].values()), 10)
+        self.assertEqual(used({**migrated, **pending["rolled"]}, self.cfg["system_simple"]), 5000)
         self.assertEqual(store.profile_raw(uid)["attrs"]["culture_book"], 10)
         save = {"actionID": "save-1"}
         roster.dispatch(uid, "user.avatar_culture_save", save)
         first = copy.deepcopy(store.profile_raw(uid)["avatars"][hero["id"]])
-        self.assertEqual(used(first, self.cfg["system_simple"]), 5000)
+        self.assertEqual({key: first[key] for key in ("hp", "ap", "de_ph", "de_ma")},
+                         pending["rolled"])
+        self.assertEqual(first["culture_roll_raw"], pending["rolled_raw"])
         roster.dispatch(uid, "user.avatar_culture_save", save)
         self.assertEqual(store.profile_raw(uid)["avatars"][hero["id"]], first)
         with self.assertRaises(GameplayFault):
@@ -142,6 +154,40 @@ class WeightedCultivationTests(unittest.TestCase):
             "aid": hero["id"], "num": 1, "type": "coin", "actionID": "roll-2"})
         roster.dispatch(uid, "user.avatar_culture_cancel", {"actionID": "cancel-1"})
         self.assertEqual(store.profile_raw(uid)["avatars"][hero["id"]], first)
+
+    def test_legacy_quality_uses_remaining_cap_and_original_price(self):
+        class Deterministic:
+            def choice(self, fields): return "ap"
+            def randint(self, minimum, maximum): return 2
+
+        db = sqlite3.connect(":memory:", check_same_thread=False)
+        self.addCleanup(db.close)
+        store = PlayerStore(db, self.config)
+        uid = store.login("legacy-quality-budget-test")["uid"]
+        hero = self.hero("A_1001_4", pith_max=100, hp=100)
+
+        def seed(profile):
+            profile["avatars"][hero["id"]] = copy.deepcopy(hero)
+            profile["coin"] = 2000
+            return profile, {}
+
+        store.atomic_update(uid, seed)
+        roster = GameplayRosterEquipment(store, self.config)
+        roster.rng = Deterministic()
+        roster.dispatch(uid, "user.avatar_culture", {
+            "aid": hero["id"], "num": 10, "type": "coin", "actionID": "legacy-ten"})
+        pending = store.profile_raw(uid)["attrs"]["avatar_culture"]
+        self.assertEqual(pending["rolled"], {"hp": 0, "ap": 50, "de_ph": 0, "de_ma": 0})
+        self.assertEqual(pending["spent"], {"coin": 1000})
+        roster.dispatch(uid, "user.avatar_culture_save", {"actionID": "legacy-save"})
+        saved = store.profile_raw(uid)
+        self.assertEqual(saved["avatars"][hero["id"]]["ap"], 50)
+        self.assertEqual(saved["coin"], 1000)
+        with self.assertRaises(GameplayFault) as rejected:
+            roster.dispatch(uid, "user.avatar_culture", {
+                "aid": hero["id"], "num": 1, "type": "coin", "actionID": "legacy-at-cap"})
+        self.assertEqual(rejected.exception.code, "MaxCulture")
+        self.assertEqual(store.profile_raw(uid)["coin"], 1000)
 
     def test_paid_legacy_pending_survives_migration_and_saves_once(self):
         db = sqlite3.connect(":memory:", check_same_thread=False)

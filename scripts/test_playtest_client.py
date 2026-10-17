@@ -119,14 +119,14 @@ const PanelCenterShopVIP={};
 
     def test_system_labels_survive_missing_translation_catalog(self):
         script = "const GlobalLanguageStr={getLanguageStr:()=>''}; const unit={};\n"
-        script += function('151_ItemHelp.as','getMenuTitle','item')
+        script += function('153_ItemHelp.as','getMenuTitle','item')
         script += '''console.log(JSON.stringify(['center_help_notice','center_help_setting','center_help_quit',
           'center_help_award_code','center_help_name'].map(name=>unit.getMenuTitle({name}))));'''
         self.assertEqual(self.run_js(script),['游戏公告','游戏设置','返回登录','兑换码','修改昵称'])
 
     def test_non_skill_fragment_has_safe_description(self):
         script = 'const unit={_skillset:null};\n'
-        script += function('150_PanelInfoChip.as','getFragmentSkillInfo')
+        script += function('156_PanelInfoChip.as','getFragmentSkillInfo')
         script += 'console.log(JSON.stringify(unit.getFragmentSkillInfo()));'
         self.assertEqual(self.run_js(script),'该装备不附带技能。')
 
@@ -156,7 +156,7 @@ let rows=[];
 const unit={mRadioBar:{selectedIndex:0},mList:{},mListY:0,mTips:null,
   setListTimer:(list,data)=>rows=data, setTips:()=>{}};
 '''
-        script += function('153_PanelEquipSelect.as','addList')
+        script += function('158_PanelEquipSelect.as','addList')
         script += 'unit.addList();console.log(JSON.stringify({ids:rows.map(v=>v.id),mutated:input.a.id!==undefined}));'
         self.assertEqual(self.run_js(script),{'ids':['a','b','c'],'mutated':False})
 

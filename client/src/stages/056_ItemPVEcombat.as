@@ -183,7 +183,7 @@ package com.meng52.game.ui.element
                mBaseSpr.addChild(mRndSpr);
             }
          }
-         mH_max = 380;
+         mH_max = 142;
          mH_min = 142;
          mImg9_bg.width = 570;
          mBaseSpr.addChild(mImg9_bg);
@@ -205,8 +205,6 @@ package com.meng52.game.ui.element
       
       override public function setUI() : void
       {
-         var _loc2_:Number = Number(NaN);
-         _loc2_ = 0.35;
          var _loc29_:int = 0;
          var _loc16_:TextField = null;
          var _loc21_:String = null;
@@ -219,33 +217,6 @@ package com.meng52.game.ui.element
          var _loc39_:* = undefined;
          var _loc38_:Array = null;
          var _loc40_:String = null;
-         var _loc32_:TextField = null;
-         var _loc41_:Sprite = null;
-         var _loc35_:Array = null;
-         var _loc5_:Array = null;
-         var _loc30_:int = 0;
-         var _loc26_:Object = null;
-         var _loc4_:Object = null;
-         var _loc23_:* = undefined;
-         var _stageCfg:Object = null;
-         var _stageReward:Object = null;
-         var _rewardAttrs:Object = null;
-         var _guaranteedItems:Array = null;
-         var _firstClearItems:Array = null;
-         var _firstClearReward:Object = null;
-         var _firstAttrs:Object = null;
-         var _spClaimed:Array = null;
-         var _rewardY:Number = 0;
-         var _itemRow:Object = null;
-         var _dustIndex:int = 0;
-         var _dustAmount:int = 0;
-         var _spIndex:int = 0;
-         var _spAmount:int = 0;
-         var _firstClear:Boolean = false;
-         var _randomHeroCandidates:Array = null;
-         var _rewardGold:int = 0;
-         var _rewardExp:int = 0;
-         var _rewardFactor:Array = null;
          var _loc13_:GameMapData = GameMapManager.getOnlyExample().getData(data.id);
          mBossId = _loc13_.bossId;
          this.setAvatar(mBossId,0,null);
@@ -253,8 +224,6 @@ package com.meng52.game.ui.element
          mAvatar.touchable = false;
          this.mAvatar.x = 30;
          this.mAvatar.y = 15;
-         var _loc11_:int = GlobalFunction.check_pass_combat(data.id,diff);
-         var _loc1_:Number = Math.floor(this.width * 0.4);
          var _loc3_:Rectangle = new Rectangle(this.mAvatar.x,this.mAvatar.y,this.mAvatar.x + 80,this.mAvatar.y + 35);
          var _loc25_:Number = _loc3_.x + _loc3_.width + 135;
          var _loc28_:Number = _loc3_.y + 18;
@@ -358,7 +327,7 @@ package com.meng52.game.ui.element
          this.mLimit = GlobalFunction.getUserCombat(GlobalData.$tempPVE_type,this.data.id);
          this.mLimit = _loc13_.getLimit(diff) - this.mLimit;
          this.mLimit = this.mLimit < 0 ? 0 : this.mLimit;
-         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
+         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material" && this.data.material_kind != "skill_biscuit")
          {
             var _materialDay:Date = new Date(Number(SendAndSelect.$systemTimer_nowSecond) * 1000 + 28800000);
             var _month:int = _materialDay.getUTCMonth() + 1;
@@ -441,7 +410,7 @@ package com.meng52.game.ui.element
             _loc12_.y = _loc31_.y + 8;
             mBaseSpr.addChild(_loc12_);
          }
-         var _loc9_:int = _loc13_.getUserPower(diff);
+         var _loc9_:Number = _loc13_.getUserPower(diff);
          var _loc14_:Array = [_loc10_,_loc10_,_loc10_,_loc10_];
          if(rndList)
          {
@@ -486,429 +455,26 @@ package com.meng52.game.ui.element
          _loc42_.y = 57;
          _loc42_.touchable = false;
          this.mDetails.addChild(_loc42_);
-         var _loc15_:TextFieldHtmlRenderer = GlobalTextStyle.getHtmlTextRenderer();
-         _loc15_.x = 0;
-         _loc15_.y = 105;
-         _loc15_.width = 485;
-         _loc15_.height = 34;
-         _loc15_.touchable = false;
-         this.mDetails.addChild(_loc15_);
+         // Keep only combat guidance in the expanded card. The stage reward
+         // payload remains on the server; this card does not preview it.
+         var _detailsBottom:Number = _loc42_.y + _loc42_.height;
          if(data.info != null && String(data.info) != "")
          {
-            _loc15_.text = Tools.formatLineX(data.info,[_loc17_],52,MainConfig.$isEnglish ? 15 : 16,false);
+            var _description:TextFieldHtmlRenderer = GlobalTextStyle.getHtmlTextRenderer();
+            _description.x = 0;
+            _description.y = _detailsBottom;
+            _description.width = 485;
+            _description.height = 34;
+            _description.touchable = false;
+            _description.text = Tools.formatLineX(String(data.info),[_loc17_],28,MainConfig.$isEnglish ? 15 : 16,false);
+            _description.height = Math.max(34,_description.text.split("\n").length * 24 + 8);
+            this.mDetails.addChild(_description);
+            _detailsBottom = _description.y + _description.height;
          }
-         else
-         {
-            _loc15_.text = "";
-         }
-         _stageCfg = GlobalData.$tempPVE_type == "status_pve_activities" ? GlobalData.$mConfig.combat_ploy[data.id] : GlobalData.$config_combat_main[data.id];
-         _stageReward = _stageCfg && _stageCfg.reward is Object ? _stageCfg.reward : {};
-         _rewardAttrs = _stageReward.attrs is Object ? _stageReward.attrs : {};
-         _guaranteedItems = [];
-         _firstClearItems = [];
-         _rewardY = data.info != null && String(data.info) != "" ? 148 : 118;
-         var _previewTitle:TextField = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20057),20,_loc27_,"left",485,27);
-         _previewTitle.x = 0;
-         _previewTitle.y = _rewardY;
-         _previewTitle.touchable = false;
-         this.mDetails.addChild(_previewTitle);
-         _rewardY += 29;
-         _randomHeroCandidates = _stageCfg && _stageCfg.hero_drop_candidates_by_diff is Object ? _stageCfg.hero_drop_candidates_by_diff[String(diff)] as Array : null;
-         if(_randomHeroCandidates && _randomHeroCandidates.length > 0)
-         {
-            _rewardY = addRandomHeroDropPreview(this.mDetails,_randomHeroCandidates,_rewardY);
-         }
-         _firstClear = GlobalFunction.check_pass_combat(this.data.id,diff) != 1;
-         _rewardGold = _loc13_.getGold(diff) * (_firstClear ? 2 : 1);
-         _rewardExp = _loc13_.getExp(diff) * (_firstClear ? 2 : 1);
-         _firstClearReward = _stageReward.first_clear is Object ? _stageReward.first_clear : {};
-         _firstAttrs = _firstClearReward.attrs is Object ? _firstClearReward.attrs : {};
-         _spClaimed = GlobalData.$userData.records.talent_sp_first_clear as Array;
-         if(_firstAttrs.sp is Array && (!_spClaimed || _spClaimed.indexOf(this.data.id) < 0))
-         {
-            _spIndex = 0;
-            while(_spIndex < _firstAttrs.sp.length)
-            {
-               _spAmount = int(_firstAttrs.sp[_spIndex]);
-               if(_spAmount > 0)
-               {
-                  _firstClearItems.push({
-                     "type":"sp",
-                     "value":{
-                        "indexID_s":_spIndex,
-                        "numberIndex":_spAmount
-                     },
-                     "count":_spAmount
-                  });
-               }
-               _spIndex++;
-            }
-         }
-         if(_firstClear)
-         {
-            _rewardGold += int(_firstClearReward.gold);
-         }
-         if(_rewardGold > 0)
-         {
-            _guaranteedItems.push({
-               "type":"gold",
-               "value":_rewardGold,
-               "count":_rewardGold
-            });
-         }
-         if(_rewardExp > 0)
-         {
-            _guaranteedItems.push({
-               "type":"exp",
-               "value":_rewardExp,
-               "count":_rewardExp
-            });
-         }
-         if(_rewardAttrs.dust is Array)
-         {
-            _dustIndex = 0;
-            while(_dustIndex < _rewardAttrs.dust.length)
-            {
-               _dustAmount = int(_rewardAttrs.dust[_dustIndex]);
-               if(_dustAmount > 0)
-               {
-                  _guaranteedItems.push({
-                     "type":"dust",
-                     "value":{
-                        "indexID_s":_dustIndex,
-                        "numberIndex":_dustAmount
-                     },
-                     "count":_dustAmount
-                  });
-               }
-               _dustIndex++;
-            }
-         }
-         if(Number(_rewardAttrs.dn_stone) > 0)
-         {
-            _guaranteedItems.push({
-               "type":"dn_stone",
-               "value":Number(_rewardAttrs.dn_stone),
-               "count":Number(_rewardAttrs.dn_stone)
-            });
-         }
-         if(Number(_rewardAttrs.culture_book) > 0)
-         {
-            _guaranteedItems.push({
-               "type":"culture_book",
-               "value":Number(_rewardAttrs.culture_book),
-               "count":Number(_rewardAttrs.culture_book)
-            });
-         }
-         if(_rewardAttrs.sp is Array)
-         {
-            _spIndex = 0;
-            while(_spIndex < _rewardAttrs.sp.length)
-            {
-               _spAmount = int(_rewardAttrs.sp[_spIndex]);
-               if(_spAmount > 0)
-               {
-                  _guaranteedItems.push({
-                     "type":"sp",
-                     "value":{
-                        "indexID_s":_spIndex,
-                        "numberIndex":_spAmount
-                     },
-                     "count":_spAmount
-                  });
-               }
-               _spIndex++;
-            }
-         }
-         if(Number(_stageReward.coin) > 0)
-         {
-            _guaranteedItems.push({
-               "type":"coin",
-               "value":Number(_stageReward.coin),
-               "count":Number(_stageReward.coin)
-            });
-         }
-         if(Number(_stageReward.mark) > 0)
-         {
-            _guaranteedItems.push({
-               "type":"mark",
-               "value":Number(_stageReward.mark),
-               "count":Number(_stageReward.mark)
-            });
-         }
-         if(Number(_stageReward.medal) > 0)
-         {
-            _guaranteedItems.push({
-               "type":"medal",
-               "value":Number(_stageReward.medal),
-               "count":Number(_stageReward.medal)
-            });
-         }
-         if(_stageReward.items is Array)
-         {
-            for each(_itemRow in _stageReward.items)
-            {
-               if(_itemRow && _itemRow.eid && int(_itemRow.num) > 0)
-               {
-                  _guaranteedItems.push({
-                     "type":"equip",
-                     "value":String(_itemRow.eid),
-                     "count":int(_itemRow.num)
-                  });
-               }
-            }
-         }
-         if(_stageReward.heroes is Array)
-         {
-            for each(_itemRow in _stageReward.heroes)
-            {
-               if(_itemRow && _itemRow.aid && int(_itemRow.num) > 0)
-               {
-                  _guaranteedItems.push({
-                     "type":"avatar",
-                     "value":String(_itemRow.aid),
-                     "count":int(_itemRow.num)
-                  });
-               }
-            }
-         }
-         if(_firstClear)
-         {
-            if(Number(_firstClearReward.coin) > 0)
-            {
-               _firstClearItems.push({
-                  "type":"coin",
-                  "value":Number(_firstClearReward.coin),
-                  "count":Number(_firstClearReward.coin)
-               });
-            }
-            if(Number(_firstClearReward.mark) > 0)
-            {
-               _firstClearItems.push({
-                  "type":"mark",
-                  "value":Number(_firstClearReward.mark),
-                  "count":Number(_firstClearReward.mark)
-               });
-            }
-            if(Number(_firstClearReward.medal) > 0)
-            {
-               _firstClearItems.push({
-                  "type":"medal",
-                  "value":Number(_firstClearReward.medal),
-                  "count":Number(_firstClearReward.medal)
-               });
-            }
-            if(_firstAttrs.dust is Array)
-            {
-               _dustIndex = 0;
-               while(_dustIndex < _firstAttrs.dust.length)
-               {
-                  _dustAmount = int(_firstAttrs.dust[_dustIndex]);
-                  if(_dustAmount > 0)
-                  {
-                     _firstClearItems.push({
-                        "type":"dust",
-                        "value":{
-                           "indexID_s":_dustIndex,
-                           "numberIndex":_dustAmount
-                        },
-                        "count":_dustAmount
-                     });
-                  }
-                  _dustIndex++;
-               }
-            }
-            if(Number(_firstAttrs.dn_stone) > 0)
-            {
-               _firstClearItems.push({
-                  "type":"dn_stone",
-                  "value":Number(_firstAttrs.dn_stone),
-                  "count":Number(_firstAttrs.dn_stone)
-               });
-            }
-            if(Number(_firstAttrs.culture_book) > 0)
-            {
-               _firstClearItems.push({
-                  "type":"culture_book",
-                  "value":Number(_firstAttrs.culture_book),
-                  "count":Number(_firstAttrs.culture_book)
-               });
-            }
-            if(_firstClearReward.items is Array)
-            {
-               for each(_itemRow in _firstClearReward.items)
-               {
-                  if(_itemRow && _itemRow.eid && int(_itemRow.num) > 0)
-                  {
-                     _firstClearItems.push({
-                        "type":"equip",
-                        "value":String(_itemRow.eid),
-                        "count":int(_itemRow.num)
-                     });
-                  }
-               }
-            }
-            if(_firstClearReward.heroes is Array)
-            {
-               for each(_itemRow in _firstClearReward.heroes)
-               {
-                  if(_itemRow && _itemRow.aid && int(_itemRow.num) > 0)
-                  {
-                     _firstClearItems.push({
-                        "type":"avatar",
-                        "value":String(_itemRow.aid),
-                        "count":int(_itemRow.num)
-                     });
-                  }
-               }
-            }
-         }
-         if(_guaranteedItems.length > 0)
-         {
-            var _guaranteedTitle:TextField = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(98242),16,_loc10_,"left",485,24);
-            _guaranteedTitle.x = 0;
-            _guaranteedTitle.y = _rewardY;
-            _guaranteedTitle.touchable = false;
-            this.mDetails.addChild(_guaranteedTitle);
-            _rewardY += 23;
-            _rewardY = addRewardPreviewItems(this.mDetails,_guaranteedItems,_rewardY);
-         }
-         if(_firstClearItems.length > 0)
-         {
-            var _firstClearTitle:TextField = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(98243),16,_loc10_,"left",485,24);
-            _firstClearTitle.x = 0;
-            _firstClearTitle.y = _rewardY + 3;
-            _firstClearTitle.touchable = false;
-            this.mDetails.addChild(_firstClearTitle);
-            _rewardY += 28;
-            _rewardY = addRewardPreviewItems(this.mDetails,_firstClearItems,_rewardY);
-         }
-         this.mH_max = Math.max(this.mH_max,this.mDetails.y + _rewardY + 16);
+         // Leave space for the existing expand/collapse arrow without the
+         // former reward grid's empty height.
+         this.mH_max = Math.max(this.mH_min + 1,Math.ceil(this.mDetails.y + _detailsBottom + mArrowsSpr.height + 20));
          this.addEventListener("touch",this.onTOUCH);
-      }
-      
-      private function addRandomHeroDropPreview(param1:Sprite, param2:Array, param3:Number) : Number
-      {
-         var _row:Object = null;
-         var _result:Object = null;
-         var _icon:* = null;
-         var _cell:Sprite = null;
-         var _nameField:TextField = null;
-         var _chanceField:TextField = null;
-         var _map:Object = null;
-         var _avatar:Object = null;
-         var _aid:String = null;
-         var _name:String = null;
-         var _totalBp:Number = 0;
-         var _chanceBp:Number = 0;
-         var _cardChance:Number = 0;
-         var _index:int = 0;
-         var _rowY:Number = param3 + 25;
-         var _cellX:Number = 0;
-         for each(_row in param2)
-         {
-            _totalBp += Number(_row.chance_bp);
-         }
-         var _totalChance:Number = _totalBp / (param2.length * 100);
-         var _title:TextField = GlobalTextStyle.getTextField("随机英雄（每场均匀抽1名，总掉率 " + _totalChance.toFixed(2) + "%）",15,16777215,"left",485,23);
-         _title.x = 0;
-         _title.y = param3;
-         _title.touchable = false;
-         param1.addChild(_title);
-         for each(_row in param2)
-         {
-            _aid = String(_row.aid);
-            _map = {};
-            _map[_aid] = 1;
-            _result = GlobalFunction.getAwardByType("avatar",_map,false,null,"",false,0.62);
-            _icon = _result ? _result.ui : null;
-            _cell = new Sprite();
-            _cell.touchable = false;
-            _cellX = (_index % 4) * 120;
-            _rowY = param3 + 24 + int(_index / 4) * 91;
-            if(_icon)
-            {
-               _icon.touchable = false;
-               _icon.x = Math.max(0,(116 - _icon.width) * 0.5);
-               _icon.y = 0;
-               _cell.addChild(_icon);
-            }
-            _avatar = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[_aid] : null;
-            _name = _avatar && _avatar.name ? String(_avatar.name) : _aid;
-            _nameField = GlobalTextStyle.getTextField(_name,11,16777215,"center",116,20);
-            _nameField.x = 0;
-            _nameField.y = 52;
-            _nameField.touchable = false;
-            _cell.addChild(_nameField);
-            _chanceBp = Number(_row.chance_bp);
-            _cardChance = _chanceBp / (param2.length * 100);
-            _chanceField = GlobalTextStyle.getTextField("本卡 " + _cardChance.toFixed(2) + "%",11,16776960,"center",116,18);
-            _chanceField.x = 0;
-            _chanceField.y = 71;
-            _chanceField.touchable = false;
-            _cell.addChild(_chanceField);
-            _cell.x = _cellX;
-            _cell.y = _rowY;
-            param1.addChild(_cell);
-            _index++;
-         }
-         return param3 + 24 + Math.ceil(param2.length / 4) * 91 + 4;
-      }
-      
-      private function addRewardPreviewItems(param1:Sprite, param2:Array, param3:Number) : Number
-      {
-         var _row:Object = null;
-         var _result:Object = null;
-         var _icon:* = null;
-         var _cell:Sprite = null;
-         var _count:TextField = null;
-         var _value:* = null;
-         var _countValue:int = 0;
-         var _index:int = 0;
-         var _rowY:Number = param3;
-         var _cellX:Number = 0;
-         var _map:Object = null;
-         for each(_row in param2)
-         {
-            _value = _row.value;
-            if(_row.type == "equip" || _row.type == "avatar")
-            {
-               _map = {};
-               _map[String(_value)] = int(_row.count);
-               _value = _map;
-            }
-            _result = GlobalFunction.getAwardByType(String(_row.type),_value,false,null,"",false,0.62);
-            _icon = _result ? _result.ui : null;
-            if(_icon)
-            {
-               _cell = new Sprite();
-               _cell.touchable = false;
-               _index = param2.indexOf(_row);
-               _cellX = _index % 6 * 80;
-               _rowY = param3 + int(_index / 6) * 78;
-               _icon.touchable = false;
-               _icon.x = 5;
-               _icon.y = 0;
-               _cell.addChild(_icon);
-               _countValue = int(_row.count);
-               if(_countValue > 0)
-               {
-                  _count = GlobalTextStyle.getTextField("×" + String(_countValue),13,16777215,"center",70,18);
-                  _count.x = 0;
-                  _count.y = 53;
-                  _count.touchable = false;
-                  _cell.addChild(_count);
-               }
-               _cell.x = _cellX;
-               _cell.y = _rowY;
-               param1.addChild(_cell);
-            }
-         }
-         if(param2.length == 0)
-         {
-            return param3;
-         }
-         return param3 + Math.ceil(param2.length / 6) * 78;
       }
       
       private function onTOUCH(param1:TouchEvent) : void

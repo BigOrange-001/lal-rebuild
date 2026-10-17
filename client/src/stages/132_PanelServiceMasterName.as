@@ -175,10 +175,10 @@ package com.meng52.game.ui.screen
          nt.assignFocus();
          nt.fontFamily = GlobalConfig.FONT_1;
          nt.text = "";
-         nt.width = GlobalData.$fullScreenWidth;
+         nt.width = GlobalData.$mStarling.viewPort.width;
          nt.height = 46 * 2 * GlobalData.$mStage$Starling_h;
          nt.x = GlobalData.$isNotFullScreenX;
-         nt.y = int((mInputBg.y + 40 + 5) * GlobalData.$mStage$Starling_h);
+         nt.y = int((mInputBg.y + 40 + 5) * GlobalData.$mStage$Starling_h + GlobalData.$mStarling.viewPort.y);
          nt.addEventListener("focusIn",onFOCUS);
          GlobalData.$mStarling.nativeStage.addChild(nt);
          selectRandomName();

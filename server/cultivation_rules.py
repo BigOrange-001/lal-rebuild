@@ -9,7 +9,7 @@ FIELDS = ("hp", "ap", "de_ph", "de_ma")
 SCHEMA = "weighted-v2"
 WEIGHTS = {"hp": 1, "ap": 12, "de_ph": 10, "de_ma": 10}
 STAR_RULES = {
-    "5": {"cap_base": 30000, "cap_per_phase": 5000, "roll_budget": 250},
+    "5": {"cap_base": 30000, "cap_per_phase": 5000, "roll_budget": 500},
     "6": {"cap_base": 60000, "cap_per_phase": 10000, "roll_budget": 500},
 }
 
@@ -215,19 +215,53 @@ def actual_to_legacy_raw(gain: dict, avatar_row: dict, simple: dict) -> dict:
     return result
 
 
-def roll_budget(hero: dict, count: int, simple: dict) -> int:
-    _, row = rules(simple, hero)
-    return min(max(0, cap(hero, simple) - used(hero, simple)), row["roll_budget"] * count)
+def allocate_budget(scores: dict, budget: int, weights: dict) -> dict:
+    """Convert random stat proportions into an exact integer point budget.
 
-
-def roll(hero: dict, count: int, simple: dict, rng) -> dict:
-    """Random whole stat gains whose weighted cost exactly fills the budget."""
-    budget = roll_budget(hero, count, simple)
-    weights, _ = rules(simple, hero)
-    cuts = sorted(rng.randrange(budget + 1) for _ in range(3))
-    shares = (cuts[0], cuts[1] - cuts[0], cuts[2] - cuts[1], budget - cuts[2])
-    result = {"ap": shares[1] // weights["ap"],
-              "de_ph": shares[2] // weights["de_ph"],
-              "de_ma": shares[3] // weights["de_ma"]}
-    result["hp"] = budget - sum(result[key] * weights[key] for key in ("ap", "de_ph", "de_ma"))
+    Stat values are stored as integers. HP costs one point, so it receives the
+    indivisible remainder after proportional allocation to the four stats.
+    """
+    result = {key: 0 for key in FIELDS}
+    if budget <= 0:
+        return result
+    total = sum(max(0.0, float(scores.get(key, 0))) for key in FIELDS)
+    if total <= 0:
+        raise ValueError("cultivation roll has no positive growth score")
+    ideals = {key: budget * max(0.0, float(scores.get(key, 0))) / total / weights[key]
+              for key in FIELDS}
+    for key in FIELDS:
+        result[key] = math.floor(ideals[key])
+    remaining = budget - sum(result[key] * weights[key] for key in FIELDS)
+    # Award feasible rounding points to the sampled stats first. Each award
+    # lowers that stat's fractional deficit, so no stat can absorb the budget
+    # merely because it appears first in FIELDS.
+    while True:
+        candidates = [key for key in FIELDS if scores.get(key, 0) > 0
+                      and weights[key] <= remaining and ideals[key] - result[key] > 0]
+        if not candidates:
+            break
+        key = max(candidates, key=lambda field: (ideals[field] - result[field], -FIELDS.index(field)))
+        result[key] += 1
+        remaining -= weights[key]
+    result["hp"] += remaining
     return result
+
+
+def roll(hero: dict, count: int, simple: dict, rng, avatar_row: dict) -> tuple[dict, dict]:
+    """Spend 500 weighted points per attempt using native random-stat ratios."""
+    raw_roll = {key: 0 for key in FIELDS}
+    for _ in range(count):
+        raw_roll[rng.choice(FIELDS)] += rng.randint(1, 3)
+    weights, row = rules(simple, hero)
+    pl = avatar_row.get("pl", []) if isinstance(avatar_row, dict) else []
+    if not isinstance(pl, list) or len(pl) < 8:
+        raise ValueError("missing avatar growth slopes for cultivation roll")
+    scores = {}
+    for key, index in zip(FIELDS, (1, 3, 5, 7)):
+        slope = float(pl[index])
+        if not math.isfinite(slope) or slope <= 0:
+            raise ValueError("invalid avatar growth slope")
+        scores[key] = raw_roll[key] * slope * legacy_rate(simple) * weights[key]
+    remaining = max(0, cap(hero, simple) - used(hero, simple))
+    budget = min(remaining, count * row["roll_budget"])
+    return allocate_budget(scores, budget, weights), raw_roll

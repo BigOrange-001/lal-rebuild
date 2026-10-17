@@ -12,15 +12,15 @@ package com.meng52.game.ui.panel
    import feathers.data.ListCollection;
    import feathers.layout.VerticalLayout;
    import starling.events.Event;
-   
+
    public class PanelEquipSelect extends PanelCenterMainAvatar
    {
-      
+
       public function PanelEquipSelect()
       {
          super();
       }
-      
+
       public function checkGuide() : void
       {
          LayoutUIAnimation.getOnlyExample().clearIfNoGuide();
@@ -54,7 +54,7 @@ package com.meng52.game.ui.panel
             }
          }
       }
-      
+
       override protected function initializeHandler(param1:Event) : void
       {
          this.removeEventListener("addedToStage",initializeHandler);
@@ -62,7 +62,7 @@ package com.meng52.game.ui.panel
          GlobalData.$mEventDispatcher.addEventListener("update_equip_list_data",UPDATE_EQUIP_LIST_DATA);
          GlobalData.$mEventDispatcher.addEventListener("update_book_list",UPDATE_BOOK_LIST);
       }
-      
+
       private function radioBar_Complete(param1:Event) : void
       {
          if(GlobalData.$tempEquipFunId == 1)
@@ -106,17 +106,17 @@ package com.meng52.game.ui.panel
             this.mRadioBar.setChildStatus(5,false);
          }
       }
-      
+
       private function UPDATE_EQUIP_LIST_DATA(param1:Event) : void
       {
          initOtherUIs();
       }
-      
+
       private function tabBar_changeHandler(param1:Event) : void
       {
          initOtherUIs();
       }
-      
+
       public function initOtherUIs() : void
       {
          var _loc1_:Array = null;
@@ -135,12 +135,12 @@ package com.meng52.game.ui.panel
             checkGuide();
          }
       }
-      
+
       private function UPDATE_BOOK_LIST(param1:Event) : void
       {
          initOtherUIs();
       }
-      
+
       override public function setList() : void
       {
          var _rulerH:Number;
@@ -192,7 +192,7 @@ package com.meng52.game.ui.panel
             this.mList.dataProvider = new ListCollection();
          }
       }
-      
+
       override public function addList() : void
       {
          var _loc7_:String = null;
@@ -273,7 +273,7 @@ package com.meng52.game.ui.panel
          _loc2_ = [];
          _loc1_ = [];
       }
-      
+
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
          GlobalData.$mEventDispatcher.removeEventListener("update_equip_list_data",UPDATE_EQUIP_LIST_DATA);
@@ -281,4 +281,3 @@ package com.meng52.game.ui.panel
       }
    }
 }
-

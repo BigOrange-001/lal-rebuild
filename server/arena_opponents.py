@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import math
 import random
 import re
@@ -13,6 +14,21 @@ from bot_names import sample_bot_names
 
 
 STAT_KEYS = ("hp", "ap", "de_ph", "de_ma")
+POWER_ORDER_SCHEMA = "rank-ascending-power-descending-v1"
+COMBAT_CONFIG_TABLES = ("avatar", "skill", "equip", "talent", "system_simple")
+
+
+def combat_config_signature(cfg: dict) -> str:
+    """Fingerprint tables consumed by arena snapshots and native power.
+
+    A persisted batch contains complete skill and stat rows. A new process
+    must not reuse them after a balance/config update just because its rank
+    and opponent-order schema are unchanged.
+    """
+    combat = {name: cfg.get(name, {}) for name in COMBAT_CONFIG_TABLES}
+    payload = json.dumps({"schema": "arena-combat-config-v1", "tables": combat},
+                         sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def highest_rarity_heroes(cfg: dict) -> list[str]:
@@ -66,7 +82,7 @@ def _fit_units(base: list[dict], target: int, power_fn) -> tuple[list[dict], int
 
 
 def generate_opponents(cfg: dict, owner_uid: str, generation: int, player_rank: int,
-                       own_units: list[dict], power_fn) -> dict:
+                       own_units: list[dict], power_fn, *, combat_signature: str) -> dict:
     pool = highest_rarity_heroes(cfg)
     own_power = power_fn(own_units)
     if own_power < 1:
@@ -83,12 +99,15 @@ def generate_opponents(cfg: dict, owner_uid: str, generation: int, player_rank: 
     skill = max(1, min(10, round(sum(skills) / len(skills))))
     names = sample_bot_names(rng, 9)
     bots = []
-    for index, rank in enumerate(opponent_ranks(player_rank)):
+    ranks = opponent_ranks(player_rank)
+    for index, rank in enumerate(ranks):
         aids = rng.sample(pool, 5)
         team = [[aid, level, skill, slot % 3, .12 if slot < 3 else .02,
                  int(slot == 0)] for slot, aid in enumerate(aids)]
         base = serialize_stage_team(cfg, team, team=2)
-        ratio = .5 + .75 * index / 8
+        # Lower rank numbers are stronger. Keep the generated UID and rank in
+        # their original order; only the target strength descends down the list.
+        ratio = .5 + .75 * (len(ranks) - 1 - index) / (len(ranks) - 1)
         target = max(1, round(own_power * ratio))
         units, actual = _fit_units(base, target, power_fn)
         if not math.isfinite(actual) or actual < 1:
@@ -102,4 +121,6 @@ def generate_opponents(cfg: dict, owner_uid: str, generation: int, player_rank: 
                      "team": team, "units": units, "power": actual,
                      "target_power": target})
     return {"generation": generation, "player_rank": player_rank, "nonce": nonce,
+            "power_order_schema": POWER_ORDER_SCHEMA,
+            "combat_config_sha256": combat_signature,
             "source_power": own_power, "bots": bots}

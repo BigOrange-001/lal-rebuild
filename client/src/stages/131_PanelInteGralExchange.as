@@ -45,7 +45,7 @@ package com.meng52.game.ui.panel
       override protected function initializeHandler(param1:Event) : void
       {
          this.removeEventListener("addedToStage",initializeHandler);
-         this.setPopPanelBg(GlobalLanguageStr.getLanguageStr(97680),GlobalData.$center_height_curr - 121);
+         this.setPopPanelBg("积分兑换",GlobalData.$center_height_curr - 121);
          var _loc2_:Object = getVipTime();
          mTimerT = new LOL_TimeStatus("paneltimeextraction");
          if(_loc2_.can)
@@ -59,6 +59,7 @@ package com.meng52.game.ui.panel
          mTimerT.x = 40;
          mTimerT.y = 95;
          addChild(mTimerT);
+         mTimerT.visible = false;
          GlobalData.$mEventDispatcher.addEventListener("updata_vip_choujiang_fush",onFush);
          update();
       }
@@ -86,7 +87,8 @@ package com.meng52.game.ui.panel
       
       private function getDisplayLotteryScore() : Number
       {
-         return getVipTime().can ? Number(GlobalData.$userData.attrs.lottery_activity.score) : 0;
+         var state:Object = GlobalData.$userData.attrs.lottery_activity;
+         return state && !isNaN(Number(state.score)) ? Number(state.score) : 0;
       }
       
       private function onFush(param1:Event) : void
@@ -95,7 +97,7 @@ package com.meng52.game.ui.panel
          {
             
          }
-         this.mPageNum.text = GlobalLanguageStr.getLanguageStr(97085) + "      " + getDisplayLotteryScore() + "  " + GlobalLanguageStr.getLanguageStr(97996);
+         this.mPageNum.text = "积分余额：" + getDisplayLotteryScore();
          update();
       }
       
@@ -104,7 +106,7 @@ package com.meng52.game.ui.panel
          
          if(mPageNum)
          {
-            this.mPageNum.text = GlobalLanguageStr.getLanguageStr(97085) + "      " + getDisplayLotteryScore() + "  " + GlobalLanguageStr.getLanguageStr(97996);
+            this.mPageNum.text = "积分余额：" + getDisplayLotteryScore();
          }
          mTimerT.refresh(0,GlobalLanguageStr.getLanguageStr(97074,Tools.timeFormatAll(0)),GlobalLanguageStr.getLanguageStr(97074));
          update();
@@ -201,13 +203,14 @@ package com.meng52.game.ui.panel
          this.mPageNum.x += 20;
          this.mPageNum.y -= 25;
          this.mPageNum.bgWidth = 580;
-         this.mPageNum.text = GlobalLanguageStr.getLanguageStr(97085) + "      " + getDisplayLotteryScore();
+         this.mPageNum.text = "积分余额：" + getDisplayLotteryScore();
          _txt_coin = new LOL_MutilTextFieldIcon("","","UI_guildCredit_icon_0_0000");
          _txt_coin.iconScale = 0.65;
+         _txt_coin.visible = false;
          this.addChild(_txt_coin);
          _txt_coin.y = this.mPageNum.y + _txt_coin.height / 4;
          _txt_coin.x = this.mPageNum.x + 100;
-         txt_Hint = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(97996),20,16711680,"right",380,35);
+         txt_Hint = GlobalTextStyle.getTextField("100积分兑换40个橙色碎片",18,16764006,"right",380,35);
          txt_Hint.x = _txt_coin.x + 90;
          txt_Hint.y = _txt_coin.y - 15;
          addChild(txt_Hint);

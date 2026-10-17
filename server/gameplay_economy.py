@@ -1,10 +1,13 @@
 """Persistent local economy, payment, daily sign-in, and task handlers."""
 from __future__ import annotations
-import copy, datetime, hashlib, math, random
-from gameplay_common import game_day, grant_reward, skin_acquisition_blocked_ids
+import calendar, copy, datetime, hashlib, math, random
+from gameplay_common import game_day, grant_reward, skin_acquisition_blocked_ids, equipment_exclusive_ids
 from gameplay_energy import energy_state, normalize_energy_purchase_day
 from player_store import GameplayFault, native_dates
 from vip_campaign import credit_vip_gift, normalize_vip_profile
+from spending_budget import ORDINARY_TIERS,LIMIT_MESSAGE,charge_spending,normalize_spending,public_spending
+from check_in_rewards import apply_check_in_rewards,check_in_coin,orange_bonus_count,random_orange_aid
+from recruit_exchange import MEDAL_PRICE, SKIN_SOUL_IDS, daily_orange_list
 
 # Local test-gift denominations, in game currency (coin / 金砖).
 PACKS = {f"local_{amount}": amount for amount in (60, 120, 300, 680, 980, 1280, 3280, 6480, 10000)}
@@ -12,7 +15,7 @@ MONTHLY_PACKS = {"coin98": 60, "coin99": 120, "coin100": 300}
 
 class GameplayEconomy:
     METHODS = {
-        "user.local_pay_test", "user.pay", "user.appstore_pay", "user.get_coin", "user.comment_gift", "user.get_activity_cd", "user.get_avatar_store",
+        "user.local_pay_test", "user.pay", "user.appstore_pay", "user.spending_info", "user.set_spending_tier", "user.adventure_tasks_info", "user.adventure_task_claim", "user.get_coin", "user.comment_gift", "user.get_activity_cd", "user.get_avatar_store",
         "user.check_in", "user.task_info", "user.task_done", "user.everyday_gift",
         "user.vip_gift", "user.vip_gift_buy", "user.full_energy",
         "user.full_fragment_energy", "user.expand_avatar_len", "user.expand_friend_len",
@@ -20,7 +23,7 @@ class GameplayEconomy:
         "user.mystery_shop_info", "user.mystery_shop_buy", "user.mystery_shop_refresh_by_coin",
         "user.gamble", "user.get_gamble_reports", "user.fund",
         "user.get_pay_gift", "user.get_spend_fixed_gift", "user.get_pass_battle_gift", "user.get_consume_ranks",
-        "user.medal_exchange", "user.get_reward_by_code", "user.exchange_key",
+        "user.medal_exchange", "user.recruit_exchange_info", "user.recruit_medal_exchange", "user.get_reward_by_code", "user.exchange_key",
         "user.welfare_reward_info", "user.welfare_buy_dust", "user.welfare_get_reward",
         "user.roulette", "user.roulette_lottery", "user.get_lottery_activity", "user.exchange_activity_avatar",
         "user.get_box_key", "user.box_key_gift", "user.box_key_exchange", "user.box_gift_record",
@@ -41,6 +44,10 @@ class GameplayEconomy:
             "user.local_pay_test": self.local_pay_test,
             "user.pay": self.local_pay_test,
             "user.appstore_pay": self.local_pay_test,
+            "user.spending_info": self.spending_info,
+            "user.set_spending_tier": self.set_spending_tier,
+            "user.adventure_tasks_info": lambda uid, params: self.store.adventure.info(uid),
+            "user.adventure_task_claim": self.store.adventure.claim,
             "user.get_coin": self.get_coin,
             "user.comment_gift": self.comment_gift,
             "user.get_activity_cd": self.get_activity_cd,
@@ -69,6 +76,8 @@ class GameplayEconomy:
             "user.get_spend_fixed_gift": self.get_spend_fixed_gift,
             "user.get_pass_battle_gift": self.get_pass_battle_gift,
             "user.medal_exchange": self.medal_exchange,
+            "user.recruit_exchange_info": self.recruit_exchange_info,
+            "user.recruit_medal_exchange": self.recruit_medal_exchange,
             "user.get_reward_by_code": self.get_reward_by_code,
             "user.exchange_key": self.exchange_key,
             "user.welfare_reward_info": self.welfare_reward_info,
@@ -94,15 +103,17 @@ class GameplayEconomy:
 
     def local_pay_test(self, uid, params):
         pid = params.get("pid")
-        if pid not in PACKS and pid not in MONTHLY_PACKS:
+        if type(pid) is not str or (pid not in PACKS and pid not in MONTHLY_PACKS):
             raise GameplayFault("InvalidPayProduct", "Unknown local gift pack")
         base = PACKS.get(pid, MONTHLY_PACKS.get(pid))
         def mutate(p):
+            now = self._now()
+            if not charge_spending(p, base // 10, now):
+                raise GameplayFault("DailySpendingLimit", LIMIT_MESSAGE)
             # Migrate the old base/10 EXP before incrementing historical pay
             # counters, so this transaction contributes exactly once.
             normalize_vip_profile(p)
             attrs = p.setdefault("attrs", {})
-            now = self._now()
             first = int(attrs.get("pay_first_gift", 0)) == 0
             granted = base * (2 if first else 1)
             p["coin"] = int(p.get("coin", 0)) + granted
@@ -145,14 +156,35 @@ class GameplayEconomy:
             if not isinstance(pay, dict): pay = records["pay"] = {}
             pay["count"] = int(pay.get("count", 0)) + 1
             pay["coin"] = int(pay.get("coin", 0)) + base
-            pay["last_day"] = game_day(self._now())
+            pay["last_day"] = game_day(now)
             p.setdefault("task", {})["pay_total"] = int(p.get("task", {}).get("pay_total", 0)) + base // 10
             return p, {"ok": True, "pid": pid, "base_coin": base, "granted_coin": granted,
                        "first_double": first, "vip_lv": next_lv, "vip_exp": p["vip_exp"],
                        "vip_gift_total_coin": gift_total}
-        key = self._op_key("user.local_pay_test", params)
+        order_id = params.get("order_id") or params.get("orderID")
+        if order_id is not None and (not isinstance(order_id, str) or not 1 <= len(order_id) <= 210):
+            raise GameplayFault("InvalidRequestKey", "Payment order ID is invalid")
+        key = ("user.local_pay_test:order:" + order_id
+               if order_id is not None
+               else self._op_key("user.local_pay_test", params))
         result, replayed = self.store.atomic_update(uid, mutate, key, {"pid": pid})
         return {**result, "replayed": replayed}
+
+    def spending_info(self, uid, params):
+        return public_spending(self.store.profile_raw(uid), self._now())
+
+    def set_spending_tier(self, uid, params):
+        tier = params.get("spending_tier")
+        if type(tier) is not str or tier not in ORDINARY_TIERS:
+            raise GameplayFault("InvalidSpendingTier", "只能切换普通消费档位")
+        def mutate(p):
+            state = normalize_spending(p, self._now())
+            if state["gm_eligible"]:
+                raise GameplayFault("InvalidSpendingTier", "GM档位仅可在注册时选择")
+            state["tier"] = tier
+            return p, public_spending(p, self._now())
+        result, _ = self.store.atomic_update(uid, mutate, self._op_key("user.set_spending_tier", params), {"spending_tier": tier})
+        return result
 
     def get_coin(self, uid, params):
         today = game_day(self._now())
@@ -192,6 +224,8 @@ class GameplayEconomy:
     def check_in(self, uid, params):
         key = self._op_key("user.check_in", params)
         today = game_day(self._now())
+        year = int(today[:4])
+        apply_check_in_rewards({"cfg": self.config}, year)
         config = self.config.get("check_in") or {}
         month = int(today[5:7])
         month_key = today[:7]
@@ -217,10 +251,12 @@ class GameplayEconomy:
                 record["last_day"] = today
             had = list(record.get("had_check", [0, 0]))
             while len(had) < 2: had.append(0)
-            index = (int(record.get("day", 1)) - 1) % len(rewards)
+            day = int(record.get("day", 1))
+            index = day - 1
+            if index < 0 or index >= calendar.monthrange(year, month)[1] or index >= len(rewards):
+                raise GameplayFault("CheckInUnavailable", "This month's sign-in days are exhausted")
             entry = rewards[index]
-            reward = entry.get("reward", {"coin": 60 + 20 * index})
-            if not isinstance(reward, dict): raise GameplayFault("InvalidReward", "Check-in reward is invalid")
+            coin_reward = {"coin": check_in_coin(day)}
             if params.get("is_vip") is True:
                 vip_need = int(entry.get("vip_double", 0))
                 if not had[0]:
@@ -232,12 +268,18 @@ class GameplayEconomy:
                 # The native client makes a second user.check_in request for the
                 # VIP bonus after the regular reward. Grant only that second half;
                 # do not advance the day or monthly progress a second time.
-                grant_reward(p, reward, {"cfg":self.config})
+                grant_reward(p, coin_reward, {"cfg":self.config})
+                granted = coin_reward
                 had[1] = 1
                 record["n"] = min(int(record.get("day", 1)), len(rewards))
             else:
                 if had[0]: raise GameplayFault("AlreadyCheckedIn", "Today's sign-in reward has already been claimed")
-                grant_reward(p, reward, {"cfg":self.config})
+                granted = dict(coin_reward)
+                if orange_bonus_count(day):
+                    try: orange_aid = random_orange_aid(self.config, uid, today)
+                    except ValueError as error: raise GameplayFault("CheckInUnavailable", str(error)) from error
+                    granted["avatar"] = {orange_aid: orange_bonus_count(day)}
+                grant_reward(p, granted, {"cfg":self.config})
                 had[0] = 1
                 record["count"] = int(record.get("count", 0)) + 1
                 # The native client holds the current row open while a VIP
@@ -248,7 +290,7 @@ class GameplayEconomy:
                     had[1] = 1
                     record["n"] = min(int(record.get("day", 1)), len(rewards))
             record["had_check"] = had
-            return p, self._profile_result(p, check_in=record)
+            return p, self._profile_result(p, check_in=record, check_in_reward=granted)
         result, replayed = self.store.atomic_update(uid, mutate, key, {"is_vip": params.get("is_vip") is True, "day": today})
         result["check_in"] = result.get("check_in", result.get("attrs", {}).get("check_in", {}))
         result["replayed"] = replayed
@@ -623,9 +665,11 @@ class GameplayEconomy:
         seed = int.from_bytes(hashlib.sha256(f"{uid}:{kind}:{cycle}".encode()).digest()[:8], "big")
         rng = random.Random(seed); indices = list(range(len(offers))); rng.shuffle(indices)
         chosen = indices[:min(6, len(indices))]
-        return {"t": self._now() * 1000, "items": [copy.deepcopy(offers[i]) for i in chosen], "b": [], "refresh_seq": cycle}
+        previous_time = int(old.get("t", 0)) if isinstance(old, dict) else 0
+        return {"t": max(self._now() * 1000, previous_time + 1),
+                "items": [copy.deepcopy(offers[i]) for i in chosen], "b": [], "refresh_seq": cycle}
 
-    def _apply_shop_award(self, p, data):
+    def _apply_shop_award(self, p, data, *, allow_exclusive=False):
         if not isinstance(data, dict) or len(data) != 1: raise GameplayFault("InvalidReward", "Shop item must contain exactly one reward")
         kind, amount = next(iter(data.items()))
         if kind in {"avatar_soul", "equip_soul"}:
@@ -638,7 +682,8 @@ class GameplayEconomy:
             grant_reward(p, {"heroes": [{"aid": k, "num": int(v)} for k,v in amount.items()]}, {"cfg": self.config})
         elif kind == "equip":
             # Keep native eid instances; this helper also checks that the ID is configured.
-            grant_reward(p, {"items": [{"eid": k, "num": int(v)} for k,v in amount.items()]}, {"cfg": self.config})
+            grant_reward(p, {"items": [{"eid": k, "num": int(v)} for k,v in amount.items()]},
+                         {"cfg": self.config}, allow_equipment_exclusive=allow_exclusive)
         else:
             grant_reward(p, {kind: amount}, {"cfg": self.config})
 
@@ -689,7 +734,16 @@ class GameplayEconomy:
             if int(p.get(currency, 0)) < price: raise GameplayFault("InsufficientResource", "Not enough " + currency)
             p[currency] = int(p.get(currency, 0)) - price
             if currency=="coin": self._record_coin_spend(p,price)
-            self._apply_shop_award(p, row[0]); bought.append(index)
+            # The exclusive-equipment bypass belongs only to the exact
+            # published 8,000-coin offer. A forged or stale stock row cannot
+            # turn the general reward helper into an acquisition path.
+            equipment = row[0].get("equip")
+            exclusive = (isinstance(equipment, dict) and len(equipment) == 1
+                         and next(iter(equipment.values())) == 1
+                         and next(iter(equipment)) in equipment_exclusive_ids(self.config))
+            allowed = (exclusive and currency == "coin" and price == 8000
+                       and row in (self.config.get("mystery_shop_offers") or {}).get(kind, []))
+            self._apply_shop_award(p, row[0], allow_exclusive=allowed); bought.append(index)
             return p, {**copy.deepcopy(p), "b":list(bought), "t":sheet["t"], "items":copy.deepcopy(items)}
         result, replayed = self.store.atomic_update(uid, mutate, key, {"s_type":kind,"index":index,"time":requested_time})
         result["replayed"] = replayed
@@ -827,13 +881,17 @@ class GameplayEconomy:
             # below and are checked against their configured chapter length.
             chapter = None
         is_tower_completion = is_activity and bid == "P_200"
-        if is_tower_completion and chapter_count != 100:
-            raise GameplayFault("InvalidConfig", "The tower completion reward requires exactly 100 floors")
+        if is_tower_completion and chapter_count != 150:
+            raise GameplayFault("InvalidConfig", "The tower completion reward requires exactly 150 floors")
         key = self._op_key("user.get_pass_battle_gift", params)
         def mutate(p):
             mode = "normal" if diff == 0 else "hard" if diff == 1 else "ploy"
             score_bucket = p.setdefault("combat_score", {}).setdefault(mode, {})
             score_entry = score_bucket.get(bid)
+            claimed = p.setdefault("records", {}).setdefault("pass_battle_gift", {}).setdefault(str(diff), [])
+            # A reward claimed under the previous 100-floor tower remains
+            # claimed after the tower extends to 150 floors.
+            if bid in claimed: raise GameplayFault("AlreadyClaimed", "Stage reward already claimed")
             if chapter is not None:
                 # The native chapter reward button is enabled only after every
                 # configured stage in that chapter has three stars. The
@@ -855,8 +913,8 @@ class GameplayEconomy:
                     raise GameplayFault("StageRewardLocked", "Complete every stage in this chapter with three stars")
                 if is_tower_completion:
                     # The frontier or a single aggregate star count cannot
-                    # prove that all 100 distinct floors were actually won.
-                    expected = {f"P_200_{index}" for index in range(1, 101)}
+                    # prove that all 150 distinct floors were actually won.
+                    expected = {f"P_200_{index}" for index in range(1, chapter_count + 1)}
                     cleared = p.get("ploy_cids", {}).get(bid, [])
                     wins = p.get("records", {}).get("combat_ploy", {})
                     if (not isinstance(cleared, list) or not expected.issubset(
@@ -864,7 +922,7 @@ class GameplayEconomy:
                             or not isinstance(wins, dict)
                             or any(type(wins.get(cid)) is not int or wins[cid] < 1 for cid in expected)
                             or any(star != 3 for star in stage_stars)):
-                        raise GameplayFault("StageRewardLocked", "Earn three stars on each of the 100 tower floors")
+                        raise GameplayFault("StageRewardLocked", "Earn three stars on each of the 150 tower floors")
 
                 # Match the native combat_score marker as well as the durable
                 # record list, so the panel immediately disables its button.
@@ -876,8 +934,6 @@ class GameplayEconomy:
                     raise GameplayFault("InvalidProfile", "Stage star progress is malformed")
                 if score < int(row.get("need_star", 3)):
                     raise GameplayFault("StageRewardLocked", "Stage star requirement has not been met")
-            claimed = p.setdefault("records", {}).setdefault("pass_battle_gift", {}).setdefault(str(diff), [])
-            if bid in claimed: raise GameplayFault("AlreadyClaimed", "Stage reward already claimed")
             reward = row.get("gift")
             grant_reward(p, reward, {"cfg":self.config}); claimed.append(bid)
             return p, self._economy_profile_response(p, records=p.get("records", {}), chapter_reward=copy.deepcopy(reward))
@@ -887,6 +943,8 @@ class GameplayEconomy:
 
     def medal_exchange(self, uid, params):
         kind = params.get("exch_type"); item_id = params.get("exch_id")
+        if str(kind) == "avatar":
+            raise GameplayFault("DailyRecruitRequired", "英雄勋章兑换请从今日招募列表重新进入")
         table = self.config.get("medal_exchange") or {}
         row = (table.get(str(kind)) or {}).get(str(item_id))
         if not isinstance(row, dict): raise GameplayFault("UnknownExchange", "Medal exchange item is not configured")
@@ -902,6 +960,48 @@ class GameplayEconomy:
             grant_reward(p, reward, {"cfg":self.config})
             return p, self._economy_profile_response(p)
         result, replayed = self.store.atomic_update(uid, mutate, key, {"kind":kind,"id":item_id,"need_medal":cost})
+        result["replayed"] = replayed
+        return result
+
+    def recruit_exchange_info(self, uid, params):
+        day, aids = daily_orange_list(self.config, self._now())
+        profile = self.store.profile(uid)
+        return {"day": day, "medal": int(profile.get("medal", 0)), "cost": MEDAL_PRICE,
+                "heroes": [{"aid": aid, "name": self.config["avatar"][aid]["name"],
+                            "medal": MEDAL_PRICE} for aid in aids]}
+
+    def recruit_medal_exchange(self, uid, params):
+        aid, requested_day = params.get("aid"), params.get("day")
+        if not isinstance(aid, str) or not isinstance(requested_day, str):
+            raise GameplayFault("InvalidExchange", "请选择今日招募英雄")
+        key = self._op_key("user.recruit_medal_exchange", params)
+        def mutate(profile):
+            day, aids = daily_orange_list(self.config, self._now())
+            if requested_day != day:
+                raise GameplayFault("DailyRecruitExpired", "今日招募列表已更新，请刷新后重试")
+            if aid not in aids:
+                raise GameplayFault("UnknownExchange", "该英雄不在今日勋章兑换列表中")
+            medal = profile.get("medal", 0)
+            if type(medal) is not int or medal < MEDAL_PRICE:
+                raise GameplayFault("InsufficientMedal", "勋章不足")
+            attrs = profile.get("attrs", {})
+            avatars = profile.get("avatars", {})
+            capacity = attrs.get("avatar_len", 0) if isinstance(attrs, dict) else 0
+            if type(capacity) is not int or capacity < 0 or not isinstance(avatars, dict):
+                raise GameplayFault("InvalidProfile", "英雄背包数据异常")
+            if len(avatars) >= capacity:
+                raise GameplayFault("AvatarCapacity", "英雄背包已满")
+            before = set(avatars)
+            grant_reward(profile, {"heroes": [{"aid": aid, "num": 1}]}, {"cfg": self.config})
+            minted = {instance_id: copy.deepcopy(row) for instance_id, row in profile["avatars"].items()
+                      if instance_id not in before}
+            if len(minted) != 1:
+                raise GameplayFault("InvalidReward", "招募英雄发放异常")
+            profile["medal"] = medal - MEDAL_PRICE
+            return profile, self._economy_profile_response(
+                profile, avatar=minted, aid=aid, day=day, cost=MEDAL_PRICE)
+        result, replayed = self.store.atomic_update(
+            uid, mutate, key, {"aid": aid, "day": requested_day})
         result["replayed"] = replayed
         return result
 
@@ -1075,6 +1175,7 @@ class GameplayEconomy:
                 level=1
             claimable=bool(crossed)
             attrs["roulette"]=state
+            self.store.adventure.record_draw(p)
             response=self._economy_profile_response(p,attr_roulette=state,coin=p["coin"],gold=p.get("gold",0),medal=p.get("medal",0),score=p.get("score",0),mark=p.get("mark",0),
                 avatar_soul=p.get("avatar_soul",{}),equip_soul=p.get("equip_soul",{}),sp=attrs.get("sp",[0,0,0,0]),culture_book=attrs.get("culture_book",0),dn_stone=attrs.get("dn_stone",0),dust=attrs.get("dust",[0,0,0,0]),box_key=attrs.get("box_key",{}),fragment_energy=attrs.get("fragment_energy"),fragment_energy_extra=attrs.get("fragment_energy_extra",0),energy_extra=attrs.get("energy_extra",0),exp=p.get("exp",0),lv=p.get("lv",1),get_avatars=new_avatars,get_equips=new_equips,gift_list=gift_list,num=int(claimable),data={"max":str(level)})
             return p,response
@@ -1170,6 +1271,7 @@ class GameplayEconomy:
             attrs["lottery_activity"]=state
             attrs["activity_time"]=state["last_time"]
             attrs["activity_score"]=int(attrs.get("activity_score",0))+draws
+            self.store.adventure.record_draw(p)
             response=self._economy_profile_response(p,coin=p["coin"],vip_exp=int(p.get("vip_exp",0)),vip_lv=int(p.get("vip_lv",0)),score=state["score"],avatars=categories)
             return p,response
         result,replayed=self.store.atomic_update(uid,mutate,key,{"flag":flag,"hit":params.get("hit")})
@@ -1198,6 +1300,18 @@ class GameplayEconomy:
                 raise GameplayFault("AvatarCapacity", "Hero inventory is full")
             before=set(p.get("avatars",{}));grant_reward(p,reward,{"cfg":self.config})
             avatar={k:v for k,v in p.get("avatars",{}).items() if k not in before}
+            # The soul synthesis RPC already requires a matching provenance
+            # credit for blocked skins. These two approved point exchanges
+            # earn that credit alongside the fragments, within this operation.
+            offered_souls = reward.get("avatar_soul")
+            if isinstance(offered_souls, dict):
+                for skin_aid in SKIN_SOUL_IDS:
+                    amount = offered_souls.get(skin_aid, 0)
+                    if type(amount) is int and amount > 0:
+                        credits = attrs.setdefault("tower_skin_soul_credit", {})
+                        if not isinstance(credits, dict):
+                            raise GameplayFault("InvalidProfile", "皮肤碎片兑换记录异常")
+                        credits[skin_aid] = int(credits.get(skin_aid, 0)) + amount
             state["score"]-=need
             out={"score":state["score"],"avatar":avatar}
             if "avatar_soul" in reward: out["avatar_soul"]=copy.deepcopy(reward["avatar_soul"])

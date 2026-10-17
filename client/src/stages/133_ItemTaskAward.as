@@ -25,6 +25,7 @@ package com.meng52.game.ui.element
    import starling.display.Sprite;
    import starling.events.Event;
    import starling.events.TouchEvent;
+   import starling.text.TextField;
    
    public class ItemTaskAward extends ItemPVEmain implements IListItemRenderer
    {
@@ -36,6 +37,7 @@ package com.meng52.game.ui.element
       protected var m_uiBox:Sprite;
       
       private var _bg:Scale9Image;
+      private var adventureButton:LOL_Scale9Button;
       
       public function ItemTaskAward()
       {
@@ -66,6 +68,11 @@ package com.meng52.game.ui.element
       
       override public function init(param1:Object) : void
       {
+         if(param1 && param1.adventure_task === true)
+         {
+            renderAdventureTask(param1);
+            return;
+         }
          _bg = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",GlobalData.$mStageWidth - 30,110,new Rectangle(110,55,70,20));
          addChild(_bg);
          this.setUI();
@@ -1164,6 +1171,47 @@ package com.meng52.game.ui.element
          GlobalData.$mEventDispatcher.dispatchEventWith("update_avatar_award");
          GlobalData.$mEventDispatcher.dispatchEventWith("update_activity_fun_task_num");
       }
+      private function renderAdventureTask(row:Object) : void
+      {
+         var cardWidth:Number = GlobalData.$mStageWidth - 24;
+         _bg = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",cardWidth,158,new Rectangle(110,55,70,20));
+         addChild(_bg);
+         var title:TextField = GlobalFunction.createTextField(cardWidth - 32,34,String(row.title),"",23,4926491,true);
+         title.x = 16;
+         title.y = 10;
+         title.hAlign = "left";
+         title.touchable = false;
+         addChild(title);
+         var progress:TextField = GlobalFunction.createTextField(cardWidth - 160,28,String(row.progress_text),"",18,row.claimable ? 13056 : 6501176);
+         progress.x = 16;
+         progress.y = 45;
+         progress.hAlign = "left";
+         progress.touchable = false;
+         addChild(progress);
+         var reward:TextField = GlobalFunction.createTextField(cardWidth - 160,72,"奖励：" + String(row.reward_text),"",18,4926491);
+         reward.x = 16;
+         reward.y = 75;
+         reward.hAlign = "left";
+         reward.vAlign = "top";
+         reward.touchable = false;
+         addChild(reward);
+         var label:String = row.claimed ? "已领取" : row.claimable ? "领取" : "未完成";
+         if(row.kind == "repeat") label = row.claimable ? "领取" + row.available_count + "张" : "待达成";
+         if(row.busy && row.claimable) label = "请稍候";
+         adventureButton = new LOL_Scale9Button(label,116,48,"UI_btn_enterGame_0_0000");
+         adventureButton.x = cardWidth - 132;
+         adventureButton.y = 90;
+         adventureButton.enabled = row.claimable && !row.busy;
+         adventureButton.addEventListener("triggered",onAdventureButton);
+         addChild(adventureButton);
+         layoutWH();
+      }
+
+      private function onAdventureButton(param1:Event) : void
+      {
+         if(data && data.claimable && !data.busy) dispatchEventWith("adventure_task_claim",true,data);
+      }
+
    }
 }
 

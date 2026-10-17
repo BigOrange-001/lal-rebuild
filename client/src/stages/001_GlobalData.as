@@ -637,6 +637,14 @@ package com.meng52.game.global
          _data.exp = _profile.exp;
          _data.gold = _profile.gold;
          _data.coin = _profile.coin;
+         if(_profile.hasOwnProperty("spending"))
+         {
+            _data.spending = _profile.spending;
+         }
+         else
+         {
+            delete _data.spending;
+         }
          _data.score = _profile.score;
          _data.medal = _profile.medal;
          _data.mark = _profile.mark;

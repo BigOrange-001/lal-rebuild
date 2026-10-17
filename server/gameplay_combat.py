@@ -1,12 +1,14 @@
 """Original-client-compatible battle setup and single-player progression RPCs."""
 from __future__ import annotations
+from ancient_trial_drop import roll_ancient_trial_drop
+
 import copy, datetime, hashlib, math, random, secrets, time
 from player_store import GameplayFault
 from gameplay_common import grant_reward, game_day
 from battle_engine import base_unit, serialize_player_team, serialize_stage_team, validate_team_lane_coverage
 from battle_intents import create_intent, consume_intent
 from pve_modes import exploration_stages, expedition_reward_per_hero
-from solo_progression import expedition_stones, exploration_encounter, exploration_difficulty
+from solo_progression import expedition_stones, exploration_encounter, exploration_difficulty, _native_team_power
 from gameplay_energy import energy_state, write_energy_after_spend
 from equipment_elite_drop import roll_elite_drop
 from hero_drop import roll_campaign_hero_drop
@@ -114,9 +116,9 @@ class GameplayCombat:
                 if activity_kind == "tower":
                     floor = int(stage.get("tower_floor", 0))
                     frontier = max(1, int(profile.setdefault("records", {}).get("tower_floor", 1)))
-                    if floor < 1 or floor > 100 or floor > frontier:
+                    if floor < 1 or floor > 150 or floor > frontier:
                         raise GameplayFault("TowerFloorLocked", "Complete the preceding tower floor first")
-                elif activity_kind == "material":
+                elif activity_kind == "material" and not stage.get("unlimited_attempts"):
                     records = profile.setdefault("records", {})
                     daily = records.setdefault("material_activity", {})
                     today = game_day(self.store.clock.now())
@@ -138,7 +140,7 @@ class GameplayCombat:
                             else limit_value if type(limit_value) is int else 99)
                 attempt_bucket = "combat_ploy" if is_activity else "combat_main_hard" if diff else "combat_main"
                 attempts = int(profile.get("records", {}).get(attempt_bucket, {}).get(cid, 0))
-                if attempts >= limit:
+                if attempts >= limit and not stage.get("unlimited_attempts"):
                     raise GameplayFault("ActivityAttemptsExhausted" if is_activity else "StageAttemptsExhausted",
                                         "This stage has no attempts remaining")
                 own = serialize_player_team(self.config, profile, params.get("team_num", 0), params.get("team", []), attr_fn)
@@ -227,7 +229,7 @@ class GameplayCombat:
                     raise GameplayFault("InvalidStage", "Stage enemies must cover every native route") from exc
                 energy_cost=max(0,int(stage.get('energy',0)))
                 energy_state=self._spend_energy(profile,energy_cost)
-                if activity_kind == "material":
+                if activity_kind == "material" and not stage.get("unlimited_attempts"):
                     chapter_key = cid.rsplit("_", 1)[0]
                     uses[chapter_key] = int(uses.get(chapter_key, 0)) + 1
                 stage_copy = copy.deepcopy(stage)
@@ -283,7 +285,7 @@ class GameplayCombat:
             return None
         from gameplay_social import GameplaySocial
         social = GameplaySocial(self.store, self.full_config)
-        helper = social.lookup_assist(uid)
+        helper = social.lookup_assist(uid, profile)
         # Native Avatar.init synthesizes ``<aid>-<counter>`` when the selected
         # friend-card object has no id field. Other renderer paths retain the
         # base aid or the helper roster id (``aid|sequence``). Accept only
@@ -313,7 +315,7 @@ class GameplayCombat:
         simple = self.config.get("system_simple", {})
         friend_cd = simple.get("friend_cd", [0, 0, 60, 5])
         cd_seconds = max(0, int(friend_cd[2] if isinstance(friend_cd, list) and len(friend_cd) > 2 else 60)) * 60
-        cd_time = {"$date": now + cd_seconds} if is_friend and not social.is_bot_uid(uid) else {"$date": 0}
+        cd_time = {"$date": now + cd_seconds} if is_friend and not social.is_bot_uid(uid, profile) else {"$date": 0}
         avatar = copy.deepcopy(helper["avatar"])
         # GameMap.reSend() passes this object to Avatar.reInit(). That native
         # path requires aid to be the roster instance form ``base|sequence``:
@@ -342,7 +344,7 @@ class GameplayCombat:
             battle_snapshot = base_unit(
                 self.config, expected_aid, int(avatar.get("lv", 1)),
                 int(avatar.get("slv", 1)), line, pos, is_friend, 1,
-                helper_avatar_id, overrides)
+                helper_avatar_id, overrides, limit_break=avatar.get("limit_break") == 1)
         except (ValueError, TypeError, KeyError) as exc:
             raise GameplayFault("InvalidAssist", "Selected helper has invalid battle data") from exc
         return {"uid": uid, "is_friend": is_friend, "is_bot": True, "score_kind": "friend" if is_friend else "online",
@@ -464,12 +466,20 @@ class GameplayCombat:
                         raise GameplayFault("InvalidTeam", "Material hero experience has no owned battle leader")
                     reward["avatar_exp"] = {"hero_id": leader, "amount": int(stage["activity_avatar_exp"])}
                 tower_soul = None
+                tower_hero = None
                 if is_activity and stage.get("activity_kind") == "tower":
                     candidates = stage.get("soul_candidates", [])
                     if not isinstance(candidates, list) or not candidates or any(aid not in self.config.get("avatar", {}) for aid in candidates):
                         raise GameplayFault("InvalidStage", "Tower soul pool is invalid")
                     tower_soul = self._reward_rng(uid, fight_id, pending, "tower-soul").choice(candidates)
                     reward["avatar_soul"] = {tower_soul: int(stage.get("soul_amount", 120))}
+                    if int(stage.get("tower_floor", 0)) > 100:
+                        heroes = stage.get("tower_hero_candidates", [])
+                        if (not isinstance(heroes, list) or not heroes
+                                or any(aid not in self.config.get("avatar", {})
+                                       or not aid.startswith("A_1") or not aid.endswith("_6") for aid in heroes)):
+                            raise GameplayFault("InvalidStage", "Tower hero pool is invalid")
+                        tower_hero = self._reward_rng(uid, fight_id, pending, "tower-hero").choice(heroes)
                 # The config-gated elite gear rule rolls only on successful
                 # hard-mode mainline wins. It appends into
                 # this same reward object before the atomic grant_reward call,
@@ -510,8 +520,17 @@ class GameplayCombat:
                             reward.setdefault("attrs", {}).update(first_attrs)
                         for key in ("items", "heroes"):
                             if isinstance(first.get(key), list): reward.setdefault(key, []).extend(first[key])
+                if is_activity and cid.startswith("P_001_") and sign == 1:
+                    dropped_eid = roll_ancient_trial_drop(
+                        self.full_config, stage, cid, True,
+                        self._reward_rng(uid, fight_id, pending, "ancient-trial-equipment"))
+                    if dropped_eid is not None:
+                        reward.setdefault("items", []).append({"eid": dropped_eid, "num": 1})
                 before_avatars=set(profile.get("avatars",{})); before_equips=set(profile.get("my_equips",{}))
                 grant_reward(profile, reward, self.full_config)
+                if tower_hero is not None:
+                    grant_reward(profile, {"heroes": [{"aid": tower_hero, "num": 1}]}, self.full_config, allow_skin=True)
+                    reward.setdefault("heroes", []).append({"aid": tower_hero, "num": 1})
                 if reward.get("avatar_exp"):
                     from gameplay_roster import GameplayRosterEquipment
                     roster_rules = GameplayRosterEquipment(self.store, self.full_config)
@@ -530,7 +549,7 @@ class GameplayCombat:
                         credit[tower_soul] = int(credit.get(tower_soul, 0)) + int(stage.get("soul_amount", 120))
                     floor = int(stage["tower_floor"])
                     records = profile.setdefault("records", {})
-                    records["tower_floor"] = max(1, int(records.get("tower_floor", 1)), min(101, floor + 1))
+                    records["tower_floor"] = max(1, int(records.get("tower_floor", 1)), min(151, floor + 1))
                 encounter = profile.get("pending_limit_break")
                 if not isinstance(encounter, dict):
                     encounter = None
@@ -612,6 +631,8 @@ class GameplayCombat:
             pending["result"] = sign
             pending["finished"] = int(self.store.clock.now())
             profile["pending_pve"].pop(fight_id, None)
+            if sign == 1 and not is_activity:
+                self.store.adventure.record_pve_win(profile, diff)
             if sign == 1:
                 cfg_scores = profile["combat_score"]
                 # The existing panel calculates chapter/encounter progression from these fields.
@@ -774,6 +795,31 @@ class GameplayCombat:
         else:
             for key, value in (("refresh_count", 3), ("refresh_buy", 0), ("relive_buy", 0), ("mode_buy", 0), ("vip_relive", 1)):
                 times.setdefault(key, value)
+        if state.get("attribute_schema") != "hero-only-v1":
+            # Older maps recorded geared maxima and a geared difficulty
+            # anchor. Keep each surviving hero's HP percentage while moving
+            # both snapshots to exploration's native bare-Avatar rules.
+            from gameplay_roster import GameplayRosterEquipment
+            attributes = GameplayRosterEquipment(self.store, self.full_config).battle_attributes
+            ledger = state.setdefault("health_ledger", {})
+            for iid, hero in state.get("army", {}).items():
+                if not isinstance(hero, dict) or iid not in profile.get("avatars", {}):
+                    continue
+                old = hero if hero.get("max_hp") else ledger.get(iid, {})
+                old_max = max(1, int(old.get("max_hp", 1)))
+                old_hp = max(0, min(old_max, int(old.get("current_hp", old_max))))
+                new_max = max(1, int(attributes(profile, iid, hero_only=True)["hp_max"]))
+                hero["max_hp"] = new_max
+                hero["current_hp"] = max(0, min(new_max, int(new_max * old_hp / old_max)))
+                ledger[iid] = {"current_hp": hero["current_hp"], "max_hp": new_max}
+            if isinstance(state.get("difficulty"), dict) and state["difficulty"].get("stat_schema") != "hero-only-v1":
+                state.pop("difficulty", None)
+            state["attribute_schema"] = "hero-only-v1"
+        army = state.get("army", {})
+        if isinstance(army, dict):
+            for hero in army.values():
+                if isinstance(hero, dict):
+                    hero["exploration_hero_only"] = True
         return state, times
 
     def _exploration_response(self, profile):
@@ -826,16 +872,18 @@ class GameplayCombat:
                 selected = {}
                 for aid in aids:
                     hero = copy.deepcopy(roster[aid])
-                    maximum = max(1, int(attributes(profile, aid).get("hp_max", 1)))
+                    hero["exploration_hero_only"] = True
+                    maximum = max(1, int(attributes(profile, aid, hero_only=True).get("hp_max", 1)))
                     prior = previous_army.get(aid, health_ledger.get(aid, {}))
-                    current = int(prior.get("current_hp", maximum)) if isinstance(prior, dict) else maximum
-                    hero["current_hp"] = max(0, min(maximum, current))
+                    prior_max = max(1, int(prior.get("max_hp", maximum))) if isinstance(prior, dict) else maximum
+                    current = int(prior.get("current_hp", prior_max)) if isinstance(prior, dict) else maximum
+                    hero["current_hp"] = max(0, min(maximum, int(maximum * current / prior_max)))
                     hero["max_hp"] = maximum
                     selected[aid] = hero
                     health_ledger[aid] = {"current_hp": hero["current_hp"], "max_hp": maximum}
                 state["army"] = selected
                 if not state.get("difficulty"):
-                    state["difficulty"] = exploration_difficulty(profile, aids)
+                    state["difficulty"] = exploration_difficulty(profile, aids, self.full_config)
                 return profile, self._exploration_response(profile)
             if method == "user.exploration_opponent":
                 from pve_display_power_58 import exploration_opponent_power
@@ -863,7 +911,7 @@ class GameplayCombat:
                 for i, iid in enumerate(ids):
                     hero = profile.get("avatars", {}).get(iid)
                     if not hero: raise GameplayFault("InvalidTeam", "Exploration hero is no longer owned")
-                    raw = attributes(profile, iid)
+                    raw = attributes(profile, iid, hero_only=True)
                     exploration_hero = army.get(iid, {})
                     maximum = max(1, int(raw.get("hp_max", 1)))
                     current_hp = max(0, min(maximum, int(exploration_hero.get("current_hp", maximum))))
@@ -876,15 +924,12 @@ class GameplayCombat:
                     _, pos = (int(row[1]), float(row[2])) if len(row) >= 3 else (0, .2 + .24 * i)
                     line = 0
                     overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "skill", "leader_skill", "book_skill", "skillB")}
-                    # Avatar.toDataObj serializes leader_skill only for the
-                    # actual team leader. Exploration's first selected unit
-                    # is the sole leader, just like other local battles.
-                    overrides["leader_skill"] = raw.get("leader_skill") if i == 0 else None
+                    # Native exploration marks every selected hero as captain.
+                    overrides["leader_skill"] = raw.get("leader_skill")
                     overrides["hp"] = current_hp
                     overrides["new_4attrs"] = {k: raw.get(k, 0) for k in ("hit", "flee", "crit", "tough")}
-                    own.append(base_unit(self.config, hero.get("aid", iid).split("|")[0], hero.get("lv", 1), hero.get("slv", 1), max(0,min(2,line)), max(0,min(1,pos)), i == 0, 1, iid, overrides,
+                    own.append(base_unit(self.config, hero.get("aid", iid).split("|")[0], hero.get("lv", 1), hero.get("slv", 1), max(0,min(2,line)), max(0,min(1,pos)), True, 1, iid, overrides,
                                          limit_break=hero.get("limit_break") == 1))
-                    own[-1]["aid"] = iid
                 mode = state.get("stage_mode", [])
                 if isinstance(mode, list) and len(mode) == 4:
                     stat, _, amount, percentage = mode
@@ -932,6 +977,9 @@ class GameplayCombat:
                     validate_team_lane_coverage(enemy, lane_count, "exploration enemy formation")
                 except ValueError as exc:
                     raise GameplayFault("InvalidFormation", "Every exploration route needs at least one hero or enemy") from exc
+                # DoorLayer requires both powers from the final combat snapshots.
+                my_pr_power = _native_team_power(self.full_config, own)
+                pr_power = _native_team_power(self.full_config, enemy)
                 metadata = {"stage": stage_no}
                 intent = create_intent(profile, "exploration", metadata, own, enemy, now=self.store.clock.now())
                 state["combat_army"] = ids
@@ -943,7 +991,8 @@ class GameplayCombat:
                     # curtain opens, but native setup returns before creating
                     # units or starting the turn loop.
                     "orgin_team_a": copy.deepcopy(own), "orgin_team_b": copy.deepcopy(enemy),
-                    "team1": submitted, "team2": stage_cfg.get("team2", []), "win": [-1]}
+                    "team1": submitted, "team2": stage_cfg.get("team2", []), "win": [-1],
+                    "my_pr_power": my_pr_power, "pr_power": pr_power, "def_th": 1}
             if method == "user.exploration_get_reward":
                 if int(state.get("current_stage_finish", 0)) != 1:
                     raise GameplayFault("NoExplorationReward", "Complete the current stage first")
@@ -1000,7 +1049,7 @@ class GameplayCombat:
                     if isinstance(hero, dict) and hero.get("max_hp"):
                         hero["current_hp"] = hero["max_hp"]
                 if state.get("army"):
-                    state["difficulty"] = exploration_difficulty(profile, list(state["army"]))
+                    state["difficulty"] = exploration_difficulty(profile, list(state["army"]), self.full_config)
                 return profile, {**self._exploration_response(profile), "coin": profile.get("coin",0), "gold": profile.get("gold",0), "attrs": profile.get("attrs",{})}
             if method == "user.exploration_relive":
                 aid = str(params.get("aid", "")); hero = state.get("army", {}).get(aid)

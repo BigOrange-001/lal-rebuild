@@ -1215,6 +1215,7 @@ package com.meng52.game.module.avatar
       public var manualTimedStacks:Array;
       public var manualOwnerActionSerial:int = 0;
       public var manualSummonFamilies:Object;
+      public var zongziDeathNotified:Boolean;
       public var manualAttackRangeOverride:Number = NaN;
       public var manualSkillDamageCapture:Object;
       public var manualLethalFloor:Object;
@@ -2584,6 +2585,21 @@ package com.meng52.game.module.avatar
          }
          manualSummonFamilies[param1] = _loc4_;
          return Math.max(0,param2 - _loc1_.length);
+      }
+
+      public function countManualSummonAlive(param1:String) : int
+      {
+         var i:int = 0;
+         var n:int = 0;
+         var list:Vector.<Avatar> = null;
+         if(!manualSummonFamilies || !manualSummonFamilies[param1]) return 0;
+         list = manualSummonFamilies[param1] as Vector.<Avatar>;
+         while(list && i < list.length)
+         {
+            if(list[i] && list[i].hp > 0) n++;
+            i++;
+         }
+         return n;
       }
 
       public function registerManualSummon(param1:String, param2:Avatar, param3:int) : Boolean
@@ -6226,8 +6242,29 @@ package com.meng52.game.module.avatar
          mBloodSpr.refresh(param1 / hpMax);
       }
 
+      private function notifyZongziDeath() : void
+      {
+         var owner:Avatar = null;
+         var list:Vector.<Avatar> = null;
+         var i:int = 0;
+         if(zongziDeathNotified || !buffs || !buffs["summon"] || avatarData.id != "A_2014_5") return;
+         zongziDeathNotified = true;
+         owner = formationOwner;
+         if(!owner || owner.hp <= 0 || !owner.manualSummonFamilies) return;
+         list = owner.manualSummonFamilies["manual-1212-zongzi"] as Vector.<Avatar>;
+         while(list && i < list.length)
+         {
+            if(list[i] && list[i] != this && list[i].hp > 0)
+            {
+               list[i].addManualBattleStack("attack",0.1,999);
+            }
+            i++;
+         }
+      }
+
       public function dead(param1:Avatar = null) : void
       {
+         notifyZongziDeath();
          if(hp <= 0) abilityDeath();
          var _loc2_:GameMapLayer = GameMapLayer.gl;
          hideRange();

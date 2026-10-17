@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import datetime
 import hashlib
 import json
 import math
@@ -18,6 +19,15 @@ POWER_ORDER_SCHEMA = "rank-ascending-power-descending-v1"
 COMBAT_CONFIG_TABLES = ("avatar", "skill", "equip", "talent", "system_simple")
 
 
+def _signature_date(value):
+    if not isinstance(value, datetime.datetime):
+        raise TypeError(f"Unsupported arena config value: {type(value).__name__}")
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=datetime.timezone.utc)
+    stamp = value.timestamp()
+    return {"$date": int(stamp) if stamp.is_integer() else stamp}
+
+
 def combat_config_signature(cfg: dict) -> str:
     """Fingerprint tables consumed by arena snapshots and native power.
 
@@ -27,7 +37,8 @@ def combat_config_signature(cfg: dict) -> str:
     """
     combat = {name: cfg.get(name, {}) for name in COMBAT_CONFIG_TABLES}
     payload = json.dumps({"schema": "arena-combat-config-v1", "tables": combat},
-                         sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+                         sort_keys=True, ensure_ascii=False, separators=(",", ":"),
+                         default=_signature_date)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 

@@ -518,6 +518,7 @@ package com.meng52.game.module.map
                         _loc3_ = false;
                      }
                      _loc2_.setEquips();
+                     _loc2_.setDestinyAndDN();
                   }
                }
                else

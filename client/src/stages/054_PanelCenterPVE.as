@@ -635,9 +635,10 @@ package com.meng52.game.ui.screen
             mList_h.width = 600;
             mList_h.layout = _loc1_;
             mList_h.snapScrollPositionsToPixels = true;
-            // Ten activity chapters need an independently scrollable chooser;
-            // an unbounded header would push the stage list off screen.
+            // Activity chapters share a bounded header, including the fourth
+            // row containing the tower after the biscuit chapter is added.
             mList_h.verticalScrollPolicy = "auto";
+            mList_h.verticalScrollBarFactory = GlobalData.verticalScrollBarFactory;
             addChild(mList_h);
             _loc2_ = null;
             _loc1_ = null;
@@ -891,7 +892,9 @@ package com.meng52.game.ui.screen
                }
                _loc7_ = int(_loc7_ < 0 || _loc7_ >= _loc2_.length ? 0 : _loc7_);
                _loc2_[_loc7_]["choice"] = 1;
-               this.setListHData(mList_h,_loc2_,ItemPVEmain,false);
+               this.setListHData(mList_h,_loc2_,ItemPVEmain,false,_loc7_);
+               mList_h.selectedIndex = _loc7_;
+               mList_h.scrollToDisplayIndex(_loc7_);
             }
          }
          else if(GlobalData.$tempPVE_type == "status_pve_guild")
@@ -1022,7 +1025,9 @@ package com.meng52.game.ui.screen
                _loc10_ += 1;
             }
             mImg9_info.height = Math.min(190,(int(_loc2_.length / 3) + _loc10_) * 80 + (int(_loc2_.length / 3) + _loc10_ - 1) * 5 + 20);
-            mList_h.height = mImg9_info.height;
+            // The chooser begins 10 px inside its background; keep the same
+            // inset at the bottom so the fourth row is reached by scrolling.
+            mList_h.height = Math.max(1,mImg9_info.height - 20);
          }
          else
          {
@@ -1143,6 +1148,7 @@ package com.meng52.game.ui.screen
             this.mList.width = GlobalData.$mStageWidth - 20;
             this.mList.height = mListH = GlobalData.$center_height - 230;
             this.mList.layout = _layout;
+            this.mList.verticalScrollPolicy = "auto";
             this.mList.verticalScrollBarFactory = GlobalData.verticalScrollBarFactory;
             this.mList.x = int((GlobalData.$mStageWidth - this.mList.width) * 0.5);
             this.mList.y = mListY = _rulerH;
@@ -1299,7 +1305,10 @@ package com.meng52.game.ui.screen
                }
                else if(GlobalData.$tempPVE_type == "status_pve_activities")
                {
-                  _loc4_ = 0;
+                  // Open the scrollable tower at the current frontier so floor 150 is
+                  // reachable immediately while earlier floors remain in the
+                  // same scrollable list for repeat challenges.
+                  _loc4_ = _loc13_ == "P_200" ? _loc2_.length - 1 : 0;
                }
                else
                {

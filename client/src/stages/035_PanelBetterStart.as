@@ -256,7 +256,7 @@ package com.meng52.game.ui.panel
          }
          else
          {
-            checkBetterFood();
+            PanelBetterSelect.checkBetterFood();
          }
          checkBtn_selectStatus();
          setUI(true);
@@ -1209,122 +1209,7 @@ package com.meng52.game.ui.panel
       {
       }
       
-      private function checkBetterFood() : void
-      {
-         var _loc8_:String = null;
-         var _loc17_:Object = null;
-         var _loc1_:Avatar = null;
-         var _candidateOffer:Number = 0;
-         var _hasUnaffordableCandidate:Boolean = false;
-         var _loc11_:int = 0;
-         var _loc2_:String = null;
-         var _loc7_:Avatar = new Avatar(GlobalData.$tempAvatarBetter.id);
-         if(_loc7_.slv >= GlobalData.$mConfig_simple.slv_config[0])
-         {
-            _loc8_ = "";
-         }
-         else
-         {
-            _loc8_ = _loc7_.skill0 ? _loc7_.skill0.skillSetData.id : "";
-         }
-         var _loc13_:Boolean = false;
-         var _loc3_:Array = [];
-         var _loc4_:Object = GlobalData.$userData.avatars;
-         var _loc9_:String = "";
-         var _loc18_:int = 0;
-         for(var _loc12_:Object in _loc4_)
-         {
-            _loc13_ = false;
-            _loc9_ = _loc12_.toString();
-            _loc18_ = 0;
-            if(GlobalData.$tempBetterElements[_loc9_] != null)
-            {
-               _loc18_ = -1;
-            }
-            if(GlobalFunction.checkSearchTypeByType(_loc9_,0) || _loc18_ == -1 && GlobalFunction.checkSearchTypeByType(_loc9_,0))
-            {
-               _loc1_ = new Avatar(_loc9_);
-               _loc17_ = _loc4_[_loc12_];
-               _loc17_["id"] = _loc9_;
-               _loc17_["status"] = _loc18_;
-               _loc17_["canBetter"] = 0;
-               _loc17_["sort_1"] = _loc1_.getSwallowValue(_loc7_);
-            _loc17_["material_protected"] = PanelAvatarSell.isHeroAssigned(_loc9_) ? 1 : 0;
-            _loc17_["auto_blocked"] = PanelAvatarSell.isAutoBlocked(_loc17_) ? 1 : 0;
-            _loc17_["xp_material_priority"] = PanelBetterSelect.autoMaterialPriority(_loc9_);
-            _loc17_["lock"] = PanelBetterSelect.isAutoSwallowProtected(_loc1_,_loc7_,_loc9_) || _loc17_["material_protected"] != 0;
-               _loc3_.push(_loc17_);
-               _loc1_.clear();
-               _loc1_ = null;
-            }
-         }
-      _loc3_.sortOn(["xp_material_priority","material_protected","sort_1"],[0x10,0x10,0x10 | 2]);
-         var _loc15_:int = 0;
-         var _loc14_:int = _loc7_.getAllExp(_loc7_.getLvMax()) - (_loc7_.getAllExp() + _loc7_.exp);
-         var _loc10_:int = 0;
-         var _loc16_:int = 0;
-         var _loc6_:Number = 0;
-         var _loc5_:Number = 5;
-         _loc11_ = 0;
-         while(_loc11_ < _loc3_.length)
-         {
-            if(_loc15_ >= _loc5_)
-            {
-               break;
-            }
-            if(_loc14_ - _loc10_ <= 0)
-            {
-               break;
-            }
-            _loc17_ = _loc3_[_loc11_];
-            if(!PanelBetterSelect.isAutoMinion(_loc17_["id"]) || !PanelBetterSelect.matchesBetterRarity(_loc17_["id"]) || _loc17_["auto_blocked"])
-            {
-               _loc11_++;
-               continue;
-            }
-            if(!_loc17_["lock"])
-            {
-               _loc1_ = new Avatar(_loc17_["id"]);
-               _loc16_ = _loc1_.getOfferExp();
-               _candidateOffer = _loc16_;
-               if(_loc10_ + _candidateOffer > GlobalData.$userData.gold)
-               {
-                  _hasUnaffordableCandidate = true;
-                  _loc11_++;
-                  continue;
-               }
-               _loc10_ += _candidateOffer;
-               _loc17_["give"] = {
-                  "exp":_loc16_,
-                  "gold":_loc16_
-               };
-               GlobalFunction.changeAvatarBetterArray(_loc17_["id"],false,null,_loc17_);
-               if(_loc15_ == 0)
-               {
-                  _loc6_ = _loc11_;
-               }
-               _loc15_++;
-            }
-            _loc11_++;
-         }
-         if(_loc5_ > 0 && _loc15_ == 0)
-         {
-            if(_loc14_ <= 0)
-            {
-               _loc2_ = _loc7_.resId.indexOf(".") > -1 ? _loc7_.resId.slice(0,_loc7_.resId.length - 1) : _loc7_.resId;
-               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90198),false,_loc2_);
-            }
-            else if(_hasUnaffordableCandidate)
-            {
-               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(10023),false,"A_6999_3");
-            }
-            else
-            {
-               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90115),false,"A_3001_1");
-            }
-         }
-         _loc5_ = 0;
-      }
+
    }
 }
 

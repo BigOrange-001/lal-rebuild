@@ -4,6 +4,7 @@ from vip_campaign import normalize_vip_profile,legacy_first_bonus_from_receipts
 from gameplay_energy import normalize_energy_purchase_day
 from cultivation_rules import normalize_profile as normalize_culture_profile
 from game_clock import GameClock
+from spending_budget import initial_spending,normalize_spending
 
 class GameplayFault(Exception):
  def __init__(self,code,message):self.code,self.message=code,message
@@ -23,7 +24,7 @@ CLIENT_PROFILE_SYNC_REQUIRED_FIELDS = (
  'vip_lv','vip_exp','vip_time','catena','energy','fragment_energy','attrs','records',
  'avatars','my_equips','avatar_soul','equip_soul','team','fragment','pf_info','login_time',
  'create_time','add_time','friends','combat_main','combat_score','ploy_cids','tasks',
- 'association','check_in','title','zone',
+ 'association','check_in','title','zone','spending',
 )
 CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','pending_limit_break','task','boss_state')
 
@@ -38,6 +39,8 @@ CREATE TABLE IF NOT EXISTS gift_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,uid TE
 CREATE TABLE IF NOT EXISTS player_state_revision(uid TEXT PRIMARY KEY,revision INTEGER NOT NULL CHECK(revision>=0));
 INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM players;''')
   self.lock=threading.RLock()
+  from adventure_tasks import AdventureTasks
+  self.adventure=AdventureTasks(self,config or {})
   from gameplay_economy import GameplayEconomy
   self.economy=GameplayEconomy(self,config or {})
   self.gameplay_handlers=[]
@@ -136,7 +139,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   simple=cfg.get('system_simple',{}) if isinstance(cfg,dict) else {}
   table=simple.get('talent_config') if isinstance(simple,dict) else None
   return max(4,len(table)) if isinstance(table,(list,tuple)) else 4
- def initial_profile(self,uid,account):
+ def initial_profile(self,uid,account,spending_tier='small'):
   now=self.clock.now();available=self.config.get('cfg',{}).get('avatar',{}) if self.config else {}
   simple=self.config.get('cfg',{}).get('system_simple',{}) if isinstance(self.config,dict) else {}
   blocked_skin=set(simple.get('skin_acquisition_blocked_heroes',[])) if isinstance(simple,dict) and isinstance(simple.get('skin_acquisition_blocked_heroes',[]),list) else set()
@@ -151,12 +154,12 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   exploration={'stage':1,'stage_mode':['ap','all',1.05,1],'current_stage_finish':0,'army':{},'combat_army':[]}
   attrs['time_pay']={'money':0,'time_key':None}
   attrs['time_pay_loop']={'money':0,'lifetime_money':0,'claimed':0}
-  return {'uid':uid,'name':'测试玩家','exploration':exploration,'cid':'M_001_1','hid':'M_001_1','lv':1,'exp':0,'gold':1000,'coin':100,'score':0,'medal':0,'mark':0,'vip_lv':0,'vip_exp':0,'vip_time':{'$date':0},'catena':0,'energy':{'$date':now-100*300},'fragment_energy':{'$date':now-12*1800},'attrs':attrs,'records':records,'avatars':avatars,'my_equips':{},'avatar_soul':{},'equip_soul':{},'team':[list(avatars)+[None]*(6-len(avatars)) for _ in range(3)],'fragment':{'equips':{}},'msg_num':0,'apply_num':0,'pf_info':{'id':account,'pf':'local'},'login_time':{'$date':now},'create_time':{'$date':now},'add_time':{'$date':now},'friends':{},'combat_main':{},'combat_score':{'normal':{},'hard':{},'ploy':{}},'ploy_cids':{},'tasks':{},'association':{},'check_in':{},'title':'','zone':'1-01'}
- def login(self,account):
+  return {'spending':initial_spending(spending_tier,now),'uid':uid,'name':'测试玩家','exploration':exploration,'cid':'M_001_1','hid':'M_001_1','lv':1,'exp':0,'gold':1000,'coin':100,'score':0,'medal':0,'mark':0,'vip_lv':0,'vip_exp':0,'vip_time':{'$date':0},'catena':0,'energy':{'$date':now-100*300},'fragment_energy':{'$date':now-12*1800},'attrs':attrs,'records':records,'avatars':avatars,'my_equips':{},'avatar_soul':{},'equip_soul':{},'team':[list(avatars)+[None]*(6-len(avatars)) for _ in range(3)],'fragment':{'equips':{}},'msg_num':0,'apply_num':0,'pf_info':{'id':account,'pf':'local'},'login_time':{'$date':now},'create_time':{'$date':now},'add_time':{'$date':now},'friends':{},'combat_main':{},'combat_score':{'normal':{},'hard':{},'ploy':{}},'ploy_cids':{},'tasks':{},'association':{},'check_in':{},'title':'','zone':'1-01'}
+ def login(self,account,spending_tier='small'):
   row=self.db.execute('SELECT uid,profile FROM players WHERE account=?',(account,)).fetchone()
   if row:uid,raw=row;profile=json.loads(raw)
   else:
-   uid=str(secrets.randbelow(89999999)+10000000);profile=self.initial_profile(uid,account)
+   uid=str(secrets.randbelow(89999999)+10000000);profile=self.initial_profile(uid,account,spending_tier)
    self.db.execute('INSERT INTO players VALUES(?,?,?)',(uid,account,json.dumps(profile,ensure_ascii=False)))
    self.db.execute('INSERT OR IGNORE INTO player_state_revision(uid,revision) VALUES(?,0)',(uid,))
   token=secrets.token_urlsafe(32)
@@ -166,6 +169,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
    normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
    attrs=p.setdefault('attrs',{});attrs['login_total']=int(attrs.get('login_total',0))+1
+   self.adventure.record_login(p)
    attrs.setdefault('sign_in',{'k':1,'n':0,'t':None})
    p['login_time']={'$date':self.clock.now()}
    # Keep profile migrations in this transaction so a client never receives
@@ -236,6 +240,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   profile_row=self.db.execute('SELECT profile FROM players WHERE uid=?',(uid,)).fetchone()
   if not profile_row:raise GameplayFault('UnknownPlayer','Player does not exist')
   p=json.loads(profile_row[0])
+  normalize_spending(p,self.clock.now())
   # The native activity-combat progress check indexes ploy_cids by chapter
   # before the first activity request. Preserve valid records on old saves.
   if not isinstance(p.get('ploy_cids'),dict):p['ploy_cids']={}

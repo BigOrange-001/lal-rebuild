@@ -4,6 +4,7 @@ import sqlite3
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -74,29 +75,34 @@ class EquipmentMagicTest(unittest.TestCase):
     def test_first_rune_replay_unlock_and_server_calculated_cost(self):
         self._fault(1, "locked", "MagicLocked")
         initial = self.store.profile_raw(self.uid)["attrs"]["dust"][0]
-        first = self._upgrade(0, "first")
-        self.assertEqual(first["magic"], [1, 0, 0, 0])
-        self.assertIn(first["symp"], range(4))
-        self.assertEqual(self.store.profile_raw(self.uid)["attrs"]["dust"][0], initial - 2)
-        self.assertEqual(self._upgrade(0, "first"), first)
-        self.assertEqual(self.store.profile_raw(self.uid)["attrs"]["dust"][0], initial - 2)
-        blue = self._upgrade(1, "blue")
+        with patch("gameplay_roster.random.randrange", side_effect=[1, 2]) as draw:
+            first = self._upgrade(0, "first")
+            self.assertEqual(first["magic"], [1, 0, 0, 0])
+            self.assertEqual(first["symp"], 1)
+            self.assertEqual(self.store.profile_raw(self.uid)["attrs"]["dust"][0], initial - 2)
+            self.assertEqual(self._upgrade(0, "first"), first)
+            self.assertEqual(self.store.profile_raw(self.uid)["attrs"]["dust"][0], initial - 2)
+            blue = self._upgrade(1, "blue")
+            self.assertEqual(draw.call_count, 2)
         self.assertEqual(blue["magic"], [1, 1, 0, 0])
-        self.assertEqual(blue["symp"], first["symp"])
+        self.assertEqual(blue["symp"], 2)
         self._fault(3, "gold-locked", "MagicLocked")
 
     def test_fifth_stage_requires_all_colors_and_is_atomic(self):
         self._fault(4, "early-stage5", "MagicLocked")
-        self._set_magic([1, 1, 1, 1])
+        self._set_magic([1, 1, 1, 1], symp=1)
         before = list(self.store.profile_raw(self.uid)['attrs']['dust'])
-        result = self._upgrade(4, 'stage5')
+        with patch("gameplay_roster.random.randrange", return_value=2) as draw:
+            result = self._upgrade(4, 'stage5')
+            self.assertEqual(self._upgrade(4, 'stage5'), result)
+            draw.assert_called_once_with(4)
         self.assertEqual(result['magic'], [1, 1, 1, 1])
         self.assertEqual(result['magic_stage5'], 1)
+        self.assertEqual(result['symp'], 2)
         self.assertEqual(enchantment_stage(result), 5)
         self.assertAlmostEqual(main_stat_multiplier(self.config['cfg']['system_simple'], result), 1.5)
         self.assertEqual(self.store.profile_raw(self.uid)['attrs']['dust'],
                          [value - cost for value, cost in zip(before, [2, 3, 6, 8])])
-        self.assertEqual(self._upgrade(4, 'stage5'), result)
         self._fault(4, 'stage5-twice', 'MagicAtMaximum')
 
     def test_independent_rune_upgrade_replay_and_max(self):
@@ -155,13 +161,40 @@ class EquipmentMagicTest(unittest.TestCase):
     def test_level_20_price_boundary_and_level_100_cap(self):
         self._set_magic([20, 0, 0, 0], symp=2)
         before = self.store.profile_raw(self.uid)["attrs"]["dust"][0]
-        raised = self._upgrade(0, "level-21")
+        with patch("gameplay_roster.random.randrange", return_value=1) as draw:
+            raised = self._upgrade(0, "level-21")
+            draw.assert_called_once_with(4)
         self.assertEqual(raised["magic"][0], 21)
-        self.assertEqual(raised["symp"], 2)
+        self.assertEqual(raised["symp"], 1)
         self.assertEqual(self.store.profile_raw(self.uid)["attrs"]["dust"][0], before - 3)
         self._set_magic([100, 1, 0, 0], symp=2)
         self._fault(0, "maxed", "MagicAtMaximum")
         self.assertEqual(self.store.profile_raw(self.uid)["attrs"]["dust"][0], before - 3)
+
+    def test_level_100_and_rune_10_contribute_independently_to_battle(self):
+        profile = self.store.profile_raw(self.uid)
+        hero_id = profile["team"][0][0]
+        profile["as_equips"] = [[self.eqid]] + [[] for _ in range(5)]
+        item = profile["my_equips"][self.eqid]
+        item.update({"magic": [99, 99, 99, 99], "magic_stage5": 1,
+                     "symp": 2, "rune_lv": 0})
+        before = self.roster.battle_attributes(profile, hero_id)
+        item["magic"] = [100, 100, 100, 100]
+        max_magic = self.roster.battle_attributes(profile, hero_id)
+        self.assertEqual(max_magic["hp"] - before["hp"], 120 + 360)
+        self.assertEqual(max_magic["ap"] - before["ap"], 10 + 30)
+        item["rune_lv"] = 10
+        max_rune = self.roster.battle_attributes(profile, hero_id)
+        self.assertEqual(max_rune["de_ph"] - max_magic["de_ph"], 400)
+        self.assertEqual(max_rune["hp"], max_magic["hp"])
+
+    def test_all_four_magic_colors_stop_at_100_without_redrawing(self):
+        self._set_magic([100, 100, 100, 100], symp=2)
+        with patch("gameplay_roster.random.randrange") as draw:
+            for color in range(4):
+                self._fault(color, f"maxed-{color}", "MagicAtMaximum")
+            draw.assert_not_called()
+        self.assertEqual(self.store.profile_raw(self.uid)["my_equips"][self.eqid]["symp"], 2)
 
     def test_client_price_cannot_bypass_insufficient_dust(self):
         def empty(profile):

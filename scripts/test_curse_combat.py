@@ -6,9 +6,13 @@ cleanup; these checks do not replace a visual playtest on an Android device.
 import json
 import re
 import subprocess
+import sys
 import unittest
 
 from test_avatar_passive import NODE, ROOT, method_body
+
+sys.path.insert(0, str(ROOT / 'server'))
+from upstream_skill_priority import apply_upstream_skill_priority
 
 
 HARNESS = r'''
@@ -77,7 +81,7 @@ function unit(team,line,pos){
     avatarData:{id:'A_1001_6',type:1},fightRes:{parent:{setFirst:noop},x:0,y:100,pivotX:0,pivotY:0,localToGlobal(p){return {x:line*200+p.x,y:100+p.y};}},manualFocusTarget:null,skillB:null,
     currentAbilityAttack(){return {kind:'active'};},purpleBondMultiplier(){return 1;},
     abilityDirectMultiplier(){return 1;},getTeamHp:noop,getDamage(){return 100;},getTough(){return 0;},
-    refreshHp:noop,abilityRecordDamage:noop,resSwing:noop,
+    refreshHp:noop,abilityRecordDamage:noop,resSwing:noop,queueRangePreview:noop,
     checkTalent(){return 0;},getEffectiveActionType(){return 1;},getSortOnFun(){return null;},
     isResolvingSkill(){return true;},isRangedSkillCaster(){return true;},
     attackTween:noop,tickManualLethalFloors:noop,abilityClearStates:noop,clearManualSkillDots:noop,
@@ -189,7 +193,9 @@ class CurseClientCombatTests(unittest.TestCase):
         # Wrap a branch in a function so the shared parser removes AS types.
         wrapped='function curseAction():void {var _loc3_:Vector.<Avatar>; var _loc1_:Avatar;'+branch.replace('break;','return;')+'}'
         cls.methods['curseAction']=cls.translate(method_body(wrapped,'curseAction'))
-        cls.config=json.loads((ROOT/'config/reconstruction/full-config.json').read_text(encoding='utf-8'))['cfg']
+        document=json.loads((ROOT/'config/reconstruction/full-config.json').read_text(encoding='utf-8'))
+        apply_upstream_skill_priority(document)
+        cls.config=document['cfg']
 
     @staticmethod
     def translate(body):

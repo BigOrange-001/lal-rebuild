@@ -20,6 +20,7 @@ package
    import flash.display.Bitmap;
    import flash.display.BitmapData;
    import flash.display.Loader;
+   import flash.display.Screen;
    import flash.display.Sprite;
    import flash.events.Event;
    import flash.events.KeyboardEvent;
@@ -128,7 +129,7 @@ package
             startupConfig.init();
             if(Capabilities.manufacturer.indexOf("Android") != -1)
             {
-               MainConfig.VERSION_CURR = "1.0.1";
+               MainConfig.VERSION_CURR = "1.0.2";
             }
             this.checkClearLocalStore();
             this.stage.quality = "low";
@@ -189,7 +190,7 @@ package
          }
          if($XML_init.hasOwnProperty("version"))
          {
-            MainConfig.VERSION_CURR = GlobalStaticConst.$isAndroid ? "1.0.1" : $XML_init.version;
+            MainConfig.VERSION_CURR = GlobalStaticConst.$isAndroid ? "1.0.2" : $XML_init.version;
          }
          if($XML_init.hasOwnProperty("height"))
          {
@@ -275,7 +276,7 @@ package
       {
          if(GlobalStaticConst.$isAndroid)
          {
-            MainConfig.VERSION_CURR = "1.0.1";
+            MainConfig.VERSION_CURR = "1.0.2";
             MainConfig.server_address_group();
          }
          if(MainConfig.$isTest)
@@ -579,6 +580,14 @@ package
                _starlingStageHeight = 960;
             }
          }
+         else if(GlobalStaticConst.$isAndroid)
+         {
+            _starlingStageWidth = BASE_WIDTH;
+            _starlingStageHeight = Math.round(Math.max(BASE_HEIGHT,Math.min(1138,BASE_WIDTH * stage.stageHeight / stage.stageWidth)));
+            _viewPort = fitAndroidViewport(_starlingStageWidth,_starlingStageHeight);
+            GlobalData.$isNotFullScreen = _viewPort.width < stage.stageWidth || _viewPort.height < stage.stageHeight;
+            GlobalData.$isNotFullScreenX = int(_viewPort.x);
+         }
          else
          {
             _starlingStageWidth = 640;
@@ -609,6 +618,13 @@ package
          GlobalData.$assetManager.verbose = MainConfig.$isDebug;
          GlobalData.$mStarlingStageWidth = _starlingStageWidth;
          GlobalData.$mStarlingStageHeight = _starlingStageHeight;
+         if(GlobalStaticConst.$isAndroid)
+         {
+            // Game.initFirstData derives native overlay scale from these values.
+            GlobalData.$fullScreenWidth = _viewPort.width;
+            GlobalData.$fullScreenHeight = _viewPort.height;
+            GlobalData.$isNotFullScreen = false;
+         }
          GlobalData.$mStarling = new Starling(Game,stage,_viewPort);
          GlobalData.$mStarling.stage.stageWidth = _starlingStageWidth;
          GlobalData.$mStarling.stage.stageHeight = _starlingStageHeight;
@@ -707,10 +723,72 @@ package
       private function starling_rootCreatedHandler(param1:Object, param2:Game) : void
       {
          GlobalData.$mStarling.removeEventListener("rootCreated",starling_rootCreatedHandler);
+         if(GlobalStaticConst.$isAndroid)
+         {
+            GlobalData.$isNotFullScreen = $starlingRec.width < stage.stageWidth || $starlingRec.height < stage.stageHeight;
+            syncAndroidViewportMetrics();
+         }
       }
       
       private function stage_resizeHandler(param1:Event) : void
       {
+         if(!GlobalStaticConst.$isAndroid || GlobalData.$mStarling == null || stage.stageWidth <= 0 || stage.stageHeight <= 0)
+         {
+            return;
+         }
+         var viewport:Rectangle = fitAndroidViewport(GlobalData.$mStarling.stage.stageWidth,GlobalData.$mStarling.stage.stageHeight);
+         if($starlingRec != null && $starlingRec.equals(viewport))
+         {
+            return;
+         }
+         $starlingRec = viewport;
+         GlobalData.$mStarling.viewPort = viewport;
+         GlobalData.$isNotFullScreen = viewport.width < stage.stageWidth || viewport.height < stage.stageHeight;
+         GlobalData.$isNotFullScreenX = int(viewport.x);
+         syncAndroidViewportMetrics();
+      }
+
+      private function syncAndroidViewportMetrics() : void
+      {
+         GlobalData.$fullScreenWidth = stage.stageWidth;
+         GlobalData.$fullScreenHeight = stage.stageHeight;
+         if(GlobalData.$mStageWidth > 0 && GlobalData.$mStageHeight > 0)
+         {
+            GlobalData.$mStage$Starling_w = $starlingRec.width / GlobalData.$mStageWidth;
+            GlobalData.$mStage$Starling_h = $starlingRec.height / GlobalData.$mStageHeight;
+         }
+      }
+
+      private function fitAndroidViewport(logicalWidth:Number, logicalHeight:Number) : Rectangle
+      {
+         return RectangleUtil.fit(new Rectangle(0,0,logicalWidth,logicalHeight),androidUsableArea(),"showAll");
+      }
+
+      private function androidUsableArea() : Rectangle
+      {
+         var width:Number = stage.stageWidth;
+         var height:Number = stage.stageHeight;
+         var area:Rectangle = new Rectangle(0,0,width,height);
+         var screen:Screen = Screen.mainScreen;
+         if(screen == null || screen.bounds == null || screen.safeArea == null || screen.bounds.width <= 0 || screen.bounds.height <= 0)
+         {
+            return area;
+         }
+         var bounds:Rectangle = screen.bounds;
+         var safe:Rectangle = screen.safeArea;
+         var left:Number = Math.max(0,safe.left - bounds.left) * width / bounds.width;
+         var top:Number = Math.max(0,safe.top - bounds.top) * height / bounds.height;
+         var right:Number = Math.max(0,bounds.right - safe.right) * width / bounds.width;
+         var bottom:Number = Math.max(0,bounds.bottom - safe.bottom) * height / bounds.height;
+         if(left + right >= width || top + bottom >= height)
+         {
+            return area;
+         }
+         area.x = Math.round(left);
+         area.y = Math.round(top);
+         area.width = Math.floor(width - left - right);
+         area.height = Math.floor(height - top - bottom);
+         return area;
       }
       
       private function stage_deactivateHandler(param1:Event) : void

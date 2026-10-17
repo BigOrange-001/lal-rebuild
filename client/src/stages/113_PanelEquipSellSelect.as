@@ -24,7 +24,6 @@ package com.meng52.game.ui.panel
    import feathers.display.Scale9Image;
    import feathers.layout.VerticalLayout;
    import flash.geom.Rectangle;
-   import flash.events.EventDispatcher;
    import starling.display.DisplayObject;
    import starling.display.Image;
    import starling.display.Sprite;
@@ -317,7 +316,11 @@ package com.meng52.game.ui.panel
          var _loc7_:int = 0;
          var _loc11_:String = null;
          var _loc13_:String = null;
-         var _loc15_:EventDispatcher = param1.currentTarget;
+         var _loc15_:DisplayObject = param1.currentTarget as DisplayObject;
+         if(_loc15_ == null)
+         {
+            return;
+         }
          if(_loc15_.name == BTN_NAME_CLEAR)
          {
             if(GlobalData.$tempEquipSellArr.length > 0)

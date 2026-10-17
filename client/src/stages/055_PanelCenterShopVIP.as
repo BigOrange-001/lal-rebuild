@@ -428,26 +428,26 @@ package com.meng52.game.ui.screen
          if(_loc2_)
          {
             _loc3_ = [{
-               "label":GlobalLanguageStr.getLanguageStr(20477),
+               "label":"招募",
                "indexID":0
             },{
-               "label":GlobalLanguageStr.getLanguageStr(20093),
+               "label":"VIP商店",
                "indexID":1
             },{
-               "label":GlobalLanguageStr.getLanguageStr(_loc2_ ? 98129 : 20504),
+               "label":"特权",
                "indexID":2
             },{
-               "label":GlobalLanguageStr.getLanguageStr(98130),
+               "label":"VIP礼包",
                "indexID":3
             }];
          }
          else
          {
             _loc3_ = [{
-               "label":GlobalLanguageStr.getLanguageStr(20477),
+               "label":"招募",
                "indexID":0
             },{
-               "label":GlobalLanguageStr.getLanguageStr(20093),
+               "label":"VIP商店",
                "indexID":1
             }];
          }
@@ -801,7 +801,7 @@ package com.meng52.game.ui.screen
          _info_txt1.x = (GlobalData.$mStageWidth - _info_txt1.width) * 0.5;
          _info_txt1.y = _info_txt.y + _info_txt.height - 7;
          casinoSprite.addChild(_info_txt1);
-         btn_Medal = new LOL_Scale9Button("    " + GlobalLanguageStr.getLanguageStr(90383),280,70,"UI_btn_normalFun_0000");
+         btn_Medal = new LOL_Scale9Button("    勋章兑换",280,70,"UI_btn_normalFun_0000");
          btn_Medal.x = mBtn_a.x;
          btn_Medal.y = mBtn_a.y + mBtn_a.height;
          casinoSprite.addChild(btn_Medal);
@@ -810,7 +810,7 @@ package com.meng52.game.ui.screen
          mBg_Medal.x = btn_Medal.x + (btn_Medal.width - mBg_Medal.width) * 0.5 - 55;
          mBg_Medal.y = btn_Medal.y + (btn_Medal.height - mBg_Medal.height) * 0.5 + 28;
          casinoSprite.addChild(mBg_Medal);
-         btn_Score = new LOL_Scale9Button("    " + GlobalLanguageStr.getLanguageStr(97680),280,70,"UI_btn_normalFun_0000");
+         btn_Score = new LOL_Scale9Button("    积分兑换",280,70,"UI_btn_normalFun_0000");
          btn_Score.x = btn_Medal.x + btn_Medal.width + 15;
          btn_Score.y = btn_Medal.y;
          casinoSprite.addChild(btn_Score);
@@ -828,14 +828,14 @@ package com.meng52.game.ui.screen
          btn_Medal.name = BTN_NAME_CASINO_C;
          _loc29_.name = BTN_NAME_CASINO_D;
          btn_Score.name = BTN_NAME_CASINO_E;
-         _btnA_txt = new LOL_TextField(GlobalLanguageStr.getStr(20059),100,40);
+         _btnA_txt = new LOL_TextField("普通召唤",100,40);
          _btnA_txt.fontSize = 20;
          _btnA_txt.fontColor = 16777215;
          _btnA_txt.shadowFilter();
          _btnA_txt.x = _loc16_.x + 10;
          _btnA_txt.y = _loc16_.y + 10;
          casinoSprite.addChild(_btnA_txt);
-         _btnB_txt = new LOL_TextField(GlobalLanguageStr.getStr(20068),100,40);
+         _btnB_txt = new LOL_TextField("高级召唤",100,40);
          _btnB_txt.fontSize = 20;
          _btnB_txt.fontColor = 16777215;
          _btnB_txt.shadowFilter();
@@ -873,13 +873,13 @@ package com.meng52.game.ui.screen
          _loc29_.addEventListener("touch",onTOUCH);
          btn_Medal.addEventListener("triggered",onClick_Trigged);
          btn_Score.addEventListener("triggered",onClick_Trigged);
-         var _loc13_:String = infoUIsA()["score"] + infoUIsA()["coin"] + infoUIsB() + infoUIsC();
+         var _loc13_:String = "普通召唤使用友情积分，高级召唤使用金砖。<br/><br/>召唤勋章：80枚兑换一张橙卡，每日更新20名非皮肤英雄。<br/><br/>召唤积分：100分兑换40个指定皮肤的橙色碎片。<br/>当前开放：二郎真君赵信、钢铁侠提莫。";
          var _loc32_:Number = int(GlobalData.centerRealHeight() - _loc16_.y - _loc16_.height - 10 - 15);
          var _loc21_:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",618,_loc32_ - 40,new Rectangle(110,55,70,20));
          _loc21_.x = int((GlobalData.$mStageWidth - _loc21_.width) * 0.5);
          _loc21_.y = GlobalData.$center_height_curr - 121 - _loc32_ + 43;
          casinoSprite.addChild(_loc21_);
-         var _loc15_:String = HtmlTextFormat.font(_loc13_);
+         var _loc15_:String = HtmlTextFormat.font(_loc13_,4926491,20);
          mInfo = new ScrollScreenForTxt(_loc15_,_loc21_.width - 100,_loc21_.height - 55);
          mInfo.x = _loc21_.x + 50;
          mInfo.y = _loc21_.y + 25;

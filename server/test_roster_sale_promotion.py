@@ -67,10 +67,15 @@ class RosterSalePromotionTest(unittest.TestCase):
         advanced = self.roster.dispatch(self.uid, 'user.phase_up', params)
         self.assertEqual(advanced['phase'], 2)
         self.assertEqual(self.roster.dispatch(self.uid, 'user.phase_up', params), advanced)
+        before_star = self.store.profile_raw(self.uid)
         promoted = self.roster.dispatch(self.uid, 'user.star_up',
-                         {'aid': target, 'aids': materials[2:], 'actionID': 'croc-star'})
+                         {'aid': target, 'aids': [], 'actionID': 'croc-star'})
         self.assertEqual((promoted['id'], promoted['phase']), ('A_1101_6|croc', 0))
-        self.assertEqual(set(self.store.profile_raw(self.uid)['avatars']), {'A_1101_6|croc'})
+        self.assertEqual(promoted['lv'], 99)
+        after_star = self.store.profile_raw(self.uid)
+        self.assertEqual(set(after_star['avatars']), {'A_1101_6|croc', materials[2]})
+        self.assertEqual((after_star['coin'], after_star['gold']),
+                         (before_star['coin'], before_star['gold']))
         self.assertGreater(promoted['hp'], 0)
 
     def test_star_promotion_resets_phase_and_keeps_cultivation(self):
@@ -80,7 +85,7 @@ class RosterSalePromotionTest(unittest.TestCase):
             profile['team'] = [[None] * 6 for _ in range(3)]
             profile['avatars'] = {
                 target: {'id': target, 'aid': target, 'lv': 99, 'exp': 0,
-                         'phase': 3, 'morph': 0, 'limit_break': 0,
+                         'phase': 2, 'morph': 0, 'limit_break': 0,
                          'hp': 11, 'ap': 2, 'de_ph': 1, 'de_ma': 1},
                 material: {'id': material, 'aid': material, 'lv': 1, 'exp': 0,
                            'phase': 0, 'morph': 0, 'limit_break': 0},
@@ -90,14 +95,15 @@ class RosterSalePromotionTest(unittest.TestCase):
             return profile, {}
         self.store.atomic_update(self.uid, seed)
         promoted = self.roster.dispatch(self.uid, 'user.star_up',
-                                        {'aid': target, 'aids': [material], 'actionID': 'star-r0'})
+                                        {'aid': target, 'aids': [], 'actionID': 'star-r0'})
         self.assertEqual(promoted['phase'], 0)
         self.assertEqual(promoted['id'], 'A_1101_6|r0')
+        self.assertEqual(promoted['lv'], 99)
         self.assertEqual(promoted.get('limit_break', 0), 0)
         self.assertEqual(self.roster.dispatch(self.uid, 'user.star_up',
-                         {'aid': target, 'aids': [material], 'actionID': 'star-r0'}), promoted)
+                         {'aid': target, 'aids': [], 'actionID': 'star-r0'}), promoted)
         profile = self.store.profile_raw(self.uid)
-        self.assertEqual(set(profile['avatars']), {'A_1101_6|r0'})
+        self.assertEqual(set(profile['avatars']), {'A_1101_6|r0', material})
         self.assertEqual(profile['avatars']['A_1101_6|r0']['phase'], 0)
 
     def test_sell_rejects_duplicate_team_dn_and_persisted_lock(self):

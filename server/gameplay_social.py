@@ -5,6 +5,7 @@ from pathlib import Path
 from bot_names import bot_name_for_uid
 from player_store import GameplayFault, native_dates
 from gameplay_roster import GameplayRosterEquipment
+from guild_companions import GuildCompanions
 
 BOT_UID_START = 92000000
 
@@ -24,6 +25,7 @@ class GameplaySocial:
         self.avatars = self.cfg.get("avatar") or roster.get("heroes", {})
         self.simple = self.cfg.get("system_simple", {})
         self.roster = GameplayRosterEquipment(store, self.config)
+        self.companions = GuildCompanions(store, self.config)
         candidates = list(comp.get("fragment_bots", [])) + list(comp.get("pvp_bots", []))
         self.bots = [self._make_bot(row, index) for index, row in enumerate(candidates[:12])]
         self.by_uid = {bot["uid"]: bot for bot in self.bots}
@@ -70,6 +72,8 @@ class GameplaySocial:
     def _avatar_card(self, bot, instance_id):
         """Serialize the same combat fields as Avatar.toDataObj for panel preview."""
         avatar = self.roster.battle_attributes(bot, instance_id)
+        if isinstance(bot.get("battle_stats"), dict):
+            avatar.update(copy.deepcopy(bot["battle_stats"]))
         slot = next((i for i, hero_id in enumerate(bot.get("team", [[]])[0]) if hero_id == instance_id), 0)
         hero = bot.get("avatars", {}).get(instance_id, {})
         avatar.update({
@@ -78,29 +82,44 @@ class GameplaySocial:
             "line": int(hero.get("line", 0)), "pos": float(hero.get("pos", slot)),
             "new_4attrs": {key: int(avatar.get(key, 0)) for key in ("hit", "flee", "crit", "tough")},
         })
+        if int(hero.get("limit_break", 0) or 0) == 1:
+            avatar["limit_break"] = 1
         if slot != 0:
             avatar["leader_skill"] = None
         return avatar
 
-    def lookup_assist(self, uid):
+    def lookup_assist(self, uid, profile=None):
         """Return a validated local helper and its captain instance for PvE wiring."""
-        bot = self._bot_or_fail(uid)
+        bot = self._bot_or_fail(uid, profile)
         lead_id = next((item for item in bot.get("team", [[]])[0] if item), None)
         avatar = self._avatar_card(bot, lead_id)
         return {"uid": bot["uid"], "name": bot["name"], "avatar_id": lead_id,
                 "avatar": avatar, "cd_time": 0}
 
-    def is_bot_uid(self, uid):
-        return str(uid) in self.by_uid
+    def is_bot_uid(self, uid, profile=None):
+        return str(uid) in self.by_uid or self._dynamic_bot(uid, profile) is not None
 
-    def _bot_or_fail(self, uid):
-        bot = self.by_uid.get(str(uid))
+    def _dynamic_bot(self, uid, profile):
+        if not isinstance(profile, dict):
+            return None
+        bot = self.companions.find(profile, uid)
+        guild = profile.get("association")
+        members = guild.get("members", []) if isinstance(guild, dict) else []
+        social = profile.get("social")
+        social = social if isinstance(social, dict) else {}
+        known = any(str(uid) in social.get(key, []) for key in ("friends", "incoming", "outgoing"))
+        if bot and (known or any(str(row.get("uid")) == str(uid) for row in members if isinstance(row, dict))):
+            return bot
+        return None
+
+    def _bot_or_fail(self, uid, profile=None):
+        bot = self.by_uid.get(str(uid)) or self._dynamic_bot(uid, profile)
         if bot is None:
             self._fail("LocalPlayerUnavailable", "Only local reconstruction bots can be selected here")
         return bot
 
-    def _friend_card(self, uid, now=None):
-        bot = self._bot_or_fail(uid)
+    def _friend_card(self, uid, profile=None):
+        bot = self._bot_or_fail(uid, profile)
         lead_id = next((x for x in bot["team"][0] if x), None)
         avatar = self._avatar_card(bot, lead_id)
         return {"uid":bot["uid"],"name":bot["name"],"lv":bot["lv"],"vip_lv":bot["vip_lv"],
@@ -114,14 +133,18 @@ class GameplaySocial:
         social.setdefault("friendship", 0)
         if not social.get("bootstrapped"):
             # Seed a few local request cards so the original request panel has something useful to do.
-            social["incoming"] = [b["uid"] for b in self.bots[3:5]]
+            social["incoming"].extend(b["uid"] for b in self.bots[3:5]
+                                      if b["uid"] not in social["incoming"])
             social["bootstrapped"] = True
         return social
 
     def _write(self, uid, method, params, mutator):
         action = params.get("actionID")
         key = f"{method}:{action}" if isinstance(action,(str,int)) else None
-        result, replayed = self.store.atomic_update(uid, mutator, idempotency_key=key,
+        def refresh_then_mutate(profile):
+            self.companions.refresh(profile)
+            return mutator(profile)
+        result, replayed = self.store.atomic_update(uid, refresh_then_mutate, idempotency_key=key,
                                                     request_payload=params if key else None)
         if isinstance(result, dict): result.setdefault("replayed", bool(replayed))
         return result
@@ -133,8 +156,8 @@ class GameplaySocial:
             self._fail("InvalidParameter", "Expected an object")
         if method == "user.get":
             target = str(params.get("uid", ""))
-            if not self.is_bot_uid(target): self._fail("LocalPlayerUnavailable", "Only local reconstruction bots can be viewed")
-            return native_dates(self._bot_or_fail(target))
+            return self._write(uid, method, params,
+                               lambda profile: (profile, copy.deepcopy(self._bot_or_fail(target, profile))))
         if method == "user.get_friends": return self._get_friends(uid)
         if method == "user.online_user": return self._online_users(uid)
         if method == "user.apply_friend": return self._apply(uid, params)
@@ -150,29 +173,38 @@ class GameplaySocial:
     def _get_friends(self, uid):
         def mutate(profile):
             social=self._state(profile)
-            friends=[self._friend_card(fid) for fid in social["friends"] if fid in self.by_uid]
-            incoming=[self._friend_card(fid) for fid in social["incoming"] if fid in self.by_uid]
+            friends=[self._friend_card(fid, profile) for fid in social["friends"] if self.is_bot_uid(fid, profile)]
+            incoming=[self._friend_card(fid, profile) for fid in social["incoming"] if self.is_bot_uid(fid, profile)]
             # Local bots accept requests on the next refresh, retaining an auditable outgoing request first.
             accepted=[]
             for fid in social["outgoing"]:
-                if fid in self.by_uid and fid not in social["friends"] and len(social["friends"]) < int(profile.get("attrs",{}).get("friend_len",self.capacity)):
+                if self.is_bot_uid(fid, profile) and fid not in social["friends"] and len(social["friends"]) < int(profile.get("attrs",{}).get("friend_len",self.capacity)):
                     social["friends"].append(fid); accepted.append(fid)
             if accepted:
                 social["outgoing"]=[fid for fid in social["outgoing"] if fid not in accepted]
-                friends=[self._friend_card(fid) for fid in social["friends"] if fid in self.by_uid]
+                friends=[self._friend_card(fid, profile) for fid in social["friends"] if self.is_bot_uid(fid, profile)]
             return profile,{"friends_list":friends,"apply_list":incoming}
         return self._write(uid,"user.get_friends",{},mutate)
 
     def _online_users(self, uid):
-        profile=self.store.profile_raw(uid)
-        social=self._state(profile)
-        friends=[self._friend_card(fid) for fid in social["friends"] if fid in self.by_uid]
-        # Every returned profile is a local bot; the client uses uid to apply its assist cooldown rules.
-        return native_dates([self._friend_card(bot["uid"]) for bot in self.bots]+friends)
+        def mutate(profile):
+            social=self._state(profile)
+            friends=[self._friend_card(fid, profile) for fid in social["friends"] if self.is_bot_uid(fid, profile)]
+            # Only admitted guild companions can appear in the helper list.
+            guild_ids={str(row.get("uid")) for row in profile.get("association",{}).get("members",[])
+                       if isinstance(row,dict)}
+            companions=[bot for bot in profile.get("guild_companions",{}).get("bots",[])
+                        if bot["uid"] in guild_ids]
+            cards=[self._friend_card(bot["uid"], profile) for bot in self.bots+companions]
+            seen=set()
+            return profile,[card for card in cards+friends
+                            if not (card["uid"] in seen or seen.add(card["uid"]))]
+        return self._write(uid,"user.online_user",{},mutate)
 
     def _apply(self, uid, params):
-        fid=str(params.get("fid", "")); self._bot_or_fail(fid)
+        fid=str(params.get("fid", ""))
         def mutate(profile):
+            self._bot_or_fail(fid, profile)
             social=self._state(profile); friend_len=int(profile.get("attrs",{}).get("friend_len",self.capacity))
             if fid in social["friends"]: self._fail("AlreadyFriend", "This bot is already your friend")
             if len(social["friends"])>=friend_len: self._fail("FriendListFull", "Friend list is full")
@@ -181,20 +213,22 @@ class GameplaySocial:
         return self._write(uid,"user.apply_friend",params,mutate)
 
     def _accept(self, uid, params):
-        fid=str(params.get("fid", "")); self._bot_or_fail(fid)
+        fid=str(params.get("fid", ""))
         def mutate(profile):
+            self._bot_or_fail(fid, profile)
             social=self._state(profile)
             if fid not in social["incoming"]: self._fail("UnknownFriendRequest", "No local friend request from this bot")
             if fid in social["friends"]: self._fail("AlreadyFriend", "This bot is already your friend")
             cap=int(profile.get("attrs",{}).get("friend_len",self.capacity))
             if len(social["friends"])>=cap: self._fail("FriendListFull", "Friend list is full")
             social["incoming"].remove(fid); social["friends"].append(fid)
-            return profile,{"ok":True,"friend":self._friend_card(fid)}
+            return profile,{"ok":True,"friend":self._friend_card(fid, profile)}
         return self._write(uid,"user.add_friend",params,mutate)
 
     def _delete(self, uid, params):
-        fid=str(params.get("fid", "")); self._bot_or_fail(fid)
+        fid=str(params.get("fid", ""))
         def mutate(profile):
+            self._bot_or_fail(fid, profile)
             social=self._state(profile)
             if fid not in social["friends"]: self._fail("NotFriend", "This bot is not in your friend list")
             social["friends"].remove(fid)
@@ -202,8 +236,9 @@ class GameplaySocial:
         return self._write(uid,"user.del_friend",params,mutate)
 
     def _ignore(self, uid, params):
-        fid=str(params.get("fid", "")); self._bot_or_fail(fid)
+        fid=str(params.get("fid", ""))
         def mutate(profile):
+            self._bot_or_fail(fid, profile)
             social=self._state(profile)
             if fid in social["incoming"]: social["incoming"].remove(fid)
             return profile,{"ok":True,"fid":fid}

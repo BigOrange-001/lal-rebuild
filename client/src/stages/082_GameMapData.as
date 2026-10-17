@@ -42,7 +42,7 @@ package com.meng52.game.command.map
       
       public var bgList:Array;
       
-      public var userPower:int;
+      public var userPower:Number;
       
       public var win:Array;
       
@@ -71,7 +71,7 @@ package com.meng52.game.command.map
          team1List = param1["team1"];
          team2List = param1["team2"];
          // ulv remains the account-level unlock gate. Use the separate recommendation for the PVE preview when supplied.
-         userPower = int(param1["recommended_power"] != null ? param1["recommended_power"] : param1["ulv"]);
+         userPower = Number(param1["recommended_power"] != null ? param1["recommended_power"] : param1["ulv"]);
          win = param1["win"];
          energy = param1["energy"];
          exp = param1["exp"];
@@ -106,7 +106,18 @@ package com.meng52.game.command.map
          return _loc2_[0] + "_" + _loc2_[1];
       }
       
-      public function getUserPower(param1:int = 0) : int
+      private static function toEffectivePower(param1:Number) : Number
+      {
+         // Keep the existing two-significant-digit rounding for int-sized
+         // stages, without overflowing when a tower recommendation exceeds it.
+         if(param1 <= 2147483647)
+         {
+            return Tools.toEffectiveInt(int(param1),2);
+         }
+         return Number(param1.toPrecision(2));
+      }
+
+      public function getUserPower(param1:int = 0) : Number
       {
          var _loc4_:int = 0;
          var _loc9_:Array = null;
@@ -116,11 +127,11 @@ package com.meng52.game.command.map
          var _loc10_:Array = null;
          if(recommendedPowerByDiff && recommendedPowerByDiff[String(param1)] != null)
          {
-            return Tools.toEffectiveInt(int(recommendedPowerByDiff[String(param1)]),2);
+            return toEffectivePower(Number(recommendedPowerByDiff[String(param1)]));
          }
          if(param1 == 0)
          {
-            return Tools.toEffectiveInt(userPower,2);
+            return toEffectivePower(userPower);
          }
          var _loc7_:Number = 0;
          var _loc5_:Number = 0;
@@ -152,7 +163,8 @@ package com.meng52.game.command.map
             }
             _loc8_++;
          }
-         return Tools.toInt(_loc5_ * _loc3_);
+         var _scaledPower:Number = _loc5_ * _loc3_;
+         return _scaledPower <= 2147483647 ? Tools.toInt(_scaledPower) : Math.round(_scaledPower);
       }
       
       public function getAvatarPower(param1:Avatar, param2:int, param3:Object = null) : Number

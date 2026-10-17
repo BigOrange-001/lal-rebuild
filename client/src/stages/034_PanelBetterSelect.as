@@ -50,6 +50,140 @@ package com.meng52.game.ui.panel
          return _family >= 3001 && _family <= 3008;
       }
       
+      private static function autoFeedMaterialKind(param1:String) : int
+      {
+         var _base:String = param1.split("|")[0];
+         if(_base == "A_6992_4" || _base == "A_6992_5" || _base == "A_6992_6")
+         {
+            return 1;
+         }
+         if(_base == "A_6996_3" || _base == "A_6996_4" || _base == "A_6996_5" ||
+            _base == "A_6997_3" || _base == "A_6997_4" || _base == "A_6997_5" ||
+            _base == "A_6998_3" || _base == "A_6998_4" || _base == "A_6998_5")
+         {
+            return 2;
+         }
+         return 0;
+      }
+
+      private static function autoFeedMaterialSafe(param1:Avatar, param2:Object, param3:String) : Boolean
+      {
+         return param3 != GlobalData.$tempAvatarBetter.id &&
+            !PanelAvatarSell.isHeroAssigned(param3) &&
+            !PanelAvatarSell.isAutoBlocked(param2) &&
+            !GlobalFunction.checkLock(param3) &&
+            param1.morph == 0 && param1.phase == 0 && param1.slv <= 1 &&
+            param1.loveExp <= 0 && param1.exp <= 0 && param1.getPithNum() <= 0;
+      }
+
+      public static function checkBetterFood() : void
+      {
+         var _target:Avatar = new Avatar(GlobalData.$tempAvatarBetter.id);
+         var _canSkill:Boolean = _target.skill0 != null && _target.slv < int(GlobalData.$mConfig_simple.slv_config[0]);
+         var _remainingExp:Number = Math.max(0,_target.getAllExp(_target.getLvMax()) - (_target.getAllExp() + _target.exp));
+         var _biscuits:Array = [];
+         var _books:Array = [];
+         var _owned:Object = GlobalData.$userData.avatars;
+         var _id:String;
+         var _kind:int;
+         var _material:Avatar;
+         var _row:Object;
+         var _offer:int;
+         var _candidate:Object;
+         for(_id in _owned)
+         {
+            _kind = autoFeedMaterialKind(_id);
+            if((_kind == 1 && !_canSkill) || (_kind == 2 && _remainingExp <= 0) || _kind == 0)
+            {
+               continue;
+            }
+            _row = _owned[_id];
+            _material = new Avatar(_id);
+            if(autoFeedMaterialSafe(_material,_row,_id))
+            {
+               _offer = _material.getOfferExp();
+               if(_offer > 0)
+               {
+                  _candidate = {"id":_id,"data":_row,"offer":_offer};
+                  (_kind == 1 ? _biscuits : _books).push(_candidate);
+               }
+            }
+            _material.clear();
+         }
+         _biscuits.sortOn("offer",0x10);
+         var _selected:int = 0;
+         var _totalExp:int = 0;
+         var _unaffordable:Boolean = false;
+         var _budget:int = int(GlobalData.$userData.gold);
+         var _i:int;
+         for(_i = 0; _i < _biscuits.length && _selected < 5; _i++)
+         {
+            _candidate = _biscuits[_i];
+            if(Math.ceil((_totalExp + int(_candidate.offer)) / 10) > _budget)
+            {
+               _unaffordable = true;
+               continue;
+            }
+            _totalExp += int(_candidate.offer);
+            _row = _candidate.data;
+            _row["id"] = _candidate.id;
+            _row["give"] = {"exp":_candidate.offer,"gold":Math.ceil(int(_candidate.offer) / 10)};
+            GlobalFunction.changeAvatarBetterArray(_candidate.id,false,null,_row);
+            _selected++;
+         }
+         // Books are useful only while the target still has level XP to gain.
+         // Prefer the smallest book that finishes the gap, otherwise the
+         // largest available book so the five slots make useful progress.
+         while(_selected < 5 && _totalExp < _remainingExp && _books.length > 0)
+         {
+            var _best:int = -1;
+            var _need:Number = _remainingExp - _totalExp;
+            for(_i = 0; _i < _books.length; _i++)
+            {
+               _candidate = _books[_i];
+               if(Math.ceil((_totalExp + int(_candidate.offer)) / 10) > _budget)
+               {
+                  _unaffordable = true;
+                  continue;
+               }
+               if(_best < 0 ||
+                  (int(_candidate.offer) >= _need && (int(_books[_best].offer) < _need || int(_candidate.offer) < int(_books[_best].offer))) ||
+                  (int(_candidate.offer) < _need && int(_books[_best].offer) < _need && int(_candidate.offer) > int(_books[_best].offer)))
+               {
+                  _best = _i;
+               }
+            }
+            if(_best < 0)
+            {
+               break;
+            }
+            _candidate = _books.splice(_best,1)[0];
+            _totalExp += int(_candidate.offer);
+            _row = _candidate.data;
+            _row["id"] = _candidate.id;
+            _row["give"] = {"exp":_candidate.offer,"gold":Math.ceil(int(_candidate.offer) / 10)};
+            GlobalFunction.changeAvatarBetterArray(_candidate.id,false,null,_row);
+            _selected++;
+         }
+         if(_selected == 0)
+         {
+            if(_remainingExp <= 0 && !_canSkill)
+            {
+               var _res:String = _target.resId.indexOf(".") > -1 ? _target.resId.slice(0,_target.resId.length - 1) : _target.resId;
+               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90198),false,_res);
+            }
+            else if(_unaffordable)
+            {
+               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(10023),false,"A_6999_3");
+            }
+            else
+            {
+               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90115),false,_canSkill ? "A_6992_4" : "A_6996_5");
+            }
+         }
+         _target.clear();
+      }
+
       public var mNum_select:int = 0;
       
       public var mNum_selectObj:Object = 0;
@@ -139,16 +273,14 @@ package com.meng52.game.ui.panel
          GlobalData.$tempAvatarChoose = [];
          if(_loc2_.name == BTN_NAME_CLEAR)
          {
-            mRarityDiagEvent = GlobalData.$tempAvatarBetterArr.length > 0 ? "better-clear" : "better-quick-select";
-            if(GlobalData.$tempAvatarBetterArr.length > 0)
-            {
-               tempSelect = 0;
-            }
-            else
-            {
-               tempSelect = 5;
-            }
+            var _wasSelected:Boolean = GlobalData.$tempAvatarBetterArr.length > 0;
+            mRarityDiagEvent = _wasSelected ? "better-clear" : "better-quick-select";
+            tempSelect = 0;
             GlobalFunction.clearAvatarBetterItems();
+            if(!_wasSelected)
+            {
+               PanelBetterSelect.checkBetterFood();
+            }
             setList();
             addList();
             mList.scrollToPosition(0,Math.max(int(firstSelect / 5) * 124 - 62,0),0);

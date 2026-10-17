@@ -167,6 +167,7 @@ package com.meng52.game.module.avatar
 
       public var abilityState:Object = {};
       private var abilityEntryAttack:Number = 0;
+      private var initializingFightAttributes:Boolean = false;
       private var abilitySerial:int = 0;
       private var abilityIndex:int = 0;
       private static var abilityNextIndex:int = 0;
@@ -183,6 +184,46 @@ package com.meng52.game.module.avatar
       private static function currentAbilityAttack() : Object
       {
          return abilityContexts.length ? abilityContexts[abilityContexts.length - 1] : null;
+      }
+
+      private function activeManualEffectMultiplier() : Number
+      {
+         var context:Object = currentAbilityAttack();
+         var value:Number = context && context.owner === this ? Number(context.manualEffectMultiplier) : 1;
+         return isFinite(value) && value > 0 ? value : 1;
+      }
+
+      private function ownGrowthValue(effect:String) : Number
+      {
+         if(!talent || !talent.my_HaloData || !talent.my_HaloData.dataObj) return 0;
+         var row:Object = talent.my_HaloData.dataObj;
+         if(String(row.growth_effect) != effect) return 0;
+         var value:Number = Number(row.growth_value);
+         return isFinite(value) && value > 0 ? value : 0;
+      }
+
+      private function isTeamFlatTalent() : Boolean
+      {
+         return talent && talent.my_HaloData && talent.my_HaloData.dataObj && String(talent.my_HaloData.dataObj.growth_effect).indexOf("team_") == 0;
+      }
+
+      public function getRecoveryTalentMultiplier() : Number
+      {
+         return 1 + ownGrowthValue("recovery") / 100;
+      }
+
+      private function teamTalentFlat(effect:String) : int
+      {
+         var map:GameMap = GameMap.currentMap;
+         if(!map || team < 1 || team > 2 || hp <= 0) return 0;
+         var allies:Vector.<Avatar> = map.getAliveList(team) as Vector.<Avatar>;
+         if(!allies) return 0;
+         var best:Number = 0;
+         for each(var ally:Avatar in allies)
+         {
+            if(ally && ally.hp > 0) best = Math.max(best,ally.ownGrowthValue(effect));
+         }
+         return int(best);
       }
 
       public static function endAbilityAttack(context:Object) : void
@@ -220,7 +261,10 @@ package com.meng52.game.module.avatar
             if(state && context.kind == "active")
             {
                delete target.abilityState.sap;
+               var sapContext:Object = beginAbilityAttack(target,"response");
+               sapContext.manualEffectMultiplier = state.manualEffectMultiplier;
                target.abilityHeal(target,0.6);
+               endAbilityAttack(sapContext);
             }
             state = target.abilityState.counter;
             if(state && owner.hp > 0 && (context.kind == "active" || context.kind == "basic") && state.left > 0 && !state.seen[String(owner.abilityIndex)] && owner.line == target.line && Math.abs(owner.pos-target.pos) <= 400)
@@ -229,6 +273,7 @@ package com.meng52.game.module.avatar
                state.seen[String(owner.abilityIndex)] = true;
                var counterContext:Object = beginAbilityAttack(target,"response");
                counterContext.manualDamageMultiplier = state.manualDamageMultiplier;
+               counterContext.manualEffectMultiplier = state.manualEffectMultiplier;
                if(target.abilityHit(owner,1,1,"FX_A_1143_PHYSICAL")) target.abilityHeal(target,0.2);
                endAbilityAttack(counterContext);
             }
@@ -260,14 +305,23 @@ package com.meng52.game.module.avatar
          var guard:Object = abilityState.guard;
          if(!guard || guard.charges <= 0) return 1;
          if(context.guards.indexOf(this) < 0) context.guards.push(this);
-         return guard.kind == "kayle" ? 0 : 0.45;
+         if(guard.kind == "kayle") return 0;
+         var guardFactor:Number = Number(guard.manualEffectMultiplier);
+         if(!isFinite(guardFactor) || guardFactor <= 0) guardFactor = 1;
+         return Math.max(0,1 - 0.55 * guardFactor);
       }
 
       private function abilityRecordDamage(source:Avatar, damageType:int, before:int, damageTaken:Number = -1) : void
       {
          var context:Object = currentAbilityAttack();
          var actual:Number = damageTaken >= 0 ? damageTaken : Math.max(0,before-Math.max(0,hp));
-         if(abilityState.grey && actual > 0 && damageType != 4) { abilityState.grey.value = Math.min(hpMax*0.2,abilityState.grey.value+actual*0.4); abilityFeedback("灰色生命："+int(abilityState.grey.value),"",10066329); }
+         if(abilityState.grey && actual > 0 && damageType != 4)
+         {
+            var greyFactor:Number = Number(abilityState.grey.manualEffectMultiplier);
+            if(!isFinite(greyFactor) || greyFactor <= 0) greyFactor = 1;
+            abilityState.grey.value = Math.min(hpMax*0.2*greyFactor,abilityState.grey.value+actual*0.4*greyFactor);
+            abilityFeedback("灰色生命："+int(abilityState.grey.value),"FX_S9160_SHIELD",10066329);
+         }
          if(!context || !source || context.owner !== source || damageType < 1 || damageType > 3) return;
          var record:Object = null;
          for each(var entry:Object in context.targets) if(entry.target === this) record = entry;
@@ -413,6 +467,8 @@ package com.meng52.game.module.avatar
 
       private function abilitySummon(aid:String, count:int, ratio:Number, turns:int, key:String, focus:Avatar = null, clone:Boolean = false) : void
       {
+         ratio *= activeManualEffectMultiplier();
+         if(!Avatar.isValidSummonMultiplier(ratio)) return;
          var previous:Array = abilityState["summons_"+key] as Array;
          if(previous) for each(var old:Avatar in previous) if(old && old.hp > 0) { old.hp = 0; old.deadFast(); }
          var units:Array = [];
@@ -431,6 +487,11 @@ package com.meng52.game.module.avatar
             units.push(unit);
          }
          abilityState["summons_"+key] = units;
+      }
+
+      public static function isValidSummonMultiplier(ratio:Number) : Boolean
+      {
+         return isFinite(ratio) && ratio >= 0.01 && ratio <= 100;
       }
 
       private function abilityClearStates(debuffs:Boolean) : void
@@ -497,7 +558,7 @@ package com.meng52.game.module.avatar
             else if(key == "grey" && abilitySerial >= state.until)
             {
                delete abilityState.grey;
-               if(hp > 0 && state.value > 0) { addBuff("shield",2,int(state.value)); abilityFeedback("灰色生命转护盾："+int(state.value),"FX_S9160_SHIELD"); }
+               if(hp > 0 && state.value > 0) { var greyShield:int = int(state.value * getRecoveryTalentMultiplier()); addBuff("shield",2,greyShield); abilityFeedback("灰色生命转护盾："+greyShield,"FX_S9160_SHIELD"); }
             }
             else if(state.until != undefined && abilitySerial > state.until) delete abilityState[key];
          }
@@ -506,6 +567,7 @@ package com.meng52.game.module.avatar
          {
             var zoneContext:Object = beginAbilityAttack(this,"active");
             zoneContext.manualDamageMultiplier = state.manualDamageMultiplier;
+            zoneContext.manualEffectMultiplier = state.manualEffectMultiplier;
             for each(var enemy:Avatar in abilityCandidates(otherTeam,state.line,state.pos,350,3))
             {
                if(abilityHit(enemy,1.2,1,"FX_A_1011_PHYSICAL")) abilityControl(enemy,"weak",1,0.2);
@@ -521,6 +583,7 @@ package com.meng52.game.module.avatar
             {
                var channelContext:Object = beginAbilityAttack(this,"active");
                channelContext.manualDamageMultiplier = state.manualDamageMultiplier;
+               channelContext.manualEffectMultiplier = state.manualEffectMultiplier;
                for each(enemy in abilityEnemies(400,null,3)) if(abilityHit(enemy,3.6,2,"FX_A_1073_MAGIC")) abilityControl(enemy,"weak",2,0.3);
                endAbilityAttack(channelContext);
                return true;
@@ -587,6 +650,7 @@ package com.meng52.game.module.avatar
 
       public function executeAbility(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
+         var orangeFourStatBuffMultiplier:Number = getStar() == 6 ? 5 : 1;
          var enemies:Array;
          var targets:Array;
          var target:Avatar;
@@ -602,12 +666,20 @@ package com.meng52.game.module.avatar
          var context:Object = currentAbilityAttack();
          var manualConfig:Object = sourceSkill && sourceSkill.skillSetData && GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[sourceSkill.skillSetData.id] : null;
          var manualDamageMultiplier:Number = manualConfig ? Number(manualConfig.manualDamageMultiplier) : 1;
+         var manualEffectMultiplier:Number = manualConfig ? Number(manualConfig.manualEffectMultiplier) : 1;
          var manualDefenseBuffMultiplier:Number = manualConfig ? Number(manualConfig.manualDefenseBuffMultiplier) : 1;
          if(!isFinite(manualDamageMultiplier) || manualDamageMultiplier <= 0) manualDamageMultiplier = 1;
+         if(!isFinite(manualEffectMultiplier) || manualEffectMultiplier <= 0) manualEffectMultiplier = 1;
          if(!isFinite(manualDefenseBuffMultiplier) || manualDefenseBuffMultiplier <= 0) manualDefenseBuffMultiplier = 1;
          var hadManualFactor:Boolean = context != null && context.hasOwnProperty("manualDamageMultiplier");
          var previousManualFactor:Object = hadManualFactor ? context.manualDamageMultiplier : null;
-         if(context && context.owner === this) context.manualDamageMultiplier = manualDamageMultiplier;
+         var hadManualEffectFactor:Boolean = context != null && context.hasOwnProperty("manualEffectMultiplier");
+         var previousManualEffectFactor:Object = hadManualEffectFactor ? context.manualEffectMultiplier : null;
+         if(context && context.owner === this)
+         {
+            context.manualDamageMultiplier = manualDamageMultiplier;
+            context.manualEffectMultiplier = manualEffectMultiplier;
+         }
          try
          {
          switch(kind)
@@ -620,7 +692,7 @@ package com.meng52.game.module.avatar
                break;
             case "illaoi_c":
                for each(target in abilityEnemies(350,null,3)) abilityHit(target,2,1,effect);
-               abilityState.counter = {until:abilitySerial+2,left:2,seen:{},manualDamageMultiplier:manualDamageMultiplier,debuff:false};
+               abilityState.counter = {until:abilitySerial+2,left:2,seen:{},manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier,debuff:false};
                break;
             case "jayce_n":
                state = abilityState.form || {hammer:false}; abilityState.form = state;
@@ -674,7 +746,7 @@ package com.meng52.game.module.avatar
             case "maokai_n":
                enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false;
                if(abilityHit(enemies[0],scale,2,effect)) abilityControl(enemies[0],"root",1);
-               abilityState.sap={until:abilitySerial+2,debuff:false};
+               abilityState.sap={until:abilitySerial+2,manualEffectMultiplier:manualEffectMultiplier,debuff:false};
                break;
             case "maokai_c":
                for each(target in abilityEnemies(700,null,3,false,"nearest",null,true)) if(abilityHit(target,1.8,2,effect)) abilityControl(target,"root",2);
@@ -698,23 +770,29 @@ package com.meng52.game.module.avatar
                break;
             case "gangplank_c":
                enemies=abilityEnemies(800); if(!enemies.length) return false; primary=enemies[0];
-               abilityState.zone={line:primary.line,pos:primary.pos,left:2,manualDamageMultiplier:manualDamageMultiplier};
+               abilityState.zone={line:primary.line,pos:primary.pos,left:2,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier};
                for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,"weak",1,0.2);
                break;
             case "yi_n":
                enemies=abilityEnemies(600,null,-1); if(!enemies.length) return false;
                coefficient=(enemies.length==1 ? 2 : 1.1)*scale;
                for each(target in enemies.slice(0,3)) abilityHit(target,coefficient,1,effect);
-               addBuff("fleeup",1,600*scale);
+               addBuff("fleeup",1,600*scale*orangeFourStatBuffMultiplier);
                break;
             case "yi_c":
-               addBuff("strong",3,0.5); addBuff("hitup",3,800); removeBuff("weak");
+               addBuff("strong",3,0.5); addBuff("hitup",3,800*orangeFourStatBuffMultiplier); removeBuff("weak");
                abilityState.highlander={until:abilitySerial+3,left:2,debuff:false};
                if(skill0) skill0.useSkill();
                break;
             case "veigar_n":
                enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,1.2*scale,2,effect) && target.getType()==1 && !target.isManualSummonUnit) { abilityState.evilStacks=Math.min(10,int(abilityState.evilStacks)+1); abilityFeedback("邪恶之力："+int(abilityState.evilStacks)+"/10","FX_S9160_STRONG"); }
+               if(abilityHit(target,1.2*scale,2,effect) && target.getType()==1 && !target.isManualSummonUnit)
+               {
+                  var oldEvilStacks:int = int(abilityState.evilStacks);
+                  abilityState.evilStacks = Math.min(10,oldEvilStacks+1);
+                  if(int(abilityState.evilStacks) > oldEvilStacks) abilityState.evilStackBonus = Number(abilityState.evilStackBonus || 0) + 0.03 * activeManualEffectMultiplier();
+                  abilityFeedback("邪恶之力："+int(abilityState.evilStacks)+"/10","FX_S9160_STRONG");
+               }
                break;
             case "veigar_c":
                enemies=abilityEnemies(700,null,1,true,"ratio"); if(!enemies.length) enemies=abilityEnemies(700);
@@ -732,7 +810,7 @@ package com.meng52.game.module.avatar
                break;
             case "riven_n":
                enemies=abilityEnemies(450); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
-               count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback("折翼之舞：第"+count+"式");
+               count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback("折翼之舞：第"+count+"式",effect);
                for each(target in [primary].concat(abilityEnemies(200,primary,2,false,"nearest",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,"stun",1);
                if(count==2) abilityShield(this,0.6*scale);
                break;
@@ -758,7 +836,7 @@ package com.meng52.game.module.avatar
                abilityHeal(this,0.7*scale);
                break;
             case "nunu_c":
-               abilityShield(this,1.2); abilityState.channel={pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
+               abilityShield(this,1.2); abilityState.channel={pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
                break;
             case "alistar_n":
                enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
@@ -769,7 +847,7 @@ package com.meng52.game.module.avatar
                break;
             case "alistar_c":
                removeAllDebuff(); abilityHeal(this,0.5);
-               abilityState.guard={kind:"alistar",charges:3,until:abilitySerial+2,owner:this,debuff:false};
+               abilityState.guard={kind:"alistar",charges:3,until:abilitySerial+2,owner:this,manualEffectMultiplier:manualEffectMultiplier,debuff:false};
                break;
             case "diana_n":
                enemies=abilityEnemies(650); if(!enemies.length) return false; primary=enemies[0];
@@ -793,7 +871,7 @@ package com.meng52.game.module.avatar
                enemies=abilityEnemies(700,null,-1,true); primary=null;
                for each(target in enemies) if(abilityIsolated(target)) {primary=target; break;}
                if(!primary && enemies.length) primary=enemies[0]; if(!primary || !abilityDash(primary,true)) return false;
-               abilityHit(primary,abilityIsolated(primary) ? 4.2 : 2.8,1,effect); addBuff("fleeup",2,800);
+               abilityHit(primary,abilityIsolated(primary) ? 4.2 : 2.8,1,effect); addBuff("fleeup",2,800*orangeFourStatBuffMultiplier);
                if(primary.hp<=0 && primary.getType()==1 && !primary.isManualSummonUnit) sourceSkill.abilityCooldownOverride=3;
                break;
             case "malzahar_n":
@@ -816,12 +894,12 @@ package com.meng52.game.module.avatar
                targets=abilityEnemies(300,primary,2,false,"nearest",[primary]);
                abilityHit(primary,2+Math.min(2*getDamage(),(primary.hpMax-primary.hp)*0.12)/Math.max(1,getDamage()),1,effect);
                for each(target in targets) abilityHit(target,1.2,1,effect);
-               if(context && context.kills.length) {addBuff("strong",2,0.3); addBuff("critup",2,800); if(skill0) skill0.useSkill();}
+               if(context && context.kills.length) {addBuff("strong",2,0.3); addBuff("critup",2,800*orangeFourStatBuffMultiplier); if(skill0) skill0.useSkill();}
                break;
             case "tahm_n":
                enemies=abilityEnemies(500); if(!enemies.length) return false;
                if(abilityHit(enemies[0],1.1*scale,2,effect)) abilityControl(enemies[0],"stun",1);
-               abilityState.grey={until:abilitySerial+1,value:0}; abilityFeedback("灰色生命：开始储存","FX_S9160_SHIELD");
+               abilityState.grey={until:abilitySerial+1,value:0,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback("灰色生命：开始储存","FX_S9160_SHIELD");
                break;
             case "tahm_c":
                ally=abilityAlly(500,"ratio",true) || this;
@@ -839,7 +917,7 @@ package com.meng52.game.module.avatar
                {
                   if(team==1 ? other.pos>primary.pos && other.pos<pos : other.pos<primary.pos && other.pos>pos) {target=other; break;}
                }
-               addBuff("hitup",1,800); marked=target.abilityHasMark(this,"aim");
+               addBuff("hitup",1,800*orangeFourStatBuffMultiplier); marked=target.abilityHasMark(this,"aim");
                if(abilityHit(target,marked ? 5 : 4,1,effect) && marked) delete target.abilityState["mark_aim_"+abilityIndex];
                break;
             case "kaelthas_n":
@@ -868,7 +946,7 @@ package com.meng52.game.module.avatar
                if(marked) { abilityState.thunder=Math.min(3,int(abilityState.thunder)+1); abilityFeedback("风暴电荷："+int(abilityState.thunder)+"/3","FX_A_1114_MAGIC"); }
                break;
             case "aoxing_c":
-               count=int(abilityState.thunder); abilityState.thunder=0; if(count > 0) abilityFeedback("释放风暴电荷："+count); i=-1; targets=[];
+               count=int(abilityState.thunder); abilityState.thunder=0; if(count > 0) abilityFeedback("释放风暴电荷："+count,"FX_A_1114_MAGIC"); i=-1; targets=[];
                for(var lane:int=0;lane<3;lane++)
                {
                   enemies=abilityCandidates(otherTeam,lane,pos,GameMapConfig.LINE_POS,-1,true,"front");
@@ -887,6 +965,8 @@ package com.meng52.game.module.avatar
             {
                if(hadManualFactor) context.manualDamageMultiplier = previousManualFactor;
                else delete context.manualDamageMultiplier;
+               if(hadManualEffectFactor) context.manualEffectMultiplier = previousManualEffectFactor;
+               else delete context.manualEffectMultiplier;
             }
          }
       }
@@ -1176,7 +1256,11 @@ package com.meng52.game.module.avatar
 
       protected var m_fightBg:Sprite;
 
-      protected var m_fightRange:Image;
+      protected var m_fightRange:Sprite;
+
+      private var rangePreviewQueued:Boolean = false;
+
+      private var rangeMoveEndsAt:Number = 0;
 
       public var m_actionNum:Sprite;
 
@@ -1657,6 +1741,79 @@ package com.meng52.game.module.avatar
          fightRes.scaleX = fightRes.scaleY = getScale();
       }
 
+      public function showRange(param1:int, param2:int, param3:int) : void
+      {
+         var _map:GameMap = GameMap.currentMap;
+         var _layer:GameMapLayer = GameMapLayer.gl;
+         if(!_map || !_map.isFight || GameMap.currentAvatar !== this || hp <= 0 || !m_fightRes || !m_fightRes.parent || !_layer || !_layer.effectLayer || !_layer.lineLayerList)
+         {
+            return;
+         }
+         var _showLine:int = _map.getShowLine(param1);
+         if(_showLine < 0 || _showLine >= _layer.lineLayerList.length) return;
+         var _bounds:Rectangle = rangePreviewBounds(param2,param3,_layer.lineLayerList.length,_layer.getLineX(_showLine));
+         if(!m_fightRange)
+         {
+            m_fightRange = new Sprite();
+            m_fightRange.name = "attackRangeOutline";
+            m_fightRange.touchable = false;
+            var _color:uint = team == 1 ? 3459327 : 16743262;
+            for(var _edge:int = 0;_edge < 4;_edge++)
+            {
+               m_fightRange.addChild(new Quad(1,1,_color));
+            }
+            m_fightRange.alpha = 0.7;
+         }
+         if(m_fightRange.parent != _layer.effectLayer)
+         {
+            m_fightRange.removeFromParent();
+            _layer.effectLayer.addChildAt(m_fightRange,0);
+         }
+         m_fightRange.x = _bounds.x;
+         m_fightRange.y = _bounds.y;
+         var _stroke:Number = Math.max(1,Math.min(3,_bounds.height / 4));
+         var _top:Quad = m_fightRange.getChildAt(0) as Quad;
+         var _bottom:Quad = m_fightRange.getChildAt(1) as Quad;
+         var _left:Quad = m_fightRange.getChildAt(2) as Quad;
+         var _right:Quad = m_fightRange.getChildAt(3) as Quad;
+         _top.width = _bottom.width = _bounds.width;
+         _top.height = _bottom.height = _stroke;
+         _bottom.y = _bounds.height - _stroke;
+         _left.width = _right.width = _stroke;
+         _left.height = _right.height = _bounds.height;
+         _right.x = _bounds.width - _stroke;
+         m_fightRange.visible = true;
+      }
+
+      public static function rangePreviewBounds(param1:int, param2:int, param3:int, param4:Number) : Rectangle
+      {
+         var _allLines:Boolean = param2 > GameMapConfig.LINE_POS;
+         var _width:Number = _allLines ? GameMapConfig.FIGHT_WIDTH : GameMapConfig.FIGHT_WIDTH / Math.max(1,param3);
+         var _first:int = Math.max(0,Math.min(GameMapConfig.LINE_POS,param1 - Math.max(0,param2)));
+         var _last:int = Math.max(_first,Math.min(GameMapConfig.LINE_POS,param1 + Math.max(0,param2)));
+         var _top:Number = GameMapConfig.posToPixel(_first);
+         return new Rectangle(_allLines ? 0 : param4 - _width * 0.5,_top,Math.max(1,_width),Math.max(2,GameMapConfig.posToPixel(_last) - _top));
+      }
+
+      public static function rangePreviewSchedule(param1:Number, param2:Number) : Array
+      {
+         var _start:Number = Math.max(param1,param2);
+         return [_start,_start + 0.2];
+      }
+
+      private function queueRangePreview() : void
+      {
+         if(rangePreviewQueued || GameMap.currentAvatar !== this || !GameMapLayer.gl)
+         {
+            return;
+         }
+         rangePreviewQueued = true;
+         var _schedule:Array = rangePreviewSchedule(GameMap.actionDelay,rangeMoveEndsAt);
+         GameMapLayer.gl.delayCall(showRange,_schedule[0],line,pos,getRange());
+         GameMapLayer.gl.delayCall(hideRange,_schedule[1]);
+         GameMap.actionDelay = _schedule[1];
+      }
+
       public function getAvatarRes(param1:Boolean = false, param2:Boolean = false, param3:Boolean = false) : Sprite
       {
          if(!m_avatarRes)
@@ -1769,10 +1926,10 @@ package com.meng52.game.module.avatar
                if(GlobalData.$mStarling) GlobalData.$mStarling.juggler.add(pulse);
             }
          }
-         if(hasLimitBreakVisual)
+         if(hasLimitBreakVisual || getStar() == 6 && phase >= 3)
          {
             var breakColor:uint = getStar() == 5 ? 0xB561F1 : 0xFF9B32;
-            var breakLabel:TextField = GlobalTextStyle.getTextField("突破极限",15,breakColor,"center",m_icon.width,20);
+            var breakLabel:TextField = GlobalTextStyle.getTextField(getStar() == 6 && phase >= 3 ? "满阶" : "突破极限",15,breakColor,"center",m_icon.width,20);
             breakLabel.x = m_icon.x;
             breakLabel.y = m_icon.y - 21;
             breakLabel.touchable = false;
@@ -1835,7 +1992,6 @@ package com.meng52.game.module.avatar
       public function newFightRes(param1:Sprite = null) : Sprite
       {
          var _loc2_:String = null;
-         var _loc6_:Image = null;
          var _loc3_:Sprite = null;
          var _loc7_:Image = null;
          if(param1)
@@ -1865,24 +2021,6 @@ package com.meng52.game.module.avatar
             param1.addChild(m_buff);
             if(actionNum >= 0)
             {
-               m_actionNum = new Sprite();
-               m_tf = DisplayTools.newTextField("" + (actionNum + 1),"Font_numAndtag_1",40);
-               if(isBot)
-               {
-                  _loc6_ = DisplayTools.newImg("UI_icon_lock_1_0000",30,-20);
-                  _loc6_.scaleX = _loc6_.scaleY = 0.5;
-                  m_actionNum.addChild(_loc6_);
-                  m_tf.color = 13421772;
-               }
-               else
-               {
-                  m_tf.color = 16776960;
-               }
-               m_tf.scaleX = m_tf.scaleY = 1.2;
-               m_tf.alpha = 0.7;
-               m_actionNum.addChild(m_tf);
-               param1.addChild(m_actionNum);
-               m_actionNum.touchable = false;
                param1.addEventListener("touch",this.onTouch);
             }
             if(_loc7_)
@@ -1932,21 +2070,6 @@ package com.meng52.game.module.avatar
          param1.addChild(m_buff);
          if(actionNum >= 0)
          {
-            m_actionNum = new Sprite();
-            m_tf = DisplayTools.newTextField("" + (actionNum + 1),"Font_numAndtag_1",50);
-            m_tf.addEventListener("removedFromStage",DisplayTools.clearObject);
-            if(isBot)
-            {
-               _loc6_ = DisplayTools.newImg("avatarBg1");
-               _loc6_.scaleX = _loc6_.scaleY = 0.8;
-               _loc6_.alpha = 0.5;
-               m_actionNum.addChild(_loc6_);
-               m_tf.color = 16777215;
-            }
-            m_tf.alpha = 0.6;
-            m_actionNum.addChild(m_tf);
-            param1.addChild(m_actionNum);
-            m_actionNum.touchable = false;
             param1.addEventListener("touch",this.onTouch);
          }
          if(_loc7_)
@@ -2585,6 +2708,12 @@ package com.meng52.game.module.avatar
          var _loc13_:String = null;
          var _loc9_:Boolean = false;
          var _loc6_:Number = Number(NaN);
+         var sourceContext:Object = currentAbilityAttack();
+         var source:Avatar = sourceContext ? sourceContext.owner as Avatar : null;
+         var manualEffect:Number = sourceContext ? Number(sourceContext.manualEffectMultiplier) : 1;
+         if(!isFinite(manualEffect) || manualEffect <= 0) manualEffect = 1;
+         if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
+         if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          var _loc11_:Buff = new Buff(param1,param2,param3);
          var _loc12_:Buff = buffs[param1];
          var _loc7_:GameMapLayer = GameMapLayer.gl;
@@ -3199,7 +3328,7 @@ package com.meng52.game.module.avatar
          var _loc9_:Number = 0;
          var _loc10_:Number = 0;
          var _loc11_:Boolean = false;
-         if(isOthers || team == 2 || !id)
+         if(isOthers || team == 2 || !id || (mData && mData.exploration_hero_only === true))
          {
             return param2;
          }
@@ -3315,6 +3444,7 @@ package com.meng52.game.module.avatar
             _loc4_ += mDNdata.hp;
          }
          _loc4_ = applyOwnedGuildResearch("hp",_loc4_);
+         _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("hp") / 100));
          return Math.max(_loc4_,0);
       }
 
@@ -3394,7 +3524,7 @@ package com.meng52.game.module.avatar
             }
          }
          _loc6_ = Tools.toInt(_loc6_ * (1 + getManualBattleStack("attack") + getManualTimedStack("attack")) * _loc4_);
-         if(hpMax && abilityEntryAttack > 0) _loc6_ += int(abilityEntryAttack * 0.03 * int(abilityState.evilStacks));
+         if(hpMax && abilityEntryAttack > 0) _loc6_ += int(abilityEntryAttack * (abilityState.evilStackBonus != null ? Number(abilityState.evilStackBonus) : 0.03 * int(abilityState.evilStacks)));
          return Math.max(_loc6_,0);
       }
 
@@ -3651,7 +3781,7 @@ package com.meng52.game.module.avatar
                _loc3_ += _loc1_.value;
             }
          }
-         return _loc3_;
+         return _loc3_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_hit"));
       }
 
       public function getFlee() : int
@@ -3689,7 +3819,7 @@ package com.meng52.game.module.avatar
                _loc2_ += _loc1_.value;
             }
          }
-         return _loc2_ + int(getManualBattleStack("flee"));
+         return _loc2_ + int(getManualBattleStack("flee")) + (initializingFightAttributes ? 0 : teamTalentFlat("team_flee"));
       }
 
       public function getCrit() : int
@@ -3727,7 +3857,7 @@ package com.meng52.game.module.avatar
                _loc2_ += _loc1_.value;
             }
          }
-         return _loc2_;
+         return _loc2_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_crit"));
       }
 
       public function getTough() : int
@@ -3765,7 +3895,7 @@ package com.meng52.game.module.avatar
                _loc2_ += _loc1_.value;
             }
          }
-         return _loc2_;
+         return _loc2_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_tough"));
       }
 
       public function getLoveList() : Array
@@ -4262,6 +4392,7 @@ package com.meng52.game.module.avatar
             _loc2_ = _loc5_[1];
          }
          _loc4_ = _loc2_[String(_loc3_)];
+         if(_loc3_ == 5 && phase >= 2 && _loc6_.starUp.length > 0 && !GlobalFunction.isNullNextStarCfgId(id)) return 2;
          if(_loc4_)
          {
             if(phase < _loc4_[1])
@@ -4308,6 +4439,7 @@ package com.meng52.game.module.avatar
 
       public function initFightAttr() : void
       {
+         initializingFightAttributes = true;
          if(!(mData && mData.tpl))
          {
             hpMax = 0;
@@ -4322,6 +4454,7 @@ package com.meng52.game.module.avatar
          crit = getCrit();
          tough = getTough();
          hpMax = getHpMax(-1,-1,true);
+         initializingFightAttributes = false;
          if(hp <= 0)
          {
             hp = hpMax;
@@ -4340,6 +4473,8 @@ package com.meng52.game.module.avatar
          var _hasBack:Boolean;
          var _fun:Function;
          GameMap.actionDelay = 0;
+         rangePreviewQueued = false;
+         rangeMoveEndsAt = 0;
          _currentMap = GameMap.currentMap;
          if(!_currentMap)
          {
@@ -4739,6 +4874,10 @@ package com.meng52.game.module.avatar
          }
          if(_loc14_ > 0)
          {
+            if(GameMap.currentAvatar === this)
+            {
+               rangeMoveEndsAt = Math.max(rangeMoveEndsAt,param4 + _loc14_);
+            }
             if(param3)
             {
                offset += (param3.offset - offset) * ((pos - _loc9_) / (param3.pos - _loc9_));
@@ -4953,6 +5092,10 @@ package com.meng52.game.module.avatar
          _loc11_ = findAimList(param1,param2,param3,param4);
          if(_loc11_.length > 0)
          {
+            if(GameMap.currentAvatar === this && param5 < 0 && !currentAbilityAttack())
+            {
+               queueRangePreview();
+            }
             attackAimList(_loc11_,param5,param6,param7,param8,param4,param9,param3,param10);
             return _loc11_[0];
          }
@@ -5005,9 +5148,9 @@ package com.meng52.game.module.avatar
          var _loc6_:Number = 0;
          var _loc8_:Number = 0;
          var _loc7_:GameMap = GameMap.currentMap;
-         var _loc3_:Vector.<Avatar> = _loc7_.getAliveList(otherTeam == 1 ? 2 : 1) as Vector.<Avatar>;
-         var _loc5_:Vector.<Avatar> = _loc7_.getAliveList(otherTeam) as Vector.<Avatar>;
-         if(_loc7_)
+         var _loc3_:Vector.<Avatar> = _loc7_ ? _loc7_.getAliveList(team) as Vector.<Avatar> : null;
+         var _loc5_:Vector.<Avatar> = _loc7_ ? _loc7_.getAliveList(otherTeam) as Vector.<Avatar> : null;
+         if(_loc7_ && team >= 1 && team <= 2 && _loc3_ && _loc5_)
          {
             if(param1 == 14 || param1 == 15 || param1 == 16)
             {
@@ -5015,7 +5158,7 @@ package com.meng52.game.module.avatar
                while(_loc9_ < _loc3_.length)
                {
                   _loc4_ = _loc3_[_loc9_];
-                  if(_loc4_ && _loc4_.talent)
+                  if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent())
                   {
                      if(_loc4_.talent.my_HaloData.plType == param1 && _loc4_.talent.my_HaloData.plUse == 1 && (_checkListmyCurrHp ? _checkListmyCurrHp[_loc9_] : 1) > 0)
                      {
@@ -5024,7 +5167,7 @@ package com.meng52.game.module.avatar
                   }
                   _loc9_++;
                }
-               if(talent)
+               if(talent && !isTeamFlatTalent())
                {
                   if(talent.my_HaloData.plType == param1 && talent.my_HaloData.plUse == 0)
                   {
@@ -5039,18 +5182,18 @@ package com.meng52.game.module.avatar
             while(_loc9_ < _loc3_.length)
             {
                _loc4_ = _loc3_[_loc9_];
-               if(_loc4_ && _loc4_.talent)
+               if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent())
                {
-                  if(_loc4_.talent.my_HaloData.plType == param1 && _loc4_.talent.my_HaloData.plUse == 1 && (_checkListmyCurrHp ? _checkListmyCurrHp[_loc9_] : 1) > 0)
+                  if((_loc4_.talent.my_HaloData.plType == param1 || param1 == 3 && _loc4_.ownGrowthValue("defense") > 0) && _loc4_.talent.my_HaloData.plUse == 1 && (_checkListmyCurrHp ? _checkListmyCurrHp[_loc9_] : 1) > 0)
                   {
                      _loc6_ = _loc6_ > _loc4_.talent.my_HaloData.plNum ? _loc6_ : _loc4_.talent.my_HaloData.plNum;
                   }
                }
                _loc9_++;
             }
-            if(talent)
+            if(talent && !isTeamFlatTalent())
             {
-               if(talent.my_HaloData.plType == param1 && talent.my_HaloData.plNum > _loc6_ && talent.my_HaloData.plUse == 0)
+               if((talent.my_HaloData.plType == param1 || param1 == 3 && ownGrowthValue("defense") > 0) && talent.my_HaloData.plNum > _loc6_ && talent.my_HaloData.plUse == 0)
                {
                   _loc6_ = talent.my_HaloData.plNum;
                }
@@ -5059,7 +5202,7 @@ package com.meng52.game.module.avatar
             while(_loc9_ < _loc5_.length)
             {
                _loc4_ = _loc5_[_loc9_];
-               if(_loc4_ && _loc4_.talent)
+               if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent())
                {
                   if(_loc4_.talent.my_HaloData.plType < 8)
                   {
@@ -5170,7 +5313,7 @@ package com.meng52.game.module.avatar
           {
              var recoveryHit:Number = Tools.toInt(getHit() * (1 + checkTalent(4)));
              var recoveryU:Number = 1 + 0.5 * recoveryHit / (recoveryHit + 3000);
-             _loc14_ = Tools.toInt(_loc14_ * recoveryU);
+             _loc14_ = Tools.toInt(_loc14_ * recoveryU * getRecoveryTalentMultiplier() * activeManualEffectMultiplier());
           }
          trace(this.id + "|||||||||||||oldDamage" + getDamage() + "*" + _loc16_ + "|||||||" + getDamage() * _loc16_ + "|||||||||||" + param3 + "|||||||||||newDamage" + _loc14_);
          var _loc21_:int = 0;
@@ -5997,6 +6140,9 @@ package com.meng52.game.module.avatar
       {
          var _loc1_:GameMapLayer = GameMapLayer.gl;
          _loc1_.juggler.removeTweens(fightRes);
+         hideRange();
+         rangePreviewQueued = false;
+         rangeMoveEndsAt = 0;
          if(hp <= 0)
          {
             hp = hpMax;
@@ -6582,6 +6728,11 @@ package com.meng52.game.module.avatar
       {
          clearLimitBreakEdge();
          var _loc1_:* = null;
+         if(m_fightRange)
+         {
+            m_fightRange.removeFromParent(true);
+            m_fightRange = null;
+         }
          if(m_fightRes)
          {
             m_fightRes.removeChildren();

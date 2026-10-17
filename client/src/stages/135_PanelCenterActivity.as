@@ -119,22 +119,11 @@ package com.meng52.game.ui.screen
       override protected function initializeHandler(param1:Event) : void
       {
          removeEventListener("addedToStage",initializeHandler);
-         GlobalData.$mEventDispatcher.addEventListener("update_game_activity_fun",changeFun);
-         mBg_right = GlobalFunction.createImage("UI_tag_right_0_0000");
-         mBg_right.touchable = false;
-         mBg_left = GlobalFunction.createImage("UI_tag_right_0_0000");
-         mBg_left.touchable = false;
-         mBg_left.scaleX = -1;
-         mBg_left.x = mBg_left.width + 10 - 7;
-         mBg_right.x = GlobalData.$mStageWidth - mBg_right.width - 10 + 8;
-         mBg_left.y = 53;
-         mBg_right.y = 53;
-         addChild(mBg_right);
-         addChild(mBg_left);
-         mBg_right.visible = true;
-         mBg_left.visible = true;
-         setList();
-         addList();
+         mCurr_funID = "task";
+         mPanelCenterTaskAward = new PanelCenterTaskAward();
+         mPanelCenterTaskAward.y = 0;
+         addChild(mPanelCenterTaskAward);
+         mPanelCenterTaskAward.update();
       }
       
       private function nextFun(param1:int) : void
@@ -176,8 +165,7 @@ package com.meng52.game.ui.screen
       
       public function updateList() : void
       {
-         setList();
-         addList();
+         if(mPanelCenterTaskAward) mPanelCenterTaskAward.update();
       }
       
       override public function setList() : void

@@ -70,9 +70,10 @@ package com.meng52.game.ui.panel
          this.nt.color = 0;
          this.nt.fontFamily = GlobalConfig.FONT_1;
          this.nt.text = "";
-         this.nt.width = Starling.current.nativeStage.stageWidth;
+         this.nt.width = Starling.current.viewPort.width;
          this.nt.height = 46 * 4;
-         this.nt.y = int(((GlobalData.$mStageHeight - mImg9_baseBg.height) * 0.5 + 193) * GlobalData.$mStage$Starling_h);
+         this.nt.x = Starling.current.viewPort.x;
+         this.nt.y = int(((GlobalData.$mStageHeight - mImg9_baseBg.height) * 0.5 + 193) * GlobalData.$mStage$Starling_h + Starling.current.viewPort.y);
          GlobalData.$mStarling.nativeStage.addChild(this.nt);
       }
       

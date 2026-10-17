@@ -10,6 +10,15 @@ if not PROJECT_VERSION:
 from pyamf import remoting
 from player_store import PlayerStore,GameplayFault,native_dates
 from game_clock import GameClock,utc_datetime,duration_seconds
+from gameplay_common import game_day
+from check_in_rewards import apply_check_in_rewards
+from equipment_capacity import apply_equipment_capacity
+from equipment_upgrade_cost import apply_equipment_upgrade_config
+from captain_timing import apply_captain_timing
+from upstream_skill_priority import apply_upstream_skill_priority
+from battle_status_effects import apply_battle_status_effects
+from halo_progression import apply_halo_progression
+from recruit_exchange import apply_recruit_exchange_config
 from help_pages import render_help,render_notice
 
 class RpcFault(Exception):
@@ -18,7 +27,7 @@ class RpcFault(Exception):
 # Exact business-code translations for the native client popup. Unknown codes
 # retain the originating module message instead of receiving a generic label.
 GAMEPLAY_ERROR_MESSAGES_ZH={
- 'SkinAcquisitionRestricted':'该英雄形态暂时仅能通过邮件获得。',
+ 'SkinAcquisitionRestricted':'该皮肤仅能通过指定来源获得对应碎片后合成。',
  'InsufficientCoin':'金砖不足','InsufficientResource':'资源不足','InsufficientDust':'对应尘埃不足','InsufficientMedal':'勋章不足','InsufficientBoxKey':'宝箱钥匙不足','InsufficientContribution':'公会贡献不足','InsufficientEnergy':'体力不足',
  'EnergyFull':'体力已满','EnergyPurchaseLimit':'今日体力购买次数已用完','FragmentEnergyFull':'碎片体力已满','FragmentEnergyPurchaseLimit':'今日碎片体力购买次数已用完',
  'VipLevelRequired':'VIP等级不足，暂时无法领取该礼包','VipRequired':'需要达到指定VIP等级','LevelRequired':'等级不足，暂时无法进行此操作','RankLevelLow':'等级不足，暂时无法领取该奖励','StageLocked':'该关卡尚未解锁','UnavailableDifficulty':'该难度暂不可挑战',
@@ -59,6 +68,12 @@ GAMEPLAY_ERROR_MESSAGES_ZH={
  'CheckInUnavailable':'本月签到奖励暂不可用，请稍后再试。','FundUnavailable':'基金活动当前没有可用奖励。','GambleUnavailable':'当前抽奖活动暂不可用。','InvalidBattle':'探索状态已变化，请返回地图刷新后再试。','InvalidBoxExchange':'宝箱或钥匙兑换选项无效。','InvalidBoxKey':'宝箱或钥匙类型无效。','InvalidCode':'兑换码无效或已过期。','InvalidDifficulty':'关卡难度无效，请返回关卡列表重新选择。','InvalidExchange':'兑换选项无效，请刷新后重试。','InvalidGamble':'抽取档位无效，请重新选择。','InvalidShop':'商店选项无效，请重新打开商店。','InvalidShopItem':'商品信息已过期，请重新打开商店。','InvalidTeam':'队伍需由1至5名不同英雄组成。','UnknownExchange':'该兑换项目当前不可用。','PayGiftUnavailable':'充值赠送奖励配置暂不可用。','InvalidRankReward':'榜单奖励档位无效，请重新打开奖励面板。','InvalidStage':'关卡或难度信息无效，请返回关卡列表重试。','InvalidPayProduct':'充值档位无效，请重新打开充值页面。','UnknownStage':'关卡数据无效，请返回关卡列表刷新。','UnknownFight':'战斗记录已过期或不属于当前账号，请返回后重新挑战。','MissingFight':'缺少本场战斗记录，请重新开始挑战。'
 }
 GAMEPLAY_ERROR_MESSAGES_ZH.update({
+ 'InvalidAdventureTask':'任务信息无效，请重新进入奇遇。',
+ 'AdventureTaskIncomplete':'任务尚未完成，或累计充值尚未达到要求。',
+ 'AdventureTaskClaimed':'该任务奖励已经领取。',
+ 'AdventureRewardUnavailable':'任务奖励暂不可用，请重新进入奇遇。',
+ 'DailyRecruitRequired':'英雄勋章兑换请从今日招募列表进入。',
+ 'DailyRecruitExpired':'今日招募列表已更新，请刷新后重试。',
  'EquipmentLocked':'装备已锁定，请先解锁后再操作。',
  'HeroLocked':'英雄已锁定，请先解锁后再出售。',
  'MagicLocked':'请先解锁前一附魔阶段。',
@@ -80,6 +95,8 @@ class Backend:
   self.lock=threading.RLock()
   self.retry_cache={}
   self.db.execute('CREATE TABLE IF NOT EXISTS accounts (name TEXT PRIMARY KEY,salt TEXT NOT NULL,password_hash TEXT NOT NULL)')
+  if 'spending_tier' not in {row[1] for row in self.db.execute('PRAGMA table_info(accounts)')}:
+   self.db.execute("ALTER TABLE accounts ADD COLUMN spending_tier TEXT NOT NULL DEFAULT 'small'")
   self.db.commit()
   self.config=None
   if config:
@@ -87,6 +104,14 @@ class Backend:
    if not isinstance(self.config,dict) or not isinstance(self.config.get('cfg'),dict):
     raise ValueError('Config file must contain {cfg_version, cfg: {...}, ...}')
    self.config=native_dates(self.config)
+   apply_recruit_exchange_config(self.config)
+   apply_equipment_capacity(self.config)
+   apply_equipment_upgrade_config(self.config)
+   apply_captain_timing(self.config)
+   apply_upstream_skill_priority(self.config)
+   apply_battle_status_effects(self.config)
+   self.config=apply_halo_progression(self.config)
+   apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
   self.players=PlayerStore(self.db,self.config,self.clock)
   self.players.lock=self.lock
  def password_hash(self,password,salt):
@@ -107,6 +132,7 @@ class Backend:
    if method=='sys.get_config':
     if self.config is None:
      raise RpcFault('MissingGameConfig','Game configuration is unavailable.')
+    apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
     # Return all configured tables: client merges them into its cached object.
     data=self.config
    elif method in ('user.register','user.llogin','user.default_register','user.login'):
@@ -118,17 +144,20 @@ class Backend:
      name=params.get('session_key'); password=params.get('sessionid')
     if not isinstance(name,str) or not 1<=len(name)<=256 or not isinstance(password,str) or not 1<=len(password)<=256:
      raise RpcFault('InvalidCredentials','Nonempty account and password strings are required (max 256 chars)')
-    row=self.db.execute('SELECT salt,password_hash FROM accounts WHERE name=?',(name,)).fetchone()
+    row=self.db.execute('SELECT salt,password_hash,spending_tier FROM accounts WHERE name=?',(name,)).fetchone()
     if method in ('user.llogin','user.login'):
      if row is None or not hmac.compare_digest(row[1],self.password_hash(password,row[0])):
       raise RpcFault('InvalidCredentials','Account or password is incorrect')
     else:
      if row is not None: raise RpcFault('AccountExists','Account already exists')
+     from spending_budget import valid_registration_tier
+     spending_tier=params.get('spending_tier','small')
+     if not valid_registration_tier(spending_tier):raise RpcFault('InvalidSpendingTier','消费档位无效')
      salt=secrets.token_hex(16)
-     self.db.execute('INSERT INTO accounts VALUES(?,?,?)',(name,salt,self.password_hash(password,salt)))
+     self.db.execute('INSERT INTO accounts(name,salt,password_hash,spending_tier) VALUES(?,?,?,?)',(name,salt,self.password_hash(password,salt),spending_tier))
      self.db.commit()
     if method=='user.default_register': data={'session_key':name,'sessionid':password}
-    elif method=='user.login': data=self.players.login(name)
+    elif method=='user.login': data=self.players.login(name,row[2])
    elif isinstance(method,str) and method.startswith('user.'):
     try:data=self.players.dispatch(request)
     except GameplayFault as error:

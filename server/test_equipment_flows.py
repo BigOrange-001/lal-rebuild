@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from equipment_magic import apply_equipment_magic_config
+from equipment_growth_v2 import wash_stats
 from gameplay_roster import GameplayRosterEquipment
 from player_store import GameplayFault, PlayerStore
 
@@ -78,6 +79,103 @@ class EquipmentFlowTest(unittest.TestCase):
         self.fault('InvalidSelection', 'user.equip_sell', 'duplicate', eqids=['eq0', 'eq0'])
         self.fault('PendingOperation', 'user.equip_sell', 'pending', eqids=['eq1'])
         self.assertIn('eq1', self.store.profile_raw(self.uid)['my_equips'])
+
+    def test_mark_wash_price_is_fixed_for_single_and_ten(self):
+        before = self.store.profile_raw(self.uid)['mark']
+        self.call('user.equip_wash', 'mark-single', eqid='eq0', num=1, ttype='mark')
+        self.assertEqual(self.store.profile_raw(self.uid)['mark'], before - 1000)
+        self.call('user.equip_wash_save', 'mark-single-save')
+        self.call('user.equip_wash', 'mark-ten', eqid='eq0', num=10, ttype='mark')
+        self.assertEqual(self.store.profile_raw(self.uid)['mark'], before - 11000)
+
+    def test_full_wash_stats_can_finish_halo_without_changing_stats(self):
+        simple = self.config['cfg']['system_simple']
+        cap = int(simple['equip_config'][3]) * 3 * 125
+
+        def seed(profile):
+            item = profile['my_equips']['eq0']
+            item.update({'lv': 125, 'wash_schema_version': 1,
+                         'new_4attrs': {'hit': cap, 'crit': 0, 'flee': 0, 'tough': 0},
+                         'halo': {'lv': 4, 'exp': 4490}})
+            return profile, {}
+
+        self.store.atomic_update(self.uid, seed)
+        before = self.store.profile_raw(self.uid)
+        self.call('user.equip_wash', 'halo-finish', eqid='eq0', num=1, ttype='mark')
+        after = self.store.profile_raw(self.uid)
+        self.assertEqual(after['mark'], before['mark'] - 1000)
+        self.assertEqual(after['my_equips']['eq0']['halo'], {'lv': 5, 'exp': 0})
+        self.assertEqual(after['attrs']['equip_wash']['rolled'],
+                         {'hit': 0, 'crit': 0, 'flee': 0, 'tough': 0})
+        self.call('user.equip_wash_save', 'halo-save')
+        self.assertEqual(self.store.profile_raw(self.uid)['my_equips']['eq0']['new_4attrs'],
+                         before['my_equips']['eq0']['new_4attrs'])
+        before_full = self.store.profile_raw(self.uid)
+        self.fault('WashPotentialFull', 'user.equip_wash', 'already-full',
+                   eqid='eq0', num=1, ttype='mark')
+        self.assertEqual(self.store.profile_raw(self.uid), before_full)
+
+    def test_wash_one_point_remaining_cannot_exceed_item_or_attribute_cap(self):
+        cap = int(self.config['cfg']['system_simple']['equip_config'][3]) * 3 * 119
+
+        def seed(profile):
+            profile['my_equips']['eq0'].update({
+                'lv': 119, 'wash_schema_version': 1,
+                'new_4attrs': {'hit': cap - 1, 'crit': 0, 'flee': 0, 'tough': 0},
+                'halo': {'lv': 2, 'exp': 1200},
+            })
+            return profile, {}
+
+        self.store.atomic_update(self.uid, seed)
+        self.call('user.equip_wash', 'last-point', eqid='eq0', num=10, ttype='mark')
+        pending = self.store.profile_raw(self.uid)['attrs']['equip_wash']
+        self.assertEqual(sum(pending['rolled'].values()), 1)
+        self.call('user.equip_wash_save', 'last-point-save')
+        item = self.store.profile_raw(self.uid)['my_equips']['eq0']
+        self.assertEqual(sum(item['new_4attrs'].values()), cap)
+        self.assertTrue(all(0 <= value <= cap for value in item['new_4attrs'].values()))
+        self.call('user.equip_wash', 'halo-at-cap', eqid='eq0', num=1, ttype='mark')
+        self.assertEqual(sum(self.store.profile_raw(self.uid)['attrs']['equip_wash']['rolled'].values()), 0)
+        self.call('user.equip_wash_save', 'halo-at-cap-save')
+        self.assertEqual(self.store.profile_raw(self.uid)['my_equips']['eq0']['new_4attrs'],
+                         item['new_4attrs'])
+
+    def test_damaged_wash_is_repaired_on_login_and_pending_save(self):
+        cap = int(self.config['cfg']['system_simple']['equip_config'][3]) * 3 * 119
+        damaged = {'hit': 225728, 'crit': 322624, 'flee': 0, 'tough': 0}
+
+        def seed(profile):
+            profile['my_equips']['eq0'].update({
+                'lv': 119, 'wash_schema_version': 1,
+                'new_4attrs': damaged.copy(), 'halo': {'lv': 2, 'exp': 1200},
+            })
+            profile['attrs']['equip_wash'] = {
+                'eqid': 'eq0', 'rolled': damaged.copy(), 'old': damaged.copy(),
+                'spent': {'mark': 1000}, 'ttype': 'mark', 'num': 1,
+            }
+            return profile, {}
+
+        self.store.atomic_update(self.uid, seed)
+        raw_item = self.store.profile_raw(self.uid)['my_equips']['eq0']
+        guarded = wash_stats(raw_item, self.config['cfg']['equip']['E_1001_3'],
+                             self.config['cfg']['system_simple'])
+        base = int(self.config['cfg']['system_simple']['equip_config'][2]) * 3 * 119
+        self.assertEqual(guarded['hit'] + guarded['crit'], cap + 2 * base)
+        self.store.login('equipment-flow-test')
+        profile = self.store.profile_raw(self.uid)
+        item = profile['my_equips']['eq0']
+        self.assertEqual(item['wash_repair_original_v1'], damaged)
+        self.assertEqual(sum(item['new_4attrs'].values()), cap)
+        self.assertEqual(item['new_4attrs']['hit'], damaged['hit'] * cap //
+                         (damaged['hit'] + damaged['crit']))
+        self.assertEqual(profile['attrs']['equip_wash']['rolled'],
+                         {'hit': 0, 'crit': 0, 'flee': 0, 'tough': 0})
+        self.assertEqual(profile['attrs']['equip_wash']['wash_repair_original_v1'], damaged)
+        self.assertEqual(set(profile['my_equips']), {'eq0', 'eq1'})
+        self.call('user.equip_wash_save', 'damaged-pending-save')
+        saved = self.store.profile_raw(self.uid)['my_equips']['eq0']
+        self.assertEqual(saved['new_4attrs'], item['new_4attrs'])
+        self.assertEqual(saved['halo'], {'lv': 2, 'exp': 1200})
 
     def test_wash_save_cancel_relogin_and_alchemy_replay(self):
         original = copy.deepcopy(self.store.profile_raw(self.uid)['my_equips']['eq0'])

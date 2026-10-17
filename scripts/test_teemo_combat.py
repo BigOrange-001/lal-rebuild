@@ -5,9 +5,13 @@ This verifies combat values and scheduling; it does not emulate Flash rendering.
 import json
 import re
 import subprocess
+import sys
 import unittest
 
 from test_avatar_passive import NODE, ROOT, method_body
+
+sys.path.insert(0, str(ROOT / 'server'))
+from upstream_skill_priority import apply_upstream_skill_priority
 
 
 HARNESS = r'''
@@ -87,12 +91,16 @@ if (input.mode === 'summon') {
     for (const name of ['getHpMax','getDamage','getDePh','getDeMa'])
       install(this,name,'param1=-1,param2=-1,param3=false');
     for (const name of ['getHit','getFlee','getCrit','getTough','initFightAttr']) install(this,name,'');
+    install(this,'ownGrowthValue','effect');
+    install(this,'teamTalentFlat','effect');
     for (const name of ['getSpeed','getRange']) install(this,name,'param1=false');
     install(this,'init','param1');
     install(this,'goFight','param1,param2,param3,param4=true');
     this.init(data);
   }
   context.Avatar=Avatar;
+  Avatar.isValidSummonMultiplier = vm.runInContext(
+    '(function(ratio) {' + input.methods.isValidSummonMultiplier + '\n})', context);
   context.GameMapTools={gameTrace:noop};
   context.abilityNextIndex=0;
   context.int=v=>Math.trunc(Number(v))||0;
@@ -100,9 +108,11 @@ if (input.mode === 'summon') {
   const owner = {lv:input.level, hpMax:1000, hp:25, ap:300, dePh:70, deMa:80,
     team:input.team, line:1, pos:1500, hit:11, flee:12, crit:13, tough:14,
     getManualBattleStack() {return 0;},
+    teamTalentFlat() {return 0;},
     buffs:input.buffed ? {hitup:{value:5},fleeup:{value:6},critup:{value:7},toughup:{value:8}} : {}};
   for (const name of ['getHit','getFlee','getCrit','getTough']) install(owner,name,'');
   const skill = {avatar:owner, skillSetData:{id:input.skillId}, boundedSummons:[],
+    captainSummonMultiplier:input.captainSummonMultiplier,
     hasBoundedSummonPolicy(){return true;}};
   install(skill,'getSummonCombatSnapshotApFactor','');
   install(skill,'summonAction','_loc20_,_loc14_=0,actionTargets=null,targetGroups=null');
@@ -131,6 +141,7 @@ if (input.mode === 'summon') {
     }}));
   const caster = {line: 1, pos: 1500, offset: 0, team: 1, otherTeam: 2,
     currentAbilityAttack() { return {kind: 'active'}; }, purpleBondMultiplier() { return 1; },
+    queueRangePreview:noop,
     getTeamHp: noop, checkTalent() { return 0; }, getDamage() { return 100; },
     fightRes: {parent: null}, avatarData: {}, skillB: null, attackTween: noop,
     showLaneShockwave: noop, checkMiss(a, b) { return input.missIndex === targets.indexOf(b); },
@@ -163,7 +174,9 @@ class TeemoClientCombatTests(unittest.TestCase):
         for source, names in ((avatar, ('attackAimList', 'showLaneShockwave', 'getHpMax',
                                         'getDamage', 'getDePh', 'getDeMa', 'getHit',
                                         'getFlee', 'getCrit', 'getTough', 'init', 'goFight',
-                                        'initFightAttr', 'getSpeed', 'getRange')),
+                                        'initFightAttr', 'getSpeed', 'getRange',
+                                        'ownGrowthValue', 'teamTalentFlat',
+                                        'isValidSummonMultiplier')),
                               (skill, ('getSummonCombatSnapshotApFactor',))):
             for name in names:
                 body = method_body(source, name)
@@ -174,20 +187,26 @@ class TeemoClientCombatTests(unittest.TestCase):
         branch = skill.rsplit('case "summon":', 1)[1].split('case "clone_normal":', 1)[0]
         branch = branch.replace('break;', 'return;').replace('new Vector.<Avatar>()', '[]')
         cls.methods['summonAction'] = ('var limitedSummon,summonLevel,summonApFactor,_loc1_,_loc23_,_loc12_;'
+                                      'var captainSummonMultiplier=this.captainSummonMultiplier;'
                                       + branch)
-        cls.config = json.loads((ROOT / 'config/reconstruction/full-config.json').read_text(encoding='utf-8'))['cfg']
+        document = json.loads((ROOT / 'config/reconstruction/full-config.json').read_text(encoding='utf-8'))
+        apply_upstream_skill_priority(document)
+        cls.config = document['cfg']
         cls.effect = {key: value for key, value in
                       cls.config['effect']['FX_STEEL_LANE_WAVE'].items()
                       if key != 'laneWave'}
 
     def run_client(self, **options):
+        if 'skillId' in options:
+            options.setdefault('captainSummonMultiplier',
+                               self.config['skill'][options['skillId']].get('captainSummonMultiplier', 1))
         result = subprocess.run([NODE, '-e', HARNESS],
                                 input=json.dumps(dict(methods=self.methods, effect=self.effect, rows=self.config["avatar"], **options)),
                                 capture_output=True, text=True, encoding='utf-8', timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
-    def test_full_summon_path_matches_panel_and_balanced_growth_at_all_owner_levels(self):
+    def test_full_summon_path_matches_upstream_panel_stats_at_all_owner_levels(self):
         authored = {
             'A_2003_2': [3729.6,447.3,1073.8,128.8,385,46.2,464.8,56],
             'A_2018_2': [6393.6,766.8,1840.8,220.8,660,79.2,796.8,96],
@@ -203,20 +222,24 @@ class TeemoClientCombatTests(unittest.TestCase):
                         aid = self.config['skill'][skill_id]['skill'][0][2]
                         pl = authored[aid]
                         self.assertEqual(self.config['avatar'][aid]['pl'][:8], pl)
-                        expected = [int(pl[i]+pl[i+1]*(level-1)) for i in (0,2,4,6)]
-                        self.assertEqual(result['panel'], expected)
-                        self.assertEqual(result['combat'], expected)
-                        self.assertEqual(result['hp'], expected[0])
+                        panel = [int(pl[i]+pl[i+1]*(level-1)) for i in (0,2,4,6)]
+                        factor = self.config['skill'][skill_id].get('captainSummonMultiplier', 1)
+                        self.assertEqual(factor, 1)
+                        combat = [int(value * factor) for value in panel]
+                        self.assertEqual(result['panel'], panel)
+                        self.assertEqual(result['combat'], combat)
+                        self.assertEqual(result['hp'], combat[0])
                         self.assertEqual(result['level'], level)
-                        self.assertEqual(result['secondary'], [11,12,13,14])
+                        self.assertEqual(result['secondary'], [int(value * factor) for value in (11,12,13,14)])
                         self.assertEqual(result['bounded'], 1)
 
     def test_original_secondary_inheritance_includes_owner_buffs_once(self):
         sid = 'S_301310_6'
         result = self.run_client(mode='summon', skillId=sid, level=50, team=1, buffed=True,
                                  action=self.config['skill'][sid]['skill'][0])
-        self.assertEqual(result['secondary'], [16,18,20,22])
-        self.assertEqual(result['combat'], result['panel'])
+        factor = self.config['skill'][sid].get('captainSummonMultiplier', 1)
+        self.assertEqual(result['secondary'], [int(value * factor) for value in (16,18,20,22)])
+        self.assertEqual(result['combat'], [int(value * factor) for value in result['panel']])
 
     def test_steel_impact_is_three_full_lane_segments(self):
         expected = ['damage', 1.0, 1, 'FX_STEEL_LANE_WAVE']

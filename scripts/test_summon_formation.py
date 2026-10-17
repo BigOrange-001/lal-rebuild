@@ -24,7 +24,8 @@ const context=vm.createContext({Math,Number,Tween,
  GameMapConfig:{MIN_SPACE_POS:200,offsetToPixel(v){return v/6;},posToPixel(v){return v/5;},sideOffset:400},
  SoundManager:{getOnlyExample(){return {playSound:noop};}}});
 for(const unit of units){
- Object.assign(unit,{abilityState:{},formationOwner:null,offset:0,fightRes:{parent:{setFirst:noop}},
+ Object.assign(unit,{abilityState:{},formationOwner:null,offset:0,rangeMoveEndsAt:0,
+  fightRes:{parent:{setFirst:noop}},
   getSpeed(){return this.speed;},getScale(){return 1;},resBounce:noop});
  for(const [name,body] of Object.entries(input.methods)){
   const params=name==='checkMove'?'param1,param2=0,param3=null,param4=-1,param5=false,param6=null':'targetPos';

@@ -718,10 +718,10 @@ package com.meng52.game.ui.screen
          headImg.x = mBg_list.x + 85;
          headImg.y = mBg_list.y + 15;
          addChild(headImg);
-         pvpRule = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(97061),150,70,"UI_btn_normalFun_0000");
+         pvpRule = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(97061),120,40,"UI_btn_normalFun_0000");
          pvpRule.fontSize = 20;
-         pvpRule.x = mBg_list.x + mBg_list.width - pvpRule.width - 150;
-         pvpRule.y = mBg_list.y - 50 - 20;
+         pvpRule.x = mBg_list.x + mBg_list.width - pvpRule.width - 12;
+         pvpRule.y = mBg_list.y + 4;
          addChild(pvpRule);
          pvpRule.addEventListener("triggered",pvpRuleTriggered);
          if(mTabBar)
@@ -741,14 +741,14 @@ package com.meng52.game.ui.screen
          }
          var _loc1_:Array = GlobalData.$mConfig_simple.pvp_config as Array;
          var _loc2_:Number = mBg_list.width * 0.5;
-         mTxt_pkTimes = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(90657),MainConfig.$isEnglish ? 17 : 20,16777215,"left",MainConfig.$isEA ? _loc2_ + 200 : _loc2_,35);
+         mTxt_pkTimes = GlobalTextStyle.getTextField((MainConfig.$isEnglish ? "Daily reward battles: " : "今日奖励场次：") + "0/10",MainConfig.$isEnglish ? 17 : 20,16777215,"left",MainConfig.$isEA ? _loc2_ + 200 : _loc2_,35);
          mTxt_pkTimes.x = MainConfig.$isEnglish ? 10 : 17;
          mTxt_pkTimes.y = MainConfig.$isEA ? this.mBg_list.y - 68 : (MainConfig.$isEnglish ? this.mBg_list.y - 60 + 3 : this.mBg_list.y - 80);
          mBox_info.addChild(mTxt_pkTimes);
          _txt_coin = new LOL_MutilTextFieldIcon(GlobalLanguageStr.getLanguageStr(90497),GlobalData.$userData.mark,"UI_money_mark_0_0000");
          _txt_coin.fontSize = MainConfig.$isEnglish ? 17 : 20;
-         _txt_coin.x = MainConfig.$isEA ? mTxt_pkTimes.x : (MainConfig.$isEnglish ? mTxt_pkTimes.x + mTxt_pkTimes.width - 55 : mTxt_pkTimes.x - 7);
-         _txt_coin.y = MainConfig.$isEA ? mTxt_pkTimes.y + mTxt_pkTimes.height - 4 : (MainConfig.$isEnglish ? mTxt_pkTimes.y - 4 : mTxt_pkTimes.y + mTxt_pkTimes.height);
+         _txt_coin.x = MainConfig.$isEA ? mTxt_pkTimes.x : mTxt_pkTimes.x - 7;
+         _txt_coin.y = mTxt_pkTimes.y + mTxt_pkTimes.height + 1;
          addChild(_txt_coin);
          this.mBtn_re = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(mFun_status ? 98124 : 98123),135,70,"UI_btn_normalFun_0000");
          this.mBtn_re.addEventListener("triggered",this.onTRIGGERED_btns);
@@ -763,8 +763,9 @@ package com.meng52.game.ui.screen
          if(this.mTabBar.selectedIndex == 1 && !GlobalFunction.checkIsFirstPVP())
          {
             mBtn_change = new LOL_Scale9Button("换一批",135,70,"UI_btn_normalFun_0000");
-            mBtn_change.x = mBg_list.x + 165;
+            mBtn_change.x = mBtn_re.x - mBtn_change.width - 12;
             mBtn_change.y = mBg_list.y - 70;
+            mTxt_pkTimes.width = Math.max(120,mBtn_change.x - mTxt_pkTimes.x - 12);
             mBtn_change.visible = !mFun_status;
             mBtn_change.addEventListener("triggered",changeOpponents);
             addChild(mBtn_change);
@@ -848,7 +849,7 @@ package com.meng52.game.ui.screen
          mPVP_list = param1.data;
          if(mTxt_pkTimes && mPVP_list.length > 6)
          {
-            mTxt_pkTimes.text = GlobalLanguageStr.getLanguageStr(90657) + "：" + String(mPVP_list[6]);
+            mTxt_pkTimes.text = (MainConfig.$isEnglish ? "Daily reward battles: " : "今日奖励场次：") + String(Math.min(10,Math.max(0,int(mPVP_list[6])))) + "/10";
          }
          if(mTabBar.selectedIndex != 0)
          {
@@ -957,17 +958,15 @@ package com.meng52.game.ui.screen
          var _myRank:int;
          var _list_pk:Array;
          var _list_enemy:Array;
-         var _list_winner:Array;
          var _list_loser:Array;
          var _itemArr:Array;
          var _currCfg:Array;
-         var _123Obj:Object;
-         var _had123:Boolean;
-         var j:int;
          var _isFirstPVP:Boolean;
          var _itemData:Object;
          var _lv:int;
          var _listArr:Array;
+         var _seenIDs:Object;
+         var _seenRanks:Object;
          if(this.mTabBar)
          {
             $tabBarSelectedIndex = this.mTabBar.selectedIndex;
@@ -1002,18 +1001,24 @@ package com.meng52.game.ui.screen
             GlobalData.$userData.records.current_rank = _myRank;
             _list_pk = mPVP_list[1];
             _list_enemy = mPVP_list[2];
-            _list_winner = mPVP_list[3];
+            // History rows are reports, not members of the current challenge batch.
             _list_loser = mPVP_list[4];
             l = int(_list_pk.length);
             _itemArr = [];
+            _seenIDs = {};
+            _seenRanks = {};
+            _seenIDs[String(GlobalData.$userData.uid)] = true;
+            _seenRanks[String(_myRank)] = true;
             i = 0;
             while(i < l)
             {
                _currCfg = _list_pk[i];
-               if(GlobalData.$userData.uid != _currCfg[1])
+               if(hasArenaFormation(_currCfg) && !_seenIDs[String(_currCfg[1])] && !_seenRanks[String(_currCfg[0])])
                {
                   _data = getListData(_currCfg,0,_list_enemy);
                   _itemArr.push(_data);
+                  _seenIDs[String(_currCfg[1])] = true;
+                  _seenRanks[String(_currCfg[0])] = true;
                }
                i = i + 1;
             }
@@ -1022,32 +1027,12 @@ package com.meng52.game.ui.screen
             while(i < l)
             {
                _currCfg = _list_enemy[i];
-               _data = getListData(_currCfg,1);
-               _itemArr.push(_data);
-               i = i + 1;
-            }
-            l = int(_list_winner.length);
-            _had123 = false;
-            i = 0;
-            while(i < l)
-            {
-               _had123 = false;
-               _currCfg = _list_winner[i];
-               j = 0;
-               while(j < _itemArr.length)
+               if(hasArenaFormation(_currCfg) && !_seenIDs[String(_currCfg[1])] && !_seenRanks[String(_currCfg[0])])
                {
-                  _123Obj = _itemArr[j];
-                  if(_currCfg[1] == _123Obj["id"])
-                  {
-                     _had123 = true;
-                     break;
-                  }
-                  j = j + 1;
-               }
-               if(!_had123 && GlobalData.$userData.uid != _currCfg[1])
-               {
-                  _data = getListData(_currCfg,-1);
+                  _data = getListData(_currCfg,1);
                   _itemArr.push(_data);
+                  _seenIDs[String(_currCfg[1])] = true;
+                  _seenRanks[String(_currCfg[0])] = true;
                }
                i = i + 1;
             }
@@ -1057,7 +1042,8 @@ package com.meng52.game.ui.screen
             _data["indexID_s"] = _myRank;
             _data["id"] = GlobalData.$userData.uid;
             _data["is_enemy"] = 0;
-            _data["mark"] = mPVP_list.length > 5 && mPVP_list[5] != null ? int(mPVP_list[5]) : 0;
+            // Row 5 is the daily award; top-level 5 is the wallet balance.
+            _data["mark"] = _list_pk.length > 0 && _list_pk[0].length > 5 && _list_pk[0][5] != null ? int(_list_pk[0][5]) : 0;
             _itemArr.push(_data);
             _isFirstPVP = GlobalFunction.checkIsFirstPVP();
             if(_isFirstPVP)
@@ -1077,15 +1063,6 @@ package com.meng52.game.ui.screen
             else
             {
                mList.verticalScrollPolicy = "on";
-               l = int(_list_loser.length);
-               i = 0;
-               while(i < l)
-               {
-                  _currCfg = _list_loser[i];
-                  _data = getListData(_currCfg,-1,null,1);
-                  _itemArr.push(_data);
-                  i = i + 1;
-               }
             }
             _itemArr.sortOn("indexID_s",16);
             l = int(_itemArr.length);
@@ -1140,6 +1117,22 @@ package com.meng52.game.ui.screen
          _loc2_["status"] = param1;
          return _loc2_;
       }
+
+      private function hasArenaFormation(row:Array) : Boolean
+      {
+         if(row == null || row.length < 4 || int(row[0]) < 1 || row[1] == null || String(row[1]) == "" || !(row[3] is Array) || row[3].length == 0)
+         {
+            return false;
+         }
+         for each(var unit:Object in row[3])
+         {
+            if(!(unit is Array) || unit.length < 3 || !(unit[0] is String) || unit[0] == "")
+            {
+               return false;
+            }
+         }
+         return true;
+      }
       
       private function getListData(param1:Array, param2:int, param3:Array = null, param4:int = 0) : Object
       {
@@ -1153,7 +1146,8 @@ package com.meng52.game.ui.screen
          _loc6_["name"] = param1[2];
          _loc6_["data_base"] = param1[3] == null ? null : param1[3];
          _loc6_["lv"] = param1[4] == null ? 1 : param1[4];
-         _loc6_["mark"] = param1.length > 5 && param1[5] != null ? int(param1[5]) : null;
+         // The first-match robot uses the server's daily rank amount.
+         _loc6_["mark"] = param1.length > 5 && param1[5] != null ? int(param1[5]) : (mPVP_list != null && mPVP_list.length > 1 && mPVP_list[1] is Array && mPVP_list[1].length > 0 && mPVP_list[1][0].length > 5 ? int(mPVP_list[1][0][5]) : 0);
          _loc6_["is_enemy"] = param2;
          if(param3 != null)
          {

@@ -76,12 +76,12 @@ package com.meng52.game.ui.element
          {
             _loc11_ += Math.floor(_loc4_ / _loc12_);
          }
-         mTxt_attr = GlobalTextStyle.getTextField(_loc6_ + " Lv." + _loc4_,18,TXT_COLOR[mIndex],"center",140,30);
+         mTxt_attr = GlobalTextStyle.getTextField(_loc6_ + " Lv." + _loc4_ + "/" + _loc8_,14,TXT_COLOR[mIndex],"center",140,30);
          addChild(mTxt_attr);
-         mTxt_info = GlobalTextStyle.getTextField((mIndex % 2 == 0 ? "生命 +" : "攻击 +") + (_loc4_ * _loc5_),18,16777215,"center",140,30);
+         mTxt_info = GlobalTextStyle.getTextField("当前" + (mIndex % 2 == 0 ? "生命 +" : "攻击 +") + (_loc4_ * _loc5_),16,16777215,"center",140,30);
          mTxt_info.y = 28;
          addChild(mTxt_info);
-         mTxt_max = GlobalTextStyle.getTextField(_loc10_ ? "已达上限" : "等级上限 " + _loc8_,16,16763955,"center",140,30);
+         mTxt_max = GlobalTextStyle.getTextField("满级 +" + (_loc8_ * _loc5_),16,16763955,"center",140,30);
          mTxt_max.y = 55;
          addChild(mTxt_max);
          mBtn = new LOL_Scale9Button(_loc10_ ? "已满级" : _loc9_ ? "未解锁" : "附魔",135,65,"UI_btn_normalFun_0000");
@@ -102,15 +102,18 @@ package com.meng52.game.ui.element
          addChild(mBtn);
          mBtn.x = -mBtn.width * 0.5;
          mBtn.y = 82;
-         mImg_icon = GlobalFunction.createImage("UI_magic_money_000" + mIndex);
-         mImg_icon.scaleX = mImg_icon.scaleY = 0.6;
-         mImg_icon.x = -54;
-         mImg_icon.y = 154;
-         addChild(mImg_icon);
-         mTxt_num = GlobalTextStyle.getTextField("粉尘 " + _loc11_,18,TXT_COLOR[mIndex],"left",105,30);
-         mTxt_num.x = -20;
-         mTxt_num.y = 156;
-         addChild(mTxt_num);
+         if(!_loc10_)
+         {
+            mImg_icon = GlobalFunction.createImage("UI_magic_money_000" + mIndex);
+            mImg_icon.scaleX = mImg_icon.scaleY = 0.6;
+            mImg_icon.x = -54;
+            mImg_icon.y = 154;
+            addChild(mImg_icon);
+            mTxt_num = GlobalTextStyle.getTextField("粉尘 " + _loc11_,18,TXT_COLOR[mIndex],"left",105,30);
+            mTxt_num.x = -20;
+            mTxt_num.y = 156;
+            addChild(mTxt_num);
+         }
          mTxt_attr.x = mTxt_info.x = mTxt_max.x = -70;
          addEventListener("removedFromStage",onREMOVED_FROM_STAGE);
          if(mUpdate && mUpdateID == mIndex)

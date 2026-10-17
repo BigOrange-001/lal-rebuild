@@ -77,7 +77,7 @@ package com.meng52.game.ui.panel
          this.nt.height = 46 * 4;
          var _loc1_:Point = new Point(mImg9_baseBg.x,mImg9_baseBg.y);
          this.nt.x = int(_loc1_.x * GlobalData.$mStage$Starling_w) + GlobalData.$isNotFullScreenX;
-         this.nt.y = int(((GlobalData.$mStageHeight - mImg9_baseBg.height) * 0.5 + 163) * GlobalData.$mStage$Starling_h);
+         this.nt.y = int(((GlobalData.$mStageHeight - mImg9_baseBg.height) * 0.5 + 163) * GlobalData.$mStage$Starling_h + GlobalData.$mStarling.viewPort.y);
          GlobalData.$mStarling.nativeStage.addChild(this.nt);
       }
       

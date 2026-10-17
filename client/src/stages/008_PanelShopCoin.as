@@ -4,6 +4,7 @@ package com.meng52.game.ui.panel
    import com.meng52.game.global.GlobalData;
    import com.meng52.game.global.GlobalFunction;
    import com.meng52.game.global.GlobalLanguageStr;
+   import com.meng52.game.global.GlobalLocalStore;
    import com.meng52.game.global.GlobalPay;
    import com.meng52.game.global.GlobalTextStyle;
    import com.meng52.game.ui.element.ItemShopCoin;
@@ -12,6 +13,7 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.element.LOL_Button;
    import com.meng52.game.ui.screen.PanelCenterSocial;
    import com.meng52.global.GlobalStaticConst;
+   import com.meng52.net.SendAndSelect;
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
    import feathers.controls.ScrollText;
@@ -52,6 +54,24 @@ package com.meng52.game.ui.panel
       private var mVIP_r:Sprite;
       
       private var isVIPInfo:Boolean = false;
+
+      private var mSpendingBanner:Sprite;
+
+      private var mSpendingBackground:Scale9Image;
+
+      private var mSpendingText:TextField;
+
+      private var mFirstDoubleText:TextField;
+
+      private var mBalanceText:TextField;
+
+      private var mRateText:TextField;
+
+      private var mSpendingTimer:Timer;
+
+      private var mSpendingDay:String = "";
+
+      private var mCoinRowsRefreshQueued:Boolean = false;
       
       public function PanelShopCoin()
       {
@@ -99,7 +119,14 @@ package com.meng52.game.ui.panel
          mImg3_info.y = mTabBar.y + 55;
          mImg3_info.height = 40;
          addChild(mImg3_info);
+         GlobalData.$mEventDispatcher.addEventListener("profile_state_sync",onSpendingProfileSync);
+         GlobalData.$mEventDispatcher.addEventListener("update_shop_coin",onShopCoinUpdated);
+         mSpendingDay = shanghaiDayKey();
+         mSpendingTimer = new Timer(60000);
+         mSpendingTimer.addEventListener("timer",onSpendingTimer);
+         mSpendingTimer.start();
          tabBar_changeHandler(null);
+         requestSpendingInfo();
       }
       
       override public function tabBar_changeHandler(param1:Event) : void
@@ -139,10 +166,157 @@ package com.meng52.game.ui.panel
       
       override public function update() : void
       {
+         if(mList && mSpendingBanner && mSpendingBanner.visible)
+         {
+            mList.y = mListY;
+            mList.height = mListH;
+         }
          this.setList();
          this.addList();
+         refreshSpendingBanner();
       }
-      
+
+      private function shanghaiDayKey() : String
+      {
+         var seconds:Number = SendAndSelect.$systemTimer_nowSecond;
+         if(!isFinite(seconds) || seconds <= 0) seconds = new Date().time * 0.001;
+         var day:Date = new Date(seconds * 1000 + 8 * 3600000);
+         var month:String = day.monthUTC + 1 < 10 ? "0" + (day.monthUTC + 1) : String(day.monthUTC + 1);
+         var date:String = day.dateUTC < 10 ? "0" + day.dateUTC : String(day.dateUTC);
+         return day.fullYearUTC + "-" + month + "-" + date;
+      }
+
+      private function onSpendingTimer(param1:TimerEvent) : void
+      {
+         var day:String = shanghaiDayKey();
+         if(day != mSpendingDay)
+         {
+            mSpendingDay = day;
+            requestSpendingInfo();
+         }
+      }
+
+      private function requestSpendingInfo() : void
+      {
+         SendAndSelect.sendAndSelectService("user.spending_info",{},onSpendingInfo);
+      }
+
+      private function onSpendingInfo(param1:Object) : void
+      {
+         if(param1 && param1.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(param1.state_sync)) return;
+         if(stage != null && param1 && int(param1.return_code) == 0 && param1.data && param1.data.tier != null && GlobalData.$userData)
+         {
+            GlobalData.$userData.spending = param1.data;
+            mSpendingDay = shanghaiDayKey();
+            refreshSpendingBanner();
+            queueCoinRowsRefresh();
+         }
+      }
+
+      private function onSpendingProfileSync(param1:Event) : void
+      {
+         refreshSpendingBanner();
+      }
+
+      private function onShopCoinUpdated(param1:Event) : void
+      {
+         requestSpendingInfo();
+         queueCoinRowsRefresh();
+      }
+
+      private function queueCoinRowsRefresh() : void
+      {
+         if(mCoinRowsRefreshQueued || !mList || mStatus_back != "status_normal" || !mItemArrTemp) return;
+         mCoinRowsRefreshQueued = true;
+         GlobalData.$mStarling.juggler.delayCall(refreshCoinRows,0.05);
+      }
+
+      private function refreshCoinRows() : void
+      {
+         mCoinRowsRefreshQueued = false;
+         if(stage == null || !mList || mStatus_back != "status_normal" || !mItemArrTemp) return;
+         setListTimer(mList,mItemArrTemp,ItemShopCoin,false);
+         refreshSpendingBanner();
+      }
+
+      public static function spendingBannerLayout(param1:Number, param2:Number, param3:Number, param4:Boolean) : Object
+      {
+         var width:Number = Math.min(600,Math.max(0,param1 - 40));
+         var height:Number = param4 ? 158 : 126;
+         return {x:Math.max(0,(param1 - width) * 0.5),y:param2,width:width,height:height,
+            listY:param2 + height + 8,listHeight:Math.max(40,param3 - height - 8)};
+      }
+
+      public static function spendingBannerTitle(param1:Object) : String
+      {
+         if(param1 && param1.is_gm === true) return "GM · 今日可充值：无限制";
+         if(param1 && param1.remaining_yuan != null)
+         {
+            return String(param1.label || "消费档位") + " · 今日剩余：" + int(param1.remaining_yuan) + "元";
+         }
+         return "正在查询今日剩余额度…";
+      }
+
+      public static function walletBalanceTitle(profile:Object) : String
+      {
+         var balance:Number = profile ? Number(profile.coin) : 0;
+         if(!isFinite(balance) || balance < 0) balance = 0;
+         return "当前余额：" + Math.floor(balance) + " 金砖";
+      }
+
+      private function isLocalMode() : Boolean
+      {
+         var address:String = MainConfig.$SERVER_ADDRESS;
+         return GlobalLocalStore.$pf_type_curr == "local" || address.indexOf("http://127.0.0.1") == 0 || address.indexOf("http://localhost") == 0;
+      }
+
+      private function refreshSpendingBanner() : void
+      {
+         if(!mList || mStatus_back != "status_normal")
+         {
+            if(mSpendingBanner) mSpendingBanner.visible = false;
+            return;
+         }
+         var first:Boolean = GlobalData.$userData && GlobalData.$userData.attrs && int(GlobalData.$userData.attrs.pay_first_gift) == 0;
+         var layout:Object = PanelShopCoin.spendingBannerLayout(GlobalData.$mStageWidth,mListY,mListH,first);
+         if(!mSpendingBanner)
+         {
+            mSpendingBanner = new Sprite();
+            mSpendingBanner.touchable = false;
+            mSpendingBackground = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",layout.width,layout.height,new Rectangle(20,20,20,20));
+            mSpendingBanner.addChild(mSpendingBackground);
+            mBalanceText = GlobalTextStyle.getTextField("",28,4926491,"left",layout.width - 40,38);
+            mBalanceText.x = 20;
+            mBalanceText.y = 12;
+            mSpendingBanner.addChild(mBalanceText);
+            mSpendingText = GlobalTextStyle.getTextField("",22,4926491,"left",layout.width - 40,32);
+            mSpendingText.x = 20;
+            mSpendingText.y = 53;
+            mSpendingBanner.addChild(mSpendingText);
+            mRateText = GlobalTextStyle.getTextField("1元 = 10金砖",18,6505778,"left",layout.width - 40,28);
+            mRateText.x = 20;
+            mRateText.y = 87;
+            mSpendingBanner.addChild(mRateText);
+            mFirstDoubleText = GlobalTextStyle.getTextField("首充双倍：首次充值获2倍金砖，额度按原价计算",18,10169366,"left",layout.width - 40,28);
+            mFirstDoubleText.x = 20;
+            mFirstDoubleText.y = 119;
+            mSpendingBanner.addChild(mFirstDoubleText);
+            addChild(mSpendingBanner);
+         }
+         mSpendingBanner.visible = true;
+         mSpendingBanner.x = layout.x;
+         mSpendingBanner.y = layout.y;
+         mSpendingBackground.width = layout.width;
+         mSpendingBackground.height = layout.height;
+         mBalanceText.width = mSpendingText.width = mRateText.width = mFirstDoubleText.width = layout.width - 40;
+         mBalanceText.text = PanelShopCoin.walletBalanceTitle(GlobalData.$userData);
+         mSpendingText.text = PanelShopCoin.spendingBannerTitle(GlobalData.$userData ? GlobalData.$userData.spending : null);
+         mFirstDoubleText.visible = first;
+         setChildIndex(mSpendingBanner,numChildren - 1);
+         mList.y = layout.listY;
+         mList.height = layout.listHeight;
+      }
+
       override public function onBTN_NAME_BACK() : void
       {
          if(isVIPInfo)
@@ -169,6 +343,25 @@ package com.meng52.game.ui.panel
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         GlobalData.$mEventDispatcher.removeEventListener("profile_state_sync",onSpendingProfileSync);
+         GlobalData.$mEventDispatcher.removeEventListener("update_shop_coin",onShopCoinUpdated);
+         if(mSpendingTimer)
+         {
+            mSpendingTimer.stop();
+            mSpendingTimer.removeEventListener("timer",onSpendingTimer);
+            mSpendingTimer = null;
+         }
+         if(mSpendingBanner)
+         {
+            mSpendingBanner.removeFromParent(true);
+            mSpendingBanner = null;
+            mSpendingBackground = null;
+            mSpendingText = null;
+            mFirstDoubleText = null;
+            mBalanceText = null;
+            mRateText = null;
+         }
+         mCoinRowsRefreshQueued = false;
          PanelActivityFund.$isPay = false;
          GlobalData.$shopType = 0;
          isVIPInfo = false;
@@ -316,6 +509,7 @@ package com.meng52.game.ui.panel
       {
          GlobalData.$shopAppleGetList = true;
          this.setListTimer(mList,mItemArrTemp,ItemShopCoin,false);
+         refreshSpendingBanner();
       }
       
       public function onSCROLL(param1:Event) : void
@@ -496,6 +690,7 @@ package com.meng52.game.ui.panel
             mTxt_VIPExp = null;
          }
          GlobalData.$mEventDispatcher.removeEventListener("show_vip_info",onSetVIPInfo);
+         if(isLocalMode() && mStatus_back == "status_normal") return;
          _tw = 600;
          if(!_clear)
          {

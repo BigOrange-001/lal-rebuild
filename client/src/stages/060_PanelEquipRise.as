@@ -110,8 +110,13 @@ package com.meng52.game.ui.panel
          }
          if(GlobalData.$userData.my_equips[_selectedEid] != null)
          {
-            updateAttUIs();
+            refreshAfterProfileStateSync();
          }
+      }
+
+      protected function refreshAfterProfileStateSync() : void
+      {
+         updateAttUIs();
       }
       
       override protected function initializeHandler(param1:Event) : void
@@ -411,7 +416,7 @@ package com.meng52.game.ui.panel
             mBox_data.x = mImg9_base.x + 50;
             mBox_data.y = mImg9_base.y + 50;
             mBox_equip.addChild(mBox_data);
-            if(mCurr_lv < GlobalFunction.getEquipRiseMaxLv() && mStatus_up)
+            if(mCurr_lv < Math.min(200,GlobalFunction.getEquipRiseMaxLv()) && mStatus_up)
             {
                tweenComplete = function():void
                {
@@ -464,7 +469,7 @@ package com.meng52.game.ui.panel
             }
             if(mBtn_to && !_btn_status)
             {
-               mBtn_to.enabled = mPrice_num != 0;
+               mBtn_to.enabled = mPrice_num != 0 && mCurr_lv < Math.min(200,GlobalFunction.getEquipRiseMaxLv());
             }
          }
          checkGuide();
@@ -501,7 +506,7 @@ package com.meng52.game.ui.panel
          mCurr_lv = int(data.lv);
          var equip:Equip = new Equip(GlobalData.$tempEquipCurrSelected,data);
          mPrice_num = equip.getRiseGold();
-         if(mCurr_lv >= GlobalFunction.getEquipRiseMaxLv())
+         if(mCurr_lv >= Math.min(200,GlobalFunction.getEquipRiseMaxLv()))
          {
             stopRiseBatch();
             GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90083));
@@ -574,7 +579,11 @@ package com.meng52.game.ui.panel
          if(_btn_status && _riseBatchRemaining > 0) _riseBatchRemaining--;
          // Receipt completion drives the batch. Rendering may pause or lose a
          // tween on mobile without leaving the transaction marked as pending.
-         if(_btn_status) riseDelay = setTimeout(continueRiseBatch,150);
+         if(_btn_status)
+         {
+            if(int(current.lv) >= Math.min(200,GlobalFunction.getEquipRiseMaxLv()) || _riseBatchRemaining <= 0) stopRiseBatch();
+            else riseDelay = setTimeout(continueRiseBatch,150);
+         }
          updateAttUIs();
          GlobalData.$mGameClassObject.touchable = true;
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();

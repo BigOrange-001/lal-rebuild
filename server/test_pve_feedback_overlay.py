@@ -25,7 +25,15 @@ class PveFeedbackOverlayTest(unittest.TestCase):
 
     def test_served_tables_keep_rosters_and_power(self):
         self.assertEqual((self.report["campaign"]["stages"], self.report["tower"]["floors"]),
-                         (317, 100))
+                         (336, 150))
+        expected_campaign = (2 * len(self.source["pve"]["combat_main"])
+                             + sum(not cid.startswith("P_200_")
+                                   for cid in self.source["pve"]["combat_ploy"])
+                             + len(self.source["pve"].get("modes", {}).get(
+                                 "exploration", {}).get("stages", [])))
+        self.assertEqual(self.report["campaign"]["stages"], expected_campaign)
+        self.assertEqual(self.report["tower"]["floors"],
+                         int(self.source["pve"]["battle_ploy"]["P_200"]["combat"]))
         self.assertLess(self.report["campaign"]["max_power_error_pct"], .25)
         self.assertLess(self.report["tower"]["max_power_error_pct"], .01)
         for name in ("battle_main", "combat_main", "battle_ploy", "combat_ploy"):
@@ -53,7 +61,8 @@ class PveFeedbackOverlayTest(unittest.TestCase):
                         self.assertLessEqual(max(map(abs, sides)), .5)
         self.assertEqual(self.config["pve"]["campaign_overlay"],
                          self.source["pve"]["campaign_overlay"])
-        for cid in ("P_001_1", "P_101_1", "P_101_4", "P_200_1", "P_200_81"):
+        for cid in ("P_001_1", "P_101_1", "P_101_5", "P_109_4",
+                    "P_200_1", "P_200_81", "P_200_150"):
             stage = self.config["cfg"]["combat_ploy"][cid]
             for lane in {row[3] for row in stage["team2"]}:
                 sides = [row[11] for row in stage["team2"] if row[3] == lane]
@@ -68,12 +77,15 @@ class PveFeedbackOverlayTest(unittest.TestCase):
     def test_tower_skill_boundaries_and_real_start_snapshots(self):
         for floor, expected in ((1, 2), (10, 2), (11, 4), (20, 4),
                                 (21, 6), (30, 6), (31, 8), (40, 8),
-                                (41, 10), (100, 10)):
+                                (41, 10), (100, 10), (101, 10), (150, 10)):
             self.assertEqual(tower_skill_level(floor), expected)
             stage = self.config["cfg"]["combat_ploy"][f"P_200_{floor}"]
             self.assertTrue(all(row[2] == expected for row in stage["team2"]))
             self.assertEqual(stage["recommended_power"], _power(
                 self.config["cfg"], stage["team2"], stage["enemy_unit_stats_by_diff"]["0"]))
+        for invalid in (0, 151):
+            with self.assertRaises(ValueError):
+                tower_skill_level(invalid)
         db = sqlite3.connect(":memory:", check_same_thread=False)
         self.addCleanup(db.close)
         store = PlayerStore(db, self.config)

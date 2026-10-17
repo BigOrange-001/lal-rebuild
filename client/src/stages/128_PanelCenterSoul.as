@@ -423,38 +423,29 @@ package com.meng52.game.ui.screen
             _layout = null;
             this.mList.dataProvider = new ListCollection();
          }
-         this.mList.addEventListener("scroll",function(param1:Event):void
-         {
-            var _loc2_:int = 0;
-            _loc2_ = 0;
-            while(_loc2_ < mList.dataProvider.length)
-            {
-               _loc2_++;
-            }
-         });
          if(!_sp)
          {
             _sp = new Sprite();
             addChildAt(_sp,0);
-            updateAvatar();
             _bg = GlobalFunction.createScale9Image("UI_bg_9slice_5_0000",GlobalData.$mStageWidth - 20,105,new Rectangle(25,25,50,25));
             _bg.x = int((GlobalData.$mStageWidth - _bg.width) * 0.5);
             _bg.y = GlobalData.$center_height_curr - 110 - _bg.height - 15;
             _sp.addChild(_bg);
-            _txt1 = new LOL_HtmlText(800,30,MainConfig.$isEnglish ? 15 : 20,16777215,false,"center");
-            _txt1.x = MainConfig.$isEnglish ? _bg.x - 85 : _bg.x - 148;
+            _btn = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(90647),130,45,"UI_btn_enterGame_0_0000");
+            _btn.x = _bg.x + _bg.width - _btn.width - 15;
+            _btn.y = MainConfig.$isEnglish ? _bg.y + (_bg.height - _btn.height + 28) / 2 : _bg.y + (_bg.height - _btn.height) / 2;
+            _sp.addChild(_btn);
+            var _textWidth:Number = _btn.x - _bg.x - 25;
+            _txt1 = new LOL_HtmlText(_textWidth,30,MainConfig.$isEnglish ? 15 : 20,16777215,false,"center");
+            _txt1.x = _bg.x + 10;
             _txt1.y = _bg.y + 20;
             _sp.addChild(_txt1);
             price = int(_configShop[_configSet[_radioIndex]].refresh_price);
-            _txt2 = new LOL_HtmlText(400,30,20,13777209);
+            _txt2 = new LOL_HtmlText(_textWidth,30,20,13777209,false,"center");
             _txt2.text = GlobalLanguageStr.getLanguageStr(90584,price);
-            _txt2.x = MainConfig.$isEA ? (_bg.width - 450) / 2 : (MainConfig.$isEnglish ? (_bg.width - 280) / 2 : (_bg.width - 230) / 2);
+            _txt2.x = _txt1.x;
             _txt2.y = _txt1.y + _txt1.height;
             _sp.addChild(_txt2);
-            _btn = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(90647),130,45,"UI_btn_enterGame_0_0000");
-            _btn.x = _bg.width - _btn.width - 20;
-            _btn.y = MainConfig.$isEnglish ? _bg.y + (_bg.height - _btn.height + 28) / 2 : _bg.y + (_bg.height - _btn.height) / 2;
-            _sp.addChild(_btn);
             _btn.addEventListener("triggered",btn_Triggered);
             checkTime();
          }

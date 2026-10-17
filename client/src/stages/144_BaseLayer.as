@@ -8,6 +8,7 @@ package com.meng52.game.ui.effect
    import starling.display.DisplayObjectContainer;
    import starling.display.Image;
    import starling.display.Sprite;
+   import starling.text.BitmapFont;
    import starling.text.TextField;
 
    public class BaseLayer extends Sprite
@@ -134,7 +135,16 @@ package com.meng52.game.ui.effect
          _textField.scaleX = _textField.scaleY = _scale;
          if(!_hasSkillBg)
          {
-            _textField.fontName = "Font_numAndtag_1";
+            // The damage font contains only a small set of status glyphs.
+            // Falling back to it for arbitrary skill feedback leaves just
+            // the digits visible (for example, a stack label becomes "3/10").
+            // Keep that font for complete damage/heal/status strings and use
+            // the normal CJK font whenever any glyph would be missing.
+            var numberFont:BitmapFont = TextField.getBitmapFont("Font_numAndtag_1");
+            if(numberFont && numberFont.hasChars(_str))
+            {
+               _textField.fontName = "Font_numAndtag_1";
+            }
          }
          _textField.addEventListener("removedFromStage",DisplayTools.clearObject);
          _textAllWidth = _textField.textBounds.width;

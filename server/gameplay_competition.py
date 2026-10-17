@@ -9,10 +9,14 @@ from gameplay_common import grant_reward, game_day, equipment_exclusive_ids
 from battle_intents import create_intent, consume_intent
 from battle_engine import serialize_player_team, serialize_stage_team, validate_team_lane_coverage
 from solo_progression import arena_equipment
-from arena_opponents import generate_opponents
+from arena_opponents import POWER_ORDER_SCHEMA, combat_config_signature, generate_opponents
+from arena_rewards import DAILY_RANK_MARK, DAILY_PAID_BATTLES, DAILY_BATTLE_MARK
 
 class GameplayCompetition:
     METHODS={"user.get_rank_list","user.refresh_pvp_opponents","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
+    DAILY_RANK_MARK=DAILY_RANK_MARK
+    DAILY_PAID_BATTLES=DAILY_PAID_BATTLES
+    DAILY_BATTLE_MARK=DAILY_BATTLE_MARK
     def __init__(self,store,full_config):
         self.store=store
         self.full_config=full_config if isinstance(full_config,dict) else {}
@@ -301,7 +305,7 @@ class GameplayCompetition:
                 allowed={"gold","coin","score","medal","mark","dust","dn_stone","box_key","culture_book","sp"}
                 if any(k not in allowed or type(v) is not int or v<=0 for k,v in gifts.items()):
                     raise GameplayFault("InvalidRankReward",f"Invalid native mail gifts for rank band {label}")
-                return dict(gifts)
+                return {**gifts,"mark":self.DAILY_RANK_MARK}
         return None
     @staticmethod
     def _rank_day_marker(records,day):
@@ -369,13 +373,17 @@ class GameplayCompetition:
     def _ensure_opponents(self,profile,uid,*,refresh=False):
         records=profile.setdefault("records",{})
         batch=records.get("pvp_opponents")
+        combat_signature=combat_config_signature(self.cfg)
         if (not refresh and isinstance(batch,dict) and batch.get("player_rank")==self._rank(profile)
+                and batch.get("power_order_schema")==POWER_ORDER_SCHEMA
+                and batch.get("combat_config_sha256")==combat_signature
                 and isinstance(batch.get("bots"),list) and len(batch["bots"])==9):
             return batch
         old_generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
         generation=old_generation+1 if refresh or old_generation else 1
         own=self._current_arena_team(profile)
-        batch=generate_opponents(self.cfg,str(uid),generation,self._rank(profile),own,self._team_power)
+        batch=generate_opponents(self.cfg,str(uid),generation,self._rank(profile),own,self._team_power,
+                                 combat_signature=combat_signature)
         records["pvp_opponents"]=batch
         records["pvp_opponent_generation"]=generation
         return batch
@@ -391,7 +399,7 @@ class GameplayCompetition:
         except (TypeError,ValueError): mark=0
         # Keep the native five fields and append this account's actual score;
         # ItemPVP uses its rank formula only for reconstructed NPC rows.
-        selfrow=[rank,uid,p.get("name","玩家"),self._own_compact(p),p.get("lv",1),mark]
+        selfrow=[rank,uid,p.get("name","玩家"),self._own_compact(p),p.get("lv",1),self.DAILY_RANK_MARK]
         bots=p.get("records",{}).get("pvp_opponents",{}).get("bots",[])
         rows=[]
         shown_uids={str(uid)}
@@ -407,7 +415,7 @@ class GameplayCompetition:
                 compact=self._compact(units)
                 if not compact:
                     return False
-                rows.append([br,bid,str(b.get("name") or "竞技对手"),compact,b.get("lv",1),b.get("mark")])
+                rows.append([br,bid,str(b.get("name") or "竞技对手"),compact,b.get("lv",1),self.DAILY_RANK_MARK])
                 shown_uids.add(bid); shown_ranks.add(br)
                 return True
             except (GameplayFault,KeyError,IndexError,TypeError,ValueError):
@@ -447,7 +455,7 @@ class GameplayCompetition:
                     except (GameplayFault,KeyError,IndexError,TypeError,ValueError): continue
                     hist_lv=bot.get("lv",1)
                 if not compact: continue
-                out.append([hist_rank,hist_uid,hist_name,compact,hist_lv or 1])
+                out.append([hist_rank,hist_uid,hist_name,compact,hist_lv or 1,self.DAILY_RANK_MARK])
                 history_uids.add(hist_uid)
             return sorted(out,key=lambda item:(item[0],item[1]))
         wins=history_rows(records.get("pvp_history_win",[])); losses=history_rows(records.get("pvp_history_loss",[]))
@@ -510,6 +518,11 @@ class GameplayCompetition:
     def _start(self,uid,params,kind):
         def mutate(profile):
             own=self._own_team(profile,params)
+            if kind=="pvp":
+                # Never enter a fight with persisted NPC skills from an older
+                # client configuration. Existing intents replay from the
+                # idempotency ledger before this mutator is invoked.
+                self._ensure_opponents(profile,uid)
             target_uid=str(params.get("uid",""))
             bot=self._bot(target_uid,kind=="fragment",profile=profile)
             if not bot: self._fail("UnknownOpponent","Opponent is unavailable")
@@ -664,7 +677,12 @@ class GameplayCompetition:
                     if not isinstance(reports,list): reports=[]
                     records["local_pvp_battle_reports"]=[report]+[r for r in reports if isinstance(r,dict) and r.get("cpb_id")!=report["cpb_id"]][:19]
                 rewards=self.rules
-                mark=int(rewards.get("pvp_win_mark",3) if win else rewards.get("pvp_loss_mark",0)); gold=int(rewards.get("pvp_gold_win",100) if win else rewards.get("pvp_gold_loss",20)); exp=int(rewards.get("pvp_exp_win",10) if win else rewards.get("pvp_exp_loss",5))
+                # The daily fight allowance is independent of yesterday's
+                # rank mail. Every consumed fight counts, including a loss;
+                # repeated or extra fights cannot mint more than 60,000 mark
+                # in one Shanghai calendar day.
+                mark=self.DAILY_BATTLE_MARK if count<=self.DAILY_PAID_BATTLES else 0
+                gold=int(rewards.get("pvp_gold_win",100) if win else rewards.get("pvp_gold_loss",20)); exp=int(rewards.get("pvp_exp_win",10) if win else rewards.get("pvp_exp_loss",5))
                 grant_reward(p,{"mark":mark,"gold":gold,"exp":exp},self.full_config)
                 poke_data={"gift_list":[{"gold":gold},{"gold":gold},{"gold":gold}],"poke_gift_index":0,"user_gift":{"gold":gold}}
                 data={"sign":sign,"fight_kind":kind,"records":records,"attrs":attrs,"gold":p.get("gold",0),"coin":p.get("coin",0),"score":p.get("score",0),"mark":p.get("mark",0),"medal":p.get("medal",0),"exp":p.get("exp",0),"lv":p.get("lv",1),"poke_data":poke_data,"get_avatars":{},"get_equips":{},"win_gift":{},"current_rank":newrank}

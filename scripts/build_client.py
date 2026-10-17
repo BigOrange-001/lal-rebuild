@@ -164,7 +164,7 @@ def java_major(java: str) -> int:
 
 
 def find_adt(sdk: Path) -> Path:
-    candidates = [sdk / "bin" / "adt.bat", sdk / "bin" / "adt", sdk / "lib" / "adt.jar"]
+    candidates = [sdk / "lib" / "adt.jar", sdk / "bin" / "adt.bat", sdk / "bin" / "adt"]
     for candidate in candidates:
         if candidate.is_file():
             # Keep a caller-supplied ASCII alias (for example a subst drive).
@@ -300,9 +300,10 @@ def main() -> int:
         "-storetype", "pkcs12", "-keystore", str(adt_keystore),
         "-storepass", storepass, "-alias", alias, "-keypass", keypass,
     ]
+    command += [str(adt_output_apk), str(package_descriptor)]
     if args.android_sdk:
         command += ["-platformsdk", str(args.android_sdk.expanduser().resolve())]
-    command += [str(adt_output_apk), str(package_descriptor), "MainLLOL.swf", "assets", "icons"]
+    command += ["MainLLOL.swf", "assets", "icons"]
     try:
         adt_output = checked_run(command, label="HARMAN ADT APK package", cwd=package_dir)
     finally:

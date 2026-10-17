@@ -20,50 +20,50 @@ package com.meng52.game.ui.panel
    import starling.display.Sprite;
    import starling.events.Event;
    import starling.text.TextField;
-   
+
    public class PanelInfoChip extends PanelBase
    {
-      
+
       public var _data:Object;
-      
+
       private var mBox_child:Sprite;
-      
+
       private var _equipUI:Image;
-      
+
       private var _tName:TextField;
-      
+
       private var _tLv:TextField;
-      
+
       private var _tInfo:TextField;
-      
+
       private var _tInfo_2:TextField;
-      
+
       private var _tName_shipin:TextField;
-      
+
       private var _equip:Equip;
-      
+
       private var _skillset:SkillSet;
-      
+
       private var mBox_child_close:LOL_Button;
-      
+
       private var skillImg:LOL_Button;
-      
+
       private var mBox_child_item:Sprite;
-      
+
       private var mBg_img:Scale9Image;
-      
+
       private var mBg_bg_equip:Image;
-      
+
       private var mEquip:Equip;
-      
+
       protected var _avatar:Avatar;
-      
+
       public function PanelInfoChip(param1:Object)
       {
          super();
          _data = param1;
       }
-      
+
       override protected function initializeHandler(param1:Event) : void
       {
          this.removeEventListener("addedToStage",initializeHandler);
@@ -77,7 +77,7 @@ package com.meng52.game.ui.panel
          this.setPopPanelBg(_equip.equipData.name + GlobalLanguageStr.getLanguageStr(20437),580);
          this.setFragment_child();
       }
-      
+
       private function setFragment_child() : void
       {
          var _loc12_:* = null;
@@ -163,7 +163,7 @@ package com.meng52.game.ui.panel
          mBox_child_item.x = int((mImg9_baseBg.width - _loc8_) * 0.5) + 45;
          mBox_child_item.y = 350;
       }
-      
+
       private function getFragmentSkillInfo() : String
       {
          return _skillset == null ? "该装备不附带技能。" : _skillset.getInfo();
@@ -182,7 +182,7 @@ package com.meng52.game.ui.panel
       {
          delFragment_child();
       }
-      
+
       private function delFragment_child() : void
       {
          if(mBox_child_item)
@@ -205,4 +205,3 @@ package com.meng52.game.ui.panel
       }
    }
 }
-

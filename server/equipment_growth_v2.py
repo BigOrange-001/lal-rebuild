@@ -121,6 +121,25 @@ def _nonnegative_int(value) -> int:
         return 0
 
 
+def bounded_wash_values(values: dict, pair: tuple[str, str], cap: int) -> dict[str, int]:
+    """Keep the two declared investments within their shared point budget."""
+    limit = max(0, int(cap))
+    result = {key: 0 for key in ATTRS}
+    if len(pair) != 2 or pair[0] == pair[1]:
+        return result
+    source = values if isinstance(values, dict) else {}
+    first, second = pair
+    left = _nonnegative_int(source.get(first, 0))
+    right = _nonnegative_int(source.get(second, 0))
+    total = left + right
+    if total > limit:
+        # Preserve the historical allocation ratio, including its final point.
+        left = left * limit // total
+        right = limit - left
+    result[first], result[second] = left, right
+    return result
+
+
 def migrate_item_wash(item: dict, pair: tuple[str, str]) -> bool:
     """Migrate an item's committed wash points exactly once; return if changed."""
     marker = item.get("wash_schema_version", 0)
@@ -159,7 +178,8 @@ def migrate_pending_save(item: dict, pending: dict, pair: tuple[str, str]) -> di
 
 def wash_roll(old: dict[str, int], pair: tuple[str, str], cap: int, num: int, rng, *, star: int = 1, level: int = 1) -> dict[str, int]:
     """Candidate roll only fills the two native-declared attrs, capped in aggregate."""
-    remaining = max(0, int(cap) - sum(max(0, int(old.get(k, 0))) for k in ATTRS))
+    current = bounded_wash_values(old, pair, cap)
+    remaining = max(0, int(cap) - sum(current.values()))
     budget = min(remaining, max(1, int(num)) * max(1, int(star)) * max(5, int(level) // 10))
     rolled = {key: 0 for key in ATTRS}
     if budget <= 0:
@@ -236,10 +256,9 @@ def wash_stats(item: dict, definition: dict, simple: dict) -> dict[str, int]:
         point = int(cfg[2]) if isinstance(cfg, list) and len(cfg) > 2 else 0
     except (TypeError, ValueError, OverflowError, IndexError):
         return result
+    cap = (max(0, int(cfg[3])) * star * level
+           if isinstance(cfg, list) and len(cfg) > 3 else 0)
+    invested_values = bounded_wash_values(raw, pair, cap)
     for attr in pair:
-        try:
-            invested = _nonnegative_int(raw.get(attr, 0))
-        except (TypeError, ValueError, OverflowError):
-            invested = 0
-        result[attr] = invested + point * star * level
+        result[attr] = invested_values[attr] + point * star * level
     return result

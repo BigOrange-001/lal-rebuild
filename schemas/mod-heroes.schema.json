@@ -1,0 +1,357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lal.local/schemas/mod-heroes.schema.json",
+  "title": "mod-heroes API 1",
+  "$comment": "Editor schema. Runtime additionally validates references, semantic action contracts, duplicate IDs/paths, media, dependencies and post-upgrade bounds.",
+  "type": "object",
+  "properties": {
+    "heroes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "variant": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "unitType": {
+            "const": "hero"
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 6
+          },
+          "signType": {
+            "enum": [
+              "assist",
+              "attack",
+              "tank"
+            ]
+          },
+          "actionType": {
+            "enum": [
+              "cunning",
+              "forward",
+              "sly",
+              "stand"
+            ]
+          },
+          "damageType": {
+            "enum": [
+              "magic",
+              "physical"
+            ]
+          },
+          "baseStats": {
+            "type": "object",
+            "properties": {
+              "health": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              },
+              "attack": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              },
+              "physicalDefense": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              },
+              "magicDefense": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              }
+            },
+            "required": [
+              "health",
+              "attack",
+              "physicalDefense",
+              "magicDefense"
+            ],
+            "additionalProperties": false
+          },
+          "growth": {
+            "type": "object",
+            "properties": {
+              "health": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              },
+              "attack": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              },
+              "physicalDefense": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              },
+              "magicDefense": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000000
+              }
+            },
+            "required": [
+              "health",
+              "attack",
+              "physicalDefense",
+              "magicDefense"
+            ],
+            "additionalProperties": false
+          },
+          "speed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "attackRange": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "leadership": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "levelCap": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99
+          },
+          "progression": {
+            "type": "object",
+            "properties": {
+              "preset": {
+                "const": "builtin:progression/default-player-hero"
+              },
+              "starUp": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "preset",
+              "starUp"
+            ],
+            "additionalProperties": false
+          },
+          "skills": {
+            "type": "object",
+            "properties": {
+              "normal": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "captain": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "passive": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "normal",
+              "captain",
+              "passive"
+            ],
+            "additionalProperties": false
+          },
+          "presentation": {
+            "type": "object",
+            "properties": {
+              "portrait": {
+                "type": "string",
+                "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+              },
+              "icon": {
+                "type": "string",
+                "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+              },
+              "basicAttackEffect": {
+                "type": "string",
+                "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+              },
+              "voice": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "portrait",
+              "icon",
+              "basicAttackEffect",
+              "voice"
+            ],
+            "additionalProperties": false
+          },
+          "description": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "integrationDefaults": {
+            "type": "object",
+            "properties": {
+              "appearance.arena_enemy": {
+                "type": "boolean"
+              },
+              "acquisition.summon.normal": {
+                "type": "boolean"
+              },
+              "acquisition.summon.advanced": {
+                "type": "boolean"
+              },
+              "acquisition.shop.hero_soul": {
+                "type": "boolean"
+              },
+              "appearance.fragment_enemy": {
+                "type": "boolean"
+              },
+              "appearance.exploration_enemy": {
+                "type": "boolean"
+              },
+              "appearance.expedition_enemy": {
+                "type": "boolean"
+              },
+              "appearance.campaign_random_enemy": {
+                "type": "boolean"
+              },
+              "appearance.assist_bot": {
+                "type": "boolean"
+              },
+              "acquisition.summon.activity": {
+                "type": "boolean"
+              },
+              "acquisition.exchange.hero": {
+                "type": "boolean"
+              },
+              "acquisition.exchange.activity": {
+                "type": "boolean"
+              },
+              "acquisition.drop.campaign": {
+                "type": "boolean"
+              },
+              "acquisition.drop.activity": {
+                "type": "boolean"
+              },
+              "acquisition.drop.tower_hero": {
+                "type": "boolean"
+              },
+              "acquisition.drop.tower_soul": {
+                "type": "boolean"
+              },
+              "usage.friend_assist": {
+                "type": "boolean"
+              },
+              "usage.destiny": {
+                "type": "boolean"
+              },
+              "usage.auxiliary_formation": {
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "acquisition": {
+            "enum": [
+              {},
+              null
+            ]
+          },
+          "destiny": {
+            "enum": [
+              {},
+              [],
+              null
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "variant",
+          "name",
+          "unitType",
+          "quality",
+          "signType",
+          "actionType",
+          "damageType",
+          "baseStats",
+          "growth",
+          "speed",
+          "attackRange",
+          "leadership",
+          "levelCap",
+          "progression",
+          "skills",
+          "presentation"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 256
+    }
+  },
+  "required": [
+    "heroes"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,1 @@
+{"patches":[{"expect":{"path":"skills.normal","sha256":"ed45ca2942dce3a9eff533497fd9555d2f9ad934713b4da57767fe9d4b0721cf"},"id":"restore_normal","operations":[{"op":"replace","path":"skills.normal","value":"self:skill/restored_normal"}],"target":"builtin:avatar/A_1001_5"}]}

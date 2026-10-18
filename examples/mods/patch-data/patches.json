@@ -1,0 +1,1 @@
+{"patches":[{"expect":{"path":"baseStats.attack","value":279},"id":"adjust_attack","operations":[{"op":"set","path":"baseStats.attack","value":280}],"target":"builtin:avatar/A_1001_5"}]}

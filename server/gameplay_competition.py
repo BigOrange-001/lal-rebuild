@@ -11,6 +11,8 @@ from battle_engine import serialize_player_team, serialize_stage_team, validate_
 from solo_progression import arena_equipment
 from arena_opponents import POWER_ORDER_SCHEMA, combat_config_signature, generate_opponents
 from arena_rewards import DAILY_RANK_MARK, DAILY_PAID_BATTLES, DAILY_BATTLE_MARK
+from mod_policy import (runtime as mod_runtime, candidate_ids, channel_enabled,
+                        effective_digest)
 
 class GameplayCompetition:
     METHODS={"user.get_rank_list","user.refresh_pvp_opponents","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
@@ -31,6 +33,41 @@ class GameplayCompetition:
         self.rules=self.side.get("rules",{})
         self.pvp_bots=self.side.get("pvp_bots",[])
         self.fragment_bots=self.side.get("fragment_bots",[])
+        if mod_runtime(self.cfg):
+            self.fragment_bots = self._filtered_bots(self.fragment_bots, "appearance.fragment_enemy")
+            self.pvp_bots = self._filtered_bots(self.pvp_bots, "appearance.arena_enemy")
+
+    def _filtered_bots(self, bots, channel):
+        pool = candidate_ids(self.cfg, [], channel, include_new=True)
+        result = []
+        for index, original in enumerate(bots):
+            bot = copy.deepcopy(original)
+            entries = [row for row in bot.get("team", []) if isinstance(row, list) and row
+                       and channel_enabled(self.cfg, row[0], channel)]
+            if pool:
+                # Deterministic candidate selection keeps preview/start stable.
+                templates = [row for row in bot.get("team", []) if isinstance(row, list) and row]
+                for slot, template in enumerate(templates[:5]):
+                    if slot >= len(entries):
+                        replacement = copy.deepcopy(template)
+                        choices = [aid for aid in pool if aid.rsplit("_", 1)[0] not in
+                                   {row[0].rsplit("_", 1)[0] for row in entries}]
+                        if choices:
+                            replacement[0] = choices[(index + slot) % len(choices)]
+                            entries.append(replacement)
+                if entries and index % (len(pool) + 1) < len(pool):
+                    selected = pool[index % len(pool)]
+                    if selected.rsplit("_", 1)[0] not in {row[0].rsplit("_", 1)[0] for row in entries}:
+                        entries[-1][0] = selected
+            if len(entries) >= 3:
+                if entries != bot.get("team", []):
+                    for slot, row in enumerate(entries):
+                        if len(row) > 3:
+                            row[3] = slot % 3
+                bot["team"] = entries
+                bot["mod_policy_digest"] = effective_digest(self.cfg)
+                result.append(bot)
+        return result
     @staticmethod
     def _fail(code,msg): raise GameplayFault(code,msg)
     @staticmethod
@@ -152,11 +189,22 @@ class GameplayCompetition:
         try: group,index=int(bits[1]),int(bits[2])
         except ValueError: return None
         return next((b for b in self.pvp_bots if int(b.get("group",-1))==group and int(b.get("index",-1))==index),None)
-    def _bot_units(self,bot):
+    def _bot_units(self,bot, *, fragment=False):
+        fragment = fragment or any(row.get("uid") == (bot or {}).get("uid") for row in self.fragment_bots)
         if bot and isinstance(bot.get("units"),list):
+            if mod_runtime(self.cfg):
+                channel = "appearance.fragment_enemy" if fragment else "appearance.arena_enemy"
+                for unit in bot["units"]:
+                    if not channel_enabled(self.cfg, unit.get("base_aid", unit.get("aid")), channel):
+                        self._fail("ModOpponentUnavailable", "缓存对手已被当前 Mod 策略排除，请重新生成对手")
             return copy.deepcopy(bot["units"])
         team=bot.get("team",[]) if bot else []
-        units=arena_equipment(self.full_config,bot or {},serialize_stage_team(self.cfg,team,team=2))
+        if mod_runtime(self.cfg) and (bot or {}).get("mod_policy_digest") != effective_digest(self.cfg):
+            filtered = self._filtered_bots([bot] if bot else [], "appearance.fragment_enemy" if fragment else "appearance.arena_enemy")
+            if not filtered:
+                self._fail("ModPoolEmpty", "对手没有足够的合法英雄")
+            team = filtered[0]["team"]
+        units=arena_equipment(self.full_config,bot or {},serialize_stage_team(self.cfg,team,team=2,scope="pveEnemy" if fragment else "arenaEnemy"))
         if not str((bot or {}).get("uid","")).startswith("r"):
             return units
         # Stable per-NPC traits keep preview, battle start and replay identical.
@@ -488,8 +536,10 @@ class GameplayCompetition:
         return data
     def _fragment_users(self,uid):
         p=self.store.profile_raw(uid); out=[]
+        if mod_runtime(self.cfg) and not self.fragment_bots:
+            self._fail("ModPoolEmpty", "掠夺敌人候选不足")
         for b in self.fragment_bots:
-            out.append([b["uid"],b["name"],int(b["lv"]),int(b.get("vip_lv",0)),self._compact(self._bot_units(b))])
+            out.append([b["uid"],b["name"],int(b["lv"]),int(b.get("vip_lv",0)),self._compact(self._bot_units(b, fragment=True))])
         return out
     def _battle_users(self,uid,params):
         users=params.get("users",[])
@@ -550,7 +600,7 @@ class GameplayCompetition:
                 metadata={"uid":target_uid,"target_uid":target_uid,"rank":requested_rank,
                           "team_num":self._num(params.get("team_num",0),"team_num",0,2),
                           "opponent_name":str(bot.get("name") or "竞技对手"),"opponent_lv":int(bot.get("lv",1))}
-            enemy=self._bot_units(bot)
+            enemy=self._bot_units(bot, fragment=kind=="fragment")
             # GameMapManager takes the native lane count from pvp_line or
             # frag_line. Validate the exact snapshots persisted in the intent.
             map_rows=self.simple.get("frag_line" if kind=="fragment" else "pvp_line",[])
@@ -570,7 +620,7 @@ class GameplayCompetition:
             def_th=self._pvp_def_th(my_power,enemy_power) if kind=="pvp" else 0
             if kind=="fragment":
                 self._spend_fragment_energy(profile)
-            token=create_intent(profile,kind,metadata,own,enemy,int(self.rules.get("intent_ttl",3600)),now=self.store.clock.now())
+            token=create_intent(profile,kind,metadata,own,enemy,int(self.rules.get("intent_ttl",3600)),now=self.store.clock.now(),config=self.cfg)
             if kind=="pvp":
                 intent=profile["pending_battles"][kind][token["fight_id"]]
                 intent["arena_my_pr_power"]=my_power
@@ -611,7 +661,7 @@ class GameplayCompetition:
         kind=params.get("fight_kind")
         if kind not in ("pvp","fragment"): self._fail("InvalidBattle","Unsupported competition battle kind")
         def change(p):
-            intent=consume_intent(p,kind,params,metadata_keys=("target_uid","rank","eid","fragment_index","team_num"),now=self.store.clock.now())
+            intent=consume_intent(p,kind,params,metadata_keys=("target_uid","rank","eid","fragment_index","team_num"),now=self.store.clock.now(),config=self.cfg)
             sign=intent["sign"]; metadata=intent["metadata"]; now=self.store.clock.now()
             records=p.setdefault("records",{}); attrs=p.setdefault("attrs",{})
             if kind=="pvp":

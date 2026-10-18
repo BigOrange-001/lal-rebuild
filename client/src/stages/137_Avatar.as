@@ -64,8 +64,8 @@ package com.meng52.game.module.avatar
                var members:Array = [];
                for each(var unit:Avatar in units)
                {
-                  if(!unit || unit.getStar()!=5 || unit.getType()!=1 || unit.isManualSummonUnit) continue;
-                  var family:String = String(unit.id).split("|")[0].split("_").slice(0,2).join("_");
+                  if(!unit || unit.getStar()!=5 || unit.getType()!=1 || unit.isManualSummonUnit || !GlobalData.modChannelAllowed(unit.avatarData.id,"usage.destiny")) continue;
+                  var family:String = GlobalData.baseModHeroId(unit.avatarData.id).split("_").slice(0,2).join("_");
                   if(bond.families.indexOf(family)<0 || families.indexOf(family)>=0) continue;
                   members.push(unit);
                   families.push(family);
@@ -77,10 +77,10 @@ package com.meng52.game.module.avatar
 
       public function getPurpleBondIsActive() : Boolean
       {
-         if(getStar()!=5 || getType()!=1 || !GlobalData.$userData || !GlobalData.$userData.team || !GlobalData.$userData.avatars) return false;
+         if(!GlobalData.modChannelAllowed(avatarData.id,"usage.destiny") || getStar()!=5 || getType()!=1 || !GlobalData.$userData || !GlobalData.$userData.team || !GlobalData.$userData.avatars) return false;
          var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
          if(!definitions) return false;
-         var family:String = String(id).split("|")[0].split("_").slice(0,2).join("_");
+         var family:String = GlobalData.baseModHeroId(avatarData.id).split("_").slice(0,2).join("_");
          var teamIndex:int = GlobalData.$userData.attrs && GlobalData.$userData.attrs.team_num != null ? int(GlobalData.$userData.attrs.team_num) : 0;
          var teams:Array = GlobalData.$userData.team as Array;
          var lineup:Array = teams && teamIndex >= 0 && teamIndex < teams.length ? teams[teamIndex] as Array : null;
@@ -112,7 +112,7 @@ package com.meng52.game.module.avatar
          if(getStar()!=5) return "";
          var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
          if(!definitions) return "";
-         var family:String = String(id).split("|")[0].split("_").slice(0,2).join("_");
+         var family:String = GlobalData.baseModHeroId(avatarData.id).split("_").slice(0,2).join("_");
          for each(var bond:Object in definitions)
          {
             if(bond.families.indexOf(family)<0) continue;
@@ -474,7 +474,7 @@ package com.meng52.game.module.avatar
          var units:Array = [];
          for(var i:int=0;i<count;i++)
          {
-            var unit:Avatar = new Avatar(clone ? id : aid,{lv:lv,slv:1});
+            var unit:Avatar = new Avatar(GlobalData.modDefinitionId(clone ? avatarData.id : aid,"summoned"),{lv:lv,slv:1});
             unit.goFight(team,line,0,false);
             unit.hpMax = Math.max(1,int(getHpMax()*ratio)); unit.hp = unit.hpMax;
             unit.ap = Math.max(1,int(getDamage()*ratio)); unit.dePh = Math.max(1,int(getDePh()*ratio)); unit.deMa = Math.max(1,int(getDeMa()*ratio));
@@ -1289,6 +1289,12 @@ package com.meng52.game.module.avatar
       public function Avatar(param1:String, param2:Object = null, param3:Boolean = false)
       {
          super();
+         // Battle aliases describe the active context (owned/enemy/assist).
+         // Keep the instance id in param2; never derive its definition from it.
+         if(param2 != null && !(param2 is Array) && param2.aid != null && param2.base_aid != null)
+         {
+            param1 = String(param2.aid);
+         }
          param1 = param1.replace(".","");
          var _loc4_:int = param1.indexOf("|");
          if(!param2 && !param3)
@@ -2459,7 +2465,7 @@ package com.meng52.game.module.avatar
          if(!skill0)
          {
             _loc1_ = _loc2_.skill0;
-            if(_loc1_ != "")
+            if(_loc1_ != null && _loc1_ != "")
             {
                skill0 = new SkillSet(_loc1_,this,slv);
             }
@@ -2467,7 +2473,7 @@ package com.meng52.game.module.avatar
          if(!skill1)
          {
             _loc1_ = _loc2_.skill1;
-            if(_loc1_ != "")
+            if(_loc1_ != null && _loc1_ != "")
             {
                skill1 = new SkillSet(_loc1_,this,1,true);
             }
@@ -2475,7 +2481,7 @@ package com.meng52.game.module.avatar
          if(!skillB && _loc2_.skillB)
          {
             _loc1_ = _loc2_.skillB;
-            if(_loc1_ != "")
+            if(_loc1_ != null && _loc1_ != "")
             {
                skillB = new SkillSet(_loc1_,this,1);
             }
@@ -4004,7 +4010,7 @@ package com.meng52.game.module.avatar
 
       public function getIdValue() : Number
       {
-         return 0.001 * avatarData.id.split("_")[1];
+         return 0.001 * GlobalData.baseModHeroId(avatarData.id).split("_")[1];
       }
 
       private function getExperienceCurve() : Array
@@ -4255,7 +4261,7 @@ package com.meng52.game.module.avatar
          var definition:Object = GlobalData.$mConfig_avatar[avatarData.id];
          var ranged:Boolean = definition && typeof definition.ranged_skill == "boolean" ? Boolean(definition.ranged_skill) : avatarData.range >= 500;
          if(!ranged) return false;
-         return avatarData.id.indexOf("A_1041_") != 0 || !abilityState.form || !abilityState.form.hammer;
+         return GlobalData.baseModHeroId(avatarData.id).indexOf("A_1041_") != 0 || !abilityState.form || !abilityState.form.hammer;
       }
 
       public function getLvMax() : int

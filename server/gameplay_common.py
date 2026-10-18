@@ -2,11 +2,63 @@
 from __future__ import annotations
 import datetime
 import random
+import re
 from zoneinfo import ZoneInfo
 from player_store import GameplayFault
 
 LOCAL_TZ = ZoneInfo("Asia/Shanghai")
 CURRENCIES = {"gold", "coin", "score", "medal", "mark"}
+
+MOD_HERO_SEQUENCE = "mod_avatar_next_seq"
+_HERO_INSTANCE = re.compile(r"A_[0-9]+_[0-9]+\|([0-9]+)\Z")
+
+
+def preserve_mod_hero_sequence(profile, config, history=(), *, minimum_next=0):
+    """Reserve used instance suffixes inside the caller's profile transaction.
+
+    The counter is player progress, rather than reversible Mod metadata. Once
+    present it remains authoritative after disabling the last package. Vanilla
+    saves without a counter retain their original allocation path.
+    ``history`` can supply decoded receipt records when adopting an old save.
+    """
+    from mod_policy import runtime
+    if MOD_HERO_SEQUENCE not in profile and not runtime(config):
+        return None
+    current = profile.get(MOD_HERO_SEQUENCE, 0)
+    if type(current) is not int or not 0 <= current < 9_007_199_254_740_991:
+        raise GameplayFault("InvalidProfile", "Mod hero instance sequence is invalid")
+
+    def highest(value):
+        if isinstance(value, str):
+            match = _HERO_INSTANCE.fullmatch(value)
+            return int(match.group(1)) if match else -1
+        if isinstance(value, dict):
+            return max((highest(item) for pair in value.items() for item in pair), default=-1)
+        if isinstance(value, (list, tuple)):
+            return max((highest(item) for item in value), default=-1)
+        return -1
+
+    # Scan all saved references once, before the first Mod mutation can remove
+    # an instance. Thereafter the durable counter and current cards suffice.
+    saved = profile if MOD_HERO_SEQUENCE not in profile else profile.get("avatars", {})
+    if type(minimum_next) is not int or minimum_next < 0:
+        raise GameplayFault("InvalidProfile", "Mod hero instance sequence seed is invalid")
+    reserved = max(current, highest(saved) + 1, highest(history) + 1, minimum_next)
+    if reserved >= 9_007_199_254_740_991:
+        raise GameplayFault("HeroInstanceExhausted", "Hero instance sequence is exhausted")
+    profile[MOD_HERO_SEQUENCE] = reserved
+    return reserved
+
+
+def next_hero_instance_id(profile, aid, config):
+    sequence = preserve_mod_hero_sequence(profile, config)
+    if sequence is None:
+        sequence = max([int(value.get("id", "|0").rsplit("|", 1)[-1])
+                        for value in profile.setdefault("avatars", {}).values()
+                        if "|" in str(value.get("id", ""))] or [-1]) + 1
+    else:
+        profile[MOD_HERO_SEQUENCE] = sequence + 1
+    return f"{aid}|{sequence}"
 
 def game_day(now=None):
     """Return the authoritative local calendar day as YYYY-MM-DD."""
@@ -29,6 +81,9 @@ def skin_acquisition_blocked_ids(config=None):
 
 def ensure_hero_acquirable(aid, config=None, *, allow_skin=False):
     """Reject a newly minted skin hero unless a trusted internal caller opts in."""
+    from mod_policy import runtime, ensure_available
+    if runtime(config):
+        ensure_available(config, aid)
     if allow_skin:
         return
     if aid in skin_acquisition_blocked_ids(config):
@@ -73,6 +128,17 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
     if not isinstance(reward, dict):
         raise GameplayFault("InvalidReward", "Reward must be an object")
     cfg = config.get("cfg", config) if isinstance(config, dict) else {}
+    from mod_policy import runtime, ensure_reward
+    if runtime(config):
+        # Saved rewards remain claimable when a source channel is disabled;
+        # missing definitions freeze the claim without discarding its record.
+        ensure_reward(config, reward)
+        avatar_exp = reward.get("avatar_exp")
+        if isinstance(avatar_exp, dict):
+            owned = profile.get("avatars", {}).get(avatar_exp.get("hero_id"))
+            if isinstance(owned, dict):
+                from mod_policy import ensure_available
+                ensure_available(config, owned.get("aid", avatar_exp["hero_id"]))
     if not isinstance(allow_skin, bool):
         raise GameplayFault("InvalidReward", "Skin acquisition override must be boolean")
     if not isinstance(allow_equipment_exclusive, bool):
@@ -223,8 +289,7 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
             for item in value:
                 aid = item["aid"]; count = item.get("num", 1)
                 for _ in range(count):
-                    seq = max([int(v.get("id", "|0").rsplit("|",1)[-1]) for v in avatars.values() if "|" in str(v.get("id", ""))] or [-1]) + 1
-                    iid = f"{aid}|{seq}"
+                    iid = next_hero_instance_id(profile, aid, config)
                     avatars[iid] = {"id":iid,"aid":iid,"lv":1,"slv":1,"exp":0,"hp":0,"ap":0,"de_ph":0,"de_ma":0,"phase":0,"morph":0,"love_exp":0,"equips":[]}
         elif key == "items":
             definitions = cfg.get("equip", {}) if isinstance(cfg, dict) else {}

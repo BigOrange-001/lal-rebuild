@@ -61,12 +61,14 @@ const context = vm.createContext({
     newDisplayObject(attrs){return new DragonBonesSprite(attrs);},
     addBullet() { throw Error('Lane wave must not emit per-target projectiles'); }},
   AvatarData: {isAttack() { return true; }, canMiss() { return true; }},
-  GlobalData: {}, Sprite, Quad, Tween, trace: noop, int: Math.trunc,
+  GlobalData: {$modRuntime:{}}, Sprite, Quad, Tween, trace: noop, int: Math.trunc,
   Math, Number, isFinite, Point, Rectangle, DragonBonesSprite
 });
 function install(target, name, params) {
   target[name] = vm.runInContext('(function(' + params + ') { with (this) {' + input.methods[name] + '\n} })', context);
 }
+install(context.GlobalData,'baseModHeroId','id');
+install(context.GlobalData,'modDefinitionId','id,scope');
 if (input.mode === 'summon') {
   const fields = ['hpMax','hp','ap','dePh','deMa','hit','flee','crit','tough',
     'lv','slv','phase','limitBreak','hpP','apP','dePhP','deMaP','exp','loveExp','morph'];
@@ -169,6 +171,9 @@ class TeemoClientCombatTests(unittest.TestCase):
         avatar = (ROOT / 'client/src/stages/137_Avatar.as').read_text(encoding='utf-8')
         skill = (ROOT / 'client/src/stages/139_SkillSet.as').read_text(encoding='utf-8')
         cls.methods = {}
+        global_data = (ROOT / 'client/src/stages/001_GlobalData.as').read_text(encoding='utf-8')
+        for name in ('baseModHeroId', 'modDefinitionId'):
+            cls.methods[name] = method_body(global_data, name)
         # Typed ActionScript locals have zero defaults; retain those in Node.
         avatar = re.sub(r'(var\s+\w+:int)\s*;', r'\1 = 0;', avatar)
         for source, names in ((avatar, ('attackAimList', 'showLaneShockwave', 'getHpMax',

@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from xml.etree import ElementTree as ET
 
 import build_client
 
@@ -80,6 +81,44 @@ class BuildRuntimeVersionTest(unittest.TestCase):
         self.source_path.write_text(text, encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'MainLLOL runtime versions'):
             build_client.read_build_config()
+
+
+class AndroidPackagingTest(unittest.TestCase):
+    def test_gradle_staging_preserves_original_identity_and_sdk_values(self):
+        with tempfile.TemporaryDirectory() as directory:
+            sdk=Path(directory);(sdk/'platforms/android-36').mkdir(parents=True)
+            (sdk/'platforms/android-36/android.jar').write_bytes(b'platform')
+            tree=ET.parse(ROOT/'client/air/application.xml')
+            namespace={'a':tree.getroot().tag.split('}')[0].lstrip('{')}
+            identity=tree.getroot().findtext('a:id',namespaces=namespace)
+            version=tree.getroot().findtext('a:versionNumber',namespaces=namespace)
+            settings=build_client.configure_android_gradle(tree,sdk)
+            self.assertEqual(settings['androidCompileSdkVersion'],'36')
+            self.assertEqual(tree.getroot().findtext('a:id',namespaces=namespace),identity)
+            self.assertEqual(tree.getroot().findtext('a:versionNumber',namespaces=namespace),version)
+            text=tree.getroot().find('a:android/a:manifestAdditions',namespace).text
+            self.assertNotIn('xmlns:android',text)
+            manifest=ET.fromstring(text.replace('<manifest','<manifest xmlns:android="http://schemas.android.com/apk/res/android"',1))
+            sdk_node=manifest.find('uses-sdk');android='{http://schemas.android.com/apk/res/android}'
+            self.assertEqual(sdk_node.get(android+'minSdkVersion'),'21')
+            self.assertEqual(sdk_node.get(android+'targetSdkVersion'),'36')
+            sdk_node.set(android+'minSdkVersion','23');sdk_node.set(android+'targetSdkVersion','35')
+            tree.getroot().find('a:android/a:manifestAdditions',namespace).text=ET.tostring(manifest,encoding='unicode')
+            build_client.configure_android_gradle(tree,sdk)
+            text=tree.getroot().find('a:android/a:manifestAdditions',namespace).text
+            manifest=ET.fromstring(text.replace('<manifest','<manifest xmlns:android="http://schemas.android.com/apk/res/android"',1))
+            self.assertEqual(manifest.find('uses-sdk').get(android+'minSdkVersion'),'23')
+            self.assertEqual(manifest.find('uses-sdk').get(android+'targetSdkVersion'),'35')
+    def test_modern_apk_uses_android_signature_verifier_and_rejects_unverified(self):
+        with tempfile.TemporaryDirectory() as directory:
+            jar=Path(directory)/'apksigner.jar';jar.write_bytes(b'fixture')
+            with patch.object(build_client,'checked_run',return_value='Verifies\nVerified using v2 scheme: true\n') as command:
+                _,verifier=build_client.verify_apk_signature(Path('fixture.apk'),'java',apksigner=jar)
+                self.assertEqual(verifier,'apksigner')
+                self.assertIn('verify',command.call_args.args[0])
+                self.assertEqual(build_client.signature_evidence('Verified using v2 scheme: true\n',verifier)['schemes'],{'v2':True})
+            with patch.object(build_client,'checked_run',return_value='DOES NOT VERIFY\n'):
+                with self.assertRaises(RuntimeError):build_client.verify_apk_signature(Path('fixture.apk'),'java',apksigner=jar)
 
 
 if __name__ == '__main__':

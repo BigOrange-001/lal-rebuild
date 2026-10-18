@@ -1,0 +1,168 @@
+{
+  "format": "lal-mod-v1",
+  "engineApi": "1",
+  "capabilities": [
+    "asset.image",
+    "asset.sound",
+    "effect.reference.builtin",
+    "hero.patch.presentation",
+    "hero.patch.skill",
+    "hero.patch.stats",
+    "hero.patch.text",
+    "hero.register",
+    "patch.scopes",
+    "progression.default-player-hero",
+    "skill.armor",
+    "skill.burn",
+    "skill.caster_hp_shield",
+    "skill.cure",
+    "skill.damage",
+    "skill.hp_shield",
+    "skill.poison",
+    "skill.purify",
+    "skill.reference.builtin",
+    "skill.shield",
+    "skill.silence",
+    "skill.strong",
+    "skill.stun",
+    "skill.sunder",
+    "skill.target_hp_shield",
+    "skill.weak"
+  ],
+  "actions": [
+    "armor",
+    "burn",
+    "caster_hp_shield",
+    "cure",
+    "damage",
+    "hp_shield",
+    "poison",
+    "purify",
+    "shield",
+    "silence",
+    "strong",
+    "stun",
+    "sunder",
+    "target_hp_shield",
+    "weak"
+  ],
+  "targetPolicies": [
+    "ally_all",
+    "ally_all_lowest_hp_ratio",
+    "ally_lane_all",
+    "ally_lane_highest_attack_any",
+    "ally_lane_lowest_current_hp_any",
+    "ally_lane_lowest_current_hp_hero",
+    "ally_lane_lowest_hp_ratio_any",
+    "ally_lane_lowest_hp_ratio_hero",
+    "ally_lane_lowest_hp_ratio_n",
+    "ally_self",
+    "enemy_global_highest_attack_hero",
+    "enemy_global_highest_hpmax_hero",
+    "enemy_global_lowest_current_hp",
+    "enemy_global_lowest_hp_ratio_hero",
+    "enemy_global_lowest_hpmax",
+    "enemy_lane_all",
+    "enemy_lane_farthest",
+    "enemy_lane_frontmost",
+    "enemy_lane_highest_attack_hero",
+    "enemy_lane_lowest_current_hp_hero",
+    "enemy_lane_lowest_hp_ratio_any",
+    "enemy_lane_lowest_hp_ratio_n"
+  ],
+  "channels": [
+    "appearance.arena_enemy",
+    "acquisition.summon.normal",
+    "acquisition.summon.advanced",
+    "acquisition.shop.hero_soul",
+    "appearance.fragment_enemy",
+    "appearance.exploration_enemy",
+    "appearance.expedition_enemy",
+    "appearance.campaign_random_enemy",
+    "appearance.assist_bot",
+    "acquisition.summon.activity",
+    "acquisition.exchange.hero",
+    "acquisition.exchange.activity",
+    "acquisition.drop.campaign",
+    "acquisition.drop.activity",
+    "acquisition.drop.tower_hero",
+    "acquisition.drop.tower_soul",
+    "usage.friend_assist",
+    "usage.destiny",
+    "usage.auxiliary_formation"
+  ],
+  "patchScopes": [
+    "owned",
+    "arenaEnemy",
+    "pveEnemy",
+    "assist",
+    "summoned"
+  ],
+  "limits": {
+    "archiveBytes": 67108864,
+    "expandedBytes": 134217728,
+    "fileBytes": 33554432,
+    "jsonBytes": 4194304,
+    "files": 512,
+    "entities": 256,
+    "imageDimension": 2048,
+    "imagePixels": 4194304,
+    "compressionRatio": 200,
+    "dependencyDepth": 16,
+    "skillActions": 32,
+    "skillLevel": 10,
+    "turns": 100,
+    "stat": 10000000,
+    "textureBytes": 134217728,
+    "mediaBytes": 134217728,
+    "activeHeroes": 1024,
+    "activeSkills": 2048,
+    "activePatches": 1024,
+    "activePatchOperations": 4096,
+    "combinedDataBytes": 16777216,
+    "decodedAudioBytes": 134217728
+  },
+  "skillSemantics": {
+    "timingUnit": "ownerTurns",
+    "warmup": "caster action opportunities before first use",
+    "cooldown": "caster action opportunities between uses",
+    "statusDuration": "affected target action turns under native Buff rules",
+    "maxLevel": 10,
+    "actionOrder": "array order; no implicit recast or recursive triggers",
+    "targetLock": "earlier same-side action index; missing/dead targets follow native target validity checks",
+    "damage": "native physical/magic defense and hit rules; each action uses independent defense unless builtin complete skill defines a reviewed sharing group"
+  },
+  "media": {
+    "images": [
+      "8-bit noninterlaced RGB/RGBA PNG",
+      "JPEG with Pillow verifier installed"
+    ],
+    "audio": [
+      "MPEG Layer III MP3, <= 120 seconds"
+    ],
+    "code": false
+  },
+  "identityRanges": {
+    "newHeroFamilies": [
+      180000,
+      199999
+    ],
+    "scopedAliases": [
+      170000,
+      179999
+    ],
+    "privateSkillFamilies": [
+      800000,
+      899999
+    ]
+  },
+  "unsupported": [
+    "arbitrary executable code/SWF",
+    "custom summon/clone/manual abilities",
+    "custom effect animations",
+    "persistent progression migration",
+    "authored destiny relationships",
+    "custom acquisition prices/weights",
+    "signature trust verification"
+  ]
+}

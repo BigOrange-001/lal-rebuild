@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import hashlib
 import random
+import copy
 
 from bot_names import bot_name_for_uid
+from mod_policy import (runtime as mod_runtime, candidate_ids, policy_signature,
+                        hero_available, channel_enabled)
 
 
 COMPANION_COUNT = 10
@@ -19,6 +22,9 @@ class GuildCompanions:
         blocked = self.cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", [])
         self.skins = sorted(aid for aid in blocked if aid in self.heroes and aid.startswith("A_1") and aid.endswith("_6"))
         self.orange = sorted(aid for aid in self.heroes if aid.startswith("A_1") and aid.endswith("_6"))
+        if mod_runtime(self.config):
+            self.skins = candidate_ids(self.config, self.skins, "appearance.assist_bot", quality=6)
+            self.orange = candidate_ids(self.config, self.orange, "appearance.assist_bot", include_new=True, quality=6)
 
     def _competition(self):
         from gameplay_competition import GameplayCompetition
@@ -45,10 +51,15 @@ class GuildCompanions:
         team_index = max(0, min(int(profile.get("attrs", {}).get("team_num", 0)), len(teams) - 1))
         saved = teams[team_index]
         rows = [[iid, slot % 3, slot / 6] for slot, iid in enumerate(saved[:6])
-                if iid and iid in profile.get("avatars", {})]
+                if iid and iid in profile.get("avatars", {}) and hero_available(
+                    self.config, profile["avatars"][iid].get("aid", iid))]
         if not rows:
             return 0
-        return competition._team_power(competition._own_team(profile, {"team_num": team_index, "team": rows}))
+        measured = profile
+        if mod_runtime(self.config):
+            measured = copy.deepcopy(profile)
+            measured["team"][team_index] = [row[0] for row in rows]
+        return competition._team_power(competition._own_team(measured, {"team_num": team_index, "team": rows}))
 
     def _hero(self, owner, uid, hour, index, target_power, competition):
         seed = int.from_bytes(hashlib.sha256(f"{owner}:{uid}:{hour}".encode()).digest()[:8], "big")
@@ -69,7 +80,7 @@ class GuildCompanions:
                "records": {"help_suids": {}, "help_fuids": {}}, "avatars": {instance: hero}}
         from gameplay_roster import GameplayRosterEquipment
 
-        base = GameplayRosterEquipment(self.store, self.config).battle_attributes(bot, instance)
+        base = GameplayRosterEquipment(self.store, self.config).battle_attributes(bot, instance, scope="assist")
         card = {**base, "aid": aid, "leader": 1, "isme": False, "buffs": {},
                 "line": 0, "pos": 0.2,
                 "new_4attrs": {key: int(base.get(key, 0)) for key in ("hit", "flee", "crit", "tough")}}
@@ -119,12 +130,14 @@ class GuildCompanions:
             return []
         state = profile.setdefault("guild_companions", {})
         hour = int(self.store.clock.now()) // 3600
-        if state.get("hour") != hour or not isinstance(state.get("bots"), list):
+        digest = policy_signature(self.config)
+        if state.get("hour") != hour or not isinstance(state.get("bots"), list) or state.get("mod_digest", "") != digest:
             competition = self._competition()
             target = self._player_power(profile, competition) * 0.30
             state["bots"] = [self._hero(owner, self.uid(profile, i), hour, i, target, competition)
                              for i in range(COMPANION_COUNT)] if self.orange else []
             state["hour"] = hour
+            state["mod_digest"] = digest
         bots = state["bots"]
         accepted = {str(member.get("uid")) for member in members if isinstance(member, dict)}
         for member in members:

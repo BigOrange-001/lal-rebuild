@@ -8,6 +8,9 @@ from vip_campaign import credit_vip_gift, normalize_vip_profile
 from spending_budget import ORDINARY_TIERS,LIMIT_MESSAGE,charge_spending,normalize_spending,public_spending
 from check_in_rewards import apply_check_in_rewards,check_in_coin,orange_bonus_count,random_orange_aid
 from recruit_exchange import MEDAL_PRICE, SKIN_SOUL_IDS, daily_orange_list
+from mod_policy import (runtime as mod_runtime, new_heroes, effective_digest,
+                        reward_allowed, ensure_reward, ensure_channel,
+                        channel_enabled, hero_available, activity_categories)
 
 # Local test-gift denominations, in game currency (coin / 金砖).
 PACKS = {f"local_{amount}": amount for amount in (60, 120, 300, 680, 980, 1280, 3280, 6480, 10000)}
@@ -660,6 +663,21 @@ class GameplayEconomy:
 
     def _fresh_shop_sheet(self, uid, kind, old=None):
         offers = (self.config.get("mystery_shop_offers") or {}).get(kind) or []
+        if mod_runtime(self.config):
+            channel = "acquisition.shop.hero_soul." + kind
+            originals = offers
+            offers = [copy.deepcopy(row) for row in originals if isinstance(row, list) and row
+                      and reward_allowed(self.config, row[0], channel)]
+            for aid in new_heroes(self.config, channel):
+                quality = aid.rsplit("_", 1)[-1]
+                template = next((row for row in originals if isinstance(row, list) and len(row) == 2
+                                 and isinstance(row[0], dict) and isinstance(row[0].get("avatar_soul"), dict)
+                                 and any(str(item).endswith("_" + quality) for item in row[0]["avatar_soul"])), None)
+                if template is not None:
+                    amount = next(iter(template[0]["avatar_soul"].values()))
+                    row = [{"avatar_soul": {aid: amount}}, copy.deepcopy(template[1])]
+                    if row not in offers:
+                        offers.append(row)
         if not offers: raise GameplayFault("ShopUnavailable", "Soul shop inventory is empty")
         cycle = int(old.get("refresh_seq", 0)) if isinstance(old, dict) else 0
         seed = int.from_bytes(hashlib.sha256(f"{uid}:{kind}:{cycle}".encode()).digest()[:8], "big")
@@ -667,11 +685,14 @@ class GameplayEconomy:
         chosen = indices[:min(6, len(indices))]
         previous_time = int(old.get("t", 0)) if isinstance(old, dict) else 0
         return {"t": max(self._now() * 1000, previous_time + 1),
+                "mod_digest": effective_digest(self.config),
                 "items": [copy.deepcopy(offers[i]) for i in chosen], "b": [], "refresh_seq": cycle}
 
     def _apply_shop_award(self, p, data, *, allow_exclusive=False):
         if not isinstance(data, dict) or len(data) != 1: raise GameplayFault("InvalidReward", "Shop item must contain exactly one reward")
         kind, amount = next(iter(data.items()))
+        if mod_runtime(self.config):
+            ensure_reward(self.config, data)
         if kind in {"avatar_soul", "equip_soul"}:
             if not isinstance(amount, dict) or len(amount) != 1: raise GameplayFault("InvalidReward", "Soul reward must name exactly one item")
             target = p.setdefault(kind, {})
@@ -698,6 +719,17 @@ class GameplayEconomy:
         interval = max(1, int(cfg.get("refresh_interval", 120))) * 60
         if not isinstance(sheet, dict) or self._now() * 1000 - int(sheet.get("t", 0)) >= interval * 1000:
             sheet = self._fresh_shop_sheet(uid, kind, sheet); shops[kind] = sheet
+        elif sheet.get("mod_digest", "") != effective_digest(self.config):
+            # Narrow an already offered sheet without rerolling unbought stock
+            # or resetting the paid refresh/purchase ledger.
+            surviving = [(i, row) for i, row in enumerate(sheet.get("items", []))
+                         if isinstance(row, list) and row and reward_allowed(
+                             self.config, row[0], "acquisition.shop.hero_soul." + kind)]
+            bought = set(sheet.get("b", []))
+            sheet["items"] = [row for _, row in surviving]
+            sheet["b"] = [new for new, (old, _) in enumerate(surviving) if old in bought]
+            sheet["mod_digest"] = effective_digest(self.config)
+            sheet["t"] = max(self._now() * 1000, int(sheet.get("t", 0)) + 1)
         return p, {"s_type": kind, "t": sheet["t"], "items": copy.deepcopy(sheet["items"]), "b": list(sheet.get("b", []))}
 
     def mystery_shop_refresh_by_coin(self, uid, params):
@@ -706,11 +738,11 @@ class GameplayEconomy:
         def mutate(p):
             if price <= 0: raise GameplayFault("InvalidShop", "Shop refresh price is not configured")
             if int(p.get("coin", 0)) < price: raise GameplayFault("InsufficientCoin", "Not enough coin")
+            attrs = p.setdefault("attrs", {}); shops = attrs.setdefault("mystery_shop", {})
+            old = copy.deepcopy(shops.get(kind, {})); old["refresh_seq"] = int(old.get("refresh_seq", 0)) + 1
+            sheet = self._fresh_shop_sheet(uid, kind, old); shops[kind] = sheet
             p["coin"] = int(p.get("coin", 0)) - price
             self._record_coin_spend(p,price)
-            attrs = p.setdefault("attrs", {}); shops = attrs.setdefault("mystery_shop", {})
-            old = shops.get(kind, {}); old["refresh_seq"] = int(old.get("refresh_seq", 0)) + 1
-            sheet = self._fresh_shop_sheet(uid, kind, old); shops[kind] = sheet
             return p, {**copy.deepcopy(p), "t":sheet["t"], "items":copy.deepcopy(sheet["items"]), "b":[]}
         result, replayed = self.store.atomic_update(uid, mutate, key, {"s_type":kind})
         result["replayed"] = replayed
@@ -729,6 +761,10 @@ class GameplayEconomy:
             row = items[index]
             if not isinstance(row, list) or len(row) != 2 or not isinstance(row[0], dict) or not isinstance(row[1], dict) or len(row[1]) != 1:
                 raise GameplayFault("InvalidShopItem", "Shop item data is malformed")
+            if mod_runtime(self.config):
+                if sheet.get("mod_digest", "") != effective_digest(self.config):
+                    raise GameplayFault("StaleShop", "Mod 配置已变化，请重新打开商店")
+                ensure_reward(self.config, row[0], "acquisition.shop.hero_soul." + kind)
             currency, price = next(iter(row[1].items()))
             if currency not in {"coin", "gold"} or type(price) is not int or price <= 0: raise GameplayFault("InvalidShopItem", "Shop item price is invalid")
             if int(p.get(currency, 0)) < price: raise GameplayFault("InsufficientResource", "Not enough " + currency)
@@ -1228,8 +1264,16 @@ class GameplayEconomy:
             if not isinstance(row,dict) or row.get("kind") not in {"avatar","avatar_soul"}: continue
             aid=row.get("aid"); weight=row.get("weight",0)
             if not isinstance(aid,str) or aid not in avatar_defs or aid in blocked or type(weight) is not int or weight<=0: continue
+            if mod_runtime(self.config) and not channel_enabled(self.config, aid, "acquisition.summon.activity"):
+                continue
             valid.append((row,weight));weight_total+=weight
-        if not valid or weight_total<=0: raise GameplayFault("LotteryUnavailable", "VIP activity pool has no valid hero records")
+        mod_groups = None
+        if mod_runtime(self.config):
+            authored = [row for row in pool if isinstance(row, dict) and row.get("aid") in avatar_defs
+                        and row.get("aid") not in blocked]
+            mod_groups = activity_categories(self.config, authored)
+        elif not valid or weight_total<=0:
+            raise GameplayFault("LotteryUnavailable", "VIP activity pool has no valid hero records")
         key=self._op_key("user.get_lottery_activity",params)
         def mutate(p):
             if int(p.get("coin",0))<cost: raise GameplayFault("InsufficientCoin", "Not enough coin")
@@ -1243,8 +1287,19 @@ class GameplayEconomy:
             state.setdefault("score",0)
             picks=[]
             for _ in range(draws):
-                ticket=random.randrange(weight_total)
-                for row,weight in valid:
+                choices = valid
+                available_weight = weight_total
+                if mod_groups is not None:
+                    ticket = random.randrange(sum(group["weight"] for group in mod_groups))
+                    selected_group = mod_groups[-1]
+                    for group in mod_groups:
+                        ticket -= group["weight"]
+                        if ticket < 0:
+                            selected_group = group
+                            break
+                    choices, available_weight = selected_group["rows"], selected_group["candidateWeight"]
+                ticket=random.randrange(available_weight)
+                for row,weight in choices:
                     ticket-=weight
                     if ticket<0:
                         picks.append(row);break
@@ -1292,6 +1347,8 @@ class GameplayEconomy:
         if not isinstance(row,list) or len(row)<2 or not isinstance(row[0],dict):
             raise GameplayFault("InvalidExchange", "Activity exchange row does not match the client schema")
         reward=copy.deepcopy(row[0]);need=int(row[1]);key=self._op_key("user.exchange_activity_avatar",params)
+        if mod_runtime(self.config):
+            ensure_reward(self.config, reward, "acquisition.exchange.activity")
         def mutate(p):
             attrs=p.setdefault("attrs",{}); state=attrs.setdefault("lottery_activity",{"score":0})
             if not isinstance(state,dict): state={"score":0};attrs["lottery_activity"]=state
@@ -1326,6 +1383,8 @@ class GameplayEconomy:
         avatar_defs=self.config.get("avatar",{})
         if not isinstance(avatar_defs,dict) or aid not in avatar_defs:
             raise GameplayFault("UnknownAvatar", "Timed exchange hero is not configured")
+        if mod_runtime(self.config):
+            ensure_channel(self.config, aid, "acquisition.exchange.activity")
         rows=(self.config.get("ploy_system_simple") or {}).get("timed_exchange",[])
         if not isinstance(rows,list):
             raise GameplayFault("TimedExchangeUnavailable", "Timed exchange table is invalid")

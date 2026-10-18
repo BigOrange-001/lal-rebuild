@@ -12,11 +12,27 @@ package com.meng52.game.global
    import feathers.display.Scale3Image;
    import feathers.textures.Scale3Textures;
    import flash.display.MovieClip;
+   import flash.display.Bitmap;
+   import flash.display.BitmapData;
+   import flash.display.Loader;
+   import flash.events.Event;
+   import flash.events.IOErrorEvent;
+   import flash.events.SecurityErrorEvent;
+   import flash.media.Sound;
+   import flash.net.URLLoader;
+   import flash.net.URLLoaderDataFormat;
+   import flash.net.URLRequest;
+   import flash.system.LoaderContext;
+   import flash.text.TextFormat;
+   import flash.utils.ByteArray;
+   import flash.utils.setTimeout;
+   import flash.utils.clearTimeout;
    import flash.geom.Rectangle;
    import flash.utils.Dictionary;
    import starling.core.Starling;
    import starling.events.EventDispatcher;
    import starling.utils.AssetManager;
+   import starling.textures.Texture;
    
    public class GlobalData
    {
@@ -102,6 +118,230 @@ package com.meng52.game.global
       public static var $isFightAwardIndex:int = -1;
       
       public static var $mConfig:Object = null;
+
+      public static var $modRuntime:Object = {};
+      public static var $modUid:String = "";
+      public static var $modRevision:Number = -1;
+      public static var $modDigest:String = "";
+      public static var $modReady:Boolean = true;
+      public static var $modError:String = "";
+      private static var $modGeneration:uint = 0;
+      private static var $modAssets:Array = [];
+      private static var $modBitmaps:Array = [];
+
+      // Aliases belong to the logged-in save. Nothing from the previous save
+      // is allowed to satisfy the next save's resource manifest.
+      public static function resetModResources() : uint
+      {
+         $modGeneration++;
+         for each(var asset:Object in $modAssets)
+         {
+            if(asset.kind == "sound") $assetManager.removeSound(String(asset.alias));
+            else $assetManager.removeTexture(String(asset.alias),true);
+         }
+         for each(var bitmap:BitmapData in $modBitmaps) bitmap.dispose();
+         $modAssets = [];
+         $modBitmaps = [];
+         $modRuntime = {};
+         $modUid = "";
+         $modRevision = -1;
+         $modDigest = "";
+         $modReady = false;
+         $modError = "";
+         return $modGeneration;
+      }
+
+      public static function resolveModTexture(name:String) : String
+      {
+         var aliases:Object = $modRuntime == null ? null : $modRuntime.textureAliases;
+         var seen:Object = {};
+         for(var i:int = 0; i < 8 && aliases != null && aliases[name] != null; i++)
+         {
+            if(seen[name]) return "__modMissingHero";
+            seen[name] = true;
+            name = String(aliases[name]);
+         }
+         return name;
+      }
+
+      public static function isMissingModHero(id:String) : Boolean
+      {
+         var base:String = id == null ? "" : id.split("|")[0].split("-")[0];
+         var heroes:Object = $modRuntime == null ? null : $modRuntime.heroes;
+         return heroes != null && heroes[base] != null && heroes[base].available === false;
+      }
+
+      public static function baseModHeroId(id:String) : String
+      {
+         var base:String = id == null ? "" : id.split("|")[0].split("-")[0];
+         var aliases:Object = $modRuntime == null ? null : $modRuntime.aliasBaseIds;
+         return aliases != null && aliases[base] != null ? String(aliases[base]) : base;
+      }
+
+      public static function modDefinitionId(id:String, scope:String) : String
+      {
+         var base:String = baseModHeroId(id);
+         var scopes:Object = $modRuntime == null ? null : $modRuntime.scopedAvatarIds;
+         return scopes != null && scopes[scope] != null && scopes[scope][base] != null ? String(scopes[scope][base]) : base;
+      }
+
+      public static function modChannelAllowed(id:String, channel:String) : Boolean
+      {
+         var heroes:Object = $modRuntime == null ? null : $modRuntime.heroes;
+         var metadata:Object = heroes == null ? null : heroes[baseModHeroId(id)];
+         return metadata == null || metadata.available !== false && (metadata.channels == null || metadata.channels[channel] !== false);
+      }
+
+      public static function canonicalModInstanceId(id:String) : String
+      {
+         if(id == null) return null;
+         var base:String = id.split("|")[0].split("-")[0];
+         return baseModHeroId(base) + id.substr(base.length);
+      }
+
+      public static function loadModResources(envelope:Object, done:Function) : void
+      {
+         var generation:uint = resetModResources();
+         if(envelope == null || envelope.uid == null || envelope.cfg == null || envelope.digest == null)
+         {
+            $modError = "存档 Mod 配置不完整，请重新登录。";
+            done(false);
+            return;
+         }
+         $modUid = String(envelope.uid);
+         $modRevision = Number(envelope.revision);
+         $modDigest = String(envelope.digest);
+         $modRuntime = envelope.mod_runtime == null ? {} : envelope.mod_runtime;
+         var queue:Array = $modRuntime.assets is Array ? $modRuntime.assets.concat() : [];
+         var completed:Boolean = false;
+         var timeout:uint = 0;
+         var decodedBytes:Number = 0;
+         var fail:Function = function(message:String):void
+         {
+            if(generation != $modGeneration || completed) return;
+            completed = true;
+            clearTimeout(timeout);
+            $modError = message;
+            $modReady = false;
+            done(false);
+         };
+         var next:Function = function():void
+         {
+            if(generation != $modGeneration || completed) return;
+            clearTimeout(timeout);
+            if(queue.length == 0)
+            {
+               $modReady = true;
+               completed = true;
+               done(true);
+               return;
+            }
+            var row:Object = queue.shift();
+            timeout = setTimeout(function():void { fail("读取 Mod 资源超时，请检查英雄包后重新登录。"); },20000);
+            var path:String = String(row.path);
+            var digest:String = String(row.contentDigest);
+            if(!/^[a-f0-9]{64}$/.test(digest) || path.length == 0 || path.indexOf("..") >= 0 || path.charAt(0) == "/" || path.indexOf("\\") >= 0 || String(row.alias).indexOf("MOD_") != 0)
+            {
+               fail("Mod 资源索引无效：" + path);
+               return;
+            }
+            var segments:Array = path.split("/");
+            for(var i:int = 0; i < segments.length; i++) segments[i] = encodeURIComponent(String(segments[i]));
+            var request:URLRequest = new URLRequest(MainConfig.$SERVER_ADDRESS.replace(/\/$/,"") + "/mods/assets/" + digest + "/" + segments.join("/"));
+            var reader:URLLoader = new URLLoader();
+            reader.dataFormat = URLLoaderDataFormat.BINARY;
+            var error:Function = function(event:Object):void { fail("无法读取 Mod 资源：" + path); };
+            reader.addEventListener(IOErrorEvent.IO_ERROR,error);
+            reader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,error);
+            reader.addEventListener(flash.events.Event.COMPLETE,function(event:flash.events.Event):void
+            {
+               if(generation != $modGeneration || completed) return;
+               var bytes:ByteArray = reader.data as ByteArray;
+               if(bytes == null || bytes.length == 0 || bytes.length > 33554432)
+               {
+                  fail("Mod 资源大小无效：" + path);
+                  return;
+               }
+               if(row.kind == "sound")
+               {
+                  try
+                  {
+                     var sound:Sound = new Sound();
+                     sound.loadCompressedDataFromByteArray(bytes,bytes.length);
+                     $assetManager.addSound(String(row.alias),sound);
+                     $modAssets.push(row);
+                     next();
+                  }
+                  catch(soundError:Error) { fail("Mod 音频解码失败：" + path); }
+                  return;
+               }
+               // loadBytes cannot execute a SWF, including one disguised as an
+               // image: reject its signature before touching the decoder.
+               if(row.kind != "image" || bytes.length < 4 || !((bytes[0] == 137 && bytes[1] == 80 && bytes[2] == 78 && bytes[3] == 71) || (bytes[0] == 255 && bytes[1] == 216)))
+               {
+                  fail("Mod 图像格式不受支持：" + path);
+                  return;
+               }
+               var loader:Loader = new Loader();
+               loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,error);
+               loader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,error);
+               loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,function(loaded:flash.events.Event):void
+               {
+                  if(generation != $modGeneration || completed) { loader.unloadAndStop(true); return; }
+                  var content:Bitmap = loader.content as Bitmap;
+                  if(content == null || content.bitmapData.width > 4096 || content.bitmapData.height > 4096 || decodedBytes + content.bitmapData.width * content.bitmapData.height * 4 > 134217728)
+                  {
+                     loader.unloadAndStop(true);
+                     fail("Mod 图像尺寸或类型无效：" + path);
+                     return;
+                  }
+                  try
+                  {
+                     var bitmap:BitmapData = content.bitmapData.clone();
+                     $modBitmaps.push(bitmap);
+                     var texture:Texture = Texture.fromBitmapData(bitmap,false,false);
+                     texture.root.onRestore = function():void { texture.root.uploadBitmapData(bitmap); };
+                     decodedBytes += bitmap.width * bitmap.height * 4;
+                     $assetManager.addTexture(String(row.alias),texture);
+                     $modAssets.push(row);
+                     loader.unloadAndStop(true);
+                     next();
+                  }
+                  catch(textureError:Error)
+                  {
+                     loader.unloadAndStop(true);
+                     fail("Mod 图像上传失败，请减少素材大小或数量：" + path);
+                  }
+               });
+               var context:LoaderContext = new LoaderContext();
+               context.allowCodeImport = false;
+               try { loader.loadBytes(bytes,context); }
+               catch(imageError:Error) { fail("Mod 图像解码失败：" + path); }
+            });
+            try { reader.load(request); }
+            catch(requestError:Error) { fail("无法读取 Mod 资源：" + path); }
+         };
+         next();
+      }
+
+      public static function missingModTexture() : Texture
+      {
+         var texture:Texture = $assetManager.getTexture("__modMissingHero");
+         if(texture == null)
+         {
+            var bitmap:BitmapData = new BitmapData(160,160,false,0x403846);
+            var label:flash.text.TextField = new flash.text.TextField();
+            label.defaultTextFormat = new TextFormat("Arial",94,0xDDC8D8,true,null,null,null,null,"center");
+            label.width = 160;
+            label.height = 145;
+            label.text = "?";
+            bitmap.draw(label);
+            texture = Texture.fromBitmapData(bitmap,false,false);
+            texture.root.onRestore = function():void { texture.root.uploadBitmapData(bitmap); };
+            $assetManager.addTexture("__modMissingHero",texture);
+         }
+         return texture;
+      }
       
       public static var $mConfig_simple:Object = null;
       
@@ -637,6 +877,8 @@ package com.meng52.game.global
          _data.exp = _profile.exp;
          _data.gold = _profile.gold;
          _data.coin = _profile.coin;
+         if(_profile.hasOwnProperty("mod_state")) _data.mod_state = _profile.mod_state;
+         else delete _data.mod_state;
          if(_profile.hasOwnProperty("spending"))
          {
             _data.spending = _profile.spending;

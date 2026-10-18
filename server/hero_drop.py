@@ -11,6 +11,7 @@ import re
 
 from player_store import GameplayFault
 from gameplay_common import ensure_hero_acquirable
+from mod_policy import runtime as mod_runtime, candidate_ids
 
 _HERO_AID = re.compile(r"A_1\d{3}_(\d+)")
 
@@ -84,6 +85,19 @@ def roll_campaign_hero_drop(config: dict, stage: dict, stage_id: str,
             ensure_hero_acquirable(aid, config)
         except GameplayFault as exc:
             raise GameplayFault("InvalidHeroDropPolicy", "Campaign hero drop pool contains a blocked skin") from exc
+    if mod_runtime(config):
+        groups = {}
+        for row in candidates:
+            groups.setdefault(row["star"], []).append(row)
+        pools = {star: candidate_ids(config, [row["aid"] for row in rows],
+                                     "acquisition.drop.campaign", include_new=True, quality=star)
+                 for star, rows in groups.items()}
+        if any(not pool for pool in pools.values()):
+            raise GameplayFault("ModPoolEmpty", "主线英雄掉落的某个品阶池为空")
+        selected = source.choice(candidates)
+        if source.randrange(10000) < int(selected["chance_bp"]):
+            return source.choice(pools[selected["star"]])
+        return None
     selected = source.choice(candidates)
     if source.randrange(10000) < int(selected["chance_bp"]):
         return str(selected["aid"])

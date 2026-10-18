@@ -8,6 +8,8 @@ import copy
 import math
 from combat_math import level_stats
 from combat_rng import CombatRandom
+from mod_policy import (runtime as mod_runtime, definition_id, base_aid,
+                        ensure_available, effective_digest)
 
 
 def _native_skill_snapshot(config, skill_id, level=1):
@@ -102,7 +104,11 @@ def validate_team_lane_coverage(team, lane_count, side="team"):
 
 def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1,
               instance_id=None, overrides=None, *, enforce_avatar_level_cap=True,
-              limit_break=False, npc_limit_break=False, summoned=False):
+              limit_break=False, npc_limit_break=False, summoned=False, scope=None):
+    original_aid = base_aid(config, aid)
+    if mod_runtime(config):
+        ensure_available(config, original_aid)
+        aid = definition_id(config, original_aid, scope or ("summoned" if summoned else "owned" if instance_id else "pveEnemy"))
     avatar = config.get("avatar", {}).get(str(aid))
     if not avatar:
         raise ValueError(f"unknown combat avatar id: {aid}")
@@ -148,6 +154,10 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     skill_b = _native_skill_snapshot(config, pl[13] if len(pl) > 13 else None)
     result = {"aid":str(aid),"ap":stats["attack"],"morph":0,"buffs":{},"de_ma":stats["magic_defense"],"de_ph":stats["physical_defense"],"hp":stats["health"],"hp_max":stats["health"],"isme":team==1,"leader":1 if leader else 0,"line":int(line),"lv":level,"new_4attrs":{"hit":0,"flee":0,"crit":0,"tough":0},"pos":native_pos,"slv":int(slv),"tpl":[int(tl[i]) if len(tl)>i else 0 for i in range(3)]+[int(pl[8]) if len(pl)>8 else 0,int(pl[9]) if len(pl)>9 else 0],"talent":None,"skill":skill,"leader_skill":leader_skill,"book_skill":None,"skillB":skill_b,"skill_diff":_to_int(avatar.get("skill_diff", 0))}
     if instance_id: result["instance_id"] = instance_id
+    if mod_runtime(config):
+        result["mod_digest"] = effective_digest(config)
+        if str(aid) != original_aid:
+            result["base_aid"] = original_aid
     # Avatar.toDataObj includes advancement even when it is zero. Player
     # attributes already contain its stat bonus; the snapshot must also carry
     # the stored phase so origin checks compare the same progression state.
@@ -161,7 +171,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     return result
 
 
-def serialize_stage_team(config, entries, team=2):
+def serialize_stage_team(config, entries, team=2, *, scope=None):
     result=[]
     for i,entry in enumerate(entries or []):
         if not isinstance(entry,(list,tuple)) or not entry: continue
@@ -180,7 +190,7 @@ def serialize_stage_team(config, entries, team=2):
             if len(entry) < 15 or type(entry[14]) is not int or not 0 <= entry[14] <= phase_cap:
                 raise ValueError("invalid authored NPC phase")
         unit=base_unit(config,str(entry[0]),int(entry[1]) if len(entry)>1 else 1,int(entry[2]) if len(entry)>2 else 1,int(entry[3]) if len(entry)>3 else i%3,float(entry[4]) if len(entry)>4 else .2+.16*i,bool(int(entry[5])) if len(entry)>5 else i==0,team,
-                       enforce_avatar_level_cap=False,npc_limit_break=tower_break)
+                       enforce_avatar_level_cap=False,npc_limit_break=tower_break, scope=scope)
         if tower_break:
             unit["phase"] = entry[14]
         # Campaign workbook extensions follow the native tuple's equipment
@@ -203,6 +213,10 @@ def serialize_stage_team(config, entries, team=2):
 def serialize_player_team(config, profile, team_num, submitted_team, attributes_fn=None):
     teams=profile.get("team") or []; index=max(0,min(int(team_num or 0),max(0,len(teams)-1)))
     saved=set(x for x in (teams[index] if teams else []) if x); roster=profile.get("avatars") or {}; result=[]
+    if mod_runtime(config):
+        for iid in saved:
+            if iid in roster:
+                ensure_available(config, roster[iid].get("aid", iid))
     for slot,row in enumerate((submitted_team if isinstance(submitted_team,list) else [])[:6]):
         if not row or not isinstance(row,(list,tuple)) or len(row)<3: continue
         iid=str(row[0])
@@ -922,7 +936,7 @@ class ReferenceBattle:
             ranged = _to_int(unit.get("range", 0)) >= 500
         if not ranged:
             return False
-        return str(unit.get("aid", "")).find("A_1041_") != 0
+        return base_aid(self._config, unit.get("aid", "")).find("A_1041_") != 0
 
     def _get_range(self, unit):
         """137_Avatar.as:3497 getRange(false)."""

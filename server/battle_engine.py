@@ -1603,6 +1603,23 @@ class ReferenceBattle:
         for ally in recipients:
             self._add_buff(ally, "shield", rounds, _to_int(int(attacker.get("hp_max", 0)) * ratio))
 
+    def _act_ap_shield(self, attacker, enemies, allies, skill, action, index, context):
+        """ap_shield (MOD, S_9164_6): shield = ratio * caster attack power.
+
+        Recipients follow the action's own actionTargetPolicies row
+        (``ally_all`` reaches every living ally regardless of lane), matching
+        the client case added to 139_SkillSet.as.
+        """
+        if len(action) < 4:
+            raise ValueError("ap_shield needs a coefficient, rounds and a vfx")
+        ratio = float(action[1])
+        rounds = int(action[2])
+        if not ratio > 0 or not rounds > 0:
+            return
+        for ally in self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
+                                            skill=skill, index=index):
+            self._add_buff(ally, "shield", rounds, _to_int(int(attacker.get("ap", 0)) * ratio))
+
     def _act_caster_hp_shield(self, attacker, enemies, allies, skill, action, index, context):
         self._act_hp_shield(attacker, enemies, allies, skill, action, index, context)
 
@@ -2390,9 +2407,9 @@ class ReferenceBattle:
             return False
         owner_id = owner.get("aid")
         owner_token = owner.get("_owner_token")
-        # MOD: S_9162_6 summons up to 2 zongzi per owner (client: one lane
-        # holds up to 2; the engine has no lane concept, so cap at 2 total).
-        cap = 2 if str(skill_id) == "S_9162_6" else 1
+        # MOD: S_9162_6 summons up to 3 zongzi per owner (client: one lane
+        # holds up to 3; the engine has no lane concept, so cap at 3 total).
+        cap = 3 if str(skill_id) == "S_9162_6" else 1
         live = 0
         for unit in roster:
             if not isinstance(unit, dict) or int(unit.get("hp", 0)) <= 0:
@@ -3042,6 +3059,7 @@ _ACTION_HANDLERS = {
     "attrup": ReferenceBattle._act_attrup,
     "stat_flat": ReferenceBattle._act_stat_flat,
     "hp_shield": ReferenceBattle._act_hp_shield,
+    "ap_shield": ReferenceBattle._act_ap_shield,
     "caster_hp_shield": ReferenceBattle._act_caster_hp_shield,
     "target_hp_shield": ReferenceBattle._act_target_hp_shield,
     "shield": ReferenceBattle._act_shield,

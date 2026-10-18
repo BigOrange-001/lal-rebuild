@@ -2014,6 +2014,20 @@ package com.meng52.game.module.skill
                      GameMap.actionDelay += 0.5;
                   }
                   break;
+               case "ap_shield":
+                  // MOD (S_9164_6): shield = ratio * caster attack power,
+                  // granted to every living ally regardless of lane.
+                  var apShieldTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  var apShieldIndex:int = 0;
+                  while(apShieldIndex < apShieldTargets.length)
+                  {
+                     var apShieldTarget:Avatar = apShieldTargets[apShieldIndex];
+                     apShieldTarget.addBuff("shield",int(_loc20_[2]),int(avatar.getDamage() * Number(_loc20_[1])));
+                     queueDirectActionEffect(String(_loc20_[_loc20_.length - 1]),apShieldTarget);
+                     apShieldIndex++;
+                  }
+                  GameMap.actionDelay += 0.15 * apShieldTargets.length;
+                  break;
                case "cure":
                   if(_loc24_ == 0)
                   {
@@ -3319,7 +3333,7 @@ package com.meng52.game.module.skill
                if(zongziFamily[zongziIndex] && zongziFamily[zongziIndex].hp > 0 && zongziFamily[zongziIndex].line == summonLine) zongziLaneCount++;
                zongziIndex++;
             }
-            if(zongziLaneCount >= 2)
+            if(zongziLaneCount >= 3)
             {
                zongziLine1 = summonLine - 1;
                zongziLine2 = summonLine + 1;
@@ -3335,8 +3349,8 @@ package com.meng52.game.module.skill
                   }
                   zongziIndex++;
                }
-               if(zongziLine1 >= 1 && zongziLine1 <= 3 && zongziCount1 < 2 && (zongziLine2 < 1 || zongziLine2 > 3 || zongziCount2 >= 2 || int(Math.random() * 2) == 0)) zongziTargetLine = zongziLine1;
-               else if(zongziLine2 >= 1 && zongziLine2 <= 3 && zongziCount2 < 2) zongziTargetLine = zongziLine2;
+               if(zongziLine1 >= 1 && zongziLine1 <= 3 && zongziCount1 < 3 && (zongziLine2 < 1 || zongziLine2 > 3 || zongziCount2 >= 3 || int(Math.random() * 2) == 0)) zongziTargetLine = zongziLine1;
+               else if(zongziLine2 >= 1 && zongziLine2 <= 3 && zongziCount2 < 3) zongziTargetLine = zongziLine2;
                zongziFrontAlly = null;
                zongziLineAvatars = GameMap.currentMap.getLineAliveList(avatar.team,zongziTargetLine) as Vector.<Avatar>;
                zongziIndex = 0;
@@ -3459,6 +3473,13 @@ package com.meng52.game.module.skill
             {
                replacedSummons[replacementIndex].dead();
                replacementIndex++;
+            }
+            // MOD: a new zongzi changes the friendly unit count, which is one
+            // of the passive trigger conditions of S_9164_6 (zongzi maiden).
+            if(skillSetData.id == "S_9162_6" && avatar && avatar.skillB && avatar.avatarData.skill_diff == 18)
+            {
+               GlobalData.skillBoo = true;
+               avatar.checkSkillB();
             }
          }
          else if(replacedSummons.length > 0)

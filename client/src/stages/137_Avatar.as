@@ -6245,20 +6245,16 @@ package com.meng52.game.module.avatar
       private function notifyZongziDeath() : void
       {
          var owner:Avatar = null;
-         var list:Vector.<Avatar> = null;
-         var i:int = 0;
          if(zongziDeathNotified || !buffs || !buffs["summon"] || avatarData.id != "A_2014_5") return;
          zongziDeathNotified = true;
          owner = formationOwner;
-         if(!owner || owner.hp <= 0 || !owner.manualSummonFamilies) return;
-         list = owner.manualSummonFamilies["manual-1212-zongzi"] as Vector.<Avatar>;
-         while(list && i < list.length)
+         if(!owner || owner.hp <= 0) return;
+         // MOD: a zongzi death changes the friendly unit count, which is one
+         // of the passive trigger conditions of S_9164_6 (zongzi maiden).
+         if(owner.skillB && owner.avatarData.skill_diff == 18)
          {
-            if(list[i] && list[i] != this && list[i].hp > 0)
-            {
-               list[i].addManualBattleStack("attack",0.1,999);
-            }
-            i++;
+            GlobalData.skillBoo = true;
+            owner.checkSkillB();
          }
       }
 

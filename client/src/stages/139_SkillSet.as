@@ -3310,59 +3310,24 @@ package com.meng52.game.module.skill
          }
          summonLine = summonTarget.line;
          summonPos = summonTarget.pos;
-         var zongziLaneCount:int = 0;
-         var zongziNeighborLine:int = -1;
-         var zongziFrontAlly:Avatar = null;
-         var zongziFamily:Vector.<Avatar> = null;
-         var zongziIndex:int = 0;
-         var zongziLine1:int = 0;
-         var zongziLine2:int = 0;
-         var zongziCount1:int = -1;
-         var zongziCount2:int = -1;
-         var zongziTargetLine:int = summonLine;
-         var zongziTargetPos:int = summonPos;
-         var zongziLineAvatars:Vector.<Avatar> = null;
          if(skillSetData.id == "S_9162_6")
          {
-            if(!avatar.manualSummonFamilies) avatar.manualSummonFamilies = {};
-            zongziFamily = avatar.manualSummonFamilies["manual-1212-zongzi"] as Vector.<Avatar>;
-            zongziLaneCount = 0;
-            zongziIndex = 0;
-            while(zongziFamily && zongziIndex < zongziFamily.length)
+            summonLine = chooseZongziSummonLine(summonLine);
+            // No replacement at capacity: keep every existing zongzi intact.
+            if(summonLine < 0) return;
+            if(summonLine != summonTarget.line)
             {
-               if(zongziFamily[zongziIndex] && zongziFamily[zongziIndex].hp > 0 && zongziFamily[zongziIndex].line == summonLine) zongziLaneCount++;
-               zongziIndex++;
-            }
-            if(zongziLaneCount >= 3)
-            {
-               zongziLine1 = summonLine - 1;
-               zongziLine2 = summonLine + 1;
-               zongziCount1 = -1;
-               zongziCount2 = -1;
-               zongziIndex = 0;
-               while(zongziFamily && zongziIndex < zongziFamily.length)
-               {
-                  if(zongziFamily[zongziIndex] && zongziFamily[zongziIndex].hp > 0)
-                  {
-                     if(zongziFamily[zongziIndex].line == zongziLine1) zongziCount1++;
-                     else if(zongziFamily[zongziIndex].line == zongziLine2) zongziCount2++;
-                  }
-                  zongziIndex++;
-               }
-               if(zongziLine1 >= 1 && zongziLine1 <= 3 && zongziCount1 < 3 && (zongziLine2 < 1 || zongziLine2 > 3 || zongziCount2 >= 3 || int(Math.random() * 2) == 0)) zongziTargetLine = zongziLine1;
-               else if(zongziLine2 >= 1 && zongziLine2 <= 3 && zongziCount2 < 3) zongziTargetLine = zongziLine2;
-               zongziFrontAlly = null;
-               zongziLineAvatars = GameMap.currentMap.getLineAliveList(avatar.team,zongziTargetLine) as Vector.<Avatar>;
-               zongziIndex = 0;
+               var zongziFrontAlly:Avatar = null;
+               var zongziLineAvatars:Vector.<Avatar> = GameMap.currentMap.getLineAliveList(avatar.team,summonLine) as Vector.<Avatar>;
+               var zongziIndex:int = 0;
                while(zongziLineAvatars && zongziIndex < zongziLineAvatars.length)
                {
                   if(zongziLineAvatars[zongziIndex] && zongziLineAvatars[zongziIndex].hp > 0 && (!zongziFrontAlly || (avatar.team == 1 ? zongziLineAvatars[zongziIndex].pos < zongziFrontAlly.pos : zongziLineAvatars[zongziIndex].pos > zongziFrontAlly.pos))) zongziFrontAlly = zongziLineAvatars[zongziIndex];
                   zongziIndex++;
                }
-               zongziTargetPos = zongziFrontAlly ? zongziFrontAlly.pos : summonTarget.pos;
-               summonLine = zongziTargetLine;
+               summonPos = zongziFrontAlly ? zongziFrontAlly.pos : summonTarget.pos;
             }
-            summonPos = GameMap.currentMap.getFinalPos(avatar.team,summonLine,zongziTargetPos + (avatar.team == 1 ? -50 : 50));
+            summonPos = GameMap.currentMap.getFinalPos(avatar.team,summonLine,summonPos + (avatar.team == 1 ? -50 : 50));
          }
          _loc3_ = String(_loc1_.familyKey);
          _loc4_ = int(_loc1_.maxAlive);
@@ -3382,7 +3347,7 @@ package com.meng52.game.module.skill
          replacedSummons = new Vector.<Avatar>();
          if(avatar.getManualSummonSlots(_loc3_,_loc4_) <= 0)
          {
-            if(_loc1_.replaceOldest !== true || !avatar.manualSummonFamilies)
+            if(skillSetData.id == "S_9162_6" || _loc1_.replaceOldest !== true || !avatar.manualSummonFamilies)
             {
                GameMapTools.gameTrace("召唤家族数量已满",skillSetData.id);
                return;
@@ -3489,6 +3454,35 @@ package com.meng52.game.module.skill
          }
       }
 
+      // Native lane ids are zero-based; winnerList describes the actual map.
+      private function chooseZongziSummonLine(anchorLine:int) : int
+      {
+         var laneCount:int = GameMap.currentMap.winnerList.length;
+         if(anchorLine < 0 || anchorLine >= laneCount) return -1;
+         var counts:Array = [];
+         var i:int = 0;
+         var total:int = 0;
+         var family:Vector.<Avatar> = avatar.manualSummonFamilies ? avatar.manualSummonFamilies["manual-1212-zongzi"] as Vector.<Avatar> : null;
+         while(i < laneCount) { counts.push(0); i++; }
+         i = 0;
+         while(family && i < family.length)
+         {
+            if(family[i] && family[i].hp > 0)
+            {
+               total++;
+               if(family[i].line >= 0 && family[i].line < laneCount) counts[family[i].line]++;
+            }
+            i++;
+         }
+         if(total >= 6) return -1;
+         if(counts[anchorLine] < 2) return anchorLine;
+         var candidates:Array = [];
+         if(anchorLine > 0 && counts[anchorLine - 1] < 2) candidates.push(anchorLine - 1);
+         if(anchorLine + 1 < laneCount && counts[anchorLine + 1] < 2) candidates.push(anchorLine + 1);
+         if(candidates.length == 0) return -1;
+         return int(candidates[candidates.length == 1 ? 0 : int(Math.random() * candidates.length)]);
+      }
+
       private function isManualSummonPolicyAllowed() : Boolean
       {
          var _loc1_:String = skillSetData.id;
@@ -3496,7 +3490,7 @@ package com.meng52.game.module.skill
          var policy:Object = skillSetData.manualSummonPolicy;
          if(_loc2_.indexOf(_loc1_) < 0 || !policy) return false;
          if(String(policy.skillId) != _loc1_ || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
-         if(_loc1_.indexOf("9162") >= 0) return String(policy.unitId) == "A_2014_5" && String(policy.familyKey) == "manual-1212-zongzi" && int(policy.maxAlive) == 6 && Number(policy.attackRange) == 125 && policy.clearSkills === false && policy.actionType == 1 && policy.replaceOldest === true && int(policy.ttlOwnerTurns) == 99;
+         if(_loc1_.indexOf("9162") >= 0) return String(policy.unitId) == "A_2014_5" && String(policy.familyKey) == "manual-1212-zongzi" && int(policy.maxAlive) == 6 && Number(policy.attackRange) == 125 && policy.clearSkills === false && policy.actionType == 1 && policy.replaceOldest === false && int(policy.ttlOwnerTurns) == 99;
          if(_loc1_.indexOf("1029_") >= 0) return String(policy.unitId) == "A_2002_5" && String(policy.familyKey) == "manual-1029-tibbers" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
          if(_loc1_.indexOf("1124_") >= 0) return String(policy.unitId) == "A_3002_2" && String(policy.familyKey) == "manual-1124-soldier" && int(policy.maxAlive) == 2 && Number(policy.attackRange) == 175 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true && int(policy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
          if(_loc1_.indexOf("1127_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;

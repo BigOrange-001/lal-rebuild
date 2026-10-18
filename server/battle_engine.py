@@ -309,7 +309,7 @@ class ReferenceBattle:
     _MIN_SPACE_POS = 200
     _SUMMON_POS = 500
 
-    def __init__(self, team_a, team_b, seed=82684, max_rounds=30, config=None):
+    def __init__(self, team_a, team_b, seed=82684, max_rounds=30, config=None, lane_count=None):
         self.a = copy.deepcopy([dict(x) for x in team_a])
         self.b = copy.deepcopy([dict(x) for x in team_b])
         # boundedSummons belongs to each SkillSet/Avatar instance. Keep the
@@ -318,6 +318,11 @@ class ReferenceBattle:
         for side, roster in ((1, self.a), (2, self.b)):
             for index, unit in enumerate(roster):
                 unit.setdefault("_owner_token", unit.get("instance_id") or f"{side}:{index}")
+        # Native map lane count may exceed the lanes occupied in a test snapshot.
+        self.lane_count = lane_count if lane_count is not None else max(
+            (int(u.get("line", 0)) + 1 for u in self.a + self.b), default=1)
+        if type(self.lane_count) is not int or self.lane_count < 1:
+            raise ValueError("lane_count must be a positive integer")
         self.rng = CombatRandom(int(seed))
         self.max_rounds = max(1, int(max_rounds))
         # Kept for the avatar-table lookups the action handlers need (cast
@@ -1539,10 +1544,7 @@ class ReferenceBattle:
         rounds = _to_int(action[3])
         if rounds < 1:
             return
-        live = sum(1 for u in allies
-                   if str(u.get("aid", "")) == "A_2014_5"
-                   and int(u.get("hp", 0)) > 0
-                   and u.get("summon_owner_token") is not None)
+        live = len(self._live_zongzi(attacker))
         mult = 1.0 + float(live)
         amount = self._heal_channel_value(attacker, heal_scale * mult)
         targets = list(self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
@@ -2367,6 +2369,9 @@ class ReferenceBattle:
         elif level < 1:
             return
         skill_id = str(skill.get("skid", ""))
+        if skill_id == "S_9162_6":
+            self._act_zongzi_summon(attacker, action, level, context, index)
+            return
         if bounded and self._has_live_bounded_summon(attacker, skill_id):
             return
         clone = self._spawn_summon(attacker, aid, float(fraction), rounds, level=level,
@@ -2375,6 +2380,56 @@ class ReferenceBattle:
                                    ap_factor=self._summon_ap_factor(skill_id))
         if clone is not None:
             context["targets"][index] = clone
+
+    @staticmethod
+    def _live_zongzi(owner):
+        """Same per-owner family as Avatar.countManualSummonAlive."""
+        token = owner.get("_owner_token")
+        return [u for u in owner.get("_team", [])
+                if str(u.get("aid", "")) == "A_2014_5"
+                and int(u.get("hp", 0)) > 0
+                and (u.get("summon_owner_token") == token if token is not None
+                     else u.get("summon_owner_token") is None
+                     and u.get("summon_owner") == owner.get("aid"))
+                and u.get("_bounded_summon_skill") in (None, "S_9162_6")]
+
+    def _choose_zongzi_summon_line(self, owner):
+        anchor = int(owner.get("line", 0))
+        if not 0 <= anchor < self.lane_count:
+            return None
+        family = self._live_zongzi(owner)
+        if len(family) >= 6:
+            return None
+        counts = [sum(int(u.get("line", -1)) == lane for u in family)
+                  for lane in range(self.lane_count)]
+        if counts[anchor] < 2:
+            return anchor
+        candidates = [lane for lane in (anchor - 1, anchor + 1)
+                      if 0 <= lane < self.lane_count and counts[lane] < 2]
+        if not candidates:
+            return None
+        return candidates[0] if len(candidates) == 1 else candidates[self.rng.get_random(len(candidates))]
+
+    def _act_zongzi_summon(self, owner, action, level, context, index):
+        if str(action[2]) != "A_2014_5":
+            return
+        line = self._choose_zongzi_summon_line(owner)
+        if line is None:
+            return
+        team = self._team_number(owner)
+        anchor_pos = int(owner.get("pos", 0))
+        if line != int(owner.get("line", 0)):
+            lane_allies = [u for u in owner.get("_team", [])
+                           if int(u.get("hp", 0)) > 0 and int(u.get("line", -1)) == line]
+            if lane_allies:
+                front = (min if team == 1 else max)(lane_allies, key=lambda u: u.get("pos", 0))
+                anchor_pos = int(front.get("pos", 0))
+        unit = self._spawn_summon(owner, "A_2014_5", float(action[1]), int(action[3]),
+                                  level=level, bounded=True, bounded_skill_id="S_9162_6")
+        if unit is not None:
+            unit["line"] = line
+            unit["pos"] = self._get_final_pos(team, line, anchor_pos + (-50 if team == 1 else 50))
+            context["targets"][index] = unit
 
     @staticmethod
     def _has_bounded_summon_policy(skill_id):
@@ -2407,9 +2462,7 @@ class ReferenceBattle:
             return False
         owner_id = owner.get("aid")
         owner_token = owner.get("_owner_token")
-        # MOD: S_9162_6 summons up to 3 zongzi per owner (client: one lane
-        # holds up to 3; the engine has no lane concept, so cap at 3 total).
-        cap = 3 if str(skill_id) == "S_9162_6" else 1
+        cap = 6 if str(skill_id) == "S_9162_6" else 1
         live = 0
         for unit in roster:
             if not isinstance(unit, dict) or int(unit.get("hp", 0)) <= 0:

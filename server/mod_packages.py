@@ -22,6 +22,17 @@ from mod_schema import (CHANNELS,SCOPES,LIMITS, ModError, canonical, digest, fai
 
 ALLOWED_EXTENSIONS={".json",".png",".jpg",".jpeg",".wav",".mp3",".txt",".md"}
 MAX_ARCHIVE_BYTES=LIMITS["archiveBytes"]
+MAX_REGISTRY_BYTES=LIMITS["registryBytes"]
+
+
+def _empty_registry():
+    return {"schema":"lal-mod-registry-v1","packages":{},"identities":{},"families":{},"aliases":{},"nextFamily":180000,"nextAlias":170000,"nextSkill":800000}
+
+
+def _registry_payload(value):
+    raw=canonical(value)
+    if len(raw)>MAX_REGISTRY_BYTES:fail("Installation registry exceeds its total byte quota", "registry.json", "ModRegistryLimit")
+    return raw
 
 def _validate_png(raw,path):
     if not raw.startswith(b"\x89PNG\r\n\x1a\n"):fail("Invalid PNG signature",path)
@@ -211,10 +222,10 @@ def _inspect_payload(payload,path=None):
     validate_package_references(package)
     return package
 
-def _atomic_json(path,value):
+def _atomic_json(path,value,raw=None):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
     temporary=path.with_name(path.name+"."+uuid.uuid4().hex+".tmp")
-    with temporary.open("xb") as stream:stream.write(canonical(value));stream.flush();os.fsync(stream.fileno())
+    with temporary.open("xb") as stream:stream.write(canonical(value) if raw is None else raw);stream.flush();os.fsync(stream.fileno())
     os.replace(temporary,path)
 
 class ModCatalog:
@@ -226,6 +237,7 @@ class ModCatalog:
         self.root.mkdir(parents=True,exist_ok=True)
         self.registry_path=self.root/"registry.json"
         self.catalog_error=None
+        self.recovery_error=None
         try:
             for name in ("inbox","packages","staging"):
                 directory=self.root/name;self._guard_storage(directory);directory.mkdir(exist_ok=True)
@@ -233,7 +245,7 @@ class ModCatalog:
         except ModError as exc:
             # Never reset a corrupt identity registry: that would reuse IDs.
             # Base-game saves must still be able to log in and use management.
-            self.catalog_error=exc if exc.code=="ModUnsafeStorage" else ModError("ModRegistryCorrupt","Installation registry is unreadable; restore a known registry backup before changing packages. "+str(exc),"registry.json")
+            self.catalog_error=exc if exc.code in ("ModUnsafeStorage","ModRegistryLimit") else ModError("ModRegistryCorrupt","Installation registry is unreadable; restore a known registry backup before changing packages. "+str(exc),"registry.json")
             self.registry=None
     @property
     def error(self):return self.catalog_error.as_dict() if self.catalog_error else None
@@ -298,6 +310,7 @@ class ModCatalog:
         if getattr(self,"catalog_error",None):raise self.catalog_error
         try:return self._read_registry()
         except ModError as exc:
+            if exc.code=="ModRegistryLimit":raise
             self.catalog_error=exc if exc.code=="ModUnsafeStorage" else ModError("ModRegistryCorrupt","Installation registry is unreadable; restore a known registry backup before changing packages. "+str(exc),"registry.json")
             raise self.catalog_error from exc
     def _read_registry(self):
@@ -305,8 +318,11 @@ class ModCatalog:
         if not self.registry_path.exists():
             previous=getattr(self,"registry",None) or {}
             if any(previous.get(key) for key in ("packages","identities","families","aliases","skills")):fail("Previously loaded registry disappeared; refusing to reuse reserved IDs","registry.json","ModRegistryCorrupt")
-            return {"schema":"lal-mod-registry-v1","packages":{},"identities":{},"families":{},"aliases":{},"nextFamily":180000,"nextAlias":170000,"nextSkill":800000}
-        try:value=strict_json(self.registry_path.read_bytes(),"registry.json")
+            return _empty_registry()
+        try:
+            with self.registry_path.open("rb") as stream:raw=stream.read(MAX_REGISTRY_BYTES+1)
+            if len(raw)>MAX_REGISTRY_BYTES:fail("Installation registry exceeds its total byte quota", "registry.json", "ModRegistryLimit")
+            value=strict_json(raw,"registry.json",max_bytes=MAX_REGISTRY_BYTES)
         except OSError as exc:fail("Registry cannot be read: "+str(exc),"registry.json","ModRegistryCorrupt")
         if not isinstance(value,dict) or value.get("schema")!="lal-mod-registry-v1":fail("Invalid registry schema","registry.json")
         for key in ("packages","identities","families","aliases"):
@@ -331,23 +347,36 @@ class ModCatalog:
                 fail("Duplicate definition allocation or unsafe cursor","registry.json."+table)
         return value
     def _save(self):
-        self._guard_storage(self.registry_path);_atomic_json(self.registry_path,self.registry)
+        try:raw=_registry_payload(self.registry)
+        except ModError:
+            # Allocation/restore callers may have built a larger candidate in
+            # memory. Reject it without retaining half of the proposed state.
+            self.registry=self._read_registry() if self.registry_path.exists() else _empty_registry()
+            raise
+        self._guard_storage(self.registry_path);_atomic_json(self.registry_path,self.registry,raw)
     def _recover(self):
         # Published directories contain their own verified manifest; an interrupted
         # registry write is recovered by inspection, never by loading cached data.
-        changed=False
+        recovered={}
         for candidate in (self.root/"packages").glob("*/*/*"):
             if candidate.is_dir() and not candidate.is_symlink():
                 try:pkg=self._read_directory(candidate)
                 except ModError:continue
                 key=pkg.package_id+"@"+pkg.version
                 old=self.registry["packages"].get(key)
-                if old is None:self.registry["packages"][key]=pkg.metadata();changed=True
-        if changed:
-            recovered=copy.deepcopy(self.registry["packages"])
+                if old is None:recovered[key]=pkg.metadata()
+        if recovered:
             with self._transaction():
-                self.registry=self._load()
-                for key,value in recovered.items():self.registry["packages"].setdefault(key,value)
+                planned=self._load()
+                for key,value in recovered.items():planned["packages"].setdefault(key,value)
+                try:_registry_payload(planned)
+                except ModError as exc:
+                    if exc.code!="ModRegistryLimit":raise
+                    # A crash-recovery candidate can exceed capacity while the
+                    # previous registry remains valid. Preserve its active
+                    # packages and show a management diagnostic separately.
+                    self.recovery_error=exc;return
+                self.registry=planned
                 self._save()
     def _read_directory(self,path):
         self._guard_storage(path)
@@ -376,7 +405,17 @@ class ModCatalog:
             if destination.exists():
                 existing=self._read_directory(destination)
                 if existing.digest!=pkg.digest:fail("Installed directory was modified",key)
+                if old is None:
+                    # An interrupted earlier publication is not an installed
+                    # package until its registration can be committed as well.
+                    planned=copy.deepcopy(self.registry);planned["packages"][key]=existing.metadata()
+                    _registry_payload(planned);self.registry=planned;self._save()
                 result=existing.metadata();result["duplicate"]=True;return result
+            planned=copy.deepcopy(self.registry);planned["packages"][key]=pkg.metadata()
+            # The exact registration must fit before publishing any payload.
+            # The cross-process transaction prevents a concurrent writer from
+            # changing this budget between preflight and the atomic save.
+            _registry_payload(planned)
             staging=self.root/"staging"/uuid.uuid4().hex
             self._guard_storage(staging)
             staging.mkdir()
@@ -386,7 +425,7 @@ class ModCatalog:
                     with target.open("xb") as stream:stream.write(raw);stream.flush();os.fsync(stream.fileno())
                 self._guard_storage(destination.parent);destination.parent.mkdir(parents=True,exist_ok=True)
                 self._guard_storage(destination);self._guard_storage(staging);os.replace(staging,destination)
-                self.registry["packages"][key]=pkg.metadata();self._save()
+                self.registry=planned;self._save()
             finally:
                 if staging.exists() and staging.resolve().is_relative_to((self.root/"staging").resolve()):shutil.rmtree(staging)
             return pkg.metadata()
@@ -400,10 +439,13 @@ class ModCatalog:
         if pkg.digest!=meta["digest"]:fail("Installed package content was changed",str(path),"ModCorruptPackage")
         return pkg
     def scan(self):
-        if self.catalog_error:return [{"packageId":"","version":"0.0.0","digest":"","contentDigest":"","name":"安装注册表损坏","author":"","kind":"error","status":"corrupt","reason":str(self.catalog_error),"error":self.error,"heroes":[],"patches":[]}]
+        def failure(error):
+            limited=error.code=="ModRegistryLimit"
+            return [{"packageId":"","version":"0.0.0","digest":"","contentDigest":"","name":"安装注册表达到容量限制" if limited else "安装注册表损坏","author":"","kind":"error","status":"error" if limited else "corrupt","reason":str(error),"error":error.as_dict(),"heroes":[],"patches":[]}]
+        if self.catalog_error:return failure(self.catalog_error)
         from mod_compile import Compiler
         try:self.registry=self._load()
-        except ModError:return self.scan()
+        except ModError as exc:return failure(exc)
         result=[]
         for meta in sorted(self.registry["packages"].values(),key=lambda x:(x["name"],version(x["version"]))):
             row=copy.deepcopy(meta)
@@ -442,8 +484,9 @@ class ModCatalog:
                         else:
                             target=targets[identity];target["channels"]={key:target["channels"][key] and channels[key] for key in CHANNELS};target["patchIds"].append(patch["id"])
                     row["heroes"]=list(targets.values())
-            except ModError as exc:row["status"]="missing" if exc.code=="ModMissingPackage" else "corrupt";row["error"]=exc.as_dict();row["reason"]=str(exc)
+            except ModError as exc:row["status"]="missing" if exc.code=="ModMissingPackage" else "error" if exc.code=="ModRegistryLimit" else "corrupt";row["error"]=exc.as_dict();row["reason"]=str(exc)
             result.append(row)
+        if getattr(self,"recovery_error",None):result.extend(failure(self.recovery_error))
         return result
     def import_inbox(self):
         """Explicit local-folder import. Files stay in inbox; retries deduplicate."""
@@ -556,7 +599,11 @@ class ModCatalog:
             def _load(self):
                 if self.catalog_error:raise self.catalog_error
                 return copy.deepcopy(self._memory)
-            def _save(self):self._memory=copy.deepcopy(self.registry)
+            def _save(self):
+                try:_registry_payload(self.registry)
+                except ModError:
+                    self.registry=copy.deepcopy(self._memory);raise
+                self._memory=copy.deepcopy(self.registry)
             @contextlib.contextmanager
             def _transaction(self):
                 with self._lock:yield
@@ -565,14 +612,17 @@ class ModCatalog:
     def resolve_digest_asset(self,digest_,path):
         safe_path(path)
         if not isinstance(digest_,str) or not __import__("re").fullmatch(r"[0-9a-f]{64}",digest_):fail("Invalid content digest")
-        for row in self.scan():
-            if row["digest"]==digest_ and row["status"]=="installed":
-                pkg=self.get(row["packageId"],row["version"],digest_)
-                if path not in pkg.media:fail("Path is not a declared media asset",path)
-                target=(pkg.path/path).resolve()
-                if not target.is_relative_to(pkg.path.resolve()):fail("Asset escaped package root",path)
-                return target
-        fail("Active asset package is missing",path,"ModMissingPackage")
+        # Asset reads must not enumerate/validate every installed archive or
+        # allocate unrelated hero identities. The registry locates one precise
+        # content version; get() still verifies all bytes of that selected pack.
+        self.registry=self._load()
+        row=next((row for row in self.registry["packages"].values() if row["digest"]==digest_),None)
+        if row is None:fail("Active asset package is missing",path,"ModMissingPackage")
+        pkg=self.get(row["packageId"],row["version"],digest_)
+        if path not in pkg.media:fail("Path is not a declared media asset",path)
+        target=(pkg.path/path).resolve()
+        if not target.is_relative_to(pkg.path.resolve()):fail("Asset escaped package root",path)
+        return target
     def resolve_asset(self,pid,version_,digest_,path):
         pkg=self.get(pid,version_,digest_);return self.resolve_digest_asset(pkg.digest,path)
     def compile(self,base_document,settings,roster_side=None,allow_missing=False):

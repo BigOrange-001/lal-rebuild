@@ -21,7 +21,7 @@ LIMITS = {"archiveBytes": 64*1024*1024, "expandedBytes": 128*1024*1024,
           "skillLevel": 10, "turns": 100, "stat": 10_000_000,
           "textureBytes":128*1024*1024,"mediaBytes":128*1024*1024,"activeHeroes":1024,
           "activeSkills":2048,"activePatches":1024,"activePatchOperations":4096,"combinedDataBytes":16*1024*1024,
-          "decodedAudioBytes":128*1024*1024}
+          "decodedAudioBytes":128*1024*1024,"registryBytes":64*1024*1024}
 CHANNELS = (
  "appearance.arena_enemy", "acquisition.summon.normal", "acquisition.summon.advanced",
  "acquisition.shop.hero_soul", "appearance.fragment_enemy", "appearance.exploration_enemy",
@@ -57,8 +57,8 @@ class ModError(ValueError):
 def fail(message, path="", code="ModInvalidPackage"):
     raise ModError(code, message, path)
 
-def strict_json(raw, path=""):
-    if len(raw) > LIMITS["jsonBytes"]: fail("JSON exceeds byte limit", path)
+def strict_json(raw, path="", *, max_bytes=None):
+    if len(raw) > (LIMITS["jsonBytes"] if max_bytes is None else max_bytes): fail("JSON exceeds byte limit", path)
     def pairs(values):
         result = {}
         for key,value in values:

@@ -23,6 +23,7 @@ package com.meng52.game.ui.panel
    import flash.net.URLRequestHeader;
    import flash.utils.ByteArray;
    import flash.utils.setTimeout;
+   import flash.utils.clearTimeout;
    import starling.display.Sprite;
    import starling.display.Quad;
    import starling.events.Event;
@@ -63,13 +64,16 @@ package com.meng52.game.ui.panel
       private var mModPreview:Boolean = false;
       private var mModSupport:Object;
       private var mBackupFile:File;
-      private var mBackupOwner:String = "";
+      private var mBackupOperation:Object;
       private var mBackupMode:String = "";
       private var mBackupValue:Object;
       private var mRestoreBackup:Object;
       private var mRestorePlan:Object;
       private var mRestoreRequestId:String = "";
-      private var mBackupEpoch:int = 0;
+      private var mModEpoch:uint = 0;
+      private var mModOperation:Object;
+      private var mModNeedsResync:Boolean = false;
+      private var mImportOperation:Object;
       private var mPreviewBlocks:Array = [];
       private var mPreviewLineCount:int = 0;
       private var mPreviewPage:int = 0;
@@ -273,10 +277,51 @@ package com.meng52.game.ui.panel
          return !mDisposed && stage != null && mModView != null && mModOwner == SendAndSelect.$uid;
       }
 
+      private function beginModOperation(method:String, mutation:Boolean = false) : Object
+      {
+         mModEpoch++;
+         mModBusy = true;
+         mModOperation = {"epoch":mModEpoch,"owner":mModOwner,"view":mModView,"method":method,"mutation":mutation};
+         return mModOperation;
+      }
+
+      private function modOperationMatches(operation:Object) : Boolean
+      {
+         return operation != null && operation === mModOperation && operation.epoch == mModEpoch &&
+            operation.owner == mModOwner && operation.owner == SendAndSelect.$uid && operation.view === mModView && modAlive();
+      }
+
+      private function completeModOperation(operation:Object) : Boolean
+      {
+         if(!modOperationMatches(operation)) return false;
+         mModOperation = null;
+         mModBusy = false;
+         return true;
+      }
+
+      private function failModOperation(operation:Object, message:String, uncertain:Boolean = false) : void
+      {
+         if(!modOperationMatches(operation)) return;
+         mModEpoch++;
+         mModOperation = null;
+         mModBusy = false;
+         if(uncertain && operation.mutation === true)
+         {
+            // A transport failure is not proof that the server rolled back.
+            // Keep gameplay gated until a fresh login loads the actual state.
+            mModNeedsResync = true;
+            mModBusy = true;
+            GlobalData.$modReady = false;
+            mModStatus.text = message + " 结果可能已保存；点击返回重新登录同步后继续。";
+         }
+         else mModStatus.text = message;
+      }
+
       private function openModManager(event:Event) : void
       {
          if(mDisposed || mModView != null) return;
          mModOwner = SendAndSelect.$uid;
+         mModNeedsResync = false;
          var origin:Point = globalToLocal(new Point(0,0));
          mModShield = new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0);
          mModShield.x = origin.x;
@@ -332,16 +377,19 @@ package com.meng52.game.ui.panel
 
       private function clearModListeners() : void
       {
-         mBackupEpoch++;
+         mModEpoch++;
+         mModOperation = null;
+         mModBusy = false;
          SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onModError);
          SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_service",onModError);
          SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("net_timeout",onModError);
-         if(mImportFile != null) { mImportFile.removeEventListener(flash.events.Event.SELECT,onImportSelected); mImportFile = null; }
+         clearImportPicker();
          clearBackupPicker();
       }
 
       private function closeModManager(event:Event) : void
       {
+         if(mModNeedsResync) { GlobalFunction.quitGame(); return; }
          if(mModBusy) { mModStatus.text = "正在处理，请等待完成。"; return; }
          if(mModPreview) { mModPreview = false; mPreviewBlocks = []; mPreviewConfirm = null; renderModList(); return; }
          if(mModPackage >= 0) { mModPackage = -1; mModHero = -1; renderModList(); return; }
@@ -379,12 +427,12 @@ package com.meng52.game.ui.panel
 
       private function requestModInfo(rescan:Boolean) : void
       {
-         mModBusy = true;
+         var operation:Object = beginModOperation("user.mods_info");
          mModStatus.text = rescan ? "正在校验安装目录…" : "正在读取当前存档…";
          SendAndSelect.sendAndSelectService("user.mods_info",{"rescan":rescan},function(reply:Object):void
          {
-            if(!modReplyMatches(reply,mModOwner,modAlive())) return;
-            mModBusy = false;
+            if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
+            completeModOperation(operation);
             mModInfo = reply.data;
             mModPackage = -1;
             mModHero = -1;
@@ -762,62 +810,60 @@ package com.meng52.game.ui.panel
          mBackupFile = null;
          mBackupValue = null;
          mBackupMode = "";
-         mBackupOwner = "";
+         mBackupOperation = null;
       }
 
       private function beginBackupAction(action:String) : void
       {
          if(mModBusy || !modAlive() || mModInfo == null) return;
          if(mModDirty) { mModStatus.text = "请先保存或放弃编辑，再备份或恢复已保存的 Mod 设置。"; return; }
-         var owner:String = mModOwner;
-         var epoch:int = ++mBackupEpoch;
-         mModBusy = true;
-         if(action == "backupImport") { openBackupPicker("read",null); return; }
+         var operation:Object = beginModOperation(action == "backupImport" ? "backup_file" : "user.mods_backup");
+         if(action == "backupImport") { openBackupPicker("read",null,operation); return; }
          mModStatus.text = action == "backupPrevious" ? "正在读取上一次 Mod 设置…" : "正在获取当前已保存的 Mod 设置…";
          SendAndSelect.sendAndSelectService("user.mods_backup",{"previous":action == "backupPrevious"},function(reply:Object):void
          {
-            if(epoch != mBackupEpoch || !mModBusy || !modReplyMatches(reply,owner,modAlive())) return;
-            mModBusy = false;
-            if(action == "backupPrevious") previewModRestore(reply.data);
-            else { mModBusy = true; openBackupPicker("write",reply.data); }
+            if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
+            if(action == "backupPrevious") { completeModOperation(operation); previewModRestore(reply.data); }
+            else { operation.method = "backup_file"; openBackupPicker("write",reply.data,operation); }
          });
       }
 
-      private function openBackupPicker(mode:String, backup:Object) : void
+      private function openBackupPicker(mode:String, backup:Object, operation:Object) : void
       {
          clearBackupPicker();
-         mBackupOwner = mModOwner;
+         mBackupOperation = operation;
          mBackupMode = mode;
          mBackupValue = backup;
-         mBackupFile = File.documentsDirectory.resolvePath("lal-mod-settings-" + new Date().time + ".json");
-         mBackupFile.addEventListener(flash.events.Event.SELECT,onBackupSelected);
-         mBackupFile.addEventListener(flash.events.Event.CANCEL,onBackupCancelled);
-         mBackupFile.addEventListener(IOErrorEvent.IO_ERROR,onBackupCancelled);
          try
          {
+            mBackupFile = File.documentsDirectory.resolvePath("lal-mod-settings-" + new Date().time + ".json");
+            mBackupFile.addEventListener(flash.events.Event.SELECT,onBackupSelected);
+            mBackupFile.addEventListener(flash.events.Event.CANCEL,onBackupCancelled);
+            mBackupFile.addEventListener(IOErrorEvent.IO_ERROR,onBackupCancelled);
             if(mode == "write") mBackupFile.browseForSave("保存 Mod 元数据备份");
             else mBackupFile.browseForOpen("选择 Mod 元数据备份",[new FileFilter("Mod 备份 (*.json)","*.json")]);
             mModStatus.text = mode == "write" ? "选择备份保存位置；只导出 Mod 元数据。" : "请选择备份文件；读取后先校验与预览，不会立即恢复。";
          }
          catch(error:Error)
          {
-            mModBusy = false;
             clearBackupPicker();
-            mModStatus.text = "此设备无法打开备份文件选择器；当前设置未改变。";
+            failModOperation(operation,"此设备无法打开备份文件选择器；当前设置未改变。");
          }
       }
 
       private function onBackupCancelled(event:flash.events.Event) : void
       {
-         if(!modAlive() || mBackupOwner != mModOwner || event.currentTarget !== mBackupFile) return;
+         if(event.currentTarget !== mBackupFile || !modOperationMatches(mBackupOperation)) return;
+         var operation:Object = mBackupOperation;
          clearBackupPicker();
-         mModBusy = false;
+         completeModOperation(operation);
          mModStatus.text = event.type == IOErrorEvent.IO_ERROR ? "此设备无法打开文件选择器；当前设置未改变。" : "已取消文件选择；当前设置未改变。";
       }
 
       private function onBackupSelected(event:flash.events.Event) : void
       {
-         if(!modAlive() || !mModBusy || mBackupOwner != mModOwner || event.currentTarget !== mBackupFile) return;
+         if(event.currentTarget !== mBackupFile || !modOperationMatches(mBackupOperation)) return;
+         var operation:Object = mBackupOperation;
          var mode:String = mBackupMode;
          var backup:Object = mBackupValue;
          var file:File = mBackupFile;
@@ -830,7 +876,7 @@ package com.meng52.game.ui.panel
                stream.open(file,FileMode.WRITE);
                stream.writeUTFBytes(JSON.stringify(backup,null,2));
                stream.close();
-               mModBusy = false;
+               completeModOperation(operation);
                mModStatus.text = "Mod 元数据备份已保存；英雄包文件需另行保留。";
                return;
             }
@@ -843,28 +889,26 @@ package com.meng52.game.ui.panel
          catch(error:Error)
          {
             try { stream.close(); } catch(ignore:Error) {}
-            mModBusy = false;
+            completeModOperation(operation);
             mModStatus.text = "备份文件操作失败：" + error.message + " 当前设置未改变。";
             return;
          }
-         mModBusy = false;
+         completeModOperation(operation);
          previewModRestore(backup);
       }
 
       private function previewModRestore(backup:Object) : void
       {
          if(mModBusy || !modAlive() || mModDirty || mModInfo == null) return;
-         mModBusy = true;
+         var operation:Object = beginModOperation("user.mods_restore_plan");
          mRestoreBackup = JSON.parse(JSON.stringify(backup));
          mRestorePlan = null;
          mRestoreRequestId = "";
-         var owner:String = mModOwner;
-         var epoch:int = ++mBackupEpoch;
          mModStatus.text = "正在校验备份摘要、身份映射、缺失包和恢复影响…";
          SendAndSelect.sendAndSelectService("user.mods_restore_plan",{"backup":mRestoreBackup,"expectedRevision":mModInfo.revision},function(reply:Object):void
          {
-            if(epoch != mBackupEpoch || !mModBusy || !modReplyMatches(reply,owner,modAlive())) return;
-            mModBusy = false;
+            if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
+            completeModOperation(operation);
             mRestorePlan = reply.data;
             mModPreview = true;
             beginPreviewPages();
@@ -883,30 +927,28 @@ package com.meng52.game.ui.panel
       private function commitModRestore(event:Event) : void
       {
          if(mModBusy || !modAlive() || !mModPreview || mRestorePlan == null || mRestorePlan.valid !== true || mRestoreBackup == null || mModDirty) return;
-         mModBusy = true;
+         var operation:Object = beginModOperation("user.mods_restore",true);
          if(mRestoreRequestId.length == 0) mRestoreRequestId = "restore_" + new Date().time + "_" + int(Math.random() * 1000000000);
-         var owner:String = mModOwner;
-         var epoch:int = mBackupEpoch;
          mModStatus.text = "正在原子恢复 Mod 设置；失败不会覆盖当前活动配置。";
          SendAndSelect.sendAndSelectService("user.mods_restore",{"backup":mRestoreBackup,"expectedRevision":mRestorePlan.revision,"planDigest":mRestorePlan.planDigest,"requestId":mRestoreRequestId},function(reply:Object):void
          {
-            if(epoch != mBackupEpoch || !modReplyMatches(reply,owner,modAlive())) return;
+            if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
             mModDirty = false;
             GlobalData.$modReady = false;
             mModStatus.text = "Mod 设置已恢复，正在重新进入游戏同步资源…";
-            setTimeout(function():void { if(modAlive() && owner == mModOwner) GlobalFunction.quitGame(); },150);
+            setTimeout(function():void { if(modOperationMatches(operation)) GlobalFunction.quitGame(); },150);
          });
       }
 
       private function previewMods(event:Event) : void
       {
          if(mModBusy || !modAlive() || mModInfo == null) return;
-         mModBusy = true;
+         var operation:Object = beginModOperation("user.mods_plan");
          mModStatus.text = "正在校验依赖、冲突、渠道及存档影响…";
          SendAndSelect.sendAndSelectService("user.mods_plan",{"expectedRevision":mModInfo.revision,"selections":mModSelections},function(reply:Object):void
          {
-            if(!modReplyMatches(reply,mModOwner,modAlive())) return;
-            mModBusy = false;
+            if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
+            completeModOperation(operation);
             mModPlan = reply.data;
             mModPreview = true;
             beginPreviewPages();
@@ -927,70 +969,129 @@ package com.meng52.game.ui.panel
       private function commitMods(event:Event) : void
       {
          if(mModBusy || !modAlive() || mModPlan == null || mModPlan.valid !== true) return;
-         mModBusy = true;
+         var operation:Object = beginModOperation("user.mods_apply",true);
          if(mModRequestId.length == 0) mModRequestId = "mods_" + new Date().time + "_" + int(Math.random() * 1000000000);
          mModStatus.text = "正在原子保存；完成后重新登录同步。";
          SendAndSelect.sendAndSelectService("user.mods_apply",{"expectedRevision":mModInfo.revision,"planDigest":mModPlan.planDigest,"selections":mModSelections,"requestId":mModRequestId},function(reply:Object):void
          {
-            if(!modReplyMatches(reply,mModOwner,modAlive())) return;
+            if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
             mModDirty = false;
             mModStatus.text = "已保存，待重新进入生效。正在返回登录界面…";
             GlobalData.$modReady = false;
-            setTimeout(function():void { if(modAlive()) GlobalFunction.quitGame(); },150);
+            setTimeout(function():void { if(modOperationMatches(operation)) GlobalFunction.quitGame(); },150);
          });
       }
 
       private function onModError(event:Object) : void
       {
-         if(!modAlive() || !mModBusy) return;
+         if(!modAlive() || !mModBusy || mModOperation == null) return;
+         var operation:Object = mModOperation;
+         // Native pickers are not network requests; an unrelated timer must
+         // not cancel a selected backup or import file.
+         if(operation.method == "backup_file" || operation.method == "import_file") return;
          var data:Object = event.data;
-         if(data != null && data.method != null && String(data.method).indexOf("user.mods_") != 0) return;
-         mModBusy = false;
-         mModStatus.text = data != null && data.data != null ? formatModIssue(data.data) : "请求未完成。编辑内容已保留，请重试；不会覆盖当前活动配置。";
+         var method:String = data == null || data.method == null ? "" : String(data.method);
+         if(method == "profile_state_sync" && data.receipt_method != null) method = String(data.receipt_method);
+         if(method.length > 0 && method != operation.method) return;
+         var uncertain:Boolean = event.type == "net_timeout" || event.type == "error_service" || data != null && data.profile_sync_error === true;
+         var message:String = data != null && data.data != null ? formatModIssue(data.data) : "请求未完成。编辑内容已保留，请重新同步后重试。";
+         failModOperation(operation,message,uncertain);
+      }
+
+      private function clearImportPicker() : void
+      {
+         if(mImportFile != null)
+         {
+            mImportFile.removeEventListener(flash.events.Event.SELECT,onImportSelected);
+            mImportFile.removeEventListener(flash.events.Event.CANCEL,onImportCancelled);
+            mImportFile.removeEventListener(IOErrorEvent.IO_ERROR,onImportCancelled);
+         }
+         mImportFile = null;
+         mImportOperation = null;
+      }
+
+      private function onImportCancelled(event:flash.events.Event) : void
+      {
+         if(event.currentTarget !== mImportFile || !modOperationMatches(mImportOperation)) return;
+         var operation:Object = mImportOperation;
+         clearImportPicker();
+         completeModOperation(operation);
+         mModStatus.text = event.type == IOErrorEvent.IO_ERROR ? "此设备无法打开文件选择器；未导入英雄包。" : "已取消导入英雄包。";
       }
 
       private function importMod(event:Event) : void
       {
          if(mModBusy || !modAlive()) return;
          if(mModDirty) { mModStatus.text = "请先保存或放弃编辑，再导入新包。"; return; }
-         mImportFile = File.documentsDirectory;
-         mImportFile.addEventListener(flash.events.Event.SELECT,onImportSelected);
-         try { mImportFile.browseForOpen("导入英雄包",[new FileFilter("英雄包 (*.heropack)","*.heropack")]); }
-         catch(error:Error) { mModStatus.text = "此设备无法打开文件选择器。可将包放入 mods/inbox 后检查目录。"; }
+         var operation:Object = beginModOperation("import_file");
+         clearImportPicker();
+         mImportOperation = operation;
+         try
+         {
+            mImportFile = File.documentsDirectory;
+            mImportFile.addEventListener(flash.events.Event.SELECT,onImportSelected);
+            mImportFile.addEventListener(flash.events.Event.CANCEL,onImportCancelled);
+            mImportFile.addEventListener(IOErrorEvent.IO_ERROR,onImportCancelled);
+            mImportFile.browseForOpen("导入英雄包",[new FileFilter("英雄包 (*.heropack)","*.heropack")]);
+         }
+         catch(error:Error)
+         {
+            clearImportPicker();
+            failModOperation(operation,"此设备无法打开文件选择器。可将包放入 mods/inbox 后检查目录。");
+         }
       }
 
       private function onImportSelected(event:flash.events.Event) : void
       {
-         if(!modAlive() || mImportFile == null) return;
-         mImportFile.removeEventListener(flash.events.Event.SELECT,onImportSelected);
-         if(mImportFile.size > 67108864) { mModStatus.text = "英雄包超过 64 MiB，未导入。"; return; }
+         if(event.currentTarget !== mImportFile || !modOperationMatches(mImportOperation)) return;
+         var operation:Object = mImportOperation;
+         var file:File = mImportFile;
+         clearImportPicker();
          var bytes:ByteArray = new ByteArray();
          var stream:FileStream = new FileStream();
-         try { stream.open(mImportFile,FileMode.READ); stream.readBytes(bytes); stream.close(); }
-         catch(readError:Error) { try { stream.close(); } catch(ignore:Error) {} mModStatus.text = "无法读取所选文件。"; return; }
-         mModBusy = true;
+         try
+         {
+            if(file.size > 67108864) { completeModOperation(operation); mModStatus.text = "英雄包超过 64 MiB，未导入。"; return; }
+            stream.open(file,FileMode.READ); stream.readBytes(bytes); stream.close();
+         }
+         catch(readError:Error)
+         {
+            try { stream.close(); } catch(ignore:Error) {}
+            failModOperation(operation,"无法读取所选文件，未导入英雄包。");
+            return;
+         }
+         operation = beginModOperation("mods.install",true);
          mModStatus.text = "正在导入并验证英雄包…";
          var request:URLRequest = new URLRequest(MainConfig.$SERVER_ADDRESS.replace(/\/$/,"") + "/mods/install");
          request.method = "POST";
          request.contentType = "application/octet-stream";
-         request.requestHeaders = [new URLRequestHeader("X-Lal-Uid",mModOwner),new URLRequestHeader("X-Lal-Session",SendAndSelect.$sessionid)];
+         request.requestHeaders = [new URLRequestHeader("X-Lal-Uid",String(operation.owner)),new URLRequestHeader("X-Lal-Session",SendAndSelect.$sessionid)];
          request.data = bytes;
          var loader:URLLoader = new URLLoader();
-         var failed:Function = function(error:Object):void { if(modAlive()) { mModBusy = false; mModStatus.text = "导入请求失败，原有包和存档保持不变。"; } };
+         var timeout:uint = 0;
+         var failed:Function = function(error:Object):void
+         {
+            if(!modOperationMatches(operation)) return;
+            clearTimeout(timeout);
+            failModOperation(operation,"导入结果尚未确认，英雄包可能已安装。",true);
+            try { loader.close(); } catch(ignore:Error) {}
+         };
          loader.addEventListener(IOErrorEvent.IO_ERROR,failed);
          loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,failed);
          loader.addEventListener(flash.events.Event.COMPLETE,function(done:flash.events.Event):void
          {
-            if(!modAlive()) return;
-            mModBusy = false;
+            if(!modOperationMatches(operation)) return;
+            clearTimeout(timeout);
             try
             {
                var result:Object = JSON.parse(String(loader.data));
-               if(result.ok !== true) { mModStatus.text = "导入失败：" + formatModIssue(result.error); return; }
+               if(result.ok !== true) { completeModOperation(operation); mModStatus.text = "导入失败：" + formatModIssue(result.error); return; }
+               completeModOperation(operation);
                requestModInfo(false);
             }
-            catch(parseError:Error) { mModStatus.text = "导入返回格式错误，请检查目录确认安装状态后再重试。"; }
+            catch(parseError:Error) { failModOperation(operation,"导入返回格式错误，安装结果尚未确认。",true); }
          });
+         timeout = setTimeout(function():void { failed(null); },60000);
          try { loader.load(request); } catch(uploadError:Error) { failed(uploadError); }
       }
 
@@ -999,11 +1100,11 @@ package com.meng52.game.ui.panel
          if(mModDirty) { mModStatus.text = "请先保存或放弃存档编辑，再执行全局卸载。"; return; }
          var row:Object = mModInfo.packages[mModPackage];
          var params:Object = {"packageId":row.packageId,"version":row.version,"contentDigest":row.contentDigest};
-         mModBusy = true;
+         var operation:Object = beginModOperation("user.mods_uninstall_plan");
          SendAndSelect.sendAndSelectService("user.mods_uninstall_plan",params,function(reply:Object):void
          {
-            if(!modReplyMatches(reply,mModOwner,modAlive())) return;
-            mModBusy = false;
+            if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
+            completeModOperation(operation);
             var plan:Object = reply.data;
             mModPreview = true;
             beginPreviewPages();
@@ -1015,15 +1116,15 @@ package com.meng52.game.ui.panel
             finishPreviewPages("确认全局卸载此版本",function(event:Event):void
             {
                if(!modAlive() || mModBusy) return;
-               mModBusy = true;
+               var mutation:Object = beginModOperation("user.mods_uninstall",true);
                params.planDigest = plan.planDigest;
                SendAndSelect.sendAndSelectService("user.mods_uninstall",params,function(done:Object):void
                {
-                  if(!modReplyMatches(done,mModOwner,modAlive())) return;
+                  if(!modOperationMatches(mutation) || !modReplyMatches(done,String(mutation.owner),modAlive())) return;
                   mModDirty = false;
                   mModStatus.text = "已卸载。需要重新进入游戏以同步缺失状态和补丁回退。";
                   GlobalData.$modReady = false;
-                  setTimeout(function():void { if(modAlive()) GlobalFunction.quitGame(); },150);
+                  setTimeout(function():void { if(modOperationMatches(mutation)) GlobalFunction.quitGame(); },150);
                });
             });
             mModStatus.text = "卸载会影响上述全部存档，等待确认。返回可取消。";

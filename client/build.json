@@ -8,7 +8,7 @@
       "index": 1,
       "class": "com.meng52.game.global.GlobalData",
       "source": "client/src/stages/001_GlobalData.as",
-      "source_sha256": "f093c303e028257dce9153e686ff5b3add39cfce6ac02ab74f7e3482af93be1a"
+      "source_sha256": "5cf936d8486c9860428ff0996dacb6a961ede69759cf667021dac8c3c193babd"
     },
     {
       "index": 2,
@@ -908,7 +908,7 @@
       "index": 151,
       "class": "com.meng52.game.ui.panel.PanelHelpSetting",
       "source": "client/src/stages/151_PanelHelpSetting.as",
-      "source_sha256": "c65e9438eb3fe8b8dcfd27262c5024bd3300cdda8cb389ffaed0f95814d0a130"
+      "source_sha256": "5b3863ad659a17105963b766285bb574603db4b23d06846921149fca6d2ba2b1"
     },
     {
       "index": 152,

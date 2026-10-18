@@ -1,5 +1,6 @@
 """Save isolation, activation receipts and missing-content recovery through real RPCs."""
 import copy
+import datetime
 import hashlib
 import json
 import os
@@ -131,6 +132,94 @@ class ModServiceTests(unittest.TestCase):
         self.assertEqual(self.backend.config, original)
         self.assertIsNot(self.backend.players.context_for(self.a["uid"]), self.backend.players)
         self.assertIs(self.backend.players.context_for(self.b["uid"]), self.backend.players)
+
+    def test_calendar_rollover_refreshes_cached_and_remembered_mod_saves(self):
+        def epoch(year, month=2, day=28):
+            return int(datetime.datetime(year, month, day, 4, tzinfo=datetime.timezone.utc).timestamp())
+
+        now = [epoch(2027)]
+        with mock.patch.object(self.backend.clock, "now", side_effect=lambda: now[0]):
+            meta = self.install()
+            self.activate(self.a, [self.selection(meta)])
+            self.activate(self.b, [self.selection(meta)])
+            a_uid, b_uid = self.a["uid"], self.b["uid"]
+            old = self.backend.mods.config(a_uid)
+            old_context = self.backend.mods.context(a_uid)
+            self.assertEqual(len(old["cfg"]["check_in"]["2"]), 28)
+            # B's settings persist, but its compiled context is no longer resident.
+            self.backend.mods._contexts.pop(str(b_uid), None)
+
+            now[0] = epoch(2028, 2, 29)
+            shared = self.backend.call({"method": "sys.get_config", "params": {"actionID": "leap-shared"}})
+            self.assertEqual(len(shared["data"]["cfg"]["check_in"]["2"]), 29)
+            current = self.backend.mods.config(a_uid)
+            remembered = self.backend.mods.config(b_uid)
+            self.assertEqual(len(current["cfg"]["check_in"]["2"]), 29)
+            self.assertEqual(current["cfg"]["check_in"], remembered["cfg"]["check_in"])
+            self.assertIsNot(self.backend.mods.context(a_uid), old_context)
+            self.assertNotEqual(current["digest"], old["digest"])
+            self.assertEqual(self.backend.mods.base["cfg"]["check_in"], shared["data"]["cfg"]["check_in"])
+            stale = self.rpc(self.a, "user.init_user", mod_digest=old["digest"], expected=1)
+            self.assertEqual(stale["error_code"], "ModConfigurationChanged")
+
+            def leap_eve(profile):
+                profile["attrs"]["check_in"].update(m=2, month_key="2028-02", day=28, n=28,
+                    had_check=[1, 1], last_day="2028-02-28")
+                return profile, {}
+            self.backend.players.atomic_update(a_uid, leap_eve)
+            claimed = self.rpc(self.a, "user.check_in")
+            self.assertEqual(claimed["check_in"]["day"], 29)
+            self.assertEqual(claimed["check_in_reward"], {"coin": 7600})
+
+            # Reprojecting the same year must not rebuild or rehash the base.
+            cached = self.backend.mods.context(a_uid)
+            base_calendar = self.backend.mods.base["cfg"]["check_in"]
+            base_digest = self.backend.mods._base_digest
+            self.backend.call({"method": "sys.get_config", "params": {"actionID": "leap-repeat"}})
+            self.assertIs(self.backend.mods.context(a_uid), cached)
+            self.assertIs(self.backend.mods.base["cfg"]["check_in"], base_calendar)
+            self.assertEqual(self.backend.mods._base_digest, base_digest)
+
+            # Login itself handles the next non-leap year, before get_config.
+            now[0] = epoch(2029)
+            login = self.backend.call({"method": "user.login", "params": {"pf": "local",
+                "session_key": "A", "sessionid": "test-password", "actionID": "nonleap-login"}})
+            self.assertEqual(login["return_code"], 0, login)
+            self.assertEqual(len(login["data"]["mod_config"]["cfg"]["check_in"]["2"]), 28)
+            fresh = self.login("C")
+            self.assertEqual(fresh["mod_config"]["mod_runtime"], {})
+            self.assertEqual(len(fresh["mod_config"]["cfg"]["check_in"]["2"]), 28)
+            self.assertEqual(len(self.backend.config["cfg"]["check_in"]["2"]), 28)
+
+    def test_context_lru_is_bounded_and_rebuilds_the_same_save_definition(self):
+        meta = self.install()
+        with mock.patch.object(self.backend.mods, "MAX_CONTEXTS", 2):
+            self.activate(self.a, [self.selection(meta)])
+            self.activate(self.b, [self.selection(meta, channels={"acquisition.summon.normal": False})])
+            a_uid, b_uid = str(self.a["uid"]), str(self.b["uid"])
+            old_b = self.backend.mods.context(b_uid)
+            b_digest = old_b.mod_resolved.digest
+            before_b = copy.deepcopy(self.backend.players.profile_raw(b_uid))
+            self.backend.mods.context(a_uid)  # A is most recently used.
+            third = self.login("C")
+            self.activate(third, [self.selection(meta)])
+            c_uid = str(third["uid"])
+            self.assertEqual(list(self.backend.mods._contexts), [a_uid, c_uid])
+            self.assertNotIn(b_uid, self.backend.mods._contexts)
+
+            rebuilt = self.backend.mods.context(b_uid)
+            self.assertIsNot(rebuilt, old_b)
+            self.assertEqual(rebuilt.mod_resolved.digest, b_digest)
+            self.assertEqual(rebuilt.config, old_b.config)
+            self.assertEqual(list(self.backend.mods._contexts), [c_uid, b_uid])
+            self.assertEqual(self.backend.players.profile_raw(b_uid), before_b)
+            runtime = rebuilt.config["cfg"]["mod_runtime"]
+            self.assertTrue(all(row["channels"]["acquisition.summon.normal"] is False
+                                for row in runtime["heroes"].values() if row["kind"] == "new"))
+            self.assertTrue(all(row["channels"]["acquisition.summon.normal"] is True
+                                for row in self.backend.mods.context(a_uid).config["cfg"]["mod_runtime"]["heroes"].values()
+                                if row["kind"] == "new"))
+            self.assertLessEqual(len(self.backend.mods._contexts), 2)
 
     def test_apply_retry_is_idempotent_and_revision_bound(self):
         meta = self.install()
@@ -276,6 +365,39 @@ class ModServiceTests(unittest.TestCase):
         self.activate(self.a, [self.selection(meta, enabled=False)])
         error = self.rpc(self.a, "user.init_user", mod_digest=previous, expected=1)
         self.assertEqual(error["error_code"], "ModConfigurationChanged")
+
+    def test_empty_patch_apply_and_restore_keep_digest_guard_without_changing_legacy_saves(self):
+        aid = "A_1001_5"
+        original = copy.deepcopy(self.backend.config)
+        backup = self.rpc(self.a, "user.mods_backup")
+        patch = {"id": "rename", "target": "builtin:avatar/" + aid,
+                 "expect": {"path": "name", "value": original["cfg"]["avatar"][aid]["name"]},
+                 "operations": [{"op": "set", "path": "name", "value": "Patched"}]}
+        meta = self.install(kind="patch", patches=[patch])
+        for operation in ("apply", "restore"):
+            with self.subTest(operation=operation):
+                self.activate(self.a, [self.selection(meta)])
+                stale_digest = self.backend.mods.config(self.a["uid"])["digest"]
+                if operation == "apply":
+                    self.activate(self.a, [])
+                else:
+                    plan = self.rpc(self.a, "user.mods_restore_plan", {"backup": backup})
+                    self.rpc(self.a, "user.mods_restore", {"backup": backup, "planDigest": plan["planDigest"]})
+                config = self.backend.mods.config(self.a["uid"])
+                self.assertEqual(config["mod_runtime"], {})
+                self.assertEqual(config["cfg"]["avatar"][aid]["name"], original["cfg"]["avatar"][aid]["name"])
+                self.assertIsNot(self.backend.players.context_for(self.a["uid"]), self.backend.players)
+                self.assertNotEqual(stale_digest, config["digest"])
+                error = self.rpc(self.a, "user.init_user", mod_digest=stale_digest, expected=1)
+                self.assertEqual(error["error_code"], "ModConfigurationChanged")
+                self.rpc(self.a, "user.init_user", mod_digest=config["digest"])
+                self.assertEqual(self.backend.config, original)
+
+        # Never-configured legacy saves retain their existing no-digest path.
+        self.assertIs(self.backend.players.context_for(self.b["uid"]), self.backend.players)
+        reply = self.backend.call({"method": "user.init_user", "uid": self.b["uid"],
+            "sessionid": self.b["sessionid"], "params": {"actionID": "legacy-without-mod-digest"}})
+        self.assertEqual(reply["return_code"], 0, reply)
 
     def test_missing_shared_slot_equipment_reclaim_preserves_owned_items_and_retries(self):
         meta = self.install()

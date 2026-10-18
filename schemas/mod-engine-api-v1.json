@@ -120,7 +120,8 @@
     "activePatches": 1024,
     "activePatchOperations": 4096,
     "combinedDataBytes": 16777216,
-    "decodedAudioBytes": 134217728
+    "decodedAudioBytes": 134217728,
+    "registryBytes": 67108864
   },
   "skillSemantics": {
     "timingUnit": "ownerTurns",

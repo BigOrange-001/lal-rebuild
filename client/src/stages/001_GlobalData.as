@@ -199,6 +199,135 @@ package com.meng52.game.global
          return baseModHeroId(base) + id.substr(base.length);
       }
 
+      // Adobe as3corelib SHA256/IntUtil byte hashing implementation (BSD-3-Clause).
+      // Source: https://github.com/mikechambers/as3corelib
+      // Full copyright, license and adaptation notes ship in assets/licenses/as3corelib-SHA256.txt.
+      public static function modAssetSha256(bytes:ByteArray) : String
+      {
+         var position:uint = bytes.position;
+         var result:String = "";
+         try
+         {
+            var hash:ByteArray = modShaBlocks(modShaCreateBlocks(bytes));
+            for(var i:int = 0; i < hash.length; i++) result += ("0" + hash[i].toString(16)).substr(-2);
+         }
+         finally { bytes.position = position; }
+         return result;
+      }
+
+      private static function modShaBlocks( blocks:Array ):ByteArray {
+               var h0:int = 0x6a09e667;
+               var h1:int = 0xbb67ae85;
+               var h2:int = 0x3c6ef372;
+               var h3:int = 0xa54ff53a;
+               var h4:int = 0x510e527f;
+               var h5:int = 0x9b05688c;
+               var h6:int = 0x1f83d9ab;
+               var h7:int = 0x5be0cd19;
+
+               var k:Array = new Array(0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2);
+
+               var len:int = blocks.length;
+               var w:Array = new Array( 64 );
+
+               // loop over all of the blocks
+               for ( var i:int = 0; i < len; i += 16 ) {
+
+                  var a:int = h0;
+                  var b:int = h1;
+                  var c:int = h2;
+                  var d:int = h3;
+                  var e:int = h4;
+                  var f:int = h5;
+                  var g:int = h6;
+                  var h:int = h7;
+
+                  for(var t:int = 0; t < 64; t++) {
+
+                     if ( t < 16 ) {
+                        w[t] = blocks[ i + t ];
+                        if(isNaN(w[t])) { w[t] = 0; }
+                     } else {
+                        var ws0:int = modShaRor(w[t-15], 7) ^ modShaRor(w[t-15], 18) ^ (w[t-15] >>> 3);
+                        var ws1:int = modShaRor(w[t-2], 17) ^ modShaRor(w[t-2], 19) ^ (w[t-2] >>> 10);
+                        w[t] = w[t-16] + ws0 + w[t-7] + ws1;
+                     }
+
+                     var s0:int = modShaRor(a, 2) ^ modShaRor(a, 13) ^ modShaRor(a, 22);
+                     var maj:int = (a & b) ^ (a & c) ^ (b & c);
+                     var t2:int = s0 + maj;
+                     var s1:int = modShaRor(e, 6) ^ modShaRor(e, 11) ^ modShaRor(e, 25);
+                     var ch:int = (e & f) ^ ((~e) & g);
+                     var t1:int = h + s1 + ch + k[t] + w[t];
+
+                     h = g;
+                     g = f;
+                     f = e;
+                     e = d + t1;
+                     d = c;
+                     c = b;
+                     b = a;
+                     a = t1 + t2;
+                  }
+
+                  //Add this chunk's hash to result so far:
+                  h0 += a;
+                  h1 += b;
+                  h2 += c;
+                  h3 += d;
+                  h4 += e;
+                  h5 += f;
+                  h6 += g;
+                  h7 += h;
+               }
+
+               var byteArray:ByteArray = new ByteArray();
+               byteArray.writeInt(h0);
+               byteArray.writeInt(h1);
+               byteArray.writeInt(h2);
+               byteArray.writeInt(h3);
+               byteArray.writeInt(h4);
+               byteArray.writeInt(h5);
+               byteArray.writeInt(h6);
+               byteArray.writeInt(h7);
+               byteArray.position = 0;
+               return byteArray;
+            }
+
+      private static function modShaCreateBlocks( data:ByteArray ):Array
+            {
+               var oldPosition:int = data.position;
+               data.position = 0;
+
+               var blocks:Array = new Array();
+               var len:int = data.length * 8;
+               var mask:int = 0xFF; // ignore hi byte of characters > 0xFF
+               for( var i:int = 0; i < len; i += 8 )
+               {
+                  blocks[ i >> 5 ] |= ( data.readByte() & mask ) << ( 24 - i % 32 );
+               }
+
+               // append padding and length
+               blocks[ len >> 5 ] |= 0x80 << ( 24 - len % 32 );
+               blocks[ ( ( ( len + 64 ) >> 9 ) << 4 ) + 15 ] = len;
+
+               data.position = oldPosition;
+
+               return blocks;
+            }
+
+      private static function modShaRor ( x:int, n:int ):uint {
+               var nn:int = 32 - n;
+               return ( x << nn ) | ( x >>> ( 32 - nn ) );
+            }
+
+      public static function modAssetMatches(bytes:ByteArray, row:Object) : Boolean
+      {
+         if(bytes == null || row == null || typeof row.bytes != "number" || Number(row.bytes) != bytes.length ||
+            typeof row.sha256 != "string" || !/^[a-f0-9]{64}$/.test(String(row.sha256))) return false;
+         return modAssetSha256(bytes) == String(row.sha256);
+      }
+
       public static function loadModResources(envelope:Object, done:Function) : void
       {
          var generation:uint = resetModResources();
@@ -262,6 +391,24 @@ package com.meng52.game.global
                   fail("Mod 资源大小无效：" + path);
                   return;
                }
+               try
+               {
+                  if(!modAssetMatches(bytes,row))
+                  {
+                     fail("Mod 资源大小或 SHA-256 校验失败：" + path);
+                     return;
+                  }
+               }
+               catch(integrityError:Error)
+               {
+                  fail("无法校验 Mod 资源完整性，请重新登录：" + path);
+                  return;
+               }
+               // Hashing is synchronous in this SWF33-compatible implementation.
+               // Give decoding its own budget after a verified download, even
+               // when hashing ran past the original network deadline.
+               clearTimeout(timeout);
+               timeout = setTimeout(function():void { fail("解码 Mod 资源超时，请检查英雄包后重新登录。"); },20000);
                if(row.kind == "sound")
                {
                   try
@@ -1119,4 +1266,3 @@ package com.meng52.game.global
       }
    }
 }
-

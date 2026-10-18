@@ -7,6 +7,7 @@ import json
 import mimetypes
 import re
 import secrets
+from collections import OrderedDict
 from pathlib import Path
 
 from player_store import GameplayFault, PlayerStore, native_dates
@@ -36,6 +37,7 @@ class ModService:
         "user.mods_test_grant", "user.mods_backup", "user.mods_restore_plan", "user.mods_restore",
     })
     MAX_UPLOAD_BYTES = 64 * 1024 * 1024
+    MAX_CONTEXTS = 4
 
     def __init__(self, store, base_document, root, roster_side=None):
         self.store = store
@@ -46,7 +48,7 @@ class ModService:
             side_path = Path(__file__).resolve().parents[1] / "config/reconstruction/roster-config.json"
             roster_side = json.loads(side_path.read_text("utf-8-sig")) if side_path.is_file() else {}
         self.roster = copy.deepcopy(roster_side)
-        self._contexts = {}
+        self._contexts = OrderedDict()
         self._identity_errors = {}
         self._identity_cache = {}
         self._inbox_errors = []
@@ -57,7 +59,30 @@ class ModService:
             if isinstance(state, dict):
                 self._restore_saved_bindings(str(uid), state)
         self._base_digest = digest(self.base)
+        from gameplay_common import game_day
+        self._calendar_year = int(game_day(store.clock.now())[:4])
         store.mod_service = self
+
+    def _refresh_base_calendar(self):
+        """Track the only runtime base-table update without hashing per RPC.
+
+        The gateway and sign-in handler project this table for the game year.
+        Mod compilation must use that same projection, including after a cached
+        or remembered save is selected without a prior sys.get_config call.
+        """
+        from gameplay_common import game_day
+        year = int(game_day(self.store.clock.now())[:4])
+        if year == self._calendar_year or not isinstance(self.store.config, dict):
+            return
+        from check_in_rewards import apply_check_in_rewards
+        with self.store.lock:
+            if year == self._calendar_year:
+                return
+            apply_check_in_rewards(self.store.config, year)
+            self.base.setdefault("cfg", {})["check_in"] = copy.deepcopy(self.store.config["cfg"]["check_in"])
+            self._base_digest = digest(self.base)
+            self._calendar_year = year
+            self._contexts.clear()
 
     def _restore_saved_bindings(self, uid, state):
         snapshot = state.get("identityMap")
@@ -165,6 +190,7 @@ class ModService:
         return digest(sorted(({k: row.get(k) for k in fields} for row in rows), key=canonical))
 
     def _compile(self, state, selections=None, *, strict=False):
+        self._refresh_base_calendar()
         selected = state["selections"] if selections is None else selections
         settings = {"packages": self.normalize_selections(selected),
                     "knownHeroes": copy.deepcopy(state.get("knownHeroes", {}))}
@@ -179,8 +205,12 @@ class ModService:
         """Get an owner-bound store without temporarily replacing shared state."""
         uid = str(uid)
         with self.store.lock:
+            self._refresh_base_calendar()
             _, state = self.state(uid)
-            if not state["selections"] and not state.get("knownHeroes"):
+            # A save that has applied Mod settings still needs an owner-bound
+            # digest after its final patch is removed. Returning the legacy
+            # base store here would accept requests from its stale client.
+            if not state["selections"] and not state.get("knownHeroes") and state["revision"] == 0:
                 return self.store
             self._restore_saved_bindings(uid, state)
             fingerprint = self._fingerprint()
@@ -188,6 +218,7 @@ class ModService:
             key = digest({"base": self._base_digest, "catalog": fingerprint, "state": state, "identityError": error})
             previous = self._contexts.get(uid)
             if previous is not None and previous[0] == key:
+                self._contexts.move_to_end(uid)
                 return previous[1]
             selected = [{**row, "enabled": False} for row in state["selections"]] if error else None
             result = self._compile(state, selected)
@@ -200,6 +231,9 @@ class ModService:
             context.mod_resolved = result
             context.configure_handlers(result.document)
             self._contexts[uid] = (key, context)
+            self._contexts.move_to_end(uid)
+            while len(self._contexts) > self.MAX_CONTEXTS:
+                self._contexts.popitem(last=False)
             return context
 
     def config(self, uid):

@@ -78,6 +78,65 @@ class ModPackageTest(unittest.TestCase):
         with self.assertRaises(ModError) as raised:self.install(entities={"heroes":{"heroes":[hero]}})
         self.assertEqual(raised.exception.code,"ModIdentityConflict")
         self.assertEqual(self.catalog.get(PID1,"1.0.0").digest,a["digest"])
+    def test_near_limit_manifest_can_install_and_reload_larger_registry(self):
+        source=self.package()
+        with zipfile.ZipFile(source) as archive:payload={name:archive.read(name) for name in archive.namelist()}
+        manifest=json.loads(payload["manifest.json"]);manifest["sourceNotes"]=""
+        manifest["sourceNotes"]="x"*(LIMITS["jsonBytes"]-len(canonical(manifest))-1)
+        payload["manifest.json"]=canonical(manifest)
+        self.assertEqual(len(payload["manifest.json"]),LIMITS["jsonBytes"]-1)
+        with zipfile.ZipFile(source,"w",compression=zipfile.ZIP_STORED) as archive:
+            for name,raw in payload.items():archive.writestr(name,raw)
+        installed=self.catalog.install(source)
+        self.assertGreater(self.catalog.registry_path.stat().st_size,LIMITS["jsonBytes"])
+        fresh=ModCatalog(self.catalog.root,self.base)
+        self.assertIsNone(fresh.error)
+        self.assertEqual(fresh.get(PID1,"1.0.0").digest,installed["digest"])
+        self.assertEqual(fresh.scan()[0]["status"],"installed")
+        with self.assertRaises(ModError):strict_json(b'"'+b'x'*LIMITS["jsonBytes"]+b'"')
+    def test_registry_limit_rejects_install_restore_and_allocations_atomically(self):
+        installed=self.install();self.compile(self.selection(installed))
+        source=self.package(PID2)
+        before=self.catalog.registry_path.read_bytes();saved=copy.deepcopy(self.catalog.registry)
+        snapshot=self.catalog.identity_snapshot()
+        next(iter(snapshot["identities"].values()))["name"]="x"*200
+        with mock.patch("mod_packages.MAX_REGISTRY_BYTES",len(before)+100):
+            for operation in (lambda:self.catalog.install(source),lambda:self.catalog.restore_identities(snapshot),
+                              lambda:self.catalog.preview_restore(snapshot,self.base,{"packages":[self.selection(installed)]}),
+                              lambda:self.catalog.allocate_hero(PID2,"new_hero","quality5",5,{"name":"x"*200})):
+                with self.assertRaises(ModError) as raised:operation()
+                self.assertEqual(raised.exception.code,"ModRegistryLimit")
+                self.assertEqual(self.catalog.registry_path.read_bytes(),before)
+                self.assertEqual(self.catalog.registry,saved)
+                self.assertIsNone(self.catalog.error)
+                self.assertEqual(self.catalog.get(PID1,"1.0.0").digest,installed["digest"])
+            self.assertFalse((self.catalog.root/"packages"/PID2).exists())
+            self.assertEqual(list((self.catalog.root/"staging").iterdir()),[])
+            # Simulate a crash after payload publication but before registration.
+            package=inspect_package(source,self.base)
+            orphan=self.catalog.root/"packages"/PID2/"1.0.0"/package.digest
+            orphan.mkdir(parents=True)
+            for name,raw in package.payloads.items():
+                target=orphan/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(raw)
+            recovered=ModCatalog(self.catalog.root,self.base)
+            self.assertIsNone(recovered.error)
+            self.assertEqual(recovered.get(PID1,"1.0.0").digest,installed["digest"])
+            self.assertEqual(recovered.registry_path.read_bytes(),before)
+            self.assertTrue(any(row.get("error",{}).get("code")=="ModRegistryLimit" and row["status"]=="error" for row in recovered.scan()))
+            with self.assertRaises(ModError) as raised:recovered.install(source)
+            self.assertEqual(raised.exception.code,"ModRegistryLimit")
+            self.assertEqual(recovered.registry_path.read_bytes(),before)
+            with self.assertRaises(ModError) as raised:recovered.get(PID2,"1.0.0")
+            self.assertEqual(raised.exception.code,"ModMissingPackage")
+        self.install(PID3)
+        before=self.catalog.registry_path.read_bytes()
+        with mock.patch("mod_packages.MAX_REGISTRY_BYTES",len(before)):
+            rows=self.catalog.scan()
+            limited=next(row for row in rows if row["packageId"]==PID3)
+            self.assertEqual(limited["status"],"error")
+            self.assertEqual(limited["error"]["code"],"ModRegistryLimit")
+            self.assertEqual(self.catalog.registry_path.read_bytes(),before)
+            self.assertIsNone(self.catalog.error)
     def test_strict_json_keys_nonfinite_and_zip_payload_boundary(self):
         for raw in (b'{"a":1,"a":2}',b'{"a":NaN}',b'{"a":1e999}'):
             with self.assertRaises(ModError):strict_json(raw)
@@ -116,6 +175,27 @@ class ModPackageTest(unittest.TestCase):
         raw[29:33]=struct.pack(">I",zlib.crc32(raw[12:29])&0xffffffff)
         with self.assertRaisesRegex(ModError,"dimensions exceed quota"):
             self.install(entities={"heroes":{"heroes":[hero]}},assets={"assets/portrait.png":bytes(raw)})
+    def test_asset_resolution_validates_only_selected_package_without_allocating(self):
+        hero=hero_definition();hero["presentation"]["portrait"]="self:asset/portrait.png"
+        selected=self.install(entities={"heroes":{"heroes":[hero]}},assets={"assets/portrait.png":png()})
+        other=self.install(PID2)
+        selected_dir=self.catalog.get(PID1,"1.0.0").path
+        other_dir=self.catalog.get(PID2,"1.0.0").path
+        (other_dir/"heroes.json").write_bytes(b"externally corrupted unrelated pack")
+        before=self.catalog.registry_path.read_bytes()
+        original=self.catalog._read_directory;reads=[]
+        def read_selected(path):
+            self.assertEqual(path,selected_dir)
+            reads.append(path)
+            return original(path)
+        with mock.patch.object(self.catalog,"scan",side_effect=AssertionError("Asset reads must not scan the catalogue")),mock.patch.object(self.catalog,"allocate_hero",side_effect=AssertionError("Asset reads must not allocate identities")),mock.patch.object(self.catalog,"_read_directory",side_effect=read_selected):
+            asset=self.catalog.resolve_digest_asset(selected["digest"],"assets/portrait.png")
+            self.assertEqual(asset.read_bytes(),png())
+            self.assertEqual(reads,[selected_dir])
+            self.assertEqual(self.catalog.registry_path.read_bytes(),before)
+            (selected_dir/"assets/portrait.png").write_bytes(b"modified selected media")
+            with self.assertRaises(ModError):self.catalog.resolve_digest_asset(selected["digest"],"assets/portrait.png")
+            with self.assertRaises(ModError):self.catalog.resolve_digest_asset(selected["digest"],"../heroes.json")
     def test_missing_and_disabled_preserve_only_current_save_identity(self):
         row=self.install();active=self.compile(self.selection(row));known=active.runtime["heroes"];aid=next(iter(known))
         self.catalog.uninstall(PID1,"1.0.0")

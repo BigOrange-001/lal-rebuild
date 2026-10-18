@@ -164,6 +164,22 @@ package com.meng52.game.global
          return name;
       }
 
+      public static function modCardFrame(name:String) : Array
+      {
+         name = resolveModTexture(name);
+         var assets:Array = $modRuntime == null ? null : $modRuntime.assets as Array;
+         if(assets) for each(var asset:Object in assets)
+         {
+            if(asset.alias != name || !(asset.cardFrame is Array)) continue;
+            var f:Array = asset.cardFrame;
+            if(f.length != 4) return null;
+            for(var i:int = 0; i < 4; i++) if(typeof f[i] != "number" || !isFinite(Number(f[i]))) return null;
+            if(f[0] < 0 || f[1] < 0 || f[2] < 8 || f[3] < 8 || f[0]+f[2] > asset.width || f[1]+f[3] > asset.height) return null;
+            return f;
+         }
+         return null;
+      }
+
       public static function isMissingModHero(id:String) : Boolean
       {
          var base:String = id == null ? "" : id.split("|")[0].split("-")[0];

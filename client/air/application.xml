@@ -24,6 +24,7 @@
   </icon>
   <android>
     <addAirToAppID>false</addAirToAppID>
+    <storageAccessFrameworkFromAPI>24</storageAccessFrameworkFromAPI>
     <manifestAdditions><![CDATA[
       <manifest android:installLocation="auto">
         <uses-permission android:name="android.permission.INTERNET" />

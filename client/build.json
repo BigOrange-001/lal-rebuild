@@ -8,7 +8,7 @@
       "index": 1,
       "class": "com.meng52.game.global.GlobalData",
       "source": "client/src/stages/001_GlobalData.as",
-      "source_sha256": "5cf936d8486c9860428ff0996dacb6a961ede69759cf667021dac8c3c193babd"
+      "source_sha256": "b7d4502a28e0c87b29708940a9fad40cba111dac64abf977dbb3d45b99694554"
     },
     {
       "index": 2,
@@ -20,7 +20,7 @@
       "index": 3,
       "class": "com.meng52.net.SendAndSelect",
       "source": "client/src/stages/003_SendAndSelect.as",
-      "source_sha256": "bb44807a770f64a5b4694be7ff7107149e9fce061b9011e87fbf7629e322c3fe"
+      "source_sha256": "f9199d876e1dda4c4f540dacaaa3be07352aa17f14d292e4dc7727fa530c6841"
     },
     {
       "index": 4,
@@ -284,7 +284,7 @@
       "index": 47,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/045_GlobalFunction.as",
-      "source_sha256": "fe4cf10d36f20f5be7efcc789d3c77cd4c4d0ea5dbd6005c785952253a041560"
+      "source_sha256": "8e15500c3163ed93eb4e3bb51d0985cccff1900cee6926b0d48914888462a740"
     },
     {
       "index": 48,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "50aa6cfaa00a80113b6e18c14eef84ffd2b3c548c486e1a2ff7218e3f7b1960a"
+      "source_sha256": "7096ddac0666086068862e01fd80766c1ca930d49c47cbe7ab8223234f19d6d9"
     },
     {
       "index": 140,
@@ -908,7 +908,7 @@
       "index": 151,
       "class": "com.meng52.game.ui.panel.PanelHelpSetting",
       "source": "client/src/stages/151_PanelHelpSetting.as",
-      "source_sha256": "5b3863ad659a17105963b766285bb574603db4b23d06846921149fca6d2ba2b1"
+      "source_sha256": "0d6aefec22f0acf6c40f1072a8d0870088353570e465152a33ce4bfabdd33b68"
     },
     {
       "index": 152,
@@ -977,7 +977,7 @@
   },
   "descriptor": {
     "path": "client/air/application.xml",
-    "sha256": "17c7f0b2fceb86542280951c6c1f960ed27f50ed57432b5bf6fff87b1dced20d"
+    "sha256": "3ca1bc4cfdab9a656b08ae8ad060ef4cec8ebe6999a029d0ae63b458c778e150"
   },
   "assets_manifest": {
     "path": "client/resources/assets-manifest.json",

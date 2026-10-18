@@ -152,6 +152,16 @@ python -B scripts/check_native_client_guard.py
 
 第一项验证全部技能逐字段往返、逐技能修改编译、引用重排、五批真实包安装编译、new/patch 和非法输入拒绝；第二项使用临时 SQLite 验证新旧客户端能力握手。需要正常服务端依赖，不需要编辑器依赖。另有三项已有包回归检查。
 
-客户端最终 SkillSetData、Avatar、SkillSet、SendAndSelect 已在相同源码上进行增量编译检查；本次未构建 APK/AIR、未启动游戏或进行实战验证。
+客户端最终 SkillSetData、Avatar、SkillSet、SendAndSelect 已在相同源码上进行增量编译检查；后续修复已复用编译 SWF 打包 Android 客户端，并在雷电验证登录、自制卡显示与系统文件选择器导入；未做完整战斗回归或手机版整合端重打包。
 
 格式见 [作者规范](mod-authoring.md) 与 [原生模板 Schema](../schemas/mod-native-template.schema.json)。编辑器界面、图片处理、合包 UI 和 EXE 发行应由独立工具项目管理，不纳入游戏端运行依赖。
+
+## 卡面布局、手机导入与管理修正（2026-10-19）
+
+PNG 可携带经严格校验的 `lal.cardFrame` 矩形，包和客户端通过 `asset.image.card-frame` 协商。布局和点击区域使用 103×118 逻辑盾框，透明留白及人物出框部分照常绘制，不计入边界；旧 PNG 沿用原显示路径。卡框图与详情页 portrait 为独立资源引用。
+
+Android 使用 SAF，空 File 对象先完成异步权限初始化，再打开系统文件选择器；通过 File 对象读取 content URI，读取上限 64 MiB。用户可从 Download 选择包，无需 root。雷电 Android 9 普通应用的实际 `/mods/install` 请求已返回 200。包列表直接提供“删除已安装包 · 此版本”，调用现有全存档影响预览和确认卸载接口，保留永久身份与英雄进度。
+
+助战保留原有 12 个机器人的队长，为每个可用新增英雄分配独立候选，避免同一测试英雄替换六个队长并占满首屏。额外候选每次最多六个并按日轮换；关闭出现开关后移除对应候选。
+
+新增检查：`python -B -m unittest server.test_mod_card_frame server.test_mod_assist`；另通过已有跨存档待结算卸载保护回归。

@@ -253,7 +253,7 @@ class ModService:
         supported=set(capabilities) if isinstance(capabilities,list) and all(isinstance(v,str) for v in capabilities) else set()
         required=set(getattr(compiled,'runtime',{}).get('requiredClientCapabilities',[]))
         if required-supported:
-            raise GameplayFault('ModClientIncompatible','此存档启用了完整原生技能模板，请更新游戏客户端后进入；如需继续使用旧客户端，请先通过新版客户端停用相关包。')
+            raise GameplayFault('ModClientIncompatible','此存档启用了需要新版客户端的 Mod 内容，请更新游戏客户端后进入；如需继续使用旧客户端，请先通过新版客户端停用相关包。')
 
     def check_request(self, uid, request, context):
         expected = getattr(context, "mod_resolved", None)

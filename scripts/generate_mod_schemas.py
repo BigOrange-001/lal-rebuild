@@ -83,6 +83,7 @@ if __name__=="__main__":
         maxTargets='-1 means all valid targets after range/policy filtering; otherwise 1..6; movement requires 1',
         rankInfoTemplate='optional reviewed rank/flat numeric tokens; reorder action indices with actions')
     catalogue['extensionCapabilities']={
+        'asset.image.card-frame':'PNG lal.cardFrame [x,y,width,height] anchors a native 103x118 shield; overflow pixels do not affect layout',
         'skill.native-template.v1':'complete structured native battle templates; requires updated client mechanism dispatch and compound parameter support',
         'hero.damage.true':'required for new heroes with true basic attacks (native tl[2]=3)',
         'hero.patch.damage-type':'required for patches replacing basic attack damageType',

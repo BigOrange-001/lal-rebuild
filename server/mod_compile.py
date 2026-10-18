@@ -195,7 +195,7 @@ class Compiler:
         if resolved["media"]["kind"]!=required:fail("Media type does not match usage",alias,"ModInvalidReference")
         pkg=resolved["package"];path=resolved["path"];sha=next(r["sha256"] for r in pkg.manifest["files"] if r["path"]==path)
         row={"alias":alias,"kind":required,"contentDigest":pkg.digest,"path":path,"sha256":sha,"packageId":pkg.package_id,"version":pkg.version,"role":role}
-        for key in ("width","height","bytes","duration","decodedBytes"):
+        for key in ("width","height","bytes","duration","decodedBytes","cardFrame"):
             if key in resolved["media"]:row[key]=resolved["media"][key]
         if alias in self.assets and self.assets[alias]!=row:fail("Resource alias collision",alias)
         self.assets[alias]=row;return alias
@@ -533,6 +533,8 @@ class Compiler:
         runtime={"digest":effective_digest,"engineApi":ENGINE_API,"heroes":self.metadata,"scopedAvatarIds":self.scoped,"aliasBaseIds":self.aliases,"missingHeroIds":sorted(self.missing),"knownHeroIds":sorted(self.metadata),"assets":sorted(self.assets.values(),key=lambda r:r["alias"]),"textureAliases":self.texture_aliases,"packages":[{"packageId":p.package_id,"version":p.version,"contentDigest":p.digest} for p in self.ordered],"warnings":self.warnings,"errors":copy.deepcopy(self.warnings),"capabilities":sorted(CAPABILITIES)}
         if any(row.get('model')=='native-template-v1' for p in self.ordered for row in p.data.get('skills',{}).get('skills',[])):
             runtime['requiredClientCapabilities']=['skill.native-template.v1']
+        if any(row.get('cardFrame') for row in self.assets.values()):
+            runtime.setdefault('requiredClientCapabilities',[]).append('asset.image.card-frame')
         if self.ordered or self.missing or self.warnings:self.cfg["mod_runtime"]=runtime
         self.roster["heroes"]=copy.deepcopy(self.cfg["avatar"]);self.roster["skills"]=copy.deepcopy(self.cfg["skill"]);self.roster["effects"]=copy.deepcopy(self.cfg["effect"])
         if self.ordered or self.missing or self.warnings:self.roster["mod_runtime"]=copy.deepcopy(runtime)

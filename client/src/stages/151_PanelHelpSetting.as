@@ -11,6 +11,8 @@ package com.meng52.game.ui.panel
    import feathers.display.Scale9Image;
    import feathers.controls.ScrollContainer;
    import flash.events.IOErrorEvent;
+   import flash.events.PermissionEvent;
+   import flash.system.Capabilities;
    import flash.events.SecurityErrorEvent;
    import flash.filesystem.File;
    import flash.filesystem.FileMode;
@@ -528,6 +530,7 @@ package com.meng52.game.ui.panel
             if(row.kind == "error" || row.packageId == null || String(row.packageId).length == 0) continue;
             modRow(active ? "当前存档：已启用此包（点击关闭）" : "当前存档：已关闭此包（点击启用）",{"action":"enable","package":i},row.status != "corrupt" && row.status != "incompatible" && row.status != "invalid");
             modRow("展开英雄、玩法及补丁范围",{"action":"details","package":i});
+            if(row.status != "missing") modRow("删除已安装包 · 此版本（先查看影响）",{"action":"uninstall","package":i});
          }
          var errors:Array = mModInfo.errors is Array ? mModInfo.errors : [];
          for each(var error:Object in errors) modText(formatModIssue(error),16736512,85);
@@ -598,7 +601,7 @@ package com.meng52.game.ui.panel
          {
             if(row.description) modText(String(row.description),16777215,85);
             if(row.sourceNotes) modText("来源说明：" + JSON.stringify(row.sourceNotes),16777215,90);
-            modRow("全局卸载此版本（先查看影响）",{"action":"uninstall"});
+            modRow("删除已安装包 · 此版本（先查看影响）",{"action":"uninstall"});
          }
       }
 
@@ -645,7 +648,7 @@ package com.meng52.game.ui.panel
          if(action.action == "details") { mModPackage = int(action["package"]); mModHero = -1; renderModList(); return; }
          if(action.action == "hero") { mModHero = int(action.hero); renderModList(); return; }
          if(action.action == "heroBack") { mModHero = -1; renderModList(); return; }
-         if(action.action == "uninstall") { previewUninstall(); return; }
+         if(action.action == "uninstall") { if(action.hasOwnProperty("package")) { mModPackage = int(action["package"]); mModHero = -1; } previewUninstall(); return; }
          if(action.action == "backupExport" || action.action == "backupImport" || action.action == "backupPrevious")
          {
             beginBackupAction(String(action.action));
@@ -803,6 +806,7 @@ package com.meng52.game.ui.panel
       {
          if(mBackupFile != null)
          {
+            mBackupFile.removeEventListener(PermissionEvent.PERMISSION_STATUS,onBackupPermission);
             mBackupFile.removeEventListener(flash.events.Event.SELECT,onBackupSelected);
             mBackupFile.removeEventListener(flash.events.Event.CANCEL,onBackupCancelled);
             mBackupFile.removeEventListener(IOErrorEvent.IO_ERROR,onBackupCancelled);
@@ -836,18 +840,50 @@ package com.meng52.game.ui.panel
          mBackupValue = backup;
          try
          {
-            mBackupFile = File.documentsDirectory.resolvePath("lal-mod-settings-" + new Date().time + ".json");
+            mBackupFile = new File();
             mBackupFile.addEventListener(flash.events.Event.SELECT,onBackupSelected);
             mBackupFile.addEventListener(flash.events.Event.CANCEL,onBackupCancelled);
             mBackupFile.addEventListener(IOErrorEvent.IO_ERROR,onBackupCancelled);
-            if(mode == "write") mBackupFile.browseForSave("保存 Mod 元数据备份");
-            else mBackupFile.browseForOpen("选择 Mod 元数据备份",[new FileFilter("Mod 备份 (*.json)","*.json")]);
+            if(Capabilities.version.indexOf("AND") == 0)
+            {
+               mBackupFile.addEventListener(PermissionEvent.PERMISSION_STATUS,onBackupPermission);
+               mBackupFile.requestPermission();
+            }
+            else browseBackupFile();
             mModStatus.text = mode == "write" ? "选择备份保存位置；只导出 Mod 元数据。" : "请选择备份文件；读取后先校验与预览，不会立即恢复。";
          }
          catch(error:Error)
          {
             clearBackupPicker();
             failModOperation(operation,"此设备无法打开备份文件选择器；当前设置未改变。");
+         }
+      }
+
+      private function onBackupPermission(event:PermissionEvent) : void
+      {
+         if(event.currentTarget !== mBackupFile || !modOperationMatches(mBackupOperation)) return;
+         mBackupFile.removeEventListener(PermissionEvent.PERMISSION_STATUS,onBackupPermission);
+         if(event.status == "granted") browseBackupFile();
+         else
+         {
+            var operation:Object = mBackupOperation;
+            clearBackupPicker();
+            failModOperation(operation,"未获得文件选择权限；当前设置未改变。");
+         }
+      }
+
+      private function browseBackupFile() : void
+      {
+         try
+         {
+            if(mBackupMode == "write") mBackupFile.browseForSave("保存 Mod 元数据备份");
+            else mBackupFile.browseForOpen("选择 Mod 元数据备份",[new FileFilter("Mod 备份 (*.json)","*.json")]);
+         }
+         catch(error:Error)
+         {
+            var operation:Object = mBackupOperation;
+            clearBackupPicker();
+            failModOperation(operation,"无法打开备份选择器（错误 " + error.errorID + "）；当前设置未改变。");
          }
       }
 
@@ -1002,6 +1038,7 @@ package com.meng52.game.ui.panel
       {
          if(mImportFile != null)
          {
+            mImportFile.removeEventListener(PermissionEvent.PERMISSION_STATUS,onImportPermission);
             mImportFile.removeEventListener(flash.events.Event.SELECT,onImportSelected);
             mImportFile.removeEventListener(flash.events.Event.CANCEL,onImportCancelled);
             mImportFile.removeEventListener(IOErrorEvent.IO_ERROR,onImportCancelled);
@@ -1028,16 +1065,45 @@ package com.meng52.game.ui.panel
          mImportOperation = operation;
          try
          {
-            mImportFile = File.documentsDirectory;
+            mImportFile = new File();
             mImportFile.addEventListener(flash.events.Event.SELECT,onImportSelected);
             mImportFile.addEventListener(flash.events.Event.CANCEL,onImportCancelled);
             mImportFile.addEventListener(IOErrorEvent.IO_ERROR,onImportCancelled);
-            mImportFile.browseForOpen("导入英雄包",[new FileFilter("英雄包 (*.heropack)","*.heropack")]);
+            if(Capabilities.version.indexOf("AND") == 0)
+            {
+               mImportFile.addEventListener(PermissionEvent.PERMISSION_STATUS,onImportPermission);
+               mImportFile.requestPermission();
+            }
+            else browseImportFile();
          }
          catch(error:Error)
          {
             clearImportPicker();
-            failModOperation(operation,"此设备无法打开文件选择器。可将包放入 mods/inbox 后检查目录。");
+            failModOperation(operation,"无法打开系统文件选择器。请将 .heropack 保存到下载目录，确认系统文件应用可以打开后重试。（错误 " + error.errorID + "：" + error.message + "）");
+         }
+      }
+
+      private function onImportPermission(event:PermissionEvent) : void
+      {
+         if(event.currentTarget !== mImportFile || !modOperationMatches(mImportOperation)) return;
+         mImportFile.removeEventListener(PermissionEvent.PERMISSION_STATUS,onImportPermission);
+         if(event.status == "granted") browseImportFile();
+         else
+         {
+            var operation:Object = mImportOperation;
+            clearImportPicker();
+            failModOperation(operation,"未获得文件选择权限；未导入英雄包。");
+         }
+      }
+
+      private function browseImportFile() : void
+      {
+         try { mImportFile.browseForOpen("导入英雄包",[new FileFilter("英雄包 (*.heropack)","*.heropack"),new FileFilter("所有文件","*.*")]); }
+         catch(error:Error)
+         {
+            var operation:Object = mImportOperation;
+            clearImportPicker();
+            failModOperation(operation,"无法打开文件选择器（错误 " + error.errorID + "）。");
          }
       }
 
@@ -1052,7 +1118,10 @@ package com.meng52.game.ui.panel
          try
          {
             if(file.size > 67108864) { completeModOperation(operation); mModStatus.text = "英雄包超过 64 MiB，未导入。"; return; }
-            stream.open(file,FileMode.READ); stream.readBytes(bytes); stream.close();
+            stream.open(file,FileMode.READ);
+            var available:Number = stream.bytesAvailable;
+            if(available <= 0 || available > 67108864) { stream.close(); completeModOperation(operation); mModStatus.text = "英雄包为空或超过 64 MiB，未导入。"; return; }
+            stream.readBytes(bytes,0,uint(available)); stream.close();
          }
          catch(readError:Error)
          {
@@ -1108,12 +1177,12 @@ package com.meng52.game.ui.panel
             var plan:Object = reply.data;
             mModPreview = true;
             beginPreviewPages();
-            modText("全局卸载预览",16764006,40);
+            modText("删除已安装包预览",16764006,40);
             modText("将影响 " + plan.affectedSaves + " 个存档。新增英雄将显示内容缺失并冻结；替换补丁将回退。",16764006,85);
             for each(var change:Object in plan.changes) renderModChange(change);
             for each(var error:Object in plan.errors) modWrappedText(formatModIssue(error),16736512);
             if(plan.valid !== true) { finishPreviewPages("",null); mModStatus.text = "无法卸载，请先处理以上问题。"; return; }
-            finishPreviewPages("确认全局卸载此版本",function(event:Event):void
+            finishPreviewPages("确认删除此版本包文件",function(event:Event):void
             {
                if(!modAlive() || mModBusy) return;
                var mutation:Object = beginModOperation("user.mods_uninstall",true);

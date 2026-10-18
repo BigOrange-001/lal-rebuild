@@ -1835,7 +1835,7 @@ package com.meng52.game.module.avatar
          {
             m_avatarRes = newAvatarRes(null,param1,param2,param3);
          }
-         if(!m_avatarRes.getChildByName("limitBreakEdge")) m_avatarRes.flatten();
+         if(!GlobalData.modCardFrame(avatarData.res + "_icon0000") && !m_avatarRes.getChildByName("limitBreakEdge")) m_avatarRes.flatten();
          return m_avatarRes;
       }
 

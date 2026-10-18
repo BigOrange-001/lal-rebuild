@@ -113,7 +113,7 @@ python -B scripts/mod_tools.py fork work/my-hero work/another-hero
 - 模板来源 SHA-256 防止基础配置变化后静默套用旧契约。基础变化应重新导入审核；自制名称和数值调整不要求改变永久包身份。
 - 合包保留机制来源、参数和索引；只对包内实体及引用执行原有命名空间重写。普通更新和卸载仍按原有存档冻结／缺失规则处理。
 
-客户端改造保留原版技能的原始派发路径，为自制技能单独提供来源标识和参数读取。历史 `hitup/fleeup` 等原生无执行分支条目仍保留原始行为；不能把完整数据导入解释为新增游戏算法。覆盖清单与编辑入口见 [原生战斗模板接口](native-battle-template-api.md)。
+客户端改造保留原版技能的原始派发路径，为自制技能单独提供来源标识和参数读取。历史 `hitup/fleeup` 等原生无执行分支条目仍保留原始行为；不能把完整数据导入解释为新增游戏算法。覆盖清单与编辑入口见 [战斗机制目录](battle-mechanism-editor-catalog.md)。
 
 ## patch 数据与回退
 
@@ -160,3 +160,11 @@ python -B scripts/mod_tools.py --mods-root state/mods uninstall <packageId> <ver
 错误返回包含 `code`、`path`、`message`。`ModIdentityConflict` 表示身份／版本重用，使用原文件或创建新版本／分叉；`ModTargetMismatch` 表示目标已变，检查基础／前置补丁后重新制作；`ModPatchConflict` 表示重叠修改，停用其中一项或明确依赖；`ModMissingDependency` 表示未选择必要依赖；`ModMigrationRequired` 表示持久进度契约或编号冲突，需要迁移，不能强制覆盖；`ModUnsupportedMedia` 表示没有对应解码与播放能力；`ModRegistryCorrupt` 表示身份注册表损坏，需要可信恢复。其他错误会定位具体文件和字段。
 
 Schema 可通过 `python -B scripts/generate_mod_schemas.py` 重新生成。验证命令不代替游戏内启用预览与真实客户端验证；尤其 Windows／Android 最终包、图像／语音播放及同场双定义应按开发目标分别验收。
+
+## 卡面边框布局与免 root 导入（2026-10-19）
+
+带框 PNG 可使用唯一的未压缩 tEXt 键 `lal.cardFrame`，值为整数 JSON 数组 `[x,y,width,height]`，描述整张 PNG 内的原版盾框基准区域。区域必须位于图片内，至少 8×8，比例须符合 103:118（允许像素取整误差）。包必须声明 `asset.image.card-frame`；服务端校验后把区域传入客户端素材清单。合包和图片原样导入保留 PNG 内元数据。绘制允许超出基准区域，布局和点击判断仅使用边框区域。没有此键的旧素材继续按旧方式显示。
+
+Android 创作者／玩家将包保存在 Download（下载）或系统文件应用可访问的位置，通过“系统设置 → Mod 管理 → 导入英雄包”选择。SDK 51 的文件选择器统一使用 Storage Access Framework（最低支持 API 24），由系统授予所选文件权限，不读取 nativePath、不要求 root，也不申请所有文件访问权限。游戏立即读取、校验并复制安装包，后续启动不依赖下载目录中的原文件。
+
+手机版整合端的默认安装目录位于应用私有 `files/state/mods`（跟随存档数据库目录），用户无需手动访问。电脑版／外置服务器使用配置的 --mods-root。`mods/inbox` 只作为宿主可选批量导入路径，不作为手机必须使用的入口。当前雷电测试连接电脑服务端，故安装副本保存在电脑端，而非模拟器的应用私有存储。

@@ -41,6 +41,7 @@
       "items": {
         "enum": [
           "asset.image",
+          "asset.image.card-frame",
           "asset.sound",
           "effect.reference.builtin",
           "hero.damage.true",

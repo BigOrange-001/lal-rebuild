@@ -43,7 +43,7 @@ ACTIONS = frozenset(("damage", "cure", "shield", "hp_shield", "caster_hp_shield"
 CAPABILITIES = frozenset(("hero.register", "hero.patch.skill", "hero.patch.stats", "hero.patch.presentation",
  "hero.patch.text", "skill.reference.builtin", "asset.image", "asset.sound", "effect.reference.builtin",
  "patch.scopes", "progression.default-player-hero", "hero.damage.true", "hero.patch.damage-type", "skill.target.lock-only",
- "skill.target.unlimited", "skill.description.rank-template", "skill.native-template.v1") + tuple("skill."+a for a in ACTIONS))
+ "skill.target.unlimited", "skill.description.rank-template", "skill.native-template.v1", "asset.image.card-frame") + tuple("skill."+a for a in ACTIONS))
 LOCAL_ID = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")

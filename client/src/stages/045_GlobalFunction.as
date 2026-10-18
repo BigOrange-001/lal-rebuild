@@ -2272,6 +2272,8 @@ package com.meng52.game.global
       
       public static function createImage(param1:String, param2:Boolean = false) : Image
       {
+         var cardFrame:Array = GlobalData.modCardFrame(param1);
+         if(!param2 && cardFrame) return new ModCardImage(getTexture(param1),cardFrame);
          var _loc4_:Texture = null;
          if(param2)
          {
@@ -3778,6 +3780,14 @@ package com.meng52.game.global
       public static function getAvatarIcon(param1:String = "A_1001_2") : Image
       {
          var _loc2_:String = param1 + "_icon0000";
+         var cardFrame:Array = GlobalData.modCardFrame(_loc2_);
+         if(cardFrame)
+         {
+            var framedIcon:Image = new ModCardImage(getTexture(_loc2_),cardFrame);
+            framedIcon.touchable = false;
+            framedIcon.name = "icon";
+            return framedIcon;
+         }
          var _loc3_:Image = new Image(getTexture(_loc2_));
          if(param1.indexOf("MOD_") == 0 || param1 == "__modMissingHero")
          {
@@ -7734,6 +7744,53 @@ package com.meng52.game.global
          PanelRollInfo.lastTime = 0;
          PanelCenterActivity.$activityFunObj = null;
          GuideData.clear();
+      }
+   }
+
+   // The complete texture may extend beyond the frame. Layout, pivots and
+   // hit tests use only the native shield canvas; rendering keeps all pixels.
+   internal class ModCardImage extends Image
+   {
+      private var cardBounds:Rectangle;
+
+      public function ModCardImage(texture:Texture, frame:Array)
+      {
+         super(texture);
+         cardBounds = new Rectangle(Number(frame[0]),Number(frame[1]),Number(frame[2]),Number(frame[3]));
+         pivotX = cardBounds.x;
+         pivotY = cardBounds.y;
+         scaleX = 103 / cardBounds.width;
+         scaleY = 118 / cardBounds.height;
+      }
+
+      override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle = null) : Rectangle
+      {
+         if(resultRect == null) resultRect = new Rectangle();
+         if(cardBounds == null) { resultRect.setTo(0,0,0,0); return resultRect; }
+         if(targetSpace == this) { resultRect.setTo(cardBounds.x,cardBounds.y,cardBounds.width,cardBounds.height); return resultRect; }
+         var matrix:flash.geom.Matrix = getTransformationMatrix(targetSpace);
+         var x0:Number = cardBounds.x;
+         var y0:Number = cardBounds.y;
+         var x1:Number = cardBounds.right;
+         var y1:Number = cardBounds.bottom;
+         var ax:Number = matrix.a*x0+matrix.c*y0+matrix.tx;
+         var ay:Number = matrix.b*x0+matrix.d*y0+matrix.ty;
+         var bx:Number = matrix.a*x1+matrix.c*y0+matrix.tx;
+         var by:Number = matrix.b*x1+matrix.d*y0+matrix.ty;
+         var cx:Number = matrix.a*x0+matrix.c*y1+matrix.tx;
+         var cy:Number = matrix.b*x0+matrix.d*y1+matrix.ty;
+         var dx:Number = matrix.a*x1+matrix.c*y1+matrix.tx;
+         var dy:Number = matrix.b*x1+matrix.d*y1+matrix.ty;
+         var left:Number = Math.min(ax,bx,cx,dx);
+         var top:Number = Math.min(ay,by,cy,dy);
+         resultRect.setTo(left,top,Math.max(ax,bx,cx,dx)-left,Math.max(ay,by,cy,dy)-top);
+         return resultRect;
+      }
+
+      override public function hitTest(localPoint:Point, forTouch:Boolean = false) : DisplayObject
+      {
+         if(forTouch && (!visible || !touchable)) return null;
+         return cardBounds && cardBounds.containsPoint(localPoint) ? this : null;
       }
    }
 }

@@ -32,7 +32,15 @@ class GameplaySocial:
         self.bots = [self._make_bot(row, index) for index, row in enumerate(candidates[:12])]
         if mod_runtime(self.config):
             self.bots = [bot for bot in self.bots if bot.get("avatars")]
-        self.by_uid = {bot["uid"]: bot for bot in self.bots}
+        # Added heroes receive dedicated helpers instead of replacing the
+        # captains of half the original roster. One hero must not become six
+        # high-power copies that fill the client's sorted first screen.
+        self.mod_bots = []
+        for offset, aid in enumerate(candidate_ids(self.config, [], "appearance.assist_bot", include_new=True)):
+            source = candidates[offset % len(candidates)] if candidates else {"lv": 1}
+            row = {**source, "team": [[aid, int(source.get("lv", 1)), 1]]}
+            self.mod_bots.append(self._make_bot(row, 1000 + offset))
+        self.by_uid = {bot["uid"]: bot for bot in self.bots + self.mod_bots}
         self.capacity = int(self.simple.get("friend_len", [0, 0, 30])[2]) if isinstance(self.simple.get("friend_len"), list) and len(self.simple["friend_len"]) > 2 else 30
 
     @staticmethod
@@ -47,14 +55,6 @@ class GameplaySocial:
         if mod_runtime(self.config):
             raw_team = [list(copy.deepcopy(row)) for row in raw_team if isinstance(row, (list, tuple)) and row
                         and channel_enabled(self.config, row[0], "appearance.assist_bot")]
-            additions = candidate_ids(self.config, [], "appearance.assist_bot", include_new=True)
-            if additions and index % (len(additions) + 1) < len(additions):
-                aid = additions[index % len(additions)]
-                if raw_team:
-                    # Only the captain becomes a selectable friend helper.
-                    raw_team[0][0] = aid
-                else:
-                    raw_team = [[aid, level, 1]]
         units = []
         for slot, row in enumerate(raw_team[:6]):
             if not isinstance(row, (list, tuple)) or not row:
@@ -220,7 +220,10 @@ class GameplaySocial:
                        if isinstance(row,dict)}
             companions=[bot for bot in profile.get("guild_companions",{}).get("bots",[])
                         if bot["uid"] in guild_ids]
-            cards=[self._friend_card(bot["uid"], profile) for bot in self.bots+companions
+            # Keep responses bounded; rotate additional hero candidates daily.
+            offset = int(self.store.clock.now()) // 86400 % max(1, len(self.mod_bots))
+            extra = (self.mod_bots[offset:] + self.mod_bots[:offset])[:6]
+            cards=[self._friend_card(bot["uid"], profile) for bot in self.bots+extra+companions
                    if self.is_bot_uid(bot["uid"], profile)]
             seen=set()
             return profile,[card for card in cards+friends

@@ -1,0 +1,3236 @@
+{
+  "version": 1,
+  "source": "client/src/stages/137_Avatar.as",
+  "originalSha256": "357bad0ab12150f0cb3cf5d802ca44dc8fa30b7233c0421178e575d61d732654",
+  "mechanisms": {
+    "kayle_c": {
+      "can_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "return abilityAlly(600) != null;",
+        "sourceLine": 624,
+        "label": "友军距离 · 0"
+      },
+      "cast_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "ally=abilityAlly(600); if(!ally) return false;",
+        "sourceLine": 743,
+        "label": "友军距离 · 0"
+      },
+      "cast_2": {
+        "default": 1,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "ally.abilityState.guard={kind:\"kayle\",charges:1,until:ally.abilitySerial+2,owner:this,manualDamageMultiplier:manualDamageMultiplier,debuff:false};",
+        "sourceLine": 744,
+        "label": "触发次数 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "ally.abilityState.guard={kind:\"kayle\",charges:1,until:ally.abilitySerial+2,owner:this,manualDamageMultiplier:manualDamageMultiplier,debuff:false};",
+        "sourceLine": 744,
+        "label": "状态持续回合 · 3"
+      }
+    },
+    "nunu_c": {
+      "can_0": {
+        "default": 400,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "return abilityEnemies(skillAreaRadius(400)).length > 0;",
+        "sourceLine": 629,
+        "label": "目标距离 · 0"
+      },
+      "cast_0": {
+        "default": 1.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(this,1.2); abilityState.channel={pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback(\"绝对零度：开始引导\",\"FX_A_1073_MAGIC\");",
+        "sourceLine": 839,
+        "label": "护盾倍率 · 0"
+      }
+    },
+    "illaoi_c": {
+      "can_0": {
+        "default": 350,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "return abilityEnemies(350,null,3).length > 0;",
+        "sourceLine": 630,
+        "label": "目标距离 · 0"
+      },
+      "can_1": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(350,null,3).length > 0;",
+        "sourceLine": 630,
+        "label": "最多目标数 · 1"
+      },
+      "cast_0": {
+        "default": 350,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in abilityEnemies(350,null,3)) abilityHit(target,2,1,effect);",
+        "sourceLine": 694,
+        "label": "目标距离 · 0"
+      },
+      "cast_1": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in abilityEnemies(350,null,3)) abilityHit(target,2,1,effect);",
+        "sourceLine": 694,
+        "label": "最多目标数 · 1"
+      },
+      "cast_2": {
+        "default": 2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(350,null,3)) abilityHit(target,2,1,effect);",
+        "sourceLine": 694,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in abilityEnemies(350,null,3)) abilityHit(target,2,1,effect);",
+        "sourceLine": 694,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_4": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityState.counter = {until:abilitySerial+2,left:2,seen:{},manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier,debuff:false};",
+        "sourceLine": 695,
+        "label": "状态持续回合 · 4"
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "abilityState.counter = {until:abilitySerial+2,left:2,seen:{},manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier,debuff:false};",
+        "sourceLine": 695,
+        "label": "触发次数 · 5"
+      }
+    },
+    "orianna_c": {
+      "can_1": {
+        "default": 350,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "return abilityEnemies(350,center,3).length > 0;",
+        "sourceLine": 634,
+        "label": "目标距离 · 1"
+      },
+      "can_2": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(350,center,3).length > 0;",
+        "sourceLine": 634,
+        "label": "最多目标数 · 2"
+      },
+      "cast_1": {
+        "default": 350,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "targets=abilityEnemies(350,ally,3);",
+        "sourceLine": 829,
+        "label": "目标距离 · 1"
+      },
+      "cast_2": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "targets=abilityEnemies(350,ally,3);",
+        "sourceLine": 829,
+        "label": "最多目标数 · 2"
+      },
+      "cast_3": {
+        "default": 200,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in targets) { abilityPull(target,ally,200); if(abilityHit(target,2.2,2,effect)) abilityControl(target,\"stun\",1); }",
+        "sourceLine": 830,
+        "label": "触发 / 状态数值 · 3"
+      },
+      "cast_4": {
+        "default": 2.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) { abilityPull(target,ally,200); if(abilityHit(target,2.2,2,effect)) abilityControl(target,\"stun\",1); }",
+        "sourceLine": 830,
+        "label": "伤害倍率 · 4"
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in targets) { abilityPull(target,ally,200); if(abilityHit(target,2.2,2,effect)) abilityControl(target,\"stun\",1); }",
+        "sourceLine": 830,
+        "label": "伤害类型 · 5",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_7": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for each(target in targets) { abilityPull(target,ally,200); if(abilityHit(target,2.2,2,effect)) abilityControl(target,\"stun\",1); }",
+        "sourceLine": 830,
+        "label": "持续回合 · 7"
+      },
+      "cast_8": {
+        "default": 0.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(ally,0.8);",
+        "sourceLine": 831,
+        "label": "护盾倍率 · 8"
+      }
+    },
+    "jayce_n": {
+      "can_0": {
+        "default": 1500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "distance = abilityState.form && abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS; break;",
+        "sourceLine": 635,
+        "label": "触发 / 状态数值 · 0"
+      },
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies = abilityEnemies(state.hammer ? 500 : 700); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 699,
+        "label": "目标距离 · 0"
+      },
+      "cast_1": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies = abilityEnemies(state.hammer ? 500 : 700); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 699,
+        "label": "目标距离 · 1"
+      },
+      "cast_3": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,1.4*scale,1,effect);",
+        "sourceLine": 702,
+        "label": "伤害倍率 · 3"
+      },
+      "cast_4": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(primary,1.4*scale,1,effect);",
+        "sourceLine": 702,
+        "label": "伤害类型 · 4",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_5": {
+        "default": 200,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in abilityEnemies(200,primary,1,false,\"nearest\",[primary])) abilityHit(target,0.8*scale,1,effect);",
+        "sourceLine": 703,
+        "label": "目标距离 · 5"
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in abilityEnemies(200,primary,1,false,\"nearest\",[primary])) abilityHit(target,0.8*scale,1,effect);",
+        "sourceLine": 703,
+        "label": "最多目标数 · 6"
+      },
+      "cast_8": {
+        "default": 0.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(200,primary,1,false,\"nearest\",[primary])) abilityHit(target,0.8*scale,1,effect);",
+        "sourceLine": 703,
+        "label": "伤害倍率 · 8"
+      },
+      "cast_9": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in abilityEnemies(200,primary,1,false,\"nearest\",[primary])) abilityHit(target,0.8*scale,1,effect);",
+        "sourceLine": 703,
+        "label": "伤害类型 · 9",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_10": {
+        "default": 1.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(primary,1.8*scale,1,effect)) primary.checkMove(false,200,this,-1,true);",
+        "sourceLine": 708,
+        "label": "伤害倍率 · 10"
+      },
+      "cast_11": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(primary,1.8*scale,1,effect)) primary.checkMove(false,200,this,-1,true);",
+        "sourceLine": 708,
+        "label": "伤害类型 · 11",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_12": {
+        "default": 200,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "if(abilityHit(primary,1.8*scale,1,effect)) primary.checkMove(false,200,this,-1,true);",
+        "sourceLine": 708,
+        "label": "位移距离 · 12"
+      },
+      "cast_14": {
+        "default": 0.5,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(this,0.5*scale);",
+        "sourceLine": 709,
+        "label": "护盾倍率 · 14"
+      }
+    },
+    "elise_c": {
+      "can_0": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(distance,null,1,true).length > 0;",
+        "sourceLine": 640,
+        "label": "最多目标数 · 0"
+      },
+      "cast_0": {
+        "default": 650,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(650,null,1,true,\"ratio\"); if(!enemies.length || !abilityDash(enemies[0])) return false; target=enemies[0];",
+        "sourceLine": 807,
+        "label": "目标距离 · 0"
+      },
+      "cast_1": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "enemies=abilityEnemies(650,null,1,true,\"ratio\"); if(!enemies.length || !abilityDash(enemies[0])) return false; target=enemies[0];",
+        "sourceLine": 807,
+        "label": "最多目标数 · 1"
+      },
+      "cast_5": {
+        "default": 1.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 18.0,
+        "context": "coefficient=1.8+Math.min(getDamage()*1.8,(target.hpMax-target.hp)*0.12)/Math.max(1,getDamage());",
+        "sourceLine": 808,
+        "label": "触发 / 状态数值 · 5"
+      },
+      "cast_6": {
+        "default": 1.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 18.0,
+        "context": "coefficient=1.8+Math.min(getDamage()*1.8,(target.hpMax-target.hp)*0.12)/Math.max(1,getDamage());",
+        "sourceLine": 808,
+        "label": "触发 / 状态数值 · 6"
+      },
+      "cast_7": {
+        "default": 0.12,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 10,
+        "context": "coefficient=1.8+Math.min(getDamage()*1.8,(target.hpMax-target.hp)*0.12)/Math.max(1,getDamage());",
+        "sourceLine": 808,
+        "label": "触发 / 状态数值 · 7"
+      },
+      "cast_8": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 32,
+        "context": "coefficient=1.8+Math.min(getDamage()*1.8,(target.hpMax-target.hp)*0.12)/Math.max(1,getDamage());",
+        "sourceLine": 808,
+        "label": "最小计算基数 · 8"
+      },
+      "cast_9": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(target,coefficient,2,effect); abilitySummon(\"A_2013_5\",2,0.3,2,\"elise\");",
+        "sourceLine": 809,
+        "label": "伤害类型 · 9",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_11": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "abilityHit(target,coefficient,2,effect); abilitySummon(\"A_2013_5\",2,0.3,2,\"elise\");",
+        "sourceLine": 809,
+        "label": "召唤数量 · 11"
+      },
+      "cast_12": {
+        "default": 0.3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(target,coefficient,2,effect); abilitySummon(\"A_2013_5\",2,0.3,2,\"elise\");",
+        "sourceLine": 809,
+        "label": "面板倍率 · 12"
+      },
+      "cast_13": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityHit(target,coefficient,2,effect); abilitySummon(\"A_2013_5\",2,0.3,2,\"elise\");",
+        "sourceLine": 809,
+        "label": "存续回合 · 13"
+      }
+    },
+    "nidalee_c": {
+      "can_0": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(distance,null,1,true).length > 0;",
+        "sourceLine": 640,
+        "label": "最多目标数 · 0"
+      },
+      "cast_0": {
+        "default": 0.7,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "ally=abilityAlly(); abilityHeal(ally,0.7);",
+        "sourceLine": 730,
+        "label": "治疗倍率 · 0"
+      },
+      "cast_2": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "target=abilityMarkedTarget(\"hunt\",700);",
+        "sourceLine": 731,
+        "label": "追踪距离 · 2"
+      },
+      "cast_4": {
+        "default": 3.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,marked ? 3.2 : 2.2,2,effect) && marked) delete target.abilityState[\"mark_hunt_\"+abilityIndex];",
+        "sourceLine": 735,
+        "label": "伤害倍率 · 4"
+      },
+      "cast_5": {
+        "default": 2.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,marked ? 3.2 : 2.2,2,effect) && marked) delete target.abilityState[\"mark_hunt_\"+abilityIndex];",
+        "sourceLine": 735,
+        "label": "伤害倍率 · 5"
+      },
+      "cast_6": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,marked ? 3.2 : 2.2,2,effect) && marked) delete target.abilityState[\"mark_hunt_\"+abilityIndex];",
+        "sourceLine": 735,
+        "label": "伤害类型 · 6",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "caitlyn_c": {
+      "can_0": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(distance,null,1,true).length > 0;",
+        "sourceLine": 640,
+        "label": "最多目标数 · 0"
+      },
+      "cast_1": {
+        "default": 1000,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "primary=abilityMarkedTarget(\"aim\",1000,\"farthest\"); if(!primary) return false; target=primary;",
+        "sourceLine": 915,
+        "label": "追踪距离 · 1"
+      },
+      "cast_3": {
+        "default": 200,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(other in abilityEnemies(200,primary,-1,true,\"nearest\",[primary]))",
+        "sourceLine": 916,
+        "label": "目标距离 · 3"
+      },
+      "cast_8": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "addBuff(\"hitup\",1,800*orangeFourStatBuffMultiplier); marked=target.abilityHasMark(this,\"aim\");",
+        "sourceLine": 920,
+        "label": "持续回合 · 8"
+      },
+      "cast_9": {
+        "default": 800,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 8000,
+        "context": "addBuff(\"hitup\",1,800*orangeFourStatBuffMultiplier); marked=target.abilityHasMark(this,\"aim\");",
+        "sourceLine": 920,
+        "label": "状态数值 · 9"
+      },
+      "cast_11": {
+        "default": 5,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,marked ? 5 : 4,1,effect) && marked) delete target.abilityState[\"mark_aim_\"+abilityIndex];",
+        "sourceLine": 921,
+        "label": "伤害倍率 · 11"
+      },
+      "cast_12": {
+        "default": 4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,marked ? 5 : 4,1,effect) && marked) delete target.abilityState[\"mark_aim_\"+abilityIndex];",
+        "sourceLine": 921,
+        "label": "伤害倍率 · 12"
+      },
+      "cast_13": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,marked ? 5 : 4,1,effect) && marked) delete target.abilityState[\"mark_aim_\"+abilityIndex];",
+        "sourceLine": 921,
+        "label": "伤害类型 · 13",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "khazix_c": {
+      "can_0": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(distance,null,1,true).length > 0;",
+        "sourceLine": 640,
+        "label": "最多目标数 · 0"
+      },
+      "cast_0": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(700,null,-1,true); primary=null;",
+        "sourceLine": 871,
+        "label": "目标距离 · 0"
+      },
+      "cast_3": {
+        "default": 4.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,abilityIsolated(primary) ? 4.2 : 2.8,1,effect); addBuff(\"fleeup\",2,800*orangeFourStatBuffMultiplier);",
+        "sourceLine": 874,
+        "label": "伤害倍率 · 3"
+      },
+      "cast_4": {
+        "default": 2.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,abilityIsolated(primary) ? 4.2 : 2.8,1,effect); addBuff(\"fleeup\",2,800*orangeFourStatBuffMultiplier);",
+        "sourceLine": 874,
+        "label": "伤害倍率 · 4"
+      },
+      "cast_5": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(primary,abilityIsolated(primary) ? 4.2 : 2.8,1,effect); addBuff(\"fleeup\",2,800*orangeFourStatBuffMultiplier);",
+        "sourceLine": 874,
+        "label": "伤害类型 · 5",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_7": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityHit(primary,abilityIsolated(primary) ? 4.2 : 2.8,1,effect); addBuff(\"fleeup\",2,800*orangeFourStatBuffMultiplier);",
+        "sourceLine": 874,
+        "label": "持续回合 · 7"
+      },
+      "cast_8": {
+        "default": 800,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 8000,
+        "context": "abilityHit(primary,abilityIsolated(primary) ? 4.2 : 2.8,1,effect); addBuff(\"fleeup\",2,800*orangeFourStatBuffMultiplier);",
+        "sourceLine": 874,
+        "label": "状态数值 · 8"
+      },
+      "cast_11": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "if(primary.hp<=0 && primary.getType()==1 && !primary.isManualSummonUnit) sourceSkill.abilityCooldownOverride=3;",
+        "sourceLine": 875,
+        "label": "触发 / 状态数值 · 11"
+      }
+    },
+    "jinx_c": {
+      "can_0": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(distance,null,1,true).length > 0;",
+        "sourceLine": 640,
+        "label": "最多目标数 · 0"
+      },
+      "cast_0": {
+        "default": 1000,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(1000,null,1,true,\"ratio\"); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 893,
+        "label": "目标距离 · 0"
+      },
+      "cast_1": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "enemies=abilityEnemies(1000,null,1,true,\"ratio\"); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 893,
+        "label": "最多目标数 · 1"
+      },
+      "cast_4": {
+        "default": 300,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "targets=abilityEnemies(300,primary,2,false,\"nearest\",[primary]);",
+        "sourceLine": 894,
+        "label": "目标距离 · 4"
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "targets=abilityEnemies(300,primary,2,false,\"nearest\",[primary]);",
+        "sourceLine": 894,
+        "label": "最多目标数 · 5"
+      },
+      "cast_7": {
+        "default": 2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,2+Math.min(2*getDamage(),(primary.hpMax-primary.hp)*0.12)/Math.max(1,getDamage()),1,effect);",
+        "sourceLine": 895,
+        "label": "伤害倍率 · 7"
+      },
+      "cast_8": {
+        "default": 2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,2+Math.min(2*getDamage(),(primary.hpMax-primary.hp)*0.12)/Math.max(1,getDamage()),1,effect);",
+        "sourceLine": 895,
+        "label": "伤害倍率 · 8"
+      },
+      "cast_9": {
+        "default": 0.12,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,2+Math.min(2*getDamage(),(primary.hpMax-primary.hp)*0.12)/Math.max(1,getDamage()),1,effect);",
+        "sourceLine": 895,
+        "label": "伤害倍率 · 9"
+      },
+      "cast_10": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 32,
+        "context": "abilityHit(primary,2+Math.min(2*getDamage(),(primary.hpMax-primary.hp)*0.12)/Math.max(1,getDamage()),1,effect);",
+        "sourceLine": 895,
+        "label": "最小计算基数 · 10"
+      },
+      "cast_11": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(primary,2+Math.min(2*getDamage(),(primary.hpMax-primary.hp)*0.12)/Math.max(1,getDamage()),1,effect);",
+        "sourceLine": 895,
+        "label": "伤害类型 · 11",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_12": {
+        "default": 1.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) abilityHit(target,1.2,1,effect);",
+        "sourceLine": 896,
+        "label": "伤害倍率 · 12"
+      },
+      "cast_13": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in targets) abilityHit(target,1.2,1,effect);",
+        "sourceLine": 896,
+        "label": "伤害类型 · 13",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_15": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(context && context.kills.length) {addBuff(\"strong\",2,0.3); addBuff(\"critup\",2,800*orangeFourStatBuffMultiplier); if(skill0) skill0.useSkill();}",
+        "sourceLine": 897,
+        "label": "持续回合 · 15"
+      },
+      "cast_16": {
+        "default": 0.3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(context && context.kills.length) {addBuff(\"strong\",2,0.3); addBuff(\"critup\",2,800*orangeFourStatBuffMultiplier); if(skill0) skill0.useSkill();}",
+        "sourceLine": 897,
+        "label": "状态数值 · 16"
+      },
+      "cast_18": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(context && context.kills.length) {addBuff(\"strong\",2,0.3); addBuff(\"critup\",2,800*orangeFourStatBuffMultiplier); if(skill0) skill0.useSkill();}",
+        "sourceLine": 897,
+        "label": "持续回合 · 18"
+      },
+      "cast_19": {
+        "default": 800,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 8000,
+        "context": "if(context && context.kills.length) {addBuff(\"strong\",2,0.3); addBuff(\"critup\",2,800*orangeFourStatBuffMultiplier); if(skill0) skill0.useSkill();}",
+        "sourceLine": 897,
+        "label": "状态数值 · 19"
+      }
+    },
+    "maokai_c": {
+      "can_0": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(distance,null,1,false,\"nearest\",null,true).length > 0;",
+        "sourceLine": 642,
+        "label": "最多目标数 · 0"
+      },
+      "cast_0": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) if(abilityHit(target,1.8,2,effect)) abilityControl(target,\"root\",2);",
+        "sourceLine": 752,
+        "label": "目标距离 · 0"
+      },
+      "cast_1": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) if(abilityHit(target,1.8,2,effect)) abilityControl(target,\"root\",2);",
+        "sourceLine": 752,
+        "label": "最多目标数 · 1"
+      },
+      "cast_3": {
+        "default": 1.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) if(abilityHit(target,1.8,2,effect)) abilityControl(target,\"root\",2);",
+        "sourceLine": 752,
+        "label": "伤害倍率 · 3"
+      },
+      "cast_4": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) if(abilityHit(target,1.8,2,effect)) abilityControl(target,\"root\",2);",
+        "sourceLine": 752,
+        "label": "伤害类型 · 4",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) if(abilityHit(target,1.8,2,effect)) abilityControl(target,\"root\",2);",
+        "sourceLine": 752,
+        "label": "持续回合 · 6"
+      },
+      "cast_7": {
+        "default": 0.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(this,0.2,2,true);",
+        "sourceLine": 753,
+        "label": "护盾倍率 · 7"
+      },
+      "cast_8": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityShield(this,0.2,2,true);",
+        "sourceLine": 753,
+        "label": "持续回合 · 8"
+      }
+    },
+    "riven_c": {
+      "can_0": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "return abilityEnemies(distance,null,1,false,\"nearest\",null,true).length > 0;",
+        "sourceLine": 642,
+        "label": "最多目标数 · 0"
+      },
+      "cast_1": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "addBuff(\"strong\",2,0.35);",
+        "sourceLine": 818,
+        "label": "持续回合 · 1"
+      },
+      "cast_2": {
+        "default": 0.35,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "addBuff(\"strong\",2,0.35);",
+        "sourceLine": 818,
+        "label": "状态数值 · 2"
+      },
+      "cast_3": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) abilityHit(target,1.6+0.96*(1-target.hp/target.hpMax),1,effect);",
+        "sourceLine": 819,
+        "label": "目标距离 · 3"
+      },
+      "cast_4": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) abilityHit(target,1.6+0.96*(1-target.hp/target.hpMax),1,effect);",
+        "sourceLine": 819,
+        "label": "最多目标数 · 4"
+      },
+      "cast_6": {
+        "default": 1.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) abilityHit(target,1.6+0.96*(1-target.hp/target.hpMax),1,effect);",
+        "sourceLine": 819,
+        "label": "伤害倍率 · 6"
+      },
+      "cast_7": {
+        "default": 0.96,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) abilityHit(target,1.6+0.96*(1-target.hp/target.hpMax),1,effect);",
+        "sourceLine": 819,
+        "label": "伤害倍率 · 7"
+      },
+      "cast_8": {
+        "default": 1,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) abilityHit(target,1.6+0.96*(1-target.hp/target.hpMax),1,effect);",
+        "sourceLine": 819,
+        "label": "伤害倍率 · 8"
+      },
+      "cast_9": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in abilityEnemies(700,null,3,false,\"nearest\",null,true)) abilityHit(target,1.6+0.96*(1-target.hp/target.hpMax),1,effect);",
+        "sourceLine": 819,
+        "label": "伤害类型 · 9",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_10": {
+        "default": 2,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "abilityState.rivenStep=2;",
+        "sourceLine": 820,
+        "label": "触发 / 状态数值 · 10"
+      }
+    },
+    "aoxing_c": {
+      "can_2": {
+        "default": 3001,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "if(abilityCandidates(otherTeam,lane,pos,3001,1).length > 0) return true;",
+        "sourceLine": 645,
+        "label": "目标距离 · 2"
+      },
+      "can_3": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "if(abilityCandidates(otherTeam,lane,pos,3001,1).length > 0) return true;",
+        "sourceLine": 645,
+        "label": "最多目标数 · 3"
+      },
+      "cast_9": {
+        "default": 4,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "if(enemies.length>i) {i=enemies.length; targets=abilityCandidates(otherTeam,lane,pos,GameMapConfig.LINE_POS,4,false,\"front\");}",
+        "sourceLine": 953,
+        "label": "最多目标数 · 9"
+      },
+      "cast_12": {
+        "default": 1.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,1.8+0.4*count,2,effect) && count==3 && target.getType()==1 && !target.isManualSummonUnit && i++<2) abilityControl(target,\"stun\",1);",
+        "sourceLine": 956,
+        "label": "伤害倍率 · 12"
+      },
+      "cast_13": {
+        "default": 0.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,1.8+0.4*count,2,effect) && count==3 && target.getType()==1 && !target.isManualSummonUnit && i++<2) abilityControl(target,\"stun\",1);",
+        "sourceLine": 956,
+        "label": "伤害倍率 · 13"
+      },
+      "cast_14": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in targets) if(abilityHit(target,1.8+0.4*count,2,effect) && count==3 && target.getType()==1 && !target.isManualSummonUnit && i++<2) abilityControl(target,\"stun\",1);",
+        "sourceLine": 956,
+        "label": "伤害类型 · 14",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_15": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "for each(target in targets) if(abilityHit(target,1.8+0.4*count,2,effect) && count==3 && target.getType()==1 && !target.isManualSummonUnit && i++<2) abilityControl(target,\"stun\",1);",
+        "sourceLine": 956,
+        "label": "触发层数 · 15"
+      },
+      "cast_17": {
+        "default": 2,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "for each(target in targets) if(abilityHit(target,1.8+0.4*count,2,effect) && count==3 && target.getType()==1 && !target.isManualSummonUnit && i++<2) abilityControl(target,\"stun\",1);",
+        "sourceLine": 956,
+        "label": "触发 / 状态数值 · 17"
+      },
+      "cast_19": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,1.8+0.4*count,2,effect) && count==3 && target.getType()==1 && !target.isManualSummonUnit && i++<2) abilityControl(target,\"stun\",1);",
+        "sourceLine": 956,
+        "label": "持续回合 · 19"
+      }
+    },
+    "illaoi_n": {
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies = abilityEnemies(500); if(!enemies.length) return false;",
+        "sourceLine": 688,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 250,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "primary = enemies[0]; targets = [primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary])); count = 0;",
+        "sourceLine": 689,
+        "label": "目标距离 · 2"
+      },
+      "cast_3": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "primary = enemies[0]; targets = [primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary])); count = 0;",
+        "sourceLine": 689,
+        "label": "最多目标数 · 3"
+      },
+      "cast_6": {
+        "default": 1.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,1.2*scale,1,effect) && target.getType() == 1 && !target.isManualSummonUnit) ++count;",
+        "sourceLine": 690,
+        "label": "伤害倍率 · 6"
+      },
+      "cast_7": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in targets) if(abilityHit(target,1.2*scale,1,effect) && target.getType() == 1 && !target.isManualSummonUnit) ++count;",
+        "sourceLine": 690,
+        "label": "伤害类型 · 7",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_9": {
+        "default": 0.15,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(count) abilityHeal(this,0.15*Math.min(3,count)*scale);",
+        "sourceLine": 691,
+        "label": "治疗倍率 · 9"
+      },
+      "cast_10": {
+        "default": 3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(count) abilityHeal(this,0.15*Math.min(3,count)*scale);",
+        "sourceLine": 691,
+        "label": "治疗倍率 · 10"
+      }
+    },
+    "jayce_c": {
+      "cast_0": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(700); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 714,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 250,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "targets=[primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]));",
+        "sourceLine": 715,
+        "label": "目标距离 · 2"
+      },
+      "cast_3": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "targets=[primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]));",
+        "sourceLine": 715,
+        "label": "最多目标数 · 3"
+      },
+      "cast_5": {
+        "default": 1.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) abilityHit(target,1.6,1,effect,target===primary ? 3 : 0);",
+        "sourceLine": 716,
+        "label": "伤害倍率 · 5"
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in targets) abilityHit(target,1.6,1,effect,target===primary ? 3 : 0);",
+        "sourceLine": 716,
+        "label": "伤害类型 · 6",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_7": {
+        "default": 3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) abilityHit(target,1.6,1,effect,target===primary ? 3 : 0);",
+        "sourceLine": 716,
+        "label": "共享伤害基数 · 7"
+      },
+      "cast_8": {
+        "default": 0,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) abilityHit(target,1.6,1,effect,target===primary ? 3 : 0);",
+        "sourceLine": 716,
+        "label": "共享伤害基数 · 8"
+      },
+      "cast_10": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);",
+        "sourceLine": 720,
+        "label": "伤害倍率 · 10"
+      },
+      "cast_11": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);",
+        "sourceLine": 720,
+        "label": "伤害类型 · 11",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_12": {
+        "default": 3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);",
+        "sourceLine": 720,
+        "label": "共享伤害基数 · 12"
+      },
+      "cast_13": {
+        "default": 250,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "if(abilityHit(primary,1.4,1,effect,3)) primary.checkMove(false,250,this,-1,true);",
+        "sourceLine": 720,
+        "label": "位移距离 · 13"
+      }
+    },
+    "nidalee_n": {
+      "cast_0": {
+        "default": 650,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(650,null,1,false,\"farthest\"); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 725,
+        "label": "目标距离 · 0"
+      },
+      "cast_1": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "enemies=abilityEnemies(650,null,1,false,\"farthest\"); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 725,
+        "label": "最多目标数 · 1"
+      },
+      "cast_4": {
+        "default": 1,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "coefficient=(1+Math.min(sourceSkill.skillSetData.range,Math.abs(pos-target.pos))/Math.max(1,sourceSkill.skillSetData.range))*scale;",
+        "sourceLine": 726,
+        "label": "触发 / 状态数值 · 4"
+      },
+      "cast_5": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 32,
+        "context": "coefficient=(1+Math.min(sourceSkill.skillSetData.range,Math.abs(pos-target.pos))/Math.max(1,sourceSkill.skillSetData.range))*scale;",
+        "sourceLine": 726,
+        "label": "最小计算基数 · 5"
+      },
+      "cast_6": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,coefficient,2,effect)) abilityMark(target,\"hunt\",3);",
+        "sourceLine": 727,
+        "label": "伤害类型 · 6",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_8": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(target,coefficient,2,effect)) abilityMark(target,\"hunt\",3);",
+        "sourceLine": 727,
+        "label": "持续回合 · 8"
+      }
+    },
+    "kayle_n": {
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(500); if(enemies.length && abilityHit(enemies[0],1.2*scale,2,effect)) abilityControl(enemies[0],\"sunder\",2,0.2*scale);",
+        "sourceLine": 739,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 1.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "enemies=abilityEnemies(500); if(enemies.length && abilityHit(enemies[0],1.2*scale,2,effect)) abilityControl(enemies[0],\"sunder\",2,0.2*scale);",
+        "sourceLine": 739,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "enemies=abilityEnemies(500); if(enemies.length && abilityHit(enemies[0],1.2*scale,2,effect)) abilityControl(enemies[0],\"sunder\",2,0.2*scale);",
+        "sourceLine": 739,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "enemies=abilityEnemies(500); if(enemies.length && abilityHit(enemies[0],1.2*scale,2,effect)) abilityControl(enemies[0],\"sunder\",2,0.2*scale);",
+        "sourceLine": 739,
+        "label": "持续回合 · 6"
+      },
+      "cast_7": {
+        "default": 0.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "enemies=abilityEnemies(500); if(enemies.length && abilityHit(enemies[0],1.2*scale,2,effect)) abilityControl(enemies[0],\"sunder\",2,0.2*scale);",
+        "sourceLine": 739,
+        "label": "附加比例 · 7"
+      },
+      "cast_8": {
+        "default": 0.45,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHeal(abilityAlly(),0.45*scale);",
+        "sourceLine": 740,
+        "label": "治疗倍率 · 8"
+      }
+    },
+    "maokai_n": {
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false;",
+        "sourceLine": 747,
+        "label": "目标距离 · 0"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(enemies[0],scale,2,effect)) abilityControl(enemies[0],\"root\",1);",
+        "sourceLine": 748,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(enemies[0],scale,2,effect)) abilityControl(enemies[0],\"root\",1);",
+        "sourceLine": 748,
+        "label": "持续回合 · 6"
+      },
+      "cast_7": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityState.sap={until:abilitySerial+2,manualEffectMultiplier:manualEffectMultiplier,debuff:false};",
+        "sourceLine": 749,
+        "label": "状态持续回合 · 7"
+      }
+    },
+    "wukong_n": {
+      "cast_0": {
+        "default": 175,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(175); if(!enemies.length) return false;",
+        "sourceLine": 756,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(enemies[0],1.4*scale,1,effect)) abilityControl(enemies[0],\"sunder\",2,0.25*scale);",
+        "sourceLine": 757,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(enemies[0],1.4*scale,1,effect)) abilityControl(enemies[0],\"sunder\",2,0.25*scale);",
+        "sourceLine": 757,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(enemies[0],1.4*scale,1,effect)) abilityControl(enemies[0],\"sunder\",2,0.25*scale);",
+        "sourceLine": 757,
+        "label": "持续回合 · 6"
+      },
+      "cast_7": {
+        "default": 0.25,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(enemies[0],1.4*scale,1,effect)) abilityControl(enemies[0],\"sunder\",2,0.25*scale);",
+        "sourceLine": 757,
+        "label": "附加比例 · 7"
+      },
+      "cast_8": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "abilitySummon(id,1,0.35*scale,2,\"wukong\",null,true); checkMove(false,200);",
+        "sourceLine": 758,
+        "label": "召唤数量 · 8"
+      },
+      "cast_9": {
+        "default": 0.35,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilitySummon(id,1,0.35*scale,2,\"wukong\",null,true); checkMove(false,200);",
+        "sourceLine": 758,
+        "label": "面板倍率 · 9"
+      },
+      "cast_10": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilitySummon(id,1,0.35*scale,2,\"wukong\",null,true); checkMove(false,200);",
+        "sourceLine": 758,
+        "label": "存续回合 · 10"
+      },
+      "cast_12": {
+        "default": 200,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "abilitySummon(id,1,0.35*scale,2,\"wukong\",null,true); checkMove(false,200);",
+        "sourceLine": 758,
+        "label": "位移距离 · 12"
+      }
+    },
+    "wukong_c": {
+      "cast_0": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(700); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];",
+        "sourceLine": 761,
+        "label": "目标距离 · 0"
+      },
+      "cast_3": {
+        "default": 300,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "targets=[primary].concat(abilityEnemies(300,primary,3,false,\"nearest\",[primary]));",
+        "sourceLine": 762,
+        "label": "目标距离 · 3"
+      },
+      "cast_4": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "targets=[primary].concat(abilityEnemies(300,primary,3,false,\"nearest\",[primary]));",
+        "sourceLine": 762,
+        "label": "最多目标数 · 4"
+      },
+      "cast_7": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for(i=0;i<2;i++) for each(target in targets) if(abilityHit(target,1.3,1,effect,2.6) && i==0) abilityControl(target,\"stun\",1);",
+        "sourceLine": 763,
+        "label": "连段 / 循环次数 · 7"
+      },
+      "cast_8": {
+        "default": 1.3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for(i=0;i<2;i++) for each(target in targets) if(abilityHit(target,1.3,1,effect,2.6) && i==0) abilityControl(target,\"stun\",1);",
+        "sourceLine": 763,
+        "label": "伤害倍率 · 8"
+      },
+      "cast_9": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for(i=0;i<2;i++) for each(target in targets) if(abilityHit(target,1.3,1,effect,2.6) && i==0) abilityControl(target,\"stun\",1);",
+        "sourceLine": 763,
+        "label": "伤害类型 · 9",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_10": {
+        "default": 2.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for(i=0;i<2;i++) for each(target in targets) if(abilityHit(target,1.3,1,effect,2.6) && i==0) abilityControl(target,\"stun\",1);",
+        "sourceLine": 763,
+        "label": "共享伤害基数 · 10"
+      },
+      "cast_13": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for(i=0;i<2;i++) for each(target in targets) if(abilityHit(target,1.3,1,effect,2.6) && i==0) abilityControl(target,\"stun\",1);",
+        "sourceLine": 763,
+        "label": "持续回合 · 13"
+      },
+      "cast_15": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "addBuff(\"steel\",2,0.4*manualDefenseBuffMultiplier);",
+        "sourceLine": 764,
+        "label": "持续回合 · 15"
+      },
+      "cast_16": {
+        "default": 0.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "addBuff(\"steel\",2,0.4*manualDefenseBuffMultiplier);",
+        "sourceLine": 764,
+        "label": "状态数值 · 16"
+      }
+    },
+    "gangplank_n": {
+      "cast_0": {
+        "default": 0.5,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "marked=hp/hpMax < 0.5; enemies=abilityEnemies(600); if(!enemies.length) return false;",
+        "sourceLine": 767,
+        "label": "生命比例阈值 · 0"
+      },
+      "cast_1": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "marked=hp/hpMax < 0.5; enemies=abilityEnemies(600); if(!enemies.length) return false;",
+        "sourceLine": 767,
+        "label": "目标距离 · 1"
+      },
+      "cast_3": {
+        "default": 1.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(enemies[0],1.6*scale,1,effect);",
+        "sourceLine": 768,
+        "label": "伤害倍率 · 3"
+      },
+      "cast_4": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(enemies[0],1.6*scale,1,effect);",
+        "sourceLine": 768,
+        "label": "伤害类型 · 4",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_5": {
+        "default": 0.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(marked) { removeAllDebuff(); abilityHeal(this,0.4*scale); }",
+        "sourceLine": 769,
+        "label": "治疗倍率 · 5"
+      }
+    },
+    "gangplank_c": {
+      "cast_0": {
+        "default": 800,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(800); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 772,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 2,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "abilityState.zone={line:primary.line,pos:primary.pos,left:2,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier};",
+        "sourceLine": 773,
+        "label": "触发次数 · 2"
+      },
+      "cast_3": {
+        "default": 350,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,\"weak\",1,0.2);",
+        "sourceLine": 774,
+        "label": "目标距离 · 3"
+      },
+      "cast_4": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,\"weak\",1,0.2);",
+        "sourceLine": 774,
+        "label": "最多目标数 · 4"
+      },
+      "cast_5": {
+        "default": 1.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,\"weak\",1,0.2);",
+        "sourceLine": 774,
+        "label": "伤害倍率 · 5"
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,\"weak\",1,0.2);",
+        "sourceLine": 774,
+        "label": "伤害类型 · 6",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_8": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,\"weak\",1,0.2);",
+        "sourceLine": 774,
+        "label": "持续回合 · 8"
+      },
+      "cast_9": {
+        "default": 0.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(350,primary,3)) if(abilityHit(target,1.2,1,effect)) abilityControl(target,\"weak\",1,0.2);",
+        "sourceLine": 774,
+        "label": "附加比例 · 9"
+      }
+    },
+    "yi_n": {
+      "cast_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(600,null,-1); if(!enemies.length) return false;",
+        "sourceLine": 777,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 1,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "coefficient=(enemies.length==1 ? 2 : 1.1)*scale;",
+        "sourceLine": 778,
+        "label": "触发 / 状态数值 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "coefficient=(enemies.length==1 ? 2 : 1.1)*scale;",
+        "sourceLine": 778,
+        "label": "触发 / 状态数值 · 3"
+      },
+      "cast_4": {
+        "default": 1.1,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 11.0,
+        "context": "coefficient=(enemies.length==1 ? 2 : 1.1)*scale;",
+        "sourceLine": 778,
+        "label": "触发 / 状态数值 · 4"
+      },
+      "cast_6": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "for each(target in enemies.slice(0,3)) abilityHit(target,coefficient,1,effect);",
+        "sourceLine": 779,
+        "label": "触发 / 状态数值 · 6"
+      },
+      "cast_7": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in enemies.slice(0,3)) abilityHit(target,coefficient,1,effect);",
+        "sourceLine": 779,
+        "label": "伤害类型 · 7",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_9": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "addBuff(\"fleeup\",1,600*scale*orangeFourStatBuffMultiplier);",
+        "sourceLine": 780,
+        "label": "持续回合 · 9"
+      },
+      "cast_10": {
+        "default": 600,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 6000,
+        "context": "addBuff(\"fleeup\",1,600*scale*orangeFourStatBuffMultiplier);",
+        "sourceLine": 780,
+        "label": "状态数值 · 10"
+      }
+    },
+    "yi_c": {
+      "cast_1": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "addBuff(\"strong\",3,0.5); addBuff(\"hitup\",3,800*orangeFourStatBuffMultiplier); removeBuff(\"weak\");",
+        "sourceLine": 783,
+        "label": "持续回合 · 1"
+      },
+      "cast_2": {
+        "default": 0.5,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "addBuff(\"strong\",3,0.5); addBuff(\"hitup\",3,800*orangeFourStatBuffMultiplier); removeBuff(\"weak\");",
+        "sourceLine": 783,
+        "label": "状态数值 · 2"
+      },
+      "cast_4": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "addBuff(\"strong\",3,0.5); addBuff(\"hitup\",3,800*orangeFourStatBuffMultiplier); removeBuff(\"weak\");",
+        "sourceLine": 783,
+        "label": "持续回合 · 4"
+      },
+      "cast_5": {
+        "default": 800,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 8000,
+        "context": "addBuff(\"strong\",3,0.5); addBuff(\"hitup\",3,800*orangeFourStatBuffMultiplier); removeBuff(\"weak\");",
+        "sourceLine": 783,
+        "label": "状态数值 · 5"
+      },
+      "cast_7": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityState.highlander={until:abilitySerial+3,left:2,debuff:false};",
+        "sourceLine": 784,
+        "label": "状态持续回合 · 7"
+      },
+      "cast_8": {
+        "default": 2,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "abilityState.highlander={until:abilitySerial+3,left:2,debuff:false};",
+        "sourceLine": 784,
+        "label": "触发次数 · 8"
+      }
+    },
+    "veigar_n": {
+      "cast_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 788,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 1.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,1.2*scale,2,effect) && target.getType()==1 && !target.isManualSummonUnit)",
+        "sourceLine": 789,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,1.2*scale,2,effect) && target.getType()==1 && !target.isManualSummonUnit)",
+        "sourceLine": 789,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_5": {
+        "default": 10,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "abilityState.evilStacks = Math.min(10,oldEvilStacks+1);",
+        "sourceLine": 792,
+        "label": "触发 / 状态数值 · 5"
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "abilityState.evilStacks = Math.min(10,oldEvilStacks+1);",
+        "sourceLine": 792,
+        "label": "触发 / 状态数值 · 6"
+      },
+      "cast_7": {
+        "default": 0,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "if(int(abilityState.evilStacks) > oldEvilStacks) abilityState.evilStackBonus = Number(abilityState.evilStackBonus || 0) + 0.03 * activeManualEffectMultiplier();",
+        "sourceLine": 793,
+        "label": "触发 / 状态数值 · 7"
+      },
+      "cast_8": {
+        "default": 0.03,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 10,
+        "context": "if(int(abilityState.evilStacks) > oldEvilStacks) abilityState.evilStackBonus = Number(abilityState.evilStackBonus || 0) + 0.03 * activeManualEffectMultiplier();",
+        "sourceLine": 793,
+        "label": "触发 / 状态数值 · 8"
+      }
+    },
+    "veigar_c": {
+      "cast_0": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(700,null,1,true,\"ratio\"); if(!enemies.length) enemies=abilityEnemies(700);",
+        "sourceLine": 798,
+        "label": "目标距离 · 0"
+      },
+      "cast_1": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "enemies=abilityEnemies(700,null,1,true,\"ratio\"); if(!enemies.length) enemies=abilityEnemies(700);",
+        "sourceLine": 798,
+        "label": "最多目标数 · 1"
+      },
+      "cast_3": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(700,null,1,true,\"ratio\"); if(!enemies.length) enemies=abilityEnemies(700);",
+        "sourceLine": 798,
+        "label": "目标距离 · 3"
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(!enemies.length) return false; target=enemies[0]; abilityHit(target,2+3*(1-target.hp/target.hpMax),2,effect);",
+        "sourceLine": 799,
+        "label": "伤害倍率 · 5"
+      },
+      "cast_6": {
+        "default": 3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(!enemies.length) return false; target=enemies[0]; abilityHit(target,2+3*(1-target.hp/target.hpMax),2,effect);",
+        "sourceLine": 799,
+        "label": "伤害倍率 · 6"
+      },
+      "cast_7": {
+        "default": 1,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(!enemies.length) return false; target=enemies[0]; abilityHit(target,2+3*(1-target.hp/target.hpMax),2,effect);",
+        "sourceLine": 799,
+        "label": "伤害倍率 · 7"
+      },
+      "cast_8": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(!enemies.length) return false; target=enemies[0]; abilityHit(target,2+3*(1-target.hp/target.hpMax),2,effect);",
+        "sourceLine": 799,
+        "label": "伤害类型 · 8",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "elise_n": {
+      "cast_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 802,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 0.04,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 10,
+        "context": "coefficient=scale+Math.min(getDamage(),target.hp*0.04*scale)/Math.max(1,getDamage());",
+        "sourceLine": 803,
+        "label": "触发 / 状态数值 · 2"
+      },
+      "cast_3": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 32,
+        "context": "coefficient=scale+Math.min(getDamage(),target.hp*0.04*scale)/Math.max(1,getDamage());",
+        "sourceLine": 803,
+        "label": "最小计算基数 · 3"
+      },
+      "cast_4": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,coefficient,2,effect)) abilityControl(target,\"stun\",1);",
+        "sourceLine": 804,
+        "label": "伤害类型 · 4",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(target,coefficient,2,effect)) abilityControl(target,\"stun\",1);",
+        "sourceLine": 804,
+        "label": "持续回合 · 6"
+      }
+    },
+    "riven_n": {
+      "cast_0": {
+        "default": 450,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(450); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];",
+        "sourceLine": 812,
+        "label": "目标距离 · 0"
+      },
+      "cast_3": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 32,
+        "context": "count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback(\"折翼之舞：第\"+count+\"式\",effect);",
+        "sourceLine": 813,
+        "label": "触发 / 状态数值 · 3"
+      },
+      "cast_4": {
+        "default": 1,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback(\"折翼之舞：第\"+count+\"式\",effect);",
+        "sourceLine": 813,
+        "label": "触发 / 状态数值 · 4"
+      },
+      "cast_5": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 32,
+        "context": "count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback(\"折翼之舞：第\"+count+\"式\",effect);",
+        "sourceLine": 813,
+        "label": "触发 / 状态数值 · 5"
+      },
+      "cast_8": {
+        "default": 200,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "目标距离 · 8"
+      },
+      "cast_9": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "最多目标数 · 9"
+      },
+      "cast_11": {
+        "default": 3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "伤害倍率 · 11"
+      },
+      "cast_12": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "伤害倍率 · 12"
+      },
+      "cast_13": {
+        "default": 0.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "伤害倍率 · 13"
+      },
+      "cast_14": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "伤害类型 · 14",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_15": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "触发层数 · 15"
+      },
+      "cast_17": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for each(target in [primary].concat(abilityEnemies(200,primary,2,false,\"nearest\",[primary]))) if(abilityHit(target,(count==3 ? 1.4 : 0.8)*scale,1,effect) && count==3) abilityControl(target,\"stun\",1);",
+        "sourceLine": 814,
+        "label": "持续回合 · 17"
+      },
+      "cast_18": {
+        "default": 2,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "if(count==2) abilityShield(this,0.6*scale);",
+        "sourceLine": 815,
+        "label": "触发层数 · 18"
+      },
+      "cast_19": {
+        "default": 0.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(count==2) abilityShield(this,0.6*scale);",
+        "sourceLine": 815,
+        "label": "护盾倍率 · 19"
+      }
+    },
+    "orianna_n": {
+      "cast_0": {
+        "default": 3001,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "ally=abilityAlly(3001,\"front\",true) || this; abilityState.ball=ally;",
+        "sourceLine": 823,
+        "label": "友军距离 · 0"
+      },
+      "cast_2": {
+        "default": 0.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(ally,0.8*scale);",
+        "sourceLine": 824,
+        "label": "护盾倍率 · 2"
+      },
+      "cast_3": {
+        "default": 300,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in abilityEnemies(300,ally,2)) abilityHit(target,scale,2,effect);",
+        "sourceLine": 825,
+        "label": "目标距离 · 3"
+      },
+      "cast_4": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in abilityEnemies(300,ally,2)) abilityHit(target,scale,2,effect);",
+        "sourceLine": 825,
+        "label": "最多目标数 · 4"
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in abilityEnemies(300,ally,2)) abilityHit(target,scale,2,effect);",
+        "sourceLine": 825,
+        "label": "伤害类型 · 5",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "nunu_n": {
+      "cast_0": {
+        "default": 175,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(175); if(!enemies.length) return false;",
+        "sourceLine": 834,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 3,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "target=enemies[0]; abilityHit(target,(target.isManualSummonUnit ? 3 : 1.4)*scale,target.isManualSummonUnit ? 3 : 2,effect);",
+        "sourceLine": 835,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "target=enemies[0]; abilityHit(target,(target.isManualSummonUnit ? 3 : 1.4)*scale,target.isManualSummonUnit ? 3 : 2,effect);",
+        "sourceLine": 835,
+        "label": "伤害倍率 · 3"
+      },
+      "cast_4": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "target=enemies[0]; abilityHit(target,(target.isManualSummonUnit ? 3 : 1.4)*scale,target.isManualSummonUnit ? 3 : 2,effect);",
+        "sourceLine": 835,
+        "label": "伤害类型 · 4",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "target=enemies[0]; abilityHit(target,(target.isManualSummonUnit ? 3 : 1.4)*scale,target.isManualSummonUnit ? 3 : 2,effect);",
+        "sourceLine": 835,
+        "label": "伤害类型 · 5",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 0.7,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHeal(this,0.7*scale);",
+        "sourceLine": 836,
+        "label": "治疗倍率 · 6"
+      }
+    },
+    "alistar_n": {
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];",
+        "sourceLine": 842,
+        "label": "目标距离 · 0"
+      },
+      "cast_3": {
+        "default": 250,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "targets=[primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]));",
+        "sourceLine": 843,
+        "label": "目标距离 · 3"
+      },
+      "cast_4": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "targets=[primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]));",
+        "sourceLine": 843,
+        "label": "最多目标数 · 4"
+      },
+      "cast_6": {
+        "default": 0.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,0.8*scale,2,effect,1.4*scale);",
+        "sourceLine": 844,
+        "label": "伤害倍率 · 6"
+      },
+      "cast_7": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(primary,0.8*scale,2,effect,1.4*scale);",
+        "sourceLine": 844,
+        "label": "伤害类型 · 7",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_8": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,0.8*scale,2,effect,1.4*scale);",
+        "sourceLine": 844,
+        "label": "共享伤害基数 · 8"
+      },
+      "cast_9": {
+        "default": 0.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,0.6*scale,2,effect,target===primary ? 1.4*scale : 0)) abilityControl(target,\"stun\",1);",
+        "sourceLine": 845,
+        "label": "伤害倍率 · 9"
+      },
+      "cast_10": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in targets) if(abilityHit(target,0.6*scale,2,effect,target===primary ? 1.4*scale : 0)) abilityControl(target,\"stun\",1);",
+        "sourceLine": 845,
+        "label": "伤害类型 · 10",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_11": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,0.6*scale,2,effect,target===primary ? 1.4*scale : 0)) abilityControl(target,\"stun\",1);",
+        "sourceLine": 845,
+        "label": "共享伤害基数 · 11"
+      },
+      "cast_12": {
+        "default": 0,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,0.6*scale,2,effect,target===primary ? 1.4*scale : 0)) abilityControl(target,\"stun\",1);",
+        "sourceLine": 845,
+        "label": "共享伤害基数 · 12"
+      },
+      "cast_14": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for each(target in targets) if(abilityHit(target,0.6*scale,2,effect,target===primary ? 1.4*scale : 0)) abilityControl(target,\"stun\",1);",
+        "sourceLine": 845,
+        "label": "持续回合 · 14"
+      },
+      "cast_16": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "addBuff(\"taunt\",2);",
+        "sourceLine": 846,
+        "label": "持续回合 · 16"
+      }
+    },
+    "alistar_c": {
+      "cast_0": {
+        "default": 0.5,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "removeAllDebuff(); abilityHeal(this,0.5);",
+        "sourceLine": 849,
+        "label": "治疗倍率 · 0"
+      },
+      "cast_2": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "abilityState.guard={kind:\"alistar\",charges:3,until:abilitySerial+2,owner:this,manualEffectMultiplier:manualEffectMultiplier,debuff:false};",
+        "sourceLine": 850,
+        "label": "触发次数 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityState.guard={kind:\"alistar\",charges:3,until:abilitySerial+2,owner:this,manualEffectMultiplier:manualEffectMultiplier,debuff:false};",
+        "sourceLine": 850,
+        "label": "状态持续回合 · 3"
+      }
+    },
+    "diana_n": {
+      "cast_0": {
+        "default": 650,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(650); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 853,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 250,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in [primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]))) if(abilityHit(target,scale,2,effect)) abilityMark(target,\"moon\",3);",
+        "sourceLine": 854,
+        "label": "目标距离 · 2"
+      },
+      "cast_3": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in [primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]))) if(abilityHit(target,scale,2,effect)) abilityMark(target,\"moon\",3);",
+        "sourceLine": 854,
+        "label": "最多目标数 · 3"
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in [primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]))) if(abilityHit(target,scale,2,effect)) abilityMark(target,\"moon\",3);",
+        "sourceLine": 854,
+        "label": "伤害类型 · 5",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_7": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "for each(target in [primary].concat(abilityEnemies(250,primary,3,false,\"nearest\",[primary]))) if(abilityHit(target,scale,2,effect)) abilityMark(target,\"moon\",3);",
+        "sourceLine": 854,
+        "label": "持续回合 · 7"
+      }
+    },
+    "diana_c": {
+      "cast_1": {
+        "default": 650,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "primary=abilityMarkedTarget(\"moon\",650); if(!primary || !abilityDash(primary)) return false;",
+        "sourceLine": 857,
+        "label": "追踪距离 · 1"
+      },
+      "cast_2": {
+        "default": 300,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "targets=abilityEnemies(300,this,3); if(targets.indexOf(primary)<0) {targets.unshift(primary); targets=targets.slice(0,3);}",
+        "sourceLine": 858,
+        "label": "目标距离 · 2"
+      },
+      "cast_3": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "targets=abilityEnemies(300,this,3); if(targets.indexOf(primary)<0) {targets.unshift(primary); targets=targets.slice(0,3);}",
+        "sourceLine": 858,
+        "label": "最多目标数 · 3"
+      },
+      "cast_6": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "targets=abilityEnemies(300,this,3); if(targets.indexOf(primary)<0) {targets.unshift(primary); targets=targets.slice(0,3);}",
+        "sourceLine": 858,
+        "label": "触发 / 状态数值 · 6"
+      },
+      "cast_8": {
+        "default": 150,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "marked=target.abilityHasMark(this,\"moon\"); abilityPull(target,this,150);",
+        "sourceLine": 861,
+        "label": "触发 / 状态数值 · 8"
+      },
+      "cast_9": {
+        "default": 2.7,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,marked ? 2.7 : 1.8,2,effect) && marked) delete target.abilityState[\"mark_moon_\"+abilityIndex];",
+        "sourceLine": 862,
+        "label": "伤害倍率 · 9"
+      },
+      "cast_10": {
+        "default": 1.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,marked ? 2.7 : 1.8,2,effect) && marked) delete target.abilityState[\"mark_moon_\"+abilityIndex];",
+        "sourceLine": 862,
+        "label": "伤害倍率 · 10"
+      },
+      "cast_11": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,marked ? 2.7 : 1.8,2,effect) && marked) delete target.abilityState[\"mark_moon_\"+abilityIndex];",
+        "sourceLine": 862,
+        "label": "伤害类型 · 11",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_13": {
+        "default": 1,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(this,1);",
+        "sourceLine": 864,
+        "label": "护盾倍率 · 13"
+      }
+    },
+    "khazix_n": {
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(500); if(!enemies.length || !abilityDash(enemies[0])) return false;",
+        "sourceLine": 867,
+        "label": "目标距离 · 0"
+      },
+      "cast_4": {
+        "default": 2.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(enemies[0],(abilityIsolated(enemies[0]) ? 2.4 : 1.6)*scale,1,effect);",
+        "sourceLine": 868,
+        "label": "伤害倍率 · 4"
+      },
+      "cast_5": {
+        "default": 1.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(enemies[0],(abilityIsolated(enemies[0]) ? 2.4 : 1.6)*scale,1,effect);",
+        "sourceLine": 868,
+        "label": "伤害倍率 · 5"
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(enemies[0],(abilityIsolated(enemies[0]) ? 2.4 : 1.6)*scale,1,effect);",
+        "sourceLine": 868,
+        "label": "伤害类型 · 6",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "malzahar_n": {
+      "cast_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 878,
+        "label": "目标距离 · 0"
+      },
+      "cast_4": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale*manualDamageMultiplier,hops:0,debuff:true};",
+        "sourceLine": 880,
+        "label": "状态持续回合 · 4"
+      },
+      "cast_5": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale*manualDamageMultiplier,hops:0,debuff:true};",
+        "sourceLine": 880,
+        "label": "触发 / 状态数值 · 5"
+      },
+      "cast_6": {
+        "default": 0.35,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 10,
+        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale*manualDamageMultiplier,hops:0,debuff:true};",
+        "sourceLine": 880,
+        "label": "触发 / 状态数值 · 6"
+      }
+    },
+    "malzahar_c": {
+      "cast_0": {
+        "default": 650,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(650); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 883,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 2.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,2.4,2,effect)) abilityControl(target,\"stun\",2);",
+        "sourceLine": 884,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,2.4,2,effect)) abilityControl(target,\"stun\",2);",
+        "sourceLine": 884,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(target,2.4,2,effect)) abilityControl(target,\"stun\",2);",
+        "sourceLine": 884,
+        "label": "持续回合 · 5"
+      },
+      "cast_7": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "abilitySummon(\"A_2013_5\",2,0.35,2,\"malzahar\",target);",
+        "sourceLine": 885,
+        "label": "召唤数量 · 7"
+      },
+      "cast_8": {
+        "default": 0.35,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilitySummon(\"A_2013_5\",2,0.35,2,\"malzahar\",target);",
+        "sourceLine": 885,
+        "label": "面板倍率 · 8"
+      },
+      "cast_9": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilitySummon(\"A_2013_5\",2,0.35,2,\"malzahar\",target);",
+        "sourceLine": 885,
+        "label": "存续回合 · 9"
+      }
+    },
+    "jinx_n": {
+      "cast_0": {
+        "default": 650,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(650); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 888,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 1.5,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityHit(primary,1.5*scale,1,effect);",
+        "sourceLine": 889,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "abilityHit(primary,1.5*scale,1,effect);",
+        "sourceLine": 889,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_4": {
+        "default": 250,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in abilityEnemies(250,primary,2,false,\"nearest\",[primary])) abilityHit(target,1.1*scale,1,effect);",
+        "sourceLine": 890,
+        "label": "目标距离 · 4"
+      },
+      "cast_5": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in abilityEnemies(250,primary,2,false,\"nearest\",[primary])) abilityHit(target,1.1*scale,1,effect);",
+        "sourceLine": 890,
+        "label": "最多目标数 · 5"
+      },
+      "cast_7": {
+        "default": 1.1,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "for each(target in abilityEnemies(250,primary,2,false,\"nearest\",[primary])) abilityHit(target,1.1*scale,1,effect);",
+        "sourceLine": 890,
+        "label": "伤害倍率 · 7"
+      },
+      "cast_8": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "for each(target in abilityEnemies(250,primary,2,false,\"nearest\",[primary])) abilityHit(target,1.1*scale,1,effect);",
+        "sourceLine": 890,
+        "label": "伤害类型 · 8",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "tahm_n": {
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(500); if(!enemies.length) return false;",
+        "sourceLine": 900,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 1.1,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(enemies[0],1.1*scale,2,effect)) abilityControl(enemies[0],\"stun\",1);",
+        "sourceLine": 901,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(enemies[0],1.1*scale,2,effect)) abilityControl(enemies[0],\"stun\",1);",
+        "sourceLine": 901,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(enemies[0],1.1*scale,2,effect)) abilityControl(enemies[0],\"stun\",1);",
+        "sourceLine": 901,
+        "label": "持续回合 · 6"
+      },
+      "cast_7": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityState.grey={until:abilitySerial+1,value:0,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback(\"灰色生命：开始储存\",\"FX_S9160_SHIELD\");",
+        "sourceLine": 902,
+        "label": "状态持续回合 · 7"
+      }
+    },
+    "tahm_c": {
+      "cast_0": {
+        "default": 500,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "ally=abilityAlly(500,\"ratio\",true) || this;",
+        "sourceLine": 905,
+        "label": "友军距离 · 0"
+      },
+      "cast_4": {
+        "default": 100,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "if(ally!==this) ally.reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,pos+(team==1 ? 100 : -100))),-2147483648,0,0,true);",
+        "sourceLine": 906,
+        "label": "触发 / 状态数值 · 4"
+      },
+      "cast_5": {
+        "default": 100,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "if(ally!==this) ally.reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,pos+(team==1 ? 100 : -100))),-2147483648,0,0,true);",
+        "sourceLine": 906,
+        "label": "触发 / 状态数值 · 5"
+      },
+      "cast_9": {
+        "default": 1.6,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(ally,1.6); ally.addBuff(\"purify\",2); addBuff(\"taunt\",2); addBuff(\"steel\",2,0.4*manualDefenseBuffMultiplier);",
+        "sourceLine": 907,
+        "label": "护盾倍率 · 9"
+      },
+      "cast_11": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityShield(ally,1.6); ally.addBuff(\"purify\",2); addBuff(\"taunt\",2); addBuff(\"steel\",2,0.4*manualDefenseBuffMultiplier);",
+        "sourceLine": 907,
+        "label": "持续回合 · 11"
+      },
+      "cast_13": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityShield(ally,1.6); ally.addBuff(\"purify\",2); addBuff(\"taunt\",2); addBuff(\"steel\",2,0.4*manualDefenseBuffMultiplier);",
+        "sourceLine": 907,
+        "label": "持续回合 · 13"
+      },
+      "cast_15": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "abilityShield(ally,1.6); ally.addBuff(\"purify\",2); addBuff(\"taunt\",2); addBuff(\"steel\",2,0.4*manualDefenseBuffMultiplier);",
+        "sourceLine": 907,
+        "label": "持续回合 · 15"
+      },
+      "cast_16": {
+        "default": 0.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "abilityShield(ally,1.6); ally.addBuff(\"purify\",2); addBuff(\"taunt\",2); addBuff(\"steel\",2,0.4*manualDefenseBuffMultiplier);",
+        "sourceLine": 907,
+        "label": "状态数值 · 16"
+      }
+    },
+    "caitlyn_n": {
+      "cast_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 910,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,scale,1,effect)) abilityMark(target,\"aim\",2,scale);",
+        "sourceLine": 911,
+        "label": "伤害类型 · 2",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_4": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(target,scale,1,effect)) abilityMark(target,\"aim\",2,scale);",
+        "sourceLine": 911,
+        "label": "持续回合 · 4"
+      },
+      "cast_5": {
+        "default": 250,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "checkMove(false,250);",
+        "sourceLine": 912,
+        "label": "位移距离 · 5"
+      }
+    },
+    "kaelthas_n": {
+      "cast_0": {
+        "default": 600,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(600); if(!enemies.length) return false; target=enemies[0];",
+        "sourceLine": 924,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 0.8,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(target,0.8*scale,2,effect) && target.hp>0 && !target.buffs.purify) target.abilityState[\"bomb_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,coefficient:1.2*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};",
+        "sourceLine": 925,
+        "label": "伤害倍率 · 2"
+      },
+      "cast_3": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(target,0.8*scale,2,effect) && target.hp>0 && !target.buffs.purify) target.abilityState[\"bomb_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,coefficient:1.2*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};",
+        "sourceLine": 925,
+        "label": "伤害类型 · 3",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_6": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 100,
+        "context": "if(abilityHit(target,0.8*scale,2,effect) && target.hp>0 && !target.buffs.purify) target.abilityState[\"bomb_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,coefficient:1.2*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};",
+        "sourceLine": 925,
+        "label": "状态持续回合 · 6"
+      },
+      "cast_7": {
+        "default": 1.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 12.0,
+        "context": "if(abilityHit(target,0.8*scale,2,effect) && target.hp>0 && !target.buffs.purify) target.abilityState[\"bomb_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,coefficient:1.2*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};",
+        "sourceLine": 925,
+        "label": "触发 / 状态数值 · 7"
+      }
+    },
+    "kaelthas_c": {
+      "cast_0": {
+        "default": 700,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(700); if(!enemies.length) return false; primary=enemies[0];",
+        "sourceLine": 928,
+        "label": "目标距离 · 0"
+      },
+      "cast_2": {
+        "default": 300,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "for each(target in [primary].concat(abilityEnemies(300,primary,3,false,\"nearest\",[primary])))",
+        "sourceLine": 929,
+        "label": "目标距离 · 2"
+      },
+      "cast_3": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for each(target in [primary].concat(abilityEnemies(300,primary,3,false,\"nearest\",[primary])))",
+        "sourceLine": 929,
+        "label": "最多目标数 · 3"
+      },
+      "cast_6": {
+        "default": 4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "landed=abilityHit(target,state ? 4 : 2.2,2,effect);",
+        "sourceLine": 933,
+        "label": "伤害倍率 · 6"
+      },
+      "cast_7": {
+        "default": 2.2,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "landed=abilityHit(target,state ? 4 : 2.2,2,effect);",
+        "sourceLine": 933,
+        "label": "伤害倍率 · 7"
+      },
+      "cast_8": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "landed=abilityHit(target,state ? 4 : 2.2,2,effect);",
+        "sourceLine": 933,
+        "label": "伤害类型 · 8",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "aoxing_n": {
+      "cast_0": {
+        "default": 650,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "enemies=abilityEnemies(650); if(!enemies.length) return false; primary=enemies[0]; targets=[primary]; marked=false;",
+        "sourceLine": 939,
+        "label": "目标距离 · 0"
+      },
+      "cast_3": {
+        "default": 3,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "for(i=0;i<3;i++)",
+        "sourceLine": 940,
+        "label": "连段 / 循环次数 · 3"
+      },
+      "cast_6": {
+        "default": 300,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 10000,
+        "context": "if(i>0) { enemies=abilityEnemies(300,primary,1,false,\"nearest\",targets); if(!enemies.length) break; primary=enemies[0]; targets.push(primary); }",
+        "sourceLine": 943,
+        "label": "目标距离 · 6"
+      },
+      "cast_7": {
+        "default": 1,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 16,
+        "context": "if(i>0) { enemies=abilityEnemies(300,primary,1,false,\"nearest\",targets); if(!enemies.length) break; primary=enemies[0]; targets.push(primary); }",
+        "sourceLine": 943,
+        "label": "最多目标数 · 7"
+      },
+      "cast_11": {
+        "default": 1.4,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(primary,(i==0 ? 1.4 : 1)*scale,2,effect,0,bounceSource) && primary.getType()==1 && !primary.isManualSummonUnit) marked=true;",
+        "sourceLine": 944,
+        "label": "伤害倍率 · 11"
+      },
+      "cast_12": {
+        "default": 1,
+        "integer": false,
+        "minimum": 0,
+        "maximum": 100,
+        "context": "if(abilityHit(primary,(i==0 ? 1.4 : 1)*scale,2,effect,0,bounceSource) && primary.getType()==1 && !primary.isManualSummonUnit) marked=true;",
+        "sourceLine": 944,
+        "label": "伤害倍率 · 12"
+      },
+      "cast_13": {
+        "default": 2,
+        "integer": true,
+        "minimum": 1,
+        "maximum": 3,
+        "context": "if(abilityHit(primary,(i==0 ? 1.4 : 1)*scale,2,effect,0,bounceSource) && primary.getType()==1 && !primary.isManualSummonUnit) marked=true;",
+        "sourceLine": 944,
+        "label": "伤害类型 · 13",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "cast_16": {
+        "default": 3,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "if(marked) { abilityState.thunder=Math.min(3,int(abilityState.thunder)+1); abilityFeedback(\"风暴电荷：\"+int(abilityState.thunder)+\"/3\",\"FX_A_1114_MAGIC\"); }",
+        "sourceLine": 946,
+        "label": "触发 / 状态数值 · 16"
+      },
+      "cast_17": {
+        "default": 1,
+        "integer": true,
+        "minimum": 0,
+        "maximum": 32,
+        "context": "if(marked) { abilityState.thunder=Math.min(3,int(abilityState.thunder)+1); abilityFeedback(\"风暴电荷：\"+int(abilityState.thunder)+\"/3\",\"FX_A_1114_MAGIC\"); }",
+        "sourceLine": 946,
+        "label": "触发 / 状态数值 · 17"
+      }
+    }
+  }
+}

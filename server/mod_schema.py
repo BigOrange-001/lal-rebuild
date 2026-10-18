@@ -39,10 +39,11 @@ POLICIES = frozenset(("enemy_lane_frontmost", "enemy_lane_farthest", "enemy_lane
  "ally_lane_lowest_current_hp_any", "ally_lane_highest_attack_any", "ally_lane_lowest_hp_ratio_hero",
  "ally_lane_lowest_hp_ratio_any", "ally_lane_lowest_hp_ratio_n", "ally_all_lowest_hp_ratio"))
 ACTIONS = frozenset(("damage", "cure", "shield", "hp_shield", "caster_hp_shield", "target_hp_shield",
- "stun", "silence", "weak", "sunder", "poison", "burn", "strong", "purify", "armor"))
+ "stun", "silence", "weak", "sunder", "poison", "burn", "strong", "purify", "armor", "move_to_target"))
 CAPABILITIES = frozenset(("hero.register", "hero.patch.skill", "hero.patch.stats", "hero.patch.presentation",
  "hero.patch.text", "skill.reference.builtin", "asset.image", "asset.sound", "effect.reference.builtin",
- "patch.scopes", "progression.default-player-hero") + tuple("skill."+a for a in ACTIONS))
+ "patch.scopes", "progression.default-player-hero", "hero.damage.true", "hero.patch.damage-type", "skill.target.lock-only",
+ "skill.target.unlimited", "skill.description.rank-template", "skill.native-template.v1", "asset.image.card-frame") + tuple("skill."+a for a in ACTIONS))
 LOCAL_ID = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
@@ -205,7 +206,7 @@ def validate_hero(hero,path):
     number(hero["quality"],path+".quality",2,6,True)
     enum(hero["signType"],("attack","tank","assist"),path+".signType")
     enum(hero["actionType"],("forward","sly","stand","cunning"),path+".actionType")
-    enum(hero["damageType"],("physical","magic"),path+".damageType")
+    enum(hero["damageType"],("physical","magic","true"),path+".damageType")
     for key in ("baseStats","growth"):
         object_(hero[key],path+"."+key,STATS,set(STATS))
         for stat in STATS:number(hero[key][stat],path+"."+key+"."+stat,1 if key=="baseStats" and stat=="health" else 0)
@@ -224,9 +225,22 @@ def validate_hero(hero,path):
     if hero.get("acquisition") not in (None,{}):fail("API 1 uses the documented channel templates; custom acquisition parameters are not open",path+".acquisition","ModIncompatible")
     if hero.get("destiny") not in (None,{},[]):fail("API 1 has no authored destiny adapter; this interaction is marked unavailable",path+".destiny","ModIncompatible")
 
+def skill_extension_capabilities(skill):
+    if skill.get('model')=='native-template-v1':return {'skill.native-template.v1'}
+    caps=set()
+    if "rankInfoTemplate" in skill:caps.add("skill.description.rank-template")
+    for action in skill.get("actions",[]):
+        if action.get("type")=="move_to_target":caps.add("skill.move_to_target")
+        if action.get("lockOnly"):caps.add("skill.target.lock-only")
+        if action.get("maxTargets")==-1:caps.add("skill.target.unlimited")
+    return caps
+
 def validate_skill(skill,path):
+    if isinstance(skill,dict) and skill.get('model')=='native-template-v1':
+        from mod_native import validate_shape
+        return validate_shape(skill,path)
     required=("id","name","description","timingUnit","warmup","cooldown","range","targetPolicy","actions","upgrades")
-    object_(skill,path,required,set(required)|{"maxLevel","aoe","banStand"})
+    object_(skill,path,required,set(required)|{"maxLevel","aoe","banStand","rankInfoTemplate"})
     local_id(skill["id"],path+".id");text_(skill["name"],path+".name");text_(skill["description"],path+".description",4000,True)
     enum(skill["timingUnit"],("ownerTurns",),path+".timingUnit")
     number(skill["warmup"],path+".warmup",0,100,True);number(skill["cooldown"],path+".cooldown",1,100,True)
@@ -234,26 +248,56 @@ def validate_skill(skill,path):
     if "maxLevel" in skill:number(skill["maxLevel"],path+".maxLevel",10,10,True)
     if "aoe" in skill:number(skill["aoe"],path+".aoe",-1,6,True)
     if "banStand" in skill and type(skill["banStand"]) is not bool:fail("Expected boolean",path+".banStand")
+    if "rankInfoTemplate" in skill:text_(skill["rankInfoTemplate"],path+".rankInfoTemplate",4000,True)
     actions=skill["actions"]
     if not isinstance(actions,list) or not 1<=len(actions)<=LIMITS["skillActions"]:fail("Expected 1..32 actions",path+".actions")
     for i,action in enumerate(actions):
         p=path+".actions[%d]"%i
-        object_(action,p,("type","effect"),{"type","coefficient","damageType","duration","amount","effect","targetPolicy","maxTargets","lockToAction"})
+        object_(action,p,("type","effect"),{"type","coefficient","damageType","duration","amount","effect","targetPolicy","maxTargets","lockToAction","lockOnly","distance"})
         enum(action["type"],ACTIONS,p+".type");reference(action["effect"],p+".effect",("effect",),True)
-        if action["type"] not in ("purify",):number(action.get("coefficient"),p+".coefficient",0,1000)
+        moving=action["type"]=="move_to_target"
+        if action["type"] not in ("purify","move_to_target"):number(action.get("coefficient"),p+".coefficient",0,1000)
+        if moving:
+            number(action.get("distance"),p+".distance",0,10000,True)
+            if any(key in action for key in ("coefficient","damageType","duration","amount")):fail("Movement has distance, not damage/status fields",p)
+            if action.get("maxTargets",1)!=1:fail("Movement selects exactly one target",p+".maxTargets")
+            if action.get("lockOnly"):fail("Movement uses its explicit native target policy; lock-only is for follow-up actions",p+".lockOnly")
+        elif "distance" in action:fail("Distance is only supported by movement",p+".distance")
         if action["type"] in ("damage","stun","silence","weak","sunder","poison"):enum(action.get("damageType"),("physical","magic"),p+".damageType")
-        if action["type"] not in ("damage","cure"):number(action.get("duration"),p+".duration",1,100,True)
+        if action["type"] not in ("damage","cure","move_to_target"):number(action.get("duration"),p+".duration",1,100,True)
         if action["type"] in ("weak","sunder","poison"):number(action.get("amount"),p+".amount",0,1000)
         if "targetPolicy" in action:enum(action["targetPolicy"],POLICIES,p+".targetPolicy")
         beneficial=action["type"] in ("cure","shield","hp_shield","caster_hp_shield","target_hp_shield","strong","purify","armor")
         policy=action.get("targetPolicy",skill["targetPolicy"])
         if policy.startswith("ally_")!=beneficial:fail("Action and target side are incompatible",p+".targetPolicy")
         if action["type"]=="armor" and policy!="ally_self":fail("Armor currently applies only to the caster",p+".targetPolicy")
-        if "maxTargets" in action:number(action["maxTargets"],p+".maxTargets",1,6,True)
+        if "maxTargets" in action:
+            number(action["maxTargets"],p+".maxTargets",-1,6,True)
+            if action["maxTargets"]==0:fail("Use -1 for all valid targets, or 1..6",p+".maxTargets")
+        if "lockOnly" in action:
+            if type(action["lockOnly"]) is not bool:fail("Expected boolean",p+".lockOnly")
+            if action["lockOnly"] and "lockToAction" not in action:fail("Lock-only targeting requires an earlier action",p+".lockOnly")
         if "lockToAction" in action:number(action["lockToAction"],p+".lockToAction",0,i-1,True)
         if "lockToAction" in action:
             previous=actions[action["lockToAction"]].get("targetPolicy",skill["targetPolicy"])
             if previous.startswith("ally_")!=beneficial:fail("Action lock crosses incompatible target sides",p+".lockToAction")
+    template=skill.get("rankInfoTemplate","")
+    for match in re.finditer(r"\{(rank|flat):(\d+):([0-9.]+)\}",template):
+        index=int(match[2]);field=match[3]
+        if index>=len(actions):fail("Description template action is missing",path+".rankInfoTemplate")
+        action=actions[index];kind=action["type"]
+        numeric={"1"} if kind not in ("purify","move_to_target") else set()
+        if kind in ("damage","stun","silence","weak","sunder","poison"):numeric.add("2")
+        if kind in ("stun","silence"):numeric.add("3")
+        if kind in ("weak","sunder","poison"):numeric.update(("3","4"))
+        if kind=="purify":numeric.add("1")
+        elif kind not in ("damage","cure","move_to_target","stun","silence","weak","sunder","poison"):numeric.add("2")
+        if kind=="move_to_target":numeric.add("2")
+        if field not in numeric:fail("Description template must reference a numeric action field",path+".rankInfoTemplate")
+    # Only the reviewed rank/flat numeric tokens are authored; do not retain
+    # legacy scale tokens that implicitly depend on the first action's type.
+    if re.search(r"\{(?:rank|flat|scale):",re.sub(r"\{(?:rank|flat):\d+:[0-9.]+\}","",template)):
+        fail("Unsupported description template token",path+".rankInfoTemplate")
     upgrades=skill["upgrades"]
     if not isinstance(upgrades,list) or len(upgrades)>128:fail("Invalid upgrade list",path+".upgrades")
     upgrade_paths=set()
@@ -266,7 +310,7 @@ def validate_skill(skill,path):
         upgrade_paths.add(key);number(up["perLevel"],p+".perLevel",-1000,1000)
         number(actions[key[0]][key[1]]+up["perLevel"]*(skill.get("maxLevel",10)-1),p+".maximumLevelValue",0,1000)
 
-PATCH_PATHS = {"name","description","role","speed","attackRange","leadership"} | {"baseStats."+s for s in STATS} | {"growth."+s for s in STATS} | {"skills."+s for s in ("normal","captain","passive")} | {"presentation."+s for s in ("portrait","icon","voice","basicAttackEffect")}
+PATCH_PATHS = {"name","description","role","speed","attackRange","leadership","damageType"} | {"baseStats."+s for s in STATS} | {"growth."+s for s in STATS} | {"skills."+s for s in ("normal","captain","passive")} | {"presentation."+s for s in ("portrait","icon","voice","basicAttackEffect")}
 PATCH_PATHS |= {"skills."+s+"."+f for s in ("normal","captain","passive") for f in ("cooldown","warmup","range","description")}
 NULLABLE_PATHS={"skills.normal","skills.captain","skills.passive","presentation.voice"}
 
@@ -287,6 +331,7 @@ def validate_patch(patch,path):
             if op["path"] not in NULLABLE_PATHS or "value" in op:fail("Only optional slots may be cleared",p)
         elif "value" not in op:fail("Missing replacement value",p+".value")
         elif op["value"] is None:fail("Use the explicit clear operation to disable optional content",p+".value")
+        if op['path']=='damageType':enum(op.get('value'),('physical','magic','true'),p+'.value')
         if op["op"]=="set" and expected["path"]!=op["path"] and "expect" not in op:fail("Single-field set requires an exact field expectation",p)
     boolean_map(patch.get("integrationDefaults",{}),CHANNELS,path+".integrationDefaults")
     boolean_map(patch.get("patchScopes",{}),SCOPES,path+".patchScopes")
@@ -300,9 +345,18 @@ def validate_data(manifest,data):
         seen=set()
         for i,row in enumerate(rows):
             p=kind+"[%d]"%i
-            if kind=="heroes":validate_hero(row,p);key=(row["id"],row["variant"])
-            elif kind=="skills":validate_skill(row,p);key=row["id"]
-            elif kind=="patches":validate_patch(row,p);key=row["id"]
+            if kind=="heroes":
+                validate_hero(row,p);key=(row["id"],row["variant"])
+                if row['damageType']=='true' and 'hero.damage.true' not in manifest.get('requiredCapabilities',[]):
+                    fail('Declare required capability hero.damage.true',p+'.damageType','ModIncompatible')
+            elif kind=="skills":
+                validate_skill(row,p);key=row["id"]
+                missing=skill_extension_capabilities(row)-set(manifest.get("requiredCapabilities",[]))
+                if missing:fail("Declare required capabilities: "+", ".join(sorted(missing)),p,"ModIncompatible")
+            elif kind=="patches":
+                validate_patch(row,p);key=row["id"]
+                if any(op['path']=='damageType' for op in row['operations']) and 'hero.patch.damage-type' not in manifest.get('requiredCapabilities',[]):
+                    fail('Declare required capability hero.patch.damage-type',p,'ModIncompatible')
             else:fail("Custom effects are not open in API 1; reference a builtin effect",p,"ModIncompatible")
             if key in seen:fail("Duplicate entity ID/variant",p)
             seen.add(key)

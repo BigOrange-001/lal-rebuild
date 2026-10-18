@@ -195,7 +195,7 @@ class Compiler:
         if resolved["media"]["kind"]!=required:fail("Media type does not match usage",alias,"ModInvalidReference")
         pkg=resolved["package"];path=resolved["path"];sha=next(r["sha256"] for r in pkg.manifest["files"] if r["path"]==path)
         row={"alias":alias,"kind":required,"contentDigest":pkg.digest,"path":path,"sha256":sha,"packageId":pkg.package_id,"version":pkg.version,"role":role}
-        for key in ("width","height","bytes","duration","decodedBytes"):
+        for key in ("width","height","bytes","duration","decodedBytes","cardFrame"):
             if key in resolved["media"]:row[key]=resolved["media"][key]
         if alias in self.assets and self.assets[alias]!=row:fail("Resource alias collision",alias)
         self.assets[alias]=row;return alias
@@ -203,6 +203,8 @@ class Compiler:
         if not sid:return
         skill=self.cfg["skill"].get(sid)
         if not skill:fail("Skill does not exist",path,"ModMissingReference")
+        if skill.get('modNativeSource'):
+            return
         actions=skill.get("skill",[])
         unsafe={"manual_ability","summon","summon_turret","clone_normal"}
         if skill.get("manualSummonPolicy") or skill.get("manualClonePolicy") or any(isinstance(a,list) and a and a[0] in unsafe for a in actions):
@@ -224,6 +226,9 @@ class Compiler:
         effect=self.resolve(presentation["basicAttackEffect"],pkg,("effect",),"presentation.basicAttackEffect")
         return res,{"portrait":res,"icon":res+"_icon0000","voice":voice,"basicAttackEffect":effect}
     def skill(self,pkg,skill):
+        if skill.get('model')=='native-template-v1':
+            from mod_native import compile_template
+            return compile_template(skill,self.base,self.skill_refs[(pkg.package_id,skill['id'])])
         sid=self.skill_refs[(pkg.package_id,skill["id"])];native=[];upgrade_indices=[]
         policies=[];locks=[];maximum=[]
         for action in skill["actions"]:
@@ -231,20 +236,23 @@ class Compiler:
             kind=action["type"];coefficient=action.get("coefficient",0);duration=action.get("duration",0)
             damage_type=1 if action.get("damageType")=="physical" else 2
             if kind=="damage":raw=[kind,coefficient,damage_type,effect]
+            elif kind=="move_to_target":raw=[kind,action.get("targetPolicy",skill["targetPolicy"]),action["distance"],effect]
             elif kind=="cure":raw=[kind,coefficient,effect]
             elif kind in ("stun","silence"):raw=[kind,coefficient,damage_type,duration,effect]
             elif kind in ("weak","sunder","poison"):raw=[kind,coefficient,damage_type,action["amount"],duration,effect]
             elif kind=="purify":raw=[kind,duration,effect]
             else:raw=[kind,coefficient,duration,effect]
-            native.append(raw);policies.append(action.get("targetPolicy",skill["targetPolicy"]));locks.append(action.get("lockToAction"));maximum.append(action.get("maxTargets",1))
+            native.append(raw);policies.append(None if action.get("lockOnly") else action.get("targetPolicy",skill["targetPolicy"]));locks.append(action.get("lockToAction"));maximum.append(action.get("maxTargets",1))
         for upgrade in skill["upgrades"]:
             index=3 if upgrade["field"]=="amount" else 1
             upgrade_indices.append([upgrade["action"],index,upgrade["perLevel"]])
-        return {"id":sid,"name":skill["name"],"info":skill["description"],"res":sid,
+        result={"id":sid,"name":skill["name"],"info":skill["description"],"res":sid,
                 "pl":[skill["warmup"],skill["cooldown"],skill["range"],0,skill.get("aoe",0),0 if skill.get("banStand",True) else 1],
                 "skill":native,"skillUp":upgrade_indices,"targetPolicy":skill["targetPolicy"],
                 "actionTargetPolicies":policies,"actionTargetLocks":locks,"actionTargetMaxTargets":maximum,
                 "modMaxLevel":skill.get("maxLevel",10)}
+        if "rankInfoTemplate" in skill:result["rankInfoTemplate"]=skill["rankInfoTemplate"]
+        return result
     @staticmethod
     def channel_applicability(quality,new=True):
         unavailable={"appearance.expedition_enemy":"Current expedition is dispatch-only and has no random enemy generator", "appearance.campaign_random_enemy":"Current campaign contains fixed formations"}
@@ -266,9 +274,11 @@ class Compiler:
         for key,sid in skills.items():self.ensure_public_skill(sid,"skills."+key)
         res,presentation=self.presentation(hero,pkg,identity)
         native={"id":aid,"name":hero["name"],"res":res,"role":hero.get("role",hero["signType"]),"info":hero.get("description",""),
-                "tl":[{"attack":1,"tank":2,"assist":3}[hero["signType"]],{"forward":1,"sly":2,"stand":3,"cunning":4}[hero["actionType"]],1 if hero["damageType"]=="physical" else 2,hero["leadership"],hero["levelCap"],1,hero["quality"]*25,hero["quality"]*20,[],0,1],
+                "tl":[{"attack":1,"tank":2,"assist":3}[hero["signType"]],{"forward":1,"sly":2,"stand":3,"cunning":4}[hero["actionType"]],{"physical":1,"magic":2,"true":3}[hero["damageType"]],hero["leadership"],hero["levelCap"],1,hero["quality"]*25,hero["quality"]*20,[],0,1],
                 "pl":[n for stat in STATS for n in (hero["baseStats"][stat],hero["growth"][stat])]+[hero["speed"],hero["attackRange"],skills["normal"],skills["captain"],presentation["basicAttackEffect"],skills["passive"]],
                 "skillup":hero["quality"]*100,"love":hero["quality"]*100,"modIdentity":identity,"modVoice":presentation["voice"] or ""}
+        passive=self.cfg.get('skill',{}).get(skills['passive'],{})
+        if passive.get('modPassiveTrigger'):native['skill_diff']=passive['modPassiveTrigger']
         channels,scopes=_options(pkg,self.selected[pkg.package_id],hero,identity,aid,hero["id"])
         quality=hero["quality"]
         unavailable,support=self.channel_applicability(quality)
@@ -302,6 +312,7 @@ class Compiler:
             key,stat=path.split(".");return row["pl"][STATS.index(stat)*2+(key=="growth")]
         if path in ("speed","attackRange"):return row["pl"][8 if path=="speed" else 9]
         if path=="leadership":return row["tl"][3]
+        if path=='damageType':return {1:'physical',2:'magic',3:'true'}.get(row['tl'][2])
         if path in ("name","role"):return row.get(path,"")
         if path=="description":return row.get("info","")
         if path.startswith("skills."):
@@ -342,6 +353,8 @@ class Compiler:
             number(value,path,0,10000,True)
             if path=="leadership":row["tl"][3]=value
             else:row["pl"][8 if path=="speed" else 9]=value
+        elif path=='damageType':
+            enum(value,('physical','magic','true'),path);row['tl'][2]={'physical':1,'magic':2,'true':3}[value]
         elif path in ("name","description","role"):
             text_(value,path,4000 if path=="description" else 200,True);row["info" if path=="description" else path]=value
         elif path.startswith("skills."):
@@ -349,6 +362,7 @@ class Compiler:
             while len(row["pl"])<=index:row["pl"].append(None)
             if len(parts)==2:
                 resolved=self.resolve(value,pkg,("skill",),path,True);self.ensure_public_skill(resolved,path);row["pl"][index]=resolved
+                if parts[1]=='passive':row['skill_diff']=self.cfg.get('skill',{}).get(resolved,{}).get('modPassiveTrigger',0)
             else:
                 original=row["pl"][index]
                 if not original or original not in self.cfg["skill"]:fail("Cannot patch an empty skill",path)
@@ -356,6 +370,9 @@ class Compiler:
                 # Copy-on-write prevents shared skill mutation, including scopes.
                 private=self.catalog.allocate_skill(f"patch:{pkg.package_id}:{scope}:{aid}:{parts[1]}:{original}:{digest(op)}",int(original.rsplit("_",1)[-1]))
                 skill=copy.deepcopy(self.cfg["skill"][original]);skill["id"]=private
+                if original in self.base.get('cfg',self.base).get('skill',{}):skill['modNativeSource']=original
+                for policyKey in ('manualSummonPolicy','manualClonePolicy'):
+                    if isinstance(skill.get(policyKey),dict) and 'skillId' in skill[policyKey]:skill[policyKey]['skillId']=private
                 if parts[2]=="description":
                     text_(value,path,4000,True);skill["info"]=value;skill.pop("rankInfoTemplate",None)
                 else:
@@ -514,6 +531,10 @@ class Compiler:
         summary={"api":ENGINE_API,"base":digest(self.base),"effective":digest(self.cfg),"roster":digest(self.roster),"selections":[{**self.selected[p.package_id],"digest":p.digest} for p in self.ordered],"metadata":self.metadata,"scopeAliases":self.scoped,"warnings":self.warnings}
         effective_digest=digest(summary)
         runtime={"digest":effective_digest,"engineApi":ENGINE_API,"heroes":self.metadata,"scopedAvatarIds":self.scoped,"aliasBaseIds":self.aliases,"missingHeroIds":sorted(self.missing),"knownHeroIds":sorted(self.metadata),"assets":sorted(self.assets.values(),key=lambda r:r["alias"]),"textureAliases":self.texture_aliases,"packages":[{"packageId":p.package_id,"version":p.version,"contentDigest":p.digest} for p in self.ordered],"warnings":self.warnings,"errors":copy.deepcopy(self.warnings),"capabilities":sorted(CAPABILITIES)}
+        if any(row.get('model')=='native-template-v1' for p in self.ordered for row in p.data.get('skills',{}).get('skills',[])):
+            runtime['requiredClientCapabilities']=['skill.native-template.v1']
+        if any(row.get('cardFrame') for row in self.assets.values()):
+            runtime.setdefault('requiredClientCapabilities',[]).append('asset.image.card-frame')
         if self.ordered or self.missing or self.warnings:self.cfg["mod_runtime"]=runtime
         self.roster["heroes"]=copy.deepcopy(self.cfg["avatar"]);self.roster["skills"]=copy.deepcopy(self.cfg["skill"]);self.roster["effects"]=copy.deepcopy(self.cfg["effect"])
         if self.ordered or self.missing or self.warnings:self.roster["mod_runtime"]=copy.deepcopy(runtime)

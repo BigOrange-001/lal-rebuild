@@ -36,7 +36,7 @@ def _registry_payload(value):
 
 def _validate_png(raw,path):
     if not raw.startswith(b"\x89PNG\r\n\x1a\n"):fail("Invalid PNG signature",path)
-    offset=8; idat=[]; header=None; ended=False; seen_idat=False; idat_finished=False
+    offset=8; idat=[]; header=None; ended=False; seen_idat=False; idat_finished=False; card_frame=None
     while offset<len(raw):
         if offset+12>len(raw):fail("Truncated PNG chunk",path)
         length=struct.unpack(">I",raw[offset:offset+4])[0];kind=raw[offset+4:offset+8]
@@ -51,6 +51,15 @@ def _validate_png(raw,path):
             # API 1 uses ordinary 8-bit RGB/RGBA so every supported runtime can decode.
             if depth!=8 or color not in (2,6) or compression or filter_ or interlace:fail("API 1 requires noninterlaced 8-bit RGB/RGBA PNG",path)
             header=(width,height,3 if color==2 else 4)
+        elif kind==b"tEXt" and data.startswith(b"lal.cardFrame\x00"):
+            if card_frame is not None:fail("Duplicate card frame metadata",path)
+            if length>256:fail("Card frame metadata is too large",path)
+            card_frame=strict_json(data.split(b"\x00",1)[1],path+".cardFrame")
+            if not isinstance(card_frame,list) or len(card_frame)!=4 or any(type(v) is not int for v in card_frame):
+                fail("Expected integer card frame [x,y,width,height]",path)
+            x,y,w,h=card_frame
+            if x<0 or y<0 or w<8 or h<8 or x+w>header[0] or y+h>header[1] or abs(w/h-103/118)>.02:
+                fail("Card frame is outside the image or has a non-native aspect ratio",path)
         elif kind==b"IDAT":
             if idat_finished:fail("Nonconsecutive PNG IDAT",path)
             seen_idat=True;idat.append(data)
@@ -68,7 +77,9 @@ def _validate_png(raw,path):
     except zlib.error:fail("PNG pixel decoding failed",path)
     stride=width*channels+1
     if any(pixels[i*stride]>4 for i in range(height)):fail("Invalid PNG row filter",path)
-    return {"kind":"image","width":width,"height":height,"mime":"image/png"}
+    result={"kind":"image","width":width,"height":height,"mime":"image/png"}
+    if card_frame is not None:result['cardFrame']=card_frame
+    return result
 
 def validate_media(raw,path):
     ext=Path(path).suffix.lower()
@@ -175,6 +186,11 @@ def validate_package_references(package,base_document=None):
         values.extend((value,"heroes."+hero["id"]+".presentation."+key) for key,value in hero["presentation"].items() if value is not None)
         if hero["progression"]["starUp"] is not None:values.append((hero["progression"]["starUp"],"heroes."+hero["id"]+".progression.starUp"))
     for skill in package.data.get("skills",{}).get("skills",[]):
+        if skill.get('model')=='native-template-v1':
+            if base_document is not None:
+                from mod_native import validate_template
+                validate_template(skill,base_document,'skills.'+skill['id'])
+            continue
         values.extend((a["effect"],"skills."+skill["id"]+".actions.effect") for a in skill["actions"] if a["effect"] is not None)
     for patch in package.data.get("patches",{}).get("patches",[]):
         values.append((patch["target"],"patches."+patch["id"]+".target"))
@@ -215,7 +231,10 @@ def _inspect_payload(payload,path=None):
         if hashlib.sha256(raw).hexdigest()!=sha:fail("SHA-256 mismatch",name)
         if Path(name).suffix.lower()==".json":strict_json(raw,name)
         checked=validate_media(raw,name)
-        if checked:media[name]={**checked,"bytes":len(raw)}
+        if checked:
+            if checked.get('cardFrame') and 'asset.image.card-frame' not in manifest['requiredCapabilities']:
+                fail("Declare required capability asset.image.card-frame",name,"ModIncompatible")
+            media[name]={**checked,"bytes":len(raw)}
     data={key:strict_json(payload[file],file) for key,file in manifest["entrypoints"].items()}
     validate_data(manifest,data)
     package=Package(manifest,data,package_digest(manifest),path,media,payload if path is None else None)

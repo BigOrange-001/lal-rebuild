@@ -214,6 +214,7 @@ package com.meng52.net
             "app_version":$appVersion,
             "cfg_version":$cfgVersion
             ,"mod_digest":GlobalData.$modDigest
+            ,"client_capabilities":["skill.native-template.v1"]
          },reCheckFun,reErrorCheckFun);
          Tools.toTrace("发送消息：" + param1);
          DebugManager.instance().debug("<font color=\"#00ff00\">Send >>> " + param1 + "  " + _loc8_["actionID"] + "</font>");

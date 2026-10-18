@@ -168,6 +168,7 @@ class Backend:
     elif method=='user.login':
      try:
       data=self.players.login(name,row[2])
+      self.mods.require_client(getattr(self.mods.context(data['uid']),'mod_resolved',None),request.get('client_capabilities'))
       data['mod_config']=self.mods.config(data['uid'])
      except GameplayFault as error:
       return {'method':method,'params':params,'return_code':1,'server_now':utc_datetime(self.clock.now()),

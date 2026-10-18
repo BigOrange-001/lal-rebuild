@@ -761,7 +761,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
  def dispatch(self,request):
   uid=self.authenticate(request);method=request['method'];params=request['params']
   if self.mod_service is not None:
-   if method in self.mod_service.METHODS:return self.mod_service.dispatch(uid,method,params)
+   if method in self.mod_service.METHODS:return self.mod_service.dispatch(uid,method,params,request.get('client_capabilities'))
    context=self.context_for(uid)
    if self._mod_uid is None:self.mod_service.check_request(uid,request,context)
    if context is not self:return context.dispatch(request)

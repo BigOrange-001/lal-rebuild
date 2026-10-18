@@ -20,7 +20,7 @@
       "index": 3,
       "class": "com.meng52.net.SendAndSelect",
       "source": "client/src/stages/003_SendAndSelect.as",
-      "source_sha256": "0059cf7de0a747147eac7a0a35d6cdbffa7ceaa3ebe70424ec9f447d6686be91"
+      "source_sha256": "bb44807a770f64a5b4694be7ff7107149e9fce061b9011e87fbf7629e322c3fe"
     },
     {
       "index": 4,
@@ -530,13 +530,13 @@
       "index": 88,
       "class": "com.meng52.game.command.skill.SkillSetData",
       "source": "client/src/stages/086_SkillSetData.as",
-      "source_sha256": "227188ff703e207a0baccbecb696d91bb62ef41fb0591e42c520f8236eb981e2"
+      "source_sha256": "48ab9e399d56b363f54316c9e6faa8b5effc3bbe4a6f529480d33d990d10e04d"
     },
     {
       "index": 89,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/087_SkillSet.as",
-      "source_sha256": "a730b340f3bf5141a2ce4a49391e2f4b3875debaff5136ab23df6187cb278051"
+      "source_sha256": "2bdd0d18929d6fc6858d2d3f6aa7405532d4916ee26bafb0738312f268915a23"
     },
     {
       "index": 90,
@@ -836,19 +836,19 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "fe336d6752f7b150858b709d2aae921716fc94df3bf4d9df265fd4b59ca846f8"
+      "source_sha256": "50aa6cfaa00a80113b6e18c14eef84ffd2b3c548c486e1a2ff7218e3f7b1960a"
     },
     {
       "index": 140,
       "class": "com.meng52.game.command.skill.SkillSetData",
       "source": "client/src/stages/138_SkillSetData.as",
-      "source_sha256": "51d791dc0b4a8688498d7a985ccf48b3e82dd1e50bcea94d6b0ae7f69384f53d"
+      "source_sha256": "e5378ab22c13020c12838d04d279725e60bf599af741fde4267039c29213cba4"
     },
     {
       "index": 141,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "f1c800dfa30daea3fe73cc21ae47f5182fde9a0ddd43933e0f1084be6f7594f0"
+      "source_sha256": "5c844a7570ebb0330358f911c58a9e8417df684b1747a2b2c800e08ef7eb1015"
     },
     {
       "index": 142,

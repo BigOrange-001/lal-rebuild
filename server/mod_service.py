@@ -248,8 +248,16 @@ class ModService:
                 "cfg": document.get("cfg", {}), "config": document, "mod_runtime": runtime,
                 "assets": runtime.get("assets", [])}
 
+    @staticmethod
+    def require_client(compiled, capabilities=None):
+        supported=set(capabilities) if isinstance(capabilities,list) and all(isinstance(v,str) for v in capabilities) else set()
+        required=set(getattr(compiled,'runtime',{}).get('requiredClientCapabilities',[]))
+        if required-supported:
+            raise GameplayFault('ModClientIncompatible','此存档启用了完整原生技能模板，请更新游戏客户端后进入；如需继续使用旧客户端，请先通过新版客户端停用相关包。')
+
     def check_request(self, uid, request, context):
         expected = getattr(context, "mod_resolved", None)
+        self.require_client(expected,request.get('client_capabilities'))
         if expected is not None and request.get("mod_digest") != expected.digest:
             raise GameplayFault("ModConfigurationChanged", "当前存档的 Mod 内容已变化，请重新进入游戏完成配置同步。")
 
@@ -376,6 +384,7 @@ class ModService:
                 error = self._identity_errors[str(uid)]
                 raise GameplayFault(error["code"], error["message"])
             compiled = self._compile(state, selections, strict=True)
+            self.require_client(compiled,params.get('_clientCapabilities'))
             self._owned_compatible(profile, compiled)
         except GameplayFault as error:
             compiled = None
@@ -414,7 +423,7 @@ class ModService:
             state = profile.get("mod_state", {})
             revision = state.get("revision", 0)
             # Plan checks are deliberately inside the same SQLite transaction.
-            check = self.plan(uid, {"expectedRevision": payload["expectedRevision"], "selections": selections})
+            check = self.plan(uid, {"expectedRevision": payload["expectedRevision"], "selections": selections,'_clientCapabilities':params.get('_clientCapabilities')})
             if check["planDigest"] != payload["planDigest"]:
                 raise GameplayFault("ModPlanExpired", "预览后存档或包文件已变化，请重新预览。")
             if not check["valid"]:
@@ -744,7 +753,10 @@ class ModService:
         self._contexts.pop(str(uid), None)
         return {**result, "replayed": replayed}
 
-    def dispatch(self, uid, method, params):
+    def dispatch(self, uid, method, params, client_capabilities=None):
+        params={**params,'_clientCapabilities':client_capabilities}
+        if method in ('user.mods_config','user.mods_test_grant'):
+            self.require_client(getattr(self.context(uid),'mod_resolved',None),client_capabilities)
         functions = {"user.mods_info": lambda: self.info(uid, rescan=params.get("rescan") is True),
                      "user.mods_config": lambda: self.config(uid),
                      "user.mods_plan": lambda: self.plan(uid, params),

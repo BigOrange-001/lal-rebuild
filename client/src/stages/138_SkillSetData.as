@@ -103,6 +103,7 @@ package com.meng52.game.command.skill
       public var skillUpPaths:Array;
 
       public var targetPolicy:String;
+      public var modNativeSource:String;
       public var actionTargetPolicies:Array;
       public var actionTargetLocks:Array;
       public var actionTargetGroups:Array;
@@ -131,6 +132,7 @@ package com.meng52.game.command.skill
          skillUp = param1["skillUp"];
          skillUpPaths = param1["skillUpPaths"] as Array;
          targetPolicy = param1["targetPolicy"];
+         modNativeSource = param1["modNativeSource"];
          actionTargetPolicies = param1["actionTargetPolicies"] as Array;
          actionTargetLocks = param1["actionTargetLocks"] as Array;
          actionTargetGroups = param1["actionTargetGroups"] as Array;

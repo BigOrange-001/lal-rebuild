@@ -43,6 +43,8 @@
           "asset.image",
           "asset.sound",
           "effect.reference.builtin",
+          "hero.damage.true",
+          "hero.patch.damage-type",
           "hero.patch.presentation",
           "hero.patch.skill",
           "hero.patch.stats",
@@ -55,7 +57,10 @@
           "skill.caster_hp_shield",
           "skill.cure",
           "skill.damage",
+          "skill.description.rank-template",
           "skill.hp_shield",
+          "skill.move_to_target",
+          "skill.native-template.v1",
           "skill.poison",
           "skill.purify",
           "skill.reference.builtin",
@@ -64,6 +69,8 @@
           "skill.strong",
           "skill.stun",
           "skill.sunder",
+          "skill.target.lock-only",
+          "skill.target.unlimited",
           "skill.target_hp_shield",
           "skill.weak"
         ]

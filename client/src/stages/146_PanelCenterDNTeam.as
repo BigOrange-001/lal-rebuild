@@ -102,6 +102,7 @@ package com.meng52.game.ui.screen
 
       public static function getDestinyMyAll(param1:String, param2:Array = null, param3:Array = null, param4:Object = null, param5:Object = null, param6:Boolean = false) : Object
       {
+         param1 = GlobalData.canonicalModInstanceId(param1);
          var _loc23_:Object = null;
          var _loc16_:String = param1;
          var _loc21_:Boolean = param1.indexOf("|") > -1;
@@ -115,12 +116,28 @@ package com.meng52.game.ui.screen
          var _loc33_:Array = param3 == null ? GlobalData.$userData.as_equips : param3;
          var _loc22_:Object = param5 == null ? GlobalData.$userData.attrs.dn : param5;
          var _loc26_:Object = param4 == null ? GlobalData.$userData.my_equips : param4;
+         _loc19_ = _loc19_.concat();
+         for(var modIndex:int = 0; modIndex < _loc19_.length; modIndex++)
+         {
+            if(_loc19_[modIndex] != null)
+               _loc19_[modIndex] = GlobalData.modChannelAllowed(String(_loc19_[modIndex]),"usage.destiny") ? GlobalData.canonicalModInstanceId(String(_loc19_[modIndex])) : null;
+         }
+         var modDn:Object = {};
+         for(var modKey:String in _loc22_)
+         {
+            var modNode:Array = _loc22_[modKey] as Array;
+            modDn[modKey] = modNode == null ? null : modNode.concat();
+            if(modNode != null && modNode[1] != null)
+               modDn[modKey][1] = GlobalData.modChannelAllowed(String(modNode[1]),"usage.destiny") && GlobalData.modChannelAllowed(String(modNode[1]),"usage.auxiliary_formation") ? GlobalData.canonicalModInstanceId(String(modNode[1])) : null;
+         }
+         _loc22_ = modDn;
          var _loc31_:Boolean = false;
          if(param2 != null && param3 != null && param4 != null)
          {
             _loc31_ = true;
          }
          var _loc25_:Array = GlobalData.$mConfig_destiny[_loc41_] != null ? GlobalData.$mConfig_destiny[_loc41_] : [];
+         if(!GlobalData.modChannelAllowed(param1,"usage.destiny")) _loc25_ = [];
          var _loc34_:int = 0;
          var _loc30_:int = int(_loc25_.length);
          var _loc18_:Array = [];

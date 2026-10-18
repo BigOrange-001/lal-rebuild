@@ -6,6 +6,8 @@ from bot_names import bot_name_for_uid
 from player_store import GameplayFault, native_dates
 from gameplay_roster import GameplayRosterEquipment
 from guild_companions import GuildCompanions
+from mod_policy import (runtime as mod_runtime, candidate_ids, channel_enabled,
+                        ensure_channel, hero_available, base_aid)
 
 BOT_UID_START = 92000000
 
@@ -28,6 +30,8 @@ class GameplaySocial:
         self.companions = GuildCompanions(store, self.config)
         candidates = list(comp.get("fragment_bots", [])) + list(comp.get("pvp_bots", []))
         self.bots = [self._make_bot(row, index) for index, row in enumerate(candidates[:12])]
+        if mod_runtime(self.config):
+            self.bots = [bot for bot in self.bots if bot.get("avatars")]
         self.by_uid = {bot["uid"]: bot for bot in self.bots}
         self.capacity = int(self.simple.get("friend_len", [0, 0, 30])[2]) if isinstance(self.simple.get("friend_len"), list) and len(self.simple["friend_len"]) > 2 else 30
 
@@ -40,6 +44,17 @@ class GameplaySocial:
         name = bot_name_for_uid(uid)
         level = max(1, int(source.get("lv", 1)))
         raw_team = source.get("team", [])
+        if mod_runtime(self.config):
+            raw_team = [list(copy.deepcopy(row)) for row in raw_team if isinstance(row, (list, tuple)) and row
+                        and channel_enabled(self.config, row[0], "appearance.assist_bot")]
+            additions = candidate_ids(self.config, [], "appearance.assist_bot", include_new=True)
+            if additions and index % (len(additions) + 1) < len(additions):
+                aid = additions[index % len(additions)]
+                if raw_team:
+                    # Only the captain becomes a selectable friend helper.
+                    raw_team[0][0] = aid
+                else:
+                    raw_team = [[aid, level, 1]]
         units = []
         for slot, row in enumerate(raw_team[:6]):
             if not isinstance(row, (list, tuple)) or not row:
@@ -58,7 +73,11 @@ class GameplaySocial:
                           "pos": float(row[4]) if len(row)>4 and isinstance(row[4],(int,float)) else 0,
                           "morph": 0, "equips": []})
         if not units:
-            for slot, aid in enumerate(list(self.avatars)[:5]):
+            fallback = list(self.avatars)
+            if mod_runtime(self.config):
+                fallback = candidate_ids(self.config, fallback, "appearance.assist_bot")
+                fallback = [aid for aid in fallback if not self.avatars[aid].get("mod_variant")]
+            for slot, aid in enumerate(fallback[:5]):
                 units.append({"id":f"{aid}|{index*6+slot}","aid":f"{aid}|{index*6+slot}","tpl":aid,
                               "lv":level,"slv":1,"hp":0,"ap":0,
                               "de_ph":0,"de_ma":0,"phase":0,"morph":0,"equips":[]})
@@ -71,13 +90,13 @@ class GameplaySocial:
 
     def _avatar_card(self, bot, instance_id):
         """Serialize the same combat fields as Avatar.toDataObj for panel preview."""
-        avatar = self.roster.battle_attributes(bot, instance_id)
+        avatar = self.roster.battle_attributes(bot, instance_id, scope="assist")
         if isinstance(bot.get("battle_stats"), dict):
             avatar.update(copy.deepcopy(bot["battle_stats"]))
         slot = next((i for i, hero_id in enumerate(bot.get("team", [[]])[0]) if hero_id == instance_id), 0)
         hero = bot.get("avatars", {}).get(instance_id, {})
         avatar.update({
-            "aid": str(hero.get("aid", instance_id)).split("|")[0],
+            "aid": avatar.get("aid", str(hero.get("aid", instance_id)).split("|")[0]),
             "buffs": {}, "isme": False, "leader": 1 if slot == 0 else 0,
             "line": int(hero.get("line", 0)), "pos": float(hero.get("pos", slot)),
             "new_4attrs": {key: int(avatar.get(key, 0)) for key in ("hit", "flee", "crit", "tough")},
@@ -93,11 +112,17 @@ class GameplaySocial:
         bot = self._bot_or_fail(uid, profile)
         lead_id = next((item for item in bot.get("team", [[]])[0] if item), None)
         avatar = self._avatar_card(bot, lead_id)
+        ensure_channel(self.config, avatar.get("aid", ""), "usage.friend_assist")
         return {"uid": bot["uid"], "name": bot["name"], "avatar_id": lead_id,
                 "avatar": avatar, "cd_time": 0}
 
     def is_bot_uid(self, uid, profile=None):
-        return str(uid) in self.by_uid or self._dynamic_bot(uid, profile) is not None
+        bot = self.by_uid.get(str(uid)) or self._dynamic_bot(uid, profile)
+        if not isinstance(bot, dict):
+            return False
+        return any(hero_available(self.config, hero.get("aid", key))
+                   and channel_enabled(self.config, hero.get("aid", key), "appearance.assist_bot")
+                   for key, hero in bot.get("avatars", {}).items())
 
     def _dynamic_bot(self, uid, profile):
         if not isinstance(profile, dict):
@@ -195,7 +220,8 @@ class GameplaySocial:
                        if isinstance(row,dict)}
             companions=[bot for bot in profile.get("guild_companions",{}).get("bots",[])
                         if bot["uid"] in guild_ids]
-            cards=[self._friend_card(bot["uid"], profile) for bot in self.bots+companions]
+            cards=[self._friend_card(bot["uid"], profile) for bot in self.bots+companions
+                   if self.is_bot_uid(bot["uid"], profile)]
             seen=set()
             return profile,[card for card in cards+friends
                             if not (card["uid"] in seen or seen.add(card["uid"]))]

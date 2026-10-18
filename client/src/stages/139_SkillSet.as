@@ -1905,7 +1905,7 @@ package com.meng52.game.module.skill
                   {
                      summonLevel = 1;
                   }
-                  _loc1_ = new Avatar(_loc20_[2],{
+                  _loc1_ = new Avatar(GlobalData.modDefinitionId(String(_loc20_[2]),"summoned"),{
                      "lv":summonLevel,
                      "slv":1
                   });
@@ -3195,7 +3195,7 @@ package com.meng52.game.module.skill
          }
          boundedSummons = new Vector.<Avatar>();
          turretLevel = Math.max(1,avatar.lv);
-         turret = new Avatar(String(param1[2]),{"lv":turretLevel,"slv":1});
+         turret = new Avatar(GlobalData.modDefinitionId(String(param1[2]),"summoned"),{"lv":turretLevel,"slv":1});
          turret.goFight(avatar.team,avatar.line,0,false);
          turret.hpMax = Math.max(1,int(avatar.getHpMax() * turretScale));
          turret.hp = turret.hpMax;
@@ -3319,7 +3319,7 @@ package com.meng52.game.module.skill
             }
             avatar.manualSummonFamilies[_loc3_] = retainedSummons;
          }
-         _loc2_ = new Avatar(String(param1[2]),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
+         _loc2_ = new Avatar(GlobalData.modDefinitionId(String(param1[2]),"summoned"),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
          _loc2_.goFight(avatar.team,summonLine,0,false);
          _loc2_.ap = Math.max(1,int(avatar.getDamage() * _loc8_));
          _loc2_.hpMax = Math.max(1,int(avatar.getHpMax() * summonHpRatio));
@@ -3393,8 +3393,8 @@ package com.meng52.game.module.skill
          if(String(policy.skillId) != _loc1_ || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
          if(_loc1_.indexOf("1029_") >= 0) return String(policy.unitId) == "A_2002_5" && String(policy.familyKey) == "manual-1029-tibbers" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
          if(_loc1_.indexOf("1124_") >= 0) return String(policy.unitId) == "A_3002_2" && String(policy.familyKey) == "manual-1124-soldier" && int(policy.maxAlive) == 2 && Number(policy.attackRange) == 175 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true && int(policy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
-         if(_loc1_.indexOf("1127_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
-         if(_loc1_.indexOf("1128_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1128-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
+         if(_loc1_.indexOf("1127_") >= 0) return GlobalData.baseModHeroId(String(policy.unitId)) == GlobalData.baseModHeroId(String(avatar.avatarData.id)) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
+         if(_loc1_.indexOf("1128_") >= 0) return GlobalData.baseModHeroId(String(policy.unitId)) == GlobalData.baseModHeroId(String(avatar.avatarData.id)) && String(policy.familyKey) == "manual-1128-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
          return String(policy.unitId) == "A_2326_5" && String(policy.familyKey) == "manual-1040-plant" && int(policy.maxAlive) == 3 && Number(policy.attackRange) == 550 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
       }
 
@@ -3450,7 +3450,7 @@ package com.meng52.game.module.skill
             if(replaced == null) return;
             avatar.manualSummonFamilies[familyKey] = survivors;
          }
-         clone = new Avatar(String(avatar.id),{"lv":Math.max(1,avatar.lv),"slv":1});
+         clone = new Avatar(GlobalData.modDefinitionId(String(avatar.avatarData.id),"summoned"),{"lv":Math.max(1,avatar.lv),"slv":1});
          clone.goFight(avatar.team,avatar.line,0,false);
          clone.ap = Math.max(1,int(avatar.getDamage() * ratio));
          clone.hpMax = Math.max(1,int(avatar.getHpMax() * ratio));

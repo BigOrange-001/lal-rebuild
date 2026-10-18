@@ -9,7 +9,10 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 
 from player_store import GameplayFault
-from gameplay_common import grant_reward, ensure_hero_acquirable, skin_acquisition_blocked_ids, equipment_exclusive_ids
+from gameplay_common import (grant_reward, ensure_hero_acquirable, skin_acquisition_blocked_ids,
+                             equipment_exclusive_ids, next_hero_instance_id, preserve_mod_hero_sequence)
+from mod_policy import (runtime as mod_runtime, ensure_available, hero_available,
+                        channel_enabled, ensure_channel, draw_categories, definition_id, hero_metadata)
 from pve_modes import exploration_stages
 from equipment_magic import (
     stat_bonus as magic_stat_bonus, symp_bonuses as magic_symp_bonuses,
@@ -68,6 +71,8 @@ class GameplayRosterEquipment:
         self.full_config = config if isinstance(config, dict) else {}
         side_path = __import__("pathlib").Path(__file__).resolve().parents[1] / "config/reconstruction/roster-config.json"
         side = json.loads(side_path.read_text(encoding="utf-8")) if side_path.exists() else {}
+        if isinstance(config, dict) and isinstance(config.get("mod_roster"), dict):
+            side = config["mod_roster"]
         if not isinstance(config, dict): self._fail("InvalidConfig", "Expected a game config object")
         if "cfg" in config:
             source = config.get("cfg", {})
@@ -156,8 +161,9 @@ class GameplayRosterEquipment:
         action = params.get("actionID") if isinstance(params, dict) else None
         key = f"{method}:{action}" if isinstance(action, (str, int)) else None
         def mutate(profile):
+            preserve_mod_hero_sequence(profile, self.full_config)
             self._migrate_hero_level_caps(profile)
-            normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
+            self._normalize_available_culture(profile)
             self._normalize_profile_equips(profile)
             result = change(profile) or {}
             self._normalize_profile_equips(profile)
@@ -174,12 +180,13 @@ class GameplayRosterEquipment:
         action = params.get("actionID") if isinstance(params, dict) else None
         key = f"{method}:{action}" if isinstance(action, (str, int)) else None
         def mutate(profile):
+            preserve_mod_hero_sequence(profile, self.full_config)
             # Morphing must not rewrite historical level/XP already present
             # on the transformed hero. Other raw growth/sale requests still
             # run the normal roster-cap migration.
             if method != "user.morph":
                 self._migrate_hero_level_caps(profile)
-            normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
+            self._normalize_available_culture(profile)
             self._normalize_profile_equips(profile)
             result = change(profile)
             self._normalize_profile_equips(profile)
@@ -189,6 +196,13 @@ class GameplayRosterEquipment:
             request_payload=params if key else None,
         )
         return answer
+
+    def _normalize_available_culture(self, profile):
+        missing = {key: copy.deepcopy(hero) for key, hero in profile.get("avatars", {}).items()
+                   if mod_runtime(self.full_config) and not hero_available(self.full_config, hero.get("aid", key))}
+        changed = normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
+        profile.get("avatars", {}).update(missing)
+        return changed
 
     def _normalize_profile_equips(self, profile):
         equips = profile.get("my_equips", {}) if isinstance(profile, dict) else {}
@@ -262,9 +276,13 @@ class GameplayRosterEquipment:
         key = self._id(key, "aid")
         heroes = p.setdefault("avatars", {})
         if key in heroes:
+            if mod_runtime(getattr(self, "full_config", {})):
+                ensure_available(self.full_config, heroes[key].get("aid", key))
             return key, heroes[key]
         matches = [(k, v) for k, v in heroes.items() if v.get("aid", "").split("|")[0] == key.split("|")[0]]
         if len(matches) == 1:
+            if mod_runtime(getattr(self, "full_config", {})):
+                ensure_available(self.full_config, matches[0][1].get("aid", matches[0][0]))
             return matches[0]
         self._fail("UnknownHero", "Hero does not belong to this account")
 
@@ -757,7 +775,15 @@ class GameplayRosterEquipment:
                 raw_aid = raw_node[1]
                 aid = None
                 if raw_aid not in (None, ""):
-                    aid, _ = self._hero(p, raw_aid)
+                    bound_hero = p.get("avatars", {}).get(raw_aid) if isinstance(raw_aid, str) else None
+                    retained_missing = (raw_aid == old_node[1] and isinstance(bound_hero, dict)
+                                        and mod_runtime(self.full_config)
+                                        and not channel_enabled(self.full_config, bound_hero.get("aid", raw_aid), "usage.auxiliary_formation"))
+                    if retained_missing:
+                        aid = raw_aid
+                    else:
+                        aid, bound_hero = self._hero(p, raw_aid)
+                        ensure_channel(self.full_config, bound_hero.get("aid", aid), "usage.auxiliary_formation")
                     if aid in bound:
                         self._fail("InvalidDN", "A hero cannot occupy multiple destiny nodes")
                     bound.add(aid)
@@ -1067,6 +1093,7 @@ class GameplayRosterEquipment:
                 return {"ok": False, "reason": "NoEligibleHero", "pending_limit_break": None}
             if requested not in valid:
                 self._fail("InvalidLimitBreakCandidate", "Selected hero is no longer eligible")
+            self._hero(p, requested)
             hero = owned[requested]
             hero["limit_break"] = 1
             p.pop("pending_limit_break", None)
@@ -1101,13 +1128,20 @@ class GameplayRosterEquipment:
             if not isinstance(team, list) or len(team) != 3 or any(not isinstance(t, list) or len(t) > 6 for t in team): self._fail("InvalidTeam", "Team must contain three squads of at most six heroes")
             owned = p.get("avatars", {})
             norm = []
-            for squad in team:
+            old_teams = p.get("team", [])
+            for squad_index, squad in enumerate(team):
                 row = []
-                for hid in squad:
+                for slot_index, hid in enumerate(squad):
                     if hid in (None, ""):
                         row.append(None)
                         continue
-                    key, _ = self._hero(p, hid); row.append(key)
+                    old = old_teams[squad_index] if squad_index < len(old_teams) and isinstance(old_teams[squad_index], list) else []
+                    owned_hero = owned.get(hid) if isinstance(hid, str) else None
+                    if (mod_runtime(self.full_config) and slot_index < len(old) and old[slot_index] == hid
+                            and isinstance(owned_hero, dict) and not hero_available(self.full_config, owned_hero.get("aid", hid))):
+                        row.append(hid)
+                    else:
+                        key, _ = self._hero(p, hid); row.append(key)
                 nonempty = [v for v in row if v is not None]
                 if len(set(nonempty)) != len(nonempty): self._fail("DuplicateHero", "A hero cannot occupy two slots in one squad")
                 row += [None] * (6 - len(row)); norm.append(row[:6])
@@ -1211,6 +1245,18 @@ class GameplayRosterEquipment:
             attrs = p.setdefault("attrs", {})
             cap = self._num(attrs.get("avatar_len", 1000), "avatar_len", 1, 10_000_000)
             if len(p.get("avatars", {})) + times > cap: self._fail("RosterFull", "Hero roster is full")
+            categories = self.draw_pools.get(kind, []) if isinstance(self.draw_pools, dict) else []
+            if mod_runtime(self.full_config):
+                active = draw_categories(self.full_config, categories, kind)
+            else:
+                active = [row for row in categories if isinstance(row, dict) and row.get("ids")
+                          and int(row.get("weight", 0)) > 0
+                          and all(aid in self.heroes for aid in row["ids"])]
+            if not active:
+                self._fail("InvalidConfig", f"No valid {kind} draw pool")
+            purple_rows = [row for row in active if row.get("category") == "purple_hero"]
+            if kind == "coin" and not purple_rows:
+                self._fail("InvalidConfig", "Coin draw pity has no purple hero pool")
             price_index = (0 if times == 1 else 1) if kind == "coin" else (2 if times == 1 else 3)
             price = 0 if free else max(0, int(wager_cfg[price_index]))
             if p.get(kind, 0) < price: self._fail("InsufficientResource", f"Not enough {kind}")
@@ -1234,12 +1280,6 @@ class GameplayRosterEquipment:
                 p[kind] -= price
             medal_index = 11 if free else (12 if times == 1 else 13)
             if kind == "coin": p["medal"] = p.get("medal", 0) + max(0, int(wager_cfg[medal_index]))
-            categories = self.draw_pools.get(kind, []) if isinstance(self.draw_pools, dict) else []
-            active = [row for row in categories if isinstance(row, dict) and row.get("ids")
-                      and int(row.get("weight", 0)) > 0
-                      and all(aid in self.heroes for aid in row["ids"])]
-            if not active:
-                self._fail("InvalidConfig", f"No valid {kind} draw pool")
             new = []
             total_weight = sum(int(row["weight"]) for row in active)
             pity_period = max(1, int(wager_cfg[14]) + 1)
@@ -1392,6 +1432,13 @@ class GameplayRosterEquipment:
             star = int(base.rsplit("_", 1)[1])
             next_aid = "_".join(base.split("_")[:2] + [str(star + 1)])
             if m == "user.star_up":
+                metadata = hero_metadata(self.full_config, base)
+                if metadata.get("kind") == "new":
+                    declared = metadata.get("progression", {}).get("starUp")
+                    if not declared:
+                        self._fail("MaxGrowth", "此 Mod 英雄未声明升星目标")
+                    if declared != next_aid:
+                        self._fail("InvalidConfig", "Mod 升星链不符合已注册的英雄家族")
                 if next_aid not in self.heroes: self._fail("MaxGrowth", "This hero has reached its configured maximum star")
                 # Existing skin owners may continue growing that same family;
                 # a non-skin family cannot promote into a restricted skin ID.
@@ -1646,6 +1693,8 @@ class GameplayRosterEquipment:
                     "coin": p.get("coin", 0), "dust": copy.deepcopy(attrs.get("dust", [0, 0, 0, 0]))}
         if m == "user.soul_exchange_avatar":
             aid = self._id(x.get("aid", x.get("id")), "aid")
+            if mod_runtime(self.full_config):
+                ensure_available(self.full_config, aid)
             count = self._num(x.get("num", 1), "num", 1, 99)
             # PanelCenterSoul passes the exact soul-row ID (ItemAvatarSoul
             # sends data.id). Resolve the configured avatar and its native
@@ -1896,8 +1945,7 @@ class GameplayRosterEquipment:
         ensure_hero_acquirable(aid, self.full_config, allow_skin=allow_skin)
         cap = self._num(p.setdefault("attrs", {}).get("avatar_len", 1000), "avatar_len", 1, 10_000_000)
         if len(p.setdefault("avatars", {})) >= cap: self._fail("RosterFull", "Hero roster is full")
-        seq = max([int(v.get("id", "|0").rsplit("|", 1)[-1]) for v in p.setdefault("avatars", {}).values() if "|" in str(v.get("id", ""))] or [-1]) + 1
-        iid = f"{aid}|{seq}"
+        iid = next_hero_instance_id(p, aid, self.full_config)
         obj = copy.deepcopy(retain) if retain else {"lv": 1, "slv": 1, "exp": 0, "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0, "phase": 0, "morph": 0, "limit_break": 0, "love_exp": 0, "equips": []}
         obj.update({"id": iid, "aid": iid})
         p["avatars"][iid] = obj
@@ -1962,6 +2010,8 @@ class GameplayRosterEquipment:
             return
         for hero in profile.setdefault("avatars", {}).values():
             aid = str(hero.get("aid", hero.get("id", ""))).split("|")[0]
+            if mod_runtime(self.full_config) and not hero_available(self.full_config, aid):
+                continue
             cap = self._hero_level_cap(aid, hero)
             level = max(1, int(hero.get("lv", 1)))
             row = self.heroes.get(aid, {})
@@ -2007,7 +2057,7 @@ class GameplayRosterEquipment:
         )
         if curve_active:
             self._migrate_hero_level_caps(profile)
-        culture_changed = normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
+        culture_changed = self._normalize_available_culture(profile)
         equipment_changed = self._normalize_profile_equips(profile)
         after = (
             profile.get("attrs", {}).get("avatar_exp_curve_version"),
@@ -2057,6 +2107,8 @@ class GameplayRosterEquipment:
         old_version = int(attrs.get("avatar_exp_curve_version", 0) or 0)
         for hero in profile.get("avatars", {}).values():
             aid = str(hero.get("aid", hero.get("id", ""))).split("|")[0]
+            if mod_runtime(self.full_config) and not hero_available(self.full_config, aid):
+                continue
             quality = aid.rsplit("_", 1)[-1]
             if not aid.startswith("A_1") or quality not in self.simple["avatar_exp_curves"]:
                 continue
@@ -2186,6 +2238,8 @@ class GameplayRosterEquipment:
                 except (TypeError, ValueError):
                     continue
             aid = str(bound.get("aid", node[1])).split("|")[0]
+            if not channel_enabled(self.full_config, aid, "usage.auxiliary_formation"):
+                continue
             hero_row = self.heroes.get(aid, {})
             pl = hero_row.get("pl", [])
             if len(pl) < 8:
@@ -2243,10 +2297,12 @@ class GameplayRosterEquipment:
                     result[stat] += math.floor(base_stats[stat] * rate)
         return result
 
-    def battle_attributes(self, profile, hero_instance_id, *, hero_only=False):
+    def battle_attributes(self, profile, hero_instance_id, *, hero_only=False, scope="owned"):
         """Serialize owned stats, excluding equipment and global bonuses in exploration."""
         key, hero = self._hero(profile, hero_instance_id)
-        aid = hero.get("aid", key).split("|")[0]; row = self.heroes.get(aid)
+        base_id = hero.get("aid", key).split("|")[0]
+        aid = definition_id(self.full_config, base_id, scope) if mod_runtime(self.full_config) else base_id
+        row = self.heroes.get(aid)
         if not row: self._fail("UnknownHero", f"No combat config for {aid}")
         tl, pl = row.get("tl", []), row.get("pl", [])
         if len(pl) < 13: self._fail("InvalidConfig", f"Hero {aid} has incomplete attributes")

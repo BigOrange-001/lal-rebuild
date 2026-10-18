@@ -7,6 +7,7 @@ import re
 
 from gameplay_common import game_day
 from upstream_hero_config import apply_upstream_hero_config
+from mod_policy import runtime as mod_runtime, candidate_ids
 
 
 MEDAL_PRICE = 80
@@ -28,6 +29,8 @@ def daily_orange_pool(config):
                   if _ORDINARY_ORANGE.fullmatch(aid) and aid not in blocked
                   and isinstance(row, dict) and row.get("name")
                   and not str(row["name"]).startswith("橙阶"))
+    if mod_runtime(config):
+        pool = sorted(candidate_ids(config, pool, "acquisition.exchange.hero", include_new=True, quality=6))
     if len(pool) < DAILY_CARD_COUNT:
         raise ValueError("Fewer than twenty ordinary orange heroes are configured")
     return pool

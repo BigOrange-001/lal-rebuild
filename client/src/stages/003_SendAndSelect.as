@@ -163,6 +163,11 @@ package com.meng52.net
       
       public static function sendAndSelectService(param1:String, param2:Object = null, param3:Function = null, param4:Function = null, param5:String = "") : void
       {
+         if($uid.length > 0 && !GlobalData.$modReady && param1.indexOf("user.") == 0 && param1.indexOf("user.mods_") != 0 && !GlobalFunction.isProfileBootstrapMethod(param1))
+         {
+            GlobalFunction.popMsg("Mod 配置尚未同步，请重新进入游戏后继续。");
+            return;
+         }
          var _loc7_:* = undefined;
          if(checkRepeat(param1,param5))
          {
@@ -208,6 +213,7 @@ package com.meng52.net
             "sessionid":$sessionid,
             "app_version":$appVersion,
             "cfg_version":$cfgVersion
+            ,"mod_digest":GlobalData.$modDigest
          },reCheckFun,reErrorCheckFun);
          Tools.toTrace("发送消息：" + param1);
          DebugManager.instance().debug("<font color=\"#00ff00\">Send >>> " + param1 + "  " + _loc8_["actionID"] + "</font>");

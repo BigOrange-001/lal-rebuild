@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lal.local/schemas/mod-skills.schema.json",
+  "title": "mod-skills API 1",
+  "$comment": "Editor schema. Runtime additionally validates references, semantic action contracts, duplicate IDs/paths, media, dependencies and post-upgrade bounds.",
+  "type": "object",
+  "properties": {
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "timingUnit": {
+            "const": "ownerTurns"
+          },
+          "warmup": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "cooldown": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "range": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "targetPolicy": {
+            "enum": [
+              "ally_all",
+              "ally_all_lowest_hp_ratio",
+              "ally_lane_all",
+              "ally_lane_highest_attack_any",
+              "ally_lane_lowest_current_hp_any",
+              "ally_lane_lowest_current_hp_hero",
+              "ally_lane_lowest_hp_ratio_any",
+              "ally_lane_lowest_hp_ratio_hero",
+              "ally_lane_lowest_hp_ratio_n",
+              "ally_self",
+              "enemy_global_highest_attack_hero",
+              "enemy_global_highest_hpmax_hero",
+              "enemy_global_lowest_current_hp",
+              "enemy_global_lowest_hp_ratio_hero",
+              "enemy_global_lowest_hpmax",
+              "enemy_lane_all",
+              "enemy_lane_farthest",
+              "enemy_lane_frontmost",
+              "enemy_lane_highest_attack_hero",
+              "enemy_lane_lowest_current_hp_hero",
+              "enemy_lane_lowest_hp_ratio_any",
+              "enemy_lane_lowest_hp_ratio_n"
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "armor",
+                    "burn",
+                    "caster_hp_shield",
+                    "cure",
+                    "damage",
+                    "hp_shield",
+                    "poison",
+                    "purify",
+                    "shield",
+                    "silence",
+                    "strong",
+                    "stun",
+                    "sunder",
+                    "target_hp_shield",
+                    "weak"
+                  ]
+                },
+                "effect": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "coefficient": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000
+                },
+                "damageType": {
+                  "enum": [
+                    "magic",
+                    "physical"
+                  ]
+                },
+                "duration": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "amount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000
+                },
+                "targetPolicy": {
+                  "enum": [
+                    "ally_all",
+                    "ally_all_lowest_hp_ratio",
+                    "ally_lane_all",
+                    "ally_lane_highest_attack_any",
+                    "ally_lane_lowest_current_hp_any",
+                    "ally_lane_lowest_current_hp_hero",
+                    "ally_lane_lowest_hp_ratio_any",
+                    "ally_lane_lowest_hp_ratio_hero",
+                    "ally_lane_lowest_hp_ratio_n",
+                    "ally_self",
+                    "enemy_global_highest_attack_hero",
+                    "enemy_global_highest_hpmax_hero",
+                    "enemy_global_lowest_current_hp",
+                    "enemy_global_lowest_hp_ratio_hero",
+                    "enemy_global_lowest_hpmax",
+                    "enemy_lane_all",
+                    "enemy_lane_farthest",
+                    "enemy_lane_frontmost",
+                    "enemy_lane_highest_attack_hero",
+                    "enemy_lane_lowest_current_hp_hero",
+                    "enemy_lane_lowest_hp_ratio_any",
+                    "enemy_lane_lowest_hp_ratio_n"
+                  ]
+                },
+                "maxTargets": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 6
+                },
+                "lockToAction": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 30
+                }
+              },
+              "required": [
+                "type",
+                "effect"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "upgrades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 31
+                },
+                "field": {
+                  "enum": [
+                    "amount",
+                    "coefficient"
+                  ]
+                },
+                "perLevel": {
+                  "type": "number",
+                  "minimum": -1000,
+                  "maximum": 1000
+                }
+              },
+              "required": [
+                "action",
+                "field",
+                "perLevel"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 128
+          },
+          "maxLevel": {
+            "const": 10
+          },
+          "aoe": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 6
+          },
+          "banStand": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "timingUnit",
+          "warmup",
+          "cooldown",
+          "range",
+          "targetPolicy",
+          "actions",
+          "upgrades"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 256
+    }
+  },
+  "required": [
+    "skills"
+  ],
+  "additionalProperties": false
+}

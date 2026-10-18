@@ -1408,6 +1408,29 @@ package com.meng52.game.ui.screen
       
       private function re_user_login(param1:Object) : void
       {
+         var loginReply:Object = param1;
+         var loginAction:String = String(param1.params == null ? "" : param1.params.actionID);
+         if(param1.data == null || param1.data.mod_config == null || !GlobalFunction.applyModConfig(param1.data.mod_config))
+         {
+            GlobalFunction.setLoading(false);
+            GlobalFunction.popMsg("存档 Mod 配置同步失败，请重新登录。");
+            return;
+         }
+         GlobalData.loadModResources(param1.data.mod_config,function(ready:Boolean):void
+         {
+            if(loginAction != SendAndSelect.$profileBootstrapActionID || stage == null) return;
+            if(!ready)
+            {
+               GlobalFunction.setLoading(false);
+               GlobalFunction.popMsg(GlobalData.$modError + "\n已停止进入游戏，请恢复英雄包后重试。");
+               return;
+            }
+            finishModLogin(loginReply);
+         });
+      }
+
+      private function finishModLogin(param1:Object) : void
+      {
          var _loc4_:Object = null;
          var _loc6_:int = 0;
          if(param1.params && param1.data != undefined && param1.data != null)
@@ -1494,7 +1517,7 @@ package com.meng52.game.ui.screen
          var _re:Object = param1;
          var onTimer:* = function(param1:TimerEvent):void
          {
-            if(GlobalData.$load2Status >= 1)
+            if(GlobalData.$load2Status >= 1 && GlobalData.$modReady)
             {
                _timer.stop();
                _timer.removeEventListener("timer",onTimer);

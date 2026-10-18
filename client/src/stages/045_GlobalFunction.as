@@ -3316,6 +3316,8 @@ package com.meng52.game.global
       
       public static function getTexture(param1:String, param2:Object = null) : Texture
       {
+         param1 = GlobalData.resolveModTexture(param1);
+         if(param1 == "__modMissingHero" || param1 == "__modMissingHero_icon0000") return GlobalData.missingModTexture();
          var _loc7_:String = null;
          var _loc6_:Object = null;
          var _loc5_:Class = null;
@@ -3687,6 +3689,20 @@ package com.meng52.game.global
       
       public static function setDetaiAvatar(param1:*, param2:Boolean = false) : void
       {
+         var missingId:String = param1 is Avatar ? String(param1.id) : param1 != null && param1.id != null ? String(param1.id) : "";
+         if(GlobalData.isMissingModHero(missingId))
+         {
+            var info:Object = GlobalData.$modRuntime.heroes[missingId.split("|")[0]];
+            var reclaim:Function = function():void
+            {
+               SendAndSelect.sendAndSelectService("user.mods_reclaim_equipment",{"avatarId":missingId},function(reply:Object):void
+               {
+                  popMsg("装备已取回，英雄的等级、培养和阵容记录继续保留。");
+               });
+            };
+            popAlert("内容缺失",String(info.name == null ? missingId : info.name) + "\n所需英雄包未启用或已缺失。等级、培养、装备及阵容位置均已保留；重新安装并启用匹配版本后恢复。\n可在系统设置 → Mod 管理中查看依赖。",{"ok":reclaim,"okUI":"取回装备","no":functionNull,"noUI":"关闭"});
+            return;
+         }
          var _loc3_:Object = {
             "data":param1,
             "isLock":param2
@@ -3763,6 +3779,13 @@ package com.meng52.game.global
       {
          var _loc2_:String = param1 + "_icon0000";
          var _loc3_:Image = new Image(getTexture(_loc2_));
+         if(param1.indexOf("MOD_") == 0 || param1 == "__modMissingHero")
+         {
+            // Native hero_A atlas cells use a 103 x 118 logical canvas.
+            // Author image resolution must not change card or list geometry.
+            _loc3_.width = 103;
+            _loc3_.height = 118;
+         }
          _loc3_.touchable = false;
          _loc3_.name = "icon";
          return _loc3_;
@@ -3848,6 +3871,10 @@ package com.meng52.game.global
       public static function getAvatarUI(param1:String = "A_1001_2") : Image
       {
          param1 = param1.split("|")[0];
+         var base:String = GlobalData.baseModHeroId(param1);
+         var metadata:Object = GlobalData.$modRuntime.heroes == null ? null : GlobalData.$modRuntime.heroes[base];
+         var definition:Object = GlobalData.$mConfig_avatar == null ? null : GlobalData.$mConfig_avatar[param1];
+         if(metadata != null && definition != null && definition.res != null) param1 = String(definition.res);
          return createImage(param1);
       }
       
@@ -6483,6 +6510,46 @@ package com.meng52.game.global
                GlobalData.$mConfig[_loc2_.toString()] = param1[_loc2_];
             }
          }
+      }
+
+      public static function applyModConfig(envelope:Object) : Boolean
+      {
+         if(envelope == null || envelope.cfg == null || envelope.uid == null || envelope.digest == null) return false;
+         var cfg:Object = envelope.cfg;
+         if(cfg.avatar == null || cfg.skill == null || cfg.effect == null || cfg.system_simple == null) return false;
+         // This is a complete authenticated configuration, never merged into
+         // the installation-wide pre-login cache.
+         GlobalData.$mConfig = cfg;
+         GlobalData.$mConfig_avatar = cfg.avatar;
+         GlobalData.$mConfig_skill = cfg.skill;
+         GlobalData.$mConfig_book_skill = cfg.bookskill == null ? {} : cfg.bookskill;
+         GlobalData.$mConfig_effect = cfg.effect;
+         GlobalData.$mConfig_simple = cfg.system_simple;
+         GlobalData.$mConfig_destiny = cfg.destiny;
+         GlobalData.$mConfig_talent = cfg.talent;
+         GlobalData.$mConfig_equip = cfg.equip;
+         GlobalData.$mConfig_dn = cfg.dn;
+         GlobalData.$mConfig_pvp_robot = cfg.pvp_robot;
+         GlobalData.$mConfig_exchange = cfg.exchange;
+         GlobalData.$mConfig_festival = cfg.exchange_festival;
+         GlobalData.$mConfig_wager_festival = cfg.wager_festival;
+         GlobalData.$mConfig_ploy_cycle = cfg.ploy_cycle;
+         GlobalData.$mConfig_ploy_system_simple = cfg.ploy_system_simple;
+         GlobalData.$mConfig_battle_main = cfg.battle_main;
+         GlobalData.$mConfig_combat_main = cfg.combat_main;
+         GlobalData.$mConfig_battle_ploy = cfg.battle_ploy;
+         GlobalData.$mConfig_combat_ploy = cfg.combat_ploy;
+         GlobalData.$mConfig_battle_association = cfg.battle_association;
+         GlobalData.$mConfig_combat_association = cfg.combat_association;
+         GlobalData.$mConfig_check_in = cfg.check_in;
+         GlobalData.$mGuild_simple = cfg.association_simple;
+         // The manager singletons memoize parsed rows; merely assigning cfg
+         // leaves the old save's skills and heroes alive.
+         AvatarManager.clear();
+         SkillSetManager.clear();
+         EffectManager.clear();
+         EquipManager.clear();
+         return true;
       }
       
       public static function check_noPayList() : Boolean

@@ -16,6 +16,10 @@ from mod_schema import ModError, POLICIES, canonical, digest, fail, local_id, te
 
 MODEL = 'native-template-v1'
 CAPABILITY = 'skill.native-template.v1'
+# This bounds-only revision preserves valid packages from the pre-review
+# contract. Current field shapes and numeric bounds still apply to all inputs.
+# A later contract change must explicitly review compatibility again.
+_ABILITY_CONTRACT_PREDECESSORS = {'e92915d3f2f74b97cafebc627b8d7b7c61bcd0508bcd4985c6f71d9f40470685': 'e51a0c4280e7a861b0c8397e8c8877061c5396bda525a7c144823ee244d09f46'}
 PARALLEL = ('actionTargetPolicies', 'actionTargetLocks', 'actionTargetGroups',
             'actionTargetMaxTargets', 'actionTargetPolicyArgs')
 INDEX_KEYS = frozenset(('centerActionIndex', 'primaryActionIndex', 'requiresPrecastDotActionIndex'))
@@ -23,7 +27,8 @@ LIST_INDEX_KEYS = frozenset(('distinctFromActionIndices',))
 _CONTRACT_CACHE = {}
 ACTION_REFS = {'heal_damage_sum': (2, True), 'normal_on_hero_kill': (1, True),
                'pending_area_strike': (1, False), 'recast_on_kill': (1, False),
-               'kill_buff': (4,False), 'shield_followup': (4,False)}
+               'kill_buff': (4,False), 'shield_followup': (4,False),
+               'battle_stack': (4,False), 'heal_missing_hp_per_hero': (3,False)}
 NODE_SETTINGS=frozenset(('manualSummonPolicy','manualClonePolicy','summonCombatPolicy',
     'captainSummonMultiplier','manualDamageMultiplier','manualDefenseBuffMultiplier','manualEffectMultiplier'))
 
@@ -193,7 +198,10 @@ def validate_shape(skill,path='skill'):
     _bounded(skill,path)
     if 'scaleActionIndex' in model:_link(model['scaleActionIndex'],len(skill['actions']),path+'.scaleActionIndex')
     if 'abilityParameters' in model:
-        if model.get('abilityContract')!=digest(ability_contract()):fail('Compound ability contract changed; re-import and review',path,'ModTargetMismatch')
+        current_contract=digest(ability_contract())
+        accepted={current_contract}
+        if current_contract in _ABILITY_CONTRACT_PREDECESSORS:accepted.add(_ABILITY_CONTRACT_PREDECESSORS[current_contract])
+        if model.get('abilityContract') not in accepted:fail('Compound ability contract changed; re-import and review',path,'ModTargetMismatch')
         if not isinstance(model['abilityParameters'],dict):fail('Expected compound ability parameter groups',path)
         for kind,values in model['abilityParameters'].items():
             descriptors=ability_contract()['mechanisms'].get(kind)

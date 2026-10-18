@@ -167,8 +167,10 @@ class Backend:
     if method=='user.default_register': data={'session_key':name,'sessionid':password}
     elif method=='user.login':
      try:
+      owner=self.db.execute('SELECT uid FROM players WHERE account=?',(name,)).fetchone()
+      if owner is not None:
+       self.mods.require_client(getattr(self.mods.context(owner[0]),'mod_resolved',None),request.get('client_capabilities'))
       data=self.players.login(name,row[2])
-      self.mods.require_client(getattr(self.mods.context(data['uid']),'mod_resolved',None),request.get('client_capabilities'))
       data['mod_config']=self.mods.config(data['uid'])
      except GameplayFault as error:
       return {'method':method,'params':params,'return_code':1,'server_now':utc_datetime(self.clock.now()),

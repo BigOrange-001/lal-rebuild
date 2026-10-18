@@ -716,6 +716,7 @@ class ModService:
             )
         except ModError as error:
             raise _mod_fault(error) from error
+        self.require_client(candidate, params.get("_clientCapabilities"))
         self._owned_compatible(profile, candidate)
         token = digest({"uid": str(uid), "revision": old["revision"], "backup": backup,
                         "profileRevision": self.store.state_revision(uid), "catalog": self._fingerprint()})

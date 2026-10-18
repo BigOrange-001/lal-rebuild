@@ -2109,7 +2109,7 @@
       "cast_3": {
         "default": 3,
         "integer": true,
-        "minimum": 0,
+        "minimum": 1,
         "maximum": 32,
         "context": "count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback(\"折翼之舞：第\"+count+\"式\",effect);",
         "sourceLine": 813,
@@ -2127,7 +2127,7 @@
       "cast_5": {
         "default": 3,
         "integer": true,
-        "minimum": 0,
+        "minimum": 1,
         "maximum": 32,
         "context": "count=int(abilityState.rivenStep)%3+1; abilityState.rivenStep=count%3; abilityFeedback(\"折翼之舞：第\"+count+\"式\",effect);",
         "sourceLine": 813,

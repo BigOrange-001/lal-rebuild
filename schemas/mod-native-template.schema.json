@@ -4064,7 +4064,7 @@
                 },
                 "cast_3": {
                   "type": "integer",
-                  "minimum": 0,
+                  "minimum": 1,
                   "maximum": 32
                 },
                 "cast_4": {
@@ -4074,7 +4074,7 @@
                 },
                 "cast_5": {
                   "type": "integer",
-                  "minimum": 0,
+                  "minimum": 1,
                   "maximum": 32
                 },
                 "cast_8": {

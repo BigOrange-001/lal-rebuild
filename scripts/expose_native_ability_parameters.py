@@ -112,6 +112,7 @@ def main():
                 if label in ('持续回合','存续回合','状态持续回合'):descriptor.update(minimum=1,maximum=100)
                 if label in ('最多目标数','召唤数量','连段 / 循环次数'):descriptor.update(minimum=1,maximum=16)
                 if label=='最小计算基数':descriptor['minimum']=value if value>0 else 0
+                if re.search(r'%\s*$',before):descriptor.update(minimum=1,integer=True)
                 if not descriptor['minimum']<=value<=descriptor['maximum']:raise ValueError('Default outside parameter contract: '+line)
                 for kind in aliases:definitions.setdefault(kind,{})[key]=descriptor
                 replacement='nativeAbilityNumber(sourceSkill,kind,"'+key+'",'+literal+')'

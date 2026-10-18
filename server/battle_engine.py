@@ -258,7 +258,7 @@ _BOUNDED_SUMMON_STARS = {"2061205": ("5", "6"), "32551036": ("4", "5", "6"),
 # Families bounded at every star level the shape gate admits.
 _BOUNDED_SUMMON_FAMILIES = frozenset(["621014", "631014", "303014", "203014", "303029",
                                       "303040", "303124", "305082", "305128", "301209", "301221",
-                                      "301310"])
+                                      "301310", "9162"])
 
 # Kinds whose resolved target is published to actionTargets[actionIndex] for a
 # later action in the same skill to consume.
@@ -504,7 +504,8 @@ class ReferenceBattle:
         checkTalent(1) is applied by the calling action, not inside the getter
         (see the poison/burn and heal formulas).
         """
-        value = float(unit.get("ap", 1))
+        value = float(unit.get("ap", 1)) * (1.0 + float(self._get_manual_battle_stack(unit, "attack"))
+                              + float(self._get_manual_timed_stack(unit, "attack")))
         weak = self._buff_value(unit, "weak")
         if weak:
             value /= 1 + float(weak)
@@ -821,8 +822,8 @@ class ReferenceBattle:
         """137_Avatar.as:2287 getManualBattleStack."""
         stacks = unit.get("_manual_battle_stacks")
         if not isinstance(stacks, dict):
-            return 0
-        return max(0, _to_int(stacks.get(str(stat), 0)))
+            return 0.0
+        return max(0.0, float(stacks.get(str(stat), 0)))
 
     def _add_manual_battle_stack(self, unit, stat, value, cap):
         """137_Avatar.as:2293 addManualBattleStack (attack/defense/flee only)."""
@@ -1523,6 +1524,40 @@ class ReferenceBattle:
                                               skill=skill, index=index):
             self._add_buff(target, key + "up", _to_int(action[4]), value)
 
+    def _act_zongzi_scent(self, attacker, enemies, allies, skill, action, index, context):
+        """MOD: zongzi_scent (粽子飘香 S_9163_6).
+
+        Heals every ally for ``attack * [1]`` and grants hit/flee/crit/tough
+        buffs of ``[2]`` of the caster's raw secondary stats for ``[3]``
+        rounds. Both scale by (1 + live zongzi count), mirroring the client
+        action added to 139_SkillSet.as.
+        """
+        if len(action) < 4:
+            raise ValueError("zongzi_scent needs a heal scale, a stat scale and rounds")
+        heal_scale = float(action[1])
+        stat_scale = float(action[2])
+        rounds = _to_int(action[3])
+        if rounds < 1:
+            return
+        live = sum(1 for u in allies
+                   if str(u.get("aid", "")) == "A_2014_5"
+                   and int(u.get("hp", 0)) > 0
+                   and u.get("summon_owner_token") is not None)
+        mult = 1.0 + float(live)
+        amount = self._heal_channel_value(attacker, heal_scale * mult)
+        targets = list(self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
+                                               skill=skill, index=index))
+        for target in targets:
+            missing = int(target.get("hp_max", 0)) - int(target.get("hp", 0))
+            if missing > 0:
+                self._injured(target, min(missing, _to_int(amount)), damage_type=4)
+        raw = attacker.get("new_4attrs")
+        for key in ("hit", "flee", "crit", "tough"):
+            base = float(raw.get(key, 0)) if isinstance(raw, dict) else 0.0
+            value = _to_int(base * stat_scale * mult)
+            for target in targets:
+                self._add_buff(target, key + "up", rounds, value)
+
     def _act_stat_flat(self, attacker, enemies, allies, skill, action, index, context):
         """stat_flat (139_SkillSet.as:1204): key ``[1]``, value ``[2]``, rounds ``[3]``.
 
@@ -2003,13 +2038,16 @@ class ReferenceBattle:
         """
         return self._heal_ap_channel(attacker, coefficient)
 
-    @staticmethod
-    def _kill_record(targets):
+    def _kill_record(self, targets):
         killed = None
         for target in targets:
             if int(target.get("hp", 0)) <= 0:
                 killed = target
                 break
+        # MOD: zongzi death empowers its owner's remaining zongzi (attack
+        # +10% each, stackable without bound, cap 999 — 137_Avatar.notifyZongziDeath).
+        if killed is not None and str(killed.get("aid", "")) == "A_2014_5":
+            self._on_zongzi_death(killed)
         hero_hits = [t for t in targets if t.get("tpl")]
         return {
             "hit": bool(targets),
@@ -2018,6 +2056,24 @@ class ReferenceBattle:
             "killed_type": 1 if killed is not None else 0,
             "killed_summon": False,
         }
+
+    def _on_zongzi_death(self, zongzi):
+        """MOD: a dead zongzi (A_2014_5) grants every surviving zongzi of the
+        same owner a permanent +10% attack stack (cap 999)."""
+        owner_token = zongzi.get("summon_owner_token")
+        roster = zongzi.get("_team")
+        if not isinstance(roster, list) or owner_token is None:
+            return
+        for unit in roster:
+            if unit is zongzi or not isinstance(unit, dict):
+                continue
+            if str(unit.get("aid", "")) != "A_2014_5":
+                continue
+            if int(unit.get("hp", 0)) <= 0:
+                continue
+            if unit.get("summon_owner_token") != owner_token:
+                continue
+            self._add_manual_battle_stack(unit, "attack", 0.1, 999)
 
     # ------------------------------------------------- formerly unimplemented
 
@@ -2334,6 +2390,10 @@ class ReferenceBattle:
             return False
         owner_id = owner.get("aid")
         owner_token = owner.get("_owner_token")
+        # MOD: S_9162_6 summons up to 2 zongzi per owner (client: one lane
+        # holds up to 2; the engine has no lane concept, so cap at 2 total).
+        cap = 2 if str(skill_id) == "S_9162_6" else 1
+        live = 0
         for unit in roster:
             if not isinstance(unit, dict) or int(unit.get("hp", 0)) <= 0:
                 continue
@@ -2351,7 +2411,9 @@ class ReferenceBattle:
             # those as occupying the bounded slot rather than stacking them.
             existing_skill = unit.get("_bounded_summon_skill")
             if existing_skill is None or existing_skill == skill_id:
-                return True
+                live += 1
+                if live >= cap:
+                    return True
         return False
 
     @staticmethod
@@ -2403,6 +2465,10 @@ class ReferenceBattle:
             unit["de_ph"] = max(1, _to_int(_to_int(owner.get("de_ph", 0)) * ratio))
             unit["de_ma"] = max(1, _to_int(_to_int(owner.get("de_ma", 0)) * ratio))
             unit["hp"] = unit["hp_max"]
+            # MOD: the client copies the four secondary attrs unconditionally
+            # (139_SkillSet.as:1878-1889); mirror it on the uniform path too.
+            for key in ("hit", "flee", "crit", "tough"):
+                unit["new_4attrs"][key] = max(0, _to_int(self._stat_buff(owner, key)))
         else:
             factor = float(ap_factor)
             if math.isfinite(factor) and factor > 0:
@@ -3026,4 +3092,5 @@ _ACTION_HANDLERS = {
     "ricochet_bursts": ReferenceBattle._act_ricochet_bursts,
     "damage_chain": ReferenceBattle._act_damage_chain,
     "pending_area_strike": ReferenceBattle._act_pending_area_strike,
+    "zongzi_scent": ReferenceBattle._act_zongzi_scent,
 }

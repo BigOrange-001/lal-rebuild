@@ -68,6 +68,8 @@ def _native_skill_snapshot(config, skill_id, level=1):
         if valid and isinstance(target, list) and type(leaf) is int and 0 <= leaf < len(target) and isinstance(target[leaf], (int, float)):
             target[leaf] += step * (max(1, min(10, int(level))) - 1)
     return {
+        "modCondition": copy.deepcopy(row.get("modCondition")),
+        "modEffectSequence": row.get("modEffectSequence",0),
         "cd": int(pl[0]) if isinstance(pl, list) and pl and pl[0] is not None else 0,
         "pl": copy.deepcopy(pl),
         "skid": str(skill_id),
@@ -152,7 +154,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     skill = _native_skill_snapshot(config, pl[10] if len(pl) > 10 else None, slv)
     leader_skill = _native_skill_snapshot(config, pl[11] if len(pl) > 11 else None) if leader else None
     skill_b = _native_skill_snapshot(config, pl[13] if len(pl) > 13 else None)
-    result = {"aid":str(aid),"ap":stats["attack"],"morph":0,"buffs":{},"de_ma":stats["magic_defense"],"de_ph":stats["physical_defense"],"hp":stats["health"],"hp_max":stats["health"],"isme":team==1,"leader":1 if leader else 0,"line":int(line),"lv":level,"new_4attrs":{"hit":0,"flee":0,"crit":0,"tough":0},"pos":native_pos,"slv":int(slv),"tpl":[int(tl[i]) if len(tl)>i else 0 for i in range(3)]+[int(pl[8]) if len(pl)>8 else 0,int(pl[9]) if len(pl)>9 else 0],"talent":None,"skill":skill,"leader_skill":leader_skill,"book_skill":None,"skillB":skill_b,"skill_diff":_to_int(avatar.get("skill_diff", 0))}
+    result = {"aid":str(aid),"ap":stats["attack"],"morph":0,"buffs":{},"de_ma":stats["magic_defense"],"de_ph":stats["physical_defense"],"hp":stats["health"],"hp_max":stats["health"],"isme":team==1,"leader":1 if leader else 0,"line":int(line),"lv":level,"new_4attrs":{"hit":0,"flee":0,"crit":0,"tough":0},"pos":native_pos,"slv":int(slv),"tpl":[int(tl[i]) if len(tl)>i else 0 for i in range(3)]+[int(pl[8]) if len(pl)>8 else 0,int(pl[9]) if len(pl)>9 else 0],"talent":None,"skill":skill,"leader_skill":leader_skill,"book_skill":None,"skillB":skill_b,"skill_diff":_to_int(avatar.get("skill_diff", 0)),"modUnitType":avatar.get("modUnitType","hero")}
     if instance_id: result["instance_id"] = instance_id
     if mod_runtime(config):
         result["mod_digest"] = effective_digest(config)
@@ -904,6 +906,7 @@ class ReferenceBattle:
         2 summon/creep, 3 structure. The serialized ``tpl`` array does not
         carry it, so it must be read off the id.
         """
+        if unit.get("modUnitType")=="summon":return 2
         aid = str(unit.get("aid", ""))
         if len(aid) < 3:
             return 0
@@ -2910,6 +2913,8 @@ class ReferenceBattle:
         skill = attacker.get(slot)
         if not isinstance(skill, dict) or not skill.get("skills"):
             return False
+        from battle_mod_effects import condition_ready
+        if not condition_ready(self,attacker,skill):return False
         if int(attacker.get(cd_key, -1)) >= 0:
             return False
         if not self._apply_native_skill(attacker, enemies, slot=slot):
@@ -2937,6 +2942,9 @@ class ReferenceBattle:
         every turn *unless* the unit holds one of the 17 guard buffs — an early
         return inside the scan — and diff 19 while any listed debuff is held.
         """
+        if (attacker.get("skillB") or {}).get("modEffectSequence"):
+            from battle_mod_effects import condition_ready
+            return condition_ready(self,attacker,attacker["skillB"])
         diff = _to_int(attacker.get("skill_diff", 0))
         if diff <= 0:
             return False
@@ -2963,7 +2971,10 @@ class ReferenceBattle:
         self._injured(target, dealt, damage_type=1)
 
 
+from battle_mod_effects import execute as execute_mod_step
+
 _ACTION_HANDLERS = {
+    "mod_step": execute_mod_step,
     "dash": ReferenceBattle._act_dash,
     "damage": ReferenceBattle._act_damage,
     "true_damage": ReferenceBattle._act_true_damage,

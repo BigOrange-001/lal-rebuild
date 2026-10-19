@@ -21,6 +21,7 @@
     "skill.cure",
     "skill.damage",
     "skill.description.rank-template",
+    "skill.effect-sequence.v1",
     "skill.hp_shield",
     "skill.move_to_target",
     "skill.native-template.v1",
@@ -35,7 +36,8 @@
     "skill.target.lock-only",
     "skill.target.unlimited",
     "skill.target_hp_shield",
-    "skill.weak"
+    "skill.weak",
+    "unit.summon.v1"
   ],
   "actions": [
     "armor",
@@ -314,5 +316,15 @@
     ],
     "compoundParameterCount": 324,
     "schema": "mod-native-template.schema.json"
+  },
+  "effectSequences": {
+    "model": "effect-sequence-v1",
+    "schema": "mod-effect-sequence.schema.json",
+    "capability": "skill.effect-sequence.v1",
+    "summonCapability": "unit.summon.v1",
+    "summonsAreCollectible": false,
+    "recursiveSummoning": false,
+    "trueDamageRatio": "literal attack ratio, no legacy 0.3 attenuation",
+    "areaGeometry": "native same-lane distance"
   }
 }

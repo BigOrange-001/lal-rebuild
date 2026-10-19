@@ -168,3 +168,8 @@ Schema 可通过 `python -B scripts/generate_mod_schemas.py` 重新生成。验�
 Android 创作者／玩家将包保存在 Download（下载）或系统文件应用可访问的位置，通过“系统设置 → Mod 管理 → 导入英雄包”选择。SDK 51 的文件选择器统一使用 Storage Access Framework（最低支持 API 24），由系统授予所选文件权限，不读取 nativePath、不要求 root，也不申请所有文件访问权限。游戏立即读取、校验并复制安装包，后续启动不依赖下载目录中的原文件。
 
 手机版整合端的默认安装目录位于应用私有 `files/state/mods`（跟随存档数据库目录），用户无需手动访问。电脑版／外置服务器使用配置的 --mods-root。`mods/inbox` 只作为宿主可选批量导入路径，不作为手机必须使用的入口。当前雷电测试连接电脑服务端，故安装副本保存在电脑端，而非模拟器的应用私有存储。
+
+
+## 待测试的效果序列扩展
+
+本轮增加 `skill.effect-sequence.v1` 和 `unit.summon.v1`。新旧模型并存，详情见 [条件与召唤物接口](mod-effect-sequence.md)。尚未运行测试、构建游戏安装包或合并。

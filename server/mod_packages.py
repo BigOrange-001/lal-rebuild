@@ -186,6 +186,13 @@ def validate_package_references(package,base_document=None):
         values.extend((value,"heroes."+hero["id"]+".presentation."+key) for key,value in hero["presentation"].items() if value is not None)
         if hero["progression"]["starUp"] is not None:values.append((hero["progression"]["starUp"],"heroes."+hero["id"]+".progression.starUp"))
     for skill in package.data.get("skills",{}).get("skills",[]):
+        if skill.get('model')=='effect-sequence-v1':
+            for action in skill['actions']:
+                if action.get('effect') is not None:
+                    values.append((action['effect'],'skills.'+skill['id']+'.actions.effect'))
+                if action.get('unit') is not None:
+                    values.append((action['unit'],'skills.'+skill['id']+'.actions.unit'))
+            continue
         if skill.get('model')=='native-template-v1':
             if base_document is not None:
                 from mod_native import validate_template

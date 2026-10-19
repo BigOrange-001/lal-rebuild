@@ -43,7 +43,7 @@ ACTIONS = frozenset(("damage", "cure", "shield", "hp_shield", "caster_hp_shield"
 CAPABILITIES = frozenset(("hero.register", "hero.patch.skill", "hero.patch.stats", "hero.patch.presentation",
  "hero.patch.text", "skill.reference.builtin", "asset.image", "asset.sound", "effect.reference.builtin",
  "patch.scopes", "progression.default-player-hero", "hero.damage.true", "hero.patch.damage-type", "skill.target.lock-only",
- "skill.target.unlimited", "skill.description.rank-template", "skill.native-template.v1", "asset.image.card-frame") + tuple("skill."+a for a in ACTIONS))
+ "skill.target.unlimited", "skill.description.rank-template", "skill.native-template.v1", "asset.image.card-frame", "skill.effect-sequence.v1", "unit.summon.v1") + tuple("skill."+a for a in ACTIONS))
 LOCAL_ID = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
@@ -202,7 +202,7 @@ def validate_hero(hero,path):
     req=("id","variant","name","unitType","quality","signType","actionType","damageType","baseStats","growth","speed","attackRange","leadership","levelCap","progression","skills","presentation")
     object_(hero,path,req,set(req)|{"description","role","integrationDefaults","acquisition","destiny"})
     local_id(hero["id"],path+".id");local_id(hero["variant"],path+".variant");text_(hero["name"],path+".name")
-    enum(hero["unitType"],("hero",),path+".unitType")
+    enum(hero["unitType"],("hero","summon"),path+".unitType")
     number(hero["quality"],path+".quality",2,6,True)
     enum(hero["signType"],("attack","tank","assist"),path+".signType")
     enum(hero["actionType"],("forward","sly","stand","cunning"),path+".actionType")
@@ -216,6 +216,7 @@ def validate_hero(hero,path):
     progression=object_(hero["progression"],path+".progression",("preset","starUp"),{"preset","starUp"})
     enum(progression["preset"],("builtin:progression/default-player-hero",),path+".progression.preset")
     reference(progression["starUp"],path+".progression.starUp",("hero",),True)
+    if hero["unitType"]=="summon" and progression["starUp"] is not None:fail("Summons cannot star up",path+".progression")
     skills=object_(hero["skills"],path+".skills",("normal","captain","passive"),{"normal","captain","passive"})
     for key,value in skills.items():reference(value,path+".skills."+key,("skill",),True)
     p=object_(hero["presentation"],path+".presentation",("portrait","icon","basicAttackEffect","voice"),{"portrait","icon","basicAttackEffect","voice"})
@@ -226,6 +227,7 @@ def validate_hero(hero,path):
     if hero.get("destiny") not in (None,{},[]):fail("API 1 has no authored destiny adapter; this interaction is marked unavailable",path+".destiny","ModIncompatible")
 
 def skill_extension_capabilities(skill):
+    if skill.get('model')=='effect-sequence-v1':return {'skill.effect-sequence.v1'}
     if skill.get('model')=='native-template-v1':return {'skill.native-template.v1'}
     caps=set()
     if "rankInfoTemplate" in skill:caps.add("skill.description.rank-template")
@@ -236,6 +238,9 @@ def skill_extension_capabilities(skill):
     return caps
 
 def validate_skill(skill,path):
+    if isinstance(skill,dict) and skill.get('model')=='effect-sequence-v1':
+        from mod_effects import validate
+        return validate(skill,path)
     if isinstance(skill,dict) and skill.get('model')=='native-template-v1':
         from mod_native import validate_shape
         return validate_shape(skill,path)
@@ -347,6 +352,8 @@ def validate_data(manifest,data):
             p=kind+"[%d]"%i
             if kind=="heroes":
                 validate_hero(row,p);key=(row["id"],row["variant"])
+                if row.get('unitType')=='summon' and 'unit.summon.v1' not in manifest.get('requiredCapabilities',[]):
+                    fail('Declare required capability unit.summon.v1',p+'.unitType','ModIncompatible')
                 if row['damageType']=='true' and 'hero.damage.true' not in manifest.get('requiredCapabilities',[]):
                     fail('Declare required capability hero.damage.true',p+'.damageType','ModIncompatible')
             elif kind=="skills":

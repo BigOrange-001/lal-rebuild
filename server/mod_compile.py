@@ -139,7 +139,7 @@ class Compiler:
                 self.skill_refs[(pkg.package_id,skill["id"])]=self.catalog.allocate_skill("mod:"+pkg.package_id+"/skill/"+skill["id"])
             for hero in pkg.data.get("heroes",{}).get("heroes",[]):
                 identity=f"mod:{pkg.package_id}/hero/{hero['id']}/{hero['variant']}"
-                aid=self.catalog.allocate_hero(pkg.package_id,hero["id"],hero["variant"],hero["quality"],{"name":hero["name"],"packageName":pkg.manifest["name"],"progression":hero["progression"],"levelCap":hero["levelCap"],"unitType":"hero"})
+                aid=self.catalog.allocate_hero(pkg.package_id,hero["id"],hero["variant"],hero["quality"],{"name":hero["name"],"packageName":pkg.manifest["name"],"progression":hero["progression"],"levelCap":hero["levelCap"],"unitType":hero["unitType"]})
                 self.hero_refs[identity]=aid;self.hero_authored[aid]=(pkg,hero)
         if len(self.hero_authored)>LIMITS["activeHeroes"]:fail("Active hero count exceeds the combined configuration limit","packages","ModQuotaExceeded")
     def resolve(self,value,pkg,types,path="",nullable=False):
@@ -203,7 +203,7 @@ class Compiler:
         if not sid:return
         skill=self.cfg["skill"].get(sid)
         if not skill:fail("Skill does not exist",path,"ModMissingReference")
-        if skill.get('modNativeSource'):
+        if skill.get('modNativeSource') or skill.get('modEffectSequence'):
             return
         actions=skill.get("skill",[])
         unsafe={"manual_ability","summon","summon_turret","clone_normal"}
@@ -226,6 +226,15 @@ class Compiler:
         effect=self.resolve(presentation["basicAttackEffect"],pkg,("effect",),"presentation.basicAttackEffect")
         return res,{"portrait":res,"icon":res+"_icon0000","voice":voice,"basicAttackEffect":effect}
     def skill(self,pkg,skill):
+        if skill.get('model')=='effect-sequence-v1':
+            from mod_effects import compile_skill
+            result=compile_skill(skill,self.skill_refs[(pkg.package_id,skill['id'])],
+                lambda ref,types,path,nullable: self.resolve(ref,pkg,types,path,nullable))
+            for action in result['skill']:
+                if action[1]=='summon':
+                    target=self.hero_authored.get(action[11])
+                    if not target or target[1]['unitType']!='summon':fail('Summon must reference a registered summon unit','effects.unit')
+            return result
         if skill.get('model')=='native-template-v1':
             from mod_native import compile_template
             return compile_template(skill,self.base,self.skill_refs[(pkg.package_id,skill['id'])])
@@ -276,16 +285,27 @@ class Compiler:
         native={"id":aid,"name":hero["name"],"res":res,"role":hero.get("role",hero["signType"]),"info":hero.get("description",""),
                 "tl":[{"attack":1,"tank":2,"assist":3}[hero["signType"]],{"forward":1,"sly":2,"stand":3,"cunning":4}[hero["actionType"]],{"physical":1,"magic":2,"true":3}[hero["damageType"]],hero["leadership"],hero["levelCap"],1,hero["quality"]*25,hero["quality"]*20,[],0,1],
                 "pl":[n for stat in STATS for n in (hero["baseStats"][stat],hero["growth"][stat])]+[hero["speed"],hero["attackRange"],skills["normal"],skills["captain"],presentation["basicAttackEffect"],skills["passive"]],
-                "skillup":hero["quality"]*100,"love":hero["quality"]*100,"modIdentity":identity,"modVoice":presentation["voice"] or ""}
+                "skillup":hero["quality"]*100,"love":hero["quality"]*100,"modIdentity":identity,"modVoice":presentation["voice"] or "","modUnitType":hero["unitType"]}
         passive=self.cfg.get('skill',{}).get(skills['passive'],{})
         if passive.get('modPassiveTrigger'):native['skill_diff']=passive['modPassiveTrigger']
         channels,scopes=_options(pkg,self.selected[pkg.package_id],hero,identity,aid,hero["id"])
         quality=hero["quality"]
+        if hero['unitType']=='summon':
+            # Summon templates cannot enter a collection, lottery, store, or bot pool.
+            channels={key:False for key in CHANNELS}
+            for sid in skills.values():
+                row=self.cfg.get('skill',{}).get(sid,{})
+                if any(a and (a[0] in ('summon','summon_turret','clone_normal','manual_ability') or (a[0]=='mod_step' and a[1]=='summon')) for a in row.get('skill',[])):
+                    fail('Summoned units cannot recursively summon','heroes.'+hero['id'])
         unavailable,support=self.channel_applicability(quality)
         default_channels,default_scopes=_defaults(pkg,hero)
+        if hero['unitType']=='summon':
+            unavailable={key:'Summon templates cannot enter acquisition, collection, or enemy/assist pools' for key in CHANNELS}
+            support={key:{'supported':False,'applicable':False,'reason':unavailable[key]} for key in CHANNELS}
+            default_channels={key:False for key in CHANNELS}
         for channel in unavailable:channels[channel]=False
         meta={"packageId":pkg.package_id,"packageName":pkg.manifest["name"],"version":pkg.version,"contentDigest":pkg.digest,"identity":identity,"aid":aid,
-              "id":hero["id"],"variant":hero["variant"],"name":hero["name"],"kind":"new","unitType":"hero","available":True,"quality":quality,
+              "id":hero["id"],"variant":hero["variant"],"name":hero["name"],"kind":"new","unitType":hero["unitType"],"available":True,"quality":quality,
               "channels":channels,"unavailableChannels":unavailable,"channelSupport":support,"defaultChannels":default_channels,"defaultPatchScopes":default_scopes,"progression":copy.deepcopy(hero["progression"]),"presentation":presentation,"levelCap":hero["levelCap"],"patchScopes":scopes,"acquisition":copy.deepcopy(hero.get("acquisition",{}))}
         self.metadata[aid]=meta;self.cfg["avatar"][aid]=native;self.preview["added"].append(copy.deepcopy(meta))
     def validate_progression(self):
@@ -535,6 +555,10 @@ class Compiler:
             runtime['requiredClientCapabilities']=['skill.native-template.v1']
         if any(row.get('cardFrame') for row in self.assets.values()):
             runtime.setdefault('requiredClientCapabilities',[]).append('asset.image.card-frame')
+        if any(row.get('modEffectSequence') for row in self.cfg['skill'].values()):
+            runtime.setdefault('requiredClientCapabilities',[]).append('skill.effect-sequence.v1')
+        if any(row.get('unitType')=='summon' for row in self.metadata.values()):
+            runtime.setdefault('requiredClientCapabilities',[]).append('unit.summon.v1')
         if self.ordered or self.missing or self.warnings:self.cfg["mod_runtime"]=runtime
         self.roster["heroes"]=copy.deepcopy(self.cfg["avatar"]);self.roster["skills"]=copy.deepcopy(self.cfg["skill"]);self.roster["effects"]=copy.deepcopy(self.cfg["effect"])
         if self.ordered or self.missing or self.warnings:self.roster["mod_runtime"]=copy.deepcopy(runtime)

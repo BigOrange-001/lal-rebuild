@@ -59,6 +59,7 @@
           "skill.cure",
           "skill.damage",
           "skill.description.rank-template",
+          "skill.effect-sequence.v1",
           "skill.hp_shield",
           "skill.move_to_target",
           "skill.native-template.v1",
@@ -73,7 +74,8 @@
           "skill.target.lock-only",
           "skill.target.unlimited",
           "skill.target_hp_shield",
-          "skill.weak"
+          "skill.weak",
+          "unit.summon.v1"
         ]
       },
       "uniqueItems": true

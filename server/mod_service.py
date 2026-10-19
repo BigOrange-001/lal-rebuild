@@ -435,7 +435,7 @@ class ModService:
             self._seed_instance_sequence(uid, profile, compiled.document)
             known = copy.deepcopy(old["knownHeroes"])
             for aid, row in compiled.runtime.get("heroes", {}).items():
-                if row.get("kind") == "new" and row.get("available", True):
+                if row.get("kind") == "new" and row.get("unitType","hero") == "hero" and row.get("available", True):
                     known[aid] = copy.deepcopy(row)
             profile["mod_state"] = {"schema": "lal-mod-save-v1", "revision": revision + 1,
                                      "selections": selections, "knownHeroes": known,
@@ -529,7 +529,7 @@ class ModService:
             self._seed_instance_sequence(uid, profile, context.config)
             runtime = context.config.get("cfg", {}).get("mod_runtime", {})
             row = runtime.get("heroes", {}).get(aid, {})
-            if row.get("kind") != "new" or not row.get("available", True):
+            if row.get("kind") != "new" or row.get("unitType","hero") != "hero" or not row.get("available", True):
                 raise GameplayFault("UnknownHero", "测试发放只支持当前存档已启用的新增英雄。")
             from gameplay_common import grant_reward
             before = set(profile.get("avatars", {}))

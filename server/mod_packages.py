@@ -484,7 +484,7 @@ class ModCatalog:
                 row["defaultChannels"].update(pkg.manifest.get("integrationDefaults",{}))
                 for hero in row.get("heroes",[]):
                     hero["identity"]=f"mod:{pkg.package_id}/hero/{hero['id']}/{hero['variant']}"
-                    hero["aid"]=self.allocate_hero(pkg.package_id,hero["id"],hero["variant"],hero["quality"],{"name":hero["name"],"packageName":pkg.manifest["name"],"progression":hero["progression"],"levelCap":hero["levelCap"],"unitType":"hero"})
+                    hero["aid"]=self.allocate_hero(pkg.package_id,hero["id"],hero["variant"],hero["quality"],{"name":hero["name"],"packageName":pkg.manifest["name"],"progression":hero["progression"],"levelCap":hero["levelCap"],"unitType":hero["unitType"]})
                     unavailable,support=Compiler.channel_applicability(hero["quality"])
                     channels={**row["defaultChannels"],**hero.get("integrationDefaults",{})};default_channels=copy.deepcopy(channels)
                     for channel in unavailable:channels[channel]=False

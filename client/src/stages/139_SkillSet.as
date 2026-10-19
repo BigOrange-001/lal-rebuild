@@ -45,6 +45,7 @@ package com.meng52.game.module.skill
       private var currentActionTargets:Array;
       private var currentTargetGroups:Object;
       private var sortAnchor:Avatar;
+      private var modStepAnchors:Array = [];
       private var activeNativeSource:String;
       private var activeNativeSettings:Object;
 
@@ -183,7 +184,7 @@ package com.meng52.game.module.skill
       private function getLevelInfo() : String
       {
          var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
-         if(!row || !row.rankInfoTemplate || isSuper) return skillSetData.info;
+         if(!row || !row.rankInfoTemplate || (isSuper && !row.modEffectSequence)) return skillSetData.info;
          var actions:Array = skills;
          return String(row.rankInfoTemplate).replace(/\{rank:(\d+):([0-9.]+)\}|\{scale:([0-9.]+):([0-9.]+)\}|\{flat:(\d+):([0-9.]+)\}/g,function(...parts):String
          {
@@ -575,6 +576,7 @@ package com.meng52.game.module.skill
          {
             return false;
          }
+         if(!modConditionReady()) return false;
          var _loc5_:GameMap = GameMap.currentMap;
          if(_loc5_ == null)
          {
@@ -616,6 +618,13 @@ package com.meng52.game.module.skill
       private function hasCastTargets() : Boolean
       {
          if(!avatar || avatar.hp <= 0 || !GameMap.currentMap || !skills || skills.length == 0) return false;
+         if(isModEffectSequence())
+         {
+            if(!modConditionReady()) return false;
+            var firstMod:Array = skills[0];
+            if(firstMod[2] == "self" || firstMod[2] == "all_allies" || firstMod[2] == "ally_radius") return true;
+            return modSelectTargets(firstMod).length > 0;
+         }
          var actions:Array = [];
          var groups:Object = {};
          var oldActions:Array = currentActionTargets;
@@ -703,6 +712,144 @@ package com.meng52.game.module.skill
          return _loc1_;
       }
 
+      public function isModEffectSequence() : Boolean
+      {
+         var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         return row != null && row.modEffectSequence == 1;
+      }
+
+      public function modConditionReady() : Boolean
+      {
+         var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         var gate:Object = row ? row.modCondition : null;
+         return !gate || gate.kind != "absent_buff" || !avatar.buffs[String(gate.buff)];
+      }
+
+      private function modSelectTargets(step:Array) : Array
+      {
+         var selector:String = String(step[2]);
+         var anchor:Object = int(step[3]) >= 0 ? modStepAnchors[int(step[3])] : null;
+         var result:Array = [];
+         var unit:Avatar;
+         if(selector == "previous")
+         {
+            if(anchor) for each(unit in anchor.units) if(unit && unit.hp > 0) result.push(unit);
+            return result;
+         }
+         if(selector == "self") return avatar.hp > 0 ? [avatar] : [];
+         if(selector == "enemy_radius" && !anchor) return result;
+         var allied:Boolean = selector == "all_allies" || selector == "ally_radius";
+         var source:Vector.<Avatar> = GameMap.currentMap.getAliveList(allied ? avatar.team : avatar.otherTeam) as Vector.<Avatar>;
+         var centerLine:int = anchor ? int(anchor.line) : avatar.line;
+         var centerPos:int = anchor ? int(anchor.pos) : avatar.pos;
+         var best:Avatar = null;
+         var score:Number;
+         var bestScore:Number = Number.POSITIVE_INFINITY;
+         for each(unit in source)
+         {
+            if(!unit || unit.hp <= 0) continue;
+            if(selector == "all_allies" || selector == "all_enemies") { result.push(unit); continue; }
+            if(selector == "lane_front" || selector == "lane_lowest_hp")
+            {
+               if(unit.line != avatar.line || Math.abs(unit.pos-avatar.pos) > Math.abs(skillSetData.range)) continue;
+               score = selector == "lane_front" ? Math.abs(unit.pos-avatar.pos) : Number(unit.hp)/Math.max(1,unit.getHpMax());
+               if(score < bestScore || (score == bestScore && best && Math.abs(unit.pos-avatar.pos) < Math.abs(best.pos-avatar.pos)))
+               { best = unit; bestScore = score; }
+               continue;
+            }
+            if(unit.line != centerLine || Math.abs(unit.pos-centerPos) > Number(step[4])) continue;
+            if(step[15] === true && anchor && anchor.units.indexOf(unit) >= 0) continue;
+            result.push(unit);
+         }
+         if(best) result.push(best);
+         return result;
+      }
+
+      private function executeModStep(step:Array,index:int) : Boolean
+      {
+         if(!isModEffectSequence() || !step || step.length != 18) return false;
+         var kind:String = String(step[1]);
+         var selected:Array = modSelectTargets(step);
+         var center:Avatar = selected.length > 0 ? selected[0] : avatar;
+         // Preserve the position before damage/knockback, including when the primary dies.
+         modStepAnchors[index] = {"units":selected.concat(),"line":center.line,"pos":center.pos};
+         var unit:Avatar;
+         var value:Number;
+         var effect:String = String(step[17]);
+         var ratio:Number = Number(step[12]);
+         var family:String = "mod:" + skillSetData.id + ":" + index;
+         var summons:Vector.<Avatar>;
+         var retained:Vector.<Avatar>;
+         var expired:Avatar;
+         var expiredUnits:Array = [];
+         var singleton:Vector.<Avatar>;
+         var distance:int;
+         if(kind == "summon")
+         {
+            if(!avatar.manualSummonFamilies) avatar.manualSummonFamilies = {};
+            summons = avatar.manualSummonFamilies[family] as Vector.<Avatar>;
+            retained = new Vector.<Avatar>();
+            if(summons) for each(unit in summons) if(unit && unit.hp > 0) retained.push(unit);
+            var unitDefinition:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[String(step[11])] : null;
+            if(!unitDefinition || unitDefinition.modUnitType != "summon") return false;
+            unit = new Avatar(GlobalData.modDefinitionId(String(step[11]),"summoned"),{"lv":avatar.lv,"slv":1});
+            unit.goFight(avatar.team,avatar.line,0,false);
+            unit.ap = Math.max(1,int(avatar.getDamage()*ratio));
+            unit.hpMax = Math.max(1,int(avatar.getHpMax()*ratio));
+            unit.hp = unit.hpMax;
+            unit.dePh = Math.max(0,int(avatar.getDePh()*ratio));
+            unit.deMa = Math.max(0,int(avatar.getDeMa()*ratio));
+            unit.hit = Math.max(0,int(avatar.getHit()*ratio));
+            unit.flee = Math.max(0,int(avatar.getFlee()*ratio));
+            unit.crit = Math.max(0,int(avatar.getCrit()*ratio));
+            unit.tough = Math.max(0,int(avatar.getTough()*ratio));
+            unit.addBuff("summon",int(step[13]));
+            while(retained.length >= int(step[14]))
+            {
+               expired = retained.shift(); expiredUnits.push(expired); expired.hp = 0;
+            }
+            // addAvatar registers the unit and returns void, not a success flag.
+            GameMap.currentMap.addAvatar(unit,avatar.team,avatar.line,avatar.team == 1 ? avatar.pos - GameMapConfig.SUMMON_POS : avatar.pos + GameMapConfig.SUMMON_POS,false);
+            retained.push(unit);
+            avatar.manualSummonFamilies[family] = retained;
+            // Retire replaced units through the normal visual/death lifecycle.
+            for each(expired in expiredUnits) expired.dead();
+            var summonEffect:Object = DisplayTools.getAttrs(effect || "SUMMON_EFF");
+            if(summonEffect) { summonEffect.a1 = unit; summonEffect.par = GameMapLayer.gl.effectLayer; GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,summonEffect); }
+            return false;
+         }
+         for each(unit in selected)
+         {
+            if(!unit || unit.hp <= 0) continue;
+            if(kind == "heal")
+            {
+               value = int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6]));
+               unit.injured(int(value),1,DisplayTools.getAttrs(effect),4);
+            }
+            else if(kind == "damage")
+            {
+               singleton = new Vector.<Avatar>(); singleton.push(unit);
+               avatar.checkAttack(singleton,null,100000,false,int(step[16]),int(step[16]) == 3 ? Number(step[5])/Avatar.REAL_DAMAGE_RATE : Number(step[5]),0,effect);
+            }
+            else if(kind == "buff")
+            {
+               value = Number(step[7]);
+               if(step[8] == "shield") value += int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6]));
+               unit.addBuff(String(step[8]),int(step[9]),value);
+            }
+            else if(kind == "push") unit.addBuff("push",1,Number(step[10]));
+            else if(kind == "move")
+            {
+               distance = Math.max(0,Math.abs(unit.pos-avatar.pos)-40);
+               if(Number(step[10]) > 0) distance = Math.min(distance,int(step[10]));
+               if(distance > 0) avatar.checkMove(avatar.team == 1 ? unit.pos < avatar.pos : unit.pos > avatar.pos,distance,unit,-1,false,effect);
+            }
+         }
+         if(kind == "move" || kind == "push") GameMap.actionDelay += 0.2;
+         return kind == "move" && selected.length > 0;
+      }
+
+
       public function useSkill() : Boolean
       {
          if(!hasCastTargets()) return false;
@@ -710,6 +857,7 @@ package com.meng52.game.module.skill
          var previousNativeSettings:Object = activeNativeSettings;
          var wholeAttack:Object = Avatar.beginAbilityAttack(avatar,"active");
          wholeAttack.skill = this;
+         modStepAnchors = [];
          abilityHasCast = true;
          abilityCooldownOverride = -1;
          m_cooldownNum = skillSetData.cooldown;
@@ -840,6 +988,9 @@ package com.meng52.game.module.skill
             }
             switch(_loc20_[0])
             {
+               case "mod_step":
+                  _loc4_ = executeModStep(_loc20_,_loc14_) || _loc4_;
+                  break;
                case "manual_ability":
                   var abilityBeforePosition:int = avatar.pos;
                   var abilityBeforeLane:int = avatar.line;

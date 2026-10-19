@@ -86,3 +86,8 @@ Android 的文件选择使用 AIR 的平台选择器，选中的包通过同一�
 `ModCatalog(root,base_document)` 提供 `scan()`、`import_inbox()`、`install(path)`、`uninstall(id,version,digest)`、`get(id,version,digest)`、`resolve_digest_asset(digest,path)`、`identity_snapshot()`、`validate_identity_snapshot(snapshot)`、`restore_identities(snapshot)` 和 `preview_restore(snapshot,base,settings,roster_side,allow_missing)`。`compile(base,settings,roster_side,allow_missing)` 返回 `CompiledModConfig.document/roster/runtime/digest/preview/warnings`。
 
 目录变更和编号分配使用注册表原子发布与 Windows 字节锁／POSIX 文件锁，同一根目录同线程可重入。内存恢复预览完全覆盖磁盘写入方法，不占用或泄漏编号。包安装与 SQLite 不能组成同一个数据库事务，重启时依靠已发布清单重新验证和登记；玩家存档激活及奖励继续由既有事务／操作账本保护。
+
+
+## 待测试的效果序列扩展
+
+本轮增加 `skill.effect-sequence.v1` 和 `unit.summon.v1`。新旧模型并存，详情见 [条件与召唤物接口](mod-effect-sequence.md)。尚未运行测试、构建游戏安装包或合并。

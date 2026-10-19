@@ -4296,6 +4296,8 @@ package com.meng52.game.module.avatar
 
       public function getType() : int
       {
+         var modTypeRow:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[avatarData.id] : null;
+         if(modTypeRow && modTypeRow.modUnitType == "summon") return 2;
          return int(avatarData.id.slice(2,3));
       }
 
@@ -4683,6 +4685,7 @@ package com.meng52.game.module.avatar
 
       private function checkBuffOfSkillB() : Boolean
       {
+         if(skillB && skillB.isModEffectSequence()) return skillB.modConditionReady();
          var _loc1_:Boolean = false;
          if(!this.avatarData.skill_diff)
          {
@@ -6025,9 +6028,11 @@ package com.meng52.game.module.avatar
             param3.a1 = this;
             param3.a2 = param5;
             param3.re = true;
+            // A visual effect is optional; keep HP/status settlement and number
+            // popups running when a data-authored action intentionally has none.
+            param3.par = _loc19_.effectLayer;
+            _loc19_.delayCall(DisplayTools.addEffects,GameMap.actionDelay,param3);
          }
-         param3.par = _loc19_.effectLayer;
-         _loc19_.delayCall(DisplayTools.addEffects,GameMap.actionDelay,param3);
          if(buffs["taunt"])
          {
             if(param4 != 4 && param4 != 6 && param4 != 7 && param4 != 5 && param4 != 8)

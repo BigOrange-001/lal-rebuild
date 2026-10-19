@@ -24,7 +24,10 @@
             "maxLength": 200
           },
           "unitType": {
-            "const": "hero"
+            "enum": [
+              "hero",
+              "summon"
+            ]
           },
           "quality": {
             "type": "integer",

@@ -24,6 +24,7 @@ manifest=obj(manifest_fields,("format","kind","packageId","name","author","versi
 stats=obj({s:num() for s in STATS},STATS)
 hero_fields={"id":local,"variant":local,"name":text,"unitType":{"const":"hero"},"quality":num(2,6,True),"signType":enum(("attack","tank","assist")),"actionType":enum(("forward","sly","stand","cunning")),"damageType":enum(("physical","magic")),"baseStats":stats,"growth":stats,"speed":num(0,10000,True),"attackRange":num(0,10000,True),"leadership":num(0,10000,True),"levelCap":num(1,99,True),"progression":obj({"preset":{"const":"builtin:progression/default-player-hero"},"starUp":nullable},("preset","starUp")),"skills":obj({s:nullable for s in ("normal","captain","passive")},("normal","captain","passive")),"presentation":obj({"portrait":ref,"icon":ref,"basicAttackEffect":ref,"voice":nullable},("portrait","icon","basicAttackEffect","voice")),"description":{"type":"string"},"role":text,"integrationDefaults":channels,"acquisition":{"enum":[{},None]},"destiny":{"enum":[{},[],None]}}
 hero_required=tuple(k for k in hero_fields if k not in ("description","role","integrationDefaults","acquisition","destiny"))
+hero_fields['unitType']=enum(('hero','summon'))
 hero_fields['damageType']=enum(('physical','magic','true'))
 heroes=obj({"heroes":arr(obj(hero_fields,hero_required),minItems=1,maxItems=256)},("heroes",))
 action_fields={"type":enum(ACTIONS),"effect":nullable,"coefficient":num(0,1000),"damageType":enum(("physical","magic")),"duration":num(1,100,True),"amount":num(0,1000),"targetPolicy":enum(POLICIES),"maxTargets":num(1,6,True),"lockToAction":num(0,30,True)}
@@ -70,7 +71,16 @@ if __name__=="__main__":
                           'settings':obj({k:native_settings[k] for k in NODE_SETTINGS if k in native_settings})},('type','arguments')),minItems=1,maxItems=32),
         'upgrades':{'const':[]}}
     native_schema=obj(native_fields,native_fields.keys())
-    skills['properties']['skills']['items']={'oneOf':[skills['properties']['skills']['items'],native_schema]}
+    # Preserve field ordering of an unchanged reviewed native contract.
+    previous_native=directory/'mod-native-template.schema.json'
+    if previous_native.is_file():
+        previous=json.loads(previous_native.read_text('utf-8'))
+        previous={key:value for key,value in previous.items() if key not in ('$schema','title')}
+        if previous==native_schema:native_schema=previous
+    from mod_effects import json_schema as effect_schema
+    effect_sequence=effect_schema()
+    skills['properties']['skills']['items']={'oneOf':[skills['properties']['skills']['items'],native_schema,effect_sequence]}
+    (directory/'mod-effect-sequence.schema.json').write_text(json.dumps({'$schema':'https://json-schema.org/draft/2020-12/schema',**effect_sequence},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     (directory/'mod-native-template.schema.json').write_text(json.dumps({'$schema':'https://json-schema.org/draft/2020-12/schema',
         'title':'Complete native battle mechanism template',**native_schema},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     for name,value in (("mod-manifest",manifest),("mod-heroes",heroes),("mod-skills",skills),("mod-patches",patches)):
@@ -96,4 +106,5 @@ if __name__=="__main__":
         'compoundParameterCount':sum(map(len,ability_contract()['mechanisms'].values())),
         'schema':'mod-native-template.schema.json'}
     catalogue['unsupported']=[v for v in catalogue['unsupported'] if v!='custom summon/clone/manual abilities']
+    catalogue['effectSequences']={'model':'effect-sequence-v1','schema':'mod-effect-sequence.schema.json','capability':'skill.effect-sequence.v1','summonCapability':'unit.summon.v1','summonsAreCollectible':False,'recursiveSummoning':False,'trueDamageRatio':'literal attack ratio, no legacy 0.3 attenuation','areaGeometry':'native same-lane distance'}
     (directory/"mod-engine-api-v1.json").write_text(json.dumps(catalogue,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")

@@ -1,5 +1,6 @@
 """Bounded generic passive events; synchronous settlement with explicit chain guards."""
 def has_buff(battle,unit,kind):
+    if kind=='root':return battle._rooted(unit)
     if kind=='timed_bless':
         buff=battle._buff(unit,'bless')
         return buff is not None and buff.value>0

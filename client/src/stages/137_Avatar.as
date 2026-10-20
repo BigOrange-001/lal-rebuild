@@ -1562,6 +1562,7 @@ package com.meng52.game.module.avatar
 
       public function hasModBuff(kind:String) : Boolean
       {
+         if(kind == "root" && abilityState && abilityState.root) return true;
          if(kind == "timed_bless") return buffs && buffs["bless"] && Number(buffs["bless"].value) > 0;
          return buffs && buffs[kind] != null;
       }

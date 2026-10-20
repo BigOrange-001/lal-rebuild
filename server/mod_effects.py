@@ -19,6 +19,7 @@ TARGETS = ('self', 'all_allies', 'all_enemies', 'ally_radius',
            'lane_lowest_hp', 'lane_front', 'enemy_radius', 'previous','event_source','event_target')
 BUFFS = ('shield', 'purify', 'strong', 'weak', 'sunder', 'steel',
          'bless', 'critup', 'toughup', 'fleeup', 'hitup', 'stun','curse','timed_bless')
+CONDITION_BUFFS = BUFFS + ('root','poison','burn','evil','silence','taunt','armor','book_penetration')
 GROWTH_FIELDS = {'attackRatio': 5, 'maxHpRatio': 6, 'amount': 7,'eventRatio':18,'overhealRatio':19}
 DEFAULTS = dict(target='self', centerAction=-1, radius=0, attackRatio=0,
                 maxHpRatio=0, amount=0, buff='shield', duration=1, distance=0,
@@ -52,11 +53,11 @@ def validate(skill, path='skill'):
         number(trigger.get('minAmount',0),path+'.trigger.minAmount',0,10000000)
         number(trigger.get('hpBelow',1),path+'.trigger.hpBelow',0,1)
         for key in ('requiredBuff','absentBuff'):
-            if key in trigger:enum(trigger[key],BUFFS,path+'.trigger.'+key)
+            if key in trigger:enum(trigger[key],CONDITION_BUFFS,path+'.trigger.'+key)
         if trigger.get('requiredBuff') and trigger.get('requiredBuff')==trigger.get('absentBuff'):fail('Contradictory buff filters',path+'.trigger')
     else:
         if set(trigger)-{'kind','buff'}:fail('Event filters require an event trigger',path+'.trigger')
-        if trigger['kind']=='absent_buff':enum(trigger.get('buff'),BUFFS,path+'.trigger.buff')
+        if trigger['kind']=='absent_buff':enum(trigger.get('buff'),CONDITION_BUFFS,path+'.trigger.buff')
         elif 'buff' in trigger:fail('Ready trigger must not contain a buff',path+'.trigger')
     actions=skill['actions']
     if not isinstance(actions,list) or not 1<=len(actions)<=32:fail('Expected 1..32 effect steps',path+'.actions')
@@ -156,11 +157,11 @@ def json_schema():
                 'description':text,'model':{'const':MODEL},'warmup':num(0,100,True),
                 'cooldown':num(0,100,True),'range':num(0,10000,True),
                 'trigger':{'oneOf':[obj({'kind':{'const':'ready'}},('kind',)),
-                                     obj({'kind':{'const':'absent_buff'},'buff':{'enum':list(BUFFS)}},('kind','buff')),
+                                     obj({'kind':{'const':'absent_buff'},'buff':{'enum':list(CONDITION_BUFFS)}},('kind','buff')),
                                      obj({'kind':{'const':'event'},'event':{'enum':list(EVENTS)},'maxPerRound':num(1,16,True),
                                           'allowChain':{'type':'boolean'},'relation':{'enum':['any','self','ally','enemy']},
                                           'unitType':{'enum':['any','hero','summon']},'minAmount':num(0,10000000),'hpBelow':num(0,1),
-                                          'requiredBuff':{'enum':list(BUFFS)},'absentBuff':{'enum':list(BUFFS)}},('kind','event'))]},
+                                          'requiredBuff':{'enum':list(CONDITION_BUFFS)},'absentBuff':{'enum':list(CONDITION_BUFFS)}},('kind','event'))]},
                 'actions':{'type':'array','minItems':1,'maxItems':32,'items':obj(action,('type',))},
                 'rankInfoTemplate':text,'maxLevel':num(1,10,True)}
     return obj(properties,properties)

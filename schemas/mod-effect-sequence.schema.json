@@ -68,7 +68,15 @@
                 "hitup",
                 "stun",
                 "curse",
-                "timed_bless"
+                "timed_bless",
+                "root",
+                "poison",
+                "burn",
+                "evil",
+                "silence",
+                "taunt",
+                "armor",
+                "book_penetration"
               ]
             }
           },
@@ -151,7 +159,15 @@
                 "hitup",
                 "stun",
                 "curse",
-                "timed_bless"
+                "timed_bless",
+                "root",
+                "poison",
+                "burn",
+                "evil",
+                "silence",
+                "taunt",
+                "armor",
+                "book_penetration"
               ]
             },
             "absentBuff": {
@@ -169,7 +185,15 @@
                 "hitup",
                 "stun",
                 "curse",
-                "timed_bless"
+                "timed_bless",
+                "root",
+                "poison",
+                "burn",
+                "evil",
+                "silence",
+                "taunt",
+                "armor",
+                "book_penetration"
               ]
             }
           },

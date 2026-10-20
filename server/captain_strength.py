@@ -32,7 +32,7 @@ _SCALE_TOKEN = re.compile(r"\{scale:([0-9.]+):([0-9.]+)\}")
 # limits, status flags and summon level ratios deliberately do not.
 _EXTRA_PATHS = {
     "armor": ((1,),), "attrup": ((1,),), "back": ((1,),),
-    "caster_hp_shield": ((1,),), "caster_hp_heal": ((1,),), "cure": ((1,),),
+    "caster_hp_shield": ((1,),), "caster_hp_heal": ((1,),), "cure": ((1,),), "heal_ap": ((1,),),
     "dash_group_strike": ((3,),), "heal_missing_hp": ((1,),),
     "hp_shield": ((1,),), "kill_buff": ((2,),),
     "lethal_floor": ((3,),), "manual_dot": ((3,),),
@@ -52,7 +52,7 @@ _STRUCTURAL = {
     "move_self", "move_to_ally", "move_to_target_lane",
     "normal_on_hero_kill", "purify", "push_aoe", "recast_on_kill",
     "select_target", "shield_dispel", "summon", "taunt", "curse", "timed_bless",
-    "pull", "pull_group", "move_to_target", "focus_fire",
+    "pull", "pull_group", "move_to_target", "move_enemy_side_target", "focus_fire",
 }
 # Base paths cover the existing damage and DOT operator families.  The
 # supplemental list above covers their independent healing/buff magnitudes.

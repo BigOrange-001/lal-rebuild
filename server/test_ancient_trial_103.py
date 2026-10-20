@@ -26,8 +26,18 @@ class AncientTrial103Tests(unittest.TestCase):
             for key in ('team2','recommended_power','ancient_equip_drop','enemy_unit_stats_by_diff','reward'):
                 self.assertEqual(new[key],old[key])
         last=cfg['combat_ploy']['P_001_10']['recommended_power']
+        captains={next(row[0] for row in cfg['combat_ploy']['P_001_10']['team2'] if row[5]==1)}
+        formations={tuple(sorted(row[0] for row in cfg['combat_ploy']['P_001_10']['team2']))}
         for tier in range(11,16):
             stage=cfg['combat_ploy'][f'P_001_{tier}'];actual=_power(cfg,stage['team2'],stage['enemy_unit_stats_by_diff']['0'])
+            leaders=[row[0] for row in stage['team2'] if row[5]==1]
+            self.assertEqual(len(leaders),1);self.assertNotIn(leaders[0],captains);captains.update(leaders)
+            formation=tuple(sorted(row[0] for row in stage['team2']))
+            self.assertNotIn(formation,formations);formations.add(formation)
+            self.assertEqual(len(set(formation)),10)
+            self.assertFalse(set(formation)&set(cfg['system_simple'].get('skin_hero_ids',[])))
+            self.assertEqual([row['aid'] for row in stage['enemy_unit_stats_by_diff']['0']],
+                             [row[0] for row in stage['team2']])
             self.assertEqual(stage['win'],[-2]);self.assertEqual(len(stage['team2']),10)
             self.assertEqual(stage['recommended_power'],actual)
             self.assertTrue(last<actual<last*2)

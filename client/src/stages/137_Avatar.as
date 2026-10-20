@@ -173,6 +173,77 @@ package com.meng52.game.module.avatar
       private var abilityIndex:int = 0;
       private static var abilityNextIndex:int = 0;
       private static var abilityContexts:Array = [];
+      private var parallelVisualBatches:Array = [];
+
+      public function beginParallelVisualBatch() : Object
+      {
+         var batch:Object = {context:currentAbilityAttack(),start:NaN,end:GameMap.actionDelay,target:null,hits:[],wave:-1,step:0.15,serial:0,animated:{}};
+         parallelVisualBatches.push(batch);
+         return batch;
+      }
+
+      public function setParallelVisualWave(batch:Object, wave:int, step:Number = 0.15) : void
+      {
+         if(!batch || parallelVisualBatches[parallelVisualBatches.length-1] !== batch) return;
+         batch.end = Math.max(Number(batch.end),GameMap.actionDelay);
+         if(isNaN(Number(batch.start))) batch.start = GameMap.actionDelay;
+         batch.wave = Math.max(0,wave);
+         batch.step = Math.max(0,step);
+         GameMap.actionDelay = Number(batch.start)+int(batch.wave)*Number(batch.step);
+      }
+
+      public function prepareParallelVisualTarget(target:Avatar, hit:Boolean) : void
+      {
+         if(!target || parallelVisualBatches.length == 0) return;
+         var batch:Object = parallelVisualBatches[parallelVisualBatches.length-1];
+         // Reactions retain their own sequence and must not rewind their caller.
+         if(batch.context !== currentAbilityAttack()) return;
+         batch.end = Math.max(Number(batch.end),GameMap.actionDelay);
+         if(isNaN(Number(batch.start))) batch.start = GameMap.actionDelay;
+         if(int(batch.wave) >= 0)
+         {
+            GameMap.actionDelay = Number(batch.start)+int(batch.wave)*Number(batch.step);
+            return;
+         }
+         if(hit && batch.hits.indexOf(target) >= 0)
+         {
+            // A repeated target starts the next damage wave, not another victim.
+            batch.start = Number(batch.end);
+            batch.serial = int(batch.serial)+1;
+            batch.hits = [];
+            batch.target = null;
+         }
+         if(batch.target !== target)
+         {
+            GameMap.actionDelay = Number(batch.start);
+            batch.target = target;
+         }
+         if(hit) batch.hits.push(target);
+      }
+
+      public function endParallelVisualBatch(batch:Object) : void
+      {
+         if(!batch || parallelVisualBatches[parallelVisualBatches.length-1] !== batch) return;
+         GameMap.actionDelay = Math.max(Number(batch.end),GameMap.actionDelay);
+         parallelVisualBatches.pop();
+      }
+
+      private function flushParallelVisualBatch() : void
+      {
+         if(parallelVisualBatches.length)
+            GameMap.actionDelay = Math.max(GameMap.actionDelay,Number(parallelVisualBatches[parallelVisualBatches.length-1].end));
+      }
+
+      private function playParallelAttackTween() : Boolean
+      {
+         if(parallelVisualBatches.length == 0) return true;
+         var batch:Object = parallelVisualBatches[parallelVisualBatches.length-1];
+         if(batch.context !== currentAbilityAttack()) return true;
+         var key:String = int(batch.wave) >= 0 ? "wave"+int(batch.wave) : "auto"+int(batch.serial);
+         if(batch.animated[key]) return false;
+         batch.animated[key] = true;
+         return true;
+      }
 
       public static function beginAbilityAttack(owner:Avatar, kind:String) : Object
       {
@@ -258,8 +329,12 @@ package com.meng52.game.module.avatar
                   {
                      var swordContext:Object = beginAbilityAttack(guardOwner,"response");
                      swordContext.manualDamageMultiplier = guard.manualDamageMultiplier;
+                     var swordPresentation:Object = guardOwner.beginParallelVisualBatch();
+                     try
+                     {
                      for each(var swordTarget:Avatar in guardOwner.abilityEnemies(300,target,3)) guardOwner.abilityHit(swordTarget,1.5,2,"FX_A_1120_MAGIC");
-                     endAbilityAttack(swordContext);
+                     }
+                     finally { guardOwner.endParallelVisualBatch(swordPresentation); endAbilityAttack(swordContext); }
                   }
                }
             }
@@ -430,6 +505,7 @@ package com.meng52.game.module.avatar
       private function abilityHeal(target:Avatar, coefficient:Number) : void
       {
          if(!target || target.hp <= 0) return;
+         flushParallelVisualBatch();
          var one:Vector.<Avatar> = new Vector.<Avatar>(); one.push(target);
          attackAimList(one,4,coefficient,0,"FX60_HEAL");
       }
@@ -464,6 +540,7 @@ package com.meng52.game.module.avatar
 
       private function abilityPull(target:Avatar, center:Avatar, amount:int) : void
       {
+         prepareParallelVisualTarget(target,false);
          if(target && target.hp > 0 && center) target.checkMove(true,amount,center,-1,true);
       }
 
@@ -558,8 +635,12 @@ package com.meng52.game.module.avatar
          context.manualDamageMultiplier = bomb.manualDamageMultiplier;
          var targets:Array = owner.abilityCandidates(owner.otherTeam,line,pos,250,4);
          if(hp > 0 && targets.indexOf(this) < 0) { targets.unshift(this); targets = targets.slice(0,4); }
+         var bombPresentation:Object = owner.beginParallelVisualBatch();
+         try
+         {
          for each(var target:Avatar in targets) owner.abilityHit(target,Number(bomb.coefficient),2,"FX_A_1098_MAGIC");
-         endAbilityAttack(context);
+         }
+         finally { owner.endParallelVisualBatch(bombPresentation); endAbilityAttack(context); }
       }
 
       private function abilityDeath() : void
@@ -631,8 +712,12 @@ package com.meng52.game.module.avatar
                var channelContext:Object = beginAbilityAttack(this,"active");
                channelContext.manualDamageMultiplier = state.manualDamageMultiplier;
                channelContext.manualEffectMultiplier = state.manualEffectMultiplier;
+               var channelPresentation:Object = beginParallelVisualBatch();
+               try
+               {
                for each(enemy in abilityEnemies(400,null,3)) if(abilityHit(enemy,3.6,2,"FX_A_1073_MAGIC")) abilityControl(enemy,"weak",2,0.3);
-               endAbilityAttack(channelContext);
+               }
+               finally { endParallelVisualBatch(channelPresentation); endAbilityAttack(channelContext); }
                return true;
             }
          }
@@ -710,6 +795,16 @@ package com.meng52.game.module.avatar
       }
 
       public function executeAbility(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
+      {
+         var parallelBatch:Object = ["illaoi_n", "illaoi_c", "jayce_n", "jayce_c", "maokai_c", "wukong_c", "gangplank_c", "yi_n", "riven_n", "riven_c", "orianna_n", "orianna_c", "alistar_n", "diana_n", "jinx_n", "jinx_c", "aoxing_c", "kaelthas_c", "cat_n", "cat_c", "polar_n", "polar_c", "santa_c"].indexOf(kind) >= 0 ? beginParallelVisualBatch() : null;
+         try
+         {
+            return executeAbilityBody(kind,scale,effect,sourceSkill);
+         }
+         finally { endParallelVisualBatch(parallelBatch); }
+      }
+
+      private function executeAbilityBody(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
          if(kind == "cat_n" || kind == "cat_c") return executeCatSkin(kind,scale,effect,sourceSkill);
          if(kind == "polar_n" || kind == "polar_c") return executePolarSkin(kind,effect,sourceSkill);
@@ -861,7 +956,12 @@ package com.meng52.game.module.avatar
                break;
             case "veigar_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",700),null,nativeAbilityNumber(sourceSkill,kind,"cast_1",1),true,"ratio"); if(!enemies.length) enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_3",700));
-               if(!enemies.length) return false; target=enemies[0]; abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_5",2)+nativeAbilityNumber(sourceSkill,kind,"cast_6",3)*(nativeAbilityNumber(sourceSkill,kind,"cast_7",1)-target.hp/target.hpMax),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),effect);
+               if(!enemies.length) return false;
+               target=enemies[0];
+               var previousVeigarHit:Number = Number(abilityState.veigarCastHit || 0);
+               abilityState.veigarCastHit = previousVeigarHit+30000;
+               try { abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_5",2)+nativeAbilityNumber(sourceSkill,kind,"cast_6",3)*(nativeAbilityNumber(sourceSkill,kind,"cast_7",1)-target.hp/target.hpMax),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),effect); }
+               finally { abilityState.veigarCastHit = previousVeigarHit; }
                break;
             case "elise_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
@@ -1253,6 +1353,7 @@ package com.meng52.game.module.avatar
             for each(target in targets) abilityHit(target,Number(params[5]),3,effect);
             abilityHit(primary,Number(params[6]),3,effect);
             var restore:int = Tools.toInt(Math.max(0,Number(context.damage)-before)*Number(params[7]));
+            flushParallelVisualBatch();
             if(hp > 0 && restore > 0) injured(restore,1,null,4,null,false,this);
             return true;
          }
@@ -1269,6 +1370,7 @@ package com.meng52.game.module.avatar
             }
          }
          finally { context.catCaptainCapture = false; }
+         flushParallelVisualBatch();
          if(hp > 0 && int(context.catCrits) > 0) addBuff("strong",2,0.03*int(context.catCrits));
          return true;
       }
@@ -1831,16 +1933,16 @@ package com.meng52.game.module.avatar
          trace(_loc7_ + "is克制后的伤害" + "ph" + param2.getDePh() + "ma" + param2.getDeMa());
          if(param2.checkTalent(2) != 0 || param2.checkTalent(3) != 0)
          {
-            trace(param2.getDePh() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + Tools.toInt((param2.getDePh() + param2.getDePh() * param2.checkTalent(2)) * (1 - param1.getBookCombatBonus("penetration"))));
-            trace(param2.getDeMa() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + Tools.toInt((param2.getDeMa() + param2.getDeMa() * param2.checkTalent(3)) * (1 - param1.getBookCombatBonus("penetration"))));
+            trace(param2.getDePh() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + param2.getDefenseAgainst(param1,1));
+            trace(param2.getDeMa() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + param2.getDefenseAgainst(param1,2));
          }
          if(param4 == 1)
          {
-            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - Tools.toInt((param2.getDePh() + param2.getDePh() * param2.checkTalent(2)) * (1 - param1.getBookCombatBonus("penetration"))));
+            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - param2.getDefenseAgainst(param1,1));
          }
          else if(param4 == 2)
          {
-            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - Tools.toInt((param2.getDeMa() + param2.getDeMa() * param2.checkTalent(3)) * (1 - param1.getBookCombatBonus("penetration"))));
+            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - param2.getDefenseAgainst(param1,2));
          }
          else if(param4 == 3)
          {
@@ -3887,12 +3989,15 @@ package com.meng52.game.module.avatar
          {
             for each(var action:Array in skill2.skills)
             {
-               if(action[0] == "book_passive" && action[2] == stat) value += Number(action[1]);
+               if(action[0] == "book_passive" && action[2] == stat)
+               {
+                  value = stat == "penetration" ? Math.max(value,Number(action[1])) : value + Number(action[1]);
+               }
             }
          }
          if(stat == "penetration")
          {
-            if(buffs && buffs["book_penetration"]) value += Number(buffs["book_penetration"].value);
+            if(buffs && buffs["book_penetration"]) value = Math.max(value,Number(buffs["book_penetration"].value));
             return Math.max(0,Math.min(1,value));
          }
          return isFinite(value) ? Math.max(0,value) : 0;
@@ -4002,7 +4107,28 @@ package com.meng52.game.module.avatar
          return Math.max(_loc6_,0);
       }
 
+      public function getDefenseAgainst(source:Avatar, damageType:int) : int
+      {
+         var penetration:Number = source ? source.getBookCombatBonus("penetration") : 0;
+         var talent:Number = checkTalent(damageType == 1 ? 2 : 3);
+         var defense:Number;
+         if(penetration <= 0)
+         {
+            defense = damageType == 1 ? getDePh() : getDeMa();
+            return Tools.toInt(defense * (1 + talent));
+         }
+         var sunder:Number = buffs && buffs["sunder"] ? Math.max(0,Number(buffs["sunder"].value)) : 0;
+         var reduction:Number = Math.max(penetration,sunder / (1 + sunder));
+         defense = damageType == 1 ? getPhysicalDefense(-1,-1,false,true) : getMagicDefense(-1,-1,false,true);
+         return Math.max(0,Tools.toInt(defense * (1 + talent) * (1 - reduction)));
+      }
+
       public function getDePh(param1:int = -1, param2:int = -1, param3:Boolean = false) : int
+      {
+         return getPhysicalDefense(param1,param2,param3,false);
+      }
+
+      private function getPhysicalDefense(param1:int, param2:int, param3:Boolean, ignoreSunder:Boolean) : int
       {
          var _loc4_:int = 0;
          var _loc10_:AvatarData = null;
@@ -4069,7 +4195,7 @@ package com.meng52.game.module.avatar
          if(buffs)
          {
             _loc6_ = buffs["sunder"] as Buff;
-            if(_loc6_)
+            if(_loc6_ && !ignoreSunder)
             {
                _loc5_ /= 1 + _loc6_.value;
             }
@@ -4084,6 +4210,11 @@ package com.meng52.game.module.avatar
       }
 
       public function getDeMa(param1:int = -1, param2:int = -1, param3:Boolean = false) : int
+      {
+         return getMagicDefense(param1,param2,param3,false);
+      }
+
+      private function getMagicDefense(param1:int, param2:int, param3:Boolean, ignoreSunder:Boolean) : int
       {
          var _loc4_:int = 0;
          var _loc10_:AvatarData = null;
@@ -4150,7 +4281,7 @@ package com.meng52.game.module.avatar
          if(buffs)
          {
             _loc6_ = buffs["sunder"] as Buff;
-            if(_loc6_)
+            if(_loc6_ && !ignoreSunder)
             {
                _loc5_ /= 1 + _loc6_.value;
             }
@@ -4261,7 +4392,7 @@ package com.meng52.game.module.avatar
                _loc3_ += _loc1_.value;
             }
          }
-         return _loc3_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_hit")) + (this.abilityState ? int(this.abilityState.polarCastHit) : 0);
+         return _loc3_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_hit")) + (this.abilityState ? int(this.abilityState.polarCastHit) + int(this.abilityState.veigarCastHit) : 0);
       }
 
       public function getFlee() : int
@@ -5746,6 +5877,8 @@ package com.meng52.game.module.avatar
          if(param7 && param7.type == "shield") param7.value *= purpleBondMultiplier();
          var basicContext:Object = null;
          var aimTarget:Avatar = param1 && param1.length ? param1[0] : null;
+         if(param1 && param1.length == 1) prepareParallelVisualTarget(aimTarget,true);
+         var playBatchAttack:Boolean = param1 && param1.length ? playParallelAttackTween() : true;
          var markedBasic:Boolean = false;
          if(!currentAbilityAttack() && (param2 < 0 || param2 >= 1 && param2 <= 3))
          {
@@ -5852,7 +5985,7 @@ package com.meng52.game.module.avatar
          }
          _loc25_.par = _loc30_.effectLayer;
          GameMap.actionDelay += 0.3;
-         if((!effectSource || effectSource === this) && fightRes.parent)
+         if(playBatchAttack && (!effectSource || effectSource === this) && fightRes.parent)
          {
             _loc30_.delayCall((fightRes.parent as AvatarLayer).setFirst,GameMap.actionDelay,fightRes);
          }
@@ -5868,11 +6001,11 @@ package com.meng52.game.module.avatar
          if(_loc41_.laneWave || isSteelLaneWave)
          {
             _loc30_.delayCall(showLaneShockwave,GameMap.actionDelay,effectSource || this);
-            if(!effectSource || effectSource === this)
+            if(playBatchAttack && (!effectSource || effectSource === this))
             {
                _loc30_.delayCall(attackTween,GameMap.actionDelay,this,param1[0]);
             }
-            // One wave reaches the whole lane before any hit is presented.
+            // A fixed impact time aligns the existing full-lane shockwave.
             // Keep the normal miss, crit, shield and injury paths for each unit.
             var waveHitDelay:Number = GameMap.actionDelay + 0.18;
             var waveEndDelay:Number = waveHitDelay;
@@ -5915,7 +6048,7 @@ package com.meng52.game.module.avatar
             _loc27_.par = _loc30_.effectLayer;
             _loc30_.delayCall(DisplayTools.addBullet,GameMap.actionDelay + 0.25,_loc27_);
             _loc26_ = GameMapConfig.offsetToPixel(0);
-            _loc30_.delayCall(attackTween,GameMap.actionDelay,this,null,_loc26_);
+            if(playBatchAttack) _loc30_.delayCall(attackTween,GameMap.actionDelay,this,null,_loc26_);
             _loc26_ = pos;
             _loc10_ = param1[0];
             if(_loc10_.pos - _loc26_ < 0)
@@ -5999,7 +6132,7 @@ package com.meng52.game.module.avatar
             delete _loc27_.check;
             _loc27_.par = _loc30_.effectLayer;
             _loc30_.delayCall(DisplayTools.addBullet,GameMap.actionDelay,_loc27_);
-            if((!effectSource || effectSource === this) && param4 != GameMapConfig.MIN_SPACE_POS - 1 && _loc34_ == 0)
+            if(playBatchAttack && (!effectSource || effectSource === this) && param4 != GameMapConfig.MIN_SPACE_POS - 1 && _loc34_ == 0)
             {
                _loc30_.delayCall(attackTween,GameMap.actionDelay,this,_loc10_);
             }

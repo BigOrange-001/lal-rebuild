@@ -23,6 +23,8 @@ class CatKatarina103Tests(unittest.TestCase):
         b.a[0]['skill']=_native_skill_snapshot(self.cfg,f'S_{271129 if slot=="n" else 371129}_6',level)
         return b._apply_native_skill(b.a[0],b.b)
     def test_configuration_growth_fixed_passive_timing_and_idempotence(self):
+        self.assertEqual(self.cfg['effect']['FX_S9130_COMBO']['sp'],850)
+        self.assertNotIn('instantWave',self.cfg['effect']['FX_S9130_COMBO'])
         for q in (5,6):
             h=self.cfg['avatar'][f'A_1129_{q}'];self.assertEqual(h['tl'][2],3);self.assertEqual(h['skill_diff'],0)
             lo=_native_skill_snapshot(self.cfg,h['pl'][10],1);hi=_native_skill_snapshot(self.cfg,h['pl'][10],10)

@@ -26,6 +26,9 @@ def apply_hero_skills_103(document):
     """
     cfg = document.get('cfg', document)
     heroes, skills = cfg['avatar'], cfg['skill']
+    simple = cfg.setdefault('system_simple', {})
+    simple['skin_hero_ids'] = sorted(set(simple.get('skin_hero_ids', [])) |
+                                    {'A_1311_5', 'A_1311_6'})
     changed = []
     for quality in (5, 6):
         suffix = str(quality)
@@ -35,7 +38,7 @@ def apply_hero_skills_103(document):
         # Keep the existing assets: no invented resource IDs or shared-skill edits.
         normal_res = skills[hero['pl'][10]].get('res', hero['pl'][10])
         captain_res = skills[hero['pl'][11]].get('res', hero['pl'][11])
-        skills[normal] = _skill(normal, '超赛变身', normal_res, [1, 2, 0, 0, 0, 1], [
+        skills[normal] = _skill(normal, '超赛变身', normal_res, [0, 0, 0, 0, 0, 1], [
             ['purify', 2, 'FX_S9150_PURIFY'],
             ['timed_bless', 2, 'BLESS_EFF'],
             ['stat_flat', 'hit', 4500, 2, 'FX60_HIT'],
@@ -44,13 +47,13 @@ def apply_hero_skills_103(document):
             ['caster_hp_heal', .12, 'FX_S9150_CURE'],
         ], ['ally_self'] * 6,
             '净化自身并获得神佑，持续2回合；精准、闪避、韧性各提高{flat:2:2}点，'
-            '持续2回合，再恢复自身最大生命值的{rank:5:1}。治疗1级12%、10级18%，线性成长，不附加攻击力或精准系数。准备1，冷却2。',
+            '持续2回合，再恢复自身最大生命值的{rank:5:1}。治疗1级12%、10级18%，线性成长，不附加攻击力或精准系数。准备0，冷却0。',
             upgrades=[[2, 2, 500], [3, 2, 500], [4, 2, 500], [5, 1, .06 / 9]])
-        skills[captain] = _skill(captain, '真·龟派气功', captain_res, [2, 3, 3000, 0, -1, 1], [
+        skills[captain] = _skill(captain, '真·龟派气功', captain_res, [0, 0, 3000, 0, -1, 1], [
             ['damage', .5, 2, 'FX_S9004_ARC'],
             ['push_aoe', 3000, 1500, 'push'],
         ], ['enemy_lane_all'] * 2,
-            '对当前分路全部敌人造成50%攻击的魔法伤害，并击退1500码。准备2，冷却3。')
+            '对当前分路全部敌人造成50%攻击的魔法伤害，并击退1500码。准备0，冷却0。')
         skills[passive] = _skill(passive, '绝境逢生', normal_res, [0, 0, 10000, 0, -1, 1], [
             ['purify', 1, 'FX_S9150_PURIFY'],
             ['caster_ap_shield', 3.0, 1, 'FX60_SHIELD'],

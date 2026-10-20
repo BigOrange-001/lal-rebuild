@@ -25,7 +25,7 @@ function Buff(type,round,value=0){this.type=type;this.round=round;this.value=val
 const Random={getRandom:n=>(picks++)%n};
 let enemies=Array.from({length:4},(_,i)=>({id:'enemy'+i,team:2,hp:10000,hpMax:10000,line:0,pos:1600-100*i,ap:300,abilityIndex:10+i,buffs:{},getDamage(){return this.ap;},addBuff(kind,round,value=0){this.buffs[kind]=new Buff(kind,round,value);}}));
 const unit={id:'owner',team:1,otherTeam:2,line:0,pos:2200,hp:5000,hpMax:10000,abilityIndex:1,
-abilityState:{},buffs:{},skillB:null,m_buff:{},showBuff:noop,abilityFeedback:noop,checkTalent:()=>0,
+abilityState:{},parallelVisualBatches:[],buffs:{},skillB:null,m_buff:{},showBuff:noop,abilityFeedback:noop,checkTalent:()=>0,flushParallelVisualBatch:noop,
 abilityDirectMultiplier:()=>1,getTough:()=>0,getBookCombatBonus:()=>0,hasManualDotKind:()=>false,abilityRecordDamage:noop,
 ap:300,abilityEntryAttack:0,getManualBattleStack:()=>0,getManualTimedStack:()=>0,
 removeAllDebuff:noop,reline(line,pos){this.line=line;this.pos=pos;},
@@ -43,6 +43,8 @@ const GameMap={roundNum:0,actionDelay:0,currentMap:{roundNum:0,getAliveList(side
 '''
         source=SOURCE.read_text('utf-8')
         params={
+            'executeAbility':'kind,scale,effect,sourceSkill','executeAbilityBody':'kind,scale,effect,sourceSkill','beginParallelVisualBatch':'',
+            'prepareParallelVisualTarget':'target,hit','endParallelVisualBatch':'batch','flushParallelVisualBatch':'',
             'abilityCandidates':'whichTeam,lane,position,distance,maximum,heroOnly=false,order="nearest",excluded=null,forward=false',
             'abilityDash':'target,enemySide=false','abilityAllEnemies':'','addPurifyCharges':'count',
             'executeCatSkin':'kind,scale,effect,sourceSkill','executePolarSkin':'kind,effect,sourceSkill',
@@ -53,6 +55,9 @@ const GameMap={roundNum:0,actionDelay:0,currentMap:{roundNum:0,getAliveList(side
             'getDamage':'param1=-1,param2=-1,param3=false'}
         for name,args in params.items():
             body=method_body(source,name)
+            if name in ('executeCatSkin','executePolarSkin','executeSantaSkin','executeNurseSkin'):
+                # Skill doubles expose the current node, matching the native API.
+                body='if(sourceSkill && !sourceSkill.getNativeAction) sourceSkill.getNativeAction=function(){return this.skills[0]||[];};'+body
             body=re.sub(r'for each\s*\(([^)]+) in ([^)]+)\)',r'for (\1 of \2)',body)
             body=re.sub(r'function\(([^)]*)\)',lambda m:'function('+re.sub(r':\w+','',m[1])+')',body)
             script+=f'unit.{name}=function({args}){{with(this){{{body}}}}};\n'
@@ -79,6 +84,26 @@ console.log(JSON.stringify({events,buffs:unit.buffs,contexts:contexts.length}));
         self.assertTrue(all(e['damage']==180 for e in result['events']))
         self.assertAlmostEqual(result['buffs']['strong']['value'],.72)
         self.assertEqual(result['buffs']['purify']['value'],2);self.assertEqual(result['contexts'],0)
+
+    def test_cat_dispatch_runs_six_parallel_target_waves(self):
+        result=self.run_case('''const starts=[],original=unit.abilityHit;
+unit.abilityHit=function(target,coef,type){this.prepareParallelVisualTarget(target,true);starts.push(GameMap.actionDelay);
+let ok=original.call(this,target,coef,type);GameMap.actionDelay+=.25;return ok;};
+const c=beginAbilityAttack(unit,'active');unit.executeAbility('cat_c',1,'FX',{skills:[]});endAbilityAttack(c);
+console.log(JSON.stringify({starts,end:GameMap.actionDelay,stack:unit.parallelVisualBatches.length}));''')
+        self.assertEqual(result['starts'],[w*.25 for w in range(6) for _ in range(4)])
+        self.assertEqual(result['end'],1.5);self.assertEqual(result['stack'],0)
+
+    def test_veigar_precision_only_exists_during_captain_hit(self):
+        result=self.run_case('''unit.getStar=()=>6;unit.abilityEnemies=()=>[enemies[0]];
+unit.nativeAbilityNumber=(skill,kind,key,fallback)=>fallback;
+unit.abilityHit=()=>events.push(unit.abilityState.veigarCastHit);
+const skill={skillSetData:{id:'TEST'},getNativeSetting:(key,fallback)=>fallback};
+const c=beginAbilityAttack(unit,'active');unit.executeAbility('veigar_c',1,'FX',skill);
+const after=unit.abilityState.veigarCastHit;unit.abilityHit=()=>{throw Error('failed')};
+try{unit.executeAbility('veigar_c',1,'FX',skill)}catch(e){}endAbilityAttack(c);
+console.log(JSON.stringify([events,after,unit.abilityState.veigarCastHit]));''')
+        self.assertEqual(result,[[30000],0,0])
     def test_cat_reentrant_kills_stop_at_five_and_reset_next_round(self):
         result=self.run_case('''enemies=Array.from({length:40},(_,i)=>({id:'e'+i,team:2,hp:1,line:i%3,pos:1000}));
 unit.skillB={skills:[['cat_passive',.4,3,5]]};unit.queueCatSkinKill();let first=events.length;

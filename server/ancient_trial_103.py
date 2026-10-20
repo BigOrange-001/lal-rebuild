@@ -1,11 +1,26 @@
 """Extend the authored ancient trial through tier 15, preserving tiers 1..10."""
-import copy,math
+import copy,math,random,re
 from ancient_trial_overlay import _base_stats,EQUIPMENT_TYPES
 from campaign_workbook_overlay import _fit_power
 from gameplay_common import equipment_exclusive_ids
 
 SCHEMA='ancient-trial-1.0.3-v1'
 EXTENDED_CHANCES_BP={11:3000,12:3500,13:4000,14:4500,15:4500}
+
+def _extended_team(cfg,template,tier):
+    blocked=set(cfg['system_simple'].get('skin_hero_ids',[]))
+    blocked.update(cfg['system_simple'].get('skin_acquisition_blocked_heroes',[]))
+    candidates=sorted(aid for aid in cfg['avatar']
+                      if re.fullmatch(r'A_1\d{3}_6',aid) and aid not in blocked)
+    if len(candidates)<10:raise ValueError('Ancient trial requires ten ordinary orange heroes')
+    previous=next(row[0] for row in template if row[5]==1)
+    start=candidates.index(previous) if previous in candidates else 0
+    captain=candidates[(start+tier-10)%len(candidates)]
+    others=random.Random(f'ancient-trial-103-{tier}').sample([a for a in candidates if a!=captain],9)
+    team=copy.deepcopy(template)
+    for index,(row,aid) in enumerate(zip(team,[captain]+others)):
+        row[0]=aid;row[5]=int(index==0)
+    return team
 
 def target_power(tier):
     if not 11<=tier<=15:raise ValueError('Extended ancient trial tier must be 11..15')
@@ -21,13 +36,13 @@ def apply_ancient_trial_103(document):
     if not exclusive:raise ValueError('Ancient trial requires an exclusive orange equipment pool')
     for tier,chance in EXTENDED_CHANCES_BP.items():
         stage=copy.deepcopy(template);cid=f'P_001_{tier}'
-        target=target_power(tier);team=stage['team2']
+        target=target_power(tier);team=_extended_team(cfg,template['team2'],tier)
         stats,actual=_fit_power(cfg,team,_base_stats(cfg,team),target)
         policy=copy.deepcopy(template['ancient_equip_drop'])
         policy.update(schema=SCHEMA,chance_bp=chance,quality=6)
         note=f'胜利有{chance/100:g}%概率获得一件随机普通橙色装备。'
         stage.update(id=cid,name=f'远古试炼·第{tier}档',index=tier,indexID_s=tier,
-                     win=[-2],ancient_equip_drop=policy,reward_note=note,
+                     win=[-2],team2=team,ancient_equip_drop=policy,reward_note=note,
                      recommended_power=actual,recommended_power_by_diff={'0':actual},
                      enemy_snapshot_power=actual,enemy_unit_stats_by_diff={'0':stats})
         if tier==15:

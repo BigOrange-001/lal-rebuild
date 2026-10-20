@@ -80,6 +80,7 @@ function unit(team,line,pos){
     buffs:{},abilityState:{},manualSkillDots:{},tryndUndyingActive:false,m_buff:new Sprite(),
     avatarData:{id:'A_1001_6',type:1},fightRes:{parent:{setFirst:noop},x:0,y:100,pivotX:0,pivotY:0,localToGlobal(p){return {x:line*200+p.x,y:100+p.y};}},manualFocusTarget:null,skillB:null,
     currentAbilityAttack(){return {kind:'active'};},purpleBondMultiplier(){return 1;},
+    prepareParallelVisualTarget:noop,playParallelAttackTween:()=>true,
     abilityDirectMultiplier(){return 1;},getTeamHp:noop,getDamage(){return 100;},getTough(){return 0;},
     refreshHp:noop,abilityRecordDamage:noop,resSwing:noop,queueRangePreview:noop,
     checkTalent(){return 0;},getEffectiveActionType(){return 1;},getSortOnFun(){return null;},

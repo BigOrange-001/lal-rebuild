@@ -22,6 +22,7 @@ function attach(u){for(const [name,[params,body]] of Object.entries(input.method
 const units=input.units.map((data,i)=>Object.assign(data,{id:data.aid,hpMax:data.hp_max,abilityState:{},abilitySerial:0,
  abilityIndex:i+1,buffs:{},otherTeam:3-data.team,isManualSummonUnit:false,
  getType:()=>1,getStar:()=>6,getDamage:()=>1000,getHpMax:()=>10000,abilityFeedback:()=>{},
+ beginParallelVisualBatch:()=>null,endParallelVisualBatch:()=>{},prepareParallelVisualTarget:()=>{},
  checkMove(forward,distance,center=null){this.pos+=(this.team===1?-1:1)*(forward?1:-1)*distance;},
  reline(line,pos){this.line=line;this.pos=pos;},removeBuff(k){delete this.buffs[k];},removeAllDebuff(){},
  skill0:{useSkill(){events.push(['recast']);}}}));
@@ -66,6 +67,7 @@ class ManualOracleTests(unittest.TestCase):
     def setUpClass(cls):
         source=(ROOT/'client/src/stages/137_Avatar.as').read_text('utf-8')
         definitions=dict(executeAbility='kind,scale,effect,sourceSkill',
+          executeAbilityBody='kind,scale,effect,sourceSkill',
           nativeAbilityNumber='sourceSkill,kind,key,fallback',
           abilityEnemies='distance,center=null,maximum=1,heroOnly=false,order="nearest",excluded=null,forward=false',
           abilityCandidates='whichTeam,lane,position,distance,maximum,heroOnly=false,order="nearest",excluded=null,forward=false',

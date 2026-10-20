@@ -22,23 +22,20 @@ class GameClockTests(unittest.TestCase):
         self.database = Path(self.directory.name) / "clock.sqlite3"
 
     def test_advance_is_persistent_and_visible_without_restart(self):
-        with patch("game_clock.boot_id", return_value="boot-1"), \
-             patch("game_clock.time.time", return_value=1_797_000_000), \
+        with patch("game_clock.time.time", return_value=1_797_000_000), \
              patch("game_clock.time.monotonic", return_value=1000):
             server = GameClock(self.database)
             admin = GameClock(self.database)
         self.addCleanup(server.close)
         self.addCleanup(admin.close)
-        with patch("game_clock.time.monotonic", return_value=1010):
+        with patch("game_clock.time.time", return_value=1_797_000_010):
             self.assertEqual(server.now(), 1_797_000_010)
-        with patch("game_clock.boot_id", return_value="boot-1"), \
-             patch("game_clock.time.time", return_value=1_797_000_099), \
+        with patch("game_clock.time.time", return_value=1_797_000_099), \
              patch("game_clock.time.monotonic", return_value=1010):
             before, after = admin.advance(86400)
             self.assertEqual(after - before, 86400)
             self.assertEqual(server.now(), after)
-        with patch("game_clock.boot_id", return_value="boot-1"), \
-             patch("game_clock.time.time", return_value=1_797_000_099), \
+        with patch("game_clock.time.time", return_value=1_797_000_100), \
              patch("game_clock.time.monotonic", return_value=1011):
             reopened = GameClock(self.database)
             self.addCleanup(reopened.close)
@@ -47,29 +44,28 @@ class GameClockTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 admin.advance(invalid)
 
-    def test_changed_os_clock_never_advances_logical_time(self):
-        with patch("game_clock.boot_id", return_value="boot-1"), \
-             patch("game_clock.time.time", return_value=1_797_000_000), \
-             patch("game_clock.time.monotonic", return_value=1000):
-            clock = GameClock(self.database)
-        with patch("game_clock.time.monotonic", return_value=1031):
-            self.assertEqual(clock.now(), 1_797_000_031)
-        clock.close()
-        # Simulate another boot or a large OS-clock edit. Resume at the last
-        # committed game second rather than applying the wall-clock delta.
-        with patch("game_clock.boot_id", return_value="boot-2"), \
-             patch("game_clock.time.time", return_value=1_900_000_000), \
-             patch("game_clock.time.monotonic", return_value=100):
-            reopened = GameClock(self.database)
-            self.addCleanup(reopened.close)
-            self.assertEqual(reopened.now(), 1_797_000_031)
+    def test_system_time_changes_and_legacy_clock_is_ignored(self):
+        import sqlite3
+        with contextlib.closing(sqlite3.connect(self.database)) as db:
+            db.execute("CREATE TABLE game_clock (id INTEGER PRIMARY KEY, logical_epoch REAL, monotonic_anchor REAL, boot_id TEXT)")
+            db.execute("INSERT INTO game_clock VALUES(1,1900000000,1000,'old-boot')")
+            db.commit()
+        clock = GameClock(self.database)
+        self.addCleanup(clock.close)
+        for system_now in (1797000000, 1797086400, 1796900000):
+            with patch("game_clock.time.time", return_value=system_now):
+                self.assertEqual(clock.now(), system_now)
+        clock.advance(3600)
+        reopened = GameClock(self.database)
+        self.addCleanup(reopened.close)
+        with patch("game_clock.time.time", return_value=1800000000):
+            self.assertEqual(reopened.now(), 1800003600)
 
     def test_cli_advance_crosses_shanghai_day_and_resets_daily_energy(self):
         from scripts.game_time import main
         start = int(datetime.datetime(2026, 10, 13, 15, 59, 59,
                                       tzinfo=datetime.timezone.utc).timestamp())
-        with patch("game_clock.boot_id", return_value="boot-day"), \
-             patch("game_clock.time.time", return_value=start), \
+        with patch("game_clock.time.time", return_value=start), \
              patch("game_clock.time.monotonic", return_value=1000):
             clock = GameClock(self.database)
             self.addCleanup(clock.close)
@@ -82,7 +78,8 @@ class GameClockTests(unittest.TestCase):
             with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 main(["--database", str(self.database), "advance", "--days", "0"])
 
-    def test_gateway_reply_resynchronizes_after_cli_advance(self):
+    @patch("game_clock.time.time", return_value=1_797_000_000)
+    def test_gateway_reply_resynchronizes_after_cli_advance(self, wall_time):
         from gateway import Backend
         from scripts.game_time import main
         config = Path(__file__).resolve().parents[1] / "config/reconstruction/full-config.json"

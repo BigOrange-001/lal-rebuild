@@ -29,7 +29,8 @@ package com.meng52.game.ui.panel
 
       public static function autoMaterialPriority(param1:String) : int
       {
-         return isAutoMinion(param1) ? 0 : 1;
+         var kind:int = autoFeedMaterialKind(param1);
+         return kind == 1 || kind == 2 ? 0 : (isAutoMinion(param1) ? 1 : 2);
       }
 
       public static function isAutoMinion(param1:String) : Boolean
@@ -44,10 +45,9 @@ package com.meng52.game.ui.panel
          {
             return false;
          }
-         // The configured A_3001..A_3008 families are lane minions,
-         // cannon minions and super minions. A_3009/3010 are buildings.
-         var _family:int = int(_parts[1]);
-         return _family >= 3001 && _family <= 3008;
+         var _type:int = int(String(_parts[1]).charAt(0));
+         // Match the game's own minion/monster tab, including every family.
+         return _type == 2 || _type == 3 || _type == 4;
       }
       
       private static function autoFeedMaterialKind(param1:String) : int
@@ -63,7 +63,7 @@ package com.meng52.game.ui.panel
          {
             return 2;
          }
-         return 0;
+         return isAutoMinion(param1) ? 3 : 0;
       }
 
       private static function autoFeedMaterialSafe(param1:Avatar, param2:Object, param3:String) : Boolean
@@ -76,13 +76,14 @@ package com.meng52.game.ui.panel
             param1.loveExp <= 0 && param1.exp <= 0 && param1.getPithNum() <= 0;
       }
 
-      public static function checkBetterFood() : void
+      public static function checkBetterFood(respectRarity:Boolean = false) : void
       {
          var _target:Avatar = new Avatar(GlobalData.$tempAvatarBetter.id);
          var _canSkill:Boolean = _target.skill0 != null && _target.slv < int(GlobalData.$mConfig_simple.slv_config[0]);
          var _remainingExp:Number = Math.max(0,_target.getAllExp(_target.getLvMax()) - (_target.getAllExp() + _target.exp));
          var _biscuits:Array = [];
          var _books:Array = [];
+         var _monsters:Array = [];
          var _owned:Object = GlobalData.$userData.avatars;
          var _id:String;
          var _kind:int;
@@ -93,7 +94,7 @@ package com.meng52.game.ui.panel
          for(_id in _owned)
          {
             _kind = autoFeedMaterialKind(_id);
-            if((_kind == 1 && !_canSkill) || (_kind == 2 && _remainingExp <= 0) || _kind == 0)
+            if((_kind == 1 && !_canSkill) || (_kind >= 2 && _remainingExp <= 0) || _kind == 0 || (respectRarity && !matchesBetterRarity(_id)))
             {
                continue;
             }
@@ -105,7 +106,7 @@ package com.meng52.game.ui.panel
                if(_offer > 0)
                {
                   _candidate = {"id":_id,"data":_row,"offer":_offer};
-                  (_kind == 1 ? _biscuits : _books).push(_candidate);
+                  (_kind == 1 ? _biscuits : (_kind == 2 ? _books : _monsters)).push(_candidate);
                }
             }
             _material.clear();
@@ -114,7 +115,7 @@ package com.meng52.game.ui.panel
          var _selected:int = 0;
          var _totalExp:int = 0;
          var _unaffordable:Boolean = false;
-         var _budget:int = int(GlobalData.$userData.gold);
+         var _budget:Number = Number(GlobalData.$userData.gold);
          var _i:int;
          for(_i = 0; _i < _biscuits.length && _selected < 5; _i++)
          {
@@ -134,21 +135,24 @@ package com.meng52.game.ui.panel
          // Books are useful only while the target still has level XP to gain.
          // Prefer the smallest book that finishes the gap, otherwise the
          // largest available book so the five slots make useful progress.
-         while(_selected < 5 && _totalExp < _remainingExp && _books.length > 0)
+         // Dedicated materials always precede ordinary minions/monsters.
+         for each(var _pool:Array in [_books,_monsters])
+         {
+         while(_selected < 5 && _totalExp < _remainingExp && _pool.length > 0)
          {
             var _best:int = -1;
             var _need:Number = _remainingExp - _totalExp;
-            for(_i = 0; _i < _books.length; _i++)
+            for(_i = 0; _i < _pool.length; _i++)
             {
-               _candidate = _books[_i];
+               _candidate = _pool[_i];
                if(Math.ceil((_totalExp + int(_candidate.offer)) / 10) > _budget)
                {
                   _unaffordable = true;
                   continue;
                }
                if(_best < 0 ||
-                  (int(_candidate.offer) >= _need && (int(_books[_best].offer) < _need || int(_candidate.offer) < int(_books[_best].offer))) ||
-                  (int(_candidate.offer) < _need && int(_books[_best].offer) < _need && int(_candidate.offer) > int(_books[_best].offer)))
+                  (int(_candidate.offer) >= _need && (int(_pool[_best].offer) < _need || int(_candidate.offer) < int(_pool[_best].offer))) ||
+                  (int(_candidate.offer) < _need && int(_pool[_best].offer) < _need && int(_candidate.offer) > int(_pool[_best].offer)))
                {
                   _best = _i;
                }
@@ -157,13 +161,14 @@ package com.meng52.game.ui.panel
             {
                break;
             }
-            _candidate = _books.splice(_best,1)[0];
+            _candidate = _pool.splice(_best,1)[0];
             _totalExp += int(_candidate.offer);
             _row = _candidate.data;
             _row["id"] = _candidate.id;
             _row["give"] = {"exp":_candidate.offer,"gold":Math.ceil(int(_candidate.offer) / 10)};
             GlobalFunction.changeAvatarBetterArray(_candidate.id,false,null,_row);
             _selected++;
+         }
          }
          if(_selected == 0)
          {
@@ -279,7 +284,7 @@ package com.meng52.game.ui.panel
             GlobalFunction.clearAvatarBetterItems();
             if(!_wasSelected)
             {
-               PanelBetterSelect.checkBetterFood();
+               PanelBetterSelect.checkBetterFood(true);
             }
             setList();
             addList();

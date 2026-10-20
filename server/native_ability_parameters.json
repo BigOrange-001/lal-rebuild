@@ -2694,7 +2694,7 @@
         "integer": true,
         "minimum": 1,
         "maximum": 100,
-        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale*manualDamageMultiplier,hops:0,debuff:true};",
+        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*1*scale*manualDamageMultiplier,hops:0,debuff:true};",
         "sourceLine": 880,
         "label": "状态持续回合 · 4"
       },
@@ -2703,16 +2703,16 @@
         "integer": true,
         "minimum": 0,
         "maximum": 32,
-        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale*manualDamageMultiplier,hops:0,debuff:true};",
+        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*1*scale*manualDamageMultiplier,hops:0,debuff:true};",
         "sourceLine": 880,
         "label": "触发 / 状态数值 · 5"
       },
       "cast_6": {
-        "default": 0.35,
+        "default": 1,
         "integer": false,
         "minimum": 0,
         "maximum": 10,
-        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*0.35*scale*manualDamageMultiplier,hops:0,debuff:true};",
+        "context": "target.abilityState[\"malz_\"+abilityIndex]={owner:this,until:target.abilitySerial+1,ticks:3,tickDamage:getDamage()*1*scale*manualDamageMultiplier,hops:0,debuff:true};",
         "sourceLine": 880,
         "label": "触发 / 状态数值 · 6"
       }
@@ -3231,6 +3231,14 @@
         "sourceLine": 946,
         "label": "触发 / 状态数值 · 17"
       }
-    }
+    },
+    "cat_n": {},
+    "cat_c": {},
+    "polar_n": {},
+    "polar_c": {},
+    "santa_n": {},
+    "santa_c": {},
+    "nurse_n": {},
+    "nurse_c": {}
   }
 }

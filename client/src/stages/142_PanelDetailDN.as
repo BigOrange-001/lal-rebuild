@@ -117,18 +117,10 @@ package com.meng52.game.ui.panel
                _loc6_ = _loc14_[1];
                if(!GlobalData.modChannelAllowed(_loc6_,"usage.auxiliary_formation")) continue;
                _loc4_ = null;
-               if(_loc14_[2] != null)
+               _weightedOwned = (param1 == null || param1 === GlobalData.$userData.attrs.dn) && GlobalData.$userData.avatars ? GlobalData.$userData.avatars[_loc6_] : null;
+               if(_loc14_[2] != null && !_weightedOwned)
                {
                   _loc4_ = GlobalFunction.setOtherCfgAvatar(_loc14_[2],true,_loc6_);
-                  _weightedOwned = param1 == null && GlobalData.$userData.avatars ? GlobalData.$userData.avatars[_loc6_] : null;
-                  if(_weightedOwned && _weightedOwned.culture_schema == "weighted-v2")
-                  {
-                     _loc4_.hp = int(_weightedOwned.hp);
-                     _loc4_.ap = int(_weightedOwned.ap);
-                     _loc4_.de_ph = int(_weightedOwned.de_ph);
-                     _loc4_.de_ma = int(_weightedOwned.de_ma);
-                     _loc4_.culture_schema = "weighted-v2";
-                  }
                }
                _loc2_ = new Avatar(_loc6_,_loc4_);
                _loc11_ = Number(getDNaddValue(_loc9_.toString(),_loc14_).currP);

@@ -94,7 +94,11 @@ if (input.mode === 'summon') {
       install(this,name,'param1=-1,param2=-1,param3=false');
     for (const name of ['getHit','getFlee','getCrit','getTough','initFightAttr']) install(this,name,'');
     install(this,'ownGrowthValue','effect');
+    install(this,'inheritSummonPanel','owner,apRatio,hpRatio=-1,dePhRatio=-1,deMaRatio=-1,secondaryRatio=-1');
+    install(this,'scaledSummonStat','value,ratio,minimum');
+    this.isValidSummonMultiplier=ratio=>Avatar.isValidSummonMultiplier(ratio);
     install(this,'teamTalentFlat','effect');
+    install(this,'getBookCombatBonus','stat');
     for (const name of ['getSpeed','getRange']) install(this,name,'param1=false');
     install(this,'init','param1');
     install(this,'goFight','param1,param2,param3,param4=true');
@@ -111,11 +115,16 @@ if (input.mode === 'summon') {
     team:input.team, line:1, pos:1500, hit:11, flee:12, crit:13, tough:14,
     getManualBattleStack() {return 0;},
     teamTalentFlat() {return 0;},
+    getHpMax(){return this.hpMax;},getDamage(){return this.ap;},
+    getDePh(){return this.dePh;},getDeMa(){return this.deMa;},checkTalent(){return 0;},
     buffs:input.buffed ? {hitup:{value:5},fleeup:{value:6},critup:{value:7},toughup:{value:8}} : {}};
   for (const name of ['getHit','getFlee','getCrit','getTough']) install(owner,name,'');
-  const skill = {avatar:owner, skillSetData:{id:input.skillId}, boundedSummons:[],
+  install(owner,'getSummonPanelSnapshot','');
+  const skill = {avatar:owner, skillSetData:{id:input.skillId}, boundedSummons:[],activeNativeSettings:null,activeNativeSource:null,
     captainSummonMultiplier:input.captainSummonMultiplier,
     hasBoundedSummonPolicy(){return true;}};
+  install(skill,'getNativeSetting','key,fallback=null');
+  install(skill,'getMechanismId','');
   install(skill,'getSummonCombatSnapshotApFactor','');
   install(skill,'summonAction','_loc20_,_loc14_=0,actionTargets=null,targetGroups=null');
   context._loc16_=layer;
@@ -180,9 +189,9 @@ class TeemoClientCombatTests(unittest.TestCase):
                                         'getDamage', 'getDePh', 'getDeMa', 'getHit',
                                         'getFlee', 'getCrit', 'getTough', 'init', 'goFight',
                                         'initFightAttr', 'getSpeed', 'getRange',
-                                        'ownGrowthValue', 'teamTalentFlat',
-                                        'isValidSummonMultiplier')),
-                              (skill, ('getSummonCombatSnapshotApFactor',))):
+                                        'ownGrowthValue', 'teamTalentFlat', 'getBookCombatBonus',
+                                        'isValidSummonMultiplier','inheritSummonPanel','scaledSummonStat','getSummonPanelSnapshot')),
+                              (skill, ('getNativeSetting','getMechanismId','getSummonCombatSnapshotApFactor'))):
             for name in names:
                 body = method_body(source, name)
                 body = re.sub(r'for each\s*\(([^)]+) in ([^)]+)\)', r'for (\1 of \2)', body)
@@ -211,7 +220,7 @@ class TeemoClientCombatTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
-    def test_full_summon_path_matches_upstream_panel_stats_at_all_owner_levels(self):
+    def test_full_summon_path_inherits_owner_panel_at_all_owner_levels(self):
         authored = {
             'A_2003_2': [3729.6,447.3,1073.8,128.8,385,46.2,464.8,56],
             'A_2018_2': [6393.6,766.8,1840.8,220.8,660,79.2,796.8,96],
@@ -230,7 +239,7 @@ class TeemoClientCombatTests(unittest.TestCase):
                         panel = [int(pl[i]+pl[i+1]*(level-1)) for i in (0,2,4,6)]
                         factor = self.config['skill'][skill_id].get('captainSummonMultiplier', 1)
                         self.assertEqual(factor, 1)
-                        combat = [int(value * factor) for value in panel]
+                        combat = [int(value * factor) for value in (1000,300,70,80)]
                         self.assertEqual(result['panel'], panel)
                         self.assertEqual(result['combat'], combat)
                         self.assertEqual(result['hp'], combat[0])
@@ -244,7 +253,7 @@ class TeemoClientCombatTests(unittest.TestCase):
                                  action=self.config['skill'][sid]['skill'][0])
         factor = self.config['skill'][sid].get('captainSummonMultiplier', 1)
         self.assertEqual(result['secondary'], [int(value * factor) for value in (16,18,20,22)])
-        self.assertEqual(result['combat'], [int(value * factor) for value in result['panel']])
+        self.assertEqual(result['combat'], [int(value * factor) for value in (1000,300,70,80)])
 
     def test_steel_impact_is_three_full_lane_segments(self):
         expected = ['damage', 1.0, 1, 'FX_STEEL_LANE_WAVE']

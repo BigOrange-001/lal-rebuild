@@ -90,9 +90,9 @@ function unit(team,line,pos){
     countDamage(a,b,base){return [base,false];},checkMiss(){return false;},checkCrit(){return 1;}};
   for(const name of ['showBuff','showCurseImpact','removeAllDebuff','removeAllGoodBuff','checkBuff','getType'])
     install(host,name,name==='showBuff'?'param1':'');
-  install(host,'removeBuff','param1');
+  install(host,'removeBuff','param1,consume=false');
   install(host,'addBuff','param1,param2,param3=0,param4=0,param5=-1');
-  install(host,'injured','param1,param2=1,param3=null,param4=-1,param5=null,param6=false,param7=null,param8=null');
+  install(host,'injured','param1,param2=1,param3=null,param4=-1,param5=null,param6=false,param7=null,param8=null,dotKind=""');
   install(host,'findAimList','param1,param2=null,param3=-1,param4=false');
   install(host,'checkAttack','param1,param2,param3=-1,param4=false,param5=-1,param6=1,param7=0,param8=null,param9=null,param10=1');
   install(host,'checkAllAttack','param1,param2,param3=-1,param4=false,param5=-1,param6=1,param7=0,param8=null,param9=null,param10=1');
@@ -107,12 +107,12 @@ const map={gameMapData:{win:[-1]},getAliveList(side){return (side===team?[caster
 GameMap.currentMap=map;
 if(input.dead) enemies[0].hp=0;
 if(input.immune) enemies.forEach(enemy=>enemy.buffs.purify=new Buff('purify',1));
-const row=input.skill;
+const row=input.skill;context.GlobalData.$mConfig_skill={[row.id]:row};
 const groups=input.fullCast ? {} : {cluster:enemies.slice()};
 const skill={avatar:caster,skills:row.skill,skillSetData:{...row,range:row.pl[2],aoe:row.pl[4],banStand:false},
   currentActionTargets:[],currentTargetGroups:groups,preparingCast:false,sortAnchor:null,
   isSuper:false,abilityHasCast:false,abilityCooldownOverride:-1,inKillRecast:false,lv:1,
-  m_cooldownNum:-1};
+  m_cooldownNum:-1,activeNativeSource:null,activeNativeSettings:null,isModEffectSequence:()=>false,getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,getMechanismId:()=>row.id};
 context.Avatar={beginAbilityAttack(){return {};},endAbilityAttack:noop,skillAreaRadius(v){return v;}};
 layer.infoLayer.showSkill=noop;
 context.GlobalLanguageStr.getStr=id=>String(id);

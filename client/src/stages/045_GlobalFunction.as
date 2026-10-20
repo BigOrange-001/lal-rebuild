@@ -803,52 +803,50 @@ package com.meng52.game.global
       
       public static function getEquipBookUpP(param1:Array, param2:String) : Number
       {
-         var _loc11_:String = null;
-         var _loc9_:Object = null;
-         var _loc5_:Equip = null;
-         var _loc3_:Array = null;
-         var _loc8_:int = 0;
-         var _loc6_:int = 0;
-         var _loc14_:Object = null;
-         var _loc7_:Number = Number(NaN);
-         var _loc13_:int = 0;
-         var _loc10_:Array = null;
-         var _loc4_:int = 0;
-         var _loc12_:Number = 0;
-         if(param1 != null && param1.length > 0)
+         if(!param1 || param1.length == 0 || !GlobalData.$userData.my_equips[param2]) return 0;
+         var table:Array = GlobalData.$mConfig_simple.skill_book_rand as Array;
+         if(!table) return 0;
+         var target:Equip = new Equip(param2,GlobalData.$userData.my_equips[param2]);
+         var level:int = Math.max(1,target.slv);
+         target.clear();
+         var units:Number = 0;
+         var penalty:Number = GlobalData.$mConfig_simple.skill_book_level_penalty == null ? 0.03 : Number(GlobalData.$mConfig_simple.skill_book_level_penalty);
+         var loss:Number = Math.round(penalty * 1000000) * (level - 1);
+         if(level >= 10) return 0;
+         for each(var id:String in param1)
          {
-            _loc11_ = param2;
-            _loc9_ = GlobalData.$userData.my_equips[_loc11_];
-            _loc5_ = null;
-            if(_loc9_ != null)
-            {
-               _loc5_ = new Equip(_loc11_,_loc9_);
-            }
-            _loc3_ = GlobalData.$mConfig_simple.skill_book_rand as Array;
-            _loc8_ = 0;
-            _loc6_ = int(param1.length);
-            _loc7_ = 0;
-            _loc13_ = 0;
-            _loc10_ = null;
-            _loc4_ = 0;
-            _loc8_ = 0;
-            while(_loc8_ < _loc6_)
-            {
-               _loc14_ = GlobalData.$userData.my_equips[param1[_loc8_]];
-               if(_loc14_)
-               {
-                  _loc10_ = String(_loc14_.eid).split("_");
-                  _loc4_ = _loc13_ = int(_loc10_[2]);
-                  _loc7_ = Number(_loc3_[_loc4_ - 1] != null ? _loc3_[_loc4_ - 1] : 0);
-                  _loc12_ += _loc7_;
-               }
-               _loc8_++;
-            }
-            _loc12_ = Math.floor(_loc12_ / _loc5_.slv * 100) * 0.01;
+            var row:Object = GlobalData.$userData.my_equips[id];
+            if(!row) continue;
+            var quality:int = int(String(row.eid).split("_")[2]);
+            if(quality >= 1 && quality <= table.length)
+               units += Math.max(0,Math.round(Number(table[quality-1]) * 1000000) - loss);
          }
-         return _loc12_ >= 1 ? 1 : _loc12_;
+         return Math.min(1,units / 1000000);
       }
-      
+
+      public static function getMaterialChallenge(param1:String) : Object
+      {
+         var row:Object = GlobalData.$mConfig_combat_ploy == null ? null : GlobalData.$mConfig_combat_ploy[param1];
+         if(!row || row.activity_kind != "material") return null;
+         var bid:String = param1.substring(0,param1.lastIndexOf("_"));
+         var now:Date = new Date(Number(SendAndSelect.$systemTimer_nowSecond) * 1000 + 28800000);
+         var month:int = now.getUTCMonth() + 1;
+         var day:int = now.getUTCDate();
+         var today:String = String(now.getUTCFullYear()) + "-" + (month < 10 ? "0" : "") + String(month) + "-" + (day < 10 ? "0" : "") + String(day);
+         var daily:Object = GlobalData.$userData.records.material_activity;
+         var used:int = 0;
+         var bought:int = 0;
+         if(daily && String(daily.day) == today)
+         {
+            used = daily.uses ? int(daily.uses[bid]) : 0;
+            bought = daily.buys ? int(daily.buys[bid]) : 0;
+         }
+         var policy:Object = GlobalData.$mConfig_simple.material_challenge;
+         var base:int = policy ? int(policy.base_attempts) : 12;
+         var price:int = policy ? int(policy.buy_cost) : 50;
+         return {"bid":bid,"remaining":Math.max(0,base+bought-used),"buys":bought,"buyLimit":Math.max(0,getVipLv())+2,"price":price};
+      }
+
       public static function checkEquipTypeWash(param1:String) : Boolean
       {
          var _loc2_:Boolean = false;
@@ -2007,24 +2005,71 @@ package com.meng52.game.global
          return _loc3_ <= _loc2_;
       }
       
+      public static function getRosterTalentPreview(ids:Array, extra:Object = null) : Object
+      {
+         var result:Object = {"team_hit":0,"team_flee":0,"team_crit":0,"team_tough":0};
+         var rows:Array = [];
+         var profile:Object = GlobalData.$userData;
+         if(!profile || !profile.avatars || !GlobalData.$mConfig_talent) return result;
+         for each(var id:Object in ids) if(id != null && profile.avatars[id]) rows.push(profile.avatars[id]);
+         if(extra) rows.push(extra);
+         for each(var row:Object in rows)
+         {
+            var tid:Object = row.talent;
+            if(tid && !(tid is String)) tid = tid.id;
+            var definition:Object = tid ? GlobalData.$mConfig_talent[String(tid)] : null;
+            if(definition && result.hasOwnProperty(String(definition.growth_effect)))
+            {
+               var effect:String = String(definition.growth_effect);
+               result[effect] = Math.max(Number(result[effect]),Number(definition.growth_value));
+            }
+         }
+         return result;
+      }
+
+      public static function getOwnedAvatarPower(id:String, captain:Boolean = false) : Number
+      {
+         var profile:Object = GlobalData.$userData;
+         if(!profile || !profile.avatars || !profile.avatars[id]) return 0;
+         var avatar:Avatar = new Avatar(id);
+         var main:Array = profile.team && profile.team[0] is Array ? profile.team[0] as Array : [];
+         var slot:int = main.indexOf(id);
+         if(slot >= 0)
+         {
+            var groups:Array = profile.as_equips is Array ? profile.as_equips as Array : [];
+            avatar.setEquips(slot < groups.length && groups[slot] is Array ? groups[slot] : []);
+            avatar.setDestinyAndDN(id,main);
+            var preview:Object = avatar;
+            preview.previewTeamTalentBonuses = getRosterTalentPreview(main);
+            avatar.initFightAttr();
+         }
+         var value:Number = avatar.getPower(captain,-1,slot >= 0);
+         avatar.clear();
+         return value;
+      }
+
       public static function getTeamPower(param1:Array, param2:* = null) : Number
       {
          var _loc3_:Avatar = null;
          var _loc7_:Object = null;
          var _loc9_:int = 0;
-         var _loc6_:int = int(param1.length);
+         var _loc6_:int = param1 == null ? 0 : int(param1.length);
          var _loc4_:String = "";
          var _loc8_:Number = 0;
-         var _loc5_:Array = GlobalData.$userData.as_equips;
+         if(param1 == null || !GlobalData.$userData || !GlobalData.$userData.avatars) return 0;
+         var _loc5_:Array = GlobalData.$userData.as_equips is Array ? GlobalData.$userData.as_equips as Array : [];
+         var talentPreview:Object = getRosterTalentPreview(param1,param2 ? param2.avatar : null);
          _loc9_ = 0;
          while(_loc9_ < _loc6_)
          {
             _loc4_ = param1[_loc9_];
-            if(!Tools.strIsNull(_loc4_))
+            if(!Tools.strIsNull(_loc4_) && GlobalData.$userData.avatars[_loc4_] != null)
             {
                _loc3_ = new Avatar(_loc4_);
-               _loc3_.setEquips(_loc5_[_loc9_]);
+               _loc3_.setEquips(_loc9_ < _loc5_.length && _loc5_[_loc9_] is Array ? _loc5_[_loc9_] : []);
                _loc3_.setDestinyAndDN(_loc4_,param1);
+               var preview:Object = _loc3_;
+               preview.previewTeamTalentBonuses = talentPreview;
                _loc3_.initFightAttr();
                _loc8_ += _loc3_.getPower(_loc9_ == 0,-1,true);
                _loc3_.clear();
@@ -2035,6 +2080,8 @@ package com.meng52.game.global
          {
             _loc7_ = param2.avatar;
             _loc3_ = new Avatar(_loc7_.id,_loc7_);
+            var extraPreview:Object = _loc3_;
+            extraPreview.previewTeamTalentBonuses = talentPreview;
             _loc3_.initFightAttr();
             _loc8_ += _loc3_.getPower(param2.isF == 1);
             _loc3_.clear();
@@ -2683,30 +2730,74 @@ package com.meng52.game.global
          return _loc6_;
       }
       
+      private static var inventoryLockPending:Object = {};
+
+      public static function setInventoryLock(kind:String, id:String, locked:Boolean, done:Function = null) : void
+      {
+         var profile:Object = GlobalData.$userData;
+         if(!profile || !id) return;
+         var uid:String = String(profile.uid);
+         var catalog:String = kind == "hero" ? "avatars" : "my_equips";
+         if(!profile[catalog] || !profile[catalog][id]) return;
+         var key:String = uid+":"+kind+":"+id;
+         if(inventoryLockPending[key]) return;
+         inventoryLockPending[key] = true;
+         var params:Object = {"kind":kind,"id":id,"locked":locked};
+         var notify:Function = function():void
+         {
+            GlobalData.$mEventDispatcher.dispatchEventWith("change_team_member_lock");
+            GlobalData.$mEventDispatcher.dispatchEventWith("update_avatar_sell");
+            GlobalData.$mEventDispatcher.dispatchEventWith("update_avatar_better_data");
+            if(kind == "hero" && GlobalData.$tempLockItem && GlobalData.$tempLockItem.id == id && GlobalData.$tempLockItem.fun is Function) GlobalData.$tempLockItem.fun();
+            if(done != null) done();
+         };
+         var failed:Function = function(event:NetEvent):void
+         {
+            var error:Object = event.data;
+            var receipt:Object = error && error.profile_receipt ? error.profile_receipt : error;
+            if(!receipt || !receipt.params || receipt.params.actionID != params.actionID) return;
+            SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",failed);
+            delete inventoryLockPending[key];
+            if(!GlobalData.$userData || String(GlobalData.$userData.uid) != uid) return;
+            notify();
+         };
+         SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",failed);
+         SendAndSelect.sendAndSelectService("user.inventory_lock",params,function(receipt:Object):void
+         {
+            SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",failed);
+            delete inventoryLockPending[key];
+            if(!GlobalData.$userData || String(GlobalData.$userData.uid) != uid) return;
+            if(kind == "hero")
+            {
+               var parts:Array = id.split("|");
+               var localKey:String = parts.length > 1 ? String(parts[1]) : id;
+               if(!GlobalData.$tempAvatarLock) GlobalData.$tempAvatarLock = {};
+               var current:Object = GlobalData.$userData.avatars[id];
+               if(current && (current.lock || current.locked)) GlobalData.$tempAvatarLock[localKey] = localKey;
+               else if(current) delete GlobalData.$tempAvatarLock[localKey];
+               if(GlobalData.$localUser)
+               {
+                  GlobalData.$localUser["avatarLock"] = GlobalData.$tempAvatarLock;
+                  GlobalLocalStore.setCurrUserData(SendAndSelect.$uid+"_"+GlobalData.$mServiceID,GlobalData.$localUser);
+               }
+            }
+            notify();
+         });
+      }
+
       public static function changeLock(param1:String, param2:Boolean) : void
       {
-         var _loc3_:Array = param1.split("|");
-         if(_loc3_ == null)
-         {
-            return;
-         }
-         if(param2)
-         {
-            GlobalData.$tempAvatarLock[_loc3_[1]] = _loc3_[1];
-         }
-         else
-         {
-            GlobalData.$tempAvatarLock[_loc3_[1]] = null;
-            delete GlobalData.$tempAvatarLock[_loc3_[1]];
-         }
-         GlobalData.$localUser["avatarLock"] = GlobalData.$tempAvatarLock;
-         GlobalLocalStore.setCurrUserData(SendAndSelect.$uid + "_" + GlobalData.$mServiceID,GlobalData.$localUser);
+         setInventoryLock("hero",param1,param2);
       }
       
       public static function checkLock(param1:String) : Boolean
       {
-         var _loc2_:Array = param1.split("|");
-         return GlobalData.$tempAvatarLock[_loc2_[1]] == null ? false : true;
+         if(param1 == null) return false;
+         var row:Object = GlobalData.$userData && GlobalData.$userData.avatars ? GlobalData.$userData.avatars[param1] : null;
+         if(row && (row.lock || row.locked)) return true;
+         var parts:Array = param1.split("|");
+         var localKey:String = parts.length > 1 ? String(parts[1]) : param1;
+         return GlobalData.$tempAvatarLock && GlobalData.$tempAvatarLock[localKey] != null;
       }
       
       public static function checkCombatWinAndLose(param1:Object) : Object
@@ -4839,6 +4930,14 @@ package com.meng52.game.global
          _top.updateVip();
       }
       
+      public static function refreshOwnedTeamPower() : void
+      {
+         var profile:Object = GlobalData.$userData;
+         if(!profile || !(profile.team is Array) || !(profile.team[0] is Array) || !GlobalData.$mConfig_avatar || !GlobalData.$mConfig_simple) return;
+         GlobalData.$tempTeamPowerTemp = getTeamPower(profile.team[0]);
+         if(GlobalData.$mEventDispatcher) GlobalData.$mEventDispatcher.dispatchEventWith("update_team_power");
+      }
+
       public static function applyProfileStateSync(param1:Object) : Boolean
       {
          if(!GlobalData.applyProfileSnapshot(param1))
@@ -4846,10 +4945,14 @@ package com.meng52.game.global
             return false;
          }
          GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
-         refreshProfileTopBar();
+         // A rendered panel is a projection of a committed snapshot. Its
+         // failure cannot turn an accepted gameplay operation into a retry.
+         try { refreshProfileTopBar(); } catch(topError:Error) { trace("profile top bar refresh: "+topError.message); }
+         try { refreshOwnedTeamPower(); } catch(powerError:Error) { trace("profile team power refresh: "+powerError.message); }
          if(GlobalData.$mEventDispatcher != null)
          {
-            GlobalData.$mEventDispatcher.dispatchEventWith("profile_state_sync");
+            try { GlobalData.$mEventDispatcher.dispatchEventWith("profile_state_sync"); }
+            catch(panelError:Error) { trace("profile panel refresh: "+panelError.message); }
          }
          return true;
       }

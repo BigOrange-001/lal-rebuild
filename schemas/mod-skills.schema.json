@@ -426,6 +426,8 @@
                       "builtin:skill/S_201309_6",
                       "builtin:skill/S_201310_5",
                       "builtin:skill/S_201310_6",
+                      "builtin:skill/S_201311_5",
+                      "builtin:skill/S_201311_6",
                       "builtin:skill/S_202013_3",
                       "builtin:skill/S_202013_4",
                       "builtin:skill/S_202013_5",
@@ -625,6 +627,14 @@
                       "builtin:skill/S_22551115_6",
                       "builtin:skill/S_22551138_5",
                       "builtin:skill/S_22551138_6",
+                      "builtin:skill/S_271129_5",
+                      "builtin:skill/S_271129_6",
+                      "builtin:skill/S_271202_5",
+                      "builtin:skill/S_271202_6",
+                      "builtin:skill/S_271208_5",
+                      "builtin:skill/S_271208_6",
+                      "builtin:skill/S_271217_5",
+                      "builtin:skill/S_271217_6",
                       "builtin:skill/S_301001_2",
                       "builtin:skill/S_301001_3",
                       "builtin:skill/S_301001_4",
@@ -705,6 +715,8 @@
                       "builtin:skill/S_301309_6",
                       "builtin:skill/S_301310_5",
                       "builtin:skill/S_301310_6",
+                      "builtin:skill/S_301311_5",
+                      "builtin:skill/S_301311_6",
                       "builtin:skill/S_302013_3",
                       "builtin:skill/S_302013_4",
                       "builtin:skill/S_302013_5",
@@ -903,6 +915,14 @@
                       "builtin:skill/S_32551115_6",
                       "builtin:skill/S_32551138_5",
                       "builtin:skill/S_32551138_6",
+                      "builtin:skill/S_371129_5",
+                      "builtin:skill/S_371129_6",
+                      "builtin:skill/S_371202_5",
+                      "builtin:skill/S_371202_6",
+                      "builtin:skill/S_371208_5",
+                      "builtin:skill/S_371208_6",
+                      "builtin:skill/S_371217_5",
+                      "builtin:skill/S_371217_6",
                       "builtin:skill/S_401129_5",
                       "builtin:skill/S_401129_6",
                       "builtin:skill/S_401201_5",
@@ -954,7 +974,17 @@
                       "builtin:skill/S_401309_6",
                       "builtin:skill/S_401310_5",
                       "builtin:skill/S_401310_6",
+                      "builtin:skill/S_401311_5",
+                      "builtin:skill/S_401311_6",
                       "builtin:skill/S_402024_6",
+                      "builtin:skill/S_471129_5",
+                      "builtin:skill/S_471129_6",
+                      "builtin:skill/S_471202_5",
+                      "builtin:skill/S_471202_6",
+                      "builtin:skill/S_471208_5",
+                      "builtin:skill/S_471208_6",
+                      "builtin:skill/S_471217_5",
+                      "builtin:skill/S_471217_6",
                       "builtin:skill/S_601001_2",
                       "builtin:skill/S_611001_2",
                       "builtin:skill/S_621016_3",
@@ -1347,8 +1377,20 @@
                       "builtin:skill/S_651143_6",
                       "builtin:skill/S_651205_5",
                       "builtin:skill/S_651205_6",
+                      "builtin:skill/S_8140192756845514_5",
+                      "builtin:skill/S_8144653284274070_5",
+                      "builtin:skill/S_8193316589355160_5",
+                      "builtin:skill/S_8198237280098187_6",
+                      "builtin:skill/S_8208935632590473_5",
                       "builtin:skill/S_821003_2",
                       "builtin:skill/S_821018_2",
+                      "builtin:skill/S_8212418996671211_6",
+                      "builtin:skill/S_8261599924272710_5",
+                      "builtin:skill/S_8264929707065721_5",
+                      "builtin:skill/S_857409198208491_5",
+                      "builtin:skill/S_864956142058865_6",
+                      "builtin:skill/S_881002043954425_6",
+                      "builtin:skill/S_894100929966047_5",
                       "builtin:skill/S_9000_1",
                       "builtin:skill/S_9000_2",
                       "builtin:skill/S_9000_3",
@@ -1422,7 +1464,95 @@
                       "builtin:skill/S_9170_6",
                       "builtin:skill/S_9171_4",
                       "builtin:skill/S_9171_5",
-                      "builtin:skill/S_9171_6"
+                      "builtin:skill/S_9171_6",
+                      "builtin:skill/S_96001_2",
+                      "builtin:skill/S_96001_3",
+                      "builtin:skill/S_96001_4",
+                      "builtin:skill/S_96001_5",
+                      "builtin:skill/S_96001_6",
+                      "builtin:skill/S_96001_7",
+                      "builtin:skill/S_96002_2",
+                      "builtin:skill/S_96002_3",
+                      "builtin:skill/S_96002_4",
+                      "builtin:skill/S_96002_5",
+                      "builtin:skill/S_96002_6",
+                      "builtin:skill/S_96002_7",
+                      "builtin:skill/S_96003_2",
+                      "builtin:skill/S_96003_3",
+                      "builtin:skill/S_96003_4",
+                      "builtin:skill/S_96003_5",
+                      "builtin:skill/S_96003_6",
+                      "builtin:skill/S_96003_7",
+                      "builtin:skill/S_96004_2",
+                      "builtin:skill/S_96004_3",
+                      "builtin:skill/S_96004_4",
+                      "builtin:skill/S_96004_5",
+                      "builtin:skill/S_96004_6",
+                      "builtin:skill/S_96004_7",
+                      "builtin:skill/S_96005_2",
+                      "builtin:skill/S_96005_3",
+                      "builtin:skill/S_96005_4",
+                      "builtin:skill/S_96005_5",
+                      "builtin:skill/S_96005_6",
+                      "builtin:skill/S_96005_7",
+                      "builtin:skill/S_96006_2",
+                      "builtin:skill/S_96006_3",
+                      "builtin:skill/S_96006_4",
+                      "builtin:skill/S_96006_5",
+                      "builtin:skill/S_96006_6",
+                      "builtin:skill/S_96006_7",
+                      "builtin:skill/S_96007_2",
+                      "builtin:skill/S_96007_3",
+                      "builtin:skill/S_96007_4",
+                      "builtin:skill/S_96007_5",
+                      "builtin:skill/S_96007_6",
+                      "builtin:skill/S_96007_7",
+                      "builtin:skill/S_96008_2",
+                      "builtin:skill/S_96008_3",
+                      "builtin:skill/S_96008_4",
+                      "builtin:skill/S_96008_5",
+                      "builtin:skill/S_96008_6",
+                      "builtin:skill/S_96008_7",
+                      "builtin:skill/S_96009_3",
+                      "builtin:skill/S_96009_4",
+                      "builtin:skill/S_96009_5",
+                      "builtin:skill/S_96010_3",
+                      "builtin:skill/S_96010_4",
+                      "builtin:skill/S_96010_5",
+                      "builtin:skill/S_96201_2",
+                      "builtin:skill/S_96201_3",
+                      "builtin:skill/S_96201_4",
+                      "builtin:skill/S_96201_5",
+                      "builtin:skill/S_96501_2",
+                      "builtin:skill/S_96501_3",
+                      "builtin:skill/S_96501_4",
+                      "builtin:skill/S_96501_5",
+                      "builtin:skill/S_96501_6",
+                      "builtin:skill/S_96501_7",
+                      "builtin:skill/S_96502_2",
+                      "builtin:skill/S_96502_3",
+                      "builtin:skill/S_96502_4",
+                      "builtin:skill/S_96502_5",
+                      "builtin:skill/S_96502_6",
+                      "builtin:skill/S_96502_7",
+                      "builtin:skill/S_96503_2",
+                      "builtin:skill/S_96503_3",
+                      "builtin:skill/S_96503_4",
+                      "builtin:skill/S_96503_5",
+                      "builtin:skill/S_96503_6",
+                      "builtin:skill/S_96503_7",
+                      "builtin:skill/S_96504_2",
+                      "builtin:skill/S_96504_3",
+                      "builtin:skill/S_96504_4",
+                      "builtin:skill/S_96504_5",
+                      "builtin:skill/S_96504_6",
+                      "builtin:skill/S_96504_7",
+                      "builtin:skill/S_96505_3",
+                      "builtin:skill/S_96505_4",
+                      "builtin:skill/S_96505_5",
+                      "builtin:skill/S_96506_3",
+                      "builtin:skill/S_96506_4",
+                      "builtin:skill/S_96506_5"
                     ]
                   },
                   "sourceDigest": {
@@ -1445,6 +1575,9 @@
                           {
                             "type": "array",
                             "maxItems": 256
+                          },
+                          {
+                            "type": "null"
                           }
                         ]
                       },
@@ -1500,6 +1633,28 @@
                           {
                             "type": "string",
                             "maxLength": 8000
+                          }
+                        ]
+                      },
+                      "skillUpPaths": {
+                        "anyOf": [
+                          {
+                            "type": "array",
+                            "maxItems": 256
+                          },
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "maxItems": 256
+                          }
+                        ]
+                      },
+                      "dotRule": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
                           }
                         ]
                       },
@@ -1837,10 +1992,6 @@
                       },
                       "actionTargetGroups": {
                         "anyOf": [
-                          {
-                            "type": "array",
-                            "maxItems": 256
-                          },
                           {
                             "type": "array",
                             "maxItems": 256
@@ -2475,14 +2626,6 @@
                           {
                             "type": "array",
                             "maxItems": 256
-                          },
-                          {
-                            "type": "array",
-                            "maxItems": 256
-                          },
-                          {
-                            "type": "array",
-                            "maxItems": 256
                           }
                         ]
                       },
@@ -2698,21 +2841,6 @@
                           }
                         ]
                       },
-                      "skillUpPaths": {
-                        "anyOf": [
-                          {
-                            "type": "array",
-                            "maxItems": 256
-                          },
-                          {
-                            "type": "null"
-                          },
-                          {
-                            "type": "array",
-                            "maxItems": 256
-                          }
-                        ]
-                      },
                       "manualSummonPolicy": {
                         "anyOf": [
                           {
@@ -2872,6 +3000,20 @@
                             "type": "number",
                             "minimum": -10000000,
                             "maximum": 10000000
+                          }
+                        ]
+                      },
+                      "dotPhantasmRule": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "bookRule": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
                           }
                         ]
                       }
@@ -5189,6 +5331,54 @@
                           "cast_17"
                         ],
                         "additionalProperties": false
+                      },
+                      "cat_n": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
+                      },
+                      "cat_c": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
+                      },
+                      "polar_n": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
+                      },
+                      "polar_c": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
+                      },
+                      "santa_n": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
+                      },
+                      "santa_c": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
+                      },
+                      "nurse_n": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
+                      },
+                      "nurse_c": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                        "additionalProperties": false
                       }
                     },
                     "required": [],
@@ -5221,8 +5411,14 @@
                         "battle_stack",
                         "battle_stack_unconditional",
                         "bless",
+                        "book_bonus",
+                        "book_burn",
+                        "book_passive",
                         "burn",
+                        "caster_ap_shield",
+                        "caster_hp_heal",
                         "caster_hp_shield",
+                        "cat_passive",
                         "clone_normal",
                         "combo",
                         "conditional_damage",
@@ -5256,8 +5452,10 @@
                         "move_to_target",
                         "move_to_target_lane",
                         "normal_on_hero_kill",
+                        "nurse_healing",
                         "pending_area_strike",
                         "poison",
+                        "polar_basic",
                         "pull",
                         "pull_group",
                         "purify",
@@ -5265,6 +5463,7 @@
                         "push_aoe",
                         "recast_on_kill",
                         "ricochet_bursts",
+                        "santa_kill",
                         "select_target",
                         "shield",
                         "shield_composite",
@@ -5283,6 +5482,7 @@
                         "sunder_percent",
                         "target_hp_shield",
                         "taunt",
+                        "timed_bless",
                         "timed_stack",
                         "true_damage",
                         "trynd_undying",
@@ -5301,12 +5501,47 @@
                     "settings": {
                       "type": "object",
                       "properties": {
-                        "manualDamageMultiplier": {
+                        "manualClonePolicy": {
                           "anyOf": [
                             {
-                              "type": "number",
-                              "minimum": -10000000,
-                              "maximum": 10000000
+                              "type": "object",
+                              "properties": {
+                                "familyKey": {
+                                  "type": "string",
+                                  "maxLength": 8000
+                                },
+                                "maxAlive": {
+                                  "type": "number",
+                                  "minimum": -10000000,
+                                  "maximum": 10000000
+                                },
+                                "panelStatRatio": {
+                                  "type": "number",
+                                  "minimum": -10000000,
+                                  "maximum": 10000000
+                                },
+                                "ttlOwnTurns": {
+                                  "type": "number",
+                                  "minimum": -10000000,
+                                  "maximum": 10000000
+                                },
+                                "replaceOldest": {
+                                  "type": "boolean"
+                                },
+                                "skillId": {
+                                  "type": "string",
+                                  "maxLength": 8000
+                                }
+                              },
+                              "required": [
+                                "familyKey",
+                                "maxAlive",
+                                "panelStatRatio",
+                                "ttlOwnTurns",
+                                "replaceOldest",
+                                "skillId"
+                              ],
+                              "additionalProperties": false
                             }
                           ]
                         },
@@ -5393,69 +5628,7 @@
                             }
                           ]
                         },
-                        "manualEffectMultiplier": {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "minimum": -10000000,
-                              "maximum": 10000000
-                            }
-                          ]
-                        },
                         "captainSummonMultiplier": {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "minimum": -10000000,
-                              "maximum": 10000000
-                            }
-                          ]
-                        },
-                        "manualClonePolicy": {
-                          "anyOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "familyKey": {
-                                  "type": "string",
-                                  "maxLength": 8000
-                                },
-                                "maxAlive": {
-                                  "type": "number",
-                                  "minimum": -10000000,
-                                  "maximum": 10000000
-                                },
-                                "panelStatRatio": {
-                                  "type": "number",
-                                  "minimum": -10000000,
-                                  "maximum": 10000000
-                                },
-                                "ttlOwnTurns": {
-                                  "type": "number",
-                                  "minimum": -10000000,
-                                  "maximum": 10000000
-                                },
-                                "replaceOldest": {
-                                  "type": "boolean"
-                                },
-                                "skillId": {
-                                  "type": "string",
-                                  "maxLength": 8000
-                                }
-                              },
-                              "required": [
-                                "familyKey",
-                                "maxAlive",
-                                "panelStatRatio",
-                                "ttlOwnTurns",
-                                "replaceOldest",
-                                "skillId"
-                              ],
-                              "additionalProperties": false
-                            }
-                          ]
-                        },
-                        "manualDefenseBuffMultiplier": {
                           "anyOf": [
                             {
                               "type": "number",
@@ -5505,6 +5678,33 @@
                                 "status"
                               ],
                               "additionalProperties": false
+                            }
+                          ]
+                        },
+                        "manualDamageMultiplier": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": -10000000,
+                              "maximum": 10000000
+                            }
+                          ]
+                        },
+                        "manualDefenseBuffMultiplier": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": -10000000,
+                              "maximum": 10000000
+                            }
+                          ]
+                        },
+                        "manualEffectMultiplier": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": -10000000,
+                              "maximum": 10000000
                             }
                           ]
                         }

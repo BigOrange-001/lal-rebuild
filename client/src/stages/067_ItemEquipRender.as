@@ -9,6 +9,7 @@ package com.meng52.game.ui.element
    import starling.events.Event;
    import starling.events.Touch;
    import starling.events.TouchEvent;
+   import starling.display.Image;
    import starling.text.TextField;
    
    public class ItemEquipRender extends ItemEquipSelect implements IListItemRenderer
@@ -39,6 +40,13 @@ package com.meng52.game.ui.element
             _bg.width = GlobalData.$mStageWidth - 165;
          }
          setEquip(param1["id"],param1,8,5);
+         if(param1.lock || param1.locked)
+         {
+            var lockBadge:Image = GlobalFunction.createImage("UI_icon_lock_1_0000");
+            lockBadge.width = lockBadge.height = 22;
+            lockBadge.x = 80;lockBadge.y = 76;lockBadge.touchable = false;
+            addChild(lockBadge);
+         }
          if(param1.type == 0)
          {
             var actionLabel:int = GlobalData.$tempEquipFunId == 2 ? 20260 : 20268;

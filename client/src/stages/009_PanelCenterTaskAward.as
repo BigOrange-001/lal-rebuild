@@ -16,6 +16,11 @@ package com.meng52.game.ui.screen
    import feathers.data.ListCollection;
    import feathers.layout.VerticalLayout;
    import starling.events.Event;
+   import starling.core.Starling;
+   import starling.animation.Tween;
+   import starling.display.Quad;
+   import starling.display.DisplayObject;
+   import flash.geom.Rectangle;
    
    public class PanelCenterTaskAward extends PanelCenterPVE
    {
@@ -29,6 +34,7 @@ package com.meng52.game.ui.screen
       private var adventureButtons:Array = [];
       private var adventureStatus:TextField;
       private var adventureTimer:Timer;
+      private var adventureUnderline:Quad;
       
       public function PanelCenterTaskAward()
       {
@@ -408,6 +414,8 @@ package com.meng52.game.ui.screen
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
          adventureRequest++;
+         if(adventureUnderline) Starling.juggler.removeTweens(adventureUnderline);
+         if(mList) Starling.juggler.removeTweens(mList);
          if(adventureTimer)
          {
             adventureTimer.stop();
@@ -424,26 +432,41 @@ package com.meng52.game.ui.screen
       {
          if(adventureStatus) return;
          var width:Number = GlobalData.$mStageWidth;
-         var title:TextField = GlobalFunction.createTextField(width - 24,44,"奇遇任务","",30,16764006,true);
-         title.x = 12;
+         var header:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_1_0000",width - 24,168,new Rectangle(83,94,88,100));
+         header.x = 12;
+         header.y = 4;
+         header.touchable = false;
+         addChild(header);
+         var titlePlate:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_3_0000",width - 100,40,new Rectangle(90,8,82,30));
+         titlePlate.x = 50;titlePlate.y = 8;titlePlate.touchable = false;addChild(titlePlate);
+         var title:TextField = GlobalFunction.createTextField(width - 48,36,"奇遇任务","",28,16764006,true);
+         title.x = 24;
+         title.y = 10;
          title.hAlign = "center";
          title.touchable = false;
          addChild(title);
          var labels:Array = ["日常任务","累计充值","循环奖励"];
-         var buttonWidth:Number = (width - 32) / 3;
+         var buttonWidth:Number = (width - 48) / 3;
          for(var i:int = 0; i < labels.length; i++)
          {
-            var button:LOL_Scale9Button = new LOL_Scale9Button(labels[i],buttonWidth,48,"UI_btn_enterGame_0_0000");
+            var button:LOL_Scale9Button = new LOL_Scale9Button(labels[i],buttonWidth,44,"UI_btn_enterGame_0_0000");
             button.name = String(i);
-            button.x = 12 + i * (buttonWidth + 4);
-            button.y = 48;
+            button.x = 20 + i * (buttonWidth + 4);
+            button.y = 54;
+            button.fontSize = 19;
             button.addEventListener("triggered",onAdventureTab);
             addChild(button);
             adventureButtons.push(button);
          }
-         adventureStatus = GlobalFunction.createTextField(width - 36,60,"正在加载任务…","",20,16777215);
-         adventureStatus.x = 18;
-         adventureStatus.y = 102;
+         adventureUnderline = new Quad(buttonWidth - 12,3,16764006);
+         adventureUnderline.x = 26;
+         adventureUnderline.y = 100;
+         adventureUnderline.touchable = false;
+         addChild(adventureUnderline);
+         adventureStatus = GlobalFunction.createTextField(width - 52,56,"正在加载任务…","",18,0xBFC4CA);
+         adventureStatus.x = 26;
+         adventureStatus.y = 108;
+         adventureStatus.autoScale = true;
          adventureStatus.hAlign = "left";
          adventureStatus.touchable = false;
          addChild(adventureStatus);
@@ -461,10 +484,25 @@ package com.meng52.game.ui.screen
       private function onAdventureTab(param1:Event) : void
       {
          var button:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
-         if(button == null) return;
+         if(button == null || int(button.name) == adventureTab) return;
          adventureTab = int(button.name);
          if(mList) mList.verticalScrollPosition = 0;
          addList();
+         if(adventureUnderline)
+         {
+            Starling.juggler.removeTweens(adventureUnderline);
+            var indicator:Tween = new Tween(adventureUnderline,0.18,"easeOut");
+            indicator.animate("x",button.x + 6);
+            Starling.juggler.add(indicator);
+         }
+         if(mList)
+         {
+            Starling.juggler.removeTweens(mList);
+            mList.alpha = 0.55;
+            var content:Tween = new Tween(mList,0.18,"easeOut");
+            content.fadeTo(1);
+            Starling.juggler.add(content);
+         }
       }
 
       private function onUPDATE_SHOP_COIN(param1:Event) : void
@@ -499,8 +537,8 @@ package com.meng52.game.ui.screen
          mList.isSelectable = false;
          mList.layout = layout;
          mList.width = GlobalData.$mStageWidth;
-         mList.height = Math.max(180,GlobalData.$center_height_curr - 121 - 178);
-         mList.y = 166;
+         mList.height = Math.max(80,GlobalData.$center_height_curr - 121 - 184 - 12);
+         mList.y = 184;
          mList.verticalScrollBarFactory = GlobalData.verticalScrollBarFactory;
          mList.snapScrollPositionsToPixels = true;
          mList.dataProvider = new ListCollection();
@@ -516,29 +554,43 @@ package com.meng52.game.ui.screen
          if(adventureTab == 2) source = [adventureData.repeat];
          adventureReady = 0;
          var item:Object;
-         for each(item in adventureData.daily) if(item.claimable) adventureReady++;
-         for each(item in adventureData.milestones) if(item.claimable) adventureReady++;
-         if(adventureData.repeat && adventureData.repeat.claimable) adventureReady++;
+         var counts:Array = [0,0,0];
+         for each(item in adventureData.daily) if(item.claimable) counts[0]++;
+         for each(item in adventureData.milestones) if(item.claimable) counts[1]++;
+         if(adventureData.repeat && adventureData.repeat.claimable) counts[2] = 1;
+         adventureReady = counts[0] + counts[1] + counts[2];
          for each(item in source)
          {
             var row:Object = Tools.clone(item);
             row.adventure_task = true;
             row.kind = adventureTab == 0 ? "daily" : adventureTab == 1 ? "milestone" : "repeat";
             row.busy = adventureClaiming;
-            if(adventureTab == 0) row.progress_text = "进度：" + Math.min(Number(row.count),Number(row.goal)) + "/" + row.goal;
+            row.progress_ratio = row.claimed || row.claimable ? 1 : 0;
+            if(adventureTab == 0)
+            {
+               row.progress_text = "进度：" + Math.min(Number(row.count),Number(row.goal)) + "/" + row.goal;
+               row.progress_ratio = Number(row.goal) > 0 ? Math.min(1,Number(row.count) / Number(row.goal)) : 0;
+            }
             else if(adventureTab == 1)
             {
                row.title = "累计充值" + row.required_yuan + "元";
+               row.progress_ratio = Number(row.required_yuan) > 0 ? Math.min(1,Number(adventureData.paid_yuan) / Number(row.required_yuan)) : 0;
                row.progress_text = "进度：" + Math.min(Number(adventureData.paid_yuan),Number(row.required_yuan)) + "/" + row.required_yuan + "元";
             }
             else
             {
                row.title = "每累计充值2000元，再领橙卡";
+               row.progress_ratio = row.claimable ? 1 : Number(adventureData.paid_yuan) % 2000 / 2000;
                row.progress_text = "已领取" + row.claimed_count + "张，当前可领取" + row.available_count + "张";
             }
             rows.push(row);
          }
-         for(var i:int = 0; i < adventureButtons.length; i++) adventureButtons[i].alpha = i == adventureTab ? 1 : 0.65;
+         var labels:Array = ["日常任务","累计充值","循环奖励"];
+         for(var i:int = 0; i < adventureButtons.length; i++)
+         {
+            adventureButtons[i].alpha = i == adventureTab ? 1 : 0.72;
+            adventureButtons[i].text = labels[i] + (counts[i] > 0 ? " · " + counts[i] : "");
+         }
          adventureStatus.text = adventureTab == 0 ? "每日零点刷新；完成后分别领取奖励。" :
             "累计充值：" + adventureData.paid_yuan + "元\n累计与循环奖励可同时领取，首充翻倍不计入累计金额。";
          mList.dataProvider = new ListCollection();
@@ -560,8 +612,8 @@ package com.meng52.game.ui.screen
          {
             if(stage == null || request != adventureRequest) return;
             adventureClaiming = false;
-            if(reply == null || int(reply.return_code) != 0 || reply.data == null) { update(); return; }
-            if(reply.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(reply.state_sync)) { update(); return; }
+            if(reply == null || int(reply.return_code) != 0 || reply.data == null) { addList(); update(); return; }
+            if(reply.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(reply.state_sync)) { addList(); update(); return; }
             adventureData = reply.data.tasks;
             addList();
             var lines:Array = [];
@@ -584,7 +636,7 @@ package com.meng52.game.ui.screen
          adventureClaiming = false;
          if(stage != null)
          {
-            if(reply.method == "user.adventure_task_claim") update();
+            if(reply.method == "user.adventure_task_claim") { addList(); update(); }
             else if(adventureStatus) adventureStatus.text = "任务加载失败，请重新进入奇遇。";
          }
       }

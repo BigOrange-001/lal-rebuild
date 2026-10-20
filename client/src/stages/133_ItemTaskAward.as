@@ -23,6 +23,9 @@ package com.meng52.game.ui.element
    import starling.display.DisplayObject;
    import starling.display.Image;
    import starling.display.Sprite;
+   import starling.display.Quad;
+   import starling.core.Starling;
+   import starling.animation.Tween;
    import starling.events.Event;
    import starling.events.TouchEvent;
    import starling.text.TextField;
@@ -38,6 +41,7 @@ package com.meng52.game.ui.element
       
       private var _bg:Scale9Image;
       private var adventureButton:LOL_Scale9Button;
+      private var adventureProgress:Quad;
       
       public function ItemTaskAward()
       {
@@ -56,6 +60,14 @@ package com.meng52.game.ui.element
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         if(adventureProgress) Starling.juggler.removeTweens(adventureProgress);
+         if(adventureButton)
+         {
+            Starling.juggler.removeTweens(adventureButton);
+            adventureButton.removeEventListener("triggered",onAdventureButton);
+         }
+         adventureButton = null;
+         adventureProgress = null;
          if(m_uiBox)
          {
             StarlingTools.removeChildrenClear(m_uiBox);
@@ -1174,42 +1186,128 @@ package com.meng52.game.ui.element
       private function renderAdventureTask(row:Object) : void
       {
          var cardWidth:Number = GlobalData.$mStageWidth - 24;
-         _bg = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",cardWidth,158,new Rectangle(110,55,70,20));
+         _bg = GlobalFunction.createScale9Image("UI_bg_9slice_4_0000",cardWidth,208,new Rectangle(110,60,30,15));
          addChild(_bg);
-         var title:TextField = GlobalFunction.createTextField(cardWidth - 32,34,String(row.title),"",23,4926491,true);
+         var surface:Quad = new Quad(cardWidth - 18,190,0x282B30);
+         surface.x = surface.y = 9;surface.touchable = false;addChild(surface);
+         var title:TextField = GlobalFunction.createTextField(cardWidth - 32,32,String(row.title),"",22,0xFFD684,true);
          title.x = 16;
-         title.y = 10;
+         title.y = 12;
+         title.autoScale = true;
          title.hAlign = "left";
          title.touchable = false;
          addChild(title);
-         var progress:TextField = GlobalFunction.createTextField(cardWidth - 160,28,String(row.progress_text),"",18,row.claimable ? 13056 : 6501176);
-         progress.x = 16;
-         progress.y = 45;
+         addAdventureRewardIcon(row);
+         var progress:TextField = GlobalFunction.createTextField(cardWidth - 116,28,String(row.progress_text),"",18,row.claimable ? 0xA9DEA1 : 0xBAC2CC);
+         progress.x = 100;
+         progress.y = 54;
+         progress.autoScale = true;
          progress.hAlign = "left";
          progress.touchable = false;
          addChild(progress);
-         var reward:TextField = GlobalFunction.createTextField(cardWidth - 160,72,"奖励：" + String(row.reward_text),"",18,4926491);
-         reward.x = 16;
-         reward.y = 75;
+         var track:Quad = new Quad(cardWidth - 116,8,0x11161C);
+         track.x = 100;
+         track.y = 87;
+         track.alpha = 0.8;
+         track.touchable = false;
+         addChild(track);
+         var ratio:Number = Number(row.progress_ratio);
+         if(isNaN(ratio)) ratio = row.claimed || row.claimable ? 1 : 0;
+         ratio = Math.max(0,Math.min(1,ratio));
+         adventureProgress = new Quad(cardWidth - 116,8,row.claimable ? 0x8CB968 : 0xBB9952);
+         adventureProgress.x = 100;
+         adventureProgress.y = 87;
+         adventureProgress.scaleX = ratio;
+         adventureProgress.touchable = false;
+         addChild(adventureProgress);
+         var reward:TextField = GlobalFunction.createTextField(cardWidth - 116,48,"奖励：" + String(row.reward_text),"",17,0xE5D9C1);
+         reward.x = 100;
+         reward.y = 102;
+         reward.autoScale = true;
          reward.hAlign = "left";
          reward.vAlign = "top";
          reward.touchable = false;
          addChild(reward);
-         var label:String = row.claimed ? "已领取" : row.claimable ? "领取" : "未完成";
+         var state:TextField = GlobalFunction.createTextField(cardWidth - 180,28,row.claimed ? "奖励已领取" : row.claimable ? "奖励已备好，点击领取" : row.kind == "daily" ? "完成任务即可领取" : "达成条件后解锁","",16,row.claimable ? 0xA9DEA1 : 0xBAC2CC);
+         state.x = 16;
+         state.y = 163;
+         state.autoScale = true;
+         state.hAlign = "left";
+         state.touchable = false;
+         addChild(state);
+         var label:String = row.claimed ? "已领取" : row.claimable ? "领取奖励" : "未完成";
          if(row.kind == "repeat") label = row.claimable ? "领取" + row.available_count + "张" : "待达成";
-         if(row.busy && row.claimable) label = "请稍候";
-         adventureButton = new LOL_Scale9Button(label,116,48,"UI_btn_enterGame_0_0000");
-         adventureButton.x = cardWidth - 132;
-         adventureButton.y = 90;
+         if(row.busy && row.claimable) label = "领取中…";
+         adventureButton = new LOL_Scale9Button(label,132,42,"UI_btn_enterGame_0_0000");
+         adventureButton.x = cardWidth - 148;
+         adventureButton.y = 155;
          adventureButton.enabled = row.claimable && !row.busy;
          adventureButton.addEventListener("triggered",onAdventureButton);
          addChild(adventureButton);
+         if(row.claimable && !row.busy)
+         {
+            adventureButton.alpha = 0.65;
+            var ready:Tween = new Tween(adventureButton,0.22,"easeOut");
+            ready.fadeTo(1);
+            Starling.juggler.add(ready);
+         }
          layoutWH();
+      }
+
+      private function addAdventureRewardIcon(row:Object) : void
+      {
+         var icon:DisplayObject;
+         var reward:Object = row.reward;
+         if(reward)
+         {
+            for(var type:String in reward)
+            {
+               if(type == "random_non_skin_orange_hero" || type == "random_normal_orange_equipment")
+               {
+                  icon = GlobalFunction.createImage("UI_bg_card_2_0003");
+                  break;
+               }
+               if(type == "attrs" && reward.attrs.dust)
+               {
+                  var dust:Array = reward.attrs.dust as Array;
+                  for(var i:int = 0; i < dust.length; i++)
+                  {
+                     if(Number(dust[i]) > 0)
+                     {
+                        icon = GlobalFunction.getAwardByType("dust",{"indexID_s":i,"numberIndex":dust[i]},false,null,"",true,1,this.parent ? this.parent.parent as List : null).ui;
+                        break;
+                     }
+                  }
+               }
+               else if(type == "coin" || type == "culture_book" || type == "dn_stone" || type == "avatar" || type == "equip")
+                  icon = GlobalFunction.getAwardByType(type,reward[type],false,null,"",true,1,this.parent ? this.parent.parent as List : null).ui;
+               if(icon) break;
+            }
+         }
+         if(!icon) icon = GlobalFunction.createImage("UI_award_ui_type_0016");
+         var scale:Number = Math.min(72 / Math.max(1,icon.width),76 / Math.max(1,icon.height));
+         icon.scaleX *= scale;
+         icon.scaleY *= scale;
+         icon.x = 18 + (72 - icon.width) / 2;
+         icon.y = 57 + (76 - icon.height) / 2;
+         addChild(icon);
+         var caption:String = reward && reward.random_non_skin_orange_hero ? "随机橙卡" : reward && reward.random_normal_orange_equipment ? "随机橙装" : "任务奖励";
+         var label:TextField = GlobalFunction.createTextField(80,24,caption,"",14,0xBFC1C4);
+         label.x = 14;
+         label.y = 133;
+         label.autoScale = true;
+         label.touchable = false;
+         addChild(label);
       }
 
       private function onAdventureButton(param1:Event) : void
       {
-         if(data && data.claimable && !data.busy) dispatchEventWith("adventure_task_claim",true,data);
+         if(data && data.claimable && !data.busy && adventureButton && adventureButton.enabled)
+         {
+            adventureButton.enabled = false;
+            adventureButton.text = "领取中…";
+            dispatchEventWith("adventure_task_claim",true,data);
+         }
       }
 
    }

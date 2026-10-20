@@ -3,8 +3,8 @@
   <id>air.com.meng52.lol.android</id>
   <filename>最强王者</filename>
   <name>最强王者</name>
-  <versionNumber>1.0.2</versionNumber>
-  <versionLabel>1.0.2</versionLabel>
+  <versionNumber>1.0.3</versionNumber>
+  <versionLabel>1.0.3</versionLabel>
   <supportedProfiles>mobileDevice</supportedProfiles>
   <initialWindow>
     <content>MainLLOL.swf</content>

@@ -34,7 +34,7 @@ class ActivityTowerTest(unittest.TestCase):
 
     def test_color_tiers_native_power_and_three_table_publication(self):
         self.assertEqual((self.report["chapters"], self.report["stages"]), (11, 204))
-        self.assertEqual(self.config["cfg_version"], (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip())
+        self.assertEqual(self.config["cfg_version"], json.loads((Path(__file__).resolve().parents[1] / "config/reconstruction/full-config.json").read_text(encoding="utf-8"))["cfg_version"])
         pve = self.config["pve"]
         self.assertIn("P_001", pve["battle_ploy"])
         self.assertIn("P_001_3", pve["combat_ploy"])
@@ -80,7 +80,9 @@ class ActivityTowerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             serialize_stage_team(self.config["cfg"], [invalid])
         purple = list(pve["combat_ploy"]["P_200_81"]["team2"][0])
-        purple[0] = next(aid for aid in self.config["cfg"]["avatar"] if aid.endswith("_5"))
+        purple[0] = next(aid for aid in self.config["cfg"]["avatar"] if aid.startswith('A_1') and aid.endswith("_5"))
+        self.assertEqual(serialize_stage_team(self.config['cfg'],[purple])[0]['limit_break'],1)
+        purple[0] = next(aid for aid in self.config["cfg"]["avatar"] if aid.startswith('A_1') and aid.endswith("_4"))
         with self.assertRaises(ValueError):
             serialize_stage_team(self.config["cfg"], [purple])
 
@@ -90,12 +92,15 @@ class ActivityTowerTest(unittest.TestCase):
             combat._start_main(uid, {"cid": "P_200_2", "diff": 0, "team": team})
         self.assertEqual(locked.exception.code, "TowerFloorLocked")
         for index, cid in enumerate(("P_101_1", "P_101_2")):
-            combat._start_main(uid, {"cid": cid, "diff": 0, "team": team,
-                                     "actionID": f"material-{index}"})
+            started=combat._start_main(uid, {"cid": cid, "diff": 0, "team": team,
+                                           "actionID": f"material-{index}"})
+            combat._finish(uid,{'cid':cid,'diff':0,'fight_id':started['fight_id'],'sign':1,'combat_star':3,'actionID':f'material-win-{index}'})
+        self.assertEqual(store.profile_raw(uid)["records"]["material_activity"]["uses"]["P_101"], 2)
+        def exhaust(p):p['records']['material_activity']['uses']['P_101']=12;return p,{}
+        store.atomic_update(uid,exhaust)
         with self.assertRaises(GameplayFault) as exhausted:
             combat._start_main(uid, {"cid": "P_101_3", "diff": 0, "team": team})
         self.assertEqual(exhausted.exception.code, "ActivityAttemptsExhausted")
-        self.assertEqual(store.profile_raw(uid)["records"]["material_activity"]["uses"]["P_101"], 2)
         started = combat._start_main(uid, {"cid": "P_200_1", "diff": 0, "team": team})
         finish = {"cid": "P_200_1", "diff": 0, "fight_id": started["fight_id"],
                   "sign": 1, "combat_star": 3,

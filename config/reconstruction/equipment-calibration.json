@@ -1,0 +1,7463 @@
+{
+  "schema": "lal-equipment-calibration-v1",
+  "version": "1.0.3",
+  "exported_at": "2026-10-19T13:41:18.306Z",
+  "source": {
+    "path": "publish/lal/config/reconstruction/full-config.json + gateway runtime overlays",
+    "sha256": "f6a65a6081dbf83e3d9b2e83d1955a2c0e5ec43d0fdb197a5c9f98cdb4c03cc3",
+    "snapshot_date": "2026-10-19"
+  },
+  "field_mapping": {
+    "pl": [
+      "hp",
+      "ap",
+      "de_ph",
+      "de_ma",
+      "speed",
+      "range",
+      "affix1",
+      "affix2",
+      "skill",
+      "d0"
+    ],
+    "quality": "preserve_id_quality",
+    "type": "native_equipment_type",
+    "classification": "equipment_classification",
+    "slot": "native_slot_index"
+  },
+  "changed_ids": [
+    "E_1001_1",
+    "E_1001_2",
+    "E_1001_3",
+    "E_1001_4",
+    "E_1001_5",
+    "E_1002_2",
+    "E_1002_3",
+    "E_1002_4",
+    "E_1002_5",
+    "E_1002_6",
+    "E_1003_1",
+    "E_1003_6",
+    "E_1004_2",
+    "E_1004_3",
+    "E_1004_4",
+    "E_1004_5",
+    "E_1005_2",
+    "E_1005_3",
+    "E_1005_4",
+    "E_1005_5",
+    "E_1006_5",
+    "E_1006_6",
+    "E_1011_6",
+    "E_1012_6",
+    "E_1013_6",
+    "E_1014_5",
+    "E_1015_5",
+    "E_1016_6",
+    "E_1017_6",
+    "E_1018_6",
+    "E_1019_6",
+    "E_1020_6",
+    "E_1021_6",
+    "E_1022_6",
+    "E_1024_6",
+    "E_1025_6",
+    "E_1027_6",
+    "E_1028_6",
+    "E_1029_6",
+    "E_1030_6",
+    "E_1032_6",
+    "E_1033_6",
+    "E_1041_6",
+    "E_1051_6",
+    "E_1061_6",
+    "E_1499_5",
+    "E_1501_2",
+    "E_1501_3",
+    "E_1501_4",
+    "E_1502_2",
+    "E_1502_3",
+    "E_1502_4",
+    "E_1502_5",
+    "E_1503_2",
+    "E_1503_4",
+    "E_1503_5",
+    "E_1504_2",
+    "E_1999_5",
+    "E_3001_1",
+    "E_3001_4",
+    "E_3002_2",
+    "E_3002_4",
+    "E_3003_2",
+    "E_3003_3",
+    "E_3003_4",
+    "E_3003_5",
+    "E_3004_2",
+    "E_3004_3",
+    "E_3004_4",
+    "E_3004_5",
+    "E_3005_6",
+    "E_4001_2",
+    "E_4001_3",
+    "E_4001_4",
+    "E_4001_5",
+    "E_4002_2",
+    "E_4002_3",
+    "E_4002_4",
+    "E_4002_5",
+    "E_4003_2",
+    "E_4003_3",
+    "E_4003_4",
+    "E_4003_5",
+    "E_4004_2",
+    "E_4004_3",
+    "E_4004_4",
+    "E_4004_5",
+    "E_4007_6",
+    "E_4009_6",
+    "E_4010_6",
+    "E_4011_6",
+    "E_4012_6",
+    "E_4013_6",
+    "E_4015_6",
+    "E_4016_6",
+    "E_4017_6",
+    "E_4018_6",
+    "E_4019_6",
+    "E_4020_6",
+    "E_4021_6",
+    "E_4022_6",
+    "E_4999_6",
+    "E_5001_1",
+    "E_5001_2",
+    "E_5001_3",
+    "E_5001_4",
+    "E_5001_5",
+    "E_5002_2",
+    "E_5002_3",
+    "E_5002_4",
+    "E_5002_5",
+    "E_5002_6",
+    "E_5003_2",
+    "E_5003_3",
+    "E_5003_4",
+    "E_5003_5",
+    "E_5004_2",
+    "E_5004_3",
+    "E_5004_4",
+    "E_5004_5",
+    "E_5005_6",
+    "E_5006_2",
+    "E_5006_3",
+    "E_5006_4",
+    "E_5006_5",
+    "E_5008_6",
+    "E_5011_6",
+    "E_5999_5",
+    "E_6001_2",
+    "E_6001_3",
+    "E_6001_4",
+    "E_6001_5",
+    "E_6001_6",
+    "E_6001_7",
+    "E_6004_2",
+    "E_6004_3",
+    "E_6004_4",
+    "E_6004_5",
+    "E_6004_6",
+    "E_6004_7",
+    "E_6007_2",
+    "E_6007_3",
+    "E_6007_4",
+    "E_6007_5",
+    "E_6007_6",
+    "E_6007_7",
+    "E_6503_2",
+    "E_6503_3",
+    "E_6503_4",
+    "E_6503_5",
+    "E_6503_6",
+    "E_6503_7"
+  ],
+  "equipment": {
+    "E_1001_1": {
+      "id": "E_1001_1",
+      "name": "长剑",
+      "res": "EQ_1001_1",
+      "type": 1,
+      "slot": 0,
+      "quality": 1,
+      "level_cap": 200,
+      "tl": [
+        1,
+        1
+      ],
+      "pl": [
+        0,
+        84,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 50,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1001_2": {
+      "id": "E_1001_2",
+      "name": "贪婪之刃",
+      "res": "EQ_1001_2",
+      "type": 1,
+      "slot": 0,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        1,
+        2
+      ],
+      "pl": [
+        0,
+        133,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1001_3": {
+      "id": "E_1001_3",
+      "name": "暴风之剑",
+      "res": "EQ_1001_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        0,
+        168,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1001_4": {
+      "id": "E_1001_4",
+      "name": "神圣之剑",
+      "res": "EQ_1001_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        0,
+        210,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1001_5": {
+      "id": "E_1001_5",
+      "name": "幻影之舞",
+      "res": "EQ_1001_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1001_6": {
+      "id": "E_1001_6",
+      "name": "破晓长剑",
+      "res": "EQ_1001_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1002_2": {
+      "id": "E_1002_2",
+      "name": "吸血鬼节杖",
+      "res": "EQ_1002_2",
+      "type": 1,
+      "slot": 0,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        1,
+        2
+      ],
+      "pl": [
+        0,
+        133,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1002_3": {
+      "id": "E_1002_3",
+      "name": "爆裂魔杖",
+      "res": "EQ_1002_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        0,
+        168,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1002_4": {
+      "id": "E_1002_4",
+      "name": "虚空之杖",
+      "res": "EQ_1002_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        0,
+        210,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1002_5": {
+      "id": "E_1002_5",
+      "name": "时光之杖",
+      "res": "EQ_1002_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1002_6": {
+      "id": "E_1002_6",
+      "name": "诡术魔杖",
+      "res": "EQ_1002_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1003_1": {
+      "id": "E_1003_1",
+      "name": "长剑",
+      "res": "EQ_1003_1",
+      "type": 1,
+      "slot": 0,
+      "quality": 1,
+      "level_cap": 200,
+      "tl": [
+        1,
+        1
+      ],
+      "pl": [
+        0,
+        84,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 50,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1003_6": {
+      "id": "E_1003_6",
+      "name": "符文之刃",
+      "res": "EQ_1003_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1004_2": {
+      "id": "E_1004_2",
+      "name": "十字镐",
+      "res": "EQ_1004_2",
+      "type": 1,
+      "slot": 0,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        1,
+        2
+      ],
+      "pl": [
+        0,
+        133,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1004_3": {
+      "id": "E_1004_3",
+      "name": "净蚀",
+      "res": "EQ_1004_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        0,
+        168,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1004_4": {
+      "id": "E_1004_4",
+      "name": "阿塔玛之戟",
+      "res": "EQ_1004_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        0,
+        210,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1004_5": {
+      "id": "E_1004_5",
+      "name": "无尽之刃",
+      "res": "EQ_1004_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1005_2": {
+      "id": "E_1005_2",
+      "name": "反曲之弓",
+      "res": "EQ_1005_2",
+      "type": 1,
+      "slot": 0,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        1,
+        2
+      ],
+      "pl": [
+        0,
+        133,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1005_3": {
+      "id": "E_1005_3",
+      "name": "最后的轻语",
+      "res": "EQ_1005_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        0,
+        168,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1005_4": {
+      "id": "E_1005_4",
+      "name": "卢安娜的飓风",
+      "res": "EQ_1005_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        0,
+        210,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1005_5": {
+      "id": "E_1005_5",
+      "name": "离子火花",
+      "res": "EQ_1005_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1006_5": {
+      "id": "E_1006_5",
+      "name": "黄金奖杯",
+      "res": "EQ_1006_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1006_6": {
+      "id": "E_1006_6",
+      "name": "黑色切割者",
+      "res": "EQ_1006_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1011_6": {
+      "id": "E_1011_6",
+      "name": "胡萝卜大剑",
+      "res": "EQ_1011_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1012_6": {
+      "id": "E_1012_6",
+      "name": "冰晶权杖",
+      "res": "EQ_1012_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1013_6": {
+      "id": "E_1013_6",
+      "name": "斥候吹箭",
+      "res": "EQ_1013_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1014_5": {
+      "id": "E_1014_5",
+      "name": "厄运双枪",
+      "res": "EQ_1014_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1015_5": {
+      "id": "E_1015_5",
+      "name": "海克斯科技步枪",
+      "res": "EQ_1015_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1016_6": {
+      "id": "E_1016_6",
+      "name": "贪欲九头蛇",
+      "res": "EQ_1016_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1017_6": {
+      "id": "E_1017_6",
+      "name": "回旋刃",
+      "res": "EQ_1017_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1018_6": {
+      "id": "E_1018_6",
+      "name": "能量之手",
+      "res": "EQ_1018_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1019_6": {
+      "id": "E_1019_6",
+      "name": "源计划战刃",
+      "res": "EQ_1019_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1020_6": {
+      "id": "E_1020_6",
+      "name": "圣光双枪",
+      "res": "EQ_1020_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1021_6": {
+      "id": "E_1021_6",
+      "name": "觅心巨弩",
+      "res": "EQ_1021_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1022_6": {
+      "id": "E_1022_6",
+      "name": "灼热之触",
+      "res": "EQ_1022_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1023_6": {
+      "id": "E_1023_6",
+      "name": "日炎巨剑",
+      "res": "EQ_1023_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1024_6": {
+      "id": "E_1024_6",
+      "name": "海克斯步枪-沙漠",
+      "res": "EQ_1024_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1025_6": {
+      "id": "E_1025_6",
+      "name": "寒冬之触",
+      "res": "EQ_1025_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1026_6": {
+      "id": "E_1026_6",
+      "name": "魔晶拳套",
+      "res": "EQ_1026_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1027_6": {
+      "id": "E_1027_6",
+      "name": "鱼骨头",
+      "res": "EQ_1027_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1028_6": {
+      "id": "E_1028_6",
+      "name": "拨浪鼓",
+      "res": "EQ_1028_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1029_6": {
+      "id": "E_1029_6",
+      "name": "弯刃猎刀",
+      "res": "EQ_1029_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1030_6": {
+      "id": "E_1030_6",
+      "name": "恐惧收割者",
+      "res": "EQ_1030_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1031_6": {
+      "id": "E_1031_6",
+      "name": "奥能注射器",
+      "res": "EQ_1031_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1032_6": {
+      "id": "E_1032_6",
+      "name": "夜陨",
+      "res": "EQ_1032_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1033_6": {
+      "id": "E_1033_6",
+      "name": "雷霆之怒",
+      "res": "EQ_1033_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1041_6": {
+      "id": "E_1041_6",
+      "name": "仙灵法杖",
+      "res": "EQ_1041_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1051_6": {
+      "id": "E_1051_6",
+      "name": "恶魔大刀",
+      "res": "EQ_1051_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1061_6": {
+      "id": "E_1061_6",
+      "name": "不祥之刃",
+      "res": "EQ_1061_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1499_5": {
+      "id": "E_1499_5",
+      "name": "耀金长枪",
+      "res": "EQ_1499_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "weapon"
+    },
+    "E_1501_2": {
+      "id": "E_1501_2",
+      "name": "盾牌",
+      "res": "EQ_1501_2",
+      "type": 1,
+      "slot": 0,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        1,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1501_3": {
+      "id": "E_1501_3",
+      "name": "军团圣盾",
+      "res": "EQ_1501_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1501_4": {
+      "id": "E_1501_4",
+      "name": "钢铁烈阳之匣",
+      "res": "EQ_1501_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1501_5": {
+      "id": "E_1501_5",
+      "name": "雄狮盾",
+      "res": "EQ_1501_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1502_2": {
+      "id": "E_1502_2",
+      "name": "多兰之盾",
+      "res": "EQ_1502_2",
+      "type": 1,
+      "slot": 0,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        1,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1502_3": {
+      "id": "E_1502_3",
+      "name": "多兰宝盾",
+      "res": "EQ_1502_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1502_4": {
+      "id": "E_1502_4",
+      "name": "多兰坚盾",
+      "res": "EQ_1502_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1502_5": {
+      "id": "E_1502_5",
+      "name": "多兰神盾",
+      "res": "EQ_1502_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1503_2": {
+      "id": "E_1503_2",
+      "name": "美味的饼干",
+      "res": "EQ_1503_2",
+      "type": 4,
+      "slot": 3,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        4,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_1503_3": {
+      "id": "E_1503_3",
+      "name": "符文冰盾",
+      "res": "EQ_1503_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1503_4": {
+      "id": "E_1503_4",
+      "name": "冰川护甲",
+      "res": "EQ_1503_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1503_5": {
+      "id": "E_1503_5",
+      "name": "冰霜之心",
+      "res": "EQ_1503_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1504_2": {
+      "id": "E_1504_2",
+      "name": "小圆盾",
+      "res": "EQ_1504_2",
+      "type": 1,
+      "slot": 0,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        1,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1504_3": {
+      "id": "E_1504_3",
+      "name": "精钢圆盾",
+      "res": "EQ_1504_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1504_4": {
+      "id": "E_1504_4",
+      "name": "金钢圆盾",
+      "res": "EQ_1504_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1504_5": {
+      "id": "E_1504_5",
+      "name": "太阳圆盾",
+      "res": "EQ_1504_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1504_6": {
+      "id": "E_1504_6",
+      "name": "日冕之盾",
+      "res": "EQ_1504_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1505_3": {
+      "id": "E_1505_3",
+      "name": "轻铁圆盾",
+      "res": "EQ_1505_3",
+      "type": 1,
+      "slot": 0,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        1,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1505_4": {
+      "id": "E_1505_4",
+      "name": "精铁圆盾",
+      "res": "EQ_1505_4",
+      "type": 1,
+      "slot": 0,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        1,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1505_5": {
+      "id": "E_1505_5",
+      "name": "魔铁圆盾",
+      "res": "EQ_1505_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1505_6": {
+      "id": "E_1505_6",
+      "name": "冰棘圆盾",
+      "res": "EQ_1505_6",
+      "type": 1,
+      "slot": 0,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        1,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_1999_5": {
+      "id": "E_1999_5",
+      "name": "血色圣盾",
+      "res": "EQ_1999_5",
+      "type": 1,
+      "slot": 0,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        1,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shield"
+    },
+    "E_3001_1": {
+      "id": "E_3001_1",
+      "name": "布甲",
+      "res": "EQ_3001_1",
+      "type": 3,
+      "slot": 2,
+      "quality": 1,
+      "level_cap": 200,
+      "tl": [
+        3,
+        1
+      ],
+      "pl": [
+        960,
+        0,
+        48,
+        48,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 50,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3001_2": {
+      "id": "E_3001_2",
+      "name": "铁链护甲",
+      "res": "EQ_3001_2",
+      "type": 3,
+      "slot": 2,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        3,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3001_3": {
+      "id": "E_3001_3",
+      "name": "龙鳞护甲",
+      "res": "EQ_3001_3",
+      "type": 3,
+      "slot": 2,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        3,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3001_4": {
+      "id": "E_3001_4",
+      "name": "霸王血铠",
+      "res": "EQ_3001_4",
+      "type": 3,
+      "slot": 2,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        3,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3001_5": {
+      "id": "E_3001_5",
+      "name": "重装护甲",
+      "res": "EQ_3001_5",
+      "type": 3,
+      "slot": 2,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        3,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3001_6": {
+      "id": "E_3001_6",
+      "name": "赤焰战甲",
+      "res": "EQ_3001_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3002_2": {
+      "id": "E_3002_2",
+      "name": "锁子甲",
+      "res": "EQ_3002_2",
+      "type": 3,
+      "slot": 2,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        3,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3002_3": {
+      "id": "E_3002_3",
+      "name": "黄金胸甲",
+      "res": "EQ_3002_3",
+      "type": 3,
+      "slot": 2,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        3,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3002_4": {
+      "id": "E_3002_4",
+      "name": "荆棘之甲",
+      "res": "EQ_3002_4",
+      "type": 3,
+      "slot": 2,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        3,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3002_5": {
+      "id": "E_3002_5",
+      "name": "精钢胸甲",
+      "res": "EQ_3002_5",
+      "type": 3,
+      "slot": 2,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        3,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3002_6": {
+      "id": "E_3002_6",
+      "name": "紫金战甲",
+      "res": "EQ_3002_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3003_2": {
+      "id": "E_3003_2",
+      "name": "抗魔斗篷",
+      "res": "EQ_3003_2",
+      "type": 3,
+      "slot": 2,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        3,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3003_3": {
+      "id": "E_3003_3",
+      "name": "负极斗篷",
+      "res": "EQ_3003_3",
+      "type": 3,
+      "slot": 2,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        3,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3003_4": {
+      "id": "E_3003_4",
+      "name": "幽魂斗篷",
+      "res": "EQ_3003_4",
+      "type": 3,
+      "slot": 2,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        3,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3003_5": {
+      "id": "E_3003_5",
+      "name": "振奋铠甲",
+      "res": "EQ_3003_5",
+      "type": 3,
+      "slot": 2,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        3,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3003_6": {
+      "id": "E_3003_6",
+      "name": "王者战衣",
+      "res": "EQ_3003_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3004_2": {
+      "id": "E_3004_2",
+      "name": "海蓝披风",
+      "res": "EQ_3004_2",
+      "type": 3,
+      "slot": 2,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        3,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3004_3": {
+      "id": "E_3004_3",
+      "name": "宝石战铠",
+      "res": "EQ_3004_3",
+      "type": 3,
+      "slot": 2,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        3,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3004_4": {
+      "id": "E_3004_4",
+      "name": "日炎斗篷",
+      "res": "EQ_3004_4",
+      "type": 3,
+      "slot": 2,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        3,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3004_5": {
+      "id": "E_3004_5",
+      "name": "守护天使",
+      "res": "EQ_3004_5",
+      "type": 3,
+      "slot": 2,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        3,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3004_6": {
+      "id": "E_3004_6",
+      "name": "虚空战甲",
+      "res": "EQ_3004_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3005_6": {
+      "id": "E_3005_6",
+      "name": "DJ护甲",
+      "res": "EQ_3005_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3006_6": {
+      "id": "E_3006_6",
+      "name": "王者礼服",
+      "res": "EQ_3006_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3007_6": {
+      "id": "E_3007_6",
+      "name": "暗影羽翼",
+      "res": "EQ_3007_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3008_6": {
+      "id": "E_3008_6",
+      "name": "影刃铠甲",
+      "res": "EQ_3008_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3009_6": {
+      "id": "E_3009_6",
+      "name": "角魔战甲",
+      "res": "EQ_3009_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3010_6": {
+      "id": "E_3010_6",
+      "name": "禁魔枷锁",
+      "res": "EQ_3010_6",
+      "type": 3,
+      "slot": 2,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        3,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_3999_5": {
+      "id": "E_3999_5",
+      "name": "熔岩战甲",
+      "res": "EQ_3999_5",
+      "type": 3,
+      "slot": 2,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        3,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "armor"
+    },
+    "E_4001_2": {
+      "id": "E_4001_2",
+      "name": "愤怒合剂",
+      "res": "EQ_4001_2",
+      "type": 4,
+      "slot": 3,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        4,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4001_3": {
+      "id": "E_4001_3",
+      "name": "远古魔像精魄",
+      "res": "EQ_4001_3",
+      "type": 4,
+      "slot": 3,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        4,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4001_4": {
+      "id": "E_4001_4",
+      "name": "蜥蜴长者精魄",
+      "res": "EQ_4001_4",
+      "type": 4,
+      "slot": 3,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        4,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4001_5": {
+      "id": "E_4001_5",
+      "name": "幽魂提灯",
+      "res": "EQ_4001_5",
+      "type": 4,
+      "slot": 3,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        4,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4002_2": {
+      "id": "E_4002_2",
+      "name": "燃烧宝石",
+      "res": "EQ_4002_2",
+      "type": 4,
+      "slot": 3,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        4,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4002_3": {
+      "id": "E_4002_3",
+      "name": "治疗宝珠",
+      "res": "EQ_4002_3",
+      "type": 4,
+      "slot": 3,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        4,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4002_4": {
+      "id": "E_4002_4",
+      "name": "痛苦面具",
+      "res": "EQ_4002_4",
+      "type": 4,
+      "slot": 3,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        4,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4002_5": {
+      "id": "E_4002_5",
+      "name": "舒瑞亚的狂热",
+      "res": "EQ_4002_5",
+      "type": 4,
+      "slot": 3,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        4,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4002_6": {
+      "id": "E_4002_6",
+      "name": "碧海宝珠",
+      "res": "EQ_4002_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4003_2": {
+      "id": "E_4003_2",
+      "name": "号令之旗",
+      "res": "EQ_4003_2",
+      "type": 4,
+      "slot": 3,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        4,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4003_3": {
+      "id": "E_4003_3",
+      "name": "巫师帽",
+      "res": "EQ_4003_3",
+      "type": 4,
+      "slot": 3,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        4,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4003_4": {
+      "id": "E_4003_4",
+      "name": "勇气勋章",
+      "res": "EQ_4003_4",
+      "type": 4,
+      "slot": 3,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        4,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4003_5": {
+      "id": "E_4003_5",
+      "name": "瑞格之灯",
+      "res": "EQ_4003_5",
+      "type": 4,
+      "slot": 3,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        4,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4004_2": {
+      "id": "E_4004_2",
+      "name": "水银饰带",
+      "res": "EQ_4004_2",
+      "type": 4,
+      "slot": 3,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        4,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        76,
+        76,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4004_3": {
+      "id": "E_4004_3",
+      "name": "伊丽莎的奇迹",
+      "res": "EQ_4004_3",
+      "type": 4,
+      "slot": 3,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        4,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        96,
+        96,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4004_4": {
+      "id": "E_4004_4",
+      "name": "和谐圣杯",
+      "res": "EQ_4004_4",
+      "type": 4,
+      "slot": 3,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        4,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        120,
+        120,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4004_5": {
+      "id": "E_4004_5",
+      "name": "干扰水晶",
+      "res": "EQ_4004_5",
+      "type": 4,
+      "slot": 3,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        4,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4007_6": {
+      "id": "E_4007_6",
+      "name": "歌之权冠",
+      "res": "EQ_4007_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4009_6": {
+      "id": "E_4009_6",
+      "name": "疯狂面具",
+      "res": "EQ_4009_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4010_6": {
+      "id": "E_4010_6",
+      "name": "沃格勒特巫师帽",
+      "res": "EQ_4010_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4011_6": {
+      "id": "E_4011_6",
+      "name": "黄金头饰",
+      "res": "EQ_4011_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4012_6": {
+      "id": "E_4012_6",
+      "name": "邪恶圣杯",
+      "res": "EQ_4012_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4013_6": {
+      "id": "E_4013_6",
+      "name": "幽魂之首",
+      "res": "EQ_4013_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4014_6": {
+      "id": "E_4014_6",
+      "name": "虹彩耳机",
+      "res": "EQ_4014_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4015_6": {
+      "id": "E_4015_6",
+      "name": "帝王之盔",
+      "res": "EQ_4015_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4016_6": {
+      "id": "E_4016_6",
+      "name": "晶体护腕",
+      "res": "EQ_4016_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4017_6": {
+      "id": "E_4017_6",
+      "name": "兔宝宝耳朵",
+      "res": "EQ_4017_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4018_6": {
+      "id": "E_4018_6",
+      "name": "赤焰图腾",
+      "res": "EQ_4018_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4019_6": {
+      "id": "E_4019_6",
+      "name": "魔法钻戒",
+      "res": "EQ_4019_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4020_6": {
+      "id": "E_4020_6",
+      "name": "提伯斯玩偶",
+      "res": "EQ_4020_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4021_6": {
+      "id": "E_4021_6",
+      "name": "小丑面具",
+      "res": "EQ_4021_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4022_6": {
+      "id": "E_4022_6",
+      "name": "骨齿项链",
+      "res": "EQ_4022_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4023_6": {
+      "id": "E_4023_6",
+      "name": "铁卫面甲",
+      "res": "EQ_4023_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4024_6": {
+      "id": "E_4024_6",
+      "name": "虚空吊坠",
+      "res": "EQ_4024_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4027_6": {
+      "id": "E_4027_6",
+      "name": "烈焰星章",
+      "res": "EQ_4027_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4999_5": {
+      "id": "E_4999_5",
+      "name": "黄金腰带",
+      "res": "EQ_4999_5",
+      "type": 4,
+      "slot": 3,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        4,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        200,
+        200,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_4999_6": {
+      "id": "E_4999_6",
+      "name": "烈焰核心",
+      "res": "EQ_4999_6",
+      "type": 4,
+      "slot": 3,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        4,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "accessory"
+    },
+    "E_5001_1": {
+      "id": "E_5001_1",
+      "name": "速度之靴",
+      "res": "EQ_5001_1",
+      "type": 5,
+      "slot": 4,
+      "quality": 1,
+      "level_cap": 200,
+      "tl": [
+        5,
+        1
+      ],
+      "pl": [
+        960,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 50,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5001_2": {
+      "id": "E_5001_2",
+      "name": "狂战士之靴",
+      "res": "EQ_5001_2",
+      "type": 5,
+      "slot": 4,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        5,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5001_3": {
+      "id": "E_5001_3",
+      "name": "狂战士胫甲",
+      "res": "EQ_5001_3",
+      "type": 5,
+      "slot": 4,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        5,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5001_4": {
+      "id": "E_5001_4",
+      "name": "狂战士胫甲",
+      "res": "EQ_5001_4",
+      "type": 5,
+      "slot": 4,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        5,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5001_5": {
+      "id": "E_5001_5",
+      "name": "狂战士胫甲",
+      "res": "EQ_5001_5",
+      "type": 5,
+      "slot": 4,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        5,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5002_2": {
+      "id": "E_5002_2",
+      "name": "明朗之靴",
+      "res": "EQ_5002_2",
+      "type": 5,
+      "slot": 4,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        5,
+        2
+      ],
+      "pl": [
+        0,
+        133,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5002_3": {
+      "id": "E_5002_3",
+      "name": "明朗之靴",
+      "res": "EQ_5002_3",
+      "type": 5,
+      "slot": 4,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        5,
+        3
+      ],
+      "pl": [
+        0,
+        168,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5002_4": {
+      "id": "E_5002_4",
+      "name": "明朗之靴",
+      "res": "EQ_5002_4",
+      "type": 5,
+      "slot": 4,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        5,
+        4
+      ],
+      "pl": [
+        0,
+        210,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5002_5": {
+      "id": "E_5002_5",
+      "name": "明朗之靴",
+      "res": "EQ_5002_5",
+      "type": 5,
+      "slot": 4,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        5,
+        5
+      ],
+      "pl": [
+        0,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5002_6": {
+      "id": "E_5002_6",
+      "name": "明神靴",
+      "res": "EQ_5002_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5003_2": {
+      "id": "E_5003_2",
+      "name": "足具忍者",
+      "res": "EQ_5003_2",
+      "type": 5,
+      "slot": 4,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        5,
+        2
+      ],
+      "pl": [
+        1520,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5003_3": {
+      "id": "E_5003_3",
+      "name": "足具忍者",
+      "res": "EQ_5003_3",
+      "type": 5,
+      "slot": 4,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        5,
+        3
+      ],
+      "pl": [
+        1920,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5003_4": {
+      "id": "E_5003_4",
+      "name": "足具忍者",
+      "res": "EQ_5003_4",
+      "type": 5,
+      "slot": 4,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        5,
+        4
+      ],
+      "pl": [
+        2400,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5003_5": {
+      "id": "E_5003_5",
+      "name": "足具忍者",
+      "res": "EQ_5003_5",
+      "type": 5,
+      "slot": 4,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        5,
+        5
+      ],
+      "pl": [
+        4000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5004_2": {
+      "id": "E_5004_2",
+      "name": "法师之靴",
+      "res": "EQ_5004_2",
+      "type": 5,
+      "slot": 4,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        5,
+        2
+      ],
+      "pl": [
+        760,
+        66,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5004_3": {
+      "id": "E_5004_3",
+      "name": "法师之靴",
+      "res": "EQ_5004_3",
+      "type": 5,
+      "slot": 4,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        5,
+        3
+      ],
+      "pl": [
+        960,
+        84,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5004_4": {
+      "id": "E_5004_4",
+      "name": "法师之靴",
+      "res": "EQ_5004_4",
+      "type": 5,
+      "slot": 4,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        5,
+        4
+      ],
+      "pl": [
+        1200,
+        105,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5004_5": {
+      "id": "E_5004_5",
+      "name": "法师之靴",
+      "res": "EQ_5004_5",
+      "type": 5,
+      "slot": 4,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        5,
+        5
+      ],
+      "pl": [
+        2000,
+        175,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "crit",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5005_6": {
+      "id": "E_5005_6",
+      "name": "法神靴",
+      "res": "EQ_5005_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        8000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "hp"
+    },
+    "E_5006_2": {
+      "id": "E_5006_2",
+      "name": "轻灵之靴",
+      "res": "EQ_5006_2",
+      "type": 5,
+      "slot": 4,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        5,
+        2
+      ],
+      "pl": [
+        760,
+        66,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 100,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5006_3": {
+      "id": "E_5006_3",
+      "name": "轻灵之靴",
+      "res": "EQ_5006_3",
+      "type": 5,
+      "slot": 4,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        5,
+        3
+      ],
+      "pl": [
+        960,
+        84,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 150,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5006_4": {
+      "id": "E_5006_4",
+      "name": "轻灵之靴",
+      "res": "EQ_5006_4",
+      "type": 5,
+      "slot": 4,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        5,
+        4
+      ],
+      "pl": [
+        1200,
+        105,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 200,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5006_5": {
+      "id": "E_5006_5",
+      "name": "轻灵之靴",
+      "res": "EQ_5006_5",
+      "type": 5,
+      "slot": 4,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        5,
+        5
+      ],
+      "pl": [
+        2000,
+        175,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5006_6": {
+      "id": "E_5006_6",
+      "name": "影刃战靴",
+      "res": "EQ_5006_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        4000,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5007_6": {
+      "id": "E_5007_6",
+      "name": "机械战靴",
+      "res": "EQ_5007_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5008_6": {
+      "id": "E_5008_6",
+      "name": "红色舞鞋",
+      "res": "EQ_5008_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        0,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "defense"
+    },
+    "E_5009_6": {
+      "id": "E_5009_6",
+      "name": "赤铁长靴",
+      "res": "EQ_5009_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5010_6": {
+      "id": "E_5010_6",
+      "name": "禁魔战靴",
+      "res": "EQ_5010_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        0,
+        0,
+        400,
+        400,
+        0,
+        0,
+        "hit",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "defense"
+    },
+    "E_5011_6": {
+      "id": "E_5011_6",
+      "name": "圣诞雪橇",
+      "res": "EQ_5011_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        4000,
+        350,
+        0,
+        0,
+        0,
+        0,
+        "flee",
+        "tough",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_5016_6": {
+      "id": "E_5016_6",
+      "name": "御风战靴",
+      "res": "EQ_5016_6",
+      "type": 5,
+      "slot": 4,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        5,
+        6
+      ],
+      "pl": [
+        0,
+        700,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 300,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap"
+    },
+    "E_5999_5": {
+      "id": "E_5999_5",
+      "name": "黄金飞翼鞋",
+      "res": "EQ_5999_5",
+      "type": 5,
+      "slot": 4,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        5,
+        5
+      ],
+      "pl": [
+        2000,
+        175,
+        0,
+        0,
+        0,
+        0,
+        "crit",
+        "flee",
+        "",
+        0
+      ],
+      "skill": "",
+      "gold": 250,
+      "equipment_balance_schema": "equipment-balance-v53",
+      "equipment_classification": "shoes",
+      "equipment_shoe_class": "ap_hp"
+    },
+    "E_6001_2": {
+      "id": "E_6001_2",
+      "name": "力量符印-白",
+      "res": "EQ_6001_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        24,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_2",
+        0
+      ],
+      "skill": "S_9000_2",
+      "gold": 100
+    },
+    "E_6001_3": {
+      "id": "E_6001_3",
+      "name": "力量符印-绿",
+      "res": "EQ_6001_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        31,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_3",
+        0
+      ],
+      "skill": "S_9000_3",
+      "gold": 150
+    },
+    "E_6001_4": {
+      "id": "E_6001_4",
+      "name": "力量符印-蓝",
+      "res": "EQ_6001_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        38,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_4",
+        0
+      ],
+      "skill": "S_9000_4",
+      "gold": 200
+    },
+    "E_6001_5": {
+      "id": "E_6001_5",
+      "name": "力量符印-紫",
+      "res": "EQ_6001_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        45,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_5",
+        0
+      ],
+      "skill": "S_9000_5",
+      "gold": 250
+    },
+    "E_6001_6": {
+      "id": "E_6001_6",
+      "name": "力量符印-橙",
+      "res": "EQ_6001_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        52,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_6",
+        0
+      ],
+      "skill": "S_9000_6",
+      "gold": 300
+    },
+    "E_6001_7": {
+      "id": "E_6001_7",
+      "name": "力量符印-红",
+      "res": "EQ_6001_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        59,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_6",
+        0
+      ],
+      "skill": "S_9000_6",
+      "gold": 350
+    },
+    "E_6002_2": {
+      "id": "E_6002_2",
+      "name": "钢铁符印",
+      "res": "EQ_6002_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        26,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_2",
+        0
+      ],
+      "skill": "S_9001_2",
+      "gold": 100
+    },
+    "E_6002_3": {
+      "id": "E_6002_3",
+      "name": "钢铁符印",
+      "res": "EQ_6002_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        33,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_3",
+        0
+      ],
+      "skill": "S_9001_3",
+      "gold": 150
+    },
+    "E_6002_4": {
+      "id": "E_6002_4",
+      "name": "钢铁符印",
+      "res": "EQ_6002_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        40,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_4",
+        0
+      ],
+      "skill": "S_9001_4",
+      "gold": 200
+    },
+    "E_6002_5": {
+      "id": "E_6002_5",
+      "name": "钢铁符印",
+      "res": "EQ_6002_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        47,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_5",
+        0
+      ],
+      "skill": "S_9001_5",
+      "gold": 250
+    },
+    "E_6002_6": {
+      "id": "E_6002_6",
+      "name": "钢铁符印",
+      "res": "EQ_6002_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        54,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_6",
+        0
+      ],
+      "skill": "S_9001_6",
+      "gold": 300
+    },
+    "E_6002_7": {
+      "id": "E_6002_7",
+      "name": "钢铁符印",
+      "res": "EQ_6002_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        61,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_6",
+        0
+      ],
+      "skill": "S_9001_6",
+      "gold": 350
+    },
+    "E_6003_2": {
+      "id": "E_6003_2",
+      "name": "破甲符印",
+      "res": "EQ_6003_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        28,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_2",
+        0
+      ],
+      "skill": "S_9002_2",
+      "gold": 100
+    },
+    "E_6003_3": {
+      "id": "E_6003_3",
+      "name": "破甲符印",
+      "res": "EQ_6003_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        35,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_3",
+        0
+      ],
+      "skill": "S_9002_3",
+      "gold": 150
+    },
+    "E_6003_4": {
+      "id": "E_6003_4",
+      "name": "破甲符印",
+      "res": "EQ_6003_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        42,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_4",
+        0
+      ],
+      "skill": "S_9002_4",
+      "gold": 200
+    },
+    "E_6003_5": {
+      "id": "E_6003_5",
+      "name": "破甲符印",
+      "res": "EQ_6003_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        49,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_5",
+        0
+      ],
+      "skill": "S_9002_5",
+      "gold": 250
+    },
+    "E_6003_6": {
+      "id": "E_6003_6",
+      "name": "破甲符印",
+      "res": "EQ_6003_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        56,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_6",
+        0
+      ],
+      "skill": "S_9002_6",
+      "gold": 300
+    },
+    "E_6003_7": {
+      "id": "E_6003_7",
+      "name": "破甲符印",
+      "res": "EQ_6003_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        63,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_6",
+        0
+      ],
+      "skill": "S_9002_6",
+      "gold": 350
+    },
+    "E_6004_2": {
+      "id": "E_6004_2",
+      "name": "韧性符印",
+      "res": "EQ_6004_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        30,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_2",
+        0
+      ],
+      "skill": "S_9003_2",
+      "gold": 100
+    },
+    "E_6004_3": {
+      "id": "E_6004_3",
+      "name": "韧性符印",
+      "res": "EQ_6004_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        37,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_3",
+        0
+      ],
+      "skill": "S_9003_3",
+      "gold": 150
+    },
+    "E_6004_4": {
+      "id": "E_6004_4",
+      "name": "韧性符印",
+      "res": "EQ_6004_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        44,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_4",
+        0
+      ],
+      "skill": "S_9003_4",
+      "gold": 200
+    },
+    "E_6004_5": {
+      "id": "E_6004_5",
+      "name": "韧性符印",
+      "res": "EQ_6004_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        51,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_5",
+        0
+      ],
+      "skill": "S_9003_5",
+      "gold": 250
+    },
+    "E_6004_6": {
+      "id": "E_6004_6",
+      "name": "韧性符印",
+      "res": "EQ_6004_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        58,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_6",
+        0
+      ],
+      "skill": "S_9003_6",
+      "gold": 300
+    },
+    "E_6004_7": {
+      "id": "E_6004_7",
+      "name": "韧性符印",
+      "res": "EQ_6004_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        65,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_6",
+        0
+      ],
+      "skill": "S_9003_6",
+      "gold": 350
+    },
+    "E_6005_2": {
+      "id": "E_6005_2",
+      "name": "精准符印",
+      "res": "EQ_6005_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        32,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_2",
+        0
+      ],
+      "skill": "S_9004_2",
+      "gold": 100
+    },
+    "E_6005_3": {
+      "id": "E_6005_3",
+      "name": "精准符印",
+      "res": "EQ_6005_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        39,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_3",
+        0
+      ],
+      "skill": "S_9004_3",
+      "gold": 150
+    },
+    "E_6005_4": {
+      "id": "E_6005_4",
+      "name": "精准符印",
+      "res": "EQ_6005_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        46,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_4",
+        0
+      ],
+      "skill": "S_9004_4",
+      "gold": 200
+    },
+    "E_6005_5": {
+      "id": "E_6005_5",
+      "name": "精准符印",
+      "res": "EQ_6005_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        53,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_5",
+        0
+      ],
+      "skill": "S_9004_5",
+      "gold": 250
+    },
+    "E_6005_6": {
+      "id": "E_6005_6",
+      "name": "精准符印",
+      "res": "EQ_6005_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        60,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_6",
+        0
+      ],
+      "skill": "S_9004_6",
+      "gold": 300
+    },
+    "E_6005_7": {
+      "id": "E_6005_7",
+      "name": "精准符印",
+      "res": "EQ_6005_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        67,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_6",
+        0
+      ],
+      "skill": "S_9004_6",
+      "gold": 350
+    },
+    "E_6006_2": {
+      "id": "E_6006_2",
+      "name": "闪避符印",
+      "res": "EQ_6006_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        34,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_2",
+        0
+      ],
+      "skill": "S_9005_2",
+      "gold": 100
+    },
+    "E_6006_3": {
+      "id": "E_6006_3",
+      "name": "闪避符印",
+      "res": "EQ_6006_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        41,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_3",
+        0
+      ],
+      "skill": "S_9005_3",
+      "gold": 150
+    },
+    "E_6006_4": {
+      "id": "E_6006_4",
+      "name": "闪避符印",
+      "res": "EQ_6006_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        48,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_4",
+        0
+      ],
+      "skill": "S_9005_4",
+      "gold": 200
+    },
+    "E_6006_5": {
+      "id": "E_6006_5",
+      "name": "闪避符印",
+      "res": "EQ_6006_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        55,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_5",
+        0
+      ],
+      "skill": "S_9005_5",
+      "gold": 250
+    },
+    "E_6006_6": {
+      "id": "E_6006_6",
+      "name": "闪避符印",
+      "res": "EQ_6006_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        62,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_6",
+        0
+      ],
+      "skill": "S_9005_6",
+      "gold": 300
+    },
+    "E_6006_7": {
+      "id": "E_6006_7",
+      "name": "闪避符印",
+      "res": "EQ_6006_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        69,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_6",
+        0
+      ],
+      "skill": "S_9005_6",
+      "gold": 350
+    },
+    "E_6007_2": {
+      "id": "E_6007_2",
+      "name": "暴击符印",
+      "res": "EQ_6007_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        36,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_2",
+        0
+      ],
+      "skill": "S_9000_2",
+      "gold": 100
+    },
+    "E_6007_3": {
+      "id": "E_6007_3",
+      "name": "暴击符印",
+      "res": "EQ_6007_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        43,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_3",
+        0
+      ],
+      "skill": "S_9000_3",
+      "gold": 150
+    },
+    "E_6007_4": {
+      "id": "E_6007_4",
+      "name": "暴击符印",
+      "res": "EQ_6007_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        50,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_4",
+        0
+      ],
+      "skill": "S_9000_4",
+      "gold": 200
+    },
+    "E_6007_5": {
+      "id": "E_6007_5",
+      "name": "暴击符印",
+      "res": "EQ_6007_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        57,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_5",
+        0
+      ],
+      "skill": "S_9000_5",
+      "gold": 250
+    },
+    "E_6007_6": {
+      "id": "E_6007_6",
+      "name": "暴击符印",
+      "res": "EQ_6007_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        64,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_6",
+        0
+      ],
+      "skill": "S_9000_6",
+      "gold": 300
+    },
+    "E_6007_7": {
+      "id": "E_6007_7",
+      "name": "暴击符印",
+      "res": "EQ_6007_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        71,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_6",
+        0
+      ],
+      "skill": "S_9000_6",
+      "gold": 350
+    },
+    "E_6008_2": {
+      "id": "E_6008_2",
+      "name": "裂甲符印",
+      "res": "EQ_6008_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        38,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_2",
+        0
+      ],
+      "skill": "S_9001_2",
+      "gold": 100
+    },
+    "E_6008_3": {
+      "id": "E_6008_3",
+      "name": "裂甲符印",
+      "res": "EQ_6008_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        45,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_3",
+        0
+      ],
+      "skill": "S_9001_3",
+      "gold": 150
+    },
+    "E_6008_4": {
+      "id": "E_6008_4",
+      "name": "裂甲符印",
+      "res": "EQ_6008_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        52,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_4",
+        0
+      ],
+      "skill": "S_9001_4",
+      "gold": 200
+    },
+    "E_6008_5": {
+      "id": "E_6008_5",
+      "name": "裂甲符印",
+      "res": "EQ_6008_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        59,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_5",
+        0
+      ],
+      "skill": "S_9001_5",
+      "gold": 250
+    },
+    "E_6008_6": {
+      "id": "E_6008_6",
+      "name": "裂甲符印",
+      "res": "EQ_6008_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        66,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_6",
+        0
+      ],
+      "skill": "S_9001_6",
+      "gold": 300
+    },
+    "E_6008_7": {
+      "id": "E_6008_7",
+      "name": "裂甲符印",
+      "res": "EQ_6008_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        73,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_6",
+        0
+      ],
+      "skill": "S_9001_6",
+      "gold": 350
+    },
+    "E_6009_3": {
+      "id": "E_6009_3",
+      "name": "火焰符印",
+      "res": "EQ_6009_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        47,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_3",
+        0
+      ],
+      "skill": "S_9002_3",
+      "gold": 150
+    },
+    "E_6009_4": {
+      "id": "E_6009_4",
+      "name": "火焰符印",
+      "res": "EQ_6009_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        54,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_4",
+        0
+      ],
+      "skill": "S_9002_4",
+      "gold": 200
+    },
+    "E_6009_5": {
+      "id": "E_6009_5",
+      "name": "火焰符印",
+      "res": "EQ_6009_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        61,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_5",
+        0
+      ],
+      "skill": "S_9002_5",
+      "gold": 250
+    },
+    "E_6010_3": {
+      "id": "E_6010_3",
+      "name": "复苏符印",
+      "res": "EQ_6010_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        0,
+        29,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_3",
+        0
+      ],
+      "skill": "S_9005_3",
+      "gold": 150
+    },
+    "E_6010_4": {
+      "id": "E_6010_4",
+      "name": "复苏符印",
+      "res": "EQ_6010_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        0,
+        36,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_4",
+        0
+      ],
+      "skill": "S_9005_4",
+      "gold": 200
+    },
+    "E_6010_5": {
+      "id": "E_6010_5",
+      "name": "复苏符印",
+      "res": "EQ_6010_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        0,
+        43,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_5",
+        0
+      ],
+      "skill": "S_9005_5",
+      "gold": 250
+    },
+    "E_6201_2": {
+      "id": "E_6201_2",
+      "name": "魔灵符印",
+      "res": "EQ_6201_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        24,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_2",
+        0
+      ],
+      "skill": "S_9000_2",
+      "gold": 100
+    },
+    "E_6201_3": {
+      "id": "E_6201_3",
+      "name": "魔灵符印",
+      "res": "EQ_6201_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        31,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_3",
+        0
+      ],
+      "skill": "S_9000_3",
+      "gold": 150
+    },
+    "E_6201_4": {
+      "id": "E_6201_4",
+      "name": "魔灵符印",
+      "res": "EQ_6201_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        38,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_4",
+        0
+      ],
+      "skill": "S_9000_4",
+      "gold": 200
+    },
+    "E_6201_5": {
+      "id": "E_6201_5",
+      "name": "魔灵符印",
+      "res": "EQ_6201_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        45,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_5",
+        0
+      ],
+      "skill": "S_9000_5",
+      "gold": 250
+    },
+    "E_6501_2": {
+      "id": "E_6501_2",
+      "name": "精准之书",
+      "res": "EQ_6501_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        24,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_2",
+        0
+      ],
+      "skill": "S_9000_2",
+      "gold": 100
+    },
+    "E_6501_3": {
+      "id": "E_6501_3",
+      "name": "精准之书",
+      "res": "EQ_6501_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        31,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_3",
+        0
+      ],
+      "skill": "S_9000_3",
+      "gold": 150
+    },
+    "E_6501_4": {
+      "id": "E_6501_4",
+      "name": "精准之书",
+      "res": "EQ_6501_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        38,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_4",
+        0
+      ],
+      "skill": "S_9000_4",
+      "gold": 200
+    },
+    "E_6501_5": {
+      "id": "E_6501_5",
+      "name": "精准之书",
+      "res": "EQ_6501_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        45,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_5",
+        0
+      ],
+      "skill": "S_9000_5",
+      "gold": 250
+    },
+    "E_6501_6": {
+      "id": "E_6501_6",
+      "name": "精准之书",
+      "res": "EQ_6501_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        52,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_6",
+        0
+      ],
+      "skill": "S_9000_6",
+      "gold": 300
+    },
+    "E_6501_7": {
+      "id": "E_6501_7",
+      "name": "精准之书",
+      "res": "EQ_6501_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        59,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9000_6",
+        0
+      ],
+      "skill": "S_9000_6",
+      "gold": 350
+    },
+    "E_6502_2": {
+      "id": "E_6502_2",
+      "name": "闪避之书",
+      "res": "EQ_6502_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        26,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_2",
+        0
+      ],
+      "skill": "S_9001_2",
+      "gold": 100
+    },
+    "E_6502_3": {
+      "id": "E_6502_3",
+      "name": "闪避之书",
+      "res": "EQ_6502_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        33,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_3",
+        0
+      ],
+      "skill": "S_9001_3",
+      "gold": 150
+    },
+    "E_6502_4": {
+      "id": "E_6502_4",
+      "name": "闪避之书",
+      "res": "EQ_6502_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        40,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_4",
+        0
+      ],
+      "skill": "S_9001_4",
+      "gold": 200
+    },
+    "E_6502_5": {
+      "id": "E_6502_5",
+      "name": "闪避之书",
+      "res": "EQ_6502_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        47,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_5",
+        0
+      ],
+      "skill": "S_9001_5",
+      "gold": 250
+    },
+    "E_6502_6": {
+      "id": "E_6502_6",
+      "name": "闪避之书",
+      "res": "EQ_6502_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        54,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_6",
+        0
+      ],
+      "skill": "S_9001_6",
+      "gold": 300
+    },
+    "E_6502_7": {
+      "id": "E_6502_7",
+      "name": "闪避之书",
+      "res": "EQ_6502_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        61,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9001_6",
+        0
+      ],
+      "skill": "S_9001_6",
+      "gold": 350
+    },
+    "E_6503_2": {
+      "id": "E_6503_2",
+      "name": "暴击之书",
+      "res": "EQ_6503_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        28,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_2",
+        0
+      ],
+      "skill": "S_9002_2",
+      "gold": 100
+    },
+    "E_6503_3": {
+      "id": "E_6503_3",
+      "name": "暴击之书",
+      "res": "EQ_6503_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        35,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_3",
+        0
+      ],
+      "skill": "S_9002_3",
+      "gold": 150
+    },
+    "E_6503_4": {
+      "id": "E_6503_4",
+      "name": "暴击之书",
+      "res": "EQ_6503_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        42,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_4",
+        0
+      ],
+      "skill": "S_9002_4",
+      "gold": 200
+    },
+    "E_6503_5": {
+      "id": "E_6503_5",
+      "name": "暴击之书",
+      "res": "EQ_6503_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        49,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_5",
+        0
+      ],
+      "skill": "S_9002_5",
+      "gold": 250
+    },
+    "E_6503_6": {
+      "id": "E_6503_6",
+      "name": "暴击之书",
+      "res": "EQ_6503_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        56,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_6",
+        0
+      ],
+      "skill": "S_9002_6",
+      "gold": 300
+    },
+    "E_6503_7": {
+      "id": "E_6503_7",
+      "name": "暴击之书",
+      "res": "EQ_6503_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        63,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9002_6",
+        0
+      ],
+      "skill": "S_9002_6",
+      "gold": 350
+    },
+    "E_6504_2": {
+      "id": "E_6504_2",
+      "name": "裂甲之书",
+      "res": "EQ_6504_2",
+      "type": 6,
+      "slot": 5,
+      "quality": 2,
+      "level_cap": 200,
+      "tl": [
+        6,
+        2
+      ],
+      "pl": [
+        30,
+        0,
+        2,
+        2,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_2",
+        0
+      ],
+      "skill": "S_9003_2",
+      "gold": 100
+    },
+    "E_6504_3": {
+      "id": "E_6504_3",
+      "name": "裂甲之书",
+      "res": "EQ_6504_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        37,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_3",
+        0
+      ],
+      "skill": "S_9003_3",
+      "gold": 150
+    },
+    "E_6504_4": {
+      "id": "E_6504_4",
+      "name": "裂甲之书",
+      "res": "EQ_6504_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        44,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_4",
+        0
+      ],
+      "skill": "S_9003_4",
+      "gold": 200
+    },
+    "E_6504_5": {
+      "id": "E_6504_5",
+      "name": "裂甲之书",
+      "res": "EQ_6504_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        51,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_5",
+        0
+      ],
+      "skill": "S_9003_5",
+      "gold": 250
+    },
+    "E_6504_6": {
+      "id": "E_6504_6",
+      "name": "裂甲之书",
+      "res": "EQ_6504_6",
+      "type": 6,
+      "slot": 5,
+      "quality": 6,
+      "level_cap": 200,
+      "tl": [
+        6,
+        6
+      ],
+      "pl": [
+        58,
+        0,
+        6,
+        6,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_6",
+        0
+      ],
+      "skill": "S_9003_6",
+      "gold": 300
+    },
+    "E_6504_7": {
+      "id": "E_6504_7",
+      "name": "裂甲之书",
+      "res": "EQ_6504_7",
+      "type": 6,
+      "slot": 5,
+      "quality": 7,
+      "level_cap": 200,
+      "tl": [
+        6,
+        7
+      ],
+      "pl": [
+        65,
+        0,
+        7,
+        7,
+        0,
+        0,
+        "",
+        "",
+        "S_9003_6",
+        0
+      ],
+      "skill": "S_9003_6",
+      "gold": 350
+    },
+    "E_6505_3": {
+      "id": "E_6505_3",
+      "name": "火焰之书",
+      "res": "EQ_6505_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        39,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_3",
+        0
+      ],
+      "skill": "S_9004_3",
+      "gold": 150
+    },
+    "E_6505_4": {
+      "id": "E_6505_4",
+      "name": "火焰之书",
+      "res": "EQ_6505_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        46,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_4",
+        0
+      ],
+      "skill": "S_9004_4",
+      "gold": 200
+    },
+    "E_6505_5": {
+      "id": "E_6505_5",
+      "name": "火焰之书",
+      "res": "EQ_6505_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        53,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9004_5",
+        0
+      ],
+      "skill": "S_9004_5",
+      "gold": 250
+    },
+    "E_6506_3": {
+      "id": "E_6506_3",
+      "name": "守护之书",
+      "res": "EQ_6506_3",
+      "type": 6,
+      "slot": 5,
+      "quality": 3,
+      "level_cap": 200,
+      "tl": [
+        6,
+        3
+      ],
+      "pl": [
+        41,
+        0,
+        3,
+        3,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_3",
+        0
+      ],
+      "skill": "S_9005_3",
+      "gold": 150
+    },
+    "E_6506_4": {
+      "id": "E_6506_4",
+      "name": "守护之书",
+      "res": "EQ_6506_4",
+      "type": 6,
+      "slot": 5,
+      "quality": 4,
+      "level_cap": 200,
+      "tl": [
+        6,
+        4
+      ],
+      "pl": [
+        48,
+        0,
+        4,
+        4,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_4",
+        0
+      ],
+      "skill": "S_9005_4",
+      "gold": 200
+    },
+    "E_6506_5": {
+      "id": "E_6506_5",
+      "name": "守护之书",
+      "res": "EQ_6506_5",
+      "type": 6,
+      "slot": 5,
+      "quality": 5,
+      "level_cap": 200,
+      "tl": [
+        6,
+        5
+      ],
+      "pl": [
+        55,
+        0,
+        5,
+        5,
+        0,
+        0,
+        "",
+        "",
+        "S_9005_5",
+        0
+      ],
+      "skill": "S_9005_5",
+      "gold": 250
+    }
+  }
+}

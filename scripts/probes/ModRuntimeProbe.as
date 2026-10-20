@@ -34,6 +34,8 @@ package
       private var map:Object;
       private var panel:Object;
       private var failed:Boolean = false;
+      private var releasePrepared:Array;
+      private var releaseWait:int;
       private var scopeOwned:Object;
       private var scopeEnemy:Object;
       private var scopeOwnedCast:Boolean = false;
@@ -147,6 +149,314 @@ package
          phaseTime = getTimer();
       }
 
+
+      private function requireRelease(ok:Boolean, label:String):void
+      {
+         if(!ok) throw new Error("Release 1.0.3: "+label);
+         log("RELEASE_PASS "+label);
+      }
+
+      private function releaseConfig(gd:Class):void
+      {
+         var heroes:Object=gd["$mConfig_avatar"],skills:Object=gd["$mConfig_skill"];
+         requireRelease(heroes.A_1208_6.role=="双抗坦克","nurse tank role");
+         requireRelease(heroes.A_1208_6.pl[4]==heroes.A_1208_6.pl[6],"nurse balanced defenses");
+         var goku:Object=skills.S_201311_6;
+         requireRelease(goku.skill[2][2]==4500 && goku.skill[5][0]=="caster_hp_heal" && goku.skill[5][1]==0.12,"goku level-one values");
+         requireRelease(skills.S_301311_6.skill[1][2]==1500,"goku 1500 knockback");
+         var morde:Object=skills[heroes.A_1137_6.pl[10]];
+         requireRelease(Math.abs(Number(morde.skill[6][1])-3.276)<0.00001 && morde.skill[4][2]==6300,"morde doubled normal");
+         requireRelease(skills[heroes.A_1137_6.pl[11]].skill[2][1]==1,"morde exact 100% defense");
+         log("RELEASE_CONFIG_READY");
+      }
+
+      private function releaseTick(gd:Class,root:Object):void
+      {
+         if(getTimer()-phaseTime<1800) return;
+         var button:Object;
+         var cls:Class;
+         if(phase==20)
+         {
+            snapshot("release-main",gd);
+            root["mLayoutUICenter"].showPanel("center_social_main_avatar"); advance(21);
+         }
+         else if(phase==21)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"PanelSocialMainAvatar")!=null,"hero bag opens");
+            snapshot("release-hero-bag",gd);
+            root["mLayoutUICenter"].showPanel("center_main"); advance(22);
+         }
+         else if(phase==22)
+         {
+            button=find(gd["$mStarling"].stage,"阵容预设",true);
+            if(button==null) {snapshot("release-entry-missing",gd);log("RELEASE_PANEL "+root["mLayoutUICenter"].mCurrPanel+" main="+(find(gd["$mStarling"].stage,"PanelCenterMain")!=null));}
+            requireRelease(button!=null,"preset entry visible");
+            button.dispatchEventWith("triggered",true); advance(23);
+         }
+         else if(phase==23)
+         {
+            snapshot("release-presets",gd);
+            button=find(gd["$mStarling"].stage,"保存当前",true);
+            requireRelease(button!=null,"four-slot preset controls");
+            button.dispatchEventWith("triggered",true); advance(24);
+         }
+         else if(phase==24)
+         {
+            var presets:Object=gd["$userData"].attrs.team_presets;
+            requireRelease(presets!=null && presets[0]!=null,"preset save receipt");
+            requireRelease(presets[0].preview.length==5,"five-hero preset preview");
+            snapshot("release-presets-saved",gd);
+            button=find(gd["$mStarling"].stage,"覆盖保存",true);button.dispatchEventWith("triggered",true);advance(73);
+         }
+         else if(phase==80)
+         {
+            find(gd["$mStarling"].stage,"阵容预设",true).dispatchEventWith("triggered",true);advance(81);
+         }
+         else if(phase==81)
+         {
+            snapshot("release-presets-final",gd);root.closePopUp();
+            cls=definition("com.meng52.game.ui.screen.PanelCenterActivity");
+            cls["$activityFunObj"]=definition("com.meng52.game.global.GlobalFunction")["getActivityFun"]("task");
+            root["mLayoutUICenter"].showPanel("center_activity");advance(82);
+         }
+         else if(phase==82)
+         {
+            snapshot("release-adventure-final",gd);log("PROBE_FINISHED release103");timer.stop();NativeApplication.nativeApplication.exit(0);
+         }
+         else if(phase==73)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"确认覆盖",true)!=null,"overwrite requires second confirmation");
+            snapshot("release-preset-overwrite-confirm",gd);
+            find(gd["$mStarling"].stage,"取消",true).dispatchEventWith("triggered",true);
+            requireRelease(find(gd["$mStarling"].stage,"确认覆盖",true)==null,"overwrite can be canceled");
+            find(gd["$mStarling"].stage,"覆盖保存",true).dispatchEventWith("triggered",true);advance(74);
+         }
+         else if(phase==74)
+         {
+            find(gd["$mStarling"].stage,"确认覆盖",true).dispatchEventWith("triggered",true);advance(75);
+         }
+         else if(phase==75)
+         {
+            if(find(gd["$mStarling"].stage,"阵容1已保存。",true)==null) return;
+            requireRelease(true,"confirmed overwrite receives save receipt");
+            find(gd["$mStarling"].stage,"清空",true).dispatchEventWith("triggered",true);advance(76);
+         }
+         else if(phase==76)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"确认清空",true)!=null,"clear requires second confirmation");
+            snapshot("release-preset-clear-confirm",gd);
+            find(gd["$mStarling"].stage,"取消",true).dispatchEventWith("triggered",true);
+            requireRelease(gd["$userData"].attrs.team_presets[0]!=null,"cancel clear retains preset");
+            find(gd["$mStarling"].stage,"清空",true).dispatchEventWith("triggered",true);advance(77);
+         }
+         else if(phase==77)
+         {
+            find(gd["$mStarling"].stage,"确认清空",true).dispatchEventWith("triggered",true);advance(78);
+         }
+         else if(phase==78)
+         {
+            if(gd["$userData"].attrs.team_presets[0]!=null) return;
+            requireRelease(true,"confirmed clear removes only preset");
+            find(gd["$mStarling"].stage,"保存当前",true).dispatchEventWith("triggered",true);advance(79);
+         }
+         else if(phase==79)
+         {
+            if(gd["$userData"].attrs.team_presets[0]==null) return;
+            requireRelease(gd["$userData"].attrs.team_presets[0].preview.length==5,"preset can be saved again after clear");
+            snapshot("release-presets-restored",gd);root.closePopUp();
+            cls=definition("com.meng52.game.ui.screen.PanelCenterActivity");
+            cls["$activityFunObj"]=definition("com.meng52.game.global.GlobalFunction")["getActivityFun"]("task");
+            root["mLayoutUICenter"].showPanel("center_activity"); advance(25);
+         }
+         else if(phase==25)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"PanelCenterTaskAward")!=null,"adventure view opens");
+            snapshot("release-adventure",gd);
+            root["mLayoutUICenter"].showPanel("center_main");
+            gd["$tempEquipCurrSelected"]=settings.magicEquipment;
+            cls=definition("com.meng52.game.ui.panel.PanelEquipMagic");
+            root["mLayoutUICenter"].showPanel("equip_fun_magic",false,true);panel=find(gd["$mStarling"].stage,"PanelEquipMagic");advance(26);
+         }
+         else if(phase==26)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"PanelEquipMagic")!=null,"equipment magic opens");
+            snapshot("release-magic",gd);
+            button=find(gd["$mStarling"].stage,"粉尘强化10次",true);
+            requireRelease(button!=null && button.enabled,"batch magic control available");
+            button.dispatchEventWith("triggered",true);advance(60);
+         }
+         else if(phase==60)
+         {
+            snapshot("release-magic-confirm",gd);
+            var confirm:String=definition("com.meng52.game.global.GlobalLanguageStr")["getLanguageStr"](20021);
+            button=find(gd["$mStarling"].stage,confirm,true);
+            requireRelease(button!=null,"batch magic confirmation");button.dispatchEventWith("triggered",true);advance(61);
+         }
+         else if(phase==61)
+         {
+            if(int(gd["$userData"].my_equips[settings.magicEquipment].magic[0])==0) return;
+            requireRelease(int(gd["$userData"].my_equips[settings.magicEquipment].magic[0])==10,"real ten-step magic receipt");
+            snapshot("release-magic-upgraded",gd);panel.onTRIGGERED_closePanel(null);advance(65);
+         }
+         else if(phase==65)
+         {
+            gd["$tempEquipCurrSelected"]=settings.bookEquipment;
+            gd["$tempFoodForBook"]=[];gd["$tempObjectFoodForBook"]={};
+            root["mLayoutUICenter"].showPanel("equip_fun_book",false,true);panel=find(gd["$mStarling"].stage,"PanelEquipBook");advance(62);
+         }
+         else if(phase==62)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"PanelEquipBook")!=null,"skill book view opens");
+            releaseBookMaterials(gd,"e-qa-material-",5);advance(63);
+         }
+         else if(phase==63)
+         {
+            if(gd["$userData"].my_equips["e-qa-material-0"]!=null) return;
+            requireRelease(int(gd["$userData"].my_equips[settings.bookEquipment].slv)==2,"first book upgrade receipt");
+            releaseBookMaterials(gd,"e-qa-green-",4);advance(64);
+         }
+         else if(phase==64)
+         {
+            if(gd["$userData"].my_equips["e-qa-green-0"]!=null) return;
+            requireRelease(int(gd["$userData"].my_equips[settings.bookEquipment].slv)==3,"second book upgrade without relogin");advance(27);
+         }
+         else if(phase==27)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"PanelEquipBook")!=null,"skill book view opens");
+            snapshot("release-books",gd);panel.onTRIGGERED_closePanel(null);
+            releasePrepareBattle(gd,root);
+         }
+         else if(phase==66)
+         {
+            releasePrepareBattle(gd,root);
+         }
+         else if(phase==28 && getTimer()-phaseTime>releaseWait)
+         {
+            map.initMap(true,releasePrepared);map.sendFight();log("RELEASE_FIGHT_SENT");advance(29);
+         }
+         else if(phase==29 && map.re!=null)
+         {
+            snapshot("release-battle",gd);advance(30);
+         }
+         else if(phase==30)
+         {
+            if(map.settlementSent && !map.settlementPending && map.winner>0)
+            {
+               snapshot("release-battle-finished",gd);
+               log("RELEASE_BATTLE_FINISHED winner="+map.winner+" round="+map.roundNum);
+               root.closePopUp();map.clear();root["mLayoutUICenter"].showPanel("center_main");
+               cls=definition("com.meng52.game.ui.panel.PanelHelpNotice");
+               root.openPopUp(new cls(definition("MainConfig")["SERVER_ADDRESS_NOTICE"],"公告"));advance(70);
+            }
+         }
+         else if(phase==70 && getTimer()-phaseTime>12000)
+         {
+            requireRelease(find(gd["$mStarling"].stage,"PanelHelpNotice")!=null,"native announcement opens");
+            snapshot("release-announcement",gd);root.closePopUp();
+            cls=definition("com.meng52.game.ui.screen.PanelLogin");panel=new cls(2);
+            panel.mPop_currID=root.openPopForPanel(panel);advance(71);
+         }
+         else if(phase==71)
+         {
+            button=find(panel,"有钱程度：",true,0,true);
+            requireRelease(button!=null,"registration funding selector");button.dispatchEventWith("triggered",true);advance(72);
+         }
+         else if(phase==72 && getTimer()-phaseTime>12000)
+         {
+            snapshot("release-registration-menu",gd);panel.onTRIGGERED_closePanel(null);
+            log("PROBE_FINISHED release103");timer.stop();NativeApplication.nativeApplication.exit(0);
+         }
+      }
+
+      private function releasePrepareBattle(gd:Class,root:Object):void
+      {
+            var cls:Class=definition("com.meng52.game.ui.map.GameMapLayer");
+            cls["fpsLv"]=cls["FPS_LIST"].length-1;
+            var layer:Object=cls["gl"];if(layer.mapStage.parent==null) root.addChild(layer.mapStage);
+            gd["$isNoFriendToPVE"]=true;gd["$tempPVE_combatID"]="M_001_1";gd["$tempPVE_type"]="status_pve_normal";
+            definition("com.meng52.game.ui.stage.GuideTools")["doPreStory"]("M_001_1");
+            cls=definition("com.meng52.game.module.map.GameMap");cls["isLoad"]=cls["isLoadFile"]=false;
+            map=new cls("M_001_1",0);releasePrepared=[];map.myList=[];map.team1Offset=[];
+            var selected:Array=gd["$userData"].team[0];
+            for(var i:int=0;i<selected.length;i++)
+            {
+               if(!selected[i] || releasePrepared.length>=5) continue;
+               releasePrepared.push({data:{id:selected[i],indexID_s:i}});
+               map.myList.push([selected[i],(releasePrepared.length-1)%map.getLaneCount(),0.35]);map.team1Offset.push(0);
+            }
+            map.initMap(true,releasePrepared);log("RELEASE_MAP_UNITS own="+map.team1List.length+" enemy="+map.team2List.length);
+            releaseCombat(gd);
+            releaseWait=Math.min(60000,Math.max(4000,Number(cls["actionDelay"])*1000+2000));
+            advance(28);
+      }
+
+      private function releaseBookMaterials(gd:Class,prefix:String,count:int):void
+      {
+         gd["$tempFoodForBook"]=[];gd["$tempObjectFoodForBook"]={};
+         for(var i:int=0;i<count;i++) gd["$tempFoodForBook"].push(prefix+i);
+         gd["$mEventDispatcher"].dispatchEventWith("update_book_selected_data");
+         var label:String=definition("com.meng52.game.global.GlobalLanguageStr")["getLanguageStr"](20406);
+         var button:Object=find(panel,label,true);
+         requireRelease(button!=null && button.enabled,"book upgrade control ready");
+         button.dispatchEventWith("triggered",true);
+      }
+
+      private function releaseCombat(gd:Class):void
+      {
+         var Avatar:Class=definition("com.meng52.game.module.avatar.Avatar");
+         var Skill:Class=definition("com.meng52.game.module.skill.SkillSet");
+         var effects:Class=definition("com.meng52.game.ui.effect.DisplayTools");
+         var unit:Object,nurse:Object,goku:Object,santa:Object,morde:Object;
+         for each(unit in map.team1List)
+         {
+            unit.resetBuff();unit.abilityState={};unit.skill2=null;unit.talent=null;
+            unit.hpMax=10000;unit.hp=5000;unit.ap=1000;unit.hit=1000000;unit.flee=unit.crit=unit.tough=0;
+            switch(String(unit.avatarData.id))
+            {
+               case "A_1208_6":nurse=unit;break;
+               case "A_1311_6":goku=unit;break;
+               case "A_1217_6":santa=unit;break;
+               case "A_1137_6":morde=unit;break;
+            }
+         }
+         requireRelease(nurse!=null && goku!=null && santa!=null && morde!=null,"four designed heroes in real map");
+         for each(unit in map.team2List)
+         {
+            unit.resetBuff();unit.abilityState={};unit.skill2=null;unit.skillB=null;unit.talent=null;
+            unit.hpMax=10000000;unit.hp=10000000;unit.ap=100;unit.dePh=unit.deMa=1000000;unit.tough=unit.flee=unit.crit=0;
+         }
+         var enemy:Object=map.team2List[0];
+         nurse.skill0.useSkill();
+         requireRelease(nurse.hp==6400,"nurse level10 AP-only heal");
+         requireRelease(enemy.hp==9999440,"nurse heal produces fixed true damage through armor");
+         for each(unit in map.team1List) unit.hp=10000;
+         nurse.hp=6000;
+         var before:int=enemy.hp;
+         var captain:Object=new Skill("S_371208_6",nurse,1,true);captain.useSkill();
+         requireRelease(nurse.hp==10000 && enemy.hp==before-7600,"nurse captain double self heal and overheal");
+         requireRelease(nurse.buffs.bless!=null && nurse.buffs.bless.value==0,"nurse permanent blessing");
+         before=enemy.hp;nurse.resetBuff();nurse.addBuff("burn",3,1);
+         requireRelease(nurse.buffs.burn!=null,"burn is present for healing reduction check");
+         nurse.injured(1000,1,effects["getAttrs"]("FX60_HEAL"),4,nurse,false,nurse);
+         requireRelease(enemy.hp==before-600,"nurse overheal after burn reduction");nurse.resetBuff();
+         for each(unit in map.team1List) unit.hp=10000;
+         for(var level:int=1;level<=10;level+=9)
+         {
+            goku.hp=1000;goku.ap=level==1?1:999999;
+            var heal:Object=new Skill("S_201311_6",goku,level,false);heal.useSkill();
+            requireRelease(goku.hp==(level==1?2200:2800),"goku max-HP-only heal level "+level);
+         }
+         requireRelease(morde.skill0.skills[4][2]==12600 && Math.abs(Number(morde.skill0.skills[6][1])-6.552)<0.00001,"morde max rank values");
+         santa.abilityState={};santa.line=0;
+         for each(unit in map.team2List) {unit.hp=1;unit.line=0;}
+         santa.skill0.useSkill();
+         requireRelease(int(santa.abilityState.santaKills)==1 && int(santa.abilityState.santaStacks)==3,"santa first cast locks one resolution");
+         for each(unit in map.team2List) if(unit.hp>0) unit.hp=10000000;
+         santa.skill0.useSkill();
+         requireRelease(int(santa.abilityState.santaKills)==1 && int(santa.abilityState.santaStacks)==5,"santa next cast permanently gains second resolution");
+         log("RELEASE_COMBAT_READY");
+      }
+
       private function tick(event:TimerEvent):void
       {
          if(getTimer()-started > 600000 || failed)
@@ -170,6 +480,7 @@ package
                lastStatus = getTimer();
             }
             if(root == null) return;
+            if(String(settings.mode).indexOf("release103") == 0 && phase >= 20) { releaseTick(gd,root); return; }
             if(phase == 0)
             {
                var login:Object = find(root,"PanelServiceMain");
@@ -186,6 +497,14 @@ package
             {
                if(root["mLayoutUICenter"] == null) return;
                log("LOGIN_READY uid="+gd["$modUid"]+" digest="+gd["$modDigest"]);
+               if(String(settings.mode).indexOf("release103") == 0)
+               {
+                  root.closePopUp(); gd["$currentGuide"] = null;
+                  definition("com.meng52.game.module.guide.GuideMaster")["getOnlyExample"]().skipGuide();
+                  releaseConfig(gd);
+                  root["mLayoutUICenter"].showPanel("center_main");
+                  advance(settings.mode=="release103combat"?66:settings.mode=="release103preview"?80:20); return;
+               }
                if(settings.mode == "managed")
                {
                   var heroState:Object = gd["$modRuntime"].heroes[String(settings.expectedHero)];
@@ -375,6 +694,7 @@ package
          {
             timer.stop();
             log("PROBE_ERROR phase="+phase+" "+error.getStackTrace());
+            try {if(String(settings.mode).indexOf("release103")==0) snapshot("release-error-"+phase,definition("com.meng52.game.global.GlobalData"));} catch(captureFailure:Error) {}
             NativeApplication.nativeApplication.exit(1);
          }
       }

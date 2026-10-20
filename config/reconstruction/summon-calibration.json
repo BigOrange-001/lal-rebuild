@@ -1,0 +1,5964 @@
+{
+  "schema": "lal-summon-calibration-v1",
+  "version": "1.0.3",
+  "exported_at": "2026-10-19T08:43:59.671Z",
+  "catalog_source": "publish/lal/config/reconstruction/full-config.json + apply_recruit_exchange_config",
+  "quality_mapping": {
+    "white": 2,
+    "green": 3,
+    "blue": 4,
+    "purple": 5,
+    "orange": 6
+  },
+  "rules": {
+    "draw_order": [
+      "quality",
+      "card"
+    ],
+    "quality_probability_unit": "percent",
+    "card_weight_scope": "within_pool_and_quality",
+    "absent_or_zero_weight": "excluded",
+    "vip_fragment_drops": false,
+    "custom_hero": {
+      "requires_user_confirmation": true,
+      "pools": [
+        "normal",
+        "advanced",
+        "vip"
+      ],
+      "quality_source": "confirmed_hero_definition",
+      "initial_weight": 1,
+      "preserve_existing_weights": true,
+      "preserve_quality_probabilities": true
+    },
+    "pity": {
+      "mode": "disabled_for_this_distribution"
+    },
+    "skin_acquisition_restricted": false
+  },
+  "pools": {
+    "normal": {
+      "name": "普通召唤",
+      "qualities": {
+        "white": {
+          "probability_percent": 70,
+          "cards": [
+            {
+              "id": "A_1001_2",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_2",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_2",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_2",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_2",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_2",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_2",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_2",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_2",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3001_2",
+              "name": "近战小兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3002_2",
+              "name": "远程小兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3003_2",
+              "name": "近战小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3004_2",
+              "name": "远程小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4001_2",
+              "name": "暗影狼",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4004_2",
+              "name": "蜥蜴长者",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4008_2",
+              "name": "幽灵",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "blue": {
+          "probability_percent": 8,
+          "cards": [
+            {
+              "id": "A_1001_4",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_4",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_4",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_4",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_4",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_4",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_4",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_4",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_4",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_4",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_4",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_4",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_4",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_4",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_4",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_4",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_4",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_4",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1019_4",
+              "name": "德莱厄斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1020_4",
+              "name": "蕾欧娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1021_4",
+              "name": "伊泽瑞尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_4",
+              "name": "锤石",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_4",
+              "name": "伊丽丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_4",
+              "name": "婕拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_4",
+              "name": "瑟庄妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_4",
+              "name": "菲兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_4",
+              "name": "希瓦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_4",
+              "name": "拉克丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_4",
+              "name": "奥利安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_4",
+              "name": "努努",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_4",
+              "name": "墨菲特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_4",
+              "name": "希维尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_4",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_4",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_4",
+              "name": "阿里斯塔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_4",
+              "name": "黛安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_4",
+              "name": "拉莫斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_4",
+              "name": "迦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_4",
+              "name": "马尔扎哈",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_4",
+              "name": "古拉加斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_4",
+              "name": "弗拉基米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_4",
+              "name": "亚托克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_4",
+              "name": "敖兴",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_4",
+              "name": "金克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_4",
+              "name": "苹果机器人布里茨",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_4",
+              "name": "觅心猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_4",
+              "name": "兔宝宝提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "green": {
+          "probability_percent": 20,
+          "cards": [
+            {
+              "id": "A_1001_3",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_3",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_3",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_3",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_3",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_3",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_3",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_3",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_3",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_3",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_3",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_3",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_3",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_3",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_3",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_3",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_3",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_3",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_3",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_3",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3003_3",
+              "name": "近战小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3004_3",
+              "name": "远程小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3005_3",
+              "name": "炮车兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3006_3",
+              "name": "炮车兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3007_3",
+              "name": "超级兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3008_3",
+              "name": "超级兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4001_3",
+              "name": "暗影狼",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4004_3",
+              "name": "蜥蜴长者",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4008_3",
+              "name": "幽灵",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4012_3",
+              "name": "石头人",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "purple": {
+          "probability_percent": 2,
+          "cards": [
+            {
+              "id": "A_1001_5",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_5",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_5",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_5",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_5",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_5",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_5",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_5",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_5",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_5",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_5",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_5",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_5",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_5",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_5",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_5",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_5",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_5",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1019_5",
+              "name": "德莱厄斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1020_5",
+              "name": "蕾欧娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1021_5",
+              "name": "伊泽瑞尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1022_5",
+              "name": "阿狸",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1023_5",
+              "name": "泰隆",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1024_5",
+              "name": "艾瑞莉娅",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1025_5",
+              "name": "凯瑟琳",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1026_5",
+              "name": "李青",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1027_5",
+              "name": "维嘉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1028_5",
+              "name": "泰达米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1029_5",
+              "name": "安妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1030_5",
+              "name": "厄运小姐",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_5",
+              "name": "锤石",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1033_5",
+              "name": "伊芙琳",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_5",
+              "name": "伊丽丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_5",
+              "name": "婕拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1041_5",
+              "name": "杰斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1045_5",
+              "name": "璐璐",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_5",
+              "name": "瑟庄妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_5",
+              "name": "菲兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1053_5",
+              "name": "格雷福斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_5",
+              "name": "希瓦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1056_5",
+              "name": "锐雯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_5",
+              "name": "拉克丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1063_5",
+              "name": "卡西奥佩娅",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1068_5",
+              "name": "布兰德",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_5",
+              "name": "奥利安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_5",
+              "name": "努努",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1074_5",
+              "name": "阿木木",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_5",
+              "name": "墨菲特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_5",
+              "name": "希维尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1079_5",
+              "name": "费德提克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_5",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1082_5",
+              "name": "提莫",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_5",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_5",
+              "name": "阿里斯塔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_5",
+              "name": "黛安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_5",
+              "name": "拉莫斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1093_5",
+              "name": "塔里克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_5",
+              "name": "迦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1095_5",
+              "name": "基兰",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1096_5",
+              "name": "崔斯特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1097_5",
+              "name": "卡兹克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1098_5",
+              "name": "凯尔萨斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1099_5",
+              "name": "图奇",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1101_5",
+              "name": "雷克顿",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_5",
+              "name": "马尔扎哈",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1105_5",
+              "name": "奈德丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_5",
+              "name": "古拉加斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1108_5",
+              "name": "波比",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_5",
+              "name": "弗拉基米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1112_5",
+              "name": "扎克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_5",
+              "name": "亚托克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_5",
+              "name": "敖兴",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_5",
+              "name": "金克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1117_5",
+              "name": "丽桑卓",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1119_5",
+              "name": "亚索",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1123_5",
+              "name": "纳尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1124_5",
+              "name": "阿兹尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1125_5",
+              "name": "吉格斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1126_5",
+              "name": "辛德拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1127_5",
+              "name": "乐芙兰",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1128_5",
+              "name": "萨科",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1129_5",
+              "name": "猫女卡特琳娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1130_5",
+              "name": "菲奥娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1131_5",
+              "name": "娜美",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1132_5",
+              "name": "劫",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1133_5",
+              "name": "莫甘娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1134_5",
+              "name": "卡萨丁",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1135_5",
+              "name": "雷恩加尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1136_5",
+              "name": "卢锡安",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1137_5",
+              "name": "莫德凯撒",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1138_5",
+              "name": "塔姆肯奇",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1142_5",
+              "name": "千珏",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1143_5",
+              "name": "俄洛伊",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1201_5",
+              "name": "黄金骑士盖伦",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1202_5",
+              "name": "极地射手艾希",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1203_5",
+              "name": "恶魔男爵瑞兹",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_5",
+              "name": "苹果机器人布里茨",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1205_5",
+              "name": "茂凯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_5",
+              "name": "觅心猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1207_5",
+              "name": "偶像歌手阿狸",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1208_5",
+              "name": "护士阿卡丽",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_5",
+              "name": "兔宝宝提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1211_5",
+              "name": "沙漠治安官凯瑟琳",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1213_5",
+              "name": "足球先生伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1214_5",
+              "name": "逆转裁判崔斯特",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1215_5",
+              "name": "龙的传人李青",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1216_5",
+              "name": "联盟之喙艾维尼亚",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1217_5",
+              "name": "邪恶圣诞老人维嘉",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1218_5",
+              "name": "幽魂费德提克",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1219_5",
+              "name": "源计划亚索",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1221_5",
+              "name": "新年安妮",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1222_5",
+              "name": "超级伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1223_5",
+              "name": "猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1226_5",
+              "name": "二郎真君赵信",
+              "weight": 0.01,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1228_5",
+              "name": "DJ娑娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1309_5",
+              "name": "超人提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1310_5",
+              "name": "钢铁侠提莫",
+              "weight": 0.01,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3007_5",
+              "name": "超级兵-蓝",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3008_5",
+              "name": "超级兵-红",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4008_5",
+              "name": "幽灵",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4014_5",
+              "name": "巨龙",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4016_5",
+              "name": "野猪",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6996_5",
+              "name": "物理经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6997_5",
+              "name": "魔法经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6998_5",
+              "name": "真实经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "orange": {
+          "probability_percent": 0,
+          "cards": []
+        }
+      }
+    },
+    "advanced": {
+      "name": "高级召唤",
+      "qualities": {
+        "white": {
+          "probability_percent": 0,
+          "cards": [
+            {
+              "id": "A_1001_2",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "blue": {
+          "probability_percent": 70,
+          "cards": [
+            {
+              "id": "A_1001_4",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_4",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_4",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_4",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_4",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_4",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_4",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_4",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_4",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_4",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_4",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_4",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_4",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_4",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_4",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_4",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_4",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_4",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1019_4",
+              "name": "德莱厄斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1020_4",
+              "name": "蕾欧娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1021_4",
+              "name": "伊泽瑞尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_4",
+              "name": "锤石",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_4",
+              "name": "伊丽丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_4",
+              "name": "婕拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_4",
+              "name": "瑟庄妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_4",
+              "name": "菲兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_4",
+              "name": "希瓦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_4",
+              "name": "拉克丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_4",
+              "name": "奥利安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_4",
+              "name": "努努",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_4",
+              "name": "墨菲特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_4",
+              "name": "希维尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_4",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_4",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_4",
+              "name": "阿里斯塔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_4",
+              "name": "黛安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_4",
+              "name": "拉莫斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_4",
+              "name": "迦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_4",
+              "name": "马尔扎哈",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_4",
+              "name": "古拉加斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_4",
+              "name": "弗拉基米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_4",
+              "name": "亚托克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_4",
+              "name": "敖兴",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_4",
+              "name": "金克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_4",
+              "name": "苹果机器人布里茨",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_4",
+              "name": "觅心猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_4",
+              "name": "兔宝宝提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "green": {
+          "probability_percent": 15,
+          "cards": [
+            {
+              "id": "A_1001_3",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_3",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_3",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_3",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_3",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_3",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_3",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_3",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_3",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_3",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_3",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_3",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_3",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_3",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_3",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_3",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_3",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_3",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_3",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_3",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3003_3",
+              "name": "近战小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3004_3",
+              "name": "远程小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3005_3",
+              "name": "炮车兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3006_3",
+              "name": "炮车兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3007_3",
+              "name": "超级兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3008_3",
+              "name": "超级兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4001_3",
+              "name": "暗影狼",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4004_3",
+              "name": "蜥蜴长者",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4008_3",
+              "name": "幽灵",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4012_3",
+              "name": "石头人",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "purple": {
+          "probability_percent": 13,
+          "cards": [
+            {
+              "id": "A_1001_5",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_5",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_5",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_5",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_5",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_5",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_5",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_5",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_5",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_5",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_5",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_5",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_5",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_5",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_5",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_5",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_5",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_5",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1019_5",
+              "name": "德莱厄斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1020_5",
+              "name": "蕾欧娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1021_5",
+              "name": "伊泽瑞尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1022_5",
+              "name": "阿狸",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1023_5",
+              "name": "泰隆",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1024_5",
+              "name": "艾瑞莉娅",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1025_5",
+              "name": "凯瑟琳",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1026_5",
+              "name": "李青",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1027_5",
+              "name": "维嘉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1028_5",
+              "name": "泰达米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1029_5",
+              "name": "安妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1030_5",
+              "name": "厄运小姐",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_5",
+              "name": "锤石",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1033_5",
+              "name": "伊芙琳",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_5",
+              "name": "伊丽丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_5",
+              "name": "婕拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1041_5",
+              "name": "杰斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1045_5",
+              "name": "璐璐",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_5",
+              "name": "瑟庄妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_5",
+              "name": "菲兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1053_5",
+              "name": "格雷福斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_5",
+              "name": "希瓦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1056_5",
+              "name": "锐雯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_5",
+              "name": "拉克丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1063_5",
+              "name": "卡西奥佩娅",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1068_5",
+              "name": "布兰德",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_5",
+              "name": "奥利安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_5",
+              "name": "努努",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1074_5",
+              "name": "阿木木",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_5",
+              "name": "墨菲特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_5",
+              "name": "希维尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1079_5",
+              "name": "费德提克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_5",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1082_5",
+              "name": "提莫",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_5",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_5",
+              "name": "阿里斯塔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_5",
+              "name": "黛安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_5",
+              "name": "拉莫斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1093_5",
+              "name": "塔里克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_5",
+              "name": "迦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1095_5",
+              "name": "基兰",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1096_5",
+              "name": "崔斯特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1097_5",
+              "name": "卡兹克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1098_5",
+              "name": "凯尔萨斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1099_5",
+              "name": "图奇",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1101_5",
+              "name": "雷克顿",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_5",
+              "name": "马尔扎哈",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1105_5",
+              "name": "奈德丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_5",
+              "name": "古拉加斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1108_5",
+              "name": "波比",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_5",
+              "name": "弗拉基米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1112_5",
+              "name": "扎克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_5",
+              "name": "亚托克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_5",
+              "name": "敖兴",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_5",
+              "name": "金克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1117_5",
+              "name": "丽桑卓",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1119_5",
+              "name": "亚索",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1123_5",
+              "name": "纳尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1124_5",
+              "name": "阿兹尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1125_5",
+              "name": "吉格斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1126_5",
+              "name": "辛德拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1127_5",
+              "name": "乐芙兰",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1128_5",
+              "name": "萨科",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1129_5",
+              "name": "猫女卡特琳娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1130_5",
+              "name": "菲奥娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1131_5",
+              "name": "娜美",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1132_5",
+              "name": "劫",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1133_5",
+              "name": "莫甘娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1134_5",
+              "name": "卡萨丁",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1135_5",
+              "name": "雷恩加尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1136_5",
+              "name": "卢锡安",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1137_5",
+              "name": "莫德凯撒",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1138_5",
+              "name": "塔姆肯奇",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1142_5",
+              "name": "千珏",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1143_5",
+              "name": "俄洛伊",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1201_5",
+              "name": "黄金骑士盖伦",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1202_5",
+              "name": "极地射手艾希",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1203_5",
+              "name": "恶魔男爵瑞兹",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_5",
+              "name": "苹果机器人布里茨",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1205_5",
+              "name": "茂凯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_5",
+              "name": "觅心猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1207_5",
+              "name": "偶像歌手阿狸",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1208_5",
+              "name": "护士阿卡丽",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_5",
+              "name": "兔宝宝提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1211_5",
+              "name": "沙漠治安官凯瑟琳",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1213_5",
+              "name": "足球先生伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1214_5",
+              "name": "逆转裁判崔斯特",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1215_5",
+              "name": "龙的传人李青",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1216_5",
+              "name": "联盟之喙艾维尼亚",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1217_5",
+              "name": "邪恶圣诞老人维嘉",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1218_5",
+              "name": "幽魂费德提克",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1219_5",
+              "name": "源计划亚索",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1221_5",
+              "name": "新年安妮",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1222_5",
+              "name": "超级伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1223_5",
+              "name": "猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1226_5",
+              "name": "二郎真君赵信",
+              "weight": 0.01,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1228_5",
+              "name": "DJ娑娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1309_5",
+              "name": "超人提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1310_5",
+              "name": "钢铁侠提莫",
+              "weight": 0.01,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3007_5",
+              "name": "超级兵-蓝",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3008_5",
+              "name": "超级兵-红",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4008_5",
+              "name": "幽灵",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4014_5",
+              "name": "巨龙",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4016_5",
+              "name": "野猪",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6996_5",
+              "name": "物理经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6997_5",
+              "name": "魔法经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6998_5",
+              "name": "真实经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "orange": {
+          "probability_percent": 2,
+          "cards": [
+            {
+              "id": "A_1022_6",
+              "name": "阿狸",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1023_6",
+              "name": "泰隆",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1024_6",
+              "name": "艾瑞莉娅",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1025_6",
+              "name": "凯瑟琳",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1026_6",
+              "name": "李青",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1027_6",
+              "name": "维嘉",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1028_6",
+              "name": "泰达米尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1029_6",
+              "name": "安妮",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1030_6",
+              "name": "厄运小姐",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_6",
+              "name": "锤石",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1033_6",
+              "name": "伊芙琳",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_6",
+              "name": "伊丽丝",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_6",
+              "name": "婕拉",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1041_6",
+              "name": "杰斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1045_6",
+              "name": "璐璐",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_6",
+              "name": "瑟庄妮",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_6",
+              "name": "菲兹",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1053_6",
+              "name": "格雷福斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_6",
+              "name": "希瓦娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1056_6",
+              "name": "锐雯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_6",
+              "name": "拉克丝",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1063_6",
+              "name": "卡西奥佩娅",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1068_6",
+              "name": "布兰德",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_6",
+              "name": "奥利安娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_6",
+              "name": "努努",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1074_6",
+              "name": "阿木木",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_6",
+              "name": "墨菲特",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_6",
+              "name": "希维尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1079_6",
+              "name": "费德提克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_6",
+              "name": "艾尼维亚",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1082_6",
+              "name": "提莫",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_6",
+              "name": "崔丝塔娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_6",
+              "name": "阿里斯塔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_6",
+              "name": "黛安娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_6",
+              "name": "拉莫斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1093_6",
+              "name": "塔里克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_6",
+              "name": "迦娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1095_6",
+              "name": "基兰",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1096_6",
+              "name": "崔斯特",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1097_6",
+              "name": "卡兹克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1098_6",
+              "name": "凯尔萨斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1099_6",
+              "name": "图奇",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1101_6",
+              "name": "雷克顿",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_6",
+              "name": "马尔扎哈",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1105_6",
+              "name": "奈德丽",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_6",
+              "name": "古拉加斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1108_6",
+              "name": "波比",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_6",
+              "name": "弗拉基米尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1112_6",
+              "name": "扎克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_6",
+              "name": "亚托克斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_6",
+              "name": "敖兴",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_6",
+              "name": "金克斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1117_6",
+              "name": "丽桑卓",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1119_6",
+              "name": "亚索",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1120_6",
+              "name": "凯尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1123_6",
+              "name": "纳尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1124_6",
+              "name": "阿兹尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1125_6",
+              "name": "吉格斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1126_6",
+              "name": "辛德拉",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1127_6",
+              "name": "乐芙兰",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1128_6",
+              "name": "萨科",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1129_6",
+              "name": "猫女卡特琳娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1130_6",
+              "name": "菲奥娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1131_6",
+              "name": "娜美",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1132_6",
+              "name": "劫",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1133_6",
+              "name": "莫甘娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1134_6",
+              "name": "卡萨丁",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1135_6",
+              "name": "雷恩加尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1136_6",
+              "name": "卢锡安",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1137_6",
+              "name": "莫德凯撒",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1138_6",
+              "name": "塔姆肯奇",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1142_6",
+              "name": "千珏",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1143_6",
+              "name": "俄洛伊",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1201_6",
+              "name": "黄金骑士盖伦",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1202_6",
+              "name": "极地射手艾希",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1203_6",
+              "name": "恶魔男爵瑞兹",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_6",
+              "name": "苹果机器人布里茨",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1205_6",
+              "name": "茂凯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_6",
+              "name": "觅心猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1207_6",
+              "name": "偶像歌手阿狸",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1208_6",
+              "name": "护士阿卡丽",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_6",
+              "name": "兔宝宝提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1210_6",
+              "name": "兔女郎瑞雯",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1211_6",
+              "name": "沙漠治安官凯瑟琳",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1212_6",
+              "name": "粽子少女",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1213_6",
+              "name": "足球先生伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1214_6",
+              "name": "逆转裁判崔斯特",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1215_6",
+              "name": "龙的传人李青",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1216_6",
+              "name": "联盟之喙艾维尼亚",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1217_6",
+              "name": "邪恶圣诞老人维嘉",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1218_6",
+              "name": "幽魂费德提克",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1219_6",
+              "name": "源计划亚索",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1221_6",
+              "name": "新年安妮",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1222_6",
+              "name": "超级伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1223_6",
+              "name": "猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1226_6",
+              "name": "二郎真君赵信",
+              "weight": 0.02,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1228_6",
+              "name": "DJ娑娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1309_6",
+              "name": "超人提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1310_6",
+              "name": "钢铁侠提莫",
+              "weight": 0.02,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1998_6",
+              "name": "大天使长",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        }
+      }
+    },
+    "vip": {
+      "name": "VIP 召唤",
+      "qualities": {
+        "white": {
+          "probability_percent": 0,
+          "cards": [
+            {
+              "id": "A_1001_2",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "blue": {
+          "probability_percent": 70,
+          "cards": [
+            {
+              "id": "A_1001_4",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_4",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_4",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_4",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_4",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_4",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_4",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_4",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_4",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_4",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_4",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_4",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_4",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_4",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_4",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_4",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_4",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_4",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1019_4",
+              "name": "德莱厄斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1020_4",
+              "name": "蕾欧娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1021_4",
+              "name": "伊泽瑞尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_4",
+              "name": "锤石",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_4",
+              "name": "伊丽丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_4",
+              "name": "婕拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_4",
+              "name": "瑟庄妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_4",
+              "name": "菲兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_4",
+              "name": "希瓦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_4",
+              "name": "拉克丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_4",
+              "name": "奥利安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_4",
+              "name": "努努",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_4",
+              "name": "墨菲特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_4",
+              "name": "希维尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_4",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_4",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_4",
+              "name": "阿里斯塔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_4",
+              "name": "黛安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_4",
+              "name": "拉莫斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_4",
+              "name": "迦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_4",
+              "name": "马尔扎哈",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_4",
+              "name": "古拉加斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_4",
+              "name": "弗拉基米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_4",
+              "name": "亚托克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_4",
+              "name": "敖兴",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_4",
+              "name": "金克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_4",
+              "name": "苹果机器人布里茨",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_4",
+              "name": "觅心猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_4",
+              "name": "兔宝宝提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "green": {
+          "probability_percent": 0,
+          "cards": [
+            {
+              "id": "A_1001_3",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_3",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_3",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_3",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_3",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_3",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_3",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_3",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_3",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_3",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_3",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_3",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_3",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_3",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_3",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_3",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_3",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_3",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_3",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_3",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3003_3",
+              "name": "近战小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3004_3",
+              "name": "远程小兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3005_3",
+              "name": "炮车兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3006_3",
+              "name": "炮车兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3007_3",
+              "name": "超级兵-蓝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3008_3",
+              "name": "超级兵-红",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4001_3",
+              "name": "暗影狼",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4004_3",
+              "name": "蜥蜴长者",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4008_3",
+              "name": "幽灵",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4012_3",
+              "name": "石头人",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "purple": {
+          "probability_percent": 25,
+          "cards": [
+            {
+              "id": "A_1001_5",
+              "name": "盖伦",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1002_5",
+              "name": "艾希",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1003_5",
+              "name": "雷兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1004_5",
+              "name": "索拉卡",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1005_5",
+              "name": "悟空",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1006_5",
+              "name": "娑娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1007_5",
+              "name": "嘉文四世",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1008_5",
+              "name": "贾克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1009_5",
+              "name": "赵信",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1010_5",
+              "name": "卡特琳娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1011_5",
+              "name": "普朗克船长",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1012_5",
+              "name": "易大师",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1013_5",
+              "name": "布里茨",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1014_5",
+              "name": "黑默丁格",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1015_5",
+              "name": "阿卡丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1016_5",
+              "name": "凯南",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1017_5",
+              "name": "潘森",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1018_5",
+              "name": "慎",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1019_5",
+              "name": "德莱厄斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1020_5",
+              "name": "蕾欧娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1021_5",
+              "name": "伊泽瑞尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1022_5",
+              "name": "阿狸",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1023_5",
+              "name": "泰隆",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1024_5",
+              "name": "艾瑞莉娅",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1025_5",
+              "name": "凯瑟琳",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1026_5",
+              "name": "李青",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1027_5",
+              "name": "维嘉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1028_5",
+              "name": "泰达米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1029_5",
+              "name": "安妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1030_5",
+              "name": "厄运小姐",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_5",
+              "name": "锤石",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1033_5",
+              "name": "伊芙琳",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_5",
+              "name": "伊丽丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_5",
+              "name": "婕拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1041_5",
+              "name": "杰斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1045_5",
+              "name": "璐璐",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_5",
+              "name": "瑟庄妮",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_5",
+              "name": "菲兹",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1053_5",
+              "name": "格雷福斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_5",
+              "name": "希瓦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1056_5",
+              "name": "锐雯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_5",
+              "name": "拉克丝",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1063_5",
+              "name": "卡西奥佩娅",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1068_5",
+              "name": "布兰德",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_5",
+              "name": "奥利安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_5",
+              "name": "努努",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1074_5",
+              "name": "阿木木",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_5",
+              "name": "墨菲特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_5",
+              "name": "希维尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1079_5",
+              "name": "费德提克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_5",
+              "name": "艾尼维亚",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1082_5",
+              "name": "提莫",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_5",
+              "name": "崔丝塔娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_5",
+              "name": "阿里斯塔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_5",
+              "name": "黛安娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_5",
+              "name": "拉莫斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1093_5",
+              "name": "塔里克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_5",
+              "name": "迦娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1095_5",
+              "name": "基兰",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1096_5",
+              "name": "崔斯特",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1097_5",
+              "name": "卡兹克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1098_5",
+              "name": "凯尔萨斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1099_5",
+              "name": "图奇",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1101_5",
+              "name": "雷克顿",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_5",
+              "name": "马尔扎哈",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1105_5",
+              "name": "奈德丽",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_5",
+              "name": "古拉加斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1108_5",
+              "name": "波比",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_5",
+              "name": "弗拉基米尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1112_5",
+              "name": "扎克",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_5",
+              "name": "亚托克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_5",
+              "name": "敖兴",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_5",
+              "name": "金克斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1117_5",
+              "name": "丽桑卓",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1119_5",
+              "name": "亚索",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1123_5",
+              "name": "纳尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1124_5",
+              "name": "阿兹尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1125_5",
+              "name": "吉格斯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1126_5",
+              "name": "辛德拉",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1127_5",
+              "name": "乐芙兰",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1128_5",
+              "name": "萨科",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1129_5",
+              "name": "猫女卡特琳娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1130_5",
+              "name": "菲奥娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1131_5",
+              "name": "娜美",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1132_5",
+              "name": "劫",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1133_5",
+              "name": "莫甘娜",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1134_5",
+              "name": "卡萨丁",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1135_5",
+              "name": "雷恩加尔",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1136_5",
+              "name": "卢锡安",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1137_5",
+              "name": "莫德凯撒",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1138_5",
+              "name": "塔姆肯奇",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1142_5",
+              "name": "千珏",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1143_5",
+              "name": "俄洛伊",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1201_5",
+              "name": "黄金骑士盖伦",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1202_5",
+              "name": "极地射手艾希",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1203_5",
+              "name": "恶魔男爵瑞兹",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_5",
+              "name": "苹果机器人布里茨",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1205_5",
+              "name": "茂凯",
+              "weight": 1,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_5",
+              "name": "觅心猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1207_5",
+              "name": "偶像歌手阿狸",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1208_5",
+              "name": "护士阿卡丽",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_5",
+              "name": "兔宝宝提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1211_5",
+              "name": "沙漠治安官凯瑟琳",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1213_5",
+              "name": "足球先生伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1214_5",
+              "name": "逆转裁判崔斯特",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1215_5",
+              "name": "龙的传人李青",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1216_5",
+              "name": "联盟之喙艾维尼亚",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1217_5",
+              "name": "邪恶圣诞老人维嘉",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1218_5",
+              "name": "幽魂费德提克",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1219_5",
+              "name": "源计划亚索",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1221_5",
+              "name": "新年安妮",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1222_5",
+              "name": "超级伊泽瑞尔",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1223_5",
+              "name": "猎手薇恩",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1226_5",
+              "name": "二郎真君赵信",
+              "weight": 0.01,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1228_5",
+              "name": "DJ娑娜",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1309_5",
+              "name": "超人提莫",
+              "weight": 0.2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1310_5",
+              "name": "钢铁侠提莫",
+              "weight": 0.01,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3007_5",
+              "name": "超级兵-蓝",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_3008_5",
+              "name": "超级兵-红",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4008_5",
+              "name": "幽灵",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4014_5",
+              "name": "巨龙",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_4016_5",
+              "name": "野猪",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6996_5",
+              "name": "物理经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6997_5",
+              "name": "魔法经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_6998_5",
+              "name": "真实经验书",
+              "weight": 10,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        },
+        "orange": {
+          "probability_percent": 5,
+          "cards": [
+            {
+              "id": "A_1022_6",
+              "name": "阿狸",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1023_6",
+              "name": "泰隆",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1024_6",
+              "name": "艾瑞莉娅",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1025_6",
+              "name": "凯瑟琳",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1026_6",
+              "name": "李青",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1027_6",
+              "name": "维嘉",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1028_6",
+              "name": "泰达米尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1029_6",
+              "name": "安妮",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1030_6",
+              "name": "厄运小姐",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1032_6",
+              "name": "锤石",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1033_6",
+              "name": "伊芙琳",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1036_6",
+              "name": "伊丽丝",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1040_6",
+              "name": "婕拉",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1041_6",
+              "name": "杰斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1045_6",
+              "name": "璐璐",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1049_6",
+              "name": "瑟庄妮",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1052_6",
+              "name": "菲兹",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1053_6",
+              "name": "格雷福斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1054_6",
+              "name": "希瓦娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1056_6",
+              "name": "锐雯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1060_6",
+              "name": "拉克丝",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1063_6",
+              "name": "卡西奥佩娅",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1068_6",
+              "name": "布兰德",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1071_6",
+              "name": "奥利安娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1073_6",
+              "name": "努努",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1074_6",
+              "name": "阿木木",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1077_6",
+              "name": "墨菲特",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1078_6",
+              "name": "希维尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1079_6",
+              "name": "费德提克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1081_6",
+              "name": "艾尼维亚",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1082_6",
+              "name": "提莫",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1083_6",
+              "name": "崔丝塔娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1085_6",
+              "name": "阿里斯塔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1086_6",
+              "name": "黛安娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1090_6",
+              "name": "拉莫斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1093_6",
+              "name": "塔里克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1094_6",
+              "name": "迦娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1095_6",
+              "name": "基兰",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1096_6",
+              "name": "崔斯特",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1097_6",
+              "name": "卡兹克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1098_6",
+              "name": "凯尔萨斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1099_6",
+              "name": "图奇",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1101_6",
+              "name": "雷克顿",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1103_6",
+              "name": "马尔扎哈",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1105_6",
+              "name": "奈德丽",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1106_6",
+              "name": "古拉加斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1108_6",
+              "name": "波比",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1109_6",
+              "name": "弗拉基米尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1112_6",
+              "name": "扎克",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1113_6",
+              "name": "亚托克斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1114_6",
+              "name": "敖兴",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1115_6",
+              "name": "金克斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1117_6",
+              "name": "丽桑卓",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1119_6",
+              "name": "亚索",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1120_6",
+              "name": "凯尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1123_6",
+              "name": "纳尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1124_6",
+              "name": "阿兹尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1125_6",
+              "name": "吉格斯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1126_6",
+              "name": "辛德拉",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1127_6",
+              "name": "乐芙兰",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1128_6",
+              "name": "萨科",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1129_6",
+              "name": "猫女卡特琳娜",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1130_6",
+              "name": "菲奥娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1131_6",
+              "name": "娜美",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1132_6",
+              "name": "劫",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1133_6",
+              "name": "莫甘娜",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1134_6",
+              "name": "卡萨丁",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1135_6",
+              "name": "雷恩加尔",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1136_6",
+              "name": "卢锡安",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1137_6",
+              "name": "莫德凯撒",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1138_6",
+              "name": "塔姆肯奇",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1142_6",
+              "name": "千珏",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1143_6",
+              "name": "俄洛伊",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1201_6",
+              "name": "黄金骑士盖伦",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1202_6",
+              "name": "极地射手艾希",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1203_6",
+              "name": "恶魔男爵瑞兹",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1204_6",
+              "name": "苹果机器人布里茨",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1205_6",
+              "name": "茂凯",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1206_6",
+              "name": "觅心猎手薇恩",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1207_6",
+              "name": "偶像歌手阿狸",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1208_6",
+              "name": "护士阿卡丽",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1209_6",
+              "name": "兔宝宝提莫",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1210_6",
+              "name": "兔女郎瑞雯",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1211_6",
+              "name": "沙漠治安官凯瑟琳",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1212_6",
+              "name": "粽子少女",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1213_6",
+              "name": "足球先生伊泽瑞尔",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1214_6",
+              "name": "逆转裁判崔斯特",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1215_6",
+              "name": "龙的传人李青",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1216_6",
+              "name": "联盟之喙艾维尼亚",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1217_6",
+              "name": "邪恶圣诞老人维嘉",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1218_6",
+              "name": "幽魂费德提克",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1219_6",
+              "name": "源计划亚索",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1221_6",
+              "name": "新年安妮",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1222_6",
+              "name": "超级伊泽瑞尔",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1223_6",
+              "name": "猎手薇恩",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1226_6",
+              "name": "二郎真君赵信",
+              "weight": 0.04,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1228_6",
+              "name": "DJ娑娜",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1309_6",
+              "name": "超人提莫",
+              "weight": 0.4,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1310_6",
+              "name": "钢铁侠提莫",
+              "weight": 0.04,
+              "custom": false,
+              "confirmed": false
+            },
+            {
+              "id": "A_1998_6",
+              "name": "大天使长",
+              "weight": 2,
+              "custom": false,
+              "confirmed": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  "normalization": {
+    "shared_card_qualities": [
+      "blue",
+      "green",
+      "purple"
+    ],
+    "shared_source_pool": "normal",
+    "vip_orange_source_pool": "advanced",
+    "vip_orange_skin_weight_multiplier": 2,
+    "vip_orange_ordinary_weight_multiplier": 1,
+    "skin_hero_ids": [
+      "A_1129_5",
+      "A_1129_6",
+      "A_1201_5",
+      "A_1201_6",
+      "A_1202_5",
+      "A_1202_6",
+      "A_1203_5",
+      "A_1203_6",
+      "A_1204_4",
+      "A_1204_5",
+      "A_1204_6",
+      "A_1206_4",
+      "A_1206_5",
+      "A_1206_6",
+      "A_1207_5",
+      "A_1207_6",
+      "A_1208_5",
+      "A_1208_6",
+      "A_1209_4",
+      "A_1209_5",
+      "A_1209_6",
+      "A_1210_6",
+      "A_1211_5",
+      "A_1211_6",
+      "A_1212_6",
+      "A_1213_5",
+      "A_1213_6",
+      "A_1214_5",
+      "A_1214_6",
+      "A_1215_5",
+      "A_1215_6",
+      "A_1216_5",
+      "A_1216_6",
+      "A_1217_5",
+      "A_1217_6",
+      "A_1218_5",
+      "A_1218_6",
+      "A_1219_5",
+      "A_1219_6",
+      "A_1221_5",
+      "A_1221_6",
+      "A_1222_5",
+      "A_1222_6",
+      "A_1223_5",
+      "A_1223_6",
+      "A_1226_6",
+      "A_1228_5",
+      "A_1228_6",
+      "A_1309_5",
+      "A_1309_6",
+      "A_1310_5",
+      "A_1310_6"
+    ],
+    "note": "User clarified repeated entries on 2026-10-19. Quality probabilities preserved. A_1212_6 (粽子少女) is a skin despite missing the legacy restriction list."
+  }
+}

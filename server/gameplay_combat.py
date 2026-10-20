@@ -15,7 +15,7 @@ from hero_drop import roll_campaign_hero_drop
 from mod_policy import (runtime as mod_runtime, effective_digest, validate_battle_config,
                         candidate_ids, ensure_reward, ensure_available, base_aid,
                         hero_available, band_candidates, retain_frozen_intent)
-from tower_rewards_103 import roll_tower_reward, roll_tower_encounter, SCHEMA as TOWER_REWARD_SCHEMA
+from tower_rewards_103 import roll_tower_reward, roll_tower_encounter, validate_tower_reward, SCHEMA as TOWER_REWARD_SCHEMA
 from material_attempts_103 import remaining as material_remaining, consume_win as consume_material_win, daily_state as material_daily, BUY_COST
 
 
@@ -240,11 +240,14 @@ class GameplayCombat:
                             if not candidate_ids(self.config, ids, "acquisition.drop.campaign", include_new=True, quality=quality):
                                 raise GameplayFault("ModPoolEmpty", "主线英雄掉落的某个品阶池为空")
                     if is_activity and stage.get("activity_kind") == "tower":
-                        soul_pool = band_candidates(self.config, stage.get("soul_candidates", []), "acquisition.drop.tower_soul")
-                        if not soul_pool:
-                            raise GameplayFault("ModPoolEmpty", "爬塔英雄碎片池为空")
-                        if int(stage.get("tower_floor", 0)) > 100 and not candidate_ids(self.config, stage.get("tower_hero_candidates", []), "acquisition.drop.tower_hero", include_new=True, quality=6):
-                            raise GameplayFault("ModPoolEmpty", "爬塔整卡池为空")
+                        if stage.get('tower_reward_rule',{}).get('schema') == TOWER_REWARD_SCHEMA:
+                            validate_tower_reward(self.full_config,stage)
+                        else:
+                            soul_pool = band_candidates(self.config, stage.get("soul_candidates", []), "acquisition.drop.tower_soul")
+                            if not soul_pool:
+                                raise GameplayFault("ModPoolEmpty", "爬塔英雄碎片池为空")
+                            if int(stage.get("tower_floor", 0)) > 100 and not candidate_ids(self.config, stage.get("tower_hero_candidates", []), "acquisition.drop.tower_hero", include_new=True, quality=6):
+                                raise GameplayFault("ModPoolEmpty", "爬塔整卡池为空")
                 energy_state=self._spend_energy(profile,energy_cost)
                 stage_copy = copy.deepcopy(stage)
                 stage_copy["line"] = map_line
@@ -381,7 +384,7 @@ class GameplayCombat:
             line = max(0, min(2, int(row[1]))) if len(row) > 2 else 0
             pos = max(0.0, min(1.0, float(row[2]))) if len(row) > 2 else 0.5
             overrides = {key: avatar.get(key) for key in (
-                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema",
+                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "growth_stats_applied",
                 "skill", "leader_skill", "book_skill", "skillB")}
             overrides["leader_skill"] = avatar.get("leader_skill") if is_friend else None
             overrides["new_4attrs"] = {
@@ -1000,7 +1003,7 @@ class GameplayCombat:
                     # retain stale multi-lane indices from another mode.
                     _, pos = (int(row[1]), float(row[2])) if len(row) >= 3 else (0, .2 + .24 * i)
                     line = 0
-                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "skill", "leader_skill", "book_skill", "skillB")}
+                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "growth_stats_applied", "skill", "leader_skill", "book_skill", "skillB")}
                     # Native exploration marks every selected hero as captain.
                     overrides["leader_skill"] = raw.get("leader_skill")
                     overrides["hp"] = current_hp

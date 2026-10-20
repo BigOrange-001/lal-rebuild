@@ -71,7 +71,8 @@ def enemy_quality(stage):
     if not qualities:raise GameplayFault('InvalidStage','Tower enemy quality is unavailable')
     return max(qualities)
 
-def roll_tower_reward(config,stage,rng):
+def validate_tower_reward(config,stage):
+    """Use exactly the settlement pool and uniqueness rule for Mod preflight."""
     pools=SummonPools.from_config(config)
     if pools is None:raise GameplayFault('InvalidConfig','Tower requires calibrated summon pools')
     floor=int(stage.get('tower_floor',0))
@@ -80,9 +81,19 @@ def roll_tower_reward(config,stage,rng):
     if quality<6:
         key=next((key for key,value in QUALITY_IDS.items() if value==quality),None)
         if key is None:raise GameplayFault('InvalidStage','Unsupported tower quality')
-        aid=pools.draw_quality('advanced',key,rng)[0]
+        pools.validate_quality('advanced',key)
+        return pools,'advanced',key,1
+    pools.validate_quality('vip','orange',10)
+    return pools,'vip','orange',10
+
+
+def roll_tower_reward(config,stage,rng):
+    pools,pool,quality,count=validate_tower_reward(config,stage)
+    heroes=pools.draw_quality(pool,quality,rng,count)
+    if count==1:
+        aid=heroes[0]
         return {'heroes':[{'aid':aid,'num':1}]}
-    heroes=pools.draw_quality('vip','orange',rng,10)
+    floor=int(stage['tower_floor'])
     souls=dict.fromkeys(heroes,1)
     for _ in range(100+floor*2-10):souls[heroes[rng.randrange(10)]]+=1
     return {'avatar_soul':souls}

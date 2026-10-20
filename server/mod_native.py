@@ -54,6 +54,10 @@ OP_LABELS = dict(zip(
 
 # Labels are positions in the actual engine arrays, including index zero.
 ARG_LABELS = {
+    'caster_ap_shield': ['动作','施法者攻击护盾倍率','持续回合','特效'],
+    'timed_bless': ['动作','持续回合','特效'],
+    'book_burn': ['动作','灼烧总攻击倍率','持续回合','特效'],
+    'book_bonus': ['动作','属性比例','属性','持续回合'],
     'damage': ['动作','伤害倍率','伤害类型','特效'],
     'caster_hp_heal': ['动作','施法者最大生命治疗比例','特效'],
     'manual_ability': ['动作','复合机制','等级倍率','特效'],

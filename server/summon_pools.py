@@ -137,17 +137,21 @@ class SummonPools:
 
     def draw_quality(self, pool, quality, rng, count=1):
         """Weighted fixed-quality draw, without replacement when count > 1."""
-        if (pool, quality) not in self._cards or type(count) is not int or count < 1:
-            raise GameplayFault('InvalidConfig', 'Invalid fixed-quality summon request')
+        self.validate_quality(pool, quality, count)
         rows=list(self._cards[pool, quality][0])
-        if len(rows) < count:
-            raise GameplayFault('InvalidConfig', 'Not enough distinct heroes in the summon pool')
         chosen=[]
         for _ in range(count):
             aid=_pick((rows,sum(weight for _,weight in rows)),rng)
             chosen.append(aid)
             rows=[row for row in rows if row[0]!=aid]
         return chosen
+
+    def validate_quality(self, pool, quality, count=1):
+        """Check a fixed-quality reward before spending resources or creating intent."""
+        if (pool, quality) not in self._cards or type(count) is not int or count < 1:
+            raise GameplayFault('InvalidConfig', 'Invalid fixed-quality summon request')
+        if len(self._cards[pool, quality][0]) < count:
+            raise GameplayFault('InvalidConfig', 'Not enough distinct heroes in the summon pool')
 
 
 def confirm_custom_hero(document, aid, *, confirmed, pools=POOL_KEYS):

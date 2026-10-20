@@ -61,5 +61,21 @@ class NativeReviewTests(unittest.TestCase):
         skill['nativeTemplate']['abilityContract']='0'*64
         with self.assertRaises(ModError):validate_template(skill,self.base)
 
+    def test_new_duration_actions_reject_invalid_rounds_and_accept_boundaries(self):
+        for kind,position in (('caster_ap_shield',1),('book_burn',1),('book_bonus',2),('timed_bless',0)):
+            sid=next(sid for sid,row in self.base['cfg']['skill'].items()
+                     if any(action[0]==kind for action in row.get('skill',[])))
+            template=self.template(sid)
+            for rounds in (-999,0,101,1.5,True):
+                with self.subTest(kind=kind,rounds=rounds):
+                    changed=copy.deepcopy(template)
+                    next(a for a in changed['actions'] if a['type']==kind)['arguments'][position]=rounds
+                    with self.assertRaises(ModError):validate_template(changed,self.base)
+            for rounds in (1,100):
+                with self.subTest(kind=kind,rounds=rounds):
+                    changed=copy.deepcopy(template)
+                    next(a for a in changed['actions'] if a['type']==kind)['arguments'][position]=rounds
+                    validate_template(changed,self.base)
+
 
 if __name__=='__main__':unittest.main()

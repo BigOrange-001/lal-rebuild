@@ -164,4 +164,31 @@ class TowerRewards103Tests(unittest.TestCase):
         with self.assertRaises(GameplayFault):combat._finish(uid,params)
         self.assertEqual(store.profile_raw(uid),before)
 
+    def test_modded_tower_uses_calibrated_rewards_at_low_orange_and_final_floors(self):
+        config=copy.deepcopy(self.config)
+        config['cfg']['mod_runtime']={'digest':'tower-review','heroes':{},'scopedAvatarIds':{},
+                                     'missingHeroIds':[],'knownHeroIds':[]}
+        for floor in (1,150,180):
+            with self.subTest(floor=floor):
+                store,uid,combat,team=self.store(floor,config)
+                params=self.fight(combat,uid,team,floor,action=f'mod-floor-{floor}')
+                won=combat._finish(uid,params)
+                self.assertEqual(won['tower_floor'],floor+1)
+                if floor==1:self.assertEqual(len(won['get_avatars']),1)
+                else:
+                    self.assertEqual(len(won['new_avatar_soul']),10)
+                    self.assertEqual(sum(won['new_avatar_soul'].values()),100+2*floor)
+
+    def test_modded_tower_filtered_vip_pool_rejects_before_spending_or_creating_intent(self):
+        config=copy.deepcopy(self.config)
+        cards=config['cfg']['summon_calibration']['pools']['vip']['qualities']['orange']['cards']
+        config['cfg']['mod_runtime']={'digest':'tower-review','heroes':{
+            row['id']:{'available':True,'channels':{'acquisition.summon.activity':False}}
+            for row in cards[9:]},'scopedAvatarIds':{},'missingHeroIds':[],'knownHeroIds':[]}
+        store,uid,combat,team=self.store(150,config)
+        before=store.profile_raw(uid)
+        with self.assertRaisesRegex(GameplayFault,'Not enough distinct heroes'):
+            combat._start_main(uid,{'cid':'P_200_150','diff':0,'team':team,'actionID':'invalid-mod-pool'})
+        self.assertEqual(store.profile_raw(uid),before)
+
 if __name__=='__main__':unittest.main()

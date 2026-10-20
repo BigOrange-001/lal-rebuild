@@ -1049,7 +1049,7 @@ package com.meng52.game.module.avatar
                if(targets.length == 0 || hp <= 0) break;
                var ticket:int = Random.getRandom(targets.length);
                var victim:Avatar = targets[((ticket % targets.length)+targets.length)%targets.length] as Avatar;
-               abilityHit(victim,Number(sourceSkill.skills[0][4]),2,effect);
+               abilityHit(victim,Number(sourceSkill.getNativeAction()[4]),2,effect);
                abilityState.santaStacks = int(abilityState.santaStacks)+1;
                abilityFeedback("邪恶攻击 "+int(abilityState.santaStacks)+"层","FX60_STRONG",16744448);
             }
@@ -1072,7 +1072,7 @@ package com.meng52.game.module.avatar
          if(kind == "nurse_n")
          {
             for each(target in allies) if(target.hp > 0) target.addBuff("purify",1);
-            amount = Tools.toInt(Tools.toInt(getDamage()*(1+checkTalent(1)))*Number(sourceSkill.skills[0][4]));
+            amount = Tools.toInt(Tools.toInt(getDamage()*(1+checkTalent(1)))*Number(sourceSkill.getNativeAction()[4]));
             for each(target in allies)
             {
                if(target.hp <= 0) continue;
@@ -1148,7 +1148,7 @@ package com.meng52.game.module.avatar
          {
             targets = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1);
             if(targets.length == 0) return false;
-            var params:Array = sourceSkill.skills[0];
+            var params:Array = sourceSkill.getNativeAction();
             addBuff("critup",1,Number(params[4]));
             var reduction:Number = Number(params[5]);
             for each(target in targets)
@@ -1245,7 +1245,7 @@ package com.meng52.game.module.avatar
             targets = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,3,false,"front");
             if(targets.length == 0) return false;
             primary = targets[0] as Avatar;
-            var params:Array = sourceSkill.skills[0];
+            var params:Array = sourceSkill.getNativeAction();
             addBuff("hitup",2,Number(params[4]));
             abilityDash(primary);
             var before:Number = Number(context.damage);
@@ -1557,6 +1557,63 @@ package com.meng52.game.module.avatar
       public var manualBattleStacks:Object;
       public var manualTimedStacks:Array;
       public var manualOwnerActionSerial:int = 0;
+      private static var modEventDepth:int = 0;
+      private static var modEventBudget:int = 0;
+
+      public function hasModBuff(kind:String) : Boolean
+      {
+         if(kind == "timed_bless") return buffs && buffs["bless"] && Number(buffs["bless"].value) > 0;
+         return buffs && buffs[kind] != null;
+      }
+
+      public function emitModEvent(event:String,source:Avatar = null,target:Avatar = null,amount:Number = 0,overheal:Number = 0) : Boolean
+      {
+         if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;
+         var row:Object = GlobalData.$mConfig_skill[skillB.skillSetData.id];
+         var gate:Object = row ? row.modCondition : null;
+         if(!gate || gate.kind != "event" || gate.event != event || (hp <= 0 && event != "death")) return false;
+         if(abilityState.modEventBusy || modEventDepth >= 8 || (modEventDepth > 0 && gate.allowChain !== true)) return false;
+         var other:Avatar = source === this ? target : source;
+         if(gate.relation == "self" && other !== this) return false;
+         if(gate.relation == "ally" && (!other || other.team != team || other === this)) return false;
+         if(gate.relation == "enemy" && (!other || other.team == team)) return false;
+         if(gate.unitType == "hero" && (!other || other.getType() != 1 || other.isManualSummonUnit)) return false;
+         if(gate.unitType == "summon" && (!other || !other.isManualSummonUnit && other.getType() != 2)) return false;
+         if(gate.minAmount != null && amount < Number(gate.minAmount)) return false;
+         if(gate.hpBelow != null && Number(Math.max(0,hp))/Math.max(1,hpMax) > Number(gate.hpBelow)) return false;
+         if(gate.requiredBuff && !hasModBuff(String(gate.requiredBuff))) return false;
+         if(gate.absentBuff && hasModBuff(String(gate.absentBuff))) return false;
+         var ownTurn:int = manualOwnerActionSerial;
+         var readyTurn:int = abilityState.modEventReady == null ? skillB.skillSetData.warmup : int(abilityState.modEventReady);
+         if(ownTurn < readyTurn) return false;
+         var round:int = GameMap.currentMap.roundNum;
+         if(abilityState.modEventRound == null || int(abilityState.modEventRound) != round)
+         {
+            abilityState.modEventRound = round; abilityState.modEventCount = 0;
+         }
+         var limit:int = gate.maxPerRound == null ? 1 : int(gate.maxPerRound);
+         if(int(abilityState.modEventCount) >= limit) return false;
+         var previous:Object = skillB.modEventContext;
+         skillB.modEventContext = {event:event,source:source,target:target,amount:Math.max(0,amount),overheal:Math.max(0,overheal)};
+         if(!skillB.canModEventCast()) { skillB.modEventContext = previous; return false; }
+         if(modEventDepth == 0) modEventBudget = 64;
+         if(modEventBudget <= 0) { skillB.modEventContext = previous; return false; }
+         --modEventBudget; ++modEventDepth;
+         abilityState.modEventBusy = true;
+         abilityState.modEventCount = int(abilityState.modEventCount)+1;
+         abilityState.modEventReady = ownTurn+skillB.skillSetData.cooldown;
+         try { skillB.useSkill(); }
+         finally { abilityState.modEventBusy = false; --modEventDepth; skillB.modEventContext = previous; }
+         return true;
+      }
+
+      public function emitModTurnEnd() : Boolean
+      {
+         if(abilityState.modEventEndSerial != null && int(abilityState.modEventEndSerial) == manualOwnerActionSerial) return false;
+         abilityState.modEventEndSerial = manualOwnerActionSerial;
+         return emitModEvent("turn_end",this,this);
+      }
+
       public var manualSummonFamilies:Object;
       public var manualAttackRangeOverride:Number = NaN;
       public var manualSkillDamageCapture:Object;
@@ -4959,6 +5016,7 @@ package com.meng52.game.module.avatar
          {
             skillB.cooldown();
          }
+         emitModEvent("turn_start",this,this);
          getTeamHp();
          if(checkBuffOfSkillB())
          {
@@ -5548,6 +5606,8 @@ package com.meng52.game.module.avatar
             _loc8_.delayCall(_loc8_.infoLayer.popTextForAvatar,GameMap.actionDelay,GlobalLanguageStr.getLanguageStr(30010),param2,13684944,35,1);
             _loc8_.delayCall(missTween,GameMap.actionDelay - 0.2,param2);
             _loc8_.delayCall(SoundManager.getOnlyExample().playSound,GameMap.actionDelay - 0.1,"miss");
+            param1.emitModEvent("miss",param1,param2);
+            param2.emitModEvent("dodge",param1,param2);
             GameMapTools.gameTrace(GameMap.currentAvatar.id,GameMap.currentAvatar.team,"        ",param2.id,param2.team + "閃避");
             if(param3)
             {
@@ -6134,6 +6194,7 @@ package com.meng52.game.module.avatar
             {
                if(markedBasic && basicContext.hits.indexOf(aimTarget) >= 0) delete aimTarget.abilityState["mark_aim_"+abilityIndex];
                endAbilityAttack(basicContext);
+               if(bookBasicAttack) emitModEvent("basic_attack",this,aimTarget);
                if(bookBasicAttack && this.skillB && this.skillB.skills && this.skillB.skills.length && this.skillB.skills[0][0] == "polar_basic") polarBasicAttack();
             }
          }
@@ -6242,6 +6303,7 @@ package com.meng52.game.module.avatar
       public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "") : int
       {
          var abilityHpBefore:int = hp;
+         var modShieldBefore:Number = buffs && buffs["shield"] ? Number(buffs["shield"].value) : 0;
          var nurseHealAmount:int = 0;
          var abilityDamageTaken:Number = 0;
          param1 = int(param1 * abilityDirectMultiplier(param7,param4));
@@ -6540,6 +6602,36 @@ package com.meng52.game.module.avatar
             hp = 1;
             GameMapTools.gameTrace(id + "触发限时一次免死，保留1生命");
             _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp);
+         }
+         var modActualDamage:Number = param4 == 4 ? 0 : Math.max(0,abilityHpBefore-Math.max(0,hp));
+         var modActualHeal:Number = Math.min(Math.max(0,hpMax-abilityHpBefore),nurseHealAmount);
+         var modOverheal:Number = Math.max(0,nurseHealAmount-modActualHeal);
+         var modKilled:Boolean = abilityHpBefore > 0 && hp <= 0;
+         var modShieldBroke:Boolean = modShieldBefore > 0 && (!buffs["shield"] || Number(buffs["shield"].value) <= 0);
+         if(param4 == 4 && nurseHealAmount > 0)
+         {
+            emitModEvent("healed",param7 || param5 || this,this,modActualHeal,modOverheal);
+            if(param7 || param5) (param7 || param5).emitModEvent("heal_done",param7 || param5,this,modActualHeal,modOverheal);
+         }
+         else if(param4 >= 1 && param4 != 4 && param4 != 5)
+         {
+            if(modActualDamage > 0)
+            {
+               emitModEvent("damage_taken",param7,this,modActualDamage);
+               if(param7) param7.emitModEvent("damage_dealt",param7,this,modActualDamage);
+            }
+            if(param4 <= 3 && param7)
+            {
+               param7.emitModEvent("hit",param7,this,modActualDamage);
+               if(param2 > 1) param7.emitModEvent("crit",param7,this,modActualDamage);
+            }
+            if(modShieldBroke)
+               emitModEvent("shield_break",param7,this,modActualDamage);
+            if(modKilled)
+            {
+               if(param7 && param7.team != team) param7.emitModEvent("kill",param7,this,modActualDamage);
+               emitModEvent("death",param7,this,modActualDamage);
+            }
          }
          if(param4 == 6 || param4 == 7 || param4 == 8)
          {

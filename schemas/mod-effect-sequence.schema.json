@@ -25,7 +25,7 @@
     },
     "cooldown": {
       "type": "integer",
-      "minimum": 1,
+      "minimum": 0,
       "maximum": 100
     },
     "range": {
@@ -66,13 +66,116 @@
                 "toughup",
                 "fleeup",
                 "hitup",
-                "stun"
+                "stun",
+                "curse",
+                "timed_bless"
               ]
             }
           },
           "required": [
             "kind",
             "buff"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "event"
+            },
+            "event": {
+              "enum": [
+                "turn_start",
+                "turn_end",
+                "basic_attack",
+                "skill_cast",
+                "hit",
+                "crit",
+                "miss",
+                "damage_taken",
+                "damage_dealt",
+                "healed",
+                "heal_done",
+                "dodge",
+                "kill",
+                "death",
+                "shield_break"
+              ]
+            },
+            "maxPerRound": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "allowChain": {
+              "type": "boolean"
+            },
+            "relation": {
+              "enum": [
+                "any",
+                "self",
+                "ally",
+                "enemy"
+              ]
+            },
+            "unitType": {
+              "enum": [
+                "any",
+                "hero",
+                "summon"
+              ]
+            },
+            "minAmount": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10000000
+            },
+            "hpBelow": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "requiredBuff": {
+              "enum": [
+                "shield",
+                "purify",
+                "strong",
+                "weak",
+                "sunder",
+                "steel",
+                "bless",
+                "critup",
+                "toughup",
+                "fleeup",
+                "hitup",
+                "stun",
+                "curse",
+                "timed_bless"
+              ]
+            },
+            "absentBuff": {
+              "enum": [
+                "shield",
+                "purify",
+                "strong",
+                "weak",
+                "sunder",
+                "steel",
+                "bless",
+                "critup",
+                "toughup",
+                "fleeup",
+                "hitup",
+                "stun",
+                "curse",
+                "timed_bless"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "event"
           ],
           "additionalProperties": false
         }
@@ -104,7 +207,9 @@
               "lane_lowest_hp",
               "lane_front",
               "enemy_radius",
-              "previous"
+              "previous",
+              "event_source",
+              "event_target"
             ]
           },
           "centerAction": {
@@ -145,7 +250,9 @@
               "toughup",
               "fleeup",
               "hitup",
-              "stun"
+              "stun",
+              "curse",
+              "timed_bless"
             ]
           },
           "duration": {
@@ -195,6 +302,16 @@
               "null"
             ]
           },
+          "eventRatio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "overhealRatio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
           "growth": {
             "type": "object",
             "properties": {
@@ -209,6 +326,16 @@
                 "maximum": 100000
               },
               "amount": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "eventRatio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "overhealRatio": {
                 "type": "number",
                 "minimum": 0,
                 "maximum": 100000

@@ -22,8 +22,10 @@
     "skill.damage",
     "skill.description.rank-template",
     "skill.effect-sequence.v1",
+    "skill.events.v1",
     "skill.hp_shield",
     "skill.move_to_target",
+    "skill.native-template.103",
     "skill.native-template.v1",
     "skill.poison",
     "skill.purify",
@@ -182,6 +184,8 @@
   ],
   "extensionCapabilities": {
     "asset.image.card-frame": "PNG lal.cardFrame [x,y,width,height] anchors a native 103x118 shield; overflow pixels do not affect layout",
+    "skill.events.v1": "bounded generic passive events, event targets and actual/overheal numeric context",
+    "skill.native-template.103": "game 1.0.3 authoring semantics, timed bless, healing, skin event nodes and compound casts",
     "skill.native-template.v1": "complete structured native battle templates; requires updated client mechanism dispatch and compound parameter support",
     "hero.damage.true": "required for new heroes with true basic attacks (native tl[2]=3)",
     "hero.patch.damage-type": "required for patches replacing basic attack damageType",
@@ -334,6 +338,33 @@
     ],
     "compoundParameterCount": 324,
     "schema": "mod-native-template.schema.json"
+  },
+  "passiveEvents": {
+    "capability": "skill.events.v1",
+    "events": [
+      "turn_start",
+      "turn_end",
+      "basic_attack",
+      "skill_cast",
+      "hit",
+      "crit",
+      "miss",
+      "damage_taken",
+      "damage_dealt",
+      "healed",
+      "heal_done",
+      "dodge",
+      "kill",
+      "death",
+      "shield_break"
+    ],
+    "slot": "passive",
+    "maxPerRound": 16,
+    "maxChainDepth": 8,
+    "maxChainExecutions": 64,
+    "defaultChain": false,
+    "cooldownUnit": "owner action opportunities",
+    "deathCanReviveCaster": false
   },
   "effectSequences": {
     "model": "effect-sequence-v1",

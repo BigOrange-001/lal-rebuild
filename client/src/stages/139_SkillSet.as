@@ -46,8 +46,12 @@ package com.meng52.game.module.skill
       private var currentTargetGroups:Object;
       private var sortAnchor:Avatar;
       private var modStepAnchors:Array = [];
+      public var modEventContext:Object;
+
+      public function canModEventCast() : Boolean { return hasCastTargets(); }
       private var activeNativeSource:String;
       private var activeNativeSettings:Object;
+      private var activeNativeAction:Array;
 
       public function SkillSet(param1:String, param2:Avatar, param3:int = 1, param4:Boolean = false)
       {
@@ -620,7 +624,7 @@ package com.meng52.game.module.skill
 
       private function hasCastTargets() : Boolean
       {
-         if(!avatar || avatar.hp <= 0 || !GameMap.currentMap || !skills || skills.length == 0) return false;
+         if(!avatar || (avatar.hp <= 0 && (!modEventContext || modEventContext.event != "death")) || !GameMap.currentMap || !skills || skills.length == 0) return false;
          if(isModEffectSequence())
          {
             if(!modConditionReady()) return false;
@@ -725,7 +729,8 @@ package com.meng52.game.module.skill
       {
          var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
          var gate:Object = row ? row.modCondition : null;
-         return !gate || gate.kind != "absent_buff" || !avatar.buffs[String(gate.buff)];
+         if(gate && gate.kind == "event") return modEventContext != null;
+         return !gate || gate.kind != "absent_buff" || !avatar.hasModBuff(String(gate.buff));
       }
 
       private function modSelectTargets(step:Array) : Array
@@ -734,6 +739,13 @@ package com.meng52.game.module.skill
          var anchor:Object = int(step[3]) >= 0 ? modStepAnchors[int(step[3])] : null;
          var result:Array = [];
          var unit:Avatar;
+         if(selector == "event_source" || selector == "event_target")
+         {
+            unit = modEventContext ? (selector == "event_source" ? modEventContext.source : modEventContext.target) as Avatar : null;
+            var beneficialEvent:Boolean = step[1] == "heal" || step[1] == "buff" && ["weak","sunder","stun","curse"].indexOf(step[8]) < 0;
+            if(unit && unit.hp > 0 && (beneficialEvent ? unit.team == avatar.team : unit.team != avatar.team)) result.push(unit);
+            return result;
+         }
          if(selector == "previous")
          {
             if(anchor) for each(unit in anchor.units) if(unit && unit.hp > 0) result.push(unit);
@@ -770,7 +782,7 @@ package com.meng52.game.module.skill
 
       private function executeModStep(step:Array,index:int) : Boolean
       {
-         if(!isModEffectSequence() || !step || step.length != 18) return false;
+         if(!isModEffectSequence() || !step || (step.length != 18 && step.length != 20)) return false;
          var kind:String = String(step[1]);
          var selected:Array = modSelectTargets(step);
          var center:Avatar = selected.length > 0 ? selected[0] : avatar;
@@ -778,6 +790,7 @@ package com.meng52.game.module.skill
          modStepAnchors[index] = {"units":selected.concat(),"line":center.line,"pos":center.pos};
          var unit:Avatar;
          var value:Number;
+         var eventValue:Number = modEventContext && step.length == 20 ? Number(modEventContext.amount)*Number(step[18])+Number(modEventContext.overheal)*Number(step[19]) : 0;
          var effect:String = String(step[17]);
          var ratio:Number = Number(step[12]);
          var family:String = "mod:" + skillSetData.id + ":" + index;
@@ -824,21 +837,27 @@ package com.meng52.game.module.skill
          for each(unit in selected)
          {
             if(!unit || unit.hp <= 0) continue;
+            if(modEventContext)
+            {
+               var eventFriendly:Boolean = kind == "heal" || kind == "buff" && ["weak","sunder","stun","curse"].indexOf(step[8]) < 0;
+               if(eventFriendly != (unit.team == avatar.team)) continue;
+            }
             if(kind == "heal")
             {
-               value = int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6]));
-               unit.injured(int(value),1,DisplayTools.getAttrs(effect),4);
+               value = int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6])+eventValue);
+               unit.injured(int(value),1,DisplayTools.getAttrs(effect),4,avatar,false,avatar);
             }
             else if(kind == "damage")
             {
+               if(modEventContext && Number(step[5]) <= 0 && eventValue <= 0) continue;
                singleton = new Vector.<Avatar>(); singleton.push(unit);
-               avatar.checkAttack(singleton,null,100000,false,int(step[16]),int(step[16]) == 3 ? Number(step[5])/Avatar.REAL_DAMAGE_RATE : Number(step[5]),0,effect);
+               avatar.checkAttack(singleton,null,100000,false,int(step[16]),int(step[16]) == 3 ? (Number(step[5])+eventValue/Math.max(1,avatar.getDamage()))/Avatar.REAL_DAMAGE_RATE : Number(step[5])+eventValue/Math.max(1,avatar.getDamage()),0,effect);
             }
             else if(kind == "buff")
             {
                value = Number(step[7]);
-               if(step[8] == "shield") value += int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6]));
-               unit.addBuff(String(step[8]),int(step[9]),value);
+               if(step[8] == "shield") value += int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6])+eventValue);
+               unit.addBuff(step[8] == "timed_bless" ? "bless" : String(step[8]),int(step[9]),step[8] == "timed_bless" ? 1 : value);
             }
             else if(kind == "push") unit.addBuff("push",1,Number(step[10]));
             else if(kind == "move")
@@ -853,10 +872,17 @@ package com.meng52.game.module.skill
       }
 
 
+      public function getNativeAction() : Array
+      {
+         return activeNativeAction;
+      }
+
       public function useSkill() : Boolean
       {
          if(!hasCastTargets()) return false;
          var previousNativeSource:String = activeNativeSource;
+         var modCastCompleted:Boolean = false;
+         var previousNativeAction:Array = activeNativeAction;
          var previousNativeSettings:Object = activeNativeSettings;
          var wholeAttack:Object = Avatar.beginAbilityAttack(avatar,"active");
          wholeAttack.skill = this;
@@ -969,7 +995,7 @@ package com.meng52.game.module.skill
             captainSummonMultiplier = Number(getNativeSetting("captainSummonMultiplier",1));
             if(!isFinite(captainSummonMultiplier) || captainSummonMultiplier <= 0) captainSummonMultiplier = 1;
             _loc20_ = skills[_loc14_];
-            if(avatar.hp <= 0)
+            if(avatar.hp <= 0 && (!modEventContext || modEventContext.event != "death"))
             {
                currentActionTargets = null;
                currentTargetGroups = null;
@@ -989,6 +1015,7 @@ package com.meng52.game.module.skill
                actionDamageCapture = {"active":true,"owner":avatar,"actionIndex":_loc14_,"total":0};
                avatar.manualSkillDamageCapture = actionDamageCapture;
             }
+            activeNativeAction = _loc20_;
             switch(_loc20_[0])
             {
                case "mod_step":
@@ -2414,14 +2441,17 @@ package com.meng52.game.module.skill
          GameMap.actionDelay += 0.5 / 2;
          currentActionTargets = null;
          currentTargetGroups = null;
+         modCastCompleted = true;
          return _loc4_;
 
          }
          finally
          {
             activeNativeSource = previousNativeSource;
+            activeNativeAction = previousNativeAction;
             activeNativeSettings = previousNativeSettings;
             Avatar.endAbilityAttack(wholeAttack);
+            if(modCastCompleted && avatar && this !== avatar.skillB) avatar.emitModEvent("skill_cast",avatar,avatar);
             if(abilityCooldownOverride >= 0) m_cooldownNum = abilityCooldownOverride;
          }
       }

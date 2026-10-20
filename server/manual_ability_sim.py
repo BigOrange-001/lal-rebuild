@@ -727,7 +727,10 @@ class SkillCompleteBattle(ReferenceBattle):
         hit=max(0,self._get_hit(attacker));flee=max(0,self._get_flee(target))
         action_type=(target.get('tpl') or [0,0])[1]
         if action_type!=3 and self.rng.get_random(100)<miss_chance(hit,flee,attack):
-            self._ability_last_hit=False;return 0
+            self._ability_last_hit=False
+            self._emit_mod_event(attacker,'miss',attacker,target)
+            self._emit_mod_event(target,'dodge',attacker,target)
+            return 0
         self._ability_last_hit=True
         critical=max(0,self._get_crit(attacker));tough=max(0,self._get_tough(target))
         crit=critical_multiplier(critical,attack) if self.rng.get_random(100)<crit_chance(critical,tough,attack) else 1
@@ -741,6 +744,8 @@ class SkillCompleteBattle(ReferenceBattle):
         amount=to_int(amount/(1+tough*attack[15]/(tough+attack[13])))
         result=self._injured(target,amount,damage_type,source=attacker)
         self._ability_last_hit=True
+        self._emit_mod_event(attacker,'hit',attacker,target,max(0,result))
+        if crit>1:self._emit_mod_event(attacker,'crit',attacker,target,max(0,result))
         return result
 
     def _basic_attack(self, attacker, target):
@@ -749,6 +754,7 @@ class SkillCompleteBattle(ReferenceBattle):
             self._native_damage(attacker,target,1,damage_type)
             if self._ability_last_hit:self._book_attack_effects(attacker,target,max(0,before-target['hp']))
         self.polar_basic_attack(attacker)
+        self._emit_mod_event(attacker,'basic_attack',attacker,target)
 
     def _check_move(self, unit, forward, distance=0, forced=False):
         previous=unit['pos'];result=super()._check_move(unit,forward,distance,forced)
@@ -771,10 +777,7 @@ class SkillCompleteBattle(ReferenceBattle):
         row=self._config.get('skill',{}).get(skill.get('skid'),{})
         with self.context(attacker,'active',skill,self._factor(row.get('manualDamageMultiplier')) if manual else 1,
                           self._factor(row.get('manualEffectMultiplier')) if manual else 1):
-            if manual:
-                if len(actions)!=1:raise ValueError(f'Mixed manual action list needs explicit support: {skill.get("skid")}')
-                result=self.execute(attacker,str(manual[0][1]),float(manual[0][2]),skill)
-            else:result=super()._apply_native_skill(attacker,enemies,slot)
+            result=super()._apply_native_skill(attacker,enemies,slot)
         if result and slot=='skill':attacker['_ability_normal_cast']=True
         return result
 

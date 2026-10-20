@@ -2711,6 +2711,9 @@
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
+        "runtimeVersion": {
+          "const": "1.0.3"
+        },
         "abilityParameters": {
           "type": "object",
           "properties": {
@@ -5179,6 +5182,68 @@
           "settings": {
             "type": "object",
             "properties": {
+              "summonCombatPolicy": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "unit_id": {
+                        "type": "string",
+                        "maxLength": 8000
+                      },
+                      "owner_ap_ratio": {
+                        "type": "number",
+                        "minimum": -10000000,
+                        "maximum": 10000000
+                      },
+                      "duration_own_actions": {
+                        "type": "number",
+                        "minimum": -10000000,
+                        "maximum": 10000000
+                      },
+                      "strip_skill_slots": {
+                        "type": "boolean"
+                      },
+                      "action_type": {
+                        "type": "number",
+                        "minimum": -10000000,
+                        "maximum": 10000000
+                      },
+                      "status": {
+                        "type": "string",
+                        "maxLength": 8000
+                      }
+                    },
+                    "required": [
+                      "unit_id",
+                      "owner_ap_ratio",
+                      "duration_own_actions",
+                      "strip_skill_slots",
+                      "action_type",
+                      "status"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "manualDamageMultiplier": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  }
+                ]
+              },
+              "manualDefenseBuffMultiplier": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  }
+                ]
+              },
               "manualClonePolicy": {
                 "anyOf": [
                   {
@@ -5307,68 +5372,6 @@
                 ]
               },
               "captainSummonMultiplier": {
-                "anyOf": [
-                  {
-                    "type": "number",
-                    "minimum": -10000000,
-                    "maximum": 10000000
-                  }
-                ]
-              },
-              "summonCombatPolicy": {
-                "anyOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "unit_id": {
-                        "type": "string",
-                        "maxLength": 8000
-                      },
-                      "owner_ap_ratio": {
-                        "type": "number",
-                        "minimum": -10000000,
-                        "maximum": 10000000
-                      },
-                      "duration_own_actions": {
-                        "type": "number",
-                        "minimum": -10000000,
-                        "maximum": 10000000
-                      },
-                      "strip_skill_slots": {
-                        "type": "boolean"
-                      },
-                      "action_type": {
-                        "type": "number",
-                        "minimum": -10000000,
-                        "maximum": 10000000
-                      },
-                      "status": {
-                        "type": "string",
-                        "maxLength": 8000
-                      }
-                    },
-                    "required": [
-                      "unit_id",
-                      "owner_ap_ratio",
-                      "duration_own_actions",
-                      "strip_skill_slots",
-                      "action_type",
-                      "status"
-                    ],
-                    "additionalProperties": false
-                  }
-                ]
-              },
-              "manualDamageMultiplier": {
-                "anyOf": [
-                  {
-                    "type": "number",
-                    "minimum": -10000000,
-                    "maximum": 10000000
-                  }
-                ]
-              },
-              "manualDefenseBuffMultiplier": {
                 "anyOf": [
                   {
                     "type": "number",

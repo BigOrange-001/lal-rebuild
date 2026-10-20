@@ -110,8 +110,50 @@ for kind in ('weak','sunder','poison','weak_percent','sunder_percent'):
 for kind in ('shield','hp_shield','caster_hp_shield','target_hp_shield','strong','steel','armor','burn','back','hitup','fleeup'):
     ARG_LABELS[kind]=['动作','倍率','持续回合','特效']
 
+# Marker nodes are event entry points, not ordinary turn-start actions.
+EVENT_NODES_103 = frozenset(('cat_passive','polar_basic','santa_kill','nurse_healing','book_passive'))
+OPERATIONS_103 = EVENT_NODES_103 | frozenset(('caster_ap_shield','caster_hp_heal','timed_bless','book_bonus','book_burn'))
+KINDS_103 = frozenset(('cat_n','cat_c','polar_n','polar_c','santa_n','santa_c','nurse_n','nurse_c'))
+
+def requires_103(skill):
+    return skill.get('nativeTemplate',{}).get('runtimeVersion')=='1.0.3' or any(
+        a.get('type') in OPERATIONS_103 or a.get('type')=='manual_ability' and bool(a.get('arguments')) and a['arguments'][0] in KINDS_103
+        for a in skill.get('actions',[]))
+
+OP_LABELS.update({'caster_ap_shield':'按施法者攻击生成护盾','caster_hp_heal':'纯最大生命治疗',
+    'timed_bless':'限时神佑','book_bonus':'穿甲状态','book_burn':'技能书灼烧',
+    'book_passive':'技能书事件被动','cat_passive':'击杀连锁攻击（事件被动）',
+    'polar_basic':'普攻回合叠层追击（事件被动）','santa_kill':'击杀永久攻击叠层（事件被动）',
+    'nurse_healing':'实际治疗与过量治疗反击（事件被动）'})
+ARG_LABELS.update({'cat_passive':['动作','实际攻击真伤倍率','每次触发攻击次数','每全局回合触发上限'],
+    'polar_basic':['动作','每层追击物理倍率','叠层上限'],
+    'santa_kill':['动作','每次击杀攻击层数','每次击杀累计次数','每层永久攻击比例'],
+    'nurse_healing':['动作','实际恢复反击比例','过量治疗反击比例']})
+MANUAL_103_LABELS={'cat_n':['精准固定值','群体真伤攻击倍率','主目标追加真伤倍率','实际扣血恢复比例'],
+    'polar_n':['暴击固定值','破甲百分比','物理伤害倍率'],'santa_n':['魔法伤害倍率'],'nurse_n':['攻击治疗倍率']}
+
+def _validate_103_action(raw,path):
+    kind=raw[0]
+    if kind=='manual_ability' and raw[1] in KINDS_103:
+        lengths={'cat_n':8,'cat_c':4,'polar_n':7,'polar_c':4,'santa_n':5,'santa_c':4,'nurse_n':5,'nurse_c':4}
+        if len(raw)!=lengths[raw[1]]:fail('1.0.3 compound argument count mismatch',path)
+        if any(type(v) not in (int,float) or not math.isfinite(v) or not 0<=v<=100000 for v in raw[4:]):
+            fail('1.0.3 compound coefficients exceed bounds',path)
+        if raw[1]=='polar_n' and not 0<=raw[5]<=.95:fail('Armor reduction must remain in 0..0.95',path)
+        if raw[1]=='cat_n' and not 0<=raw[7]<=1:fail('Actual-damage healing ratio must remain in 0..1',path)
+    integer_fields={'cat_passive':(2,3),'polar_basic':(2,),'santa_kill':(1,2)}.get(kind,())
+    for index in integer_fields:
+        if type(raw[index]) not in (int,float) or not math.isfinite(raw[index]) or int(raw[index])!=raw[index] or not 0<=raw[index]<=100:fail('Event count must be an integer in 0..100',path)
+    if kind=='cat_passive' and not 1<=raw[2]<=32:fail('Kill-chain attacks must be in 1..32',path)
+    if kind in ('cat_passive','polar_basic','nurse_healing','santa_kill'):
+        if any(type(v) not in (int,float) or not math.isfinite(v) or not 0<=v<=100 for v in raw[1:]):
+            fail('Event coefficients exceed bounds',path)
+
 def argument_label(kind, index, arguments):
     raw=[kind]+arguments
+    if kind=='manual_ability' and arguments and arguments[0] in MANUAL_103_LABELS and index>=4:
+        labels=MANUAL_103_LABELS[arguments[0]]
+        return labels[index-4] if index-4<len(labels) else '参数 '+str(index)
     if index == len(raw)-1 and isinstance(raw[index],str) and kind not in ('trynd_undying',):return '视觉特效'
     if kind in ('locked_sequence','locked_sequence_area') and len(raw)>1 and type(raw[1]) is int:
         hits=raw[1]
@@ -165,7 +207,7 @@ def make_template(sid, native, base):
     result={'id':'Template_'+sid, 'name':native.get('name',sid), 'description':native.get('info',''),
             'model':MODEL, 'nativeTemplate':{'source':'builtin:skill/'+sid,'sourceDigest':digest(native),
                 'settings':copy.deepcopy({k:v for k,v in native.items() if k not in ('id','name','info','skill')}),
-                'passiveTrigger':triggers[0] if len(triggers)==1 else 0},
+                'passiveTrigger':triggers[0] if len(triggers)==1 else 0, 'runtimeVersion':'1.0.3'},
             'actions':[{'type':a[0],'arguments':copy.deepcopy(a[1:])} for a in native.get('skill',[])],
             'upgrades':[]}
     kinds={a[1] for a in native.get('skill',[]) if a[0]=='manual_ability'}
@@ -184,8 +226,9 @@ def validate_shape(skill,path='skill'):
     model=skill['nativeTemplate']
     if (skill['model']!=MODEL or not isinstance(model,dict) or
         not {'source','sourceDigest','settings','passiveTrigger'}<=set(model) or
-        set(model)-{'source','sourceDigest','settings','passiveTrigger','abilityParameters','abilityContract','scaleActionIndex'}):
+        set(model)-{'source','sourceDigest','settings','passiveTrigger','abilityParameters','abilityContract','scaleActionIndex','runtimeVersion'}):
         fail('Invalid native template identity',path+'.nativeTemplate')
+    if 'runtimeVersion' in model and model['runtimeVersion']!='1.0.3':fail('Unsupported template runtime version',path)
     if not isinstance(model['source'],str) or not re.fullmatch(r'builtin:skill/[A-Za-z0-9_]+',model['source']):
         fail('Expected original builtin skill source',path+'.nativeTemplate.source')
     if not isinstance(model['sourceDigest'],str) or not re.fullmatch('[0-9a-f]{64}',model['sourceDigest']):
@@ -200,6 +243,8 @@ def validate_shape(skill,path='skill'):
         if 'settings' in action and (not isinstance(action['settings'],dict) or set(action['settings'])-NODE_SETTINGS):
             fail('Unknown per-operation native settings',path+'.actions[%d]'%i)
     if skill['upgrades']!=[]:fail('Native growth is edited in nativeTemplate.settings.skillUp/skillUpPaths',path+'.upgrades')
+    if any(a['type'] in EVENT_NODES_103 for a in skill['actions']) and len(skill['actions'])!=1:
+        fail('Event passive nodes must remain a single event entry; use separate skills for active actions',path+'.actions')
     _bounded(skill,path)
     if 'scaleActionIndex' in model:_link(model['scaleActionIndex'],len(skill['actions']),path+'.scaleActionIndex')
     if 'abilityParameters' in model:
@@ -285,6 +330,7 @@ def validate_template(skill,base,path='skill'):
             fail('Unknown native visual effect; select an installed resource',path+'.actions[%d]'%i)
         if action['type']=='manual_ability' and raw[1] not in ability_contract()['mechanisms']:
             fail('Unknown compound ability',path+'.actions[%d]'%i)
+        _validate_103_action(raw,path+'.actions[%d]'%i)
         if action['type']=='locked_sequence' and (type(raw[1]) is not int or not 1<=raw[1]<=32 or len(raw)!=raw[1]+5):
             fail('Sequence count must match its editable hit coefficients',path+'.actions[%d]'%i)
         if action['type']=='damage_chain' and (type(raw[1]) is not int or not 1<=raw[1]<=32 or len(raw[2])!=raw[1]):
@@ -329,6 +375,11 @@ def validate_template(skill,base,path='skill'):
         policy=values.get('summonCombatPolicy')
         if policy and (type(policy.get('owner_ap_ratio')) not in (int,float) or not .01<=policy['owner_ap_ratio']<=100):fail('Summon snapshot ratio outside bounds',path)
     _validate_links(skill,path)
+    from native_skill_snapshot import _native_skill_snapshot
+    projection={'skill':{'authored':dict(settings,skill=[[a['type']]+copy.deepcopy(a['arguments']) for a in skill['actions']])}}
+    for level in range(1,11):
+        for i,raw in enumerate(_native_skill_snapshot(projection,'authored',level)['skills']):
+            _validate_103_action(raw,path+'.actions[%d].level%d'%(i,level))
     return source
 
 def _strings(value):

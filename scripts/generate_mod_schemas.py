@@ -65,7 +65,7 @@ if __name__=="__main__":
     native_fields={'id':local,'name':text,'description':{'type':'string','maxLength':4000},'model':{'const':'native-template-v1'},
         'nativeTemplate':obj({'source':enum('builtin:skill/'+sid for sid in base['cfg']['skill']),
             'sourceDigest':sha,'settings':obj(native_settings,('pl','skillUp')),'passiveTrigger':num(0,19,True),
-            'abilityContract':sha,'abilityParameters':obj(abilities),'scaleActionIndex':num(0,31,True)},('source','sourceDigest','settings','passiveTrigger')),
+            'abilityContract':sha,'runtimeVersion':{'const':'1.0.3'},'abilityParameters':obj(abilities),'scaleActionIndex':num(0,31,True)},('source','sourceDigest','settings','passiveTrigger')),
         'actions':arr(obj({'type':enum(profile['operations']),'arguments':{'type':'array','maxItems':128},
                           'origin':{'type':'string','pattern':'^builtin:skill/'},
                           'settings':obj({k:native_settings[k] for k in NODE_SETTINGS if k in native_settings})},('type','arguments')),minItems=1,maxItems=32),
@@ -94,6 +94,8 @@ if __name__=="__main__":
         rankInfoTemplate='optional reviewed rank/flat numeric tokens; reorder action indices with actions')
     catalogue['extensionCapabilities']={
         'asset.image.card-frame':'PNG lal.cardFrame [x,y,width,height] anchors a native 103x118 shield; overflow pixels do not affect layout',
+        'skill.events.v1':'bounded generic passive events, event targets and actual/overheal numeric context',
+        'skill.native-template.103':'game 1.0.3 authoring semantics, timed bless, healing, skin event nodes and compound casts',
         'skill.native-template.v1':'complete structured native battle templates; requires updated client mechanism dispatch and compound parameter support',
         'hero.damage.true':'required for new heroes with true basic attacks (native tl[2]=3)',
         'hero.patch.damage-type':'required for patches replacing basic attack damageType',
@@ -106,5 +108,7 @@ if __name__=="__main__":
         'compoundParameterCount':sum(map(len,ability_contract()['mechanisms'].values())),
         'schema':'mod-native-template.schema.json'}
     catalogue['unsupported']=[v for v in catalogue['unsupported'] if v!='custom summon/clone/manual abilities']
+    from mod_effects import EVENTS
+    catalogue['passiveEvents']={'capability':'skill.events.v1','events':list(EVENTS),'slot':'passive','maxPerRound':16,'maxChainDepth':8,'maxChainExecutions':64,'defaultChain':False,'cooldownUnit':'owner action opportunities','deathCanReviveCaster':False}
     catalogue['effectSequences']={'model':'effect-sequence-v1','schema':'mod-effect-sequence.schema.json','capability':'skill.effect-sequence.v1','summonCapability':'unit.summon.v1','summonsAreCollectible':False,'recursiveSummoning':False,'trueDamageRatio':'literal attack ratio, no legacy 0.3 attenuation','areaGeometry':'native same-lane distance'}
     (directory/"mod-engine-api-v1.json").write_text(json.dumps(catalogue,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")

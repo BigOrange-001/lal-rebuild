@@ -260,12 +260,13 @@ def _percent_debuff_value(raw):
 
 class _Buff:
     """Mirror of Buff(type, round, value) from 140_Buff.as."""
-    __slots__ = ("type", "round", "value")
+    __slots__ = ("type", "round", "value", "source")
 
-    def __init__(self, kind, rounds, value=0):
+    def __init__(self, kind, rounds, value=0, source=None):
         self.type = str(kind)
         self.round = _to_int(rounds)
         self.value = value
+        self.source = source
 
 
 class ReferenceBattle:
@@ -337,7 +338,7 @@ class ReferenceBattle:
         entry = ReferenceBattle._buff(unit, kind)
         return entry.value if entry is not None else default
 
-    def _add_buff(self, unit, kind, rounds, value=0):
+    def _add_buff(self, unit, kind, rounds, value=0, source=None):
         """addBuff tail (137_Avatar.as:2619): merge rules differ per buff.
 
         Two compare arms and one merge arm; a kind in neither arm has its new
@@ -346,7 +347,7 @@ class ReferenceBattle:
         kind = str(kind)
         container = unit.setdefault("_buffs", {})
         current = container.get(kind)
-        incoming = _Buff(kind, rounds, value)
+        incoming = _Buff(kind, rounds, value, source)
         if kind == 'bless' and current is not None:
             if current.value <= 0 < incoming.value:
                 return
@@ -392,6 +393,7 @@ class ReferenceBattle:
                 current.value = _to_int(current.value * current.round / incoming.round
                                         + incoming.value)
             current.round = incoming.round
+            current.source = incoming.source
             return
         if kind in ("root", "weak", "sunder", "shield", "strong", "steel", "armor",
                     "hitup", "fleeup", "critup", "toughup", "book_penetration"):
@@ -449,7 +451,7 @@ class ReferenceBattle:
         poison = container.get("poison")
         if poison is not None:
             tick = _to_int(poison.value + self._poison_hp_fraction * int(unit.get("hp_max", 0)))
-            self._injured(unit, tick, damage_type=6, dot_kind='poison')
+            self._injured(unit, tick, damage_type=6, dot_kind='poison', source=poison.source)
             if int(unit.get("hp", 0)) <= 0:
                 unit["hp"] = 0
                 return True
@@ -457,7 +459,7 @@ class ReferenceBattle:
                 container.pop("poison", None)
         burn = container.get("burn")
         if burn is not None:
-            self._injured(unit, _to_int(burn.value), damage_type=7, dot_kind="burn")
+            self._injured(unit, _to_int(burn.value), damage_type=7, dot_kind="burn", source=burn.source)
             if int(unit.get("hp", 0)) <= 0:
                 unit["hp"] = 0
                 return True
@@ -576,17 +578,20 @@ class ReferenceBattle:
         from battle_mod_events import emit
         return emit(self,owner,event,source,target,amount,overheal)
 
-    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None):
+    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         before=int(target.get('hp',0));shield=self._buff(target,'shield')
         had_shield=shield is not None and shield.value>0
         result=self._injured_base(target,amount,damage_type,source,dot_kind)
+        actual=max(0,before-max(0,int(target.get('hp',0)))) if damage_type!=4 else 0
+        if receipt is not None:receipt.update(actual=actual,before=before,after=int(target.get('hp',0)))
         killed=before>0 and target.get('hp',0)<=0
         shield_broke=had_shield and (self._buff(target,'shield') is None or self._buff(target,'shield').value<=0)
         if before>0 and damage_type not in (0,4,5):
-            actual=max(0,result)
             if actual:
                 self._emit_mod_event(target,'damage_taken',source,target,actual)
                 self._emit_mod_event(source,'damage_dealt',source,target,actual)
+            if damage_type in (1,2,3) and source is not None:
+                self._emit_mod_event(source,'hit',source,target,actual)
             if shield_broke:
                 self._emit_mod_event(target,'shield_break',source,target,actual)
             if killed:
@@ -1254,6 +1259,8 @@ class ReferenceBattle:
                    "precast_dot": {id(u) for u in enemies if any(
                        self._has_manual_dot_kind(u, kind) for kind in ("burn", "bleed", "poison", "phantasm"))},
                    "precast_burn": {id(u) for u in enemies if self._has_manual_dot_kind(u, "burn")}}
+        manual_seen=any(isinstance(a,list) and a and a[0]=='manual_ability' for a in actions)
+        settled=False
         for index, action in enumerate(actions):
             if not isinstance(action, list) or not action:
                 return False
@@ -1262,10 +1269,11 @@ class ReferenceBattle:
                 # No matching case in the native switch: skip and carry on.
                 continue
             try:
-                handler(self, attacker, enemies, allies, skill, action, index, context)
+                applied=handler(self, attacker, enemies, allies, skill, action, index, context)
+                if action[0]!='manual_ability' or applied is True:settled=True
             except (TypeError, ValueError, IndexError, KeyError):
                 return False
-        return True
+        return settled if manual_seen else True
 
     # --- individual action handlers -------------------------------------
 
@@ -1463,7 +1471,7 @@ class ReferenceBattle:
         total = 0
         for target in targets:
             total += self._native_damage(attacker, target, action[1], action[2])
-            self._add_buff(target, "poison", int(action[4]), magnitude)
+            self._add_buff(target, "poison", int(action[4]), magnitude, source=attacker)
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(targets)
         if targets:
@@ -1483,7 +1491,7 @@ class ReferenceBattle:
         magnitude = _to_int(float(action[1]) * self._ap_with_talent(attacker))
         targets = self._skill_targets(attacker, enemies, pl)
         for target in targets:
-            self._add_buff(target, "burn", int(action[2]), magnitude)
+            self._add_buff(target, "burn", int(action[2]), magnitude, source=attacker)
         if targets:
             context["targets"][index] = targets[0]
 

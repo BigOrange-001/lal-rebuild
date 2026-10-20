@@ -2877,7 +2877,8 @@ package com.meng52.game.module.skill
       public function getCastRange() : int
       {
          var distance:int = Math.abs(skillSetData.range);
-         if(avatar && skills && skills.length > 0 && skills[0][0] == "manual_ability" && skills[0][1] == "jayce_n") return avatar.abilityState.form && avatar.abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
+         var rangeAction:Array = getNativeAction() || (skills && skills.length ? skills[0] as Array : null);
+         if(avatar && rangeAction && rangeAction[0] == "manual_ability" && rangeAction[1] == "jayce_n") return avatar.abilityState.form && avatar.abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
          if(distance > 0 && distance <= GameMapConfig.LINE_POS && avatar && avatar.isRangedSkillCaster()) return GameMapConfig.LINE_POS;
          return distance;
       }

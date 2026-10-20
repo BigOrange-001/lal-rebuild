@@ -97,6 +97,9 @@ def validate(skill, path='skill'):
         beneficial=selector in ('self','all_allies','ally_radius')
         if a['type'] in ('heal','summon') and not beneficial and selector not in ('event_source','event_target'):fail('Healing and summons require allied targets',p+'.target')
         if a['type'] in ('damage','push','move') and beneficial:fail('Offensive actions require enemy targets',p+'.target')
+        if a['type']=='buff' and selector not in ('event_source','event_target'):
+            if a['buff']=='timed_bless' and not beneficial:fail('Timed blessing requires allied targets',p+'.target')
+            if a['buff']=='curse' and beneficial:fail('Curse requires enemy targets',p+'.target')
         if a['type']=='buff' and a['buff'] in ('strong','weak','sunder','steel') and a['amount']>1:fail('Percentage buff must be in 0..1',p+'.amount')
         if a['type']=='move' and a['target'] not in ('previous','lane_front','lane_lowest_hp'):fail('Move requires a single target',p+'.target')
         object_(a['growth'],p+'.growth',(),set(GROWTH_FIELDS))

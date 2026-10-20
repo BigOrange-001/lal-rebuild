@@ -349,7 +349,8 @@ package com.meng52.game.module.avatar
             {
                var configured:int = context.skill.getCastRange();
                if(configured > 0) distance = configured;
-               if(context.skill.skills[0][1] == "jayce_n") distance = abilityState.form && abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
+               var rangeAction:Array = context.skill.getNativeAction();
+               if(rangeAction && rangeAction[0] == "manual_ability" && rangeAction[1] == "jayce_n") distance = abilityState.form && abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
             }
          }
          if(center != null || maximum != 1) distance = skillAreaRadius(distance);
@@ -3112,19 +3113,20 @@ package com.meng52.game.module.avatar
          }
       }
 
-      public function addBuff(param1:String, param2:int, param3:Number = 0, param4:Number = 0, param5:int = -1) : void
+      public function addBuff(param1:String, param2:int, param3:Number = 0, param4:Number = 0, param5:int = -1, param6:Avatar = null) : void
       {
          var _loc8_:* = 0;
          var _loc13_:String = null;
          var _loc9_:Boolean = false;
          var _loc6_:Number = Number(NaN);
          var sourceContext:Object = currentAbilityAttack();
-         var source:Avatar = sourceContext ? sourceContext.owner as Avatar : null;
+         var source:Avatar = param6 || (sourceContext ? sourceContext.owner as Avatar : null);
          var manualEffect:Number = sourceContext ? Number(sourceContext.manualEffectMultiplier) : 1;
          if(!isFinite(manualEffect) || manualEffect <= 0) manualEffect = 1;
          if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          var _loc11_:Buff = new Buff(param1,param2,param3);
+         _loc11_.source = source;
          var _loc12_:Buff = buffs[param1];
          // A timed revival must never shorten an existing permanent one.
          // Legacy bless uses value 0; the explicit timed_bless action uses 1.
@@ -3309,6 +3311,8 @@ package com.meng52.game.module.avatar
                case "poison":
                case "burn":
                   _loc12_.value = int(_loc12_.value * _loc12_.round / _loc11_.round + _loc11_.value);
+                  // Native DOT merges into one pool; the latest accepted applier owns it.
+                  _loc12_.source = _loc11_.source;
                   _loc12_.round = _loc11_.round;
                   _loc11_ = _loc12_;
                   _loc9_ = true;
@@ -3558,7 +3562,7 @@ package com.meng52.game.module.avatar
          if(_loc1_)
          {
             _loc5_ = DisplayTools.getAttrs("POISON_EFF");
-            injured(Tools.toInt(_loc1_.value + GlobalData.$mConfig_simple.attack[18] * hpMax),1,_loc5_,6,null,false,null,null,"poison");
+            injured(Tools.toInt(_loc1_.value + GlobalData.$mConfig_simple.attack[18] * hpMax),1,_loc5_,6,_loc1_.source,false,_loc1_.source,null,"poison");
             if(hp <= 0)
             {
                hp = 0;
@@ -3573,7 +3577,7 @@ package com.meng52.game.module.avatar
          if(_loc1_)
          {
             _loc5_ = DisplayTools.getAttrs("BURN_EFF");
-            injured(Tools.toInt(_loc1_.value),1,_loc5_,7,null,false,null,null,"burn");
+            injured(Tools.toInt(_loc1_.value),1,_loc5_,7,_loc1_.source,false,_loc1_.source,null,"burn");
             if(hp <= 0)
             {
                hp = 0;
@@ -6329,7 +6333,7 @@ package com.meng52.game.module.avatar
             if(param8)
             {
                var priorCurse:Buff = buffs["curse"];
-               addBuff(param8.type,param8.round,param8.value);
+               addBuff(param8.type,param8.round,param8.value,0,-1,param7 || param5);
                // Zero-damage actions return before the normal hit VFX below.
                // Show a burst only when the curse was actually accepted;
                // purification and weaker reapplications must not fake a hit.
@@ -6461,11 +6465,12 @@ package com.meng52.game.module.avatar
             {
                _loc12_ = String(param1);
             }
-            if(!param7)
+            if(!param7 && dotKind == "")
             {
                param7 = GameMap.currentAvatar;
             }
-            if(param7.team != team)
+            // Native DOTs retain their source for events without becoming direct-hit retaliation.
+            if(param7 && param7.team != team && param4 != 6 && param4 != 7)
             {
                _loc17_ = DisplayTools.getAttrs("BACK_BUL");
                if(hp > 0)
@@ -6482,7 +6487,7 @@ package com.meng52.game.module.avatar
                      _loc17_.par = _loc19_.effectLayer;
                      _loc19_.delayCall(DisplayTools.addBullet,GameMap.actionDelay,_loc17_);
                      _loc19_.delayCall(_loc19_.infoLayer.popText,GameMap.actionDelay,GlobalLanguageStr.getLanguageStr(30060),_loc16_,_loc22_,16737792,25,0.5,team == 1);
-                     param7.addBuff("burn",1,Tools.toInt(Tools.toInt(getDamage() + getDamage() * checkTalent(1)) * _loc9_.value),0.25 * 2,25);
+                     param7.addBuff("burn",1,Tools.toInt(Tools.toInt(getDamage() + getDamage() * checkTalent(1)) * _loc9_.value),0.25 * 2,25,this);
                   }
                }
                else
@@ -6499,7 +6504,7 @@ package com.meng52.game.module.avatar
                      _loc17_.par = _loc19_.effectLayer;
                      _loc19_.delayCall(DisplayTools.addBullet,GameMap.actionDelay,_loc17_);
                      _loc19_.delayCall(_loc19_.infoLayer.popText,GameMap.actionDelay,GlobalLanguageStr.getLanguageStr(30061),_loc16_,_loc22_,16737792,25,0.5,team == 1);
-                     param7.addBuff("burn",1,Tools.toInt(hpMax * _loc9_.value),0.25 * 2,25);
+                     param7.addBuff("burn",1,Tools.toInt(hpMax * _loc9_.value),0.25 * 2,25,this);
                      removeBuff("avenge");
                   }
                }
@@ -6548,7 +6553,7 @@ package com.meng52.game.module.avatar
          }
          if(param8)
          {
-            addBuff(param8.type,param8.round,param8.value);
+            addBuff(param8.type,param8.round,param8.value,0,-1,param7 || param5);
          }
          if(hp <= 0)
          {

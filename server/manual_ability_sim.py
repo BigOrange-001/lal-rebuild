@@ -680,10 +680,10 @@ class SkillCompleteBattle(ReferenceBattle):
                         self.hit(owner,target,float(policy[1]),3)
         finally:state.update(cat_busy=False,cat_pending=0)
 
-    def _add_buff(self, unit, kind, rounds, value=0):
+    def _add_buff(self, unit, kind, rounds, value=0, source=None):
         ctx=self._context()
         if ctx and value and kind!='summon':value*=ctx['effect_factor']
-        return super()._add_buff(unit,kind,rounds,value)
+        return super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None))
 
     def _remove_all_debuff(self, unit):
         super()._remove_all_debuff(unit)
@@ -697,14 +697,14 @@ class SkillCompleteBattle(ReferenceBattle):
         for key,value in list(state.items()):
             if isinstance(value,dict) and value.get('debuff') is False:state.pop(key,None)
 
-    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None):
+    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
         if ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')
-        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind)
+        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt)
         taken=max(0,before-max(0,target.get('hp',0)))+max(0,shield_before-self._buff_value(target,'shield'))
         grey=state.get('grey')
         if grey and taken>0 and damage_type!=4:
@@ -742,10 +742,10 @@ class SkillCompleteBattle(ReferenceBattle):
         amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._get_de_ph(target),self._get_de_ma(target),attack,share)
         amount=to_int(to_int(amount*crit)*attack[21])
         amount=to_int(amount/(1+tough*attack[15]/(tough+attack[13])))
-        result=self._injured(target,amount,damage_type,source=attacker)
+        receipt={}
+        result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt)
         self._ability_last_hit=True
-        self._emit_mod_event(attacker,'hit',attacker,target,max(0,result))
-        if crit>1:self._emit_mod_event(attacker,'crit',attacker,target,max(0,result))
+        if crit>1:self._emit_mod_event(attacker,'crit',attacker,target,receipt.get('actual',0))
         return result
 
     def _basic_attack(self, attacker, target):
@@ -842,7 +842,7 @@ class SkillCompleteBattle(ReferenceBattle):
             return True
         return owner['hp']<=0
 
-    def _run_unit_turn(self, attacker, sides, side):
+    def _run_unit_turn_base(self, attacker, sides, side):
         attacker['_team']=sides[side]
         self._resolve_pending_strike(attacker)
         if attacker['hp']<=0:return True

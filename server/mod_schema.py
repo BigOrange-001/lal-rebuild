@@ -230,7 +230,7 @@ def skill_extension_capabilities(skill):
     if skill.get('model')=='effect-sequence-v1':
         caps={'skill.effect-sequence.v1'}
         if skill.get('trigger',{}).get('kind')=='event':caps.add('skill.events.v1')
-        if any(a.get('buff')=='timed_bless' for a in skill.get('actions',[])):caps.add('skill.native-template.103')
+        if any(a.get('buff')=='timed_bless' for a in skill.get('actions',[])) or 'timed_bless' in [skill.get('trigger',{}).get(k) for k in ('buff','requiredBuff','absentBuff')]:caps.add('skill.native-template.103')
         return caps
     if skill.get('model')=='native-template-v1':
         from mod_native import requires_103

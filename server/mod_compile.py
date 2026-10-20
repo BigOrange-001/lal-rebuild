@@ -553,10 +553,10 @@ class Compiler:
         runtime={"digest":effective_digest,"engineApi":ENGINE_API,"heroes":self.metadata,"scopedAvatarIds":self.scoped,"aliasBaseIds":self.aliases,"missingHeroIds":sorted(self.missing),"knownHeroIds":sorted(self.metadata),"assets":sorted(self.assets.values(),key=lambda r:r["alias"]),"textureAliases":self.texture_aliases,"packages":[{"packageId":p.package_id,"version":p.version,"contentDigest":p.digest} for p in self.ordered],"warnings":self.warnings,"errors":copy.deepcopy(self.warnings),"capabilities":sorted(CAPABILITIES)}
         if any(row.get('model')=='native-template-v1' for p in self.ordered for row in p.data.get('skills',{}).get('skills',[])):
             runtime['requiredClientCapabilities']=['skill.native-template.v1']
-        from mod_native import requires_103
+        from mod_native import requires_103, EVENT_NODES_103
         if any(requires_103(row) for p in self.ordered for row in p.data.get('skills',{}).get('skills',[]) if row.get('model')=='native-template-v1'):
             runtime.setdefault('requiredClientCapabilities',[]).append('skill.native-template.103')
-        if any(a[0]=='mod_step' and a[8]=='timed_bless' for row in self.cfg['skill'].values() for a in row.get('skill',[])):
+        if any(a[0]=='mod_step' and a[8]=='timed_bless' for row in self.cfg['skill'].values() for a in row.get('skill',[])) or any('timed_bless' in [(row.get('modCondition') or {}).get(k) for k in ('buff','requiredBuff','absentBuff')] for row in self.cfg['skill'].values()):
             if 'skill.native-template.103' not in runtime.setdefault('requiredClientCapabilities',[]):runtime['requiredClientCapabilities'].append('skill.native-template.103')
         if any(row.get('cardFrame') for row in self.assets.values()):
             runtime.setdefault('requiredClientCapabilities',[]).append('asset.image.card-frame')
@@ -567,7 +567,8 @@ class Compiler:
         for aid,hero in self.cfg['avatar'].items():
             for slot in (10,11):
                 sid=hero.get('pl',[])[slot] if len(hero.get('pl',[]))>slot else None
-                if (self.cfg['skill'].get(sid,{}).get('modCondition') or {}).get('kind')=='event':
+                row=self.cfg['skill'].get(sid,{})
+                if (row.get('modCondition') or {}).get('kind')=='event' or any(a and a[0] in EVENT_NODES_103 for a in row.get('skill',[])):
                     fail('Event skills must be assigned to the passive slot','heroes.'+aid+'.skills')
         if any(row.get('unitType')=='summon' for row in self.metadata.values()):
             runtime.setdefault('requiredClientCapabilities',[]).append('unit.summon.v1')

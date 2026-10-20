@@ -128,19 +128,26 @@ OP_LABELS.update({'caster_ap_shield':'按施法者攻击生成护盾','caster_hp
 ARG_LABELS.update({'cat_passive':['动作','实际攻击真伤倍率','每次触发攻击次数','每全局回合触发上限'],
     'polar_basic':['动作','每层追击物理倍率','叠层上限'],
     'santa_kill':['动作','每次击杀攻击层数','每次击杀累计次数','每层永久攻击比例'],
-    'nurse_healing':['动作','实际恢复反击比例','过量治疗反击比例']})
+    'nurse_healing':['动作','实际恢复反击比例','过量治疗反击比例'],
+    'book_passive':['动作','属性比例','被动属性'],
+    'book_bonus':['动作','属性比例','增益属性','持续回合']})
 MANUAL_103_LABELS={'cat_n':['精准固定值','群体真伤攻击倍率','主目标追加真伤倍率','实际扣血恢复比例'],
     'polar_n':['暴击固定值','破甲百分比','物理伤害倍率'],'santa_n':['魔法伤害倍率'],'nurse_n':['攻击治疗倍率']}
+
+BOOK_PASSIVE_STATS = ('ap','de_ph','de_ma','shield_damage','tough','hit','flee','crit','penetration','attack_burn','healing','attack_curse')
+BOOK_BONUS_STATS = ('penetration',)
 
 def _validate_103_action(raw,path):
     kind=raw[0]
     if kind=='manual_ability' and raw[1] in KINDS_103:
         lengths={'cat_n':8,'cat_c':4,'polar_n':7,'polar_c':4,'santa_n':5,'santa_c':4,'nurse_n':5,'nurse_c':4}
         if len(raw)!=lengths[raw[1]]:fail('1.0.3 compound argument count mismatch',path)
-        if any(type(v) not in (int,float) or not math.isfinite(v) or not 0<=v<=100000 for v in raw[4:]):
+        if any(type(v) not in (int,float) or not math.isfinite(v) or not 0<=v<=(10000000 if i==4 and raw[1] in ('cat_n','polar_n') else 100000) for i,v in enumerate(raw[4:],4)):
             fail('1.0.3 compound coefficients exceed bounds',path)
         if raw[1]=='polar_n' and not 0<=raw[5]<=.95:fail('Armor reduction must remain in 0..0.95',path)
         if raw[1]=='cat_n' and not 0<=raw[7]<=1:fail('Actual-damage healing ratio must remain in 0..1',path)
+    if kind=='book_passive' and raw[2] not in BOOK_PASSIVE_STATS:fail('Unknown book passive attribute',path)
+    if kind=='book_bonus' and raw[2] not in BOOK_BONUS_STATS:fail('Unknown book bonus attribute',path)
     integer_fields={'cat_passive':(2,3),'polar_basic':(2,),'santa_kill':(1,2)}.get(kind,())
     for index in integer_fields:
         if type(raw[index]) not in (int,float) or not math.isfinite(raw[index]) or int(raw[index])!=raw[index] or not 0<=raw[index]<=100:fail('Event count must be an integer in 0..100',path)
@@ -151,6 +158,8 @@ def _validate_103_action(raw,path):
 
 def argument_label(kind, index, arguments):
     raw=[kind]+arguments
+    if kind=='book_passive' and index==2:return '被动属性'
+    if kind=='book_bonus' and index==2:return '增益属性'
     if kind=='manual_ability' and arguments and arguments[0] in MANUAL_103_LABELS and index>=4:
         labels=MANUAL_103_LABELS[arguments[0]]
         return labels[index-4] if index-4<len(labels) else '参数 '+str(index)
@@ -243,7 +252,7 @@ def validate_shape(skill,path='skill'):
         if 'settings' in action and (not isinstance(action['settings'],dict) or set(action['settings'])-NODE_SETTINGS):
             fail('Unknown per-operation native settings',path+'.actions[%d]'%i)
     if skill['upgrades']!=[]:fail('Native growth is edited in nativeTemplate.settings.skillUp/skillUpPaths',path+'.upgrades')
-    if any(a['type'] in EVENT_NODES_103 for a in skill['actions']) and len(skill['actions'])!=1:
+    if any(a['type'] in EVENT_NODES_103 for a in skill['actions']) and len(skill['actions'])!=1 and not all(a['type']=='book_passive' for a in skill['actions']):
         fail('Event passive nodes must remain a single event entry; use separate skills for active actions',path+'.actions')
     _bounded(skill,path)
     if 'scaleActionIndex' in model:_link(model['scaleActionIndex'],len(skill['actions']),path+'.scaleActionIndex')

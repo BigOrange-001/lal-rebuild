@@ -19,6 +19,9 @@ package com.meng52.game.ui.screen
    import flash.geom.Point;
    import flash.geom.Rectangle;
    import starling.core.Starling;
+   import starling.animation.Tween;
+   import starling.events.Touch;
+   import starling.events.TouchEvent;
    import starling.display.Quad;
    import starling.display.Sprite;
    import starling.events.Event;
@@ -28,7 +31,6 @@ package com.meng52.game.ui.screen
    public class PanelLogin extends PanelBase
    {
 
-      private static const mRegExp_mail:RegExp = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
 
       private var mType:int = 0;
 
@@ -181,6 +183,7 @@ package com.meng52.game.ui.screen
 
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         if(mTierMenu) Starling.juggler.removeTweens(mTierMenu);
          LayoutUIPop.$touch = true;
          delNT();
          if(mBg_login)
@@ -466,6 +469,12 @@ package com.meng52.game.ui.screen
          mBtn_tier.addEventListener("triggered",openTierMenu);
          mBox.addChild(mBtn_tier);
          mTierMenu = new Sprite();
+         var backdrop:Quad = new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0);
+         backdrop.x = -mBox.x;
+         backdrop.y = -mBox.y;
+         backdrop.alpha = 0.45;
+         backdrop.addEventListener("touch",onTierBackdropTouch);
+         mTierMenu.addChild(backdrop);
          var background:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_6_0000",420,310,new Rectangle(20,20,10,10));
          background.x = mBg_txt1.x - 10;
          background.y = 93;
@@ -480,7 +489,10 @@ package com.meng52.game.ui.screen
             mTierMenu.addChild(option);
          }
          mTierMenu.visible = false;
-         mBox.addChild(mTierMenu);
+         // This menu must cover siblings outside mBox as well as native inputs.
+         mTierMenu.x = mBox.x;
+         mTierMenu.y = mBox.y;
+         addChild(mTierMenu);
       }
 
       private function updateTierVisibility() : void
@@ -489,18 +501,47 @@ package com.meng52.game.ui.screen
          {
             mBtn_tier.visible = mStatus == 2 || mType == 2;
          }
-         if(mTierMenu && mBtn_tier && !mBtn_tier.visible)
+         if(mTierMenu && mTierMenu.visible && mBtn_tier && !mBtn_tier.visible)
          {
-            mTierMenu.visible = false;
+            closeTierMenu();
          }
       }
 
       private function openTierMenu(param1:Event) : void
       {
+         if(!mTierMenu || !stage) return;
          if(mNT_id) mNT_id.visible = false;
          if(mNT_pass) mNT_pass.visible = false;
-         mBox.setChildIndex(mTierMenu,mBox.numChildren - 1);
+         mTierMenu.x = mBox.x;
+         mTierMenu.y = mBox.y;
+         setChildIndex(mTierMenu,numChildren - 1);
+         var backdrop:Quad = mTierMenu.getChildAt(0) as Quad;
+         var origin:Point = mTierMenu.globalToLocal(new Point(0,0));
+         backdrop.x = origin.x;
+         backdrop.y = origin.y;
+         Starling.juggler.removeTweens(mTierMenu);
+         mTierMenu.alpha = 0;
          mTierMenu.visible = true;
+         var tween:Tween = new Tween(mTierMenu,0.16,"easeOut");
+         tween.fadeTo(1);
+         Starling.juggler.add(tween);
+      }
+
+      private function closeTierMenu() : void
+      {
+         if(mTierMenu)
+         {
+            Starling.juggler.removeTweens(mTierMenu);
+            mTierMenu.visible = false;
+            mTierMenu.alpha = 1;
+         }
+         btn_CloseEvent();
+      }
+
+      private function onTierBackdropTouch(param1:TouchEvent) : void
+      {
+         var touch:Touch = param1.getTouch(param1.currentTarget as Quad,"ended");
+         if(touch) closeTierMenu();
       }
 
       private function chooseTier(param1:Event) : void
@@ -511,8 +552,7 @@ package com.meng52.game.ui.screen
             mTierIndex = index;
             mBtn_tier.text = "有钱程度：" + TIER_NAMES[index] + " ▼";
          }
-         mTierMenu.visible = false;
-         btn_CloseEvent();
+         closeTierMenu();
       }
 
       override public function onTRIGGERED_closePanel(param1:Event) : void
@@ -563,11 +603,8 @@ package com.meng52.game.ui.screen
 
       private function onTRIGGERED_btns(param1:Event) : void
       {
-         var _loc7_:Boolean = false;
-         var _loc8_:Boolean = false;
          var _loc9_:String = null;
          var _loc5_:String = null;
-         var _loc10_:Number = NaN;
          var _loc11_:String = null;
          var _loc3_:String = null;
          var _loc2_:String = null;
@@ -609,31 +646,9 @@ package com.meng52.game.ui.screen
             }
             else
             {
-               _loc7_ = false;
-               _loc8_ = true;
                _loc9_ = getNT_id();
                _loc5_ = getNT_pass();
-               _loc10_ = Number(_loc9_);
-               if(isNaN(_loc10_))
-               {
-                  _loc7_ = mRegExp_mail.test(_loc9_);
-                  if(!_loc7_)
-                  {
-                     GlobalFunction.tipsOS_ios(GlobalLanguageStr.getLanguageStr(90010),GlobalLanguageStr.getLanguageStr(90155),GlobalLanguageStr.getLanguageStr(20021),btn_CloseEvent);
-                  }
-               }
-               else if(_loc9_.length >= 11 && int(_loc9_.charAt(0)) != 0)
-               {
-                  _loc7_ = true;
-               }
-               else
-               {
-                  GlobalFunction.tipsOS_ios(GlobalLanguageStr.getLanguageStr(90010),GlobalLanguageStr.getLanguageStr(90156),GlobalLanguageStr.getLanguageStr(20021),btn_CloseEvent);
-               }
-               if(_loc7_ && _loc8_)
-               {
-                  SendServiceAMFFun.send_user_register(re_register,registrationParams(_loc9_,_loc5_,GlobalLocalStore.$pf_type_curr,mTierIndex));
-               }
+               SendServiceAMFFun.send_user_register(re_register,registrationParams(_loc9_,_loc5_,GlobalLocalStore.$pf_type_curr,mTierIndex));
             }
          }
          else if(_loc13_.name == "btn_name_close")
@@ -696,38 +711,14 @@ package com.meng52.game.ui.screen
                }
                else
                {
-                  _loc7_ = false;
-                  _loc8_ = true;
-                  _loc9_ = getNT_id();
-                  _loc5_ = getNT_pass();
-                  _loc10_ = Number(_loc9_);
-                  if(isNaN(_loc10_))
-                  {
-                     _loc7_ = mRegExp_mail.test(_loc9_);
-                     if(!_loc7_)
-                     {
-                        GlobalFunction.tipsOS_ios(GlobalLanguageStr.getLanguageStr(90010),GlobalLanguageStr.getLanguageStr(90155),GlobalLanguageStr.getLanguageStr(20021),btn_CloseEvent);
-                     }
-                  }
-                  else if(_loc9_.length >= 11 && int(_loc9_.charAt(0)) != 0)
-                  {
-                     _loc7_ = true;
-                  }
-                  else
-                  {
-                     GlobalFunction.tipsOS_ios(GlobalLanguageStr.getLanguageStr(90010),GlobalLanguageStr.getLanguageStr(90156),GlobalLanguageStr.getLanguageStr(20021),btn_CloseEvent);
-                  }
                   btn_CloseEvent();
-                  if(_loc7_ && _loc8_)
-                  {
-                     _loc4_ = {};
-                     _loc4_.def_session_key = GlobalLocalStore.$pf_token_curr;
-                     _loc4_.def_sessionid = GlobalLocalStore.$pf_uid_curr;
-                     _loc4_.session_key = getNT_id();
-                     _loc4_.sessionid = getNT_pass();
-                     _loc4_.pf = GlobalLocalStore.$pf_type_curr;
-                     SendServiceAMFFun.send_user_bind(re_bind,_loc4_);
-                  }
+                  _loc4_ = {};
+                  _loc4_.def_session_key = GlobalLocalStore.$pf_token_curr;
+                  _loc4_.def_sessionid = GlobalLocalStore.$pf_uid_curr;
+                  _loc4_.session_key = getNT_id();
+                  _loc4_.sessionid = getNT_pass();
+                  _loc4_.pf = GlobalLocalStore.$pf_type_curr;
+                  SendServiceAMFFun.send_user_bind(re_bind,_loc4_);
                }
             }
          }
@@ -751,6 +742,7 @@ package com.meng52.game.ui.screen
 
       public function btn_CloseEvent() : void
       {
+         if(mTierMenu && mTierMenu.visible) return;
          if(mNT_id)
          {
             mNT_id.visible = true;

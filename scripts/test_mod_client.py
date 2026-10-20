@@ -50,7 +50,8 @@ def install_operations(receiver='unit'):
 
 
 def manager_harness(methods):
-    text = '''const int=Math.trunc,sent=[],timers=[];let relogins=0,previews=0,renders=0;
+    text = '''const PermissionEvent={PERMISSION_STATUS:'permission'};const onImportPermission=()=>{},onBackupPermission=()=>{};
+const int=Math.trunc,uint=Math.trunc,sent=[],timers=[];let relogins=0,previews=0,renders=0;
 const setTimeout=fn=>{timers.push(fn);return timers.length;},clearTimeout=()=>{};
 const GlobalData={$modReady:true,isCurrentProfileSyncEnvelope:()=>true};
 const GlobalFunction={quitGame(){relogins++;},functionNull(){}};
@@ -275,7 +276,7 @@ mModInfo:{packages:[{packageId:'',version:'0.0.0',contentDigest:'',kind:'error',
         script += '''unit.renderModList();console.log(JSON.stringify({actions,texts,labels,selected:unit.mModSelections}));'''
         result = self.run_js(script)
         self.assertEqual(result['actions'], [{'action': 'enable', 'package': 1}, {'action': 'details', 'package': 1},
-                                             {'action': 'backupExport'}, {'action': 'backupImport'}, {'action': 'backupPrevious'}])
+                                             {'action': 'uninstall', 'package': 1}, {'action': 'backupExport'}, {'action': 'backupImport'}, {'action': 'backupPrevious'}])
         self.assertEqual(result['selected'], [])
         self.assertIn('bad JSON', result['texts'])
         self.assertEqual(result['labels'][0], '当前存档：已关闭此包（点击启用）')
@@ -342,7 +343,7 @@ console.log(JSON.stringify({text:lines.map(x=>x.text).join(''),max:Math.max(...l
         self.assertGreaterEqual(result['minHeight'], 26)
 
     def test_backup_native_file_write_invalid_import_cancel_and_owner_guard(self):
-        script = '''let writes=[],reads=0,previews=0;
+        script = '''const PermissionEvent={PERMISSION_STATUS:'permission'},onBackupPermission=()=>{};let writes=[],reads=0,previews=0;
 const SendAndSelect={$uid:'A'};const flash={events:{Event:{SELECT:'select',CANCEL:'cancel'}}};const IOErrorEvent={IO_ERROR:'ioError'};const FileMode={WRITE:'write',READ:'read'};
 class FileStream{open(file,mode){this.mode=mode;}writeUTFBytes(text){writes.push(JSON.parse(text));}close(){}readUTFBytes(){reads++;return 'broken JSON';}}
 const file={size:12,removeEventListener(){}};
@@ -496,7 +497,7 @@ unit.closeModManager(null);console.log(JSON.stringify({after,message,relogins}))
 const IOErrorEvent={IO_ERROR:'io'},SecurityErrorEvent={SECURITY_ERROR:'security'},FileMode={READ:'read'};
 const MainConfig={$SERVER_ADDRESS:'http://127.0.0.1:1'};
 class ByteArray{};class URLRequest{constructor(url){this.url=url;}};class URLRequestHeader{};
-class FileStream{open(){}readBytes(bytes){bytes.length=1;}close(){}}
+class FileStream{get bytesAvailable(){return 1;}open(){}readBytes(bytes){bytes.length=1;}close(){}}
 class URLLoader{constructor(){this.events={};this.data='{"ok":true}';readers.push(this);}addEventListener(type,fn){this.events[type]=fn;}load(){}close(){}}
 function selectImport(){const file={size:10,removeEventListener(){}};unit.mImportOperation=unit.beginModOperation('import_file');unit.mImportFile=file;unit.onImportSelected({currentTarget:file});}
 selectImport();unit.clearModListeners();unit.mModView={removeFromParent(){}};unit.requestModInfo(false);

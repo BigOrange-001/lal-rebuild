@@ -168,6 +168,7 @@ package com.meng52.game.module.avatar
       public var abilityState:Object = {};
       private var abilityEntryAttack:Number = 0;
       private var initializingFightAttributes:Boolean = false;
+      public var previewTeamTalentBonuses:Object = null;
       private var abilitySerial:int = 0;
       private var abilityIndex:int = 0;
       private static var abilityNextIndex:int = 0;
@@ -207,6 +208,11 @@ package com.meng52.game.module.avatar
          return talent && talent.my_HaloData && talent.my_HaloData.dataObj && String(talent.my_HaloData.dataObj.growth_effect).indexOf("team_") == 0;
       }
 
+      private function isPanelStatTalent() : Boolean
+      {
+         return ownGrowthValue("attack") > 0 || ownGrowthValue("defense") > 0 || ownGrowthValue("hp") > 0;
+      }
+
       public function getRecoveryTalentMultiplier() : Number
       {
          return 1 + ownGrowthValue("recovery") / 100;
@@ -214,8 +220,9 @@ package com.meng52.game.module.avatar
 
       private function teamTalentFlat(effect:String) : int
       {
+         if(this.summonStatSnapshot) return 0;
          var map:GameMap = GameMap.currentMap;
-         if(!map || team < 1 || team > 2 || hp <= 0) return 0;
+         if(!map || team < 1 || team > 2 || hp <= 0) return previewTeamTalentBonuses ? Math.max(0,int(previewTeamTalentBonuses[effect])) : 0;
          var allies:Vector.<Avatar> = map.getAliveList(team) as Vector.<Avatar>;
          if(!allies) return 0;
          var best:Number = 0;
@@ -438,7 +445,7 @@ package com.meng52.game.module.avatar
          if(!target || target.hp <= 0) return;
          if(kind == "root")
          {
-            if(target.buffs["purify"]) { target.removeBuff("purify"); return; }
+            if(target.buffs["purify"]) { target.removeBuff("purify",true); return; }
             target.abilityState.root = {until:target.abilitySerial+duration,debuff:true};
             target.addBuff("root",duration);
             return;
@@ -476,8 +483,7 @@ package com.meng52.game.module.avatar
          {
             var unit:Avatar = new Avatar(GlobalData.modDefinitionId(clone ? avatarData.id : aid,"summoned"),{lv:lv,slv:1});
             unit.goFight(team,line,0,false);
-            unit.hpMax = Math.max(1,int(getHpMax()*ratio)); unit.hp = unit.hpMax;
-            unit.ap = Math.max(1,int(getDamage()*ratio)); unit.dePh = Math.max(1,int(getDePh()*ratio)); unit.deMa = Math.max(1,int(getDeMa()*ratio));
+            if(!unit.inheritSummonPanel(this,ratio)) return;
             unit.speed = 220; unit.range = 125; unit.skill0 = null; unit.skill1 = null; unit.skill2 = null; unit.skillB = null;
             unit.manualActionTypeOverride = 1;
             unit.addBuff("summon",turns);
@@ -487,6 +493,46 @@ package com.meng52.game.module.avatar
             units.push(unit);
          }
          abilityState["summons_"+key] = units;
+      }
+
+      public var summonStatSnapshot:Boolean = false;
+
+      public function getSummonPanelSnapshot() : Object
+      {
+         return {"hpMax":getHpMax(),
+                 "ap":Tools.toInt(getDamage() * (1 + checkTalent(1))),
+                 "dePh":Tools.toInt(getDePh() * (1 + checkTalent(2))),
+                 "deMa":Tools.toInt(getDeMa() * (1 + checkTalent(3))),
+                 "hit":getHit(),"flee":getFlee(),"crit":getCrit(),"tough":getTough()};
+      }
+
+      private function scaledSummonStat(value:Number, ratio:Number, minimum:int) : int
+      {
+         if(!isFinite(value)) return minimum;
+         return int(Math.min(2147483647,Math.max(minimum,Math.floor(value * ratio))));
+      }
+
+      public function inheritSummonPanel(owner:Avatar, apRatio:Number, hpRatio:Number = -1, dePhRatio:Number = -1, deMaRatio:Number = -1, secondaryRatio:Number = -1) : Boolean
+      {
+         if(hpRatio == -1) hpRatio = apRatio;
+         if(dePhRatio == -1) dePhRatio = apRatio;
+         if(deMaRatio == -1) deMaRatio = apRatio;
+         if(secondaryRatio == -1) secondaryRatio = apRatio;
+         if(!owner || !isValidSummonMultiplier(apRatio) || !isValidSummonMultiplier(hpRatio) || !isValidSummonMultiplier(dePhRatio) || !isValidSummonMultiplier(deMaRatio) || !isValidSummonMultiplier(secondaryRatio)) return false;
+         var panel:Object = owner.getSummonPanelSnapshot();
+         hpMax = scaledSummonStat(Number(panel.hpMax),hpRatio,1);
+         hp = hpMax;
+         ap = scaledSummonStat(Number(panel.ap),apRatio,1);
+         dePh = scaledSummonStat(Number(panel.dePh),dePhRatio,0);
+         deMa = scaledSummonStat(Number(panel.deMa),deMaRatio,0);
+         hit = scaledSummonStat(Number(panel.hit),secondaryRatio,0);
+         flee = scaledSummonStat(Number(panel.flee),secondaryRatio,0);
+         crit = scaledSummonStat(Number(panel.crit),secondaryRatio,0);
+         tough = scaledSummonStat(Number(panel.tough),secondaryRatio,0);
+         abilityEntryAttack = ap;
+         // The owner's live talent/aura contribution is already in this snapshot.
+         summonStatSnapshot = true;
+         return true;
       }
 
       public static function isValidSummonMultiplier(ratio:Number) : Boolean
@@ -551,7 +597,7 @@ package com.meng52.game.module.avatar
             {
                --state.ticks;
                state.until = abilitySerial+1;
-               injured(int(state.tickDamage),1,DisplayTools.getAttrs("FX_A_1103_MAGIC"),6,state.owner,false,state.owner);
+               injured(int(state.tickDamage),1,DisplayTools.getAttrs("FX_A_1103_MAGIC"),6,state.owner,false,state.owner,null,"phantasm");
                if(hp <= 0) { dead(); return true; }
                if(state.ticks <= 0) delete abilityState[key];
             }
@@ -630,6 +676,11 @@ package com.meng52.game.module.avatar
          var center:Avatar;
          switch(kind)
          {
+            case "nurse_n":
+            case "nurse_c": return true;
+            case "cat_c": return GameMap.currentMap.getAliveList(otherTeam).length > 0;
+            case "polar_c": return GameMap.currentMap.getAliveList(otherTeam).length > 0;
+            case "santa_c": return GameMap.currentMap.getAliveList(otherTeam).length > 0;
             case "kayle_c": return abilityAlly(nativeAbilityNumber(sourceSkill,kind,"can_0",600)) != null;
             case "yi_c":
             case "orianna_n":
@@ -659,6 +710,10 @@ package com.meng52.game.module.avatar
 
       public function executeAbility(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
+         if(kind == "cat_n" || kind == "cat_c") return executeCatSkin(kind,scale,effect,sourceSkill);
+         if(kind == "polar_n" || kind == "polar_c") return executePolarSkin(kind,effect,sourceSkill);
+         if(kind == "santa_n" || kind == "santa_c") return executeSantaSkin(kind,effect,sourceSkill);
+         if(kind == "nurse_n" || kind == "nurse_c") return executeNurseSkin(kind,sourceSkill);
          var orangeFourStatBuffMultiplier:Number = getStar() == 6 ? 5 : 1;
          var enemies:Array;
          var targets:Array;
@@ -885,8 +940,8 @@ package com.meng52.game.module.avatar
                break;
             case "malzahar_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               if(target.buffs.purify) {target.removeBuff("purify"); break;}
-               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",0.35)*scale*manualDamageMultiplier,hops:0,debuff:true};
+               if(target.buffs.purify) {target.removeBuff("purify",true); break;}
+               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1)*scale*manualDamageMultiplier,hops:0,debuff:true};
                break;
             case "malzahar_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650)); if(!enemies.length) return false; target=enemies[0];
@@ -977,6 +1032,285 @@ package com.meng52.game.module.avatar
                if(hadManualEffectFactor) context.manualEffectMultiplier = previousManualEffectFactor;
                else delete context.manualEffectMultiplier;
             }
+         }
+      }
+
+      private function executeSantaSkin(kind:String, effect:String, sourceSkill:*) : Boolean
+      {
+         var targets:Array = kind == "santa_n" ? abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1) : abilityAllEnemies();
+         if(targets.length == 0 || hp <= 0) return false;
+         if(kind == "santa_n")
+         {
+            // Lock this cast's repeat count before any of its hits can kill.
+            var count:int = 1+int(abilityState.santaKills);
+            for(var i:int = 0;i < count;i++)
+            {
+               targets = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1);
+               if(targets.length == 0 || hp <= 0) break;
+               var ticket:int = Random.getRandom(targets.length);
+               var victim:Avatar = targets[((ticket % targets.length)+targets.length)%targets.length] as Avatar;
+               abilityHit(victim,Number(sourceSkill.skills[0][4]),2,effect);
+               abilityState.santaStacks = int(abilityState.santaStacks)+1;
+               abilityFeedback("邪恶攻击 "+int(abilityState.santaStacks)+"层","FX60_STRONG",16744448);
+            }
+         }
+         else
+         {
+            for each(var target:Avatar in targets)
+               if(abilityHit(target,0.3,3,effect) && target.hp > 0) abilityControl(target,"stun",1);
+         }
+         return true;
+      }
+
+      private function executeNurseSkin(kind:String, sourceSkill:*) : Boolean
+      {
+         if(hp <= 0 || !GameMap.currentMap) return false;
+         var allies:Vector.<Avatar> = GameMap.currentMap.getAliveList(team);
+         if(allies.length == 0) return false;
+         var target:Avatar;
+         var amount:int;
+         if(kind == "nurse_n")
+         {
+            for each(target in allies) if(target.hp > 0) target.addBuff("purify",1);
+            amount = Tools.toInt(Tools.toInt(getDamage()*(1+checkTalent(1)))*Number(sourceSkill.skills[0][4]));
+            for each(target in allies)
+            {
+               if(target.hp <= 0) continue;
+               target.injured(amount,1,DisplayTools.getAttrs("FX60_HEAL"),4,this,false,this);
+            }
+         }
+         else
+         {
+            var primary:Avatar = allies[0];
+            for each(target in allies)
+               if(Number(target.hp)/Math.max(1,target.hpMax) < Number(primary.hp)/Math.max(1,primary.hpMax)) primary = target;
+            amount = Tools.toInt(hpMax*0.5);
+            // Keep both entries when the most injured target is this caster.
+            for each(target in [primary,this])
+            {
+               if(hp <= 0) break;
+               if(target.hp <= 0) continue;
+               target.addBuff("purify",1);
+               target.addBuff("bless",1);
+               target.injured(amount,1,DisplayTools.getAttrs("FX60_HEAL"),4,this,false,this);
+            }
+         }
+         return true;
+      }
+
+      private function queueNurseHealing(amount:int, overheal:int = 0) : void
+      {
+         if(hp <= 0 || amount <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "nurse_healing") return;
+         if(!abilityState.nursePending) abilityState.nursePending = [];
+         overheal = Math.max(0,Math.min(amount,overheal));
+         var overflowRate:Number = skillB.skills[0].length > 2 ? Number(skillB.skills[0][2]) : 1;
+         abilityState.nursePending.push(Tools.toInt((amount-overheal)*Number(skillB.skills[0][1])+overheal*overflowRate));
+         if(abilityState.nurseBusy) return;
+         abilityState.nurseBusy = true;
+         try
+         {
+            while(abilityState.nursePending.length > 0 && hp > 0)
+            {
+               var damage:int = int(abilityState.nursePending.shift());
+               if(damage <= 0) continue;
+               var context:Object = beginAbilityAttack(this,"passive");
+               try
+               {
+                  for each(var target:Avatar in abilityAllEnemies())
+                  {
+                     if(hp <= 0) break;
+                     // Fixed true damage enters after AP/armor/miss/crit math.
+                     target.injured(damage,1,DisplayTools.getAttrs("FX_S9150_TRUE"),3,this,false,this);
+                  }
+               }
+               finally { endAbilityAttack(context); }
+            }
+         }
+         finally
+         {
+            abilityState.nurseBusy = false;
+            if(hp <= 0) abilityState.nursePending = [];
+         }
+      }
+
+      private function queueSantaKill() : void
+      {
+         if(hp <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "santa_kill") return;
+         abilityState.santaStacks = int(abilityState.santaStacks)+int(skillB.skills[0][1]);
+         abilityState.santaKills = int(abilityState.santaKills)+int(skillB.skills[0][2]);
+      }
+
+      private function executePolarSkin(kind:String, effect:String, sourceSkill:*) : Boolean
+      {
+         var targets:Array;
+         var target:Avatar;
+         if(kind == "polar_n")
+         {
+            targets = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1);
+            if(targets.length == 0) return false;
+            var params:Array = sourceSkill.skills[0];
+            addBuff("critup",1,Number(params[4]));
+            var reduction:Number = Number(params[5]);
+            for each(target in targets)
+               if(abilityHit(target,Number(params[6]),1,effect) && target.hp > 0)
+                  abilityControl(target,"sunder",1,reduction/(1-reduction));
+            return true;
+         }
+         targets = abilityAllEnemies();
+         if(targets.length == 0) return false;
+         var primary:Avatar = targets[0] as Avatar;
+         for each(target in targets) if(target.getDamage() > primary.getDamage()) primary = target;
+         targets = abilityCandidates(otherTeam,primary.line,primary.pos,300,-1);
+         var oldHit:Number = abilityState.polarCastHit != null ? Number(abilityState.polarCastHit) : 0;
+         abilityState.polarCastHit = oldHit+50000;
+         try
+         {
+            for each(target in targets)
+            {
+               if(abilityHit(target,3,2,effect) && target.hp > 0)
+               {
+                  abilityControl(target,"curse",1);
+                  abilityControl(target,"stun",1);
+               }
+            }
+         }
+         finally { abilityState.polarCastHit = oldHit; }
+         return true;
+      }
+
+      private function polarBasicAttack() : void
+      {
+         if(hp <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "polar_basic") return;
+         var round:int = GameMap.currentMap ? GameMap.currentMap.roundNum : 0;
+         if(abilityState.polarRound == null)
+         {
+            abilityState.polarRound = round;
+            abilityState.polarCount = 0;
+            abilityState.polarBasic = false;
+         }
+         var elapsed:int = round-int(abilityState.polarRound);
+         if(elapsed > 0)
+         {
+            var lost:int = elapsed-(abilityState.polarBasic ? 1 : 0);
+            abilityState.polarCount = Math.max(0,int(abilityState.polarCount)-lost);
+            abilityState.polarRound = round;
+            abilityState.polarBasic = false;
+         }
+         var policy:Array = skillB.skills[0];
+         if(!abilityState.polarBasic) abilityState.polarCount = Math.min(int(policy[2]),int(abilityState.polarCount)+1);
+         abilityState.polarBasic = true;
+         var targets:Array = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1);
+         if(targets.length == 0) return;
+         var ticket:int = Random.getRandom(targets.length);
+         var target:Avatar = targets[((ticket % targets.length)+targets.length)%targets.length] as Avatar;
+         var context:Object = beginAbilityAttack(this,"passive");
+         try { abilityHit(target,Number(policy[1])*int(abilityState.polarCount),1,"FX_S9004_ARC"); }
+         finally { endAbilityAttack(context); }
+      }
+
+      private function abilityAllEnemies() : Array
+      {
+         var result:Array = [];
+         if(!GameMap.currentMap) return result;
+         for each(var enemy:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+            if(enemy && enemy.hp > 0) result.push(enemy);
+         return result;
+      }
+
+      public function addPurifyCharges(count:int) : void
+      {
+         if(count < 1 || hp <= 0) return;
+         removeAllDebuff();
+         var previous:Buff = buffs["purify"] as Buff;
+         count = Math.max(count,previous ? int(previous.value) : 0);
+         removeBuff("purify");
+         // Positive purify value stores charges; ordinary purify keeps value 0.
+         var guard:Buff = new Buff("purify",0,count);
+         buffs["purify"] = guard;
+         if(GameMapLayer.gl) GameMapLayer.gl.delayCall(showBuff,GameMap.actionDelay,guard);
+         abilityFeedback("净化（"+count+"层）","FX_S9150_PURIFY",10526975);
+      }
+
+      private function executeCatSkin(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
+      {
+         var context:Object = currentAbilityAttack();
+         if(!context || context.owner !== this || hp <= 0) return false;
+         var targets:Array;
+         var primary:Avatar;
+         var target:Avatar;
+         var wave:int;
+         if(kind == "cat_n")
+         {
+            if(abilityState.root) return false;
+            targets = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,3,false,"front");
+            if(targets.length == 0) return false;
+            primary = targets[0] as Avatar;
+            var params:Array = sourceSkill.skills[0];
+            addBuff("hitup",2,Number(params[4]));
+            abilityDash(primary);
+            var before:Number = Number(context.damage);
+            for each(target in targets) abilityHit(target,Number(params[5]),3,effect);
+            abilityHit(primary,Number(params[6]),3,effect);
+            var restore:int = Tools.toInt(Math.max(0,Number(context.damage)-before)*Number(params[7]));
+            if(hp > 0 && restore > 0) injured(restore,1,null,4,null,false,this);
+            return true;
+         }
+         if(abilityAllEnemies().length == 0) return false;
+         addPurifyCharges(2);
+         context.catCaptainCapture = true;
+         context.catCrits = 0;
+         try
+         {
+            for(wave=0;wave<6;wave++)
+            {
+               targets = abilityAllEnemies();
+               for each(target in targets) abilityHit(target,0.3,3,effect);
+            }
+         }
+         finally { context.catCaptainCapture = false; }
+         if(hp > 0 && int(context.catCrits) > 0) addBuff("strong",2,0.03*int(context.catCrits));
+         return true;
+      }
+
+      private function queueCatSkinKill() : void
+      {
+         if(hp <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "cat_passive") return;
+         var round:int = GameMap.currentMap ? GameMap.currentMap.roundNum : 0;
+         if(abilityState.catKillRound == null || int(abilityState.catKillRound) != round)
+         {
+            abilityState.catKillRound = round;
+            abilityState.catKillCount = 0;
+            abilityState.catKillPending = 0;
+         }
+         ++abilityState.catKillPending;
+         if(abilityState.catKillBusy) return;
+         abilityState.catKillBusy = true;
+         var policy:Array = skillB.skills[0];
+         try
+         {
+            while(int(abilityState.catKillPending) > 0 && int(abilityState.catKillCount) < int(policy[3]) && hp > 0)
+            {
+               --abilityState.catKillPending;
+               ++abilityState.catKillCount;
+               var context:Object = beginAbilityAttack(this,"passive");
+               try
+               {
+                  for(var strike:int=0;strike<int(policy[2]);strike++)
+                  {
+                     var targets:Array = abilityAllEnemies();
+                     if(targets.length == 0) break;
+                     var ticket:int = Random.getRandom(targets.length);
+                     var victim:Avatar = targets[((ticket % targets.length)+targets.length)%targets.length] as Avatar;
+                     abilityHit(victim,Number(policy[1]),3,"FX_S9130_COMBO");
+                  }
+               }
+               finally { endAbilityAttack(context); }
+            }
+         }
+         finally
+         {
+            abilityState.catKillBusy = false;
+            abilityState.catKillPending = 0;
          }
       }
 
@@ -1438,16 +1772,16 @@ package com.meng52.game.module.avatar
          trace(_loc7_ + "is克制后的伤害" + "ph" + param2.getDePh() + "ma" + param2.getDeMa());
          if(param2.checkTalent(2) != 0 || param2.checkTalent(3) != 0)
          {
-            trace(param2.getDePh() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + Tools.toInt(param2.getDePh() + param2.getDePh() * param2.checkTalent(2)));
-            trace(param2.getDeMa() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + Tools.toInt(param2.getDeMa() + param2.getDeMa() * param2.checkTalent(3)));
+            trace(param2.getDePh() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + Tools.toInt((param2.getDePh() + param2.getDePh() * param2.checkTalent(2)) * (1 - param1.getBookCombatBonus("penetration"))));
+            trace(param2.getDeMa() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + Tools.toInt((param2.getDeMa() + param2.getDeMa() * param2.checkTalent(3)) * (1 - param1.getBookCombatBonus("penetration"))));
          }
          if(param4 == 1)
          {
-            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - Tools.toInt(param2.getDePh() + param2.getDePh() * param2.checkTalent(2)));
+            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - Tools.toInt((param2.getDePh() + param2.getDePh() * param2.checkTalent(2)) * (1 - param1.getBookCombatBonus("penetration"))));
          }
          else if(param4 == 2)
          {
-            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - Tools.toInt(param2.getDeMa() + param2.getDeMa() * param2.checkTalent(3)));
+            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - Tools.toInt((param2.getDeMa() + param2.getDeMa() * param2.checkTalent(3)) * (1 - param1.getBookCombatBonus("penetration"))));
          }
          else if(param4 == 3)
          {
@@ -2620,7 +2954,7 @@ package com.meng52.game.module.avatar
          if(!param1 || (param2 != "poison" && param2 != "burn" && param2 != "bleed") || !isFinite(param3) || param3 < 0 || !isFinite(param4) || param4 < 0 || param5 < 1) return;
          if(buffs && buffs["purify"])
          {
-            removeBuff("purify");
+            removeBuff("purify",true);
             return;
          }
          if(!manualSkillDots) manualSkillDots = {};
@@ -2640,9 +2974,13 @@ package com.meng52.game.module.avatar
       {
          var _loc1_:String = null;
          if(buffs && (buffs["poison"] || buffs["burn"])) return true;
+         for(_loc1_ in abilityState)
+         {
+            if(_loc1_.indexOf("malz_") == 0 && abilityState[_loc1_] && abilityState[_loc1_].ticks > 0) return true;
+         }
          for(_loc1_ in manualSkillDots)
          {
-            if(manualSkillDots[_loc1_] && manualSkillDots[_loc1_].round > 0) return true;
+            if(manualSkillDots[_loc1_] && manualSkillDots[_loc1_].round >= 0) return true;
          }
          return false;
       }
@@ -2654,7 +2992,7 @@ package com.meng52.game.module.avatar
          if(param1 == "burn" && buffs && buffs["burn"]) return true;
          for(_loc1_ in manualSkillDots)
          {
-            if(manualSkillDots[_loc1_] && manualSkillDots[_loc1_].round > 0 && manualSkillDots[_loc1_].kind == param1) return true;
+            if(manualSkillDots[_loc1_] && manualSkillDots[_loc1_].round >= 0 && manualSkillDots[_loc1_].kind == param1) return true;
          }
          return false;
       }
@@ -2696,10 +3034,9 @@ package com.meng52.game.module.avatar
                {
                   _loc3_ = Math.max(_loc3_,Math.max(0,int(hpMax * Number(_loc2_.expiryHealHpMaxFraction))));
                }
-               if(_loc3_ > 0 && hp > 0 && hp < hpMax)
+               if(_loc3_ > 0 && hp > 0)
                {
-                  hp = Math.min(hpMax,hp + _loc3_);
-                  if(GameMapLayer.gl) GameMapLayer.gl.delayCall(refreshHp,GameMap.actionDelay,hp);
+                  injured(_loc3_,1,DisplayTools.getAttrs("FX60_HEAL"),4,this,false,this);
                }
             }
          }
@@ -2731,6 +3068,13 @@ package com.meng52.game.module.avatar
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          var _loc11_:Buff = new Buff(param1,param2,param3);
          var _loc12_:Buff = buffs[param1];
+         // A timed revival must never shorten an existing permanent one.
+         // Legacy bless uses value 0; the explicit timed_bless action uses 1.
+         if(param1 == "bless" && _loc12_)
+         {
+            if(_loc12_.value <= 0 && _loc11_.value > 0) return;
+            if(_loc11_.value <= 0 && _loc12_.value > 0) _loc11_.round = Math.max(_loc11_.round,_loc12_.round);
+         }
          var _loc7_:GameMapLayer = GameMapLayer.gl;
          if(param5 < 0)
          {
@@ -2813,7 +3157,7 @@ package com.meng52.game.module.avatar
          {
             if(Buff.LIST_DEBUFF.indexOf(param1) != -1)
             {
-               removeBuff("purify");
+               removeBuff("purify",true);
                _loc8_ = 10526880;
                _loc13_ = GlobalLanguageStr.getLanguageStr(30025);
                _loc7_.delayCall(_loc7_.infoLayer.popTextForAvatar,param4,_loc13_,this,_loc8_,param5,_loc14_);
@@ -2841,6 +3185,7 @@ package com.meng52.game.module.avatar
          if(param1 == "purify")
          {
             removeAllDebuff();
+            if(_loc12_ && _loc12_.value > 0) return;
          }
          else if(param1 == "evil")
          {
@@ -2888,6 +3233,7 @@ package com.meng52.game.module.avatar
                case "fleeup":
                case "critup":
                case "toughup":
+               case "book_penetration":
                   if(_loc11_.value >= _loc12_.value)
                   {
                      removeBuff(param1);
@@ -3080,12 +3426,18 @@ package com.meng52.game.module.avatar
          clearManualSkillDots();
       }
 
-      protected function removeBuff(param1:String) : void
+      protected function removeBuff(param1:String, consume:Boolean = false) : void
       {
          if(param1 == "root") delete abilityState.root;
          var _loc2_:Buff = buffs[param1];
          if(!_loc2_)
          {
+            return;
+         }
+         if(consume && param1 == "purify" && _loc2_.value > 1)
+         {
+            --_loc2_.value;
+            abilityFeedback("净化剩余"+int(_loc2_.value)+"层","FX_S9150_PURIFY",10526975);
             return;
          }
          var _loc3_:GameMapLayer = GameMapLayer.gl;
@@ -3123,8 +3475,9 @@ package com.meng52.game.module.avatar
          for(_loc3_ in buffs)
          {
             _loc1_ = buffs[_loc3_];
-            // Bless stays armed until its one lethal-hit revival consumes it.
-            if(_loc3_ == "bless") continue;
+            // Only the new timed variant expires; legacy revival stays armed.
+            if(_loc3_ == "bless" && _loc1_.value <= 0) continue;
+            if(_loc3_ == "purify" && _loc1_.value > 0) continue;
             --_loc1_.round;
             switch(_loc3_)
             {
@@ -3147,7 +3500,7 @@ package com.meng52.game.module.avatar
          if(_loc1_)
          {
             _loc5_ = DisplayTools.getAttrs("POISON_EFF");
-            injured(Tools.toInt(_loc1_.value * REAL_DAMAGE_RATE + GlobalData.$mConfig_simple.attack[18] * hpMax),1,_loc5_,6);
+            injured(Tools.toInt(_loc1_.value + GlobalData.$mConfig_simple.attack[18] * hpMax),1,_loc5_,6,null,false,null,null,"poison");
             if(hp <= 0)
             {
                hp = 0;
@@ -3162,7 +3515,7 @@ package com.meng52.game.module.avatar
          if(_loc1_)
          {
             _loc5_ = DisplayTools.getAttrs("BURN_EFF");
-            injured(Tools.toInt(_loc1_.value * REAL_DAMAGE_RATE),1,_loc5_,7);
+            injured(Tools.toInt(_loc1_.value),1,_loc5_,7,null,false,null,null,"burn");
             if(hp <= 0)
             {
                hp = 0;
@@ -3180,17 +3533,18 @@ package com.meng52.game.module.avatar
                manualDot = manualSkillDots[manualDotKey];
                if(!manualDot) continue;
                --manualDot.round;
-               manualDotRaw = Number(manualDot.apTick) * ((int(manualDot.damageType) == 1 || int(manualDot.damageType) == 2) ? 1 : REAL_DAMAGE_RATE) + Number(manualDot.hpMaxFraction) * hpMax;
+               manualDotRaw = Number(manualDot.apTick) + Number(manualDot.hpMaxFraction) * hpMax;
                manualDotAmount = Tools.toInt(manualDotRaw);
-               if((int(manualDot.damageType) == 1 || int(manualDot.damageType) == 2) && manualDot.source is Avatar)
+               if(manualDot.bookRemaining !== undefined)
                {
-                  if(int(manualDot.damageType) == 1) manualDotAmount = Tools.toInt(Math.max(manualDotRaw * MIN_DAMAGE_RATE,manualDotRaw - Tools.toInt(getDePh() + getDePh() * checkTalent(2))));
-                  else manualDotAmount = Tools.toInt(Math.max(manualDotRaw * MIN_DAMAGE_RATE,manualDotRaw - Tools.toInt(getDeMa() + getDeMa() * checkTalent(3))));
+                  manualDotAmount = Math.ceil(Number(manualDot.bookRemaining) / Math.max(1,int(manualDot.bookTicks)));
+                  manualDot.bookRemaining -= manualDotAmount;
+                  manualDot.bookTicks--;
                }
                if(manualDotAmount > 0)
                {
                   manualDotEffect = DisplayTools.getAttrs(manualDot.kind == "burn" ? "BURN_EFF" : "POISON_EFF");
-                  injured(manualDotAmount,1,manualDotEffect,int(manualDot.damageType) == 1 || int(manualDot.damageType) == 2 ? int(manualDot.damageType) : (manualDot.kind == "burn" ? 7 : 6),manualDot.source as Avatar,false,manualDot.source as Avatar);
+                  injured(manualDotAmount,1,manualDotEffect,manualDot.kind == "burn" ? 7 : 6,manualDot.source as Avatar,false,manualDot.source as Avatar,null,String(manualDot.kind));
                   if(hp <= 0)
                   {
                      hp = 0;
@@ -3459,8 +3813,48 @@ package com.meng52.game.module.avatar
             _loc4_ += mDNdata.hp;
          }
          _loc4_ = applyOwnedGuildResearch("hp",_loc4_);
+         _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("hp")));
          _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("hp") / 100));
          return Math.max(_loc4_,0);
+      }
+
+      public function getBookCombatBonus(stat:String) : Number
+      {
+         var value:Number = 0;
+         if(skill2 && !skill2.skillSetData.pl && skill2.skills)
+         {
+            for each(var action:Array in skill2.skills)
+            {
+               if(action[0] == "book_passive" && action[2] == stat) value += Number(action[1]);
+            }
+         }
+         if(stat == "penetration")
+         {
+            if(buffs && buffs["book_penetration"]) value += Number(buffs["book_penetration"].value);
+            return Math.max(0,Math.min(1,value));
+         }
+         return isFinite(value) ? Math.max(0,value) : 0;
+      }
+
+      public function addBookBurn(total:int, rounds:int, source:Avatar) : void
+      {
+         if(total <= 0 || rounds < 1 || hp <= 0) return;
+         var key:String = "book-burn:" + (++manualDotSerial);
+         addManualSkillDot(key,"burn",0,0,rounds,source,3);
+         if(manualSkillDots && manualSkillDots[key])
+         {
+            manualSkillDots[key].bookRemaining = total;
+            manualSkillDots[key].bookTicks = rounds;
+         }
+      }
+
+      private function applyBookAttackEffects(target:Avatar, dealt:int) : void
+      {
+         if(!target || target.hp <= 0 || dealt <= 0 || target.team == team) return;
+         var burn:Number = getBookCombatBonus("attack_burn");
+         if(burn > 0) target.addBookBurn(Tools.toInt(dealt * burn),3,this);
+         var chance:Number = getBookCombatBonus("attack_curse");
+         if(chance > 0 && Random.getRandom(10000) < Math.round(chance * 10000)) target.addBuff("curse",3);
       }
 
       public function getDamage(param1:int = -1, param2:int = -1, param3:Boolean = false) : int
@@ -3523,6 +3917,8 @@ package com.meng52.game.module.avatar
                _loc6_ += mDNdata.ap;
             }
             _loc6_ = applyOwnedGuildResearch("ap",_loc6_);
+         _loc6_ = Tools.toInt(_loc6_ * (1 + getBookCombatBonus("ap")));
+         _loc6_ = Tools.toInt(_loc6_ * (1 + ownGrowthValue("attack") / 100));
          }
          var _loc4_:Number = 1;
          if(buffs)
@@ -3540,6 +3936,7 @@ package com.meng52.game.module.avatar
          }
          _loc6_ = Tools.toInt(_loc6_ * (1 + getManualBattleStack("attack") + getManualTimedStack("attack")) * _loc4_);
          if(hpMax && abilityEntryAttack > 0) _loc6_ += int(abilityEntryAttack * (abilityState.evilStackBonus != null ? Number(abilityState.evilStackBonus) : 0.03 * int(abilityState.evilStacks)));
+         if(hpMax && this.abilityState && int(this.abilityState.santaStacks) > 0) _loc6_ = Tools.toInt(_loc6_ * (1+0.05*int(this.abilityState.santaStacks)));
          return Math.max(_loc6_,0);
       }
 
@@ -3603,6 +4000,8 @@ package com.meng52.game.module.avatar
                _loc4_ += mDNdata.de_ph;
             }
             _loc4_ = applyOwnedGuildResearch("de_ph",_loc4_);
+         _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("de_ph")));
+         _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("defense") / 100));
          }
          var _loc5_:Number = 1;
          if(buffs)
@@ -3682,6 +4081,8 @@ package com.meng52.game.module.avatar
                _loc4_ += mDNdata.de_ma;
             }
             _loc4_ = applyOwnedGuildResearch("de_ma",_loc4_);
+         _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("de_ma")));
+         _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("defense") / 100));
          }
          var _loc5_:Number = 1;
          if(buffs)
@@ -3773,6 +4174,7 @@ package com.meng52.game.module.avatar
          }
          else
          {
+            _loc3_ = mData && mData.hit != null ? Math.max(0,int(mData.hit)) : 0;
             _loc4_ = 0;
             for each(_loc2_ in equips)
             {
@@ -3788,6 +4190,7 @@ package com.meng52.game.module.avatar
                _loc3_ = (_loc3_ + mDestiny.hit) * (1 + mDestiny.hitP);
             }
          }
+         if(!hpMax) _loc3_ = Tools.toInt(_loc3_ * (1 + getBookCombatBonus("hit")));
          if(buffs)
          {
             _loc1_ = buffs["hitup"] as Buff;
@@ -3796,7 +4199,7 @@ package com.meng52.game.module.avatar
                _loc3_ += _loc1_.value;
             }
          }
-         return _loc3_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_hit"));
+         return _loc3_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_hit")) + (this.abilityState ? int(this.abilityState.polarCastHit) : 0);
       }
 
       public function getFlee() : int
@@ -3811,6 +4214,7 @@ package com.meng52.game.module.avatar
          }
          else
          {
+            _loc2_ = mData && mData.flee != null ? Math.max(0,int(mData.flee)) : 0;
             _loc4_ = 0;
             for each(_loc3_ in equips)
             {
@@ -3826,6 +4230,7 @@ package com.meng52.game.module.avatar
                _loc2_ = (_loc2_ + mDestiny.flee) * (1 + mDestiny.fleeP);
             }
          }
+         if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("flee")));
          if(buffs)
          {
             _loc1_ = buffs["fleeup"] as Buff;
@@ -3849,6 +4254,7 @@ package com.meng52.game.module.avatar
          }
          else
          {
+            _loc2_ = mData && mData.crit != null ? Math.max(0,int(mData.crit)) : 0;
             _loc4_ = 0;
             for each(_loc3_ in equips)
             {
@@ -3864,6 +4270,7 @@ package com.meng52.game.module.avatar
                _loc2_ = (_loc2_ + mDestiny.crit) * (1 + mDestiny.critP);
             }
          }
+         if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("crit")));
          if(buffs)
          {
             _loc1_ = buffs["critup"] as Buff;
@@ -3887,6 +4294,7 @@ package com.meng52.game.module.avatar
          }
          else
          {
+            _loc2_ = mData && mData.tough != null ? Math.max(0,int(mData.tough)) : 0;
             _loc4_ = 0;
             for each(_loc3_ in equips)
             {
@@ -3902,6 +4310,7 @@ package com.meng52.game.module.avatar
                _loc2_ = (_loc2_ + mDestiny.tough) * (1 + mDestiny.toughP);
             }
          }
+         if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("tough")));
          if(buffs)
          {
             _loc1_ = buffs["toughup"] as Buff;
@@ -4259,7 +4668,7 @@ package com.meng52.game.module.avatar
          {
             param2 = lv;
          }
-         var _loc5_:Number = Math.pow(getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA,2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed() + getRange()) * (1 + Math.pow(getHit() + getFlee() + getCrit() + getTough(),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
+         var _loc5_:Number = Math.pow(getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA,2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(getHit() + getFlee() + getCrit() + getTough(),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
       }
@@ -4426,6 +4835,7 @@ package com.meng52.game.module.avatar
 
       public function goFight(param1:int, param2:int, param3:Number, param4:Boolean = true) : void
       {
+         summonStatSnapshot = false;
          formationOwner = null;
          abilityState = {}; abilitySerial = 0; abilityIndex = ++abilityNextIndex;
          abilityEntryAttack = 0;
@@ -5161,6 +5571,7 @@ package com.meng52.game.module.avatar
 
       public function checkTalent(param1:int, param2:Boolean = false) : Number
       {
+         if(this.summonStatSnapshot && param1 >= 1 && param1 <= 3) return 0;
          var _loc9_:int = 0;
          var _loc4_:Avatar = null;
          var _loc6_:Number = 0;
@@ -5176,7 +5587,7 @@ package com.meng52.game.module.avatar
                while(_loc9_ < _loc3_.length)
                {
                   _loc4_ = _loc3_[_loc9_];
-                  if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent())
+                  if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent() && !_loc4_.isPanelStatTalent())
                   {
                      if(_loc4_.talent.my_HaloData.plType == param1 && _loc4_.talent.my_HaloData.plUse == 1 && (_checkListmyCurrHp ? _checkListmyCurrHp[_loc9_] : 1) > 0)
                      {
@@ -5185,7 +5596,7 @@ package com.meng52.game.module.avatar
                   }
                   _loc9_++;
                }
-               if(talent && !isTeamFlatTalent())
+               if(talent && !isTeamFlatTalent() && !isPanelStatTalent())
                {
                   if(talent.my_HaloData.plType == param1 && talent.my_HaloData.plUse == 0)
                   {
@@ -5200,7 +5611,7 @@ package com.meng52.game.module.avatar
             while(_loc9_ < _loc3_.length)
             {
                _loc4_ = _loc3_[_loc9_];
-               if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent())
+               if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent() && !_loc4_.isPanelStatTalent())
                {
                   if((_loc4_.talent.my_HaloData.plType == param1 || param1 == 3 && _loc4_.ownGrowthValue("defense") > 0) && _loc4_.talent.my_HaloData.plUse == 1 && (_checkListmyCurrHp ? _checkListmyCurrHp[_loc9_] : 1) > 0)
                   {
@@ -5209,7 +5620,7 @@ package com.meng52.game.module.avatar
                }
                _loc9_++;
             }
-            if(talent && !isTeamFlatTalent())
+            if(talent && !isTeamFlatTalent() && !isPanelStatTalent())
             {
                if((talent.my_HaloData.plType == param1 || param1 == 3 && ownGrowthValue("defense") > 0) && talent.my_HaloData.plNum > _loc6_ && talent.my_HaloData.plUse == 0)
                {
@@ -5220,7 +5631,7 @@ package com.meng52.game.module.avatar
             while(_loc9_ < _loc5_.length)
             {
                _loc4_ = _loc5_[_loc9_];
-               if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent())
+               if(_loc4_ && _loc4_.talent && !_loc4_.isTeamFlatTalent() && !_loc4_.isPanelStatTalent())
                {
                   if(_loc4_.talent.my_HaloData.plType < 8)
                   {
@@ -5280,6 +5691,8 @@ package com.meng52.game.module.avatar
          try
          {
 
+         var bookBasicAttack:Boolean = param2 == -1;
+         var bookHPBefore:int = 0;
          var _loc38_:* = 0;
          var _loc10_:Avatar = null;
          var _loc12_:Avatar = null;
@@ -5410,7 +5823,9 @@ package com.meng52.game.module.avatar
                   _loc46_ = _loc42_ ? countDamage(this,waveTarget,_loc14_,param2,param9) : [_loc14_,false];
                   _loc20_ = _loc42_ ? checkCrit(this,waveTarget) : 1;
                   if(_loc20_ != 1 && skillB && avatarData.skill_diff == 2) GlobalData.skillBoo = true;
+                  bookHPBefore = waveTarget.hp;
                   _loc21_ += waveTarget.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+                  if(bookBasicAttack) applyBookAttackEffects(waveTarget,Math.max(0,bookHPBefore - waveTarget.hp));
                }
                waveEndDelay = Math.max(waveEndDelay,GameMap.actionDelay);
             }
@@ -5472,7 +5887,9 @@ package com.meng52.game.module.avatar
                         }
                      }
                   }
+                  bookHPBefore = _loc10_.hp;
                   _loc21_ += _loc10_.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+                  if(bookBasicAttack) applyBookAttackEffects(_loc10_,Math.max(0,bookHPBefore - _loc10_.hp));
                   _loc33_++;
                   _loc26_ = _loc10_.pos;
                }
@@ -5547,7 +5964,9 @@ package com.meng52.game.module.avatar
                      }
                   }
                }
+               bookHPBefore = _loc10_.hp;
                _loc21_ += _loc10_.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+               if(bookBasicAttack) applyBookAttackEffects(_loc10_,Math.max(0,bookHPBefore - _loc10_.hp));
                _loc33_++;
             }
             _loc34_++;
@@ -5629,7 +6048,9 @@ package com.meng52.game.module.avatar
                            }
                         }
                      }
+                     bookHPBefore = _loc12_.hp;
                      _loc21_ += _loc12_.injured(_loc46_[0],_loc20_,_loc25_,param2,_loc10_,_loc46_[1],this,param7);
+                     if(bookBasicAttack) applyBookAttackEffects(_loc12_,Math.max(0,bookHPBefore - _loc12_.hp));
                      _loc33_++;
                   }
                }
@@ -5695,7 +6116,9 @@ package com.meng52.game.module.avatar
                            }
                         }
                      }
+                     bookHPBefore = _loc12_.hp;
                      _loc21_ += _loc12_.injured(_loc46_[0],_loc20_,_loc25_,param2,_loc11_,_loc46_[1],this,param7);
+                     if(bookBasicAttack) applyBookAttackEffects(_loc12_,Math.max(0,bookHPBefore - _loc12_.hp));
                      _loc33_++;
                   }
                }
@@ -5711,6 +6134,7 @@ package com.meng52.game.module.avatar
             {
                if(markedBasic && basicContext.hits.indexOf(aimTarget) >= 0) delete aimTarget.abilityState["mark_aim_"+abilityIndex];
                endAbilityAttack(basicContext);
+               if(bookBasicAttack && this.skillB && this.skillB.skills && this.skillB.skills.length && this.skillB.skills[0][0] == "polar_basic") polarBasicAttack();
             }
          }
       }
@@ -5804,9 +6228,21 @@ package com.meng52.game.module.avatar
          layer.addTween(pulse);
       }
 
-      public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null) : int
+      private function absorbShieldDamage(amount:int, factor:Number) : int
+      {
+         var shield:Buff = buffs["shield"] as Buff;
+         if(!shield || amount <= 0) return amount;
+         if(!isFinite(factor) || factor < 1) factor = 1;
+         var spent:int = Math.min(Math.max(0,shield.value),Tools.toInt(amount * factor));
+         shield.value -= spent;
+         if(shield.value <= 0) removeBuff("shield");
+         return Tools.toInt(Math.max(0,Number(amount) - Number(spent) / factor));
+      }
+
+      public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "") : int
       {
          var abilityHpBefore:int = hp;
+         var nurseHealAmount:int = 0;
          var abilityDamageTaken:Number = 0;
          param1 = int(param1 * abilityDirectMultiplier(param7,param4));
          var _loc12_:String = null;
@@ -5897,10 +6333,13 @@ package com.meng52.game.module.avatar
          var _loc24_:* = GlobalData.$mConfig_simple.attack;
          if(param4 == 4)
          {
-            if(buffs["burn"])
+            var bookHealer:Avatar = param7 || param5 || this;
+            param1 = Tools.toInt(param1 * (1 + bookHealer.getBookCombatBonus("healing")));
+            if(hasManualDotKind("burn"))
             {
-               param1 = Tools.toInt(param1 * _loc24_[17]);
+               param1 = Tools.toInt(param1 * 0.6);
             }
+            nurseHealAmount = Math.max(0,param1);
             param1 = Math.min(param1,hpMax - hp);
             hp += param1;
             GameMapTools.gameTrace(id + "治療++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + param1);
@@ -5933,16 +6372,13 @@ package com.meng52.game.module.avatar
                   param1 = Tools.toInt(param1 + param1 * checkTalent(16,param7 ? 1 : 0));
             }
             trace("最终伤害算减伤之后" + param1);
+            if(hasManualDotKind("poison")) param1 = Tools.toInt(param1 * 1.2);
             _loc9_ = buffs["shield"] as Buff;
             if(_loc9_)
             {
-               _loc10_ = Math.min(_loc9_.value,param1);
-               _loc9_.value -= _loc10_;
-               if(_loc9_.value <= 0)
-               {
-                  removeBuff("shield");
-               }
-               param1 -= _loc10_;
+               var bookShieldFactor:Number = 1 + (param7 ? param7.getBookCombatBonus("shield_damage") : 0);
+               if(dotKind == "bleed" || dotKind == "phantasm") bookShieldFactor *= 3;
+               param1 = absorbShieldDamage(param1,bookShieldFactor);
             }
             if(param7 && param7.manualSkillDamageCapture && param7.manualSkillDamageCapture.active === true && param7.manualSkillDamageCapture.owner === param7)
             {
@@ -5952,7 +6388,7 @@ package com.meng52.game.module.avatar
             abilityDamageTaken = Math.min(Math.max(0,param1),Math.max(0,abilityHpBefore));
             if(param4 == 6)
             {
-               _loc12_ = GlobalLanguageStr.getLanguageStr(30013) + param1;
+               _loc12_ = (dotKind == "bleed" ? "流血" : dotKind == "phantasm" ? "幻象" : GlobalLanguageStr.getLanguageStr(30013)) + param1;
             }
             else if(param4 == 7)
             {
@@ -6153,6 +6589,14 @@ package com.meng52.game.module.avatar
             }
          }
          if(param4 != 4) abilityRecordDamage(param7,param4,abilityHpBefore,abilityDamageTaken);
+         var catContext:Object = currentAbilityAttack();
+         if(param2 > 1 && param4 >= 1 && param4 <= 3 && param7 && catContext && catContext.owner === param7 && catContext.catCaptainCapture)
+            catContext.catCrits = int(catContext.catCrits) + 1;
+         if(hp <= 0 && abilityHpBefore > 0 && param7 && param7.team != team && param7.skillB && param7.skillB.skills && param7.skillB.skills.length && param7.skillB.skills[0][0] == "cat_passive")
+            param7.queueCatSkinKill();
+         if(hp <= 0 && abilityHpBefore > 0 && param7 && param7.team != team && param7.skillB && param7.skillB.skills && param7.skillB.skills.length && param7.skillB.skills[0][0] == "santa_kill")
+            param7.queueSantaKill();
+         if(param4 == 4 && nurseHealAmount > 0) queueNurseHealing(nurseHealAmount,Math.max(0,nurseHealAmount-Math.max(0,hpMax-abilityHpBefore)));
          return param1;
       }
 

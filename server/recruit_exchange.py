@@ -22,7 +22,7 @@ def daily_orange_pool(config):
     """Use authored playable heroes, never cosmetic, NPC, or placeholder rows."""
     cfg = config.get("cfg", config)
     avatar = cfg.get("avatar", {})
-    blocked = set(cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", []))
+    blocked = set(cfg.get("system_simple", {}).get("skin_hero_ids", [])) | set(cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", []))
     if not isinstance(avatar, dict):
         raise ValueError("Avatar definitions are unavailable")
     pool = sorted(aid for aid, row in avatar.items()
@@ -82,4 +82,5 @@ def apply_recruit_exchange_config(document):
         "daily_count": DAILY_CARD_COUNT, "skin_souls": list(SKIN_SOUL_IDS),
         "soul_price": SOUL_PRICE, "soul_count": SOUL_COUNT,
     }
-    return document
+    from summon_pools import apply_summon_config
+    return apply_summon_config(document)

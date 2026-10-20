@@ -333,12 +333,15 @@ class ModCatalog:
                     if os.name=="nt":msvcrt.locking(stream.fileno(),msvcrt.LK_UNLCK,1)
                     else:fcntl.flock(stream.fileno(),fcntl.LOCK_UN)
     def _load(self):
-        if getattr(self,"catalog_error",None):raise self.catalog_error
-        try:return self._read_registry()
-        except ModError as exc:
-            if exc.code=="ModRegistryLimit":raise
-            self.catalog_error=exc if exc.code=="ModUnsafeStorage" else ModError("ModRegistryCorrupt","Installation registry is unreadable; restore a known registry backup before changing packages. "+str(exc),"registry.json")
-            raise self.catalog_error from exc
+        # Windows readers deny replacement while the registry file is open.
+        # Share the writer transaction so startup/snapshot reads cannot race
+        # an atomic publish by another server or author tool.
+        with self._transaction():
+            try:return self._read_registry()
+            except ModError as exc:
+                if exc.code=="ModRegistryLimit":raise
+                self.catalog_error=exc if exc.code=="ModUnsafeStorage" else ModError("ModRegistryCorrupt","Installation registry is unreadable; restore a known registry backup before changing packages. "+str(exc),"registry.json")
+                raise self.catalog_error from exc
     def _read_registry(self):
         self._guard_storage(self.registry_path)
         if not self.registry_path.exists():

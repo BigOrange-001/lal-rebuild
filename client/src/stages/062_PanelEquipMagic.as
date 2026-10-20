@@ -13,6 +13,8 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.element.LOL_Scale9Button;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendServiceAMFFun;
+   import com.meng52.net.SendAndSelect;
+   import com.meng52.events.NetEvent;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
@@ -47,6 +49,10 @@ package com.meng52.game.ui.panel
       private var _txt:LOL_IconText;
       
       private var _spRule:Sprite;
+      private var mMagicBusy:Boolean = false;
+      private var mMagicAction:String = "";
+      private var mMagicEpoch:int = 0;
+
       
       public function PanelEquipMagic()
       {
@@ -158,6 +164,9 @@ package com.meng52.game.ui.panel
          {
             _spRule.removeEventListener("touch",onTRIGGERED_help);
          }
+         mMagicEpoch++;
+         mMagicBusy = false;
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onMagicError);
          super.onREMOVED_FROM_STAGE(param1);
          mTxt_self = null;
          mBox_icon = null;
@@ -202,7 +211,7 @@ package com.meng52.game.ui.panel
          mBox_team = new Sprite();
          addChild(mBox_team);
          setDustBtn(mBox_team);
-         setIcon();
+         // Rune identity is shown in the header; keep the upgrade grid unobstructed.
          var _loc2_:Object = GlobalFunction.get_HelpLink(GlobalLanguageStr.getLanguageStr(90203));
          _spRule = _loc2_.ui;
          _spRule.x = _width - _loc2_.w - 40;
@@ -290,7 +299,7 @@ package com.meng52.game.ui.panel
          if(_stage >= 4)
          {
             var _stageButton:LOL_Scale9Button = new LOL_Scale9Button(_stage >= 5 ? "第五阶段已解锁" : "解锁第五阶段",200,48,"UI_btn_normalFun_0000");
-            _stageButton.y = 300;
+            _stageButton.y = Math.min(270,mImg9_baseBg.height-450);
             _stageButton.enabled = _stage < 5;
             if(_stage < 5)
             {
@@ -312,7 +321,7 @@ package com.meng52.game.ui.panel
          param1.addChild(_levelHint);
          var _runeButton:LOL_Scale9Button = new LOL_Scale9Button(_loc7_.symp < 0 || _loc7_.symp >= RUNE_STAT_NAMES.length ? "先揭示符文" : _loc7_.runeLv >= _runeMax ? "符文已满级" : "强化符文",200,48,"UI_btn_normalFun_0000");
          _runeButton.x = 210;
-         _runeButton.y = 300;
+         _runeButton.y = Math.min(270,mImg9_baseBg.height-450);
          _runeButton.enabled = _loc7_.symp >= 0 && _loc7_.symp < RUNE_STAT_NAMES.length && _loc7_.runeLv < _runeMax;
          if(_runeButton.enabled)
          {
@@ -323,6 +332,7 @@ package com.meng52.game.ui.panel
 
       private function onTRIGGERED_rune(param1:Event) : void
       {
+         if(mMagicBusy) return;
          var _eid:String = GlobalData.$tempEquipCurrSelected;
          var _item:Object = GlobalData.$userData.my_equips[_eid];
          if(_item == null)
@@ -390,6 +400,7 @@ package com.meng52.game.ui.panel
 
       private function toStage5() : void
       {
+         if(mMagicBusy) return;
          var _eid:String = GlobalData.$tempEquipCurrSelected;
          var _item:Object = GlobalData.$userData.my_equips[_eid];
          if(_item == null || new Equip(_eid,_item).getMagicStage() != 4)
@@ -440,7 +451,7 @@ package com.meng52.game.ui.panel
             addChild(_txt);
             addChild(mBox_dataUp);
             mBox_dataUp.x = 140;
-            mBox_dataUp.y = 665;
+            mBox_dataUp.y = mImg9_baseBg.y+mImg9_baseBg.height-70;
          }
          if(param1)
          {
@@ -450,114 +461,112 @@ package com.meng52.game.ui.panel
       
       private function setDustBtn(param1:Sprite, param2:Boolean = false, param3:int = 0) : void
       {
-         var _loc14_:LOL_MagicButton = null;
-         if(param2)
+         StarlingTools.removeChildrenClear(param1);
+         var labels:Array = ["绿","蓝","紫","橙"];
+         var item:Object = GlobalData.$userData.my_equips[GlobalData.$tempEquipCurrSelected];
+         if(!item) return;
+         var magic:Array = item.magic ? item.magic as Array : [0,0,0,0];
+         for(var i:int = 0; i < 4; i++)
          {
-            StarlingTools.removeChildrenClear(param1);
+            var card:Sprite = new Sprite();
+            card.x = i*150;
+            param1.addChild(card);
+            var bg:Quad = new Quad(142,190,1712944);
+            bg.touchable = false;
+            card.addChild(bg);
+            var quote:Object = magicUpgradeQuote(i,10);
+            var title:TextField = GlobalTextStyle.getTextField(labels[i]+"阶 Lv."+int(magic[i])+"/"+int(GlobalData.$mConfig_simple.dust.max[i]),18,uint(LOL_MagicButton.TXT_COLOR[i]),"center",142,32);
+            title.touchable = false;card.addChild(title);
+            var info:TextField = GlobalTextStyle.getTextField(quote.count > 0 ? "单次 "+quote.firstCost+" 粉尘\n预计 "+quote.count+"次 / "+quote.cost+"粉尘" : String(quote.message),15,16777215,"center",142,48);
+            info.y = 34;info.touchable = false;card.addChild(info);
+            addMagicUpgradeButton(card,i,1,88,quote.count > 0);
+            addMagicUpgradeButton(card,i,10,136,quote.count > 0);
          }
-         var _loc11_:String = GlobalData.$tempEquipCurrSelected;
-         var _loc9_:Object = GlobalData.$userData.my_equips[_loc11_];
-         var _loc6_:Equip = null;
-         if(_loc9_ != null)
+         param1.x = (GlobalData.$mStageWidth-592)*0.5;
+         param1.y = mImg9_baseBg.y+mImg9_baseBg.height-280;
+      }
+
+      private function addMagicUpgradeButton(card:Sprite, color:int, times:int, y:Number, enabled:Boolean) : void
+      {
+         var button:LOL_Scale9Button = new LOL_Scale9Button("粉尘强化"+times+"次",126,38,"UI_btn_enterGame_0_0000");
+         button.x = 8;button.y = y;button.fontSize = 16;
+         button.enabled = enabled && !mMagicBusy;
+         button.addEventListener("triggered",function(event:Event):void { submitMagicUpgrade(color,times); });
+         card.addChild(button);
+      }
+
+      private function magicUpgradeQuote(color:int, times:int) : Object
+      {
+         var item:Object = GlobalData.$userData.my_equips[GlobalData.$tempEquipCurrSelected];
+         var result:Object = {"count":0,"cost":0,"firstCost":0,"message":"装备不存在"};
+         if(!item || color < 0 || color > 3) return result;
+         var magic:Array = item.magic ? item.magic as Array : [0,0,0,0];
+         if(color > 0 && int(magic[color-1]) <= 0) { result.message = "先开启前一阶";return result; }
+         var level:int = int(magic[color]);
+         var cap:int = int(GlobalData.$mConfig_simple.dust.max[color]);
+         if(level >= cap) { result.message = "此阶已满级";return result; }
+         var base:int = int(GlobalData.$mConfig_simple.dust.add_magic[0][color]);
+         var rules:Object = GlobalData.$mConfig_simple.equipment_magic;
+         var every:int = rules ? int(rules.cost_growth_every) : 0;
+         var dust:Number = Number(GlobalData.$userData.attrs.dust[color]);
+         for(var i:int = 0; i < times && level+i < cap; i++)
          {
-            _loc6_ = new Equip(_loc11_,_loc9_);
+            var cost:int = base+(every > 0 ? Math.floor((level+i)/every) : 0);
+            if(i == 0) result.firstCost = cost;
+            if(int(result.cost)+cost > dust) break;
+            result.cost += cost;result.count++;
          }
-         var _loc4_:Array = [0,0,0,0];
-         if(_loc6_ != null && _loc6_.magic is Array)
-         {
-            _loc4_ = _loc6_.magic as Array;
-         }
-         var _loc8_:int = 0;
-         var _loc7_:int = 4;
-         var _loc12_:Number = 150;
-         var _loc5_:int = 0;
-         var _loc13_:int = 0;
-         _loc8_ = 0;
-         while(_loc8_ < _loc7_)
-         {
-            _loc14_ = new LOL_MagicButton(_loc8_,_loc4_,toMagic,param2,param3);
-            _loc14_.x = _loc8_ * _loc12_;
-            _loc14_.y = 0;
-            param1.addChild(_loc14_);
-            _loc13_ += 1;
-            _loc8_++;
-         }
-         param1.x = int((GlobalData.$mStageWidth - _loc12_ * _loc13_ + _loc12_) * 0.5);
-         var _loc10_:Number = GlobalData.formatVScaleY_center(150) + 20;
-         param1.y = 665 - _loc10_;
+         result.message = "粉尘不足";
+         return result;
+      }
+
+      private function submitMagicUpgrade(color:int, times:int) : void
+      {
+         if(mMagicBusy || !stage) return;
+         var quote:Object = magicUpgradeQuote(color,times);
+         if(quote.count <= 0) { GlobalFunction.popAlert("",String(quote.message));return; }
+         var eid:String = GlobalData.$tempEquipCurrSelected;
+         var uid:String = String(GlobalData.$userData.uid);
+         var epoch:int = mMagicEpoch;
+         GlobalFunction.popAlert("","强化当前阶段 "+quote.count+" 次，预计消耗 "+quote.cost+" 对应粉尘。满级或粉尘不足时自动停止。",{
+            "ok":function():void
+            {
+               if(!stage || epoch != mMagicEpoch || String(GlobalData.$userData.uid) != uid || GlobalData.$tempEquipCurrSelected != eid || mMagicBusy) return;
+               var params:Object = {"eqid":eid,"color":color,"times":times};
+               mMagicBusy = true;setDustBtn(mBox_team,true);
+               SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",onMagicError);
+               SendAndSelect.sendAndSelectService("user.add_magic",params,function(receipt:Object):void
+               {
+                  SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onMagicError);
+                  if(epoch != mMagicEpoch || !stage || String(GlobalData.$userData.uid) != uid) return;
+                  mMagicBusy = false;mMagicAction = "";
+                  if(GlobalData.$tempEquipCurrSelected != eid || !mCurrEquip || mCurrEquip.data.id != eid) return;
+                  re_add_magic(receipt);
+                  setDustBtn(mBox_team,true);
+                  var summary:Object = receipt.data ? receipt.data.magic_batch : null;
+                  if(summary) LayoutUIAnimation.getOnlyExample().popWords("已强化"+summary.completed+"次，消耗"+summary.dust_spent+"粉尘（Lv."+summary.before+"→"+summary.after+"）");
+               });
+               mMagicAction = String(params.actionID);
+            },
+            "no":GlobalFunction.functionNull
+         });
+      }
+
+      private function onMagicError(event:NetEvent) : void
+      {
+         var error:Object = event.data;
+         var receipt:Object = error && error.profile_receipt ? error.profile_receipt : error;
+         if(!receipt || !receipt.params || String(receipt.params.actionID) != mMagicAction) return;
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onMagicError);
+         mMagicBusy = false;mMagicAction = "";
+         if(stage && mBox_team) setDustBtn(mBox_team,true);
       }
       
       public function toMagic(param1:int) : void
       {
-         if(param1 == 4)
-         {
-            toStage5();
-            return;
-         }
-         var _fun:Object;
-         var _index:int = param1;
-         var gotoEquipSell:* = function():void
-         {
-            onCLOSE_PANEL_SELF(null);
-            GlobalData.$tempEquipFunId = 5;
-            GlobalData.$mEventDispatcher.dispatchEventWith("update_panel_equipbase_index");
-            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_change_base");
-         };
-         var gotoEquipMagic:* = function():void
-         {
-            SendServiceAMFFun.send_user_add_magic(re_add_magic,{
-               "eqid":_eid,
-               "color":_index,
-               "dust":_pay
-            });
-         };
-         var _eid:String = GlobalData.$tempEquipCurrSelected;
-         var _equipData:Object = GlobalData.$userData.my_equips[_eid];
-         if(_equipData == null || _index < 0 || _index >= 4)
-         {
-            return;
-         }
-         var _magic:Array = _equipData.magic == null ? [0,0,0,0] : _equipData.magic as Array;
-         if(_magic == null || _index > 0 && int(_magic[_index - 1]) <= 0)
-         {
-            return;
-         }
-         var _level:int = int(_magic[_index]);
-         if(_level >= int(GlobalData.$mConfig_simple.dust.max[_index]))
-         {
-            return;
-         }
-         var _pay:int = int(GlobalData.$mConfig_simple.dust.add_magic[0][_index]);
-         var _magicRules:Object = GlobalData.$mConfig_simple.equipment_magic;
-         var _growthEvery:int = _magicRules == null ? 0 : int(_magicRules.cost_growth_every);
-         if(_growthEvery > 0)
-         {
-            _pay += Math.floor(_level / _growthEvery);
-         }
-         var _myDust:int = int(GlobalData.$userData.attrs.dust[_index]);
-         var _dustStr:Array = GlobalLanguageStr.getLanguageStr(90197).split("$");
-         var _color:uint = uint(LOL_MagicButton.TXT_COLOR[_index]);
-         var _str:String = "";
-         if(_myDust >= _pay)
-         {
-            _str = GlobalLanguageStr.getLanguageStr(90202,_pay,_dustStr[_index],"附魔");
-            _fun = {
-               "ok":gotoEquipMagic,
-               "no":GlobalFunction.functionNull,
-               "aid":"A_1098_6"
-            };
-            GlobalFunction.popAlert("",Tools.formatLineX(_str,[16777215,_color,_color,_color]),_fun);
-         }
-         else
-         {
-            _str = Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90199,_pay,_dustStr[_index]),[16777215,_color,_color,_color]);
-            _fun = {
-               "ok":gotoEquipSell,
-               "no":GlobalFunction.functionNull,
-               "aid":"A_1098_6"
-            };
-            GlobalFunction.popAlert("",_str,_fun);
-         }
+         if(mMagicBusy) return;
+         if(param1 == 4) toStage5();
+         else submitMagicUpgrade(param1,1);
       }
       
       private function re_add_magic(param1:Object) : void

@@ -13,6 +13,7 @@ package com.meng52.game.ui.element
    import com.meng52.game.module.map.GameMapTools;
    import com.meng52.net.RpcStaticCall;
    import com.meng52.net.SendAndSelect;
+   import com.meng52.events.NetEvent;
    import com.meng52.utils.Tools;
    import feathers.controls.List;
    import feathers.controls.renderers.IListItemRenderer;
@@ -40,6 +41,9 @@ package com.meng52.game.ui.element
       private var isPlay:Boolean = false;
       
       private var mLimit:int = 0;
+      private var mMaterialBuy:LOL_Scale9Button;
+      private var mMaterialBusy:Boolean = false;
+      private var mMaterialAction:String = "";
       
       private var mDetails:Sprite;
       
@@ -88,6 +92,11 @@ package com.meng52.game.ui.element
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         GlobalData.$mEventDispatcher.removeEventListener("material_attempts_changed",refreshMaterialAttempts);
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onMaterialBuyError);
+         mMaterialBuy = null;
+         mMaterialBusy = false;
+         mMaterialAction = "";
          if(mEquip)
          {
             mEquip.removeFromParent(true);
@@ -327,15 +336,9 @@ package com.meng52.game.ui.element
          this.mLimit = GlobalFunction.getUserCombat(GlobalData.$tempPVE_type,this.data.id);
          this.mLimit = _loc13_.getLimit(diff) - this.mLimit;
          this.mLimit = this.mLimit < 0 ? 0 : this.mLimit;
-         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material" && this.data.material_kind != "skill_biscuit")
+         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
          {
-            var _materialDay:Date = new Date(Number(SendAndSelect.$systemTimer_nowSecond) * 1000 + 28800000);
-            var _month:int = _materialDay.getUTCMonth() + 1;
-            var _day:int = _materialDay.getUTCDate();
-            var _today:String = String(_materialDay.getUTCFullYear()) + "-" + (_month < 10 ? "0" : "") + String(_month) + "-" + (_day < 10 ? "0" : "") + String(_day);
-            var _daily:Object = GlobalData.$userData.records.material_activity;
-            var _used:int = _daily != null && String(_daily.day) == _today && _daily.uses != null ? int(_daily.uses[String(this.data.id).substring(0,String(this.data.id).lastIndexOf("_"))]) : 0;
-            this.mLimit = Math.max(0,2 + int((Math.max(0,GlobalFunction.getVipLv()) + 1) / 2) - _used);
+            this.mLimit = int(GlobalFunction.getMaterialChallenge(String(this.data.id)).remaining);
          }
          var _loc37_:Number = 140;
          this.mTxt_str0 = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20032,_loc13_.getEnergy(diff)),20,_loc27_,"left",_loc37_,35);
@@ -347,7 +350,7 @@ package com.meng52.game.ui.element
          this.mTxt_num.touchable = false;
          this.mTxt_num.x = this.mTxt_str0.x + _loc37_ + 5;
          this.mTxt_num.y = this.mTxt_str0.y;
-         if(mLimit <= 20)
+         if(mLimit <= 20 || this.data.activity_kind == "material")
          {
             mBaseSpr.addChild(this.mTxt_num);
          }
@@ -356,6 +359,18 @@ package com.meng52.game.ui.element
          mBtn_bg_lv.y = _loc28_ - 4;
          mBtn_bg_lv.addEventListener("triggered",this.onTRIGGERED_btn);
          mBaseSpr.addChild(mBtn_bg_lv);
+         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
+         {
+            mTxt_num.width = 130;
+            mMaterialBuy = new LOL_Scale9Button("购买次数",126,35,"UI_btn_normalFun_0000");
+            mMaterialBuy.x = mBtn_bg_lv.x;
+            mMaterialBuy.y = mTxt_num.y;
+            mMaterialBuy.addEventListener("triggered",onMaterialBuy);
+            mBaseSpr.addChild(mMaterialBuy);
+            GlobalData.$mEventDispatcher.removeEventListener("material_attempts_changed",refreshMaterialAttempts);
+            GlobalData.$mEventDispatcher.addEventListener("material_attempts_changed",refreshMaterialAttempts);
+            refreshMaterialAttempts();
+         }
          if(this.data.needvip)
          {
             _loc16_ = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(97684,this.data.needvip),14,16724736,"center",200,35);
@@ -372,7 +387,7 @@ package com.meng52.game.ui.element
             mBtn_bg_lv.showGlow();
          }
          var _loc8_:int = int(data["status_activity"] ? data["status_activity"] : 0);
-         if(_loc8_ > 0)
+         if(_loc8_ > 0 && this.data.activity_kind != "material")
          {
             _loc21_ = "";
             _loc36_ = "";
@@ -630,6 +645,7 @@ package com.meng52.game.ui.element
       
       private function onTRIGGERED_btn(param1:Event) : void
       {
+         refreshMaterialAttempts();
          var _loc7_:Object = null;
          var _loc6_:GameMapData = null;
          var _loc9_:int = 0;
@@ -701,7 +717,8 @@ package com.meng52.game.ui.element
                }
                else
                {
-                  GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90031));
+                  if(this.data.activity_kind == "material") onMaterialBuy(param1);
+                  else GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90031));
                }
             }
          }
@@ -709,6 +726,64 @@ package com.meng52.game.ui.element
          {
             GlobalFunction.popAvatarLen();
          }
+      }
+
+      private function refreshMaterialAttempts(param1:Event = null) : void
+      {
+         if(!data || GlobalData.$tempPVE_type != "status_pve_activities") return;
+         var quote:Object = GlobalFunction.getMaterialChallenge(String(data.id));
+         if(!quote) return;
+         mLimit = int(quote.remaining);
+         if(mTxt_num) mTxt_num.text = "剩余：" + mLimit + "次";
+         if(mMaterialBuy) mMaterialBuy.enabled = !mMaterialBusy && int(quote.buys) < int(quote.buyLimit);
+      }
+
+      private function onMaterialBuy(event:Event) : void
+      {
+         event.stopPropagation();
+         if(mMaterialBusy || !stage || !data) return;
+         var quote:Object = GlobalFunction.getMaterialChallenge(String(data.id));
+         if(!quote) return;
+         if(int(quote.buys) >= int(quote.buyLimit))
+         {
+            GlobalFunction.popError("今日该副本的购买次数已用完。");
+            return;
+         }
+         var owner:ItemPVEcombat = this;
+         var bid:String = String(quote.bid);
+         var uid:String = String(GlobalData.$userData.uid);
+         GlobalFunction.popAlert("购买挑战次数","花费"+quote.price+"金砖，增加1次挑战。所有难度共享，胜利才扣次数。\n今日还可购买"+(int(quote.buyLimit)-int(quote.buys))+"次。",{
+            "ok":function():void
+            {
+               if(!owner.stage || owner.mMaterialBusy || !owner.data || String(owner.data.id).indexOf(bid+"_") != 0 || String(GlobalData.$userData.uid) != uid) return;
+               owner.mMaterialBusy = true;
+               owner.refreshMaterialAttempts();
+               var params:Object = {"bid":bid};
+               SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",owner.onMaterialBuyError);
+               SendAndSelect.sendAndSelectService("user.material_buy_attempt",params,function(receipt:Object):void
+               {
+                  SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",owner.onMaterialBuyError);
+                  owner.mMaterialBusy = false;
+                  owner.mMaterialAction = "";
+                  if(!GlobalData.$userData || String(GlobalData.$userData.uid) != uid) return;
+                  GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
+                  GlobalData.$mEventDispatcher.dispatchEventWith("material_attempts_changed");
+               });
+               owner.mMaterialAction = String(params.actionID);
+            },
+            "no":GlobalFunction.functionNull
+         });
+      }
+
+      private function onMaterialBuyError(event:NetEvent) : void
+      {
+         var error:Object = event.data;
+         var receipt:Object = error && error.profile_receipt ? error.profile_receipt : error;
+         if(!receipt || !receipt.params || String(receipt.params.actionID) != mMaterialAction) return;
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onMaterialBuyError);
+         mMaterialBusy = false;
+         mMaterialAction = "";
+         refreshMaterialAttempts();
       }
    }
 }

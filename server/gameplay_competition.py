@@ -287,10 +287,29 @@ class GameplayCompetition:
             if not isinstance(weights,list) or not 0<=index<len(weights): return 0.0
             try: factor=float(weights[index])
             except (TypeError,ValueError): return 0.0
-            return factor if math.isfinite(factor) else 0.0
+            return factor if math.isfinite(factor) and factor >= 0 else 0.0
         def native_floor(value):
             rounded=Decimal(str(value)).quantize(Decimal("0.00001"),rounding=ROUND_HALF_UP)
             return math.floor(rounded)
+        def finite_number(value):
+            try:
+                number = float(value)
+                return number if math.isfinite(number) else 0.0
+            except (TypeError, ValueError):
+                return 0.0
+        # These auras are added by Avatar's live getters rather than baked
+        # into new_4attrs. Include the same initial living-team maximum in
+        # the power projection without duplicating it in combat snapshots.
+        team_bonus = {key: 0.0 for key in ('hit', 'flee', 'crit', 'tough')}
+        for unit in units if isinstance(units, list) else []:
+            if not isinstance(unit, dict) or finite_number(unit.get('hp', unit.get('hp_max', 0))) <= 0:
+                continue
+            tid = unit.get('talent')
+            tid = tid.get('id') if isinstance(tid, dict) else tid
+            talent = self.cfg.get('talent', {}).get(tid, {}) if isinstance(tid, str) else {}
+            effect = str(talent.get('growth_effect') or '')
+            if effect.startswith('team_') and effect[5:] in team_bonus:
+                team_bonus[effect[5:]] = max(team_bonus[effect[5:]], finite_number(talent.get('growth_value', 0)))
         total=0
         for unit in units if isinstance(units,list) else []:
             if not isinstance(unit,dict): continue
@@ -305,7 +324,7 @@ class GameplayCompetition:
             speed=number(tpl[3]) if len(tpl)>3 else 0
             reach=number(tpl[4]) if len(tpl)>4 else 0
             attrs=unit.get("new_4attrs",{}); attrs=attrs if isinstance(attrs,dict) else {}
-            substats=sum(number(attrs.get(k)) for k in ("hit","flee","crit","tough"))
+            substats=sum(number(attrs.get(k)) + team_bonus[k] for k in ("hit","flee","crit","tough"))
             slv=max(1,int(unit.get("slv",1) or 1))
             book=unit.get("book_skill")
             multiplier=1.0+skill_factor(unit.get("skill"),level=slv)+skill_factor(unit.get("leader_skill"),True)+skill_factor(book,book=True,level=book.get("slv",1) if isinstance(book,dict) else 1)+skill_factor(unit.get("skillB"))

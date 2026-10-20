@@ -63,7 +63,7 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 
 `--android-gradle` 使用现代 ADT／Gradle 打包分支，同时构建 ARMv7 与 ARM64，并使用 Android SDK 的 `apksigner` 校验签名。此分支需要已安装的 Android Build-Tools 35 及 Android 平台；当前交付使用 compileSDK 36。已有最终 SWF 时可加 `--prebuilt-swf .\build\mod-cold-final-v2\stage-161.swf` 只重新封装，仍应保留其完整冷编译报告。
 
-默认输出为 `build/lal-rebuild-1.0.2.apk`，包含 ARM 与 ARM64 运行库；x86 模拟器需要启用 ARM 转译支持。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
+默认输出为 `build/lal-rebuild-1.0.3.apk`，包含 ARM 与 ARM64 运行库；x86 模拟器需要启用 ARM 转译支持。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
 
 需要自行签名时可使用 `--keystore`，并通过 `--storepass-env`、`--keypass-env` 指定保存密码的环境变量名称；省略时脚本交互询问密码。`--android-sdk` 应指向包含 `platforms`、`build-tools` 和 `platform-tools` 的 SDK 根目录。
 
@@ -75,20 +75,20 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 
 ```powershell
 adb devices
-adb install -r .\build\lal-rebuild-1.0.2.apk
+adb install -r .\build\lal-rebuild-1.0.3.apk
 adb reverse tcp:8080 tcp:8080
 adb reverse --list
 ```
 
 连接了多台设备时，为每条 ADB 命令添加 `-s 设备序列号`。
 
-此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.2。
+此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.3。
 
 保持服务器运行，打开游戏，在本地登录界面注册账号并登录即可开始游玩。设备断开或重启后重新执行端口映射。网络错误时依次检查服务器窗口、`/health` 和 `adb reverse --list`。
 
 ## 5. 服务器控制台
 
-游戏时间独立保存在同一个 SQLite 数据库中，正常运行时随单调计时器前进，修改系统日期不会改变游戏天数。在服务器控制台输入 `time` 查看游戏时间，`time hours 6` 推进六小时，`time days 1` 过一天。
+游戏时间实时跟随系统时间，修改系统日期会同步改变游戏时间。跳天累计偏移保存在同一个 SQLite 数据库中，重启后继续生效；旧版独立逻辑时钟不再使用，升级后默认以系统时间为准。在服务器控制台输入 `time` 查看游戏时间，`time hours 6` 推进六小时，`time days 1` 过一天。
 
 也可以在另一个 PowerShell 窗口推进游戏时间；`--database` 必须指向启动服务器时使用的数据库：
 
@@ -98,7 +98,7 @@ adb reverse --list
 .\.venv\Scripts\python.exe .\scripts\game_time.py --database .\data\local.sqlite3 advance --days 1
 ```
 
-每次只指定小时或天数，时长必须为正数，允许换算为整数秒的小数小时。推进后下一次游戏请求会读取新时间，每日次数、体力恢复和游戏内冷却按新时间结算。登录会话的安全有效期仍使用真实时间。重启操作系统后从最近保存的游戏时间继续，关机时间不累计。
+每次只指定小时或天数，时长必须为正数，允许换算为整数秒的小数小时。推进后下一次游戏请求会读取新时间，每日次数、体力恢复和游戏内冷却按新时间结算。登录会话的安全有效期仍使用真实时间。重启后继续使用系统时间加已保存的跳天偏移，关机时间随系统时间正常累计。
 
 在服务器窗口输入 `help` 查看命令：
 
@@ -157,3 +157,14 @@ Windows 打包复用完整冷编译后的 SWF，额外生成桌面启动适配�
 ```
 
 便携 Python 目录需要 `python.exe`、`pythonw.exe`、标准库 ZIP 和对应 DLL；依赖目录提供 `pyamf`、`cpyamf`、`defusedxml`、`tzdata`。打包脚本检验其可启动，复制干净的服务器、配置、资源及作者示例，不读取个人存档。解压后运行“开始游戏.cmd”，首次启动在包内创建 `data/local.sqlite3` 和 `data/mods`。日志在 `logs`；关闭游戏只结束本启动器创建的本地服务。
+
+
+## 1.0.3 召唤池标定
+
+`config/reconstruction/summon-calibration.json` 为已补齐重复项的正式标定：普通、高级、VIP 的品质出率分别保存；蓝、绿、紫的卡表及权重相同。VIP 橙池使用高级橙池卡表，普通橙卡权重不变，皮肤英雄权重乘 2。`normalization.skin_hero_ids` 保存精确皮肤 ID，避免把茂凯等普通英雄按编号误判为皮肤。
+
+每次先按品质百分比抽品质，再在该池该品质中按正数权重抽卡。小数权重转为精确整数比例抽取；空白对应缺少记录、零权重均不参与。旧高级召唤紫卡保底不再覆盖品质概率。VIP 只出整卡，价格、积分和单抽/十连协议保留。皮肤英雄的全局获取限制、碎片合成的爬塔来源限制均已解除；原有兑换入口保留。
+
+后端启动时加载标定；更新文件后重启后端。原始输入和补齐确认版另存于工作区 `outputs/召唤池标定-1.0.3/`，确认版可重新导入离线网页查看。
+
+`summon_pools.confirm_custom_hero` 为确认导入接口：用户确认后向对应品质池添加权重 1 的记录，保留已有权重和品质概率。已应用 Mod 配置的 `mod_runtime.heroes` 会按各召唤渠道的确认状态自动加入，缺包、禁用、未开放渠道均不入池；新条目不修改基础配置。

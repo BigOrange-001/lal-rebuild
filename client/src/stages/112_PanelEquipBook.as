@@ -309,6 +309,7 @@ package com.meng52.game.ui.panel
       {
          var _loc3_:LOL_Scale9Button = null;
          var _loc2_:Object = null;
+         sanitizeBookFood();
          if(GlobalData.$tempFoodForBook.length > 0 && GlobalData.$tempEquipCurrSelected != "" && GlobalData.$tempEquipCurrSelected.indexOf("e") > -1)
          {
             _loc3_ = param1.currentTarget as LOL_Scale9Button;
@@ -322,7 +323,7 @@ package com.meng52.game.ui.panel
                {
                   _loc2_ = {
                      "eqid":GlobalData.$tempEquipCurrSelected,
-                     "eqids":GlobalData.$tempFoodForBook
+                     "eqids":GlobalData.$tempFoodForBook.concat()
                   };
                   var _bookEqid:String = String(GlobalData.$tempEquipCurrSelected);
                   var _bookFoodIds:Array = (_loc2_["eqids"] as Array).concat();
@@ -395,12 +396,18 @@ package com.meng52.game.ui.panel
          GlobalData.$tempTeamPowerTemp = GlobalFunction.getTeamPower(GlobalData.$userData.team[0]);
          if(this.stage && GlobalData.$tempEquipCurrSelected == param3)
          {
-            clip_food();
+            sanitizeBookFood();
+            setFood(true);
+            setmMC_book();
             if(mBox_data)
             {
                setTxt(mBox_data,true);
             }
             checkBtn_selectStatus();
+            if(_loc6_.success === false)
+            {
+               GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(90010),"本次升级未成功，材料已消耗。");
+            }
          }
       }
       
@@ -420,6 +427,24 @@ package com.meng52.game.ui.panel
          }
       }
       
+      private function sanitizeBookFood() : void
+      {
+         if(!GlobalData.$tempFoodForBook) GlobalData.$tempFoodForBook = [];
+         if(!GlobalData.$tempObjectFoodForBook) GlobalData.$tempObjectFoodForBook = {};
+         var seen:Object = {};
+         for(var i:int = GlobalData.$tempFoodForBook.length - 1; i >= 0; i--)
+         {
+            var id:String = String(GlobalData.$tempFoodForBook[i]);
+            var row:Object = GlobalData.$userData.my_equips[id];
+            if(!row || id == GlobalData.$tempEquipCurrSelected || row.lock || row.locked || seen[id])
+            {
+               GlobalData.$tempFoodForBook.splice(i,1);
+               delete GlobalData.$tempObjectFoodForBook[id];
+            }
+            else seen[id] = true;
+         }
+      }
+
       private function checkBtn_selectStatus() : void
       {
          var _loc1_:String = "";
@@ -445,8 +470,9 @@ package com.meng52.game.ui.panel
          var _loc10_:Object = null;
          var _loc7_:Equip = null;
          var _loc9_:int = 0;
+         sanitizeBookFood();
          var _loc5_:Equip = new Equip(GlobalData.$tempEquipCurrSelected);
-         if(_loc5_.slv >= GlobalData.$mConfig_simple.slv_config[0])
+         if(_loc5_.slv >= GlobalData.$mConfig_simple.skill_book_exp[3])
          {
             GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90238),false,"A_1008_3");
             return;
@@ -461,9 +487,9 @@ package com.meng52.game.ui.panel
             _loc1_ = false;
             _loc3_ = String(_loc12_);
             _loc11_ = 0;
-            if(_loc8_[GlobalData.$tempEquipCurrSelected].eid != _loc8_[_loc12_].eid)
+            if(String(_loc12_) != GlobalData.$tempEquipCurrSelected && !_loc8_[_loc12_].lock && !_loc8_[_loc12_].locked)
             {
-               if(GlobalData.$tempFoodForBook[_loc3_] != null)
+               if(GlobalData.$tempFoodForBook.indexOf(_loc3_) >= 0)
                {
                   _loc11_ = -1;
                }
@@ -573,7 +599,7 @@ package com.meng52.game.ui.panel
             mCost_gold = _loc3_ != null && GlobalData.$tempFoodForBook.length > 0 ? _loc7_.getBookUpGold() : 0;
             mTxt_gold.txt2 = mCost_gold > 0 ? String(mCost_gold) : "0";
          }
-         _loc7_.clear();
+         if(_loc7_) _loc7_.clear();
          var _loc2_:Array = GlobalData.$tempFoodForBook;
          var _loc12_:int = 0;
          var _loc9_:int = 5;

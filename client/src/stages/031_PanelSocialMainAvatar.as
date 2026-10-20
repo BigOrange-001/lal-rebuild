@@ -26,6 +26,7 @@ package com.meng52.game.ui.screen
    import flash.geom.Rectangle;
    import flash.utils.getQualifiedClassName;
    import starling.events.Event;
+   import starling.display.Sprite;
    
    public class PanelSocialMainAvatar extends PanelCenterPVE
    {
@@ -48,9 +49,8 @@ package com.meng52.game.ui.screen
       
       public var mBtn_sell:LOL_Scale9Button;
 
-      private var mBtn_smart:LOL_Scale9Button;
-
-      private var mSmartSort:Boolean = true;
+      private var mRosterFilters:Sprite;
+      private var mRosterState:Object = {"quality":0,"order":0,"descending":true};
       
       public var mTxt_info:TextFieldHtmlRenderer;
       
@@ -95,11 +95,10 @@ package com.meng52.game.ui.screen
          GlobalData.$mEventDispatcher.removeEventListener("update_avatar_sell_data",onUPDATE_AVATAR_DATA);
          GlobalData.$mEventDispatcher.removeEventListener("update_dn_team_ui",onMainEvent);
          removeRarityFilters();
-         if(mBtn_smart)
+         if(mRosterFilters)
          {
-            mBtn_smart.removeEventListener("triggered",onSmartSort);
-            mBtn_smart.removeFromParent(true);
-            mBtn_smart = null;
+            mRosterFilters.removeFromParent(true);
+            mRosterFilters = null;
          }
          super.onREMOVED_FROM_STAGE(param1);
       }
@@ -136,20 +135,10 @@ package com.meng52.game.ui.screen
          mImg3_info.y = mTabBar.y + 55;
          mImg3_info.height = 80;
          addChild(mImg3_info);
-         mBtn_smart = new LOL_Scale9Button("智能排序：开",136,30,"UI_btn_enterGame_0_0000");
-         mBtn_smart.fontSize = 18;
-         mBtn_smart.x = GlobalData.$mStageWidth - mBtn_smart.width - 20;
-         mBtn_smart.y = GlobalData.$center_height - mBtn_smart.height - 3;
-         mBtn_smart.visible = mTabBar == null || mTabBar.selectedIndex != 4;
-         mBtn_smart.addEventListener("triggered",onSmartSort);
-         addChild(mBtn_smart);
-      }
-
-      private function onSmartSort(param1:Event) : void
-      {
-         mSmartSort = !mSmartSort;
-         mBtn_smart.text = mSmartSort ? "智能排序：开" : "智能排序：关";
-         update();
+         mRosterFilters = PanelAvatarSell.createRosterFilters(mRosterState,update,GlobalData.$mStageWidth);
+         mRosterFilters.y = GlobalData.$center_height - 33;
+         mRosterFilters.visible = mTabBar == null || mTabBar.selectedIndex != 4;
+         addChild(mRosterFilters);
       }
 
       private function compareSmartAvatars(param1:Object, param2:Object) : int
@@ -174,9 +163,12 @@ package com.meng52.game.ui.screen
 
       private function sortBarracks(param1:Array) : void
       {
-         if(mSmartSort && !_boo)
+         if(!_boo)
          {
             param1.sort(compareSmartAvatars);
+            var filtered:Array = PanelAvatarSell.filterRosterRows(param1,mRosterState);
+            param1.length = 0;
+            for each(var row:Object in filtered) param1.push(row);
          }
       }
       
@@ -369,12 +361,12 @@ package com.meng52.game.ui.screen
          var _loc1_:Avatar = null;
          setList();
          addList();
-         if(mBtn_smart && mBtn_smart.visible && mList)
+         if(mRosterFilters && mRosterFilters.visible && mList)
          {
             // The hero grid ends 36px above the content edge. Keep sorting
             // in that bottom control strip, away from radio tabs and cards.
-            mBtn_smart.y = mList.y + mList.height + 3;
-            setChildIndex(mBtn_smart,numChildren - 1);
+            mRosterFilters.y = mList.y + mList.height + 3;
+            setChildIndex(mRosterFilters,numChildren - 1);
          }
          LayoutUIAnimation.getOnlyExample().clearIfNoGuide();
          if(this.mTabBar.selectedIndex == 4)
@@ -521,7 +513,7 @@ package com.meng52.game.ui.screen
                   _loc13_["sort_1"] = _loc1_.avatarData.actionType != 3 ? 0 : 1;
                   _loc13_["sort_2"] = GlobalFunction.checkSearchTypeByType(_loc15_,1) ? 1 : 0;
                   _loc13_["lock"] = GlobalFunction.checkLock(_loc1_.id) ? 1 : 0;
-                  _loc13_["power"] = _loc1_.getPower(GlobalData.$userData.team[0].indexOf(_loc1_.id) == 0);
+                  _loc13_["power"] = GlobalFunction.getOwnedAvatarPower(_loc1_.id,GlobalData.$userData.team[0].indexOf(_loc1_.id) == 0);
                   _loc13_["type"] = 1;
                   _loc10_.push(_loc13_);
                   _loc1_.clear();
@@ -573,7 +565,7 @@ package com.meng52.game.ui.screen
                   _loc12_["sort_1"] = _loc2_.avatarData.actionType != 3 && _loc2_.getLvMax() > 1 ? 0 : 1;
                   _loc12_["sort_2"] = GlobalFunction.checkSearchTypeByType(_loc5_,1) ? 1 : 0;
                   _loc12_["lock"] = GlobalFunction.checkLock(_loc2_.id) ? 1 : 0;
-                  _loc12_["power"] = _loc2_.getPower(GlobalData.$userData.team[0].indexOf(_loc2_.id) == 0);
+                  _loc12_["power"] = GlobalFunction.getOwnedAvatarPower(_loc2_.id,GlobalData.$userData.team[0].indexOf(_loc2_.id) == 0);
                   _loc12_["starType"] = _loc2_.getPhaseType() > 0 ? 1 : 0;
                   _loc12_["lvMax"] = _loc2_.lv >= _loc2_.getLvMax() && _loc2_.lv > 1 ? 1 : 0;
                   _loc12_["type"] = 0;
@@ -627,7 +619,7 @@ package com.meng52.game.ui.screen
                   _loc12_["star"] = _loc2_.getStar();
                   _loc12_["talent"] = _loc2_.talent;
                   _loc12_["lock"] = GlobalFunction.checkLock(_loc2_.id) ? 1 : 0;
-                  _loc12_["power"] = _loc2_.getPower(GlobalData.$userData.team[0].indexOf(_loc2_.id) == 0);
+                  _loc12_["power"] = GlobalFunction.getOwnedAvatarPower(_loc2_.id,GlobalData.$userData.team[0].indexOf(_loc2_.id) == 0);
                   _itemArr.push(_loc12_);
                   _loc2_.clear();
                   _loc2_ = null;
@@ -678,7 +670,7 @@ package com.meng52.game.ui.screen
                   _loc12_["star"] = _loc2_.getStar();
                   _loc12_["isHero"] = GlobalFunction.checkSearchTypeByType(_loc5_,1) ? 1 : 0;
                   _loc12_["lock"] = GlobalFunction.checkLock(_loc2_.id) ? 1 : 0;
-                  _loc12_["power"] = _loc2_.getPower(GlobalData.$userData.team[0].indexOf(_loc2_.id) == 0);
+                  _loc12_["power"] = GlobalFunction.getOwnedAvatarPower(_loc2_.id,GlobalData.$userData.team[0].indexOf(_loc2_.id) == 0);
                   _itemArr.push(_loc12_);
                   _loc2_.clear();
                   _loc2_ = null;
@@ -841,9 +833,9 @@ package com.meng52.game.ui.screen
       {
          $tabBarSelectedIndex = mTabBar.selectedIndex;
          var _loc2_:int = mTabBar.selectedIndex;
-         if(mBtn_smart)
+         if(mRosterFilters)
          {
-            mBtn_smart.visible = _loc2_ != 4;
+            mRosterFilters.visible = _loc2_ != 4;
          }
          if(MainConfig.$isHasBuilding)
          {

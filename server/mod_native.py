@@ -16,10 +16,10 @@ from mod_schema import ModError, POLICIES, canonical, digest, fail, local_id, te
 
 MODEL = 'native-template-v1'
 CAPABILITY = 'skill.native-template.v1'
-# This bounds-only revision preserves valid packages from the pre-review
-# contract. Current field shapes and numeric bounds still apply to all inputs.
-# A later contract change must explicitly review compatibility again.
-_ABILITY_CONTRACT_PREDECESSORS = {'e92915d3f2f74b97cafebc627b8d7b7c61bcd0508bcd4985c6f71d9f40470685': 'e51a0c4280e7a861b0c8397e8c8877061c5396bda525a7c144823ee244d09f46'}
+# The 1.0.3 catalogue adds fixed skin mechanisms and changes one default.
+# Existing explicit parameter values and bounds are unchanged, so both reviewed
+# predecessor contracts remain valid. All current shapes and bounds still apply.
+_ABILITY_CONTRACT_PREDECESSORS = {'12e6da728f5fb976dfe5dc3f2b5895ed2169882472ee0590478e6dd2b4876041': ('e92915d3f2f74b97cafebc627b8d7b7c61bcd0508bcd4985c6f71d9f40470685', 'e51a0c4280e7a861b0c8397e8c8877061c5396bda525a7c144823ee244d09f46')}
 PARALLEL = ('actionTargetPolicies', 'actionTargetLocks', 'actionTargetGroups',
             'actionTargetMaxTargets', 'actionTargetPolicyArgs')
 INDEX_KEYS = frozenset(('centerActionIndex', 'primaryActionIndex', 'requiresPrecastDotActionIndex'))
@@ -54,7 +54,12 @@ OP_LABELS = dict(zip(
 
 # Labels are positions in the actual engine arrays, including index zero.
 ARG_LABELS = {
+    'caster_ap_shield': ['动作','施法者攻击护盾倍率','持续回合','特效'],
+    'timed_bless': ['动作','持续回合','特效'],
+    'book_burn': ['动作','灼烧总攻击倍率','持续回合','特效'],
+    'book_bonus': ['动作','属性比例','属性','持续回合'],
     'damage': ['动作','伤害倍率','伤害类型','特效'],
+    'caster_hp_heal': ['动作','施法者最大生命治疗比例','特效'],
     'manual_ability': ['动作','复合机制','等级倍率','特效'],
     'move_to_target': ['动作','目标策略','最大移动距离','特效'],
     'move_to_target_lane': ['动作','目标策略','最大移动距离','落点间距','特效'],
@@ -200,7 +205,7 @@ def validate_shape(skill,path='skill'):
     if 'abilityParameters' in model:
         current_contract=digest(ability_contract())
         accepted={current_contract}
-        if current_contract in _ABILITY_CONTRACT_PREDECESSORS:accepted.add(_ABILITY_CONTRACT_PREDECESSORS[current_contract])
+        if current_contract in _ABILITY_CONTRACT_PREDECESSORS:accepted.update(_ABILITY_CONTRACT_PREDECESSORS[current_contract])
         if model.get('abilityContract') not in accepted:fail('Compound ability contract changed; re-import and review',path,'ModTargetMismatch')
         if not isinstance(model['abilityParameters'],dict):fail('Expected compound ability parameter groups',path)
         for kind,values in model['abilityParameters'].items():

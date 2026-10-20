@@ -120,6 +120,8 @@ package com.meng52.game.module.skill
 
       public function getInfo() : String
       {
+         var calibratedBook:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         if(calibratedBook && calibratedBook.bookRule) return getLevelInfo();
          var _loc5_:Array = null;
          var _loc2_:String = null;
          var _loc1_:String = null;
@@ -299,10 +301,10 @@ package com.meng52.game.module.skill
                   _loc1_["sunder"] = GlobalLanguageStr.getLanguageStr(25003);
                   break;
                case "poison":
-                  _loc1_["poison"] = GlobalLanguageStr.getLanguageStr(25004,GameMapTools.toPercentage(GlobalData.$mConfig_simple.attack[18]));
+                  _loc1_["poison"] = "中毒：无视双防的持续伤害；普通中毒每次另加5%生命上限伤害；期间受到伤害提高20%。";
                   break;
                case "burn":
-                  _loc1_["burn"] = GlobalLanguageStr.getLanguageStr(25005,GameMapTools.toPercentage(GlobalData.$mConfig_simple.attack[17]));
+                  _loc1_["burn"] = "灼伤：无视双防的持续伤害；期间受到治疗降低40%。";
                   break;
                case "evil":
                   _loc1_["evil"] = GlobalLanguageStr.getLanguageStr(25017);
@@ -388,7 +390,8 @@ package com.meng52.game.module.skill
 
       public function get isBookSkill() : Boolean
       {
-         return skillSetData.id.slice(0,1) == "K";
+         var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         return skillSetData.id.slice(0,1) == "K" || Boolean(row && row.bookRule);
       }
 
       public function getPassiveType() : String
@@ -586,7 +589,7 @@ package com.meng52.game.module.skill
          var _loc3_:int = _loc4_.range;
          if(avatar.abilityState.root && skills)
          {
-            var requiredMove:Array = ["maokai_n","wukong_c","elise_c","riven_n","alistar_n","diana_c","khazix_n","khazix_c"];
+            var requiredMove:Array = ["maokai_n","wukong_c","elise_c","riven_n","alistar_n","diana_c","khazix_n","khazix_c","cat_n"];
             for each(var rootAction:Array in skills)
             {
                if(rootAction[0] == "manual_ability" && requiredMove.indexOf(rootAction[1]) >= 0) return false;
@@ -1012,6 +1015,44 @@ package com.meng52.game.module.skill
                   var selectedInstances:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,selectPolicy && selectPolicy.indexOf("ally_") == 0);
                   if(selectedInstances.length > 0) actionTargets[_loc14_] = selectedInstances[0];
                   break;
+               case "book_bonus":
+                  if(_loc20_[2] == "penetration") avatar.addBuff("book_penetration",int(_loc20_[3]),Number(_loc20_[1]));
+                  break;
+               case "book_burn":
+                  var bookBurnTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,false);
+                  for each(var bookBurnTarget:Avatar in bookBurnTargets)
+                  {
+                     bookBurnTarget.addBookBurn(Tools.toInt(avatar.getDamage() * Number(_loc20_[1])),int(_loc20_[2]),avatar);
+                     queueDirectActionEffect(String(_loc20_[3]),bookBurnTarget);
+                  }
+                  break;
+               case "caster_ap_shield":
+                  var bookShieldTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  var bookShieldBase:Number = avatar.getDamage();
+                  for each(var bookShieldTarget:Avatar in bookShieldTargets)
+                  {
+                     bookShieldTarget.addBuff("shield",int(_loc20_[2]),Tools.toInt(bookShieldBase * Number(_loc20_[1])));
+                     queueDirectActionEffect(String(_loc20_[3]),bookShieldTarget);
+                  }
+                  GameMap.actionDelay += 0.15 * bookShieldTargets.length;
+                  break;
+               case "caster_hp_heal":
+                  var hpHealTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  var hpHealAmount:int = Tools.toInt(avatar.hpMax * Number(_loc20_[1]));
+                  for each(var hpHealTarget:Avatar in hpHealTargets)
+                  {
+                     hpHealTarget.injured(hpHealAmount,1,DisplayTools.getAttrs(String(_loc20_[2])),4,avatar,false,avatar);
+                  }
+                  GameMap.actionDelay += 0.15 * hpHealTargets.length;
+                  break;
+               case "timed_bless":
+                  var timedBlessTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  for each(var timedBlessTarget:Avatar in timedBlessTargets)
+                  {
+                     timedBlessTarget.addBuff("bless",int(_loc20_[1]),1);
+                     queueDirectActionEffect(String(_loc20_[2]),timedBlessTarget);
+                  }
+                  break;
                case "hp_shield":
                case "caster_hp_shield":
                case "target_hp_shield":
@@ -1036,7 +1077,7 @@ package com.meng52.game.module.skill
                      var healHitContext:Object = actionKillContexts[int(_loc20_[3])];
                      var healHitCount:int = healHitContext && healHitContext.hitHeroes is Array ? healHitContext.hitHeroes.length : 0;
                      var heroRefund:Number = castMissingHp * Math.min(Number(_loc20_[2]),healHitCount * Number(_loc20_[1]));
-                     if(heroRefund > 0) avatar.injured(Math.min(avatar.hpMax-avatar.hp,int(heroRefund * avatar.getRecoveryTalentMultiplier())),1,DisplayTools.getAttrs(String(_loc20_[4])),4,avatar,false,avatar);
+                     if(heroRefund > 0) avatar.injured(int(heroRefund * avatar.getRecoveryTalentMultiplier()),1,DisplayTools.getAttrs(String(_loc20_[4])),4,avatar,false,avatar);
                   }
                   break;
                case "kill_buff":
@@ -1098,7 +1139,7 @@ package com.meng52.game.module.skill
                         dashStrikeOne.push(dashStrikeTarget);
                         avatar.attackAimList(dashStrikeOne,int(_loc20_[2]),Number(_loc20_[1]),0,String(_loc20_[4]),false,null,GameMapConfig.LINE_POS + 1);
                         var dashStrikeHeal:int = int(Number(_loc20_[3]) * (avatar.getDamage()+avatar.getHpMax()*.1) * getActiveRecoveryMultiplier());
-                        if(dashStrikeHeal > 0) avatar.injured(Math.min(avatar.hpMax-avatar.hp,dashStrikeHeal),1,DisplayTools.getAttrs("FX60_HEAL"),4,avatar,false,avatar);
+                        if(dashStrikeHeal > 0) avatar.injured(dashStrikeHeal,1,DisplayTools.getAttrs("FX60_HEAL"),4,avatar,false,avatar);
                         GameMap.actionDelay += .2;
                      }
                      dashStrikeIndex++;
@@ -1421,7 +1462,7 @@ package com.meng52.game.module.skill
                         missingHealTarget = missingHealTargets[missingHealIndex];
                         if(missingHealTarget && missingHealTarget.hp > 0)
                         {
-                           missingHealAmount = Math.max(0,Math.min(missingHealTarget.hpMax - missingHealTarget.hp,int((missingHealTarget.hpMax - missingHealTarget.hp) * Number(_loc20_[1]) * avatar.getRecoveryTalentMultiplier())));
+                           missingHealAmount = Math.max(0,int((missingHealTarget.hpMax - missingHealTarget.hp) * Number(_loc20_[1]) * avatar.getRecoveryTalentMultiplier()));
                            if(missingHealAmount > 0)
                            {
                               missingHealTarget.injured(missingHealAmount,1,DisplayTools.getAttrs(String(_loc20_[2])),4,avatar, false, avatar);
@@ -1461,7 +1502,7 @@ package com.meng52.game.module.skill
                         dealtHealTarget = dealtHealTargets[dealtHealIndex];
                         if(dealtHealTarget && dealtHealTarget.hp > 0 && dealtHealTotal > 0)
                         {
-                           dealtHealAmount = Math.max(0,Math.min(dealtHealTarget.hpMax - dealtHealTarget.hp,int(dealtHealTotal * Number(_loc20_[1]) * getActiveRecoveryMultiplier())));
+                           dealtHealAmount = Math.max(0,int(dealtHealTotal * Number(_loc20_[1]) * getActiveRecoveryMultiplier()));
                            if(dealtHealAmount > 0)
                            {
                               dealtHealTarget.injured(dealtHealAmount,1,DisplayTools.getAttrs(String(_loc20_[3])),4,avatar, false, avatar);
@@ -2074,7 +2115,7 @@ package com.meng52.game.module.skill
                      }
                      boundedSummons = new Vector.<Avatar>();
                   }
-                  summonLevel = Tools.toInt(_loc20_[1] * avatar.lv);
+                  summonLevel = Math.max(1,Tools.toInt(_loc20_[1] * avatar.lv));
                   if(limitedSummon && summonLevel < 1)
                   {
                      summonLevel = 1;
@@ -2089,20 +2130,9 @@ package com.meng52.game.module.skill
                   summonApFactor = getSummonCombatSnapshotApFactor();
                   if(summonApFactor > 0)
                   {
-                     _loc1_.hpMax = int(avatar.getHpMax() * 0.20);
-                     if(_loc1_.hpMax < 1) _loc1_.hpMax = 1;
-                     _loc1_.hp = _loc1_.hpMax;
-                     _loc1_.ap = int(avatar.getDamage() * summonApFactor);
-                     if(_loc1_.ap < 1) _loc1_.ap = 1;
-                     _loc1_.dePh = int(avatar.getDePh() * 0.40);
-                     if(_loc1_.dePh < 1) _loc1_.dePh = 1;
-                     _loc1_.deMa = int(avatar.getDeMa() * 0.40);
-                     if(_loc1_.deMa < 1) _loc1_.deMa = 1;
+                     if(!_loc1_.inheritSummonPanel(avatar,summonApFactor,0.20,0.40,0.40,Number(_loc20_[1]))) break;
                   }
-                  _loc1_.hit = avatar.getHit();
-                  _loc1_.flee = avatar.getFlee();
-                  _loc1_.crit = avatar.getCrit();
-                  _loc1_.tough = avatar.getTough();
+                  else if(!_loc1_.inheritSummonPanel(avatar,Number(_loc20_[1]))) break;
                   if(captainSummonMultiplier != 1)
                   {
                      _loc1_.hpMax = Math.max(1,int(_loc1_.hpMax * captainSummonMultiplier));
@@ -3373,15 +3403,7 @@ package com.meng52.game.module.skill
          turretLevel = Math.max(1,avatar.lv);
          turret = new Avatar(GlobalData.modDefinitionId(String(param1[2]),"summoned"),{"lv":turretLevel,"slv":1});
          turret.goFight(avatar.team,avatar.line,0,false);
-         turret.hpMax = Math.max(1,int(avatar.getHpMax() * turretScale));
-         turret.hp = turret.hpMax;
-         turret.ap = Math.max(1,int(avatar.getDamage() * turretScale));
-         turret.dePh = Math.max(1,int(avatar.getDePh() * turretScale));
-         turret.deMa = Math.max(1,int(avatar.getDeMa() * turretScale));
-         turret.hit = Math.max(1,int(avatar.getHit() * turretScale));
-         turret.flee = Math.max(1,int(avatar.getFlee() * turretScale));
-         turret.crit = Math.max(1,int(avatar.getCrit() * turretScale));
-         turret.tough = Math.max(1,int(avatar.getTough() * turretScale));
+         if(!turret.inheritSummonPanel(avatar,turretScale)) return;
          turret.skill0 = null;
          turret.skill1 = null;
          turret.skill2 = null;
@@ -3499,11 +3521,7 @@ package com.meng52.game.module.skill
          if(skillSetData.modNativeSource && (getMechanismId().indexOf("1127_") >= 0 || getMechanismId().indexOf("1128_") >= 0)) summonDefinition = String(avatar.avatarData.id);
          _loc2_ = new Avatar(GlobalData.modDefinitionId(summonDefinition,"summoned"),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
          _loc2_.goFight(avatar.team,summonLine,0,false);
-         _loc2_.ap = Math.max(1,int(avatar.getDamage() * _loc8_));
-         _loc2_.hpMax = Math.max(1,int(avatar.getHpMax() * summonHpRatio));
-         _loc2_.hp = _loc2_.hpMax;
-         _loc2_.dePh = Math.max(1,int(avatar.getDePh() * summonDePhRatio));
-         _loc2_.deMa = Math.max(1,int(avatar.getDeMa() * summonDeMaRatio));
+         if(!_loc2_.inheritSummonPanel(avatar,_loc8_,summonHpRatio,summonDePhRatio,summonDeMaRatio,_loc8_)) return;
          if(_loc1_.clearSkills === true)
          {
             _loc2_.skill0 = null;
@@ -3513,10 +3531,6 @@ package com.meng52.game.module.skill
          }
          if(typeof _loc1_.actionType == "number" && (_loc1_.actionType == 1 || _loc1_.actionType == 2 || _loc1_.actionType == 4)) _loc2_.manualActionTypeOverride = int(_loc1_.actionType);
          if(Number(_loc1_.attackRange) > 0) _loc2_.manualAttackRangeOverride = Number(_loc1_.attackRange);
-         _loc2_.hit = avatar.hit;
-         _loc2_.flee = avatar.flee;
-         _loc2_.crit = avatar.crit;
-         _loc2_.tough = avatar.tough;
          var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
          var captainFactor:Number = Number(getNativeSetting("captainSummonMultiplier",1));
          if(isFinite(captainFactor) && captainFactor > 0 && captainFactor != 1)
@@ -3633,15 +3647,7 @@ package com.meng52.game.module.skill
          }
          clone = new Avatar(GlobalData.modDefinitionId(String(avatar.avatarData.id),"summoned"),{"lv":Math.max(1,avatar.lv),"slv":1});
          clone.goFight(avatar.team,avatar.line,0,false);
-         clone.ap = Math.max(1,int(avatar.getDamage() * ratio));
-         clone.hpMax = Math.max(1,int(avatar.getHpMax() * ratio));
-         clone.hp = clone.hpMax;
-         clone.dePh = Math.max(1,int(avatar.getDePh() * ratio));
-         clone.deMa = Math.max(1,int(avatar.getDeMa() * ratio));
-         clone.hit = Math.max(0,int(avatar.hit * ratio));
-         clone.flee = Math.max(0,int(avatar.flee * ratio));
-         clone.crit = Math.max(0,int(avatar.crit * ratio));
-         clone.tough = Math.max(0,int(avatar.tough * ratio));
+         if(!clone.inheritSummonPanel(avatar,ratio)) return;
          clone.skill0 = new SkillSet(oldSkillId,clone,Math.max(1,avatar.skill0.lv),false);
          clone.skill1 = null;
          clone.skill2 = null;

@@ -263,7 +263,7 @@ def exploration_difficulty(profile: dict, selected: list[str], config: dict | No
     team = []
     for index, (_, iid, aid, hero, raw) in enumerate(ranked[:3]):
         overrides = {key: raw.get(key) for key in ("hp", "hp_max", "ap", "de_ph", "de_ma",
-                     "tpl", "talent", "morph", "phase", "culture_schema", "skill",
+                     "tpl", "talent", "morph", "phase", "culture_schema", "growth_stats_applied", "skill",
                      "leader_skill", "book_skill", "skillB")}
         overrides["leader_skill"] = raw.get("leader_skill")
         overrides["new_4attrs"] = {key: raw.get(key, 0) for key in ("hit", "flee", "crit", "tough")}

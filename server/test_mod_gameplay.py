@@ -209,7 +209,7 @@ class ModGameplayTest(unittest.TestCase):
     def test_new_assist_hero_is_a_selectable_captain_and_usage_toggle_is_checked(self):
         aid = self.new_hero()
         social = GameplaySocial(self.store, self.doc)
-        bot = next(bot for bot in social.bots if next(iter(bot["avatars"])).startswith(aid + "|"))
+        bot = next(bot for bot in social.mod_bots if next(iter(bot["avatars"])).startswith(aid + "|"))
         helper = social.lookup_assist(bot["uid"])
         self.assertEqual(helper["avatar"]["aid"], aid)
         self.runtime["heroes"][aid]["channels"]["usage.friend_assist"] = False

@@ -11,6 +11,7 @@ package
    import flash.filesystem.File;
    import flash.filesystem.FileMode;
    import flash.filesystem.FileStream;
+   import flash.geom.Point;
    import flash.net.URLRequest;
    import flash.system.ApplicationDomain;
    import flash.system.Capabilities;
@@ -214,7 +215,36 @@ package
          }
          else if(phase==81)
          {
-            snapshot("release-presets-final",gd);root.closePopUp();
+            snapshot("release-presets-final",gd);
+            button=find(gd["$mStarling"].stage,"关闭",true);
+            requireRelease(button!=null && String(button.name)=="team-preset-close","preset close control is present");
+            var bounds:Object=button.getBounds(gd["$mStarling"].stage);
+            var center:Point=new Point(bounds.x+bounds.width/2,bounds.y+bounds.height/2);
+            var hit:Object=gd["$mStarling"].stage.hitTest(center,true);
+            while(hit!=null && hit!=button) hit=hit.parent;
+            requireRelease(hit==button,"preset close control receives touches");
+            if(settings.presetCloseTouch)
+            {
+               var viewport:Object=gd["$mStarling"].viewPort;
+               log("PRESET_CLOSE_TAP "+int(viewport.x+center.x*viewport.width/gd["$mStarling"].stage.stageWidth)+" "+int(viewport.y+center.y*viewport.height/gd["$mStarling"].stage.stageHeight));
+               advance(83);return;
+            }
+            button.dispatchEventWith("triggered",true);
+            requireRelease(!root.isPopUp_Open(),"preset close returns to main screen");
+            cls=definition("com.meng52.game.ui.screen.PanelCenterActivity");
+            cls["$activityFunObj"]=definition("com.meng52.game.global.GlobalFunction")["getActivityFun"]("task");
+            root["mLayoutUICenter"].showPanel("center_activity");advance(82);
+         }
+         else if(phase==83)
+         {
+            if(root.isPopUp_Open()) return;
+            requireRelease(true,"preset closes from real device touch");
+            find(gd["$mStarling"].stage,"阵容预设",true).dispatchEventWith("triggered",true);advance(84);
+         }
+         else if(phase==84)
+         {
+            requireRelease(root.isPopUp_Open(),"preset can reopen after close");
+            snapshot("release-presets-reopened",gd);root.closePopUp();
             cls=definition("com.meng52.game.ui.screen.PanelCenterActivity");
             cls["$activityFunObj"]=definition("com.meng52.game.global.GlobalFunction")["getActivityFun"]("task");
             root["mLayoutUICenter"].showPanel("center_activity");advance(82);

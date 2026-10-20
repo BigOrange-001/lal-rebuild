@@ -746,13 +746,14 @@ package com.meng52.game.ui.screen
          var header:* = GlobalFunction.createScale9Image("UI_bg_9slice_3_0000",552,46,new Rectangle(90,8,82,30));
          header.x = 24;header.y = 10;header.touchable = false;mPresetPopup.addChild(header);
          presetText(mPresetPopup,"阵容预设",112,12,376,42,28,0xFFD684).hAlign = "center";
-         var close:LOL_Scale9Button = new LOL_Scale9Button("关闭",72,34,"UI_btn_enterGame_0_0000");
-         close.x = 512;
-         close.y = 16;
+         var close:LOL_Scale9Button = new LOL_Scale9Button("关闭",80,34,"UI_btn_enterGame_0_0000");
+         close.name = "team-preset-close";
+         close.x = 496;
+         close.y = 640;
          close.addEventListener("triggered",closeTeamPresets);
-         mPresetPopup.addChild(close);
          mPresetRows = new Sprite();
          mPresetPopup.addChild(mPresetRows);
+         mPresetPopup.addChild(close);
          var scale:Number = Math.min(1,(GlobalData.$mStageWidth-24)/600,(GlobalData.$mStageHeight-72)/690);
          mPresetPopup.scaleX = mPresetPopup.scaleY = scale;
          mPresetPopup.addEventListener("removedFromStage",onPresetPopupRemoved);
@@ -856,7 +857,7 @@ package com.meng52.game.ui.screen
                presetText(row,name,x,103,108,20,14,hero ? 0xEEE3D2 : 0x999FA6).hAlign = "center";
             }
          }
-         presetText(mPresetRows,mPresetBusy ? "正在保存或载入，请稍候…" : mPresetNotice,22,635,556,40,16,11978439);
+         presetText(mPresetRows,mPresetBusy ? "正在保存或载入，请稍候…" : mPresetNotice,22,635,456,40,15,11978439);
       }
 
       private function onPresetCommand(event:Event) : void

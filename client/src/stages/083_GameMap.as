@@ -2356,6 +2356,12 @@ package com.meng52.game.module.map
       
       public function endAction() : void
       {
+         actionDelay = 0;
+         if(currentAvatar && currentAvatar.emitModTurnEnd())
+         {
+            GameMapLayer.gl.delayCall(endAction,Math.max(0.1,actionDelay));
+            return;
+         }
          var _loc3_:int = 0;
          actionDelay = 0.4;
          var _loc1_:GameMapLayer = GameMapLayer.gl;

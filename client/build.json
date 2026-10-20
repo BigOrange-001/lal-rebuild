@@ -20,7 +20,7 @@
       "index": 3,
       "class": "com.meng52.net.SendAndSelect",
       "source": "client/src/stages/003_SendAndSelect.as",
-      "source_sha256": "aafcba1b1e82617900870e2410ee34c5059195b82ce8c316c8e1d46a56319f58"
+      "source_sha256": "a08e850f9b3f2953369c1ae9d735de1279d459a36b174ff9d9cd7c494b8eb465"
     },
     {
       "index": 4,
@@ -512,7 +512,7 @@
       "index": 85,
       "class": "com.meng52.game.module.map.GameMap",
       "source": "client/src/stages/083_GameMap.as",
-      "source_sha256": "220aaef468e95f0b9e5dd18c7fe118f992aaed59a551e34666a30a48acf64c46"
+      "source_sha256": "0ef2f7715f1eef058afd6354cad70184558340c33db701f5e614739b1775f002"
     },
     {
       "index": 86,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "7990f8ed5d8d64f63484ca04feda6c2e466cdc15f145e8fb9d12d0115188a892"
+      "source_sha256": "302f5c274daa412ab6bd6778723ea05ea8e85e560e70b907659cc94d2615a89a"
     },
     {
       "index": 140,
@@ -848,13 +848,13 @@
       "index": 141,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "95aadb6f9390f40b4c05d51a478627957d205b32af22727cc35b34ba33dda54c"
+      "source_sha256": "caf28ed91860be027dc7af394c4e32ba14efe060dc06e257d962b5cbaabef80a"
     },
     {
       "index": 142,
       "class": "com.meng52.game.module.skill.Buff",
       "source": "client/src/stages/140_Buff.as",
-      "source_sha256": "8ada71505d70d3044197c50337541c83b03c8cc947bc5b7930f3fcd5f4ce9082"
+      "source_sha256": "b66731ac58fd794a122c176fd80bfe07c038fc9fbea4be102a836bfe2338ac63"
     },
     {
       "index": 143,

@@ -4,12 +4,19 @@ from __future__ import annotations
 
 def condition_ready(battle,unit,skill):
     condition=skill.get('modCondition') or {}
-    return condition.get('kind')!='absent_buff' or battle._buff(unit,condition['buff']) is None
+    if condition.get('kind')=='event':return unit.get('_mod_event') is not None
+    from battle_mod_events import has_buff
+    return condition.get('kind')!='absent_buff' or not has_buff(battle,unit,condition['buff'])
 
 
 def targets(owner,enemies,allies,action,anchors,reach):
     selector=action[2]
     anchor=anchors.get(action[3]) if action[3]>=0 else None
+    if selector in ('event_source','event_target'):
+        event=owner.get('_mod_event') or {};unit=event.get('source' if selector=='event_source' else 'target')
+        good=action[1]=='heal' or action[1]=='buff' and action[8] not in ('weak','sunder','stun','curse')
+        same=event.get('sourceAlly' if selector=='event_source' else 'targetAlly',False)
+        return [unit] if unit is not None and unit.get('hp',0)>0 and same==good else []
     if selector=='previous':
         return [u for u in (anchor or {}).get('units',[]) if u.get('hp',0)>0]
     if selector in ('self','ally_radius','all_allies'):
@@ -32,7 +39,7 @@ def targets(owner,enemies,allies,action,anchors,reach):
 
 
 def execute(battle,owner,enemies,allies,skill,action,index,context):
-    if len(action)!=18:raise ValueError('Malformed compiled effect step')
+    if len(action) not in (18,20):raise ValueError('Malformed compiled effect step')
     anchors=context.setdefault('mod_effect_anchors',{})
     # Refresh allies after a preceding summon so that the new unit receives buffs.
     allies=[u for u in owner.get('_team',allies) if u.get('hp',0)>0]
@@ -40,6 +47,8 @@ def execute(battle,owner,enemies,allies,skill,action,index,context):
     anchors[index]={'units':list(selected),'line':selected[0]['line'] if selected else owner['line'],
                     'pos':selected[0]['pos'] if selected else owner['pos']}
     kind=action[1]
+    event=owner.get('_mod_event') or {}
+    event_value=event.get('amount',0)*action[18]+event.get('overheal',0)*action[19] if len(action)==20 else 0
     if kind=='summon':
         family=str(skill.get('skid',''))+':'+str(index)
         existing=[u for u in allies if u.get('_effect_summon_owner')==owner.get('_owner_token')
@@ -57,16 +66,23 @@ def execute(battle,owner,enemies,allies,skill,action,index,context):
             unit['_effect_summon_family']=family
         return
     for unit in selected:
+        if owner.get('_mod_event') is not None:
+            good=kind=='heal' or kind=='buff' and action[8] not in ('weak','sunder','stun','curse')
+            if good!=(battle._team_number(unit)==battle._team_number(owner)):continue
         if kind=='heal':
-            value=int(battle._get_damage(owner)*action[5]+owner['hp_max']*action[6])
-            battle._injured(unit,value,4)
+            value=int(battle._get_damage(owner)*action[5]+owner['hp_max']*action[6]+event_value)
+            battle._injured(unit,value,4,source=owner)
         elif kind=='damage':
-            if action[16]==3:battle._injured(unit,max(0,int(battle._get_damage(owner)*action[5])),3)
+            if len(action)==20:
+                coefficient=action[5]+event_value/max(1,battle._get_damage(owner))
+                if coefficient<=0:continue
+                battle._native_damage(owner,unit,coefficient/.3 if action[16]==3 else coefficient,action[16])
+            elif action[16]==3:battle._injured(unit,max(0,int(battle._get_damage(owner)*action[5])),3,source=owner)
             else:battle._native_damage(owner,unit,action[5],action[16])
         elif kind=='buff':
             value=action[7]
-            if action[8]=='shield':value=int(battle._get_damage(owner)*action[5]+owner['hp_max']*action[6]+value)
-            battle._add_buff(unit,action[8],action[9],value)
+            if action[8]=='shield':value=int(battle._get_damage(owner)*action[5]+owner['hp_max']*action[6]+value+event_value)
+            battle._add_buff(unit,'bless' if action[8]=='timed_bless' else action[8],action[9],1 if action[8]=='timed_bless' else value)
         elif kind=='push':battle._check_move(unit,False,int(action[10]),forced=True)
         elif kind=='move':
             distance=max(0,abs(unit['pos']-owner['pos'])-40)

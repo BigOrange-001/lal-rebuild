@@ -2,7 +2,7 @@
 from __future__ import annotations
 import copy
 import re
-from battle_engine import _native_skill_snapshot
+from native_skill_snapshot import _native_skill_snapshot
 
 SCHEMA='dot-rules-1.0.3-v1'
 RULES='持续伤害无视物防和魔防；中毒期间受到伤害提高20%（不叠加）；灼伤期间受到治疗降低40%（不叠加）。'

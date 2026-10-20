@@ -173,3 +173,7 @@ Android 创作者／玩家将包保存在 Download（下载）或系统文件应
 ## 待测试的效果序列扩展
 
 本轮增加 `skill.effect-sequence.v1` 和 `unit.summon.v1`。新旧模型并存，详情见 [条件与召唤物接口](mod-effect-sequence.md)。尚未运行测试、构建游戏安装包或合并。
+
+## 1.0.3 与事件被动
+
+新增模板、事件、能力声明和兼容规则见 [1.0.3 创作接口](mod-authoring-1.0.3.md)。本次扩展尚待用户功能验证。

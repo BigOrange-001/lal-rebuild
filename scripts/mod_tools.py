@@ -28,24 +28,12 @@ def load_base(path):
     from halo_progression import apply_halo_progression
     for apply in (apply_recruit_exchange_config,apply_equipment_capacity,apply_equipment_upgrade_config,apply_captain_timing,apply_upstream_skill_priority,apply_battle_status_effects):apply(document)
     document=apply_halo_progression(document)
-    from summon_panel_103 import apply_summon_panel_config
-    from skill_books import apply_equipment_calibration
-    from hero_skills_103 import apply_hero_skills_103, finalize_hero_skills_103
-    from talent_stats_103 import apply_talent_stats_103
-    from hero_balance_103 import apply_hero_balance_103
-    from dot_rules_103 import apply_dot_rules_103
-    from cat_katarina_103 import apply_cat_katarina_103
-    from polar_ashe_103 import apply_polar_ashe_103
-    from santa_veigar_103 import apply_santa_veigar_103
-    from nurse_akali_103 import apply_nurse_akali_103
+    from mod_authoring_103 import apply_mod_authoring_103
+    apply_mod_authoring_103(document)
     from tower_rewards_103 import apply_tower_rewards_103
     from ancient_trial_103 import apply_ancient_trial_103
     from material_attempts_103 import apply_material_attempts_103
-    for apply in (apply_summon_panel_config,apply_equipment_calibration,apply_hero_skills_103,
-                  apply_talent_stats_103,apply_hero_balance_103,finalize_hero_skills_103,
-                  apply_dot_rules_103,apply_cat_katarina_103,apply_polar_ashe_103,
-                  apply_santa_veigar_103,apply_nurse_akali_103,apply_tower_rewards_103,
-                  apply_ancient_trial_103,apply_material_attempts_103):apply(document)
+    for apply in (apply_tower_rewards_103,apply_ancient_trial_103,apply_material_attempts_103):apply(document)
     document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
     return document
 

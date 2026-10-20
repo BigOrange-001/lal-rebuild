@@ -22,6 +22,7 @@ function attach(u){for(const [name,[params,body]] of Object.entries(input.method
 const units=input.units.map((data,i)=>Object.assign(data,{id:data.aid,hpMax:data.hp_max,abilityState:{},abilitySerial:0,
  abilityIndex:i+1,buffs:{},otherTeam:3-data.team,isManualSummonUnit:false,
  getType:()=>1,getStar:()=>6,getDamage:()=>1000,getHpMax:()=>10000,abilityFeedback:()=>{},
+ beginParallelVisualBatch:()=>null,endParallelVisualBatch:()=>{},prepareParallelVisualTarget:()=>{},
  checkMove(forward,distance,center=null){this.pos+=(this.team===1?-1:1)*(forward?1:-1)*distance;},
  reline(line,pos){this.line=line;this.pos=pos;},removeBuff(k){delete this.buffs[k];},removeAllDebuff(){},
  skill0:{useSkill(){events.push(['recast']);}}}));
@@ -33,7 +34,7 @@ for(const u of units){attach(u);
  u.abilityShield=(target,coef,duration=2,health=false)=>{if(target&&target.hp>0)events.push(['shield',target.id,coef*input.effect,duration,health]);};
  u.abilitySummon=(aid,count,ratio,turns,key,focus=null,clone=false)=>events.push(['summon',aid,count,ratio*input.effect,turns,key,clone]);
 }
-const skill={getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,skillSetData:{id:'TEST',range:700},skills:[['manual_ability',input.kind,input.scale]],getCastRange:()=>700};
+const skill={getNativeAction(){return this.skills[0];},getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,skillSetData:{id:'TEST',range:700},skills:[['manual_ability',input.kind,input.scale]],getCastRange:()=>700};
 context={owner,kind:'active',skill,manualDamageMultiplier:input.damage,manualEffectMultiplier:input.effect,kills:[]};
 const ok=owner.executeAbility(input.kind,input.scale,'FX',skill);
 process.stdout.write(JSON.stringify({ok,events}));
@@ -66,6 +67,7 @@ class ManualOracleTests(unittest.TestCase):
     def setUpClass(cls):
         source=(ROOT/'client/src/stages/137_Avatar.as').read_text('utf-8')
         definitions=dict(executeAbility='kind,scale,effect,sourceSkill',
+          executeAbilityBody='kind,scale,effect,sourceSkill',
           nativeAbilityNumber='sourceSkill,kind,key,fallback',
           abilityEnemies='distance,center=null,maximum=1,heroOnly=false,order="nearest",excluded=null,forward=false',
           abilityCandidates='whichTeam,lane,position,distance,maximum,heroOnly=false,order="nearest",excluded=null,forward=false',

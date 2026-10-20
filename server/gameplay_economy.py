@@ -2,7 +2,7 @@
 from __future__ import annotations
 import calendar, copy, datetime, hashlib, math, random
 from gameplay_common import game_day, grant_reward, skin_acquisition_blocked_ids, equipment_exclusive_ids
-from gameplay_energy import energy_state, normalize_energy_purchase_day
+from gameplay_energy import energy_state, normalize_energy_purchase_day, ENERGY_PURCHASE_CAP
 from player_store import GameplayFault, native_dates
 from vip_campaign import credit_vip_gift, normalize_vip_profile
 from spending_budget import ORDINARY_TIERS,LIMIT_MESSAGE,charge_spending,normalize_spending,public_spending
@@ -484,7 +484,12 @@ class GameplayEconomy:
             attrs, records = p.setdefault("attrs", {}), p.setdefault("records", {})
             now = self._now(); state = energy_state(p, self.config, now)
             maximum, current = state["max"], state["current"]
-            if current >= maximum: raise GameplayFault("EnergyFull", "Energy is already full")
+            # Legacy rewards can reserve overflow while the natural meter is
+            # still filling. Preserve that bucket when a purchase fills it.
+            reserved = state['extra'] if state['intervals'] < maximum else 0
+            total = current + reserved + maximum
+            if total > ENERGY_PURCHASE_CAP:
+                raise GameplayFault("EnergyStorageLimit", "购买后体力将超过500点，无法购买")
             used = normalize_energy_purchase_day(p, now); vip = (self.config.get("vip") or {}).get(str(p.get("vip_lv", 0)), {})
             limit = int(cfg[5]) + int(vip.get("buy_energy", 0))
             if used >= limit: raise GameplayFault("EnergyPurchaseLimit", "Energy purchase limit reached")
@@ -492,10 +497,10 @@ class GameplayEconomy:
             if int(p.get("coin", 0)) < price: raise GameplayFault("InsufficientCoin", "Not enough coin")
             p["coin"] = int(p.get("coin", 0)) - price
             self._record_coin_spend(p,price)
-            attrs["energy_extra"] = 0
+            attrs["energy_extra"] = max(0,total-maximum)
             p["energy"] = {"$date": now - maximum * int(cfg[2]) * 60}
             records["energy_times"] = used + 1
-            return p, {"coin": p["coin"], "attr_energy_extra": 0, "energy_times": used + 1, "energy": p["energy"]}
+            return p, {"coin": p["coin"], "attr_energy_extra": attrs['energy_extra'], "energy_times": used + 1, "energy": p["energy"]}
         result, replayed = self.store.atomic_update(uid, mutate, key, {"method": "full_energy"})
         result["replayed"] = replayed
         return result

@@ -80,6 +80,8 @@ function unit(team,line,pos){
     buffs:{},abilityState:{},manualSkillDots:{},tryndUndyingActive:false,m_buff:new Sprite(),
     avatarData:{id:'A_1001_6',type:1},fightRes:{parent:{setFirst:noop},x:0,y:100,pivotX:0,pivotY:0,localToGlobal(p){return {x:line*200+p.x,y:100+p.y};}},manualFocusTarget:null,skillB:null,
     currentAbilityAttack(){return {kind:'active'};},purpleBondMultiplier(){return 1;},
+    prepareParallelVisualTarget:noop,playParallelAttackTween:()=>true,
+    emitModEvent:noop,
     abilityDirectMultiplier(){return 1;},getTeamHp:noop,getDamage(){return 100;},getTough(){return 0;},
     refreshHp:noop,abilityRecordDamage:noop,resSwing:noop,queueRangePreview:noop,
     checkTalent(){return 0;},getEffectiveActionType(){return 1;},getSortOnFun(){return null;},
@@ -91,7 +93,7 @@ function unit(team,line,pos){
   for(const name of ['showBuff','showCurseImpact','removeAllDebuff','removeAllGoodBuff','checkBuff','getType'])
     install(host,name,name==='showBuff'?'param1':'');
   install(host,'removeBuff','param1,consume=false');
-  install(host,'addBuff','param1,param2,param3=0,param4=0,param5=-1');
+  install(host,'addBuff','param1,param2,param3=0,param4=0,param5=-1,param6=null');
   install(host,'injured','param1,param2=1,param3=null,param4=-1,param5=null,param6=false,param7=null,param8=null,dotKind=""');
   install(host,'findAimList','param1,param2=null,param3=-1,param4=false');
   install(host,'checkAttack','param1,param2,param3=-1,param4=false,param5=-1,param6=1,param7=0,param8=null,param9=null,param10=1');
@@ -112,7 +114,7 @@ const groups=input.fullCast ? {} : {cluster:enemies.slice()};
 const skill={avatar:caster,skills:row.skill,skillSetData:{...row,range:row.pl[2],aoe:row.pl[4],banStand:false},
   currentActionTargets:[],currentTargetGroups:groups,preparingCast:false,sortAnchor:null,
   isSuper:false,abilityHasCast:false,abilityCooldownOverride:-1,inKillRecast:false,lv:1,
-  m_cooldownNum:-1,activeNativeSource:null,activeNativeSettings:null,isModEffectSequence:()=>false,getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,getMechanismId:()=>row.id};
+  m_cooldownNum:-1,activeNativeSource:null,activeNativeAction:null,activeNativeSettings:null,getNativeAction(){return this.activeNativeAction||null;},isModEffectSequence:()=>false,getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,getMechanismId:()=>row.id};
 context.Avatar={beginAbilityAttack(){return {};},endAbilityAttack:noop,skillAreaRadius(v){return v;}};
 layer.infoLayer.showSkill=noop;
 context.GlobalLanguageStr.getStr=id=>String(id);

@@ -83,6 +83,7 @@ const unit = {
   skill0: null, skill1: null, skill2: null, skillB: passive,
   fightRes: {parent: null},
   advanceManualOwnerAction: noop, getScale() { return 1; },
+  emitModEvent: noop,
   refreshIcon: noop, getTeamHp: noop, abilityTurnStart() { return false; },
   checkBuff() { return false; }, getEffectiveActionType() { return 2; },
   checkSkill() { calls.active++; return false; },

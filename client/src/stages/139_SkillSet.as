@@ -834,6 +834,9 @@ package com.meng52.game.module.skill
             if(summonEffect) { summonEffect.a1 = unit; summonEffect.par = GameMapLayer.gl.effectLayer; GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,summonEffect); }
             return false;
          }
+         var modPresentation:Object = kind == "damage" && selected.length > 1 ? avatar.beginParallelVisualBatch() : null;
+         try
+         {
          for each(unit in selected)
          {
             if(!unit || unit.hp <= 0) continue;
@@ -842,6 +845,7 @@ package com.meng52.game.module.skill
                var eventFriendly:Boolean = kind == "heal" || kind == "buff" && ["weak","sunder","stun","curse"].indexOf(step[8]) < 0;
                if(eventFriendly != (unit.team == avatar.team)) continue;
             }
+            if(modPresentation) avatar.prepareParallelVisualTarget(unit,false);
             if(kind == "heal")
             {
                value = int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6])+eventValue);
@@ -867,6 +871,8 @@ package com.meng52.game.module.skill
                if(distance > 0) avatar.checkMove(avatar.team == 1 ? unit.pos < avatar.pos : unit.pos > avatar.pos,distance,unit,-1,false,effect);
             }
          }
+         }
+         finally { avatar.endParallelVisualBatch(modPresentation); }
          if(kind == "move" || kind == "push") GameMap.actionDelay += 0.2;
          return kind == "move" && selected.length > 0;
       }
@@ -875,6 +881,57 @@ package com.meng52.game.module.skill
       public function getNativeAction() : Array
       {
          return activeNativeAction;
+      }
+
+      private function executeParallelHits(targets:Vector.<Avatar>, hitCount:int, coefficients:Array, damageType:int, effect:String, actionIndex:int, castRange:int, banStand:Boolean, preDots:Vector.<Avatar>, preBurns:Vector.<Avatar>, interval:Number, targetCap:int = -1) : Number
+      {
+         var total:Number = 0;
+         var presentation:Object = avatar.beginParallelVisualBatch();
+         try
+         {
+            var targetIndex:int = 0;
+            while(targetIndex < targets.length && (targetCap < 0 || targetIndex < targetCap))
+            {
+               var target:Avatar = targets[targetIndex];
+               var hitIndex:int = 0;
+               while(hitIndex < hitCount && target.hp > 0)
+               {
+                  var one:Vector.<Avatar> = new Vector.<Avatar>();
+                  one.push(target);
+                  avatar.setParallelVisualWave(presentation,hitIndex,interval);
+                  var coefficient:Number = Number(coefficients[coefficients.length == 1 ? 0 : hitIndex]);
+                  var shared:Number = damageShareTotal(actionIndex,coefficient,target,preDots,preBurns);
+                  total += avatar.attackAimList(one,damageType,shared,0,effect,banStand,null,castRange,damageShareWeight(coefficient,shared));
+                  GameMap.actionDelay += interval;
+                  hitIndex++;
+               }
+               targetIndex++;
+            }
+         }
+         finally { avatar.endParallelVisualBatch(presentation); }
+         return total;
+      }
+
+      private function executeConditionalDamage(action:Array, actionIndex:int, actionTargets:Array, targetGroups:Object, castRange:int, banStand:Boolean, preDots:Vector.<Avatar>, preBurns:Vector.<Avatar>) : void
+      {
+         var targets:Vector.<Avatar> = getCustomActionTargets(actionIndex,actionTargets,targetGroups,false);
+         if(targets.length == 0 || action.length < 6) return;
+         var presentation:Object = avatar.beginParallelVisualBatch();
+         try
+         {
+            for each(var target:Avatar in targets)
+            {
+               avatar.prepareParallelVisualTarget(target,false);
+               var coefficient:Number = Number(action[1]);
+               if(conditionMatches(String(action[3]),target,preDots,preBurns)) coefficient += Number(action[4]);
+               var one:Vector.<Avatar> = new Vector.<Avatar>();
+               one.push(target);
+               if(int(action[2]) == 3) coefficient /= Avatar.REAL_DAMAGE_RATE;
+               var shared:Number = damageShareTotal(actionIndex,coefficient,target,preDots,preBurns);
+               if(avatar.checkAttack(one,getActionSortFunction(actionIndex,avatar.getSortOnFun()),getActionRange(actionIndex,castRange),banStand,int(action[2]),shared,0,String(action[5]),null,damageShareWeight(coefficient,shared))) actionTargets[actionIndex] = target;
+            }
+         }
+         finally { avatar.endParallelVisualBatch(presentation); }
       }
 
       public function useSkill() : Boolean
@@ -1196,24 +1253,7 @@ package com.meng52.game.module.skill
                   }
                   break;
                case "conditional_damage":
-                  _loc3_ = getCustomActionTargets(_loc14_,actionTargets,targetGroups,false);
-                  if(_loc3_.length > 0 && _loc20_.length >= 6)
-                  {
-                     var conditionalIndex:int = 0;
-                     while(conditionalIndex < _loc3_.length)
-                     {
-                        _loc13_ = _loc3_[conditionalIndex];
-                        _loc23_ = Number(_loc20_[1]);
-                        if(conditionMatches(String(_loc20_[3]),_loc13_,preCastDotTargets,preCastBurnTargets)) _loc23_ += Number(_loc20_[4]);
-                        var conditionalOne:Vector.<Avatar> = new Vector.<Avatar>();
-                        conditionalOne.push(_loc13_);
-                         if(int(_loc20_[2]) == 3) _loc23_ /= Avatar.REAL_DAMAGE_RATE;
-                         var conditionalShareTotal:Number = damageShareTotal(_loc14_,_loc23_,_loc13_,preCastDotTargets,preCastBurnTargets);
-                         var conditionalShareQ:Number = damageShareWeight(_loc23_,conditionalShareTotal);
-                         if(avatar.checkAttack(conditionalOne,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,int(_loc20_[2]),conditionalShareTotal,0,String(_loc20_[5]),null,conditionalShareQ)) actionTargets[_loc14_] = _loc13_;
-                        conditionalIndex++;
-                     }
-                  }
+                  executeConditionalDamage(_loc20_,_loc14_,actionTargets,targetGroups,_loc24_,_loc2_,preCastDotTargets,preCastBurnTargets);
                   break;
                case "ricochet_bursts":
                   castRicochetBursts(_loc14_,_loc20_);
@@ -1768,24 +1808,8 @@ package com.meng52.game.module.skill
                            targetGroups[areaGroupName] = areaTargets.concat();
                         }
                         actionTargets[_loc14_] = _loc1_;
-                        _loc23_ = 0;
-                        var areaTargetIndex:int = 0;
-                        while(areaTargetIndex < areaTargets.length)
-                        {
-                           _loc1_ = areaTargets[areaTargetIndex];
-                           var areaHitIndex:int = 0;
-                           while(areaHitIndex < areaHitCount && _loc1_.hp > 0)
-                           {
-                              _loc3_ = new Vector.<Avatar>();
-                              _loc3_.push(_loc1_);
-                               var areaHitCoeff:Number = Number(_loc20_[2 + areaHitIndex]);
-                               var areaShareTotal:Number = damageShareTotal(_loc14_,areaHitCoeff,_loc1_,preCastDotTargets,preCastBurnTargets);
-                               _loc23_ += avatar.attackAimList(_loc3_,int(_loc20_[2 + areaHitCount]),areaShareTotal,0,String(_loc20_[6 + areaHitCount]),_loc2_,null,getActionRange(_loc14_,_loc24_),damageShareWeight(areaHitCoeff,areaShareTotal));
-                              GameMap.actionDelay += 0.15;
-                              areaHitIndex++;
-                           }
-                           areaTargetIndex++;
-                        }
+                        _loc23_ = executeParallelHits(areaTargets,areaHitCount,_loc20_.slice(2,2+areaHitCount),int(_loc20_[2+areaHitCount]),String(_loc20_[6+areaHitCount]),_loc14_,getActionRange(_loc14_,_loc24_),_loc2_,preCastDotTargets,preCastBurnTargets,0.15);
+                        _loc1_ = areaTargets[areaTargets.length-1];
                         _loc5_ = Number(_loc20_[3 + areaHitCount]);
                         if(_loc5_ > 0 && Number(actionDamageCapture ? actionDamageCapture.total : _loc23_) > 0) avatar.injured(int(Number(actionDamageCapture ? actionDamageCapture.total : _loc23_) * _loc5_ * getActiveRecoveryMultiplier()),1,DisplayTools.getAttrs(String(_loc20_[6 + areaHitCount])),4);
                      }
@@ -1891,24 +1915,8 @@ package com.meng52.game.module.skill
                      _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                      _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
                      _loc3_ = avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_);
-                     _loc23_ = 0;
-                     var groupIndex:int = 0;
-                     while(groupIndex < _loc3_.length && groupIndex < int(_loc20_[1]))
-                     {
-                        _loc1_ = _loc3_[groupIndex];
-                        var groupHit:int = 0;
-                        while(groupHit < int(_loc20_[2]) && _loc1_.hp > 0)
-                        {
-                           var oneTarget:Vector.<Avatar> = new Vector.<Avatar>();
-                           oneTarget.push(_loc1_);
-                            var comboGroupCoeff:Number = Number(_loc20_[3]);
-                            var comboGroupShareTotal:Number = damageShareTotal(_loc14_,comboGroupCoeff,_loc1_,preCastDotTargets,preCastBurnTargets);
-                            _loc23_ += avatar.attackAimList(oneTarget,int(_loc20_[4]),comboGroupShareTotal,0,String(_loc20_[6]),_loc2_,null,getActionRange(_loc14_,_loc24_),damageShareWeight(comboGroupCoeff,comboGroupShareTotal));
-                           GameMap.actionDelay += 0.12;
-                           groupHit++;
-                        }
-                        groupIndex++;
-                     }
+                     _loc23_ = executeParallelHits(_loc3_,int(_loc20_[2]),[Number(_loc20_[3])],int(_loc20_[4]),String(_loc20_[6]),_loc14_,getActionRange(_loc14_,_loc24_),_loc2_,preCastDotTargets,preCastBurnTargets,0.12,int(_loc20_[1]));
+                     if(_loc3_.length > 0 && int(_loc20_[1]) > 0) _loc1_ = _loc3_[Math.min(_loc3_.length,int(_loc20_[1]))-1];
                      if(Number(_loc20_[5]) > 0 && _loc23_ > 0)
                      {
                         avatar.injured(int(Number(actionDamageCapture ? actionDamageCapture.total : _loc23_) * Number(_loc20_[5]) * getActiveRecoveryMultiplier()),1,DisplayTools.getAttrs(String(_loc20_[6])),4);

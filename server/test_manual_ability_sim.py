@@ -72,6 +72,16 @@ class ManualAbilityStateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'Unsupported'):
             self.cast(b,'unimplemented')
 
+    def test_veigar_captain_accuracy_is_scoped_to_cast_and_restored_after_error(self):
+        b=self.battle();owner=b.a[0];base=b._get_hit(owner);seen=[]
+        b.hit=lambda *args:seen.append(b._get_hit(owner)) or 0
+        self.cast(b,'veigar_c')
+        self.assertEqual(seen,[base+30000]);self.assertEqual(b._get_hit(owner),base)
+        def fail(*args):raise RuntimeError('hit failed')
+        b.hit=fail
+        with self.assertRaisesRegex(RuntimeError,'hit failed'):self.cast(b,'veigar_c')
+        self.assertEqual(b._get_hit(owner),base)
+
     def test_expiring_dot_can_trigger_revival_and_cleanse_itself(self):
         for kind,value in (('poison',10000),('burn',10000)):
             with self.subTest(kind=kind):

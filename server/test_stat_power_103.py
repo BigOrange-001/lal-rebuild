@@ -107,6 +107,7 @@ class StatPower103Tests(unittest.TestCase):
         cls.avatar_methods = methods('137_Avatar.as', {
             'getHpMax':'param1=-1,param2=-1,param3=false','getDamage':'param1=-1,param2=-1,param3=false',
             'getDePh':'param1=-1,param2=-1,param3=false','getDeMa':'param1=-1,param2=-1,param3=false',
+            'getPhysicalDefense':'param1,param2,param3,ignoreSunder','getMagicDefense':'param1,param2,param3,ignoreSunder',
             'getSpeed':'param1=false','getRange':'param1=false','getHit':'','getFlee':'','getCrit':'','getTough':'',
             'getStar':'','getType':'','getPhaseList':'','getPhaseLv':'','getSymp':'',
             'isWeightedCultivation':'','getCultivationGainFromSlope':'param1,param2',

@@ -30,15 +30,7 @@ package com.meng52.game.global
       public static function getLanguageStr(param1:*, ... rest) : String
       {
          var _loc3_:Object = null;
-         var _loc4_:String = null;
-         if(GlobalData.$mConfig_msg)
-         {
-            _loc3_ = GlobalData.$mConfig_msg;
-            if(param1 != null && GlobalData.$mConfig_msg[param1] is String)
-            {
-               _loc4_ = GlobalData.$mConfig_msg[param1];
-            }
-         }
+         var _loc4_:String = getConfigLanguageStr(param1);
          if(_loc4_ == null && $_global_language_str && param1 != null)
          {
             if($_global_language_str["id" + param1].@str == "CHILD2010")
@@ -55,6 +47,14 @@ package com.meng52.game.global
             return "";
          }
          return replaceStrArr(_loc4_,rest);
+      }
+
+      private static function getConfigLanguageStr(id:*) : String
+      {
+         var messages:Object = GlobalData.$mConfig ? GlobalData.$mConfig.msg : null;
+         if(id != null && messages && messages[id] is String) return messages[id];
+         if(id != null && GlobalData.$mConfig_msg && GlobalData.$mConfig_msg[id] is String) return GlobalData.$mConfig_msg[id];
+         return null;
       }
 
       public static function replaceStrArr(param1:String, param2:Array) : String

@@ -2,7 +2,7 @@
 import copy,random,sqlite3,unittest
 from pathlib import Path
 from gateway import Backend
-from tower_rewards_103 import roll_tower_reward,apply_tower_rewards_103,_enemy_team
+from tower_rewards_103 import roll_tower_reward,apply_tower_rewards_103,_enemy_team,_enemy_pools
 from campaign_workbook_overlay import _power
 from gameplay_economy import GameplayEconomy
 from summon_pools import SummonPools
@@ -68,6 +68,29 @@ class TowerRewards103Tests(unittest.TestCase):
         self.assertEqual({u['line'] for u in units},{0,1,2})
         self.assertEqual(sum(u['leader'] for u in units),1)
         self.assertTrue(all((u['lv'],u['slv'],u['phase'],u['limit_break'])==(125,10,3,1) for u in units))
+
+    def test_mod_summons_missing_heroes_and_scoped_aliases_are_not_extra_candidates(self):
+        cfg=copy.deepcopy(self.config['cfg'])
+        template=copy.deepcopy(cfg['avatar']['A_1226_6'])
+        rows={'A_180002_6':('hero',True),'A_180003_6':('summon',True),
+              'A_180004_5':('summon',True),'A_180005_6':('hero',False),
+              'A_180006_6':('hero',True)}
+        metadata={}
+        for aid,(kind,available) in rows.items():
+            cfg['avatar'][aid]={**copy.deepcopy(template),'id':aid,'modUnitType':kind}
+            metadata[aid]={'kind':'new','unitType':kind,'available':available}
+        cfg['avatar']['A_170001_6']={**template,'modBaseAid':'A_1226_6'}
+        cfg['avatar']['A_170002_6']={**template,'modBaseAid':'A_180003_6'}
+        cfg['mod_runtime']={'heroes':metadata,'missingHeroIds':['A_180006_6'],
+                            'aliasBaseIds':{'A_170001_6':'A_1226_6','A_170002_6':'A_180003_6'}}
+        pools=_enemy_pools(cfg);aids=[a for group in pools.values() for a in group]
+        self.assertIn('A_180002_6',aids)
+        self.assertEqual(aids.count('A_1226_6'),1)
+        self.assertFalse(set(aids)&{'A_180003_6','A_180004_5','A_180005_6','A_180006_6',
+                                    'A_170001_6','A_170002_6','A_190001_5'})
+        store,uid,combat,team=self.store(153,{'cfg':cfg,**{k:v for k,v in self.config.items() if k!='cfg'}})
+        started=combat._start_main(uid,{'cid':'P_200_153','diff':0,'team':team,'actionID':'mod-enemies'})
+        self.assertTrue(all(u['modUnitType']=='hero' for u in started['orgin_team_b']))
     def test_random_encounters_are_bound_to_the_fight_and_final_floor_is_playable(self):
         store,uid,combat,team=self.store(180)
         first=combat._start_main(uid,{'cid':'P_200_180','diff':0,'team':team,'actionID':'start-one'})

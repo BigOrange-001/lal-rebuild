@@ -350,7 +350,7 @@
       "index": 58,
       "class": "com.meng52.game.ui.element.ItemPVEcombat",
       "source": "client/src/stages/056_ItemPVEcombat.as",
-      "source_sha256": "8de0b8bcd415c11d412c3babe6115059b599122b6c04f3a8c1a1218786acd157"
+      "source_sha256": "d9d21256d43b1818fceea4da18178d00393c4024639953606781219a9a31478f"
     },
     {
       "index": 59,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "302f5c274daa412ab6bd6778723ea05ea8e85e560e70b907659cc94d2615a89a"
+      "source_sha256": "7cb498f88125c27a7bc445cc86916b0c00a503d8964ebc7b0c4d60ab139a0c6f"
     },
     {
       "index": 140,
@@ -848,7 +848,7 @@
       "index": 141,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "caf28ed91860be027dc7af394c4e32ba14efe060dc06e257d962b5cbaabef80a"
+      "source_sha256": "c8092ee24d839ded7ab5b2dc1183ce5f35f131f48ea5840cb81ed5fc6ba61c9c"
     },
     {
       "index": 142,
@@ -944,7 +944,7 @@
       "index": 157,
       "class": "com.meng52.game.global.GlobalLanguageStr",
       "source": "client/src/stages/157_GlobalLanguageStr.as",
-      "source_sha256": "a1c37314a24ed077b16806ee6628d3eaddbcbf35545bdb16bd814bff9affae08"
+      "source_sha256": "96f80d1f446872e5f1ce8e7394383d98ed94a1a54acfb38cf0fbc3f15776400f"
     },
     {
       "index": 158,

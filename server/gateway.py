@@ -30,6 +30,9 @@ from cat_katarina_103 import apply_cat_katarina_103
 from polar_ashe_103 import apply_polar_ashe_103
 from santa_veigar_103 import apply_santa_veigar_103
 from nurse_akali_103 import apply_nurse_akali_103
+from hero_accuracy_103 import apply_hero_accuracy_103
+from hero_iteration_103 import apply_hero_iteration_103
+from gameplay_energy import apply_energy_purchase_103
 from recruit_exchange import apply_recruit_exchange_config
 from help_pages import render_help,render_notice
 
@@ -135,6 +138,9 @@ class Backend:
    apply_polar_ashe_103(self.config)
    apply_santa_veigar_103(self.config)
    apply_nurse_akali_103(self.config)
+   apply_hero_accuracy_103(self.config)
+   apply_hero_iteration_103(self.config)
+   apply_energy_purchase_103(self.config)
    apply_tower_rewards_103(self.config)
    apply_ancient_trial_103(self.config)
    apply_material_attempts_103(self.config)

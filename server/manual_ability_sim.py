@@ -202,13 +202,13 @@ class SkillCompleteBattle(ReferenceBattle):
         value=max(0,value+_to_int(state['entry_ap']*state.get('evil_bonus',0)))
         return _to_int(value*(1+.05*state.get('santa_stacks',0)))
 
-    def _get_de_ph(self, unit):
+    def _get_de_ph(self, unit, ignore_sunder=False):
         base=dict(unit,de_ph=unit.get('de_ph',0)*(1+self._get_manual_battle_stack(unit,'defense')))
-        return super()._get_de_ph(base)
+        return super()._get_de_ph(base,ignore_sunder)
 
-    def _get_de_ma(self, unit):
+    def _get_de_ma(self, unit, ignore_sunder=False):
         base=dict(unit,de_ma=unit.get('de_ma',0)*(1+self._get_manual_battle_stack(unit,'defense')))
-        return super()._get_de_ma(base)
+        return super()._get_de_ma(base,ignore_sunder)
 
     def _summon_panel_snapshot(self, owner):
         result=dict(hp_max=self._get_hp(owner),ap=self._ap_with_talent(owner),
@@ -336,7 +336,9 @@ class SkillCompleteBattle(ReferenceBattle):
             case 'veigar_c':
                 enemies=en(700,hero=True,order='ratio') or en(700)
                 if not enemies:return False
-                target=enemies[0];hit(target,2+3*(1-target['hp']/target['hp_max']),2)
+                target=enemies[0];old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+30000
+                try:hit(target,2+3*(1-target['hp']/target['hp_max']),2)
+                finally:state['veigar_cast_hit']=old
             case 'elise_n':
                 enemies=en(600)
                 if not enemies:return False
@@ -515,7 +517,7 @@ class SkillCompleteBattle(ReferenceBattle):
         self._add_buff(owner,'purify',0,count)
 
     def _get_hit(self,owner):
-        return super()._get_hit(owner)+int(self.state(owner).get('polar_cast_hit',0))
+        return super()._get_hit(owner)+int(self.state(owner).get('polar_cast_hit',0))+int(self.state(owner).get('veigar_cast_hit',0))
 
     def execute_santa_skin(self,owner,kind,skill):
         targets=(self.candidates(owner,3-self._team_number(owner),owner['line'],owner['pos'],self._LINE_POS,-1)
@@ -739,7 +741,7 @@ class SkillCompleteBattle(ReferenceBattle):
         row_a=self._config.get('avatar',{}).get(attacker.get('aid'),{});row_b=self._config.get('avatar',{}).get(target.get('aid'),{})
         sign_a=(row_a.get('tl') or [0,0,0])[0];sign_b=(row_b.get('tl') or [0,0,0])[0]
         raw=to_int(self._get_damage(attacker)*float(multiplier))
-        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._get_de_ph(target),self._get_de_ma(target),attack,share)
+        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share)
         amount=to_int(to_int(amount*crit)*attack[21])
         amount=to_int(amount/(1+tough*attack[15]/(tough+attack[13])))
         receipt={}

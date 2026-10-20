@@ -499,11 +499,11 @@ class ReferenceBattle:
         """The ``Tools.toInt(getDamage() * (1 + checkTalent(1)))`` call-site form."""
         return _to_int(self._get_damage(unit) * (1.0 + self._talent(unit, 1)))
 
-    def _get_de_ph(self, unit):
+    def _get_de_ph(self, unit, ignore_sunder=False):
         """getDePh (137_Avatar.as:3302): sunder/steel then the armor buff."""
         value = float(unit.get("de_ph", 0))
         sunder = self._buff_value(unit, "sunder")
-        if sunder:
+        if sunder and not ignore_sunder:
             value /= 1 + float(sunder)
         steel = self._buff_value(unit, "steel")
         if steel:
@@ -514,11 +514,11 @@ class ReferenceBattle:
             value = max(_to_int(value * (1 + float(armor))), 0)
         return value
 
-    def _get_de_ma(self, unit):
+    def _get_de_ma(self, unit, ignore_sunder=False):
         """getDeMa (137_Avatar.as:3381): same, but with no armor term."""
         value = float(unit.get("de_ma", 0))
         sunder = self._buff_value(unit, "sunder")
-        if sunder:
+        if sunder and not ignore_sunder:
             value /= 1 + float(sunder)
         steel = self._buff_value(unit, "steel")
         if steel:
@@ -562,14 +562,25 @@ class ReferenceBattle:
     @staticmethod
     def _book_bonus(unit, stat):
         skill = unit.get('book_skill') or {}
-        value = sum(float(a[1]) for a in skill.get('skills', [])
+        values = [float(a[1]) for a in skill.get('skills', [])
                     if isinstance(a, list) and len(a) > 2 and a[0] == 'book_passive'
-                    and a[2] == stat) if not skill.get('pl') else 0.0
+                    and a[2] == stat] if not skill.get('pl') else []
+        value = max(values,default=0.0) if stat == 'penetration' else sum(values)
         if stat == 'penetration':
             bonus = (unit.get('_buffs') or {}).get('book_penetration')
-            value += float(bonus.value) if bonus else 0
+            value = max(value,float(bonus.value) if bonus else 0)
             return max(0.0, min(1.0, value))
         return max(0.0, value)
+
+    def _defense_against(self, source, target, damage_type):
+        getter = self._get_de_ph if damage_type == 1 else self._get_de_ma
+        penetration = self._book_bonus(source, 'penetration') if source else 0
+        if penetration <= 0:
+            return getter(target)
+        sunder = max(0.0,float(self._buff_value(target,'sunder')))
+        reduction = max(penetration,sunder / (1 + sunder))
+        # Tools.toInt rounds to five decimal places before truncating.
+        return max(0,_to_int(round(getter(target,ignore_sunder=True) * (1 - reduction),5)))
 
     def _on_healing_received(self, target, amount, overheal=0):
         """Receive nominal healing after modifiers and before the HP cap."""
@@ -675,13 +686,11 @@ class ReferenceBattle:
         amount = _to_int(amount)
         damage_type = _to_int(damage_type)
         if damage_type == 1:
-            defense = max(0, self._get_de_ph(target))
+            defense = self._defense_against(source,target,1)
         elif damage_type in (2, 3):
-            defense = max(0, self._get_de_ma(target)) if damage_type == 2 else 0
+            defense = self._defense_against(source,target,2) if damage_type == 2 else 0
         else:
             defense = 0
-        if source is not None:
-            defense = _to_int(defense * (1 - self._book_bonus(source, 'penetration')))
         if damage_type == 3:
             dealt = _to_int(amount * _REAL_DAMAGE_RATE)
         elif damage_type in (1, 2):
@@ -695,13 +704,13 @@ class ReferenceBattle:
         damage_type = _to_int(damage_type)
         if damage_type == 1:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
-            defense = _to_int(max(0, self._get_de_ph(target)) * (1 - self._book_bonus(attacker, 'penetration')))
+            defense = self._defense_against(attacker,target,1)
             dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - defense)
         elif damage_type == 3:
             dealt = _to_int(max(1, _to_int(self._get_damage(attacker) * float(multiplier))) * _REAL_DAMAGE_RATE)
         else:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
-            defense = _to_int(max(0, self._get_de_ma(target)) * (1 - self._book_bonus(attacker, 'penetration')))
+            defense = self._defense_against(attacker,target,2)
             dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - defense)
         return self._injured(target, dealt, damage_type, source=attacker)
 

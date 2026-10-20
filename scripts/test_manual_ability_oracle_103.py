@@ -34,7 +34,7 @@ for(const u of units){attach(u);
  u.abilityShield=(target,coef,duration=2,health=false)=>{if(target&&target.hp>0)events.push(['shield',target.id,coef*input.effect,duration,health]);};
  u.abilitySummon=(aid,count,ratio,turns,key,focus=null,clone=false)=>events.push(['summon',aid,count,ratio*input.effect,turns,key,clone]);
 }
-const skill={getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,skillSetData:{id:'TEST',range:700},skills:[['manual_ability',input.kind,input.scale]],getCastRange:()=>700};
+const skill={getNativeAction(){return this.skills[0];},getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,skillSetData:{id:'TEST',range:700},skills:[['manual_ability',input.kind,input.scale]],getCastRange:()=>700};
 context={owner,kind:'active',skill,manualDamageMultiplier:input.damage,manualEffectMultiplier:input.effect,kills:[]};
 const ok=owner.executeAbility(input.kind,input.scale,'FX',skill);
 process.stdout.write(JSON.stringify({ok,events}));

@@ -190,7 +190,9 @@ class HeroSkills103Tests(unittest.TestCase):
         passive=cfg['avatar']['A_1137_6']['pl'][13]
         tuning=next(x for x in cfg['hero_balance_103']['skill_changes'] if x['target']==passive)
         self.assertEqual(tuning['source'],'S_9150_6')
-        self.assertAlmostEqual(cfg['skill'][passive]['skill'][0][1],.75*tuning['factor'])
+        plan=json.loads((ROOT/'config/reconstruction/hero-iteration-1.0.3.json').read_text('utf8'))
+        final_factor=next((r['skill_factor'] for r in plan['heroes'] if r['aid']=='A_1137_6'),1)
+        self.assertAlmostEqual(cfg['skill'][passive]['skill'][0][1],.75*tuning['factor']*final_factor)
         for aid,normal in (('A_1129_6','S_271129_6'),('A_1202_6','S_271202_6'),('A_1217_6','S_271217_6')):
             self.assertEqual(base_unit(cfg,aid,slv=10)['skill']['skid'],normal)
         # Native banStand is true for pl[5] == 0. A whole-team defensive

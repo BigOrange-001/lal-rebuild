@@ -23,6 +23,7 @@ def extend_action_metadata(row):
 
 
 def candidates(cfg, profile, lineup=None):
+    from mod_policy import channel_enabled
     teams = profile.get('team', [])
     index = int(profile.get('attrs', {}).get('team_num', 0))
     ids = list(lineup if lineup is not None else (teams[index] if 0 <= index < len(teams) else []))
@@ -31,10 +32,15 @@ def candidates(cfg, profile, lineup=None):
         if len(definition) > 5 and definition[5] == 'all' and isinstance(value, list) and len(value) > 1 and int(value[0]) > 0:
             ids.append(value[1])
     return [str(profile['avatars'][iid].get('aid', iid)).split('|')[0]
-            for iid in dict.fromkeys(i for i in ids if isinstance(i, str)) if iid in profile.get('avatars', {})]
+            for iid in dict.fromkeys(i for i in ids if isinstance(i, str)) if iid in profile.get('avatars', {})
+            and channel_enabled(cfg, str(profile['avatars'][iid].get('aid', iid)).split('|')[0], 'usage.destiny')]
 
 
 def active_bonds(cfg, aid, aids):
+    from mod_policy import channel_enabled
+    if not channel_enabled(cfg, aid, 'usage.destiny'):
+        return []
+    aids = [a for a in aids if channel_enabled(cfg, a, 'usage.destiny')]
     family, quality = aid.rsplit('_', 1)
     quality = int(quality)
     result = []
@@ -77,7 +83,15 @@ def apply_stats(stats, aid, bonds):
 
 def skill_ids(cfg, aid, bonds):
     key = '|'.join(sorted(bond['id'] for bond in bonds))
-    return cfg.get('system_simple', {}).get('bond_skill_variants_104', {}).get(aid, {}).get(key, {})
+    simple = cfg.get('system_simple', {})
+    variants = simple.get('bond_skill_variants_104', {}).get(aid, {}).get(key, {})
+    sources = simple.get('bond_skill_sources_104', {}).get(aid, {})
+    pl = cfg.get('avatar', {}).get(aid, {}).get('pl', [])
+    # An explicit Mod skill replacement wins for that slot. Never overwrite it
+    # with a variant generated from the pre-patch skill definition.
+    return {field: sid for field, sid in variants.items()
+            if len(pl) > {'skill':10, 'leader_skill':11}[field]
+            and sources.get(field) == pl[{'skill':10, 'leader_skill':11}[field]]}
 
 
 def _scale_skill(source, factor):
@@ -93,12 +107,13 @@ def _scale_skill(source, factor):
             extras.extend(output_paths(action))
         if action[0] in ('heal_ap', 'heal_max_hp'):
             extras.append((1,))
-        if action[0] == 'manual_ability':
-            extras.append((2,))
         for path in set(damage + defense + extras):
             _set(action, path, _get(action, path) * factor)
             paths.add((index, *path))
     _update_growth(row, paths, factor)
+    if any(a[0] == 'manual_ability' for a in row.get('skill', [])):
+        row['manualDamageMultiplier'] = row.get('manualDamageMultiplier', 1) * factor
+        row['manualEffectMultiplier'] = row.get('manualEffectMultiplier', 1) * factor
     row.pop('rankInfoTemplate', None)
     row['info'] = row.get('info', '') + f'\n羁绊：技能伤害、治疗、护盾及数值增益系数×{factor:g}（持续时间、目标数量、位移距离不变）。'
     return row
@@ -113,6 +128,7 @@ def apply_bonds_104(document):
     definitions = copy.deepcopy(plan['bonds'])
     heroes = cfg['avatar']
     variants = {}
+    sources = {}
     for bond in definitions:
         skins=set(simple.get('skin_hero_ids',[]))
         categories={any(a.startswith(family+'_') for a in skins) for family in bond['families']}
@@ -141,6 +157,7 @@ def apply_bonds_104(document):
         if not related:
             continue
         variants[aid] = {}
+        sources[aid] = {'skill':hero['pl'][10], 'leader_skill':hero['pl'][11]}
         for count in range(1, len(related) + 1):
             for selected in itertools.combinations(related, count):
                 key = '|'.join(sorted(b['id'] for b in selected))
@@ -187,6 +204,9 @@ def apply_bonds_104(document):
                     if sid in cfg['skill']:
                         raise ValueError('bond skill ID collision: ' + sid)
                     extend_action_metadata(row)
+                    # Mechanism whitelist checks must still recognize native
+                    # turret skills even when no manual policy is attached.
+                    row['equipment_source_skill_104'] = source.get('equipment_source_skill_104', source['id'])
                     for policy_key in ('manualClonePolicy', 'manualSummonPolicy'):
                         if isinstance(row.get(policy_key), dict):
                             row['equipment_source_skill_104'] = row[policy_key]['skillId']
@@ -197,5 +217,6 @@ def apply_bonds_104(document):
                     replacements[field] = sid
                 variants[aid][key] = replacements
     simple['bond_skill_variants_104'] = variants
+    simple['bond_skill_sources_104'] = sources
     simple['bonds_schema'] = '1.0.4'
     return document

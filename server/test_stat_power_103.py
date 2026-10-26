@@ -35,7 +35,7 @@ HARNESS = r'''
 const input=JSON.parse(require('fs').readFileSync(0,'utf8'));
 const cfg=input.cfg,profile=input.profile,int=v=>Math.trunc(Number(v)||0),uint=int,trace=()=>{};
 const Tools={toInt:v=>int(Number(Number(v).toFixed(5)))};
-const GlobalData={modChannelAllowed:()=>true,$userData:profile,$mConfig_simple:cfg.system_simple,$mGuild_simple:cfg.association_simple,$mConfig_talent:cfg.talent,$mConfig_avatar:cfg.avatar,$mConfig_skill:cfg.skill};
+const GlobalData={modChannelAllowed:(aid,key)=>cfg.mod_runtime?.heroes?.[aid]?.channels?.[key]!==false,$userData:profile,$mConfig_simple:cfg.system_simple,$mGuild_simple:cfg.association_simple,$mConfig_talent:cfg.talent,$mConfig_avatar:cfg.avatar,$mConfig_skill:cfg.skill};
 const GameMap={currentMap:null};
 const GlobalFunction={setOtherCfgAvatar:()=>{throw Error('stale owned DN snapshot was used');}};
 function attach(unit,definitions){for(const [name,[params,body]] of Object.entries(definitions))unit[name]=eval('(function('+params+'){with(this){'+body+String.fromCharCode(10)+'}})');return unit;}
@@ -92,7 +92,7 @@ for(let [slot,id] of profile.team[0].entries()){
  unit.initFightAttr();
  out.push({id,hp:unit.getHpMax(),ap:unit.getDamage(),de_ph:unit.getDePh(),de_ma:unit.getDeMa(),
  speed:unit.getSpeed(),range:unit.getRange(),hit:unit.hit,flee:unit.flee,crit:unit.crit,tough:unit.tough,
- power:unit.getPower(slot===0,-1,true),beforeInitPower:barePower});
+ power:unit.getPower(slot===0,-1,true),beforeInitPower:barePower,skillId:unit.skill0?.skillSetData.id,captainId:unit.skill1?.skillSetData.id});
 }
 console.log(JSON.stringify({units:out,dn:bonus}));
 '''
@@ -147,6 +147,7 @@ class StatPower103Tests(unittest.TestCase):
 
     def native(self, profile, cfg):
         selected = {key:cfg[key] for key in ('system_simple','association_simple','avatar','equip','skill','talent')}
+        selected['mod_runtime']=cfg.get('mod_runtime',{})
         payload = {'cfg':selected,'profile':profile,'avatarMethods':self.avatar_methods,'equipMethods':self.equip_methods,
                    'skillMethods':self.skill_methods,'dnMethods':self.dn_methods,'talentMethods':self.talent_methods,
                    'projectionMethods':self.projection_methods}

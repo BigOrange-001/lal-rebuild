@@ -58,6 +58,7 @@ const GameMap={roundNum:0,actionDelay:0,currentMap:{roundNum:0,getAliveList(side
             if name in ('executeCatSkin','executePolarSkin','executeSantaSkin','executeNurseSkin'):
                 # Skill doubles expose the current node, matching the native API.
                 body='if(sourceSkill && !sourceSkill.getNativeAction) sourceSkill.getNativeAction=function(){return this.skills[0]||[];};'+body
+                body='if(sourceSkill && !sourceSkill.getNativeSetting) sourceSkill.getNativeSetting=function(k,f){return this[k] == null ? f : this[k];};'+body
             body=re.sub(r'for each\s*\(([^)]+) in ([^)]+)\)',r'for (\1 of \2)',body)
             body=re.sub(r'function\(([^)]*)\)',lambda m:'function('+re.sub(r':\w+','',m[1])+')',body)
             script+=f'unit.{name}=function({args}){{with(this){{{body}}}}};\n'

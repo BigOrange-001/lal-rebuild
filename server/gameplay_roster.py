@@ -2433,8 +2433,8 @@ class GameplayRosterEquipment:
         equip_simple = self.simple
         equip_cfg = equip_simple.get("equip_config", [])
         equip_wash = equip_simple.get("equipwash", [])
-        slot = (None if hero_only else next((i for squad in profile.get("team", [])
-                  for i, member in enumerate(squad) if member == key), None))
+        from equipment_bonds_104 import equipment_slot
+        slot = None if hero_only else equipment_slot(profile, key)
         book_skill = None
         symp_counts = [0, 0, 0, 0]
         if slot is not None and slot < len(groups):

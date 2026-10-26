@@ -66,6 +66,10 @@ def apply_skill_output_104(document):
             for replacement in combinations.values():
                 for key,value in replacement.items():
                     if value==sid:replacement[key]=private
+        for aid,sources in cfg['system_simple'].get('bond_skill_sources_104',{}).items():
+            if aid in heroes:
+                for field,value in list(sources.items()):
+                    if value==sid:sources[field]=private
         # Equipment lookup must follow the hero-private skill reference too.
         for aid,mapping in cfg['system_simple'].get('equipment_skill_variants_104',{}).items():
             if aid in heroes and sid in mapping:mapping[private]=mapping.pop(sid)

@@ -551,16 +551,17 @@ class SkillCompleteBattle(ReferenceBattle):
         if owner.get('hp',0)<=0:return False
         allies=[u for u in (self.a if self._team_number(owner)==1 else self.b) if u.get('hp',0)>0]
         if not allies:return False
+        rate=self._factor(self._config.get('skill',{}).get(skill.get('skid'),{}).get('manualEffectMultiplier'))
         if kind=='nurse_n':
             for target in allies:self._add_buff(target,'purify',1)
-            amount=_to_int(self._ap_with_talent(owner)*float(skill['skills'][0][4])*self.hero_output_rate_104(owner))
+            amount=_to_int(self._ap_with_talent(owner)*float(skill['skills'][0][4])*rate*self.hero_output_rate_104(owner))
             for target in allies:
                 if target.get('hp',0)<=0:continue
                 self._injured(target,amount,4,source=owner)
         else:
             # Select once; healing the first target must not retarget the second.
             primary=min(allies,key=lambda u:u['hp']/max(1,u['hp_max']))
-            amount=_to_int(owner['hp_max']*.5*self.hero_output_rate_104(owner))
+            amount=_to_int(owner['hp_max']*.5*rate*self.hero_output_rate_104(owner))
             for target in (primary,owner):
                 if owner.get('hp',0)<=0:break
                 if target.get('hp',0)<=0:continue

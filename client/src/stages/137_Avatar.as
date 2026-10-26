@@ -59,6 +59,7 @@ package com.meng52.game.module.avatar
          var snapshot:Array = mData && mData.bonds_104 is Array ? mData.bonds_104 as Array : null;
          if(snapshot == null)
          {
+            if(!GlobalData.modChannelAllowed(aid,"usage.destiny")) return result;
             if(!roster || !roster.team || !roster.avatars || isOthers) return result;
             var selected:int = roster.attrs && roster.attrs.team_num != null ? int(roster.attrs.team_num) : 0;
             var lineup:Array = bondLineup104 != null ? bondLineup104 : roster.team[selected] as Array;
@@ -73,7 +74,11 @@ package com.meng52.game.module.avatar
             for each(var iid:Object in ids)
             {
                var hero:Object = roster.avatars[String(iid)];
-               if(hero) aids.push(String(hero.aid != null ? hero.aid : iid).split("|")[0]);
+               if(hero)
+               {
+                  var candidateAid:String = String(hero.aid != null ? hero.aid : iid).split("|")[0];
+                  if(GlobalData.modChannelAllowed(candidateAid,"usage.destiny")) aids.push(candidateAid);
+               }
             }
          }
          for each(var bond:Object in definitions)
@@ -173,8 +178,10 @@ package com.meng52.game.module.avatar
          var all:Object = GlobalData.$mConfig_simple.bond_skill_variants_104;
          var variants:Object = all ? all[avatarData.id] : null;
          var variant:Object = variants ? variants[keys.join("|")] : null;
-         var normal:String = variant && variant.skill ? String(variant.skill) : avatarData.skill0;
-         var captain:String = variant && variant.leader_skill ? String(variant.leader_skill) : avatarData.skill1;
+         var sourceTable:Object = GlobalData.$mConfig_simple.bond_skill_sources_104;
+         var sources:Object = sourceTable ? sourceTable[avatarData.id] : null;
+         var normal:String = variant && variant.skill && sources && sources.skill == avatarData.skill0 ? String(variant.skill) : avatarData.skill0;
+         var captain:String = variant && variant.leader_skill && sources && sources.leader_skill == avatarData.skill1 ? String(variant.leader_skill) : avatarData.skill1;
          normal = equipmentSkillId104(normal);
          captain = equipmentSkillId104(captain);
          var heroRow104:Object = GlobalData.$mConfig_avatar[avatarData.id];
@@ -1366,10 +1373,12 @@ package com.meng52.game.module.avatar
          if(allies.length == 0) return false;
          var target:Avatar;
          var amount:int;
+         var healingRate:Number = Number(sourceSkill.getNativeSetting("manualEffectMultiplier",1));
+         if(!isFinite(healingRate) || healingRate <= 0) healingRate = 1;
          if(kind == "nurse_n")
          {
             for each(target in allies) if(target.hp > 0) target.addBuff("purify",1);
-            amount = Tools.toInt(Tools.toInt(getDamage()*(1+checkTalent(1)))*Number(sourceSkill.getNativeAction()[4]));
+            amount = Tools.toInt(Tools.toInt(getDamage()*(1+checkTalent(1)))*Number(sourceSkill.getNativeAction()[4])*healingRate*heroSkillOutputRate104());
             for each(target in allies)
             {
                if(target.hp <= 0) continue;
@@ -1381,7 +1390,7 @@ package com.meng52.game.module.avatar
             var primary:Avatar = allies[0];
             for each(target in allies)
                if(Number(target.hp)/Math.max(1,target.hpMax) < Number(primary.hp)/Math.max(1,primary.hpMax)) primary = target;
-            amount = Tools.toInt(hpMax*0.5*heroSkillOutputRate104());
+            amount = Tools.toInt(hpMax*0.5*healingRate*heroSkillOutputRate104());
             // Keep both entries when the most injured target is this caster.
             for each(target in [primary,this])
             {

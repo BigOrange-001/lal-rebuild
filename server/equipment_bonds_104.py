@@ -17,13 +17,17 @@ def equipped_bonds(cfg,aid,eids):
     return [r for r in cfg.get('system_simple',{}).get('equipment_bonds_104',{}).get(aid,[]) if r['equipment'] in owned]
 
 
-def profile_equipment_bonds(cfg,profile,iid,hero_only=False):
-    if hero_only:return []
-    aid=str(profile.get('avatars',{}).get(iid,{}).get('aid',iid)).split('|')[0]
+def equipment_slot(profile,iid):
     selected=int(profile.get('attrs',{}).get('team_num',0))
     teams=profile.get('team',[])
     ordered=([teams[selected]] if 0<=selected<len(teams) else [])+[t for i,t in enumerate(teams) if i!=selected]
-    slot=next((t.index(iid) for t in ordered if iid in t),None)
+    return next((t.index(iid) for t in ordered if iid in t),None)
+
+
+def profile_equipment_bonds(cfg,profile,iid,hero_only=False):
+    if hero_only:return []
+    aid=str(profile.get('avatars',{}).get(iid,{}).get('aid',iid)).split('|')[0]
+    slot=equipment_slot(profile,iid)
     groups=profile.get('as_equips',[])
     if slot is None or slot>=len(groups):return []
     eids=[profile.get('my_equips',{}).get(eq,{}).get('eid') for eq in groups[slot] or []]

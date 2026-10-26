@@ -69,6 +69,8 @@ package com.meng52.game.module.skill
 
       public var value:Number;
 
+      public var poisonHpRate104:Number = 1;
+
       private var m_do:DisplayObject;
 
       public function Buff(param1:String, param2:int, param3:Number = 0)

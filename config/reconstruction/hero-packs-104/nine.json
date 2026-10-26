@@ -1,0 +1,5409 @@
+{
+  "assets": [],
+  "data": {
+    "heroes": {
+      "heroes": [
+        {
+          "actionType": "cunning",
+          "attackRange": 318,
+          "baseStats": {
+            "attack": 1272,
+            "health": 4330,
+            "magicDefense": 286,
+            "physicalDefense": 288
+          },
+          "damageType": "magic",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 51.91836734693877,
+            "health": 176.73469387755102,
+            "magicDefense": 11.673469387755102,
+            "physicalDefense": 11.755102040816327
+          },
+          "id": "kassadin_shadow",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 23,
+          "levelCap": 99,
+          "name": "卡萨丁分身",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_1134_5",
+            "portrait": "builtin:portrait/A_1134_5",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 5,
+          "signType": "attack",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/kassadin_normal",
+            "passive": "self:skill/kassadin_passive"
+          },
+          "speed": 250,
+          "unitType": "summon",
+          "variant": "quality5"
+        },
+        {
+          "actionType": "cunning",
+          "attackRange": 318,
+          "baseStats": {
+            "attack": 2544,
+            "health": 8660,
+            "magicDefense": 571,
+            "physicalDefense": 576
+          },
+          "damageType": "magic",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 103.83673469387755,
+            "health": 353.46938775510205,
+            "magicDefense": 23.306122448979593,
+            "physicalDefense": 23.510204081632654
+          },
+          "id": "kassadin_shadow",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 45,
+          "levelCap": 99,
+          "name": "卡萨丁分身",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_1134_6",
+            "portrait": "builtin:portrait/A_1134_6",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 6,
+          "signType": "attack",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/kassadin_normal",
+            "passive": "self:skill/kassadin_passive"
+          },
+          "speed": 250,
+          "unitType": "summon",
+          "variant": "quality6"
+        },
+        {
+          "actionType": "sly",
+          "attackRange": 600,
+          "baseStats": {
+            "attack": 739,
+            "health": 2323,
+            "magicDefense": 428,
+            "physicalDefense": 224
+          },
+          "damageType": "true",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 89,
+            "health": 279,
+            "magicDefense": 51,
+            "physicalDefense": 27
+          },
+          "id": "malzahar_voidling",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 18,
+          "levelCap": 1,
+          "name": "虚灵",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_2013_5",
+            "portrait": "builtin:portrait/A_2013_5",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 5,
+          "signType": "attack",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/voidling_normal",
+            "passive": null
+          },
+          "speed": 400,
+          "unitType": "summon",
+          "variant": "quality5"
+        },
+        {
+          "actionType": "cunning",
+          "attackRange": 300,
+          "baseStats": {
+            "attack": 1494.15,
+            "health": 4221.0,
+            "magicDefense": 289.8,
+            "physicalDefense": 539.7
+          },
+          "damageType": "physical",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 60.9857142857,
+            "health": 172.2857142857,
+            "magicDefense": 11.8285714286,
+            "physicalDefense": 22.0285714286
+          },
+          "id": "zed_shadow",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 29,
+          "levelCap": 99,
+          "name": "劫的衍生分身",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_1132_5",
+            "portrait": "builtin:portrait/A_1132_5",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 5,
+          "signType": "tank",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/zed_normal_q5",
+            "passive": null
+          },
+          "speed": 350,
+          "unitType": "summon",
+          "variant": "quality5"
+        },
+        {
+          "actionType": "cunning",
+          "attackRange": 300,
+          "baseStats": {
+            "attack": 2989.35,
+            "health": 8442.0,
+            "magicDefense": 579.6,
+            "physicalDefense": 1079.4
+          },
+          "damageType": "physical",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 122.0142857143,
+            "health": 344.5714285714,
+            "magicDefense": 23.6571428571,
+            "physicalDefense": 44.0571428571
+          },
+          "id": "zed_shadow",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 55,
+          "levelCap": 99,
+          "name": "劫的衍生分身",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_1132_6",
+            "portrait": "builtin:portrait/A_1132_6",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 6,
+          "signType": "tank",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/zed_normal_q6",
+            "passive": null
+          },
+          "speed": 350,
+          "unitType": "summon",
+          "variant": "quality6"
+        },
+        {
+          "actionType": "cunning",
+          "attackRange": 688,
+          "baseStats": {
+            "attack": 1195,
+            "health": 6873,
+            "magicDefense": 472,
+            "physicalDefense": 445
+          },
+          "damageType": "physical",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 48.775510204081634,
+            "health": 280.53061224489795,
+            "magicDefense": 19.26530612244898,
+            "physicalDefense": 18.163265306122447
+          },
+          "id": "vayne_shadow",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 26,
+          "levelCap": 99,
+          "name": "猎手薇恩分身",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_1223_5",
+            "portrait": "builtin:portrait/A_1223_5",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 5,
+          "signType": "assist",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/vayne_normal",
+            "passive": null
+          },
+          "speed": 245,
+          "unitType": "summon",
+          "variant": "quality5"
+        },
+        {
+          "actionType": "cunning",
+          "attackRange": 688,
+          "baseStats": {
+            "attack": 2389,
+            "health": 13747,
+            "magicDefense": 944,
+            "physicalDefense": 890
+          },
+          "damageType": "physical",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 97.51020408163265,
+            "health": 561.1020408163265,
+            "magicDefense": 38.53061224489796,
+            "physicalDefense": 36.326530612244895
+          },
+          "id": "vayne_shadow",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 50,
+          "levelCap": 99,
+          "name": "猎手薇恩分身",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_1223_6",
+            "portrait": "builtin:portrait/A_1223_6",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 6,
+          "signType": "assist",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/vayne_normal",
+            "passive": null
+          },
+          "speed": 245,
+          "unitType": "summon",
+          "variant": "quality6"
+        },
+        {
+          "actionType": "sly",
+          "attackRange": 600,
+          "baseStats": {
+            "attack": 1848,
+            "health": 5807,
+            "magicDefense": 1069,
+            "physicalDefense": 560
+          },
+          "damageType": "physical",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 222,
+            "health": 697,
+            "magicDefense": 128,
+            "physicalDefense": 67
+          },
+          "id": "white_green_snake",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 31,
+          "levelCap": 1,
+          "name": "青蛇",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_2025_6",
+            "portrait": "builtin:portrait/A_2025_6",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 6,
+          "signType": "attack",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/green_snake_normal",
+            "passive": "self:skill/green_snake_passive"
+          },
+          "speed": 250,
+          "unitType": "summon",
+          "variant": "quality6"
+        },
+        {
+          "actionType": "cunning",
+          "attackRange": 688,
+          "baseStats": {
+            "attack": 1840.8,
+            "health": 6393.6,
+            "magicDefense": 796.8,
+            "physicalDefense": 660
+          },
+          "damageType": "magic",
+          "description": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+          "growth": {
+            "attack": 220.8,
+            "health": 766.8,
+            "magicDefense": 96,
+            "physicalDefense": 79.2
+          },
+          "id": "teemo_mushroom",
+          "integrationDefaults": {
+            "acquisition.drop.activity": false,
+            "acquisition.drop.campaign": false,
+            "acquisition.drop.tower_hero": false,
+            "acquisition.drop.tower_soul": false,
+            "acquisition.exchange.activity": false,
+            "acquisition.exchange.hero": false,
+            "acquisition.shop.hero_soul": false,
+            "acquisition.summon.activity": false,
+            "acquisition.summon.advanced": false,
+            "acquisition.summon.normal": false,
+            "appearance.arena_enemy": false,
+            "appearance.assist_bot": false,
+            "appearance.campaign_random_enemy": false,
+            "appearance.expedition_enemy": false,
+            "appearance.exploration_enemy": false,
+            "appearance.fragment_enemy": false,
+            "usage.auxiliary_formation": false,
+            "usage.destiny": false,
+            "usage.friend_assist": false
+          },
+          "leadership": 12,
+          "levelCap": 1,
+          "name": "超人蘑菇",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_2018_2",
+            "portrait": "builtin:portrait/A_2018_2",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 2,
+          "signType": "assist",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/mushroom_normal",
+            "passive": null
+          },
+          "speed": 245,
+          "unitType": "summon",
+          "variant": "quality2"
+        }
+      ]
+    },
+    "patches": {
+      "patches": [
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "41d3c6149416a3ce27433e8c32f4bf3aeb7796496bde6c60172c35f05fe040b6"
+          },
+          "id": "patch_A_1134_5",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null,
+                  null
+                ],
+                "actionTargetLocks": [
+                  null,
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1,
+                  1
+                ],
+                "actionTargetPolicies": [
+                  null,
+                  "ally_self"
+                ],
+                "actionTargetPolicyArgs": [
+                  null,
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_621134_5",
+                "info": "普通技能：对本分路600范围内的当前目标造成137.4817%面板魔法伤害并沉默1回合；为自身提供攻击面板206.223%的护盾，持续2回合。准备1，冷却3。",
+                "name": "虚空脉冲",
+                "pl": [
+                  1,
+                  3,
+                  600,
+                  0,
+                  0,
+                  0
+                ],
+                "rankInfoTemplate": "普通技能：对本分路600范围内的当前目标造成137.4817%面板魔法伤害并沉默1回合；为自身提供攻击面板{rank:1:1}的护盾，持续2回合。准备1，冷却3。",
+                "res": "S_205134_5",
+                "skill": [
+                  [
+                    "silence",
+                    1.3748168,
+                    2,
+                    1,
+                    "FX_S9110_SNARE"
+                  ],
+                  [
+                    "shield",
+                    2.0622252,
+                    2,
+                    "FX_S9002_SHIELD"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    1,
+                    1,
+                    0.2291361333
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/kassadin_normal"
+            },
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null,
+                  "kassadin_primary",
+                  null,
+                  "kassadin_nearby",
+                  null,
+                  null
+                ],
+                "actionTargetLocks": [
+                  null,
+                  null,
+                  1,
+                  null,
+                  null,
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1,
+                  1,
+                  1,
+                  2,
+                  1,
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "ally_self",
+                  null,
+                  null,
+                  "enemy_lane_all_in_radius",
+                  "ally_self",
+                  null
+                ],
+                "actionTargetPolicyArgs": [
+                  null,
+                  null,
+                  {
+                    "centerActionIndex": 1,
+                    "radius": 0
+                  },
+                  {
+                    "centerActionIndex": 1,
+                    "distinctFromActionIndices": [
+                      1
+                    ],
+                    "radius": 200,
+                    "sortBy": "nearest"
+                  },
+                  null,
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_631134_5",
+                "info": "队长技能：先为自身增加600点精准，持续1回合；突进至本分路550范围内的当前目标面前，对其及附近200范围内最多2名敌人各造成247.467%面板魔法伤害，随后为自身提供攻击面板180.4447%的护盾，持续1回合，为自身叠加一个提升38.6667%攻击力面板的buff 持续4回合 每层的持续时间独立计算 也就是没被控可以叠4层。准备4，冷却0。 释放距离：1500。",
+                "name": "虚空行走",
+                "pl": [
+                  4,
+                  0,
+                  1500,
+                  0,
+                  0,
+                  0
+                ],
+                "res": "S_305134_5",
+                "skill": [
+                  [
+                    "stat_flat",
+                    "hit",
+                    1546.6689,
+                    1,
+                    "FX60_HIT"
+                  ],
+                  [
+                    "move_to_target_lane",
+                    "enemy_lane_frontmost",
+                    0,
+                    200,
+                    "FX_S9002_DASH"
+                  ],
+                  [
+                    "damage",
+                    2.47467024,
+                    2,
+                    "FX_A_1134_MAGIC"
+                  ],
+                  [
+                    "damage",
+                    2.47467024,
+                    2,
+                    "FX_A_1134_MAGIC"
+                  ],
+                  [
+                    "shield",
+                    1.80444705,
+                    1,
+                    "FX60_SHIELD"
+                  ],
+                  [
+                    "timed_stack",
+                    "attack",
+                    0.386667225,
+                    4,
+                    4,
+                    "FX60_STRONG"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/kassadin_captain_q5"
+            },
+            {
+              "expect": null,
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/kassadin_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1134_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "41d3c6149416a3ce27433e8c32f4bf3aeb7796496bde6c60172c35f05fe040b6"
+          },
+          "id": "patch_A_1134_6",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null,
+                  null
+                ],
+                "actionTargetLocks": [
+                  null,
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1,
+                  1
+                ],
+                "actionTargetPolicies": [
+                  null,
+                  "ally_self"
+                ],
+                "actionTargetPolicyArgs": [
+                  null,
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_621134_6",
+                "info": "普通技能：对本分路600范围内的当前目标造成137.4817%面板魔法伤害并沉默1回合；为自身提供攻击面板206.223%的护盾，持续2回合。准备1，冷却3。",
+                "name": "虚空脉冲",
+                "pl": [
+                  1,
+                  3,
+                  600,
+                  0,
+                  0,
+                  0
+                ],
+                "rankInfoTemplate": "普通技能：对本分路600范围内的当前目标造成137.4817%面板魔法伤害并沉默1回合；为自身提供攻击面板{rank:1:1}的护盾，持续2回合。准备1，冷却3。",
+                "res": "S_205134_6",
+                "skill": [
+                  [
+                    "silence",
+                    1.3748168,
+                    2,
+                    1,
+                    "FX_S9110_SNARE"
+                  ],
+                  [
+                    "shield",
+                    2.0622252,
+                    2,
+                    "FX_S9002_SHIELD"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    1,
+                    1,
+                    0.2291361333
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/kassadin_normal"
+            },
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null,
+                  "kassadin_primary",
+                  null,
+                  "kassadin_nearby",
+                  null,
+                  null
+                ],
+                "actionTargetLocks": [
+                  null,
+                  null,
+                  1,
+                  null,
+                  null,
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1,
+                  1,
+                  1,
+                  2,
+                  1,
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "ally_self",
+                  null,
+                  null,
+                  "enemy_lane_all_in_radius",
+                  "ally_self",
+                  null
+                ],
+                "actionTargetPolicyArgs": [
+                  null,
+                  null,
+                  {
+                    "centerActionIndex": 1,
+                    "radius": 0
+                  },
+                  {
+                    "centerActionIndex": 1,
+                    "distinctFromActionIndices": [
+                      1
+                    ],
+                    "radius": 200,
+                    "sortBy": "nearest"
+                  },
+                  null,
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_631134_6",
+                "info": "队长技能：先为自身增加7733.34点精准，持续1回合；突进至本分路550范围内的当前目标面前，对其及附近200范围内最多2名敌人各造成247.467%面板魔法伤害，随后为自身提供攻击面板180.4447%的护盾，持续1回合，为自身叠加一个提升38.6667%攻击力面板的buff 持续4回合 每层的持续时间独立计算 也就是没被控可以叠4层。准备4，冷却0。 释放距离：1500。",
+                "name": "虚空行走",
+                "pl": [
+                  4,
+                  0,
+                  1500,
+                  0,
+                  0,
+                  0
+                ],
+                "rankInfoTemplate": "队长技能：先为自身增加{flat:0:2}点精准，持续1回合；突进至本分路550范围内的当前目标面前，对其及附近200范围内最多2名敌人各造成247.467%面板魔法伤害，随后为自身提供攻击面板180.4447%的护盾，持续1回合，为自身叠加一个提升38.6667%攻击力面板的buff 持续4回合 每层的持续时间独立计算 也就是没被控可以叠4层。准备4，冷却0。 释放距离：1500。",
+                "res": "S_305134_6",
+                "skill": [
+                  [
+                    "stat_flat",
+                    "hit",
+                    7733.3445,
+                    1,
+                    "FX60_HIT"
+                  ],
+                  [
+                    "move_to_target_lane",
+                    "enemy_lane_frontmost",
+                    0,
+                    200,
+                    "FX_S9002_DASH"
+                  ],
+                  [
+                    "damage",
+                    2.47467024,
+                    2,
+                    "FX_A_1134_MAGIC"
+                  ],
+                  [
+                    "damage",
+                    2.47467024,
+                    2,
+                    "FX_A_1134_MAGIC"
+                  ],
+                  [
+                    "shield",
+                    1.80444705,
+                    1,
+                    "FX60_SHIELD"
+                  ],
+                  [
+                    "timed_stack",
+                    "attack",
+                    0.386667225,
+                    4,
+                    4,
+                    "FX60_STRONG"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/kassadin_captain_q6"
+            },
+            {
+              "expect": null,
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/kassadin_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1134_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "34ef8dac1bd8ed1f8976c7bade9d2bc17d3f5b69442f9a70f4574c32c72245ec"
+          },
+          "id": "patch_A_1103_4",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "dotPhantasmRule": true,
+                "dotRule": true,
+                "id": "S_641103_4",
+                "info": "对本分路的当前目标施加幻象，接下来3次目标自身行动开始时，每次结算施加时攻击力52.7184%的独立持续伤害。目标真正阵亡时，将剩余次数转移给其300范围内最近的另一名同阵营敌人；每次初始施放最多传播一次，不重置剩余次数和伤害快照。准备1，冷却2。 本分路内不受施法距离限制。 幻象无视双防，对护盾造成3倍伤害；破盾溢出按原伤害额度扣血。",
+                "manualDamageMultiplier": 0.43932024,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 0.5491503,
+                "name": "煞星幻象",
+                "pl": [
+                  1,
+                  2,
+                  600,
+                  0,
+                  0,
+                  1
+                ],
+                "rankInfoTemplate": "对本分路的当前目标施加幻象，接下来3次目标自身行动开始时，每次结算施加时攻击力{scale:0.0:43.932024}的独立持续伤害。目标真正阵亡时，将剩余次数转移给其300范围内最近的另一名同阵营敌人；每次初始施放最多传播一次，不重置剩余次数和伤害快照。准备1，冷却2。 本分路内不受施法距离限制。 幻象无视双防，对护盾造成3倍伤害；破盾溢出按原伤害额度扣血。",
+                "res": "S_22551103_4",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "malzahar_n",
+                    1.2,
+                    "FX_A_1103_MAGIC"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    2,
+                    0.1333333333
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/malzahar_normal"
+            },
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_651103_4",
+                "info": "对本分路的当前目标造成158.1553%魔法伤害并眩晕2回合；召唤两只虚灵，各继承自身攻击、生命上限和双防的28.8304%，攻击范围125，无技能，存在2次自身行动。原目标仍合法时，虚灵优先攻击它，否则正常选敌。准备2，冷却2。 本分路内不受施法距离限制。",
+                "manualDamageMultiplier": 0.65898036,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 0.82372545,
+                "name": "冥府之握",
+                "pl": [
+                  2,
+                  2,
+                  650,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_32551103_4",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "malzahar_c",
+                    1.0,
+                    "FX_A_1103_MAGIC"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/malzahar_captain"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1103_4"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "34ef8dac1bd8ed1f8976c7bade9d2bc17d3f5b69442f9a70f4574c32c72245ec"
+          },
+          "id": "patch_A_1103_5",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "dotPhantasmRule": true,
+                "dotRule": true,
+                "id": "S_641103_5",
+                "info": "对本分路的当前目标施加幻象，接下来3次目标自身行动开始时，每次结算施加时攻击力52.7184%的独立持续伤害。目标真正阵亡时，将剩余次数转移给其300范围内最近的另一名同阵营敌人；每次初始施放最多传播一次，不重置剩余次数和伤害快照。准备1，冷却2。 本分路内不受施法距离限制。 幻象无视双防，对护盾造成3倍伤害；破盾溢出按原伤害额度扣血。",
+                "manualDamageMultiplier": 0.43932024,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 0.5491503,
+                "name": "煞星幻象",
+                "pl": [
+                  1,
+                  2,
+                  600,
+                  0,
+                  0,
+                  1
+                ],
+                "rankInfoTemplate": "对本分路的当前目标施加幻象，接下来3次目标自身行动开始时，每次结算施加时攻击力{scale:0.0:43.932024}的独立持续伤害。目标真正阵亡时，将剩余次数转移给其300范围内最近的另一名同阵营敌人；每次初始施放最多传播一次，不重置剩余次数和伤害快照。准备1，冷却2。 本分路内不受施法距离限制。 幻象无视双防，对护盾造成3倍伤害；破盾溢出按原伤害额度扣血。",
+                "res": "S_22551103_5",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "malzahar_n",
+                    1.2,
+                    "FX_A_1103_MAGIC"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    2,
+                    0.1333333333
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/malzahar_normal"
+            },
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_651103_5",
+                "info": "对本分路的当前目标造成158.1553%魔法伤害并眩晕2回合；召唤两只虚灵，各继承自身攻击、生命上限和双防的28.8304%，攻击范围125，无技能，存在2次自身行动。原目标仍合法时，虚灵优先攻击它，否则正常选敌。准备2，冷却2。 本分路内不受施法距离限制。",
+                "manualDamageMultiplier": 0.65898036,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 0.82372545,
+                "name": "冥府之握",
+                "pl": [
+                  2,
+                  2,
+                  650,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_32551103_5",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "malzahar_c",
+                    1.0,
+                    "FX_A_1103_MAGIC"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/malzahar_captain"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1103_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "34ef8dac1bd8ed1f8976c7bade9d2bc17d3f5b69442f9a70f4574c32c72245ec"
+          },
+          "id": "patch_A_1103_6",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "dotPhantasmRule": true,
+                "dotRule": true,
+                "id": "S_641103_6",
+                "info": "对本分路的当前目标施加幻象，接下来3次目标自身行动开始时，每次结算施加时攻击力52.7184%的独立持续伤害。目标真正阵亡时，将剩余次数转移给其300范围内最近的另一名同阵营敌人；每次初始施放最多传播一次，不重置剩余次数和伤害快照。准备1，冷却2。 本分路内不受施法距离限制。 幻象无视双防，对护盾造成3倍伤害；破盾溢出按原伤害额度扣血。",
+                "manualDamageMultiplier": 0.43932024,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 0.5491503,
+                "name": "煞星幻象",
+                "pl": [
+                  1,
+                  2,
+                  600,
+                  0,
+                  0,
+                  1
+                ],
+                "rankInfoTemplate": "对本分路的当前目标施加幻象，接下来3次目标自身行动开始时，每次结算施加时攻击力{scale:0.0:43.932024}的独立持续伤害。目标真正阵亡时，将剩余次数转移给其300范围内最近的另一名同阵营敌人；每次初始施放最多传播一次，不重置剩余次数和伤害快照。准备1，冷却2。 本分路内不受施法距离限制。 幻象无视双防，对护盾造成3倍伤害；破盾溢出按原伤害额度扣血。",
+                "res": "S_22551103_6",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "malzahar_n",
+                    1.2,
+                    "FX_A_1103_MAGIC"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    2,
+                    0.1333333333
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/malzahar_normal"
+            },
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_651103_6",
+                "info": "对本分路的当前目标造成158.1553%魔法伤害并眩晕2回合；召唤两只虚灵，各继承自身攻击、生命上限和双防的28.8304%，攻击范围125，无技能，存在2次自身行动。原目标仍合法时，虚灵优先攻击它，否则正常选敌。准备2，冷却2。 本分路内不受施法距离限制。",
+                "manualDamageMultiplier": 0.65898036,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 0.82372545,
+                "name": "冥府之握",
+                "pl": [
+                  2,
+                  2,
+                  650,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_32551103_6",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "malzahar_c",
+                    1.0,
+                    "FX_A_1103_MAGIC"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/malzahar_captain"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1103_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "0179c76a4cb7005f822ce5fb18439a530763e7f74ecf0c3c000cd407da230806"
+          },
+          "id": "patch_A_1139_5",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_87109707402527295_5",
+                "info": "冲向一名敌人，造成物理伤害并沉默1回合，同时为自身施加护盾。 本分路内不受施法距离限制。",
+                "name": "沉默打击",
+                "pl": [
+                  1,
+                  2,
+                  600,
+                  0,
+                  0,
+                  0
+                ],
+                "res": "S_9002_5",
+                "skill": [
+                  [
+                    "dash",
+                    200,
+                    "FX_S9002_DASH"
+                  ],
+                  [
+                    "silence",
+                    1.92471552,
+                    1,
+                    1,
+                    "FX_S9002_SILENCE"
+                  ],
+                  [
+                    "shield",
+                    0.6477408,
+                    1,
+                    "FX_S9002_SHIELD"
+                  ]
+                ],
+                "skillUp": [
+                  1,
+                  0.088833024
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/karma_normal"
+            },
+            {
+              "expect": {
+                "id": "S_87241201880994045_5",
+                "info": "对一名敌人造成大量物理伤害，可命中坚守型目标。 本分路内不受施法距离限制。 准备1、冷却2。",
+                "name": "正义裁决",
+                "pl": [
+                  1,
+                  2,
+                  3000,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_9003_5",
+                "skill": [
+                  [
+                    "damage",
+                    4.4416512,
+                    1,
+                    "FX_S9003_JUDGMENT"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/karma_captain"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1139_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "0179c76a4cb7005f822ce5fb18439a530763e7f74ecf0c3c000cd407da230806"
+          },
+          "id": "patch_A_1139_6",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_87154689875579814_6",
+                "info": "冲向一名敌人，造成物理伤害并沉默1回合，同时为自身施加护盾。 本分路内不受施法距离限制。",
+                "name": "沉默打击",
+                "pl": [
+                  1,
+                  2,
+                  600,
+                  0,
+                  0,
+                  0
+                ],
+                "res": "S_9002_6",
+                "skill": [
+                  [
+                    "dash",
+                    200,
+                    "FX_S9002_DASH"
+                  ],
+                  [
+                    "silence",
+                    1.92471552,
+                    1,
+                    1,
+                    "FX_S9002_SILENCE"
+                  ],
+                  [
+                    "shield",
+                    0.6477408,
+                    1,
+                    "FX_S9002_SHIELD"
+                  ]
+                ],
+                "skillUp": [
+                  1,
+                  0.088833024
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/karma_normal"
+            },
+            {
+              "expect": {
+                "id": "S_87253174807533569_6",
+                "info": "对一名敌人造成大量物理伤害，可命中坚守型目标。 本分路内不受施法距离限制。 准备1、冷却2。",
+                "name": "正义裁决",
+                "pl": [
+                  1,
+                  2,
+                  3000,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_9003_6",
+                "skill": [
+                  [
+                    "damage",
+                    4.4416512,
+                    1,
+                    "FX_S9003_JUDGMENT"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/karma_captain"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1139_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "6058b58aed496e9cd6ebfa774e4ed5cd8a0ac6d4a3c1ce69788e3dc6081eaaa2"
+          },
+          "id": "patch_A_1132_5",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  "marked_primary",
+                  "marked_primary"
+                ],
+                "actionTargetLocks": [
+                  null,
+                  0
+                ],
+                "actionTargetMaxTargets": [
+                  1,
+                  1
+                ],
+                "actionTargetPolicies": [
+                  null,
+                  null
+                ],
+                "actionTargetPolicyArgs": [
+                  null,
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_621132_5",
+                "info": "普通技能：对本分路600范围内的当前目标先施加104.5439%破甲，持续2回合，再连续造成200.724%面板物理伤害3次；随后向己方后退200码。准备1，冷却3。",
+                "name": "影刃斩",
+                "pl": [
+                  1,
+                  3,
+                  600,
+                  0,
+                  0,
+                  0
+                ],
+                "rankInfoTemplate": "普通技能：对本分路600范围内的当前目标先施加104.5439%破甲，持续2回合，再连续造成{rank:1:2}面板物理伤害3次；随后向己方后退200码。准备1，冷却3。",
+                "res": "S_205132_5",
+                "skill": [
+                  [
+                    "sunder",
+                    0,
+                    0,
+                    1.0454390625,
+                    2,
+                    "FX_S9170_SUNDER"
+                  ],
+                  [
+                    "locked_sequence",
+                    3,
+                    2.007243,
+                    2.007243,
+                    2.007243,
+                    1,
+                    0,
+                    "FX_A_1132_PHYSICAL"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    1,
+                    2,
+                    0.223027
+                  ],
+                  [
+                    1,
+                    3,
+                    0.223027
+                  ],
+                  [
+                    1,
+                    4,
+                    0.223027
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/zed_normal_q5"
+            },
+            {
+              "expect": null,
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/zed_passive_q5"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1132_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "6058b58aed496e9cd6ebfa774e4ed5cd8a0ac6d4a3c1ce69788e3dc6081eaaa2"
+          },
+          "id": "patch_A_1132_6",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  "marked_primary",
+                  "marked_primary"
+                ],
+                "actionTargetLocks": [
+                  null,
+                  0
+                ],
+                "actionTargetMaxTargets": [
+                  1,
+                  1
+                ],
+                "actionTargetPolicies": [
+                  null,
+                  null
+                ],
+                "actionTargetPolicyArgs": [
+                  null,
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_621132_6",
+                "info": "普通技能：对本分路600范围内的当前目标先施加104.5439%破甲，持续2回合，再连续造成200.724%面板物理伤害3次；随后向己方后退200码。准备1，冷却3。",
+                "name": "影刃斩",
+                "pl": [
+                  1,
+                  3,
+                  600,
+                  0,
+                  0,
+                  0
+                ],
+                "rankInfoTemplate": "普通技能：对本分路600范围内的当前目标先施加104.5439%破甲，持续2回合，再连续造成{rank:1:2}面板物理伤害3次；随后向己方后退200码。准备1，冷却3。",
+                "res": "S_205132_6",
+                "skill": [
+                  [
+                    "sunder",
+                    0,
+                    0,
+                    1.0454390625,
+                    2,
+                    "FX_S9170_SUNDER"
+                  ],
+                  [
+                    "locked_sequence",
+                    3,
+                    2.007243,
+                    2.007243,
+                    2.007243,
+                    1,
+                    0,
+                    "FX_A_1132_PHYSICAL"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    1,
+                    2,
+                    0.223027
+                  ],
+                  [
+                    1,
+                    3,
+                    0.223027
+                  ],
+                  [
+                    1,
+                    4,
+                    0.223027
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/zed_normal_q6"
+            },
+            {
+              "expect": null,
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/zed_passive_q6"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1132_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "3c8fe8fc9e8e30b10fdf712cd65d1689ed748ddccb001598fe5586141849548a"
+          },
+          "id": "patch_A_1223_5",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_201223_5",
+                "info": "连续攻击一名敌人2次，每次造成物理伤害。 本分路内不受施法距离限制。",
+                "name": "圣银弩箭",
+                "pl": [
+                  0,
+                  1,
+                  600,
+                  0,
+                  1,
+                  1
+                ],
+                "rankInfoTemplate": "连续攻击一名敌人2次，每次造成物理伤害。 本分路内不受施法距离限制。",
+                "res": "S_201223_5",
+                "skill": [
+                  [
+                    "combo",
+                    0.56,
+                    1,
+                    2,
+                    "FX_S9130_COMBO"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    1,
+                    0.0622222222
+                  ]
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/vayne_normal"
+            },
+            {
+              "expect": {
+                "id": "S_301223_5",
+                "info": "对一名敌人造成高额物理伤害并施加虚弱。 准备1、冷却2。",
+                "name": "终极时刻",
+                "pl": [
+                  1,
+                  2,
+                  4000,
+                  0,
+                  1,
+                  1
+                ],
+                "res": "S_301223_5",
+                "skill": [
+                  [
+                    "weak",
+                    3.0,
+                    1,
+                    0.15,
+                    1,
+                    "FX_S9150_WEAK"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/vayne_captain"
+            },
+            {
+              "expect": {
+                "id": "S_401223_5",
+                "info": "暴击后提高自身闪避，持续1回合。",
+                "name": "夜行追猎",
+                "pl": [
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_401223_5",
+                "skill": [
+                  [
+                    "fleeup",
+                    0.168,
+                    1,
+                    "FX_S9140_FLEE"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/vayne_passive_q5"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1223_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "3c8fe8fc9e8e30b10fdf712cd65d1689ed748ddccb001598fe5586141849548a"
+          },
+          "id": "patch_A_1223_6",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_201223_6",
+                "info": "连续攻击一名敌人2次，每次造成物理伤害。 本分路内不受施法距离限制。",
+                "name": "圣银弩箭",
+                "pl": [
+                  0,
+                  1,
+                  600,
+                  0,
+                  1,
+                  1
+                ],
+                "rankInfoTemplate": "连续攻击一名敌人2次，每次造成物理伤害。 本分路内不受施法距离限制。",
+                "res": "S_201223_6",
+                "skill": [
+                  [
+                    "combo",
+                    0.56,
+                    1,
+                    2,
+                    "FX_S9130_COMBO"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    1,
+                    0.0622222222
+                  ]
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/vayne_normal"
+            },
+            {
+              "expect": {
+                "id": "S_301223_6",
+                "info": "对一名敌人造成高额物理伤害并施加虚弱。 准备1、冷却2。",
+                "name": "终极时刻",
+                "pl": [
+                  1,
+                  2,
+                  4000,
+                  0,
+                  1,
+                  1
+                ],
+                "res": "S_301223_6",
+                "skill": [
+                  [
+                    "weak",
+                    3.0,
+                    1,
+                    0.15,
+                    1,
+                    "FX_S9150_WEAK"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/vayne_captain"
+            },
+            {
+              "expect": {
+                "id": "S_401223_6",
+                "info": "暴击后提高自身闪避，持续1回合。",
+                "name": "夜行追猎",
+                "pl": [
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_401223_6",
+                "skill": [
+                  [
+                    "fleeup",
+                    0.168,
+                    1,
+                    "FX_S9140_FLEE"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/vayne_passive_q6"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1223_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "14a7c0f0d1974ad44865a99e859a05a66591024a72d05e7ddac80e95de0967b5"
+          },
+          "id": "patch_A_1138_5",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_641138_5",
+                "info": "对500范围内的当前目标造成212.9713%魔法伤害并眩晕1回合；随后开启灰色生命，至自身下一次行动开始。期间把受到的有效生命伤害的64.5367%存为灰色生命，累计最多为自身生命上限32.2684%；到下次自身行动开始时，仍存活则将储存量转为持续2回合的护盾，并结束储存。准备0，冷却2。",
+                "manualDamageMultiplier": 1.9361025,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 1.61341875,
+                "name": "巨舌鞭笞",
+                "pl": [
+                  0,
+                  2,
+                  500,
+                  0,
+                  0,
+                  1
+                ],
+                "rankInfoTemplate": "对500范围内的当前目标造成{scale:0.0:212.971275}魔法伤害并眩晕1回合；随后开启灰色生命，至自身下一次行动开始。期间把受到的有效生命伤害的40%存为灰色生命，累计最多为自身生命上限20%；到下次自身行动开始时，仍存活则将储存量转为持续2回合的护盾，并结束储存。准备0，冷却2。",
+                "res": "S_22551138_5",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "tahm_n",
+                    1.0,
+                    "FX_A_1138_MAGIC"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    2,
+                    0.1111111111111111
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/tahm_normal"
+            },
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "ally_self"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_651138_5",
+                "info": "将500范围内生命比例最低的另一名友方英雄移至自己朝己方一侧100码处，为其提供387.2205%攻击力＋38.7221%自身生命上限的护盾和净化，均持续2回合；自己获得嘲讽和193.6103%双抗，持续2回合。没有其他合法友方英雄时，对自身提供同样护盾和净化，不发生位移。准备1，冷却2。",
+                "manualDamageMultiplier": 2.90415375,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 2.420128125,
+                "name": "吞吐救援",
+                "pl": [
+                  1,
+                  2,
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_32551138_5",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "tahm_c",
+                    1.0,
+                    "FX_A_1138_MAGIC"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/tahm_captain"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1138_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "14a7c0f0d1974ad44865a99e859a05a66591024a72d05e7ddac80e95de0967b5"
+          },
+          "id": "patch_A_1138_6",
+          "operations": [
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "enemy_lane_frontmost"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_641138_6",
+                "info": "对500范围内的当前目标造成212.9713%魔法伤害并眩晕1回合；随后开启灰色生命，至自身下一次行动开始。期间把受到的有效生命伤害的64.5367%存为灰色生命，累计最多为自身生命上限32.2684%；到下次自身行动开始时，仍存活则将储存量转为持续2回合的护盾，并结束储存。准备0，冷却2。",
+                "manualDamageMultiplier": 1.9361025,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 1.61341875,
+                "name": "巨舌鞭笞",
+                "pl": [
+                  0,
+                  2,
+                  500,
+                  0,
+                  0,
+                  1
+                ],
+                "rankInfoTemplate": "对500范围内的当前目标造成{scale:0.0:212.971275}魔法伤害并眩晕1回合；随后开启灰色生命，至自身下一次行动开始。期间把受到的有效生命伤害的40%存为灰色生命，累计最多为自身生命上限20%；到下次自身行动开始时，仍存活则将储存量转为持续2回合的护盾，并结束储存。准备0，冷却2。",
+                "res": "S_22551138_6",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "tahm_n",
+                    1.0,
+                    "FX_A_1138_MAGIC"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    2,
+                    0.1111111111111111
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/tahm_normal"
+            },
+            {
+              "expect": {
+                "actionTargetGroups": [
+                  null
+                ],
+                "actionTargetLocks": [
+                  null
+                ],
+                "actionTargetMaxTargets": [
+                  1
+                ],
+                "actionTargetPolicies": [
+                  "ally_self"
+                ],
+                "actionTargetPolicyArgs": [
+                  null
+                ],
+                "damageShareGroups": [],
+                "id": "S_651138_6",
+                "info": "将500范围内生命比例最低的另一名友方英雄移至自己朝己方一侧100码处，为其提供387.2205%攻击力＋38.7221%自身生命上限的护盾和净化，均持续2回合；自己获得嘲讽和193.6103%双抗，持续2回合。没有其他合法友方英雄时，对自身提供同样护盾和净化，不发生位移。准备1，冷却2。",
+                "manualDamageMultiplier": 2.90415375,
+                "manualDefenseBuffMultiplier": 2.0,
+                "manualEffectMultiplier": 2.420128125,
+                "name": "吞吐救援",
+                "pl": [
+                  1,
+                  2,
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_32551138_6",
+                "skill": [
+                  [
+                    "manual_ability",
+                    "tahm_c",
+                    1.0,
+                    "FX_A_1138_MAGIC"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/tahm_captain"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1138_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "539343c39485c947c5c98febcaae22eb44c1391c94c961fe5a6a77b3fba82f82"
+          },
+          "id": "patch_A_1222_5",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_201222_5",
+                "info": "远距离对同一路最多2名敌人造成魔法伤害。 本分路内不受施法距离限制。",
+                "name": "秘术射击",
+                "pl": [
+                  0,
+                  1,
+                  600,
+                  0,
+                  2,
+                  1
+                ],
+                "rankInfoTemplate": "远距离对同一路最多2名敌人造成魔法伤害。 本分路内不受施法距离限制。",
+                "res": "S_201222_5",
+                "skill": [
+                  [
+                    "damage",
+                    1.134,
+                    2,
+                    "FX_S9004_ARC"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    1,
+                    0.126
+                  ]
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/ezreal_normal"
+            },
+            {
+              "expect": {
+                "id": "S_301222_5",
+                "info": "对同一路最多3名敌人造成魔法伤害。 本分路内不受施法距离限制。 准备1、冷却2。",
+                "name": "精准弹幕",
+                "pl": [
+                  1,
+                  2,
+                  3000,
+                  0,
+                  3,
+                  1
+                ],
+                "res": "S_301222_5",
+                "skill": [
+                  [
+                    "damage",
+                    3.15,
+                    2,
+                    "FX_S9111_SHRAPNEL"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/ezreal_captain"
+            },
+            {
+              "expect": {
+                "id": "S_401222_5",
+                "info": "获得攻击强化后，对一名同路敌人追加一次魔法伤害。",
+                "name": "咒能高涨",
+                "pl": [
+                  0,
+                  2,
+                  3000,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_401222_5",
+                "skill": [
+                  [
+                    "damage",
+                    0.3528,
+                    2,
+                    "FX_S9000_LIGHTNING"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/ezreal_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1222_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "539343c39485c947c5c98febcaae22eb44c1391c94c961fe5a6a77b3fba82f82"
+          },
+          "id": "patch_A_1222_6",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_201222_6",
+                "info": "远距离对同一路最多2名敌人造成魔法伤害。 本分路内不受施法距离限制。",
+                "name": "秘术射击",
+                "pl": [
+                  0,
+                  1,
+                  600,
+                  0,
+                  2,
+                  1
+                ],
+                "rankInfoTemplate": "远距离对同一路最多2名敌人造成魔法伤害。 本分路内不受施法距离限制。",
+                "res": "S_201222_6",
+                "skill": [
+                  [
+                    "damage",
+                    1.134,
+                    2,
+                    "FX_S9004_ARC"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    1,
+                    0.126
+                  ]
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/ezreal_normal"
+            },
+            {
+              "expect": {
+                "id": "S_301222_6",
+                "info": "对同一路最多3名敌人造成魔法伤害。 本分路内不受施法距离限制。 准备1、冷却2。",
+                "name": "精准弹幕",
+                "pl": [
+                  1,
+                  2,
+                  3000,
+                  0,
+                  3,
+                  1
+                ],
+                "res": "S_301222_6",
+                "skill": [
+                  [
+                    "damage",
+                    3.15,
+                    2,
+                    "FX_S9111_SHRAPNEL"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/ezreal_captain"
+            },
+            {
+              "expect": {
+                "id": "S_401222_6",
+                "info": "获得攻击强化后，对一名同路敌人追加一次魔法伤害。",
+                "name": "咒能高涨",
+                "pl": [
+                  0,
+                  2,
+                  3000,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_401222_6",
+                "skill": [
+                  [
+                    "damage",
+                    0.3528,
+                    2,
+                    "FX_S9000_LIGHTNING"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/ezreal_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1222_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "a2328c2733fd7bb4badfdbe5a8d8ddb04ee45c3af66e6ad94dc5f7f780b998db"
+          },
+          "id": "patch_A_1227_5",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_87245482235879965_5",
+                "info": "对敌方3个目标造成魔法伤害。 本分路内不受施法距离限制。",
+                "name": "乱射",
+                "pl": [
+                  1,
+                  2,
+                  600,
+                  0,
+                  2,
+                  0
+                ],
+                "res": "S_9004_5",
+                "skill": [
+                  [
+                    "damage",
+                    2.45705616,
+                    2,
+                    "FX_S9004_ARC"
+                  ]
+                ],
+                "skillUp": [
+                  0,
+                  0.113402592
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/white_normal"
+            },
+            {
+              "expect": null,
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/white_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1227_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "695b21fbc8536092990085613a723eab4beaf6374754764de62b1132b624e8e3"
+          },
+          "id": "patch_A_1227_6",
+          "operations": [
+            {
+              "expect": {
+                "id": "S_8730193304360400_6",
+                "info": "对敌方3个目标造成魔法伤害。 本分路内不受施法距离限制。",
+                "name": "乱射",
+                "pl": [
+                  1,
+                  2,
+                  600,
+                  0,
+                  2,
+                  0
+                ],
+                "res": "S_9004_6",
+                "skill": [
+                  [
+                    "damage",
+                    2.45705616,
+                    2,
+                    "FX_S9004_ARC"
+                  ]
+                ],
+                "skillUp": [
+                  0,
+                  0.113402592
+                ]
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/white_normal"
+            },
+            {
+              "expect": null,
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/white_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1227_6"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "1a2d8c4ac28b29352d915cf1569e7c9b0e0ec46063cec680c296e37258f6cb7b"
+          },
+          "id": "patch_A_1309_5",
+          "operations": [
+            {
+              "expect": {
+                "dotRule": true,
+                "id": "S_201309_5",
+                "info": "对同一路最多2名敌人造成物理伤害并使其中毒2回合。 本分路内不受施法距离限制。\n中毒每次结算120%施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "name": "毒性射击",
+                "pl": [
+                  0,
+                  1,
+                  600,
+                  0,
+                  2,
+                  1
+                ],
+                "rankInfoTemplate": "对同一路最多2名敌人造成物理伤害并使其中毒2回合。 本分路内不受施法距离限制。\n中毒每次结算{rank:0:3}施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "res": "S_201309_5",
+                "skill": [
+                  [
+                    "poison",
+                    0.8,
+                    1,
+                    1.2,
+                    2,
+                    "FX_S9140_POISON"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    1,
+                    0.0888888889
+                  ],
+                  [
+                    0,
+                    3,
+                    0.1333333334
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/super_teemo_normal"
+            },
+            {
+              "expect": {
+                "dotRule": true,
+                "id": "S_301309_5",
+                "info": "使同一路最多3名敌人中毒2回合。 本分路内不受施法距离限制。 准备1、冷却2。\n中毒每次结算270%施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "name": "毒雾弹幕",
+                "pl": [
+                  1,
+                  2,
+                  3000,
+                  0,
+                  3,
+                  1
+                ],
+                "rankInfoTemplate": "使同一路最多3名敌人中毒2回合。 本分路内不受施法距离限制。 准备1、冷却2。\n中毒每次结算{rank:0:3}施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "res": "S_301309_5",
+                "skill": [
+                  [
+                    "poison",
+                    1.8,
+                    1,
+                    2.7,
+                    2,
+                    "FX_S9140_POISON"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/super_teemo_captain"
+            },
+            {
+              "expect": {
+                "id": "S_401309_5",
+                "info": "受到中毒时解除自身可净化的负面效果并提高闪避。",
+                "name": "防毒面具",
+                "pl": [
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_401309_5",
+                "skill": [
+                  [
+                    "purify",
+                    1,
+                    "FX_S9140_PURIFY"
+                  ],
+                  [
+                    "fleeup",
+                    0.144,
+                    1,
+                    "FX_S9140_FLEE"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/super_teemo_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1309_5"
+        },
+        {
+          "expect": {
+            "path": "name",
+            "sha256": "1a2d8c4ac28b29352d915cf1569e7c9b0e0ec46063cec680c296e37258f6cb7b"
+          },
+          "id": "patch_A_1309_6",
+          "operations": [
+            {
+              "expect": {
+                "dotRule": true,
+                "id": "S_201309_6",
+                "info": "对同一路最多2名敌人造成物理伤害并使其中毒2回合。 本分路内不受施法距离限制。\n中毒每次结算120%施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "name": "毒性射击",
+                "pl": [
+                  0,
+                  1,
+                  600,
+                  0,
+                  2,
+                  1
+                ],
+                "rankInfoTemplate": "对同一路最多2名敌人造成物理伤害并使其中毒2回合。 本分路内不受施法距离限制。\n中毒每次结算{rank:0:3}施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "res": "S_201309_6",
+                "skill": [
+                  [
+                    "poison",
+                    0.8,
+                    1,
+                    1.2,
+                    2,
+                    "FX_S9140_POISON"
+                  ]
+                ],
+                "skillUp": [
+                  [
+                    0,
+                    1,
+                    0.0888888889
+                  ],
+                  [
+                    0,
+                    3,
+                    0.1333333334
+                  ]
+                ],
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.normal",
+              "value": "self:skill/super_teemo_normal"
+            },
+            {
+              "expect": {
+                "dotRule": true,
+                "id": "S_301309_6",
+                "info": "使同一路最多3名敌人中毒2回合。 本分路内不受施法距离限制。 准备1、冷却2。\n中毒每次结算270%施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "name": "毒雾弹幕",
+                "pl": [
+                  1,
+                  2,
+                  3000,
+                  0,
+                  3,
+                  1
+                ],
+                "rankInfoTemplate": "使同一路最多3名敌人中毒2回合。 本分路内不受施法距离限制。 准备1、冷却2。\n中毒每次结算{rank:0:3}施加时攻击力，持续2次自身行动，每次另加目标生命上限5%。持续伤害无视物防和魔防。中毒期间受到伤害提高20%（不叠加）。",
+                "res": "S_301309_6",
+                "skill": [
+                  [
+                    "poison",
+                    1.8,
+                    1,
+                    2.7,
+                    2,
+                    "FX_S9140_POISON"
+                  ]
+                ],
+                "skillUp": null,
+                "skillUpPaths": []
+              },
+              "op": "replace",
+              "path": "skills.captain",
+              "value": "self:skill/super_teemo_captain"
+            },
+            {
+              "expect": {
+                "id": "S_401309_6",
+                "info": "受到中毒时解除自身可净化的负面效果并提高闪避。",
+                "name": "防毒面具",
+                "pl": [
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "res": "S_401309_6",
+                "skill": [
+                  [
+                    "purify",
+                    1,
+                    "FX_S9140_PURIFY"
+                  ],
+                  [
+                    "fleeup",
+                    0.144,
+                    1,
+                    "FX_S9140_FLEE"
+                  ]
+                ],
+                "skillUp": null
+              },
+              "op": "replace",
+              "path": "skills.passive",
+              "value": "self:skill/super_teemo_passive"
+            }
+          ],
+          "patchScopes": {
+            "arenaEnemy": true,
+            "assist": true,
+            "owned": true,
+            "pveEnemy": true,
+            "summoned": true
+          },
+          "target": "builtin:avatar/A_1309_6"
+        }
+      ]
+    },
+    "skills": {
+      "skills": [
+        {
+          "actions": [
+            {
+              "arguments": [
+                0.8,
+                2,
+                1,
+                "FX_S9110_SNARE"
+              ],
+              "origin": "builtin:skill/S_621134_6",
+              "type": "silence"
+            },
+            {
+              "arguments": [
+                1.5,
+                2,
+                "FX_S9002_SHIELD"
+              ],
+              "origin": "builtin:skill/S_401311_5",
+              "type": "caster_ap_shield"
+            }
+          ],
+          "description": "对本分路600范围内当前敌人造成80%攻击魔法伤害并沉默1回合；为自身提供150%攻击护盾，持续2回合。准备0，冷却0。",
+          "id": "kassadin_normal",
+          "model": "native-template-v1",
+          "name": "虚无黑洞",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                null,
+                "ally_self"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                0,
+                600,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "对本分路600范围内当前敌人造成{rank:0:1}攻击魔法伤害并沉默1回合；为自身提供{rank:1:1}攻击护盾，持续2回合。准备0，冷却0。",
+              "res": "S_205134_6",
+              "skillUp": [
+                [
+                  0,
+                  1,
+                  0.08888888888888889
+                ],
+                [
+                  1,
+                  1,
+                  0.16666666666666666
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_621134_6",
+            "sourceDigest": "60f96f9ebfdc2f9346df7908e5eabbf79ab077401f09974efe75bfc1e76efcb7"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                2,
+                "FX_S9140_PURIFY"
+              ],
+              "origin": "builtin:skill/S_401309_6",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                3,
+                2,
+                "FX60_STRONG"
+              ],
+              "origin": "builtin:skill/S_631053_5",
+              "type": "armor"
+            }
+          ],
+          "description": "自身回合开始时，若有护盾且技能就绪，获得净化2回合，物防与法防提高300%，持续2回合。准备0，冷却1。",
+          "id": "kassadin_passive",
+          "model": "native-template-v1",
+          "name": "虚空法王",
+          "nativeTemplate": {
+            "passiveTrigger": 11,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "ally_self",
+                "ally_self"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "自身回合开始时，若有护盾且技能就绪，获得净化{flat:0:1}回合，物防与法防提高{rank:1:1}，持续{flat:1:2}回合。准备0，冷却1。",
+              "res": "S_205134_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_621134_6",
+            "sourceDigest": "60f96f9ebfdc2f9346df7908e5eabbf79ab077401f09974efe75bfc1e76efcb7"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 5,
+              "maxAlive": 16,
+              "statRatio": 0.5,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/kassadin_shadow/quality5"
+            }
+          ],
+          "cooldown": 1,
+          "description": "在本分路召唤1个卡萨丁分身，继承召唤瞬间50%战斗面板，存活5次自身行动，同时最多16个。准备0，冷却1。",
+          "id": "kassadin_captain_q5",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "虚空行走",
+          "range": 0,
+          "rankInfoTemplate": "在本分路召唤1个卡萨丁分身，继承召唤瞬间{rank:0:12}战斗面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个。准备0，冷却1。",
+          "trigger": {
+            "kind": "ready"
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 5,
+              "maxAlive": 16,
+              "statRatio": 0.5,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/kassadin_shadow/quality6"
+            }
+          ],
+          "cooldown": 1,
+          "description": "在本分路召唤1个卡萨丁分身，继承召唤瞬间50%战斗面板，存活5次自身行动，同时最多16个。准备0，冷却1。",
+          "id": "kassadin_captain_q6",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "虚空行走",
+          "range": 0,
+          "rankInfoTemplate": "在本分路召唤1个卡萨丁分身，继承召唤瞬间{rank:0:12}战斗面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个。准备0，冷却1。",
+          "trigger": {
+            "kind": "ready"
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                0.8,
+                4,
+                "FX_S9160_POISON"
+              ],
+              "origin": "builtin:skill/S_201221_5",
+              "type": "burn"
+            }
+          ],
+          "description": "对本分路所有敌人施加灼烧，每次结算80%施加时攻击，持续4回合。准备0，冷却1。",
+          "id": "malzahar_normal",
+          "model": "native-template-v1",
+          "name": "虚无烈焰",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null
+              ],
+              "actionTargetLocks": [
+                null
+              ],
+              "actionTargetMaxTargets": [
+                100000
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_all"
+              ],
+              "actionTargetPolicyArgs": [
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                1,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "对本分路所有敌人施加灼烧，每次结算{rank:0:1}施加时攻击，持续{flat:0:2}回合。准备0，冷却1。",
+              "res": "S_201221_5",
+              "skillUp": [
+                [
+                  0,
+                  1,
+                  0.08888888888888889
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_201221_5",
+            "sourceDigest": "7643c0a55d4bddeb36b770655130bdc29345626cd42028895255bd7209962cb1"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                0.8,
+                4,
+                "FX_S9160_POISON"
+              ],
+              "origin": "builtin:skill/S_201221_5",
+              "type": "burn"
+            },
+            {
+              "arguments": [
+                0.1,
+                2,
+                2,
+                3,
+                "FX_S9140_POISON"
+              ],
+              "origin": "builtin:skill/S_201209_4",
+              "type": "poison"
+            }
+          ],
+          "description": "对本分路当前敌人施加80%攻击灼烧4回合，造成10%攻击魔法伤害并施加200%攻击中毒3回合；中毒沿用原版附加规则。准备0，冷却0。",
+          "id": "voidling_normal",
+          "model": "native-template-v1",
+          "name": "虚灵：灼烧与中毒",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                0
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "dotRule": true,
+              "pl": [
+                0,
+                0,
+                600,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "对本分路当前敌人施加{rank:0:1}攻击灼烧{flat:0:2}回合，造成{rank:1:1}攻击魔法伤害并施加{rank:1:3}攻击中毒{flat:1:4}回合；中毒沿用原版附加规则。准备0，冷却0。",
+              "res": "S_201209_4",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_201209_4",
+            "sourceDigest": "8ff4158925811e9bd4508542221c3db4a06e1fc30161bcd1eba193ea51f183fe"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 3,
+              "maxAlive": 16,
+              "statRatio": 0.4,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/malzahar_voidling/quality5"
+            }
+          ],
+          "cooldown": 1,
+          "description": "在本分路召唤1个虚灵，继承召唤瞬间40%战斗面板，存活3次自身行动，同时最多16个。准备0，冷却1。",
+          "id": "malzahar_captain",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "虚空召唤",
+          "range": 0,
+          "rankInfoTemplate": "在本分路召唤1个虚灵，继承召唤瞬间{rank:0:12}战斗面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个。准备0，冷却1。",
+          "trigger": {
+            "kind": "ready"
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                "FX60_WEAK"
+              ],
+              "origin": "builtin:skill/S_621137_5",
+              "type": "dispel_good"
+            },
+            {
+              "arguments": [
+                1.2,
+                2,
+                2,
+                "FX60_STUN"
+              ],
+              "origin": "builtin:skill/S_201007_2",
+              "type": "stun"
+            },
+            {
+              "arguments": [
+                0,
+                2,
+                0.5,
+                1,
+                "FX_S9140_POISON"
+              ],
+              "origin": "builtin:skill/S_201209_4",
+              "type": "poison"
+            }
+          ],
+          "description": "选择全场血量百分比最低的3名敌方单位（包括召唤物），驱散增益，造成120%攻击魔法伤害并眩晕2回合、中毒1回合；中毒每次结算50%攻击并沿用原版附加规则。眩晕按原生命中与闪避结算。准备0，冷却2。",
+          "id": "karma_normal",
+          "model": "native-template-v1",
+          "name": "梵咒",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                "karma_targets",
+                "karma_targets",
+                "karma_targets"
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                3,
+                3,
+                3
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_lowest_hp_ratio_any",
+                "enemy_lane_lowest_hp_ratio_any",
+                "enemy_lane_lowest_hp_ratio_any"
+              ],
+              "actionTargetPolicyArgs": [
+                {
+                  "laneFilter": "all"
+                },
+                {
+                  "laneFilter": "all"
+                },
+                {
+                  "laneFilter": "all"
+                }
+              ],
+              "damageShareGroups": [],
+              "dotRule": true,
+              "pl": [
+                0,
+                2,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "选择全场血量百分比最低的3名敌方单位（包括召唤物），驱散增益，造成{rank:1:1}攻击魔法伤害并眩晕{flat:1:3}回合、中毒{flat:2:4}回合；中毒每次结算{rank:2:3}攻击并沿用原版附加规则。眩晕按原生命中与闪避结算。准备0，冷却2。",
+              "res": "S_9002_6",
+              "skillUp": [
+                [
+                  1,
+                  1,
+                  0.13333333333333333
+                ],
+                [
+                  2,
+                  3,
+                  0.05555555555555555
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_87154689875579814_6",
+            "sourceDigest": "9540a37b51d2a37e539b7a3690dfb15e23712b9861969b63298eca3c5912ad14"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                3,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                3,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                0.5,
+                2,
+                "FX60_SHIELD"
+              ],
+              "origin": "builtin:skill/S_631018_3",
+              "type": "caster_hp_shield"
+            },
+            {
+              "arguments": [
+                0.5,
+                "FX60_GAREN_R"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            },
+            {
+              "arguments": [
+                4,
+                "FX60_GAREN_R"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            },
+            {
+              "arguments": [
+                0.3,
+                [
+                  4
+                ],
+                "FX60_HEAL"
+              ],
+              "origin": "builtin:skill/S_621022_5",
+              "type": "heal_damage_sum"
+            }
+          ],
+          "description": "为本分路全体友军连续施加2次净化，每次持续3回合，并提供卡尔玛最大生命50%的护盾，持续2回合；对全场敌人依次造成50%与400%攻击真实伤害，第二段按实际造成的生命伤害吸血30%。本轮为同次立即结算，不使用延迟标记。准备1，冷却3。",
+          "id": "karma_captain",
+          "model": "native-template-v1",
+          "name": "心灵核爆",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                "karma_captain_allies",
+                "karma_captain_allies",
+                "karma_captain_allies",
+                "karma_captain_enemies",
+                "karma_captain_enemies",
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "ally_lane_all",
+                "ally_lane_all",
+                "ally_lane_all",
+                "enemy_global_lowest_hpmax",
+                "enemy_global_lowest_hpmax",
+                "ally_self"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                1,
+                3,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "为本分路全体友军连续施加2次净化，每次持续{flat:0:1}回合，并提供卡尔玛最大生命{rank:2:1}的护盾，持续{flat:2:2}回合；对全场敌人依次造成{rank:3:1}与{rank:4:1}攻击真实伤害，第二段按实际造成的生命伤害吸血{rank:5:1}。本轮为同次立即结算，不使用延迟标记。准备1，冷却3。",
+              "res": "S_9003_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_87253174807533569_6",
+            "sourceDigest": "d4dc579e1bf9eae1d3e7cf7fc96ab1100338b65555dcaea4c580df5a358c606c"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                1.35,
+                1,
+                0.7,
+                1,
+                "FX_S9170_SUNDER"
+              ],
+              "origin": "builtin:skill/S_201209_4",
+              "type": "poison"
+            }
+          ],
+          "description": "对本分路当前目标造成135%攻击物理伤害并施加70%攻击中毒1回合，中毒沿用原版附加规则。准备0，冷却0。",
+          "id": "zed_normal_q5",
+          "model": "native-template-v1",
+          "name": "剧毒手里剑",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null
+              ],
+              "actionTargetLocks": [
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null
+              ],
+              "damageShareGroups": [],
+              "dotRule": true,
+              "pl": [
+                0,
+                0,
+                600,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "对本分路当前目标造成{rank:0:1}攻击物理伤害并施加{rank:0:3}攻击中毒{flat:0:4}回合，中毒沿用原版附加规则。准备0，冷却0。",
+              "res": "S_205132_5",
+              "skillUp": [
+                [
+                  0,
+                  1,
+                  0.15000000000000002
+                ],
+                [
+                  0,
+                  3,
+                  0.07777777777777778
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_621132_5",
+            "sourceDigest": "d4d930a2ee5fa7f1231aa34d111e645c647491237e09ff114269ccf870e61323"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 5,
+              "maxAlive": 16,
+              "statRatio": 0.66,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/zed_shadow/quality5"
+            }
+          ],
+          "cooldown": 0,
+          "description": "自身回合开始时若仍被灼烧且技能就绪，召唤1个劫的衍生分身，继承66%即时面板，存活5次自身行动，同时最多16个；分身不继续召唤。准备1，冷却0。每全局回合最多触发16次。",
+          "id": "zed_passive_q5",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "影分身",
+          "range": 0,
+          "rankInfoTemplate": "自身回合开始时若仍被灼烧且技能就绪，召唤1个劫的衍生分身，继承{rank:0:12}即时面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个；分身不继续召唤。准备1，冷却0。每全局回合最多触发16次。",
+          "trigger": {
+            "event": "turn_start",
+            "kind": "event",
+            "maxPerRound": 16,
+            "requiredBuff": "burn"
+          },
+          "warmup": 1
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                1.35,
+                1,
+                0.7,
+                1,
+                "FX_S9170_SUNDER"
+              ],
+              "origin": "builtin:skill/S_201209_4",
+              "type": "poison"
+            }
+          ],
+          "description": "对本分路当前目标造成135%攻击物理伤害并施加70%攻击中毒1回合，中毒沿用原版附加规则。准备0，冷却0。",
+          "id": "zed_normal_q6",
+          "model": "native-template-v1",
+          "name": "剧毒手里剑",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null
+              ],
+              "actionTargetLocks": [
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null
+              ],
+              "damageShareGroups": [],
+              "dotRule": true,
+              "pl": [
+                0,
+                0,
+                600,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "对本分路当前目标造成{rank:0:1}攻击物理伤害并施加{rank:0:3}攻击中毒{flat:0:4}回合，中毒沿用原版附加规则。准备0，冷却0。",
+              "res": "S_205132_6",
+              "skillUp": [
+                [
+                  0,
+                  1,
+                  0.15000000000000002
+                ],
+                [
+                  0,
+                  3,
+                  0.07777777777777778
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_621132_6",
+            "sourceDigest": "6125c77d54c90fb49d6be71b33c6d059ba5b7e4c025e29a43f9b868c275de6f7"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 5,
+              "maxAlive": 16,
+              "statRatio": 0.66,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/zed_shadow/quality6"
+            }
+          ],
+          "cooldown": 0,
+          "description": "自身回合开始时若仍被灼烧且技能就绪，召唤1个劫的衍生分身，继承66%即时面板，存活5次自身行动，同时最多16个；分身不继续召唤。准备1，冷却0。每全局回合最多触发16次。",
+          "id": "zed_passive_q6",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "影分身",
+          "range": 0,
+          "rankInfoTemplate": "自身回合开始时若仍被灼烧且技能就绪，召唤1个劫的衍生分身，继承{rank:0:12}即时面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个；分身不继续召唤。准备1，冷却0。每全局回合最多触发16次。",
+          "trigger": {
+            "event": "turn_start",
+            "kind": "event",
+            "maxPerRound": 16,
+            "requiredBuff": "burn"
+          },
+          "warmup": 1
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                "FX60_MAGIC"
+              ],
+              "origin": "builtin:skill/S_621096_5",
+              "type": "select_target"
+            },
+            {
+              "arguments": [
+                -500,
+                "FX_S9002_DASH"
+              ],
+              "origin": "builtin:skill/S_621127_5",
+              "type": "move_self"
+            },
+            {
+              "arguments": [
+                0.7,
+                "FX_S9130_COMBO"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            },
+            {
+              "arguments": [
+                0.7,
+                "FX_S9130_COMBO"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            },
+            {
+              "arguments": [
+                0.7,
+                "FX_S9130_COMBO"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            }
+          ],
+          "description": "锁定本分路600范围内当前目标，后退500码，再对该目标连续造成3段各70%攻击的真实伤害。准备0，冷却0。",
+          "id": "vayne_normal",
+          "model": "native-template-v1",
+          "name": "暗影翻滚",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                0,
+                0,
+                0
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                null,
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                {
+                  "centerActionIndex": 0,
+                  "radius": 0
+                },
+                {
+                  "centerActionIndex": 0,
+                  "radius": 0
+                },
+                {
+                  "centerActionIndex": 0,
+                  "radius": 0
+                }
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                0,
+                600,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "锁定本分路600范围内当前目标，后退500码，再对该目标依次造成{rank:2:1}、{rank:3:1}、{rank:4:1}攻击的真实伤害。准备0，冷却0。",
+              "res": "S_201223_6",
+              "skillUp": [
+                [
+                  2,
+                  1,
+                  0.07777777777777778
+                ],
+                [
+                  3,
+                  1,
+                  0.07777777777777778
+                ],
+                [
+                  4,
+                  1,
+                  0.07777777777777778
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_201223_6",
+            "sourceDigest": "0cfced9a179e9aaec12bb45f27621737b5405d6ade48b8526ca207c8e29c2f8c"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "amount": 10000,
+              "buff": "fleeup",
+              "duration": 2,
+              "target": "self",
+              "type": "buff"
+            },
+            {
+              "attackRatio": 4,
+              "buff": "shield",
+              "duration": 2,
+              "target": "self",
+              "type": "buff"
+            },
+            {
+              "amount": 10000,
+              "buff": "critup",
+              "duration": 2,
+              "target": "self",
+              "type": "buff"
+            },
+            {
+              "buff": "purify",
+              "duration": 2,
+              "target": "self",
+              "type": "buff"
+            },
+            {
+              "buff": "timed_bless",
+              "duration": 2,
+              "target": "self",
+              "type": "buff"
+            }
+          ],
+          "cooldown": 2,
+          "description": "为自身增加10000点闪避、400%攻击护盾、10000点暴击，并获得净化与神佑；均持续2回合。准备1，冷却2。",
+          "id": "vayne_captain",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "终极时刻",
+          "range": 0,
+          "rankInfoTemplate": "为自身增加{flat:0:7}点闪避、{rank:1:5}攻击护盾、{flat:2:7}点暴击，并获得净化与神佑；均持续2回合。准备1，冷却2。",
+          "trigger": {
+            "kind": "ready"
+          },
+          "warmup": 1
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 4,
+              "maxAlive": 16,
+              "statRatio": 0.7,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/vayne_shadow/quality5"
+            }
+          ],
+          "cooldown": 0,
+          "description": "真正击杀敌方单位时（包括召唤物）且技能就绪，召唤1个猎手薇恩分身，继承70%即时面板，存活4次自身行动，同时最多16个；分身不继续召唤。准备0，冷却0。每全局回合最多触发16次。",
+          "id": "vayne_passive_q5",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "击杀分身",
+          "range": 0,
+          "rankInfoTemplate": "真正击杀敌方单位时（包括召唤物）且技能就绪，召唤1个猎手薇恩分身，继承{rank:0:12}即时面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个；分身不继续召唤。准备0，冷却0。每全局回合最多触发16次。",
+          "trigger": {
+            "allowChain": true,
+            "event": "kill",
+            "kind": "event",
+            "maxPerRound": 16
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 4,
+              "maxAlive": 16,
+              "statRatio": 0.7,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/vayne_shadow/quality6"
+            }
+          ],
+          "cooldown": 0,
+          "description": "真正击杀敌方单位时（包括召唤物）且技能就绪，召唤1个猎手薇恩分身，继承70%即时面板，存活4次自身行动，同时最多16个；分身不继续召唤。准备0，冷却0。每全局回合最多触发16次。",
+          "id": "vayne_passive_q6",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "击杀分身",
+          "range": 0,
+          "rankInfoTemplate": "真正击杀敌方单位时（包括召唤物）且技能就绪，召唤1个猎手薇恩分身，继承{rank:0:12}即时面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个；分身不继续召唤。准备0，冷却0。每全局回合最多触发16次。",
+          "trigger": {
+            "allowChain": true,
+            "event": "kill",
+            "kind": "event",
+            "maxPerRound": 16
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                1.25,
+                2,
+                2,
+                "FX_S9002_SILENCE"
+              ],
+              "origin": "builtin:skill/S_201001_2",
+              "type": "silence"
+            },
+            {
+              "arguments": [
+                "FX60_HIT"
+              ],
+              "origin": "builtin:skill/S_621032_4",
+              "type": "focus_fire"
+            }
+          ],
+          "description": "对本分路当前目标造成125%攻击魔法伤害并沉默2回合，再对该目标执行一次原生同路集火。准备0，冷却0。",
+          "id": "tahm_normal",
+          "model": "native-template-v1",
+          "name": "快到碗里来",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                0
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                0,
+                500,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "对本分路当前目标造成{rank:0:1}攻击魔法伤害并沉默{flat:0:3}回合，再对该目标执行一次原生同路集火。准备0，冷却0。",
+              "res": "S_22551138_6",
+              "skillUp": [
+                [
+                  0,
+                  1,
+                  0.1388888888888889
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_641138_6",
+            "sourceDigest": "33492a8fffd50e2e4e52a7be458b6a317afe2909f417556e6e587bf4c27f2f65"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                2,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                1,
+                2,
+                "FX60_STRONG"
+              ],
+              "origin": "builtin:skill/S_201007_2",
+              "type": "strong"
+            },
+            {
+              "arguments": [
+                3,
+                2,
+                "FX60_STRONG"
+              ],
+              "origin": "builtin:skill/S_631053_5",
+              "type": "armor"
+            },
+            {
+              "arguments": [
+                2,
+                "FX_S9150_TAUNT"
+              ],
+              "origin": "builtin:skill/S_402024_6",
+              "type": "taunt"
+            },
+            {
+              "arguments": [
+                3.75,
+                1,
+                "FX_A_1138_MAGIC"
+              ],
+              "origin": "builtin:skill/S_201001_3",
+              "type": "damage"
+            }
+          ],
+          "description": "自身获得净化2回合，攻击提高100%、物防与法防提高300%、嘲讽2回合，再对本分路当前目标造成375%攻击物理伤害；属性提升持续2回合。准备0，冷却2。",
+          "id": "tahm_captain",
+          "model": "native-template-v1",
+          "name": "金身猛击",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "ally_self",
+                "ally_self",
+                "ally_self",
+                "ally_self",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                2,
+                0,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "自身获得净化{flat:0:1}回合，攻击提高{rank:1:1}、物防与法防提高{rank:2:1}、嘲讽{flat:3:1}回合，再对本分路当前目标造成{rank:4:1}攻击物理伤害；属性提升持续2回合。准备0，冷却2。",
+              "res": "S_32551138_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_651138_6",
+            "sourceDigest": "4f626bcbc03811fc18d5fd894312a28d672d55232e165f2eea6c70dcdf96e988"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                "FX60_WEAK"
+              ],
+              "origin": "builtin:skill/S_621137_5",
+              "type": "dispel_good"
+            },
+            {
+              "arguments": [
+                2,
+                "FX_S9150_CURSE"
+              ],
+              "origin": "builtin:skill/S_201226_6",
+              "type": "curse"
+            },
+            {
+              "arguments": [
+                2.22,
+                2,
+                "FX_S9004_ARC"
+              ],
+              "origin": "builtin:skill/S_201001_3",
+              "type": "damage"
+            },
+            {
+              "arguments": [
+                0.8,
+                "FX_S9120_CURE"
+              ],
+              "origin": "builtin:skill/S_201228_5",
+              "type": "cure"
+            }
+          ],
+          "description": "驱散本分路全体敌人的增益并诅咒2回合，对这些敌人造成222%攻击魔法伤害；随后以自身攻击加10%最大生命为基础，按80%原生治疗倍率自疗，并受原版治疗修正。准备0，冷却0。",
+          "id": "ezreal_normal",
+          "model": "native-template-v1",
+          "name": "动感光波",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                "ezreal_lane_targets",
+                "ezreal_lane_targets",
+                "ezreal_lane_targets",
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                100000,
+                100000,
+                100000,
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_all",
+                "enemy_lane_all",
+                "enemy_lane_all",
+                "ally_self"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                0,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "驱散本分路全体敌人的增益并诅咒{flat:1:1}回合，对这些敌人造成{rank:2:1}攻击魔法伤害；随后以自身攻击加10%最大生命为基础，按{rank:3:1}原生治疗倍率自疗，并受原版治疗修正。准备0，冷却0。",
+              "res": "S_201222_6",
+              "skillUp": [
+                [
+                  2,
+                  1,
+                  0.2466666666666667
+                ],
+                [
+                  3,
+                  1,
+                  0.08888888888888889
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_201222_6",
+            "sourceDigest": "e76f65042e0c8a4c544a8ef60c6e37481f1b1e9a26f080b2e3da757262bf8ffd"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                1.75,
+                2,
+                "FX_S9111_SHRAPNEL"
+              ],
+              "origin": "builtin:skill/S_201001_3",
+              "type": "damage"
+            },
+            {
+              "arguments": [
+                1.75,
+                2,
+                "FX_S9111_SHRAPNEL"
+              ],
+              "origin": "builtin:skill/S_201001_3",
+              "type": "damage"
+            },
+            {
+              "arguments": [
+                1.75,
+                2,
+                "FX_S9111_SHRAPNEL"
+              ],
+              "origin": "builtin:skill/S_201001_3",
+              "type": "damage"
+            },
+            {
+              "arguments": [
+                1.75,
+                2,
+                "FX_S9111_SHRAPNEL"
+              ],
+              "origin": "builtin:skill/S_201001_3",
+              "type": "damage"
+            },
+            {
+              "arguments": [
+                1.75,
+                2,
+                "FX_S9111_SHRAPNEL"
+              ],
+              "origin": "builtin:skill/S_201001_3",
+              "type": "damage"
+            }
+          ],
+          "description": "锁定本分路当前目标，连续造成5段各175%攻击的魔法伤害，各段可按原生规则暴击。准备0，冷却2。",
+          "id": "ezreal_captain",
+          "model": "native-template-v1",
+          "name": "深藏身与名",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                0,
+                0,
+                0,
+                0
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                2,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "锁定本分路当前目标，依次造成{rank:0:1}、{rank:1:1}、{rank:2:1}、{rank:3:1}、{rank:4:1}攻击魔法伤害，各段可按原生规则暴击。准备0，冷却2。",
+              "res": "S_301222_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_301222_6",
+            "sourceDigest": "90e20d05d4c5a3886e63c7e5ac58584056a100f2991ef15a1296ca056a318a0c"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                2,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                "crit",
+                10000,
+                2,
+                "FX60_HIT"
+              ],
+              "origin": "builtin:skill/S_201310_5",
+              "type": "stat_flat"
+            },
+            {
+              "arguments": [
+                "hit",
+                10000,
+                2,
+                "FX60_HIT"
+              ],
+              "origin": "builtin:skill/S_201310_5",
+              "type": "stat_flat"
+            },
+            {
+              "arguments": [
+                1,
+                2,
+                "FX60_STRONG"
+              ],
+              "origin": "builtin:skill/S_201007_2",
+              "type": "strong"
+            }
+          ],
+          "description": "自身回合开始时若有控制或负面状态且技能就绪，获得净化、10000点暴击、10000点精准与100%攻击提升，均持续2回合。准备0，冷却2。",
+          "id": "ezreal_passive",
+          "model": "native-template-v1",
+          "name": "绝境翻盘",
+          "nativeTemplate": {
+            "passiveTrigger": 19,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "ally_self",
+                "ally_self",
+                "ally_self",
+                "ally_self"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                2,
+                0,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "自身回合开始时若有控制或负面状态且技能就绪，获得净化{flat:0:1}回合、{flat:1:2}点暴击、{flat:2:2}点精准与{rank:3:1}攻击提升，均持续2回合。准备0，冷却2。",
+              "res": "S_401222_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_401222_6",
+            "sourceDigest": "8f7b295ac71e83b6da4a148997af873eacedc291fedca25d00c6631efed00055"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                "FX60_MAGIC"
+              ],
+              "origin": "builtin:skill/S_621096_5",
+              "type": "select_target"
+            },
+            {
+              "arguments": [
+                3,
+                "FX_S9150_CURSE"
+              ],
+              "origin": "builtin:skill/S_201226_6",
+              "type": "curse"
+            },
+            {
+              "arguments": [
+                2,
+                "FX_S9004_ARC"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            },
+            {
+              "arguments": [
+                0,
+                2,
+                2,
+                1,
+                "FX_S9140_POISON"
+              ],
+              "origin": "builtin:skill/S_201209_4",
+              "type": "poison"
+            }
+          ],
+          "description": "对本分路最靠前目标施加诅咒3回合，造成200%攻击真实伤害并施加200%攻击中毒1回合；中毒沿用原版附加规则。技能固定1级，准备0，冷却0。",
+          "id": "green_snake_normal",
+          "model": "native-template-v1",
+          "name": "双生毒牙",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                0,
+                0,
+                0
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "dotRule": true,
+              "pl": [
+                0,
+                0,
+                600,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "对本分路最靠前目标施加诅咒{flat:1:1}回合，造成{rank:2:1}攻击真实伤害并施加{rank:3:3}攻击中毒{flat:3:4}回合；中毒沿用原版附加规则。技能固定1级，准备0，冷却0。",
+              "res": "S_9004_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_8730193304360400_6",
+            "sourceDigest": "11e4f75299f8be22d8113aa066cbd5dfc4ddbee60230144508787621b5671855"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                "FX60_MAGIC"
+              ],
+              "origin": "builtin:skill/S_621096_5",
+              "type": "select_target"
+            },
+            {
+              "arguments": [
+                1,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                1,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                1,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                1,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                1,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                1,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                0.12,
+                "FX_S9150_CURE"
+              ],
+              "origin": "builtin:skill/S_201311_5",
+              "type": "caster_hp_heal"
+            },
+            {
+              "arguments": [
+                0.12,
+                "FX_S9150_CURE"
+              ],
+              "origin": "builtin:skill/S_201311_5",
+              "type": "caster_hp_heal"
+            }
+          ],
+          "description": "自身回合开始时若有控制或负面状态且技能就绪，锁定自身及全场血量百分比最低的4名其他友军（不足4名则全选）；为这组单位重复施加3次净化，每次1回合，最后分别恢复青蛇最大生命12%的生命。准备0，冷却1。",
+          "id": "green_snake_passive",
+          "model": "native-template-v1",
+          "name": "三生相伴",
+          "nativeTemplate": {
+            "passiveTrigger": 19,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                "snake_companions",
+                null,
+                "snake_companions",
+                null,
+                "snake_companions",
+                null,
+                "snake_companions",
+                null,
+                "snake_companions"
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                4,
+                1,
+                -1,
+                1,
+                -1,
+                1,
+                -1,
+                1,
+                -1
+              ],
+              "actionTargetPolicies": [
+                "ally_all_lowest_hp_ratio",
+                "ally_self",
+                "ally_all",
+                "ally_self",
+                "ally_all",
+                "ally_self",
+                "ally_all",
+                "ally_self",
+                "ally_all"
+              ],
+              "actionTargetPolicyArgs": [
+                {
+                  "excludeSelf": true
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                1,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "自身回合开始时若有控制或负面状态且技能就绪，锁定自身及全场血量百分比最低的4名其他友军（不足4名则全选）；为这组单位重复施加3次净化，每次{flat:1:1}回合，最后分别恢复青蛇最大生命{rank:7:1}的生命。准备0，冷却1。",
+              "res": "S_9004_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_8730193304360400_6",
+            "sourceDigest": "11e4f75299f8be22d8113aa066cbd5dfc4ddbee60230144508787621b5671855"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 5,
+              "maxAlive": 1,
+              "statRatio": 0.5,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/white_green_snake/quality6"
+            },
+            {
+              "buff": "curse",
+              "duration": 2,
+              "target": "lane_front",
+              "type": "buff"
+            },
+            {
+              "attackRatio": 2,
+              "centerAction": 1,
+              "damageType": "magic",
+              "growth": {
+                "attackRatio": 0.2222222222222222
+              },
+              "target": "previous",
+              "type": "damage"
+            }
+          ],
+          "cooldown": 2,
+          "description": "在本路召唤1条青蛇，继承50%即时面板、存活5次自身行动，同时最多1条；随后对本路最靠前单体敌人施加诅咒2回合并造成200%攻击魔法伤害。本体小技能的驱散和中毒延期。准备0，冷却2。",
+          "id": "white_normal",
+          "maxLevel": 10,
+          "model": "effect-sequence-v1",
+          "name": "咒术青蛇",
+          "range": 600,
+          "rankInfoTemplate": "在本路召唤1条青蛇，继承{rank:0:12}即时面板、存活{flat:0:13}次自身行动，同时最多{flat:0:14}条；随后对本路最靠前单体敌人施加诅咒{flat:1:9}回合并造成{rank:2:5}攻击魔法伤害。本体小技能的驱散和中毒延期。准备0，冷却2。",
+          "trigger": {
+            "kind": "ready"
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "attackRatio": 3.8,
+              "damageType": "magic",
+              "target": "lane_lowest_hp",
+              "type": "damage"
+            }
+          ],
+          "cooldown": 1,
+          "description": "自身回合开始时若没有净化且技能就绪，对本分路血量百分比最低的单体敌人造成380%攻击魔法伤害，不带驱散。准备1，冷却1。",
+          "id": "white_passive",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "红尘破碎",
+          "range": 10000,
+          "rankInfoTemplate": "自身回合开始时若没有净化且技能就绪，对本分路血量百分比最低的单体敌人造成{rank:0:5}攻击魔法伤害，不带驱散。准备1，冷却1。",
+          "trigger": {
+            "buff": "purify",
+            "kind": "absent_buff"
+          },
+          "warmup": 1
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                1,
+                "FX_S9150_CURSE"
+              ],
+              "origin": "builtin:skill/S_201226_6",
+              "type": "curse"
+            },
+            {
+              "arguments": [
+                0,
+                0,
+                0.8,
+                3,
+                "FX60_WEAK"
+              ],
+              "origin": "builtin:skill/S_202013_3",
+              "type": "weak_percent"
+            },
+            {
+              "arguments": [
+                1.7,
+                "FX60_GAREN_R"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            }
+          ],
+          "description": "锁定全场血量百分比最低的3个敌方单位（包含召唤物，不足3个则全选），依次对每个目标施加诅咒1回合、攻击降低80%的虚弱3回合，并造成170%攻击真实伤害；各段按自身暴击率判定。准备0，冷却2。",
+          "id": "super_teemo_normal",
+          "model": "native-template-v1",
+          "name": "X视线",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                "x_sight_snapshot",
+                "x_sight_snapshot",
+                "x_sight_snapshot"
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                3,
+                3,
+                3
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_lowest_hp_ratio_any",
+                "enemy_lane_lowest_hp_ratio_any",
+                "enemy_lane_lowest_hp_ratio_any"
+              ],
+              "actionTargetPolicyArgs": [
+                {
+                  "laneFilter": "all"
+                },
+                {
+                  "laneFilter": "all"
+                },
+                {
+                  "laneFilter": "all"
+                }
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                2,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "锁定全场血量百分比最低的3个敌方单位（包含召唤物，不足3个则全选），依次对每个目标施加诅咒{flat:0:1}回合、攻击降低{rank:1:3}的虚弱{flat:1:4}回合，并分别造成{rank:2:1}攻击真实伤害；各段按自身暴击率判定。准备0，冷却2。",
+              "res": "S_201309_6",
+              "skillUp": [
+                [
+                  2,
+                  1,
+                  0.18888888888888888
+                ]
+              ],
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_201309_6",
+            "sourceDigest": "86f2a40d7b72e66311bed93cbd0c968356fcc33e43aed53bd4d2c47baf8dcda9"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                0.1,
+                "FX_S9150_CURE"
+              ],
+              "origin": "builtin:skill/S_201311_5",
+              "type": "caster_hp_heal"
+            }
+          ],
+          "description": "为全场每名友军恢复蘑菇自身最大生命10%的生命。技能固定1级，准备0，冷却0。",
+          "id": "mushroom_normal",
+          "model": "native-template-v1",
+          "name": "低调的蘑菇",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null
+              ],
+              "actionTargetLocks": [
+                null
+              ],
+              "actionTargetMaxTargets": [
+                -1
+              ],
+              "actionTargetPolicies": [
+                "ally_all"
+              ],
+              "actionTargetPolicyArgs": [
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                0,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "为全场每名友军恢复蘑菇自身最大生命{rank:0:1}的生命。技能固定1级，准备0，冷却0。",
+              "res": "S_821018_2",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_821018_2",
+            "sourceDigest": "fb7d33159e2e3e8a2de0b4917f261cd6624afd52ceae7b4f9283ca243677ab54"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 3,
+              "maxAlive": 16,
+              "statRatio": 0.4,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/teemo_mushroom/quality2"
+            },
+            {
+              "buff": "timed_bless",
+              "duration": 1,
+              "radius": 10000,
+              "target": "ally_radius",
+              "type": "buff"
+            },
+            {
+              "attackRatio": 1.5,
+              "buff": "shield",
+              "centerAction": 1,
+              "duration": 1,
+              "target": "previous",
+              "type": "buff"
+            }
+          ],
+          "cooldown": 1,
+          "description": "在身后召唤1个蘑菇，继承40%即时面板，存活3次自身行动，同时最多16个；为本分路全体友军提供神佑与提莫150%攻击的护盾，均持续1回合。准备0，冷却1。",
+          "id": "super_teemo_captain",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "超人伙伴",
+          "range": 0,
+          "rankInfoTemplate": "在身后召唤1个蘑菇，继承{rank:0:12}即时面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个；为本分路全体友军提供神佑与提莫{rank:2:5}攻击的护盾，均持续{flat:1:9}回合。准备0，冷却1。",
+          "trigger": {
+            "kind": "ready"
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                2,
+                "FX60_PURIFY"
+              ],
+              "origin": "builtin:skill/S_201008_2",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                "tough",
+                10000,
+                2,
+                "FX60_HIT"
+              ],
+              "origin": "builtin:skill/S_201310_5",
+              "type": "stat_flat"
+            },
+            {
+              "arguments": [
+                "flee",
+                3000,
+                2,
+                "FX60_HIT"
+              ],
+              "origin": "builtin:skill/S_201310_5",
+              "type": "stat_flat"
+            }
+          ],
+          "description": "自身回合开始时若有控制或负面状态且技能就绪，为全体友军施加净化2回合，解除可净化的负面效果，并增加10000点韧性、3000点闪避，持续2回合。准备0，冷却2。",
+          "id": "super_teemo_passive",
+          "model": "native-template-v1",
+          "name": "超人之身",
+          "nativeTemplate": {
+            "passiveTrigger": 19,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                "super_teemo_allies",
+                "super_teemo_allies",
+                "super_teemo_allies"
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                -1,
+                -1,
+                -1
+              ],
+              "actionTargetPolicies": [
+                "ally_all",
+                "ally_all",
+                "ally_all"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                2,
+                10000,
+                0,
+                0,
+                0
+              ],
+              "rankInfoTemplate": "自身回合开始时若有控制或负面状态且技能就绪，为全体友军施加净化{flat:0:1}回合，解除可净化的负面效果，并增加{flat:1:2}点韧性、{flat:2:2}点闪避，持续{flat:1:3}回合。准备0，冷却2。",
+              "res": "S_401309_6",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_401309_6",
+            "sourceDigest": "76cf1b4596bef613757b213f8ae50b3efad232ebe1141b25567063bbc75ac548"
+          },
+          "upgrades": []
+        }
+      ]
+    }
+  },
+  "format": "lal-hero-project-v1",
+  "manifest": {
+    "author": "BigOrange",
+    "dependencies": [],
+    "description": "覆盖九位原版英雄全部现有品质的技能修订，包含独立衍生召唤单位。",
+    "engineApi": "1",
+    "entrypoints": {
+      "heroes": "heroes.json",
+      "patches": "patches.json",
+      "skills": "skills.json"
+    },
+    "files": [
+      {
+        "path": "heroes.json",
+        "sha256": "f9a5b7073470cd53bc256bc8088e3ce3e8682801b68f881c454ff66df1b4008d"
+      },
+      {
+        "path": "patches.json",
+        "sha256": "0f19be4333a1cc0f07a3f51590efc430519bba062446ff499302eae469de7b8d"
+      },
+      {
+        "path": "skills.json",
+        "sha256": "4a759c77fdab07c9830e2990034326f7d01413f4506e8ceef429ecf049062a7a"
+      }
+    ],
+    "format": "lal-mod-v1",
+    "kind": "new",
+    "name": "九英雄技能修订合集",
+    "packageId": "3fd52ae0-235f-4524-b0d6-d711e240997a",
+    "requiredCapabilities": [
+      "effect.reference.builtin",
+      "hero.damage.true",
+      "hero.patch.skill",
+      "hero.register",
+      "patch.scopes",
+      "progression.default-player-hero",
+      "skill.effect-sequence.v1",
+      "skill.events.v1",
+      "skill.native-template.103",
+      "skill.native-template.v1",
+      "skill.reference.builtin",
+      "unit.summon.v1"
+    ],
+    "version": "1.0.1"
+  },
+  "metadata": {
+    "allTargets": {
+      "劫": "A_1132",
+      "卡尔玛": "A_1139",
+      "卡萨丁": "A_1134",
+      "塔姆": "A_1138",
+      "探险家伊泽瑞尔": "A_1222",
+      "猎手VN": "A_1223",
+      "玛尔扎哈": "A_1103",
+      "白娘子": "A_1227",
+      "超人提莫": "A_1309"
+    },
+    "authoredFamilies": [
+      "A_1134",
+      "A_1103",
+      "A_1139",
+      "A_1132",
+      "A_1223",
+      "A_1138",
+      "A_1222",
+      "A_1227",
+      "A_1309"
+    ],
+    "authoringStatus": "complete",
+    "confirmedDesign": {
+      "auxiliarySummons": "allowed-in-combined-package",
+      "blankSkills": "keep-existing",
+      "currentClonePassiveAdjustment": "caster-summons-one-generation-no-descendant-summoning",
+      "currentInterfaceChangesAllowed": false,
+      "derivedCloneApproach": "independent-summon-using-original-art",
+      "ezreal": {
+        "captainCritRule": "standard-critical-hit-rolls",
+        "captainMagicAttackRatios": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "normalCurseDuration": 2,
+        "normalMagicAttackRatio": 2.22,
+        "normalSelfHealAttackRatio": 0.8,
+        "normalSelfHealFormula": "native-cure-0.8-times-attack-plus-0.1-max-hp-with-native-healing-modifiers",
+        "normalSelfHealFormulaAuthority": "user-explicitly-accepted-native-healing-formula",
+        "passiveAttackBonus": 1,
+        "passiveCooldown": 2,
+        "passiveCritFlat": 10000,
+        "passiveDuration": 2,
+        "passiveHitFlat": 10000,
+        "passivePurifyDuration": 2,
+        "passiveWarmup": 0,
+        "targeting": "current-enemy-in-own-lane"
+      },
+      "implementationScope": "hero-package-only",
+      "karma": {
+        "captain": "confirmed-immediate-two-wave-true-damage-and-lifesteal",
+        "captainAllyTargetSelection": "all-allies-in-own-lane",
+        "captainCooldown": 3,
+        "captainDelayedInterfaceAdjustment": "user-confirmed-immediate-second-wave-no-delay-no-mark",
+        "captainDelayedLifestealRatio": 0.3,
+        "captainDelayedTrueAttackRatio": 4,
+        "captainEnemyTargetSelection": "all-enemies",
+        "captainInitialTrueAttackRatio": 0.5,
+        "captainLifestealDamageSource": "actual-hp-damage-of-second-wave-only",
+        "captainName": "心灵核爆",
+        "captainPurifyCurrentVersion": "native-template-fallback-two-applications-of-ordinary-purify",
+        "captainPurifyDuration": 3,
+        "captainPurifyRepetitions": 2,
+        "captainRequestedDelayedBehavior": "mark-first-wave-targets-then-after-one-turn-if-caster-alive-hit-marked-targets",
+        "captainShieldDuration": 2,
+        "captainShieldMaxHpRatio": 0.5,
+        "captainShieldMaxHpSource": "caster",
+        "captainWarmup": 1,
+        "normalMagicAttackRatio": 1.2,
+        "normalPoisonAttackRatio": 0.5,
+        "normalPoisonDuration": 1,
+        "normalStunDuration": 2,
+        "normalStunHitRule": "standard-hit-and-dodge",
+        "normalTargetCount": 3,
+        "normalTargetSelection": "global-lowest-hp-ratio-including-summons",
+        "originalRandomSelection": "not-available-in-current-interface"
+      },
+      "kassadin": {
+        "conditionalRightLaneMovement": "deferred-to-next-version",
+        "currentCaptainMovement": "none-spawn-in-current-lane-only",
+        "normalBaseline": {
+          "attackRatio": 0.8,
+          "cooldown": 0,
+          "damageType": "magic",
+          "shieldAttackRatio": 1.5,
+          "shieldDuration": 2,
+          "silenceDuration": 1,
+          "warmup": 0
+        },
+        "passiveCooldown": 1,
+        "passiveDefenseBonus": 3,
+        "passiveDefenseDuration": 2,
+        "passivePurifyDuration": 2,
+        "passiveTrigger": "own-turn-start-while-shielded",
+        "passiveWarmup": 0,
+        "summonLifetime": 5,
+        "summonMaxAlive": 16,
+        "summonStatRatio": 0.5
+      },
+      "malzahar": {
+        "normalBurnAttackRatio": 0.8,
+        "normalBurnDuration": 4,
+        "normalMaxLevelBurnAttackRatio": 1.6,
+        "summonAppearance": "A_2013_5",
+        "summonAttackRange": 600,
+        "summonBasicAttackType": "true",
+        "summonBurnDuration": 4,
+        "summonBurnRatioRule": "same-as-malzahar-normal",
+        "summonCount": 1,
+        "summonDirectAttackRatio": 0.1,
+        "summonDirectDamageType": "magic",
+        "summonLifetime": 3,
+        "summonMaxAlive": 16,
+        "summonPoisonAttackRatio": 2,
+        "summonPoisonDuration": 3,
+        "summonSkillRank": 1,
+        "summonSpeed": 400,
+        "summonStatRatio": 0.4
+      },
+      "missingNumbersProvidedBy": "user",
+      "packageId": "3fd52ae0-235f-4524-b0d6-d711e240997a",
+      "packageVersion": "1.0.1",
+      "qualityScope": "all-existing",
+      "recursiveClones": "deferred-to-next-version",
+      "releaseBaseline": {
+        "gameCommit": "c82ad0b7c6d744ff9ebdb4b5b910be4f35d25a25",
+        "gameVersion": "1.0.3",
+        "reason": "rebase-all-native-templates-and-patch-guards-on-shipped-skill-calibration"
+      },
+      "skillScaling": {
+        "captainGrowsWithSkillLevel": false,
+        "derivedCloneSkillRank": 1,
+        "normalFixedFields": [
+          "control-duration",
+          "distance",
+          "warmup",
+          "cooldown"
+        ],
+        "normalGrowingFields": [
+          "damage-ratio",
+          "healing-ratio",
+          "shield-ratio"
+        ],
+        "normalGrowthCurve": "linear-levels-1-through-10",
+        "normalMaxLevelMultiplier": 2,
+        "passiveGrowsWithSkillLevel": false,
+        "sameMultipliersAcrossQualities": true
+      },
+      "superTeemo": {
+        "captainBlessDuration": 1,
+        "captainCooldown": 1,
+        "captainCurrentDesign": "spawn-behind-caster-and-buff-all-allies-in-own-lane",
+        "captainDeferredFeatures": [
+          "spawn-in-front",
+          "only-allies-behind-mushroom",
+          "zero-cooldown"
+        ],
+        "captainParameterAuthority": "user-delegated-to-author-use-current-hero-models",
+        "captainShieldBasis": "caster-attack",
+        "captainShieldDuration": 1,
+        "captainShieldRatio": 1.5,
+        "captainWarmup": 0,
+        "normal": "confirmed",
+        "normalAttackRatioPerTarget": 1.7,
+        "normalCooldown": 2,
+        "normalCriticalRule": "standard-critical-hit-rolls",
+        "normalCurseDuration": 1,
+        "normalDamageType": "true",
+        "normalName": "X视线",
+        "normalTargetCount": 3,
+        "normalTargetSelection": "global-lowest-hp-ratio-including-summons",
+        "normalWarmup": 0,
+        "normalWeakDuration": 3,
+        "normalWeakReduction": 0.8,
+        "passive": "confirmed-author-filled-by-user-delegation",
+        "passiveAttributeDuration": 2,
+        "passiveCooldown": 2,
+        "passiveFleeFlat": 3000,
+        "passiveParameterAuthority": "user-delegated-to-author-use-current-hero-models",
+        "passivePurifyDuration": 2,
+        "passiveToughFlat": 10000,
+        "passiveTrigger": "own-turn-start-under-control-or-negative-status",
+        "passiveWarmup": 0,
+        "summonAppearance": "A_2018_2",
+        "summonAttackRange": 688,
+        "summonBasicAttackType": "magic",
+        "summonHealBasis": "mushroom-max-hp",
+        "summonHealRatio": 0.1,
+        "summonLifetime": 3,
+        "summonMaxAlive": 16,
+        "summonSkillCooldown": 0,
+        "summonSkillRank": 1,
+        "summonSkillWarmup": 0,
+        "summonSpeed": 245,
+        "summonStatRatio": 0.4
+      },
+      "tahm": {
+        "captainAttackBonus": 1,
+        "captainBuffDuration": 2,
+        "captainDefenseBonus": 3,
+        "captainPhysicalAttackRatio": 3.75,
+        "captainPurifyDuration": 2,
+        "captainTauntDuration": 2,
+        "normalFocusFire": "existing-native-operation",
+        "normalMagicAttackRatio": 1.25,
+        "normalSilenceDuration": 2,
+        "passive": "keep-existing"
+      },
+      "targetCardCount": 19,
+      "targets": {
+        "劫": "A_1132",
+        "卡尔玛": "A_1139",
+        "卡萨丁": "A_1134",
+        "塔姆": "A_1138",
+        "探险家伊泽瑞尔": "A_1222",
+        "猎手VN": "A_1223",
+        "玛尔扎哈": "A_1103",
+        "白娘子": "A_1227",
+        "超人提莫": "A_1309"
+      },
+      "vayne": {
+        "captainBuffDuration": 2,
+        "captainCooldown": 2,
+        "captainCritFlat": 10000,
+        "captainFleeFlat": 10000,
+        "captainShieldAttackRatio": 4,
+        "captainWarmup": 1,
+        "normalRetreatDistance": 500,
+        "normalTrueDamageAttackRatios": [
+          0.7,
+          0.7,
+          0.7
+        ],
+        "passiveCooldown": 0,
+        "passiveTrigger": "actual-kill-including-summons",
+        "passiveWarmup": 0,
+        "recursiveSummoning": false,
+        "summonCount": 1,
+        "summonLifetime": 4,
+        "summonMaxAlive": 16,
+        "summonSkillRank": 1,
+        "summonStatRatio": 0.7
+      },
+      "vayneKillTrigger": "actual-death-only",
+      "whiteSnake": {
+        "captain": "keep-existing",
+        "normalCooldown": 2,
+        "normalCurrentEffects": [
+          "summon-green-snake",
+          "curse",
+          "magic-damage"
+        ],
+        "normalCurseDuration": 2,
+        "normalDeferredEffects": [
+          "dispel-good",
+          "poison"
+        ],
+        "normalMagicAttackRatio": 2,
+        "normalPoisonInterfaceAdjustment": "user-confirmed-defer-parent-poison-keep-summon-curse-damage",
+        "normalPoisonRequestedAgain": true,
+        "normalTargetSelection": "own-lane-frontmost-single",
+        "normalWarmup": 0,
+        "passive": "confirmed-own-turn-start-without-purify-no-dispel",
+        "passiveCooldown": 1,
+        "passiveDispelCurrentVersion": false,
+        "passiveDispelTarget": "hit-target-only",
+        "passiveMagicAttackRatio": 3.8,
+        "passiveRequestedTrigger": "lose-purify",
+        "passiveTargetSelection": "own-lane-lowest-hp-ratio-single",
+        "passiveWarmup": 1,
+        "summonAppearance": "A_2025_6",
+        "summonAttackRange": 600,
+        "summonBasicAttackType": "physical",
+        "summonCount": 1,
+        "summonLifetime": 5,
+        "summonMaxAlive": 1,
+        "summonPassive": "own-turn-start-under-control-or-negative-status",
+        "summonPassiveCooldown": 1,
+        "summonPassiveHealCasterMaxHpRatio": 0.12,
+        "summonPassiveHealingTargets": "self-and-same-four-selected-allies",
+        "summonPassivePurifyDuration": 1,
+        "summonPassivePurifyRepetitions": 3,
+        "summonPassiveTargetSelection": "self-and-global-lowest-hp-ratio-four-other-allies",
+        "summonPassiveWarmup": 0,
+        "summonSkillCooldown": 0,
+        "summonSkillCurseDuration": 3,
+        "summonSkillDamageRatio": 2,
+        "summonSkillDamageType": "true",
+        "summonSkillPoisonDuration": 1,
+        "summonSkillPoisonRatio": 2,
+        "summonSkillRank": 1,
+        "summonSkillWarmup": 0,
+        "summonSpeed": 250,
+        "summonStatRatio": 0.5
+      },
+      "zed": {
+        "normalDirectAttackRatio": 1.35,
+        "normalDirectDamageType": "physical",
+        "normalPoisonAttackRatio": 0.7,
+        "normalPoisonDuration": 1,
+        "passiveCooldown": 0,
+        "passiveTrigger": "own-turn-start-while-burning",
+        "passiveWarmup": 1,
+        "recursiveSummoning": false,
+        "summonCount": 1,
+        "summonLifetime": 5,
+        "summonMaxAlive": 16,
+        "summonSkillRank": 1,
+        "summonStatRatio": 0.66
+      }
+    },
+    "deferredFeatures": {
+      "format": "hero-patch-follow-up-v1",
+      "items": [
+        {
+          "currentRestriction": "现有 pending_area_strike 只保存一个同路爆炸中心，不能保留全场逐单位标记名单，延迟结算入口也不带吸血。",
+          "currentVersionAdjustment": "用户已确认改为同次立即结算50%与400%两段真实伤害，第二段吸血30%；本轮不使用标记或延迟。",
+          "id": "global-marked-delayed-strike-and-lifesteal",
+          "nextVersionDesignQuestions": [
+            "一回合指全局回合结束还是卡尔玛下次行动开始。",
+            "标记可否驱散，目标换路、复活及新召唤单位如何处理。",
+            "延迟伤害使用施放时快照还是结算时攻击面板。"
+          ],
+          "requestedBehavior": "施放时对全场敌人造成50%攻击真实伤害并记录标记名单；一回合后，卡尔玛仍存活时，对被标记且仍合法的敌人造成400%攻击真实伤害，并按第二段伤害吸血30%。",
+          "status": "deferred",
+          "target": "next-version",
+          "title": "卡尔玛全场标记延迟爆发与吸血"
+        },
+        {
+          "currentRestriction": "游戏本身已有正值 purify.value 存储净化层数的机制，但原生 purify 动作没有层数参数；能指定该值的效果序列又没有吸血动作。",
+          "currentVersionAdjustment": "用户允许当前原生模板连续施加2次普通净化，每次持续3回合；这不等同于能抵挡两次负面状态的双层净化。",
+          "id": "charged-purify-with-native-combat-sequence",
+          "requestedBehavior": "同一队长技为同路友军提供双层净化，并组合生命护盾、全场真实伤害与吸血。",
+          "status": "deferred",
+          "target": "next-version",
+          "title": "带层数净化与原生吸血组合技能"
+        },
+        {
+          "currentVersionAdjustment": "用户已确认改为自身回合开始时没有净化且就绪则触发，仅造成伤害，不带驱散；准备1、冷却1。",
+          "id": "purify-removed-trigger-with-dispel",
+          "requestedBehavior": "白娘子失去净化时，对本路血量百分比最低目标驱散增益并造成380%攻击魔法伤害。",
+          "status": "deferred",
+          "target": "next-version",
+          "title": "失去净化瞬间触发并驱散受击目标增益"
+        },
+        {
+          "currentVersionAdjustment": "白娘子本轮保留召唤青蛇、诅咒2回合与魔法伤害，仅延期本体小技能的驱散与中毒；青蛇自身的原生模板技能仍可包含中毒。",
+          "id": "summon-sequence-native-dispel-poison",
+          "requestedBehavior": "同一技能依次召唤本包自定义单位，并执行驱散增益、诅咒、伤害和中毒。",
+          "status": "deferred",
+          "target": "next-version",
+          "title": "自定义召唤效果序列接入驱散增益与中毒"
+        },
+        {
+          "currentVersionAdjustment": "本轮改为身后生成蘑菇，给同路全体友军提供神佑和护盾，准备0、冷却1。",
+          "id": "mushroom-position-targeting-and-zero-cooldown",
+          "requestedBehavior": "身前生成自定义治疗蘑菇，仅给本路蘑菇后方友军提供神佑和护盾，准备0、冷却0。",
+          "status": "deferred",
+          "target": "next-version",
+          "title": "蘑菇召唤落点、后方友军筛选与零冷却"
+        },
+        {
+          "currentVersionAdjustment": "本轮卡萨丁队长技仅在原分路召唤衍生单位，继承50%即时面板，存活5回合，上限16。",
+          "id": "conditional-right-lane-movement",
+          "nextVersionDesignQuestions": [
+            "同路其他卡是否包含敌方单位及召唤物，以及判定发生在召唤前还是召唤后。",
+            "最右分路的边界行为和换路后的纵向位置。"
+          ],
+          "requestedBehavior": [
+            "先在原分路留下独立衍生单位。",
+            "自身所在分路存在其他卡时向右换一个分路；自身是本路唯一卡时不换路。",
+            "允许该条件换路动作与自定义召唤步骤按顺序组合。"
+          ],
+          "status": "deferred",
+          "target": "next-version",
+          "title": "卡萨丁的同路单位条件与向右换路组合动作"
+        },
+        {
+          "affectedProjects": [
+            "development/lal-mod-api-103",
+            "development/lal-hero-editor"
+          ],
+          "currentRestrictions": [
+            "普通分身创建入口清空被动技能。",
+            "自定义召唤单位的技能中包含召唤动作时，现有包编译器会拒绝该单位。"
+          ],
+          "currentTaskScope": "本轮只制作英雄包，不修改游戏或编辑器接口。",
+          "excludedByUserDecision": [
+            "猎手薇恩打出神佑不视作击杀，只有目标真正阵亡才触发击杀召唤。"
+          ],
+          "id": "derived-unit-recursive-summon",
+          "nextVersionDesignQuestions": [
+            "递归召唤的数量与代数规则；原始需求为分身数量不限，具体接口规则仍待确认。",
+            "衍生单位在各代之间的面板继承、存续时间和归属统计。",
+            "连续触发、单位退场和版本能力声明的兼容处理。"
+          ],
+          "requestedBehavior": [
+            "分身使用独立的召唤单位定义，复用原英雄的卡面和立绘。",
+            "允许衍生单位配置小技能和被动，队长技留空。",
+            "劫的衍生单位被灼烧时可继续生成下一代衍生单位。",
+            "猎手薇恩的衍生单位真正击杀目标时可继续生成下一代衍生单位。"
+          ],
+          "status": "deferred",
+          "target": "next-version",
+          "title": "支持带召唤型被动的独立衍生单位"
+        }
+      ],
+      "recordedOn": "2026-10-21"
+    },
+    "format": "lal-hero-project-v1",
+    "pendingFamilies": [],
+    "pendingSkillDecisions": [],
+    "releaseExportAllowed": true,
+    "requiredInterfaceChanges": false,
+    "sourceGame": {
+      "baselineSync": {
+        "changedFiles": [
+          "config/reconstruction/hero-iteration-1.0.3.json",
+          "server/captain_strength.py",
+          "server/gameplay_economy.py",
+          "server/gameplay_energy.py",
+          "server/hero_accuracy_103.py",
+          "server/hero_iteration_103.py",
+          "server/hero_skills_103.py",
+          "server/mod_authoring_103.py",
+          "server/skill_books.py"
+        ],
+        "interfaceChanges": false,
+        "previousCommit": "69085940c7b2b7ba718c267ba2f13b1ccf5e2c7a",
+        "pullRequest": "https://github.com/BigOrange-001/lal-rebuild/pull/22",
+        "reason": "Fix sourceDigest and patch guards generated from the pre-calibration 1.0.3 baseline"
+      },
+      "commit": "c82ad0b7c6d744ff9ebdb4b5b910be4f35d25a25",
+      "engineApi": "1",
+      "files": {
+        "config/reconstruction/competition-config.json": "41dfb2c9e00319259212263f22259a22e1d98418c3e20b64a40cdfb601e2764e",
+        "config/reconstruction/equipment-calibration.json": "68e843a8388166fdc4e31ff514f41ffdb675a7dfe8b5130e853bb6e784426e84",
+        "config/reconstruction/full-config.json": "f6a65a6081dbf83e3d9b2e83d1955a2c0e5ec43d0fdb197a5c9f98cdb4c03cc3",
+        "config/reconstruction/hero-balance-1.0.3.json": "b886e47cfd2a5d717dfcb14133ef29e660a2ff9b06687ad015107725da16edb2",
+        "config/reconstruction/hero-iteration-1.0.3.json": "cf25acb33615363c01dc86040b34cb07be7212160db399f3020c344a8861e965",
+        "config/reconstruction/roster-config.json": "efe440ae815cdff93000dccfac92b67578f57b28959c0d6aeb0b35a049378686",
+        "config/reconstruction/summon-calibration.json": "30184cd7967dc4816c4de365cabbd1459b08b6ffcc54acaed9b22eff823091db",
+        "schemas/mod-effect-sequence.schema.json": "b6b3ca9edd8583c1370724feb173111b825711b83965b9753ce6e035975a04be",
+        "schemas/mod-engine-api-v1.json": "9b859e890ebb9dcb5ffcd073f92d8512a665f8e7b42cf1b8d71a297511461196",
+        "schemas/mod-heroes.schema.json": "fea3a6eec723887aae8c7eaa7fda907481c2962a1a6c1afc6774d1b50390e1ba",
+        "schemas/mod-manifest.schema.json": "6fdb11313cd7db5f35b5fbf95e5d372bb732611c143c70f88762fc83d0a01cbb",
+        "schemas/mod-native-template.schema.json": "697d6cb4f82f7d044928e19ace13d2a6b336c623093e6a255205c2b65446ab11",
+        "schemas/mod-patches.schema.json": "ff326aa2b4f9741928c8a98f76fd80fa384f5b35e4ebadfe687ee0085827c454",
+        "schemas/mod-skills.schema.json": "fc867de46cd4554670d662b2b698d00c0484874cd3d91ce905396fbdc276b047",
+        "server/adventure_tasks.py": "93871548038192705c5b95a776c31151a58085a42d191b6b3438b0c211307ba0",
+        "server/battle_status_effects.py": "9ec728265e577c0f3e1405e79a5e00e0cd202d050783db67d83d10da3b672f75",
+        "server/captain_strength.py": "ea2148fff05ab162cdd65308e4723ff56fce6603d42e3e3d211f7f2052be6ce5",
+        "server/captain_timing.py": "97a2f72870c1c4f8f4ca632fc742f9bcc38ed3d90e645e9e35c2ca41c949c6a5",
+        "server/cat_katarina_103.py": "0532cda879d874b56e978e0adc9c4cf5b2e3f8004b33a3a24674963924cdc29b",
+        "server/check_in_rewards.py": "585ed504e5cdbfb66221a605626063999d56f2cd4a46811f41b932923014f675",
+        "server/cultivation_rules.py": "b8a5f541f6c0b620e0693b9525bec63bc88c5099a26d94ade6011e8867d82d20",
+        "server/dot_rules_103.py": "04171b4aa03fc08759ce8cfc558cc182458650ab9ca5d9fa61f1dfd6756ca108",
+        "server/equipment_capacity.py": "758129ade6ed505eec30f8f38ea67597c3f8b354b3480bc80943bb87a451d873",
+        "server/equipment_growth_v2.py": "1e9162fc72d9866d0a3f35129be977b9dbfa5a17384045724b8aa3508fa93618",
+        "server/equipment_upgrade_cost.py": "9f2c22da01285887c9f7d48eb4dd70014e1d85c7d4226fb593b8b0edddb3120f",
+        "server/game_clock.py": "22ca863afa6f68c4735bb7fe7eeda43abc3e47cc0f9568b69aad02a9b7b72942",
+        "server/gameplay_common.py": "ad0c928e4c9a1ce1f6bf0de65b66adf3466465c4f299f308840ef3f245694b00",
+        "server/gameplay_economy.py": "55f9095e97d05d66d94fcff1fae9465e0097b4b383ca18f874883b0efb3ad771",
+        "server/gameplay_energy.py": "978e650e0db9940bac6b7b55fc9c382e559f594371503bfc49e503de38f7f2b7",
+        "server/halo_progression.py": "6c780fc876560040548319730cf11140615fdbfb3e109791c1c6c83b24b8b19b",
+        "server/hero_accuracy_103.py": "f0ddff1568d6d1aaee7c3bb531f149f08f351539dbd83afbcaff11700fedd94a",
+        "server/hero_balance_103.py": "f0e2008ccc89fdf30da15a1ab8adf27799f23249b0642115f8902e936b7dc61a",
+        "server/hero_iteration_103.py": "eb1d1e729ba889d1707b27c0f6dc6bda09485ee9cc58d7be99947018bcd4563f",
+        "server/hero_skills_103.py": "942ae7ce7ecee0c1558d1bc77a87c08796cf14dd9317a4b82fc3ca2995afe86c",
+        "server/mod_authoring_103.py": "d0adfbe511fd0ea4628fdd86ff5907e9ebdbcd5dad09ee2bb1ee06108ddabbf4",
+        "server/mod_compile.py": "619b40fb119f1371aee28eb08aa75059fc67b6e1ae8fb68f3e7608d91efb954f",
+        "server/mod_effects.py": "2e0f04386e187384f4e876d4911f7cd3fb5fe7a8f98601b9a6c58813b83cf860",
+        "server/mod_native.py": "111f7c56017368ef36de866b282ca3b5bdfd2d12c15068ec7318d1c9b0dc8594",
+        "server/mod_packages.py": "6a3c437ae944e6d4ba152481b2ba218961c5427a3e0e778d584b53c8d0d6467b",
+        "server/mod_policy.py": "14f40f588be632fa6e4ccadef2623172e32a67738e3034001712a92dc49adb5a",
+        "server/mod_schema.py": "d44b08adb02b44987b06b3d0fb807139a258bd3674e49c1021311a6d3bb77028",
+        "server/native_ability_parameters.json": "9ea4f9fac14ea5a8c6c0e425a48e97e0734b169eb7d109e99fa9beb04f7e07d1",
+        "server/native_skill_snapshot.py": "d6465b10771fb11b7a7c58b29799a5c409f3f6b5178d22a1fa98704425e450ba",
+        "server/nurse_akali_103.py": "2508142bb0b50895e898d6cf48b5468c4226b3b0699b1dc6bf151321da47d366",
+        "server/player_store.py": "9a7433ef995ccacf630fd2cf93e0d4e28d931706518244964bf5b0d1145ae472",
+        "server/polar_ashe_103.py": "f6bac6167eeb09b317b7b7fc61023ef6dedf95543adb4884f8cfc362064ec6a4",
+        "server/recruit_exchange.py": "8a3f7e0f03630c131396df20dd9be188cfc13dce2b4524edc15933e591f9d0fe",
+        "server/santa_veigar_103.py": "b095b44efd4e949b0a835f6b10ae4c73e4564e68216e3a0258884dd3b4fce187",
+        "server/skill_balance_overlay.py": "104dba8f470de8e2fc0c2f7faa259603b850da1aad947bea44af1e1a515dcc9f",
+        "server/skill_books.py": "3d8c21912a1ec5cbf4ceb8596bed328e92c94fdd00fc9dc3d0285578fcc18fb9",
+        "server/spending_budget.py": "ef51e957d5697e9e4d53b8a1a8d5d42066c0656985ed44673dcfb96299315198",
+        "server/summon_panel_103.py": "fcbeb9d8bfe41865f382ea8d38b0ab417cf84f18b8a66a9205112d1856171323",
+        "server/summon_pools.py": "0426e8f49ef395ad73592831adb618707812bda820e57e43a430d1ed25f2f0bb",
+        "server/talent_stats_103.py": "efb425db490f84fabdd0579059cbfb88115a1b56f6d18dce40a4a2ae25480dc1",
+        "server/upstream_hero_config.py": "8cb2c86828c3eaca8f3d2b7b190e6462ba9fefff1744ba8f4b164265d6ade366",
+        "server/upstream_hero_config_delta.json": "12dfb7d8c9ed81fd79b9adb5a3a463beb6208e462d3c8156ed51a05252063baa",
+        "server/upstream_skill_priority.py": "f09114418933bca2a18f2262b1e61a9d19e4fb59464a4160cbb2f76d8c6af50b",
+        "server/vip_campaign.py": "6ac24f75d88fa9acae6fcec89a855f2f149fcd573e6eb2c4856a853b905dc941"
+      },
+      "gameVersion": "1.0.3",
+      "localExtension": {
+        "name": "game-1.0.3-authoring-and-events",
+        "newCapabilities": [
+          "skill.native-template.103",
+          "skill.events.v1"
+        ],
+        "pullRequest": "https://github.com/BigOrange-001/lal-rebuild/pull/21",
+        "status": "game PR #21 merged; review fixes synchronized; static checks only; no functional tests or packaging"
+      },
+      "note": "Offline authoring snapshot pinned to merged game PR #22 / main c82ad0b. Includes the final 1.0.3 hero skill calibration used by the shipped Android runtime. Pure hero/skill overlays and snapshot codec only; no gateway or battle simulator is bundled.",
+      "repository": "https://github.com/BigOrange-001/lal-rebuild",
+      "textNormalization": "LF; one inherited extra EOF blank line removed; hashes describe the vendored snapshot",
+      "workingTreeChanges": false
+    },
+    "targetCardCount": 19
+  },
+  "builtinImport104": {
+    "sourceFile": "九英雄技能修订合集.lalhero",
+    "sha256": "dfa825cd6b27a220e9e5db15485c86b31fdef0c0f2c0dcfb144705765bcce872"
+  }
+}

@@ -43,6 +43,185 @@ package com.meng52.game.module.avatar
 
       public static var iconStyle:int = 1;
 
+      public var bondLineup104:Array = null;
+
+      public function getBondRows104() : Array
+      {
+         var definitions:Array = GlobalData.$mConfig_simple.bonds_104 as Array;
+         var result:Array = [];
+         if(!definitions || !avatarData) return result;
+         var aid:String = String(avatarData.id);
+         var parts:Array = aid.split("_");
+         var family:String = parts[0]+"_"+parts[1];
+         var quality:int = int(parts[2]);
+         var roster:Object = GlobalData.$userData;
+         var aids:Array = [];
+         var snapshot:Array = mData && mData.bonds_104 is Array ? mData.bonds_104 as Array : null;
+         if(snapshot == null)
+         {
+            if(!GlobalData.modChannelAllowed(aid,"usage.destiny")) return result;
+            if(!roster || !roster.team || !roster.avatars || isOthers) return result;
+            var selected:int = roster.attrs && roster.attrs.team_num != null ? int(roster.attrs.team_num) : 0;
+            var lineup:Array = bondLineup104 != null ? bondLineup104 : roster.team[selected] as Array;
+            if(!lineup || lineup.indexOf(id)<0) return result;
+            var ids:Array = lineup.concat();
+            var dn:Object = roster.attrs ? roster.attrs.dn : null;
+            if(dn) for(var node:String in dn)
+            {
+               var nodeCfg:Array = GlobalData.$mConfig_simple.dn[node] as Array;
+               if(nodeCfg && nodeCfg[5]=="all" && dn[node] is Array && int(dn[node][0])>0) ids.push(dn[node][1]);
+            }
+            for each(var iid:Object in ids)
+            {
+               var hero:Object = roster.avatars[String(iid)];
+               if(hero)
+               {
+                  var candidateAid:String = String(hero.aid != null ? hero.aid : iid).split("|")[0];
+                  if(GlobalData.modChannelAllowed(candidateAid,"usage.destiny")) aids.push(candidateAid);
+               }
+            }
+         }
+         for each(var bond:Object in definitions)
+         {
+            if(bond.families.indexOf(family)<0) continue;
+            if(snapshot != null)
+            {
+               if(snapshot.indexOf(String(bond.id))>=0) result.push(bond);
+               continue;
+            }
+            var levels:Array = [quality];
+            if(quality==5 && int(bond.minimum_quality[family])==5) levels.push(4);
+            for each(var level:int in levels)
+            {
+               var matched:Boolean = true;
+               var selfMatched:Boolean = false;
+               for each(var member:String in bond.families)
+               {
+                  var needed:String = member+"_"+(level==4 && int(bond.minimum_quality[member])==5 ? 5 : level);
+                  if(needed==aid) selfMatched=true;
+                  if(aids.indexOf(needed)<0) matched=false;
+               }
+               if(matched && selfMatched) { result.push(bond); break; }
+            }
+         }
+         return result;
+      }
+
+      public function bondPanel104(stat:String, value:Number) : Number
+      {
+         var family:String = String(avatarData.id).split("_").slice(0,2).join("_");
+         var quality:String = String(avatarData.id).split("_")[2];
+         for each(var bond:Object in getBondRows104())
+         {
+            var benefit:Object = bond.benefits[family];
+            if(benefit.stats && benefit.stats[stat] != null) value = Tools.toInt(value*(1+Number(benefit.stats[stat])));
+            if(benefit.flat_by_quality && benefit.flat_by_quality[quality] && benefit.flat_by_quality[quality][stat] != null) value += Number(benefit.flat_by_quality[quality][stat]);
+         }
+         return value;
+      }
+
+      public function getEquipmentBondRows104() : Array
+      {
+         var all:Object = GlobalData.$mConfig_simple.equipment_bonds_104;
+         var definitions:Array = all && avatarData ? all[avatarData.id] as Array : null;
+         var result:Array = [];
+         if(!definitions) return result;
+         var ids:Array = [];
+         if(mData && mData.hp_max != null && mData.equipment_bonds_104 is Array) ids = mData.equipment_bonds_104 as Array;
+         else if(equips) for each(var item:Equip in equips) if(item && item.equipData) ids.push(String(item.equipData.id));
+         for each(var row:Object in definitions) if(ids.indexOf(String(row.equipment))>=0) result.push(row);
+         return result;
+      }
+
+      public function equipmentOutputRate104() : Number
+      {
+         return 1; // Equipment benefits are scoped to their skill variants.
+      }
+
+      public function equipmentSkillId104(source:String) : String
+      {
+         if(!source) return source;
+         var keys:Array = [];
+         for each(var row:Object in getEquipmentBondRows104()) keys.push(String(row.equipment));
+         keys.sort();
+         var all:Object = GlobalData.$mConfig_simple.equipment_skill_variants_104;
+         var hero:Object = all ? all[avatarData.id] : null;
+         var variants:Object = hero ? hero[source] : null;
+         return variants && variants[keys.join("|")] ? String(variants[keys.join("|")]) : source;
+      }
+
+      public function getEquipmentBondDescription104() : String
+      {
+         var all:Object = GlobalData.$mConfig_simple.equipment_bonds_104;
+         var definitions:Array = all && avatarData ? all[avatarData.id] as Array : null;
+         if(!definitions) return "";
+         var active:Array = getEquipmentBondRows104();
+         var text:String = "<br/>装备羁绊（本人穿戴，分别强化指定技能部分）";
+         for each(var row:Object in definitions)
+         {
+            var equipment:Object = GlobalData.$mConfig_equip[row.equipment];
+            var label:String = (equipment ? equipment.name : row.equipment)+" · "+row.name;
+            var info:String = label+"（"+(active.indexOf(row)>=0 ? "已激活" : "未激活")+"）<br/>"+row.info;
+            if(row.kind=="ordinary" && row.reworks) for(var rewriteName:String in row.reworks) info += "<br/>羁绊重做后："+row.reworks[rewriteName].info;
+            if(row.kind=="exclusive") info += "<br/>新增伤害、护盾、治疗系数另按全局80%结算。";
+            text += "<br/>"+Tools.formatHtmlText(info,active.indexOf(row)>=0 ? 0x55E889 : 0xFFD45C,false,15,"",0);
+         }
+         return text;
+      }
+
+      public function updateBondSkills104() : void
+      {
+         if(!GlobalData.$mConfig_simple.bonds_104 || !avatarData || mData && mData.hp_max) return;
+         var keys:Array = [];
+         for each(var bond:Object in getBondRows104()) keys.push(String(bond.id));
+         keys.sort();
+         var all:Object = GlobalData.$mConfig_simple.bond_skill_variants_104;
+         var variants:Object = all ? all[avatarData.id] : null;
+         var variant:Object = variants ? variants[keys.join("|")] : null;
+         var sourceTable:Object = GlobalData.$mConfig_simple.bond_skill_sources_104;
+         var sources:Object = sourceTable ? sourceTable[avatarData.id] : null;
+         var normal:String = variant && variant.skill && sources && sources.skill == avatarData.skill0 ? String(variant.skill) : avatarData.skill0;
+         var captain:String = variant && variant.leader_skill && sources && sources.leader_skill == avatarData.skill1 ? String(variant.leader_skill) : avatarData.skill1;
+         normal = equipmentSkillId104(normal);
+         captain = equipmentSkillId104(captain);
+         var heroRow104:Object = GlobalData.$mConfig_avatar[avatarData.id];
+         var passive104:String = heroRow104 && heroRow104.pl.length>13 ? heroRow104.pl[13] : null;
+         passive104 = equipmentSkillId104(passive104);
+         if(passive104 && (!skillB || skillB.skillSetData.id != passive104)) skillB = new SkillSet(passive104,this,1);
+         if(normal && (!skill0 || skill0.skillSetData.id != normal || skill0.lv != slv)) skill0 = new SkillSet(normal,this,slv);
+         if(captain && (!skill1 || skill1.skillSetData.id != captain)) skill1 = new SkillSet(captain,this,1,true);
+      }
+
+      public function getBondDescription104() : String
+      {
+         var definitions:Array = GlobalData.$mConfig_simple.bonds_104 as Array;
+         if(!definitions) return "";
+         var family:String = String(avatarData.id).split("_").slice(0,2).join("_");
+         var active:Array = getBondRows104();
+         var text:String = "";
+         var labels:Object = {hp:"生命",ap:"攻击",de_ph:"物防",de_ma:"法防",hit:"精准",flee:"闪避",crit:"暴击",tough:"韧性"};
+         for each(var bond:Object in definitions)
+         {
+            if(bond.families.indexOf(family)<0) continue;
+            var names:Array = [];
+            for each(var member:String in bond.families)
+            {
+               var hero:Object = GlobalData.$mConfig_avatar[member+"_"+bond.minimum_quality[member]];
+               names.push(hero ? hero.name : member);
+            }
+            var description:String = bond.name+"（"+(active.indexOf(bond)>=0 ? "已激活" : "未激活")+"）\n"+names.join("、");
+            var benefit:Object = bond.benefits[family];
+            if(benefit.stats) for(var stat:String in benefit.stats) description += "\n"+labels[stat]+" +"+Math.round(Number(benefit.stats[stat])*10000)/100+"%（独立乘区）";
+            var flats:Object = benefit.flat_by_quality ? benefit.flat_by_quality[String(getStar())] : null;
+            if(flats) for(stat in flats) description += "\n"+labels[stat]+" +"+flats[stat];
+            if(benefit.skill_rate) description += "\n技能数值 +"+Math.round(Number(benefit.skill_rate)*100)+"%";
+            if(bond.focus==family) description += "\n"+bond.mechanism.normal.name+"："+bond.mechanism.normal.info+(bond.mechanism.captain ? "\n"+bond.mechanism.captain.name+"："+bond.mechanism.captain.info : "");
+            if(bond.focus==family && GlobalData.$mConfig_simple.hero_skill_output_rate_104 != null) description += "\n伤害、护盾、治疗按上述技能基准的80%结算；增减益不变。";
+            text += "<br/>"+Tools.formatHtmlText(description.replace(/\n/g,"<br/>"),active.indexOf(bond)>=0 ? 0x55E889 : 0xFFD45C,false,15,"",0);
+         }
+         return text;
+      }
+
       private static var purpleBondMap:GameMap;
 
       private static function ensurePurpleBonds() : void
@@ -77,6 +256,7 @@ package com.meng52.game.module.avatar
 
       public function getPurpleBondIsActive() : Boolean
       {
+         if(GlobalData.$mConfig_simple.bonds_104) return getBondRows104().length>0;
          if(!GlobalData.modChannelAllowed(avatarData.id,"usage.destiny") || getStar()!=5 || getType()!=1 || !GlobalData.$userData || !GlobalData.$userData.team || !GlobalData.$userData.avatars) return false;
          var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
          if(!definitions) return false;
@@ -109,6 +289,7 @@ package com.meng52.game.module.avatar
 
       public function getPurpleBondDescription() : String
       {
+         if(GlobalData.$mConfig_simple.bonds_104) return getBondDescription104()+getEquipmentBondDescription104();
          if(getStar()!=5) return "";
          var definitions:Array = GlobalData.$mConfig_simple.purple_bonds as Array;
          if(!definitions) return "";
@@ -493,6 +674,7 @@ package com.meng52.game.module.avatar
          // not to its healing, shield, debuff or a nested normal skill.
          var manualFactor:Number = context && context.owner === this ? Number(context.manualDamageMultiplier) : 1;
          if(!isFinite(manualFactor) || manualFactor <= 0) manualFactor = 1;
+         manualFactor *= heroSkillOutputRate104();
          coefficient *= manualFactor;
          if(sharedTotal > 0) sharedTotal *= manualFactor;
          if(kind == 3) coefficient /= REAL_DAMAGE_RATE;
@@ -502,18 +684,32 @@ package com.meng52.game.module.avatar
          return context && (int(context.hitSerial) > hitCount);
       }
 
+      public function heroSkillOutputRate104() : Number
+      {
+         var rate:Object = GlobalData.$mConfig_simple.hero_skill_output_rate_104;
+         return getType() == 1 && rate != null ? Number(rate)*equipmentOutputRate104() : 1;
+      }
+
+      public function poisonSkillOutputRate104() : Number
+      {
+         var row:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[avatarData.id] : null;
+         var pack:String = row ? row.builtin_pack_104 : null;
+         var rate:Number = pack ? Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104)*equipmentOutputRate104() : heroSkillOutputRate104();
+         return pack == "nine" ? rate * 2 / 3 : rate;
+      }
+
       private function abilityHeal(target:Avatar, coefficient:Number) : void
       {
          if(!target || target.hp <= 0) return;
          flushParallelVisualBatch();
          var one:Vector.<Avatar> = new Vector.<Avatar>(); one.push(target);
-         attackAimList(one,4,coefficient,0,"FX60_HEAL");
+         attackAimList(one,4,coefficient*heroSkillOutputRate104(),0,"FX60_HEAL");
       }
 
       private function abilityShield(target:Avatar, coefficient:Number, duration:int = 2, healthOnly:Boolean = false) : void
       {
          if(!target || target.hp <= 0) return;
-         coefficient *= purpleBondMultiplier();
+         coefficient *= purpleBondMultiplier()*heroSkillOutputRate104();
          target.addBuff("shield",duration,Tools.toInt((healthOnly ? getHpMax() : getDamage()+0.1*getHpMax())*coefficient));
       }
 
@@ -686,7 +882,7 @@ package com.meng52.game.module.avatar
             else if(key == "grey" && abilitySerial >= state.until)
             {
                delete abilityState.grey;
-               if(hp > 0 && state.value > 0) { var greyShield:int = int(state.value * getRecoveryTalentMultiplier()); addBuff("shield",2,greyShield); abilityFeedback("灰色生命转护盾："+greyShield,"FX_S9160_SHIELD"); }
+               if(hp > 0 && state.value > 0) { var greyShield:int = int(state.value * getRecoveryTalentMultiplier()*heroSkillOutputRate104()); addBuff("shield",2,greyShield); abilityFeedback("灰色生命转护盾："+greyShield,"FX_S9160_SHIELD"); }
             }
             else if(state.until != undefined && abilitySerial > state.until) delete abilityState[key];
          }
@@ -794,6 +990,13 @@ package com.meng52.game.module.avatar
          return abilityEnemies(distance).length > 0;
       }
 
+      public function equipmentPart104(sourceSkill:*, part:String, value:Number) : Number
+      {
+         var row:Object = sourceSkill && sourceSkill.skillSetData ? GlobalData.$mConfig_skill[sourceSkill.skillSetData.id] : null;
+         var parts:Object = row ? row.equipment_parts_104 : null;
+         return parts && parts[part] != null ? value*Number(parts[part]) : value;
+      }
+
       public function executeAbility(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
          var parallelBatch:Object = ["illaoi_n", "illaoi_c", "jayce_n", "jayce_c", "maokai_c", "wukong_c", "gangplank_c", "yi_n", "riven_n", "riven_c", "orianna_n", "orianna_c", "alistar_n", "diana_n", "jinx_n", "jinx_c", "aoxing_c", "kaelthas_c", "cat_n", "cat_c", "polar_n", "polar_c", "santa_c"].indexOf(kind) >= 0 ? beginParallelVisualBatch() : null;
@@ -847,8 +1050,8 @@ package com.meng52.game.module.avatar
             case "illaoi_n":
                enemies = abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",500)); if(!enemies.length) return false;
                primary = enemies[0]; targets = [primary].concat(abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_2",250),primary,nativeAbilityNumber(sourceSkill,kind,"cast_3",3),false,"nearest",[primary])); count = 0;
-               for each(target in targets) if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_6",1.2)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_7",1),effect) && target.getType() == 1 && !target.isManualSummonUnit) ++count;
-               if(count) abilityHeal(this,nativeAbilityNumber(sourceSkill,kind,"cast_9",0.15)*Math.min(nativeAbilityNumber(sourceSkill,kind,"cast_10",3),count)*scale);
+               for each(target in targets) if(abilityHit(target,equipmentPart104(sourceSkill,"tentacle_hit",nativeAbilityNumber(sourceSkill,kind,"cast_6",1.2))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_7",1),effect) && target.getType() == 1 && !target.isManualSummonUnit) ++count;
+               if(count) abilityHeal(this,equipmentPart104(sourceSkill,"tentacle_heal",nativeAbilityNumber(sourceSkill,kind,"cast_9",0.15))*Math.min(nativeAbilityNumber(sourceSkill,kind,"cast_10",3),count)*scale);
                break;
             case "illaoi_c":
                for each(target in abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",350),null,nativeAbilityNumber(sourceSkill,kind,"cast_1",3))) abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",2),nativeAbilityNumber(sourceSkill,kind,"cast_3",1),effect);
@@ -865,8 +1068,8 @@ package com.meng52.game.module.avatar
                else
                {
                   if(!abilityDash(primary)) return false;
-                  if(abilityHit(primary,nativeAbilityNumber(sourceSkill,kind,"cast_10",1.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_11",1),effect)) primary.checkMove(false,nativeAbilityNumber(sourceSkill,kind,"cast_12",200),this,-1,true);
-                  abilityShield(this,nativeAbilityNumber(sourceSkill,kind,"cast_14",0.5)*scale);
+                  if(abilityHit(primary,equipmentPart104(sourceSkill,"hammer_hit",nativeAbilityNumber(sourceSkill,kind,"cast_10",1.8))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_11",1),effect)) primary.checkMove(false,nativeAbilityNumber(sourceSkill,kind,"cast_12",200),this,-1,true);
+                  abilityShield(this,equipmentPart104(sourceSkill,"hammer_shield",nativeAbilityNumber(sourceSkill,kind,"cast_14",0.5))*scale);
                }
                state.hammer = !state.hammer;
                break;
@@ -884,10 +1087,10 @@ package com.meng52.game.module.avatar
             case "nidalee_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650),null,nativeAbilityNumber(sourceSkill,kind,"cast_1",1),false,"farthest"); if(!enemies.length) return false; target=enemies[0];
                coefficient=(nativeAbilityNumber(sourceSkill,kind,"cast_4",1)+Math.min(sourceSkill.skillSetData.range,Math.abs(pos-target.pos))/Math.max(nativeAbilityNumber(sourceSkill,kind,"cast_5",1),sourceSkill.skillSetData.range))*scale;
-               if(abilityHit(target,coefficient,nativeAbilityNumber(sourceSkill,kind,"cast_6",2),effect)) abilityMark(target,"hunt",nativeAbilityNumber(sourceSkill,kind,"cast_8",3));
+               if(abilityHit(target,equipmentPart104(sourceSkill,"spear",coefficient),nativeAbilityNumber(sourceSkill,kind,"cast_6",2),effect)) abilityMark(target,"hunt",nativeAbilityNumber(sourceSkill,kind,"cast_8",3));
                break;
             case "nidalee_c":
-               ally=abilityAlly(); abilityHeal(ally,nativeAbilityNumber(sourceSkill,kind,"cast_0",0.7));
+               ally=abilityAlly(); abilityHeal(ally,equipmentPart104(sourceSkill,"primal_heal",nativeAbilityNumber(sourceSkill,kind,"cast_0",0.7)));
                target=abilityMarkedTarget("hunt",nativeAbilityNumber(sourceSkill,kind,"cast_2",700));
                if(target && abilityDash(target))
                {
@@ -896,8 +1099,8 @@ package com.meng52.game.module.avatar
                }
                break;
             case "kayle_n":
-               enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",500)); if(enemies.length && abilityHit(enemies[0],nativeAbilityNumber(sourceSkill,kind,"cast_2",1.2)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect)) abilityControl(enemies[0],"sunder",nativeAbilityNumber(sourceSkill,kind,"cast_6",2),nativeAbilityNumber(sourceSkill,kind,"cast_7",0.2)*scale);
-               abilityHeal(abilityAlly(),nativeAbilityNumber(sourceSkill,kind,"cast_8",0.45)*scale);
+               enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",500)); if(enemies.length && abilityHit(enemies[0],equipmentPart104(sourceSkill,"holy_hit",nativeAbilityNumber(sourceSkill,kind,"cast_2",1.2))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect)) abilityControl(enemies[0],"sunder",nativeAbilityNumber(sourceSkill,kind,"cast_6",2),nativeAbilityNumber(sourceSkill,kind,"cast_7",0.2)*scale);
+               abilityHeal(abilityAlly(),equipmentPart104(sourceSkill,"holy_heal",nativeAbilityNumber(sourceSkill,kind,"cast_8",0.45))*scale);
                break;
             case "kayle_c":
                ally=abilityAlly(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!ally) return false;
@@ -906,11 +1109,11 @@ package com.meng52.game.module.avatar
             case "maokai_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",500)); if(!enemies.length || !abilityDash(enemies[0])) return false;
                if(abilityHit(enemies[0],scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect)) abilityControl(enemies[0],"root",nativeAbilityNumber(sourceSkill,kind,"cast_6",1));
-               abilityState.sap={until:abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_7",2),manualEffectMultiplier:manualEffectMultiplier,debuff:false};
+               abilityState.sap={until:abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_7",2),manualEffectMultiplier:equipmentPart104(sourceSkill,"sap_heal",manualEffectMultiplier),debuff:false};
                break;
             case "maokai_c":
                for each(target in abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",700),null,nativeAbilityNumber(sourceSkill,kind,"cast_1",3),false,"nearest",null,true)) if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_3",1.8),nativeAbilityNumber(sourceSkill,kind,"cast_4",2),effect)) abilityControl(target,"root",nativeAbilityNumber(sourceSkill,kind,"cast_6",2));
-               abilityShield(this,nativeAbilityNumber(sourceSkill,kind,"cast_7",0.2),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),true);
+               abilityShield(this,equipmentPart104(sourceSkill,"root_shield",nativeAbilityNumber(sourceSkill,kind,"cast_7",0.2)),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),true);
                break;
             case "wukong_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",175)); if(!enemies.length) return false;
@@ -950,7 +1153,7 @@ package com.meng52.game.module.avatar
                {
                   var oldEvilStacks:int = int(abilityState.evilStacks);
                   abilityState.evilStacks = Math.min(nativeAbilityNumber(sourceSkill,kind,"cast_5",10),oldEvilStacks+nativeAbilityNumber(sourceSkill,kind,"cast_6",1));
-                  if(int(abilityState.evilStacks) > oldEvilStacks) abilityState.evilStackBonus = Number(abilityState.evilStackBonus || nativeAbilityNumber(sourceSkill,kind,"cast_7",0)) + nativeAbilityNumber(sourceSkill,kind,"cast_8",0.03) * activeManualEffectMultiplier();
+                  if(int(abilityState.evilStacks) > oldEvilStacks) abilityState.evilStackBonus = Number(abilityState.evilStackBonus || nativeAbilityNumber(sourceSkill,kind,"cast_7",0)) + equipmentPart104(sourceSkill,"evil_stack",nativeAbilityNumber(sourceSkill,kind,"cast_8",0.03)) * activeManualEffectMultiplier();
                   abilityFeedback("邪恶之力："+int(abilityState.evilStacks)+"/10","FX_S9160_STRONG");
                }
                break;
@@ -960,24 +1163,24 @@ package com.meng52.game.module.avatar
                target=enemies[0];
                var previousVeigarHit:Number = Number(abilityState.veigarCastHit || 0);
                abilityState.veigarCastHit = previousVeigarHit+30000;
-               try { abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_5",2)+nativeAbilityNumber(sourceSkill,kind,"cast_6",3)*(nativeAbilityNumber(sourceSkill,kind,"cast_7",1)-target.hp/target.hpMax),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),effect); }
+               try { abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_5",2)+equipmentPart104(sourceSkill,"execution",nativeAbilityNumber(sourceSkill,kind,"cast_6",3))*(nativeAbilityNumber(sourceSkill,kind,"cast_7",1)-target.hp/target.hpMax),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),effect); }
                finally { abilityState.veigarCastHit = previousVeigarHit; }
                break;
             case "elise_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               coefficient=scale+Math.min(getDamage(),target.hp*nativeAbilityNumber(sourceSkill,kind,"cast_2",0.04)*scale)/Math.max(nativeAbilityNumber(sourceSkill,kind,"cast_3",1),getDamage());
+               coefficient=scale+Math.min(getDamage(),target.hp*equipmentPart104(sourceSkill,"current_hp",nativeAbilityNumber(sourceSkill,kind,"cast_2",0.04))*scale)/Math.max(nativeAbilityNumber(sourceSkill,kind,"cast_3",1),getDamage());
                if(abilityHit(target,coefficient,nativeAbilityNumber(sourceSkill,kind,"cast_4",2),effect)) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_6",1));
                break;
             case "elise_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650),null,nativeAbilityNumber(sourceSkill,kind,"cast_1",1),true,"ratio"); if(!enemies.length || !abilityDash(enemies[0])) return false; target=enemies[0];
-               coefficient=nativeAbilityNumber(sourceSkill,kind,"cast_5",1.8)+Math.min(getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1.8),(target.hpMax-target.hp)*nativeAbilityNumber(sourceSkill,kind,"cast_7",0.12))/Math.max(nativeAbilityNumber(sourceSkill,kind,"cast_8",1),getDamage());
+               coefficient=nativeAbilityNumber(sourceSkill,kind,"cast_5",1.8)+Math.min(getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1.8),(target.hpMax-target.hp)*equipmentPart104(sourceSkill,"venom_execute",nativeAbilityNumber(sourceSkill,kind,"cast_7",0.12)))/Math.max(nativeAbilityNumber(sourceSkill,kind,"cast_8",1),getDamage());
                abilityHit(target,coefficient,nativeAbilityNumber(sourceSkill,kind,"cast_9",2),effect); abilitySummon("A_2013_5",nativeAbilityNumber(sourceSkill,kind,"cast_11",2),nativeAbilityNumber(sourceSkill,kind,"cast_12",0.3),nativeAbilityNumber(sourceSkill,kind,"cast_13",2),"elise");
                break;
             case "riven_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",450)); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
                count=int(abilityState.rivenStep)%nativeAbilityNumber(sourceSkill,kind,"cast_3",3)+nativeAbilityNumber(sourceSkill,kind,"cast_4",1); abilityState.rivenStep=count%nativeAbilityNumber(sourceSkill,kind,"cast_5",3); abilityFeedback("折翼之舞：第"+count+"式",effect);
-               for each(target in [primary].concat(abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_8",200),primary,nativeAbilityNumber(sourceSkill,kind,"cast_9",2),false,"nearest",[primary]))) if(abilityHit(target,(count==nativeAbilityNumber(sourceSkill,kind,"cast_11",3) ? nativeAbilityNumber(sourceSkill,kind,"cast_12",1.4) : nativeAbilityNumber(sourceSkill,kind,"cast_13",0.8))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_14",1),effect) && count==nativeAbilityNumber(sourceSkill,kind,"cast_15",3)) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_17",1));
-               if(count==nativeAbilityNumber(sourceSkill,kind,"cast_18",2)) abilityShield(this,nativeAbilityNumber(sourceSkill,kind,"cast_19",0.6)*scale);
+               for each(target in [primary].concat(abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_8",200),primary,nativeAbilityNumber(sourceSkill,kind,"cast_9",2),false,"nearest",[primary]))) if(abilityHit(target,(count==nativeAbilityNumber(sourceSkill,kind,"cast_11",3) ? equipmentPart104(sourceSkill,"third_dance",nativeAbilityNumber(sourceSkill,kind,"cast_12",1.4)) : nativeAbilityNumber(sourceSkill,kind,"cast_13",0.8))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_14",1),effect) && count==nativeAbilityNumber(sourceSkill,kind,"cast_15",3)) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_17",1));
+               if(count==nativeAbilityNumber(sourceSkill,kind,"cast_18",2)) abilityShield(this,equipmentPart104(sourceSkill,"second_shield",nativeAbilityNumber(sourceSkill,kind,"cast_19",0.6))*scale);
                break;
             case "riven_c":
                addBuff("strong",nativeAbilityNumber(sourceSkill,kind,"cast_1",2),nativeAbilityNumber(sourceSkill,kind,"cast_2",0.35));
@@ -986,32 +1189,32 @@ package com.meng52.game.module.avatar
                break;
             case "orianna_n":
                ally=abilityAlly(nativeAbilityNumber(sourceSkill,kind,"cast_0",3001),"front",true) || this; abilityState.ball=ally;
-               abilityShield(ally,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale);
+               abilityShield(ally,equipmentPart104(sourceSkill,"ball_shield",nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8))*scale);
                for each(target in abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_3",300),ally,nativeAbilityNumber(sourceSkill,kind,"cast_4",2))) abilityHit(target,scale,nativeAbilityNumber(sourceSkill,kind,"cast_5",2),effect);
                break;
             case "orianna_c":
                ally=abilityState.ball as Avatar; if(!ally || ally.hp<=0 || ally.line!=line) ally=this; abilityState.ball=ally;
                targets=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_1",350),ally,nativeAbilityNumber(sourceSkill,kind,"cast_2",3));
-               for each(target in targets) { abilityPull(target,ally,nativeAbilityNumber(sourceSkill,kind,"cast_3",200)); if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_4",2.2),nativeAbilityNumber(sourceSkill,kind,"cast_5",2),effect)) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_7",1)); }
+               for each(target in targets) { abilityPull(target,ally,nativeAbilityNumber(sourceSkill,kind,"cast_3",200)); if(abilityHit(target,equipmentPart104(sourceSkill,"shockwave",nativeAbilityNumber(sourceSkill,kind,"cast_4",2.2)),nativeAbilityNumber(sourceSkill,kind,"cast_5",2),effect)) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_7",1)); }
                abilityShield(ally,nativeAbilityNumber(sourceSkill,kind,"cast_8",0.8));
                break;
             case "nunu_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",175)); if(!enemies.length) return false;
                target=enemies[0]; abilityHit(target,(target.isManualSummonUnit ? nativeAbilityNumber(sourceSkill,kind,"cast_2",3) : nativeAbilityNumber(sourceSkill,kind,"cast_3",1.4))*scale,target.isManualSummonUnit ? nativeAbilityNumber(sourceSkill,kind,"cast_4",3) : nativeAbilityNumber(sourceSkill,kind,"cast_5",2),effect);
-               abilityHeal(this,nativeAbilityNumber(sourceSkill,kind,"cast_6",0.7)*scale);
+               abilityHeal(this,equipmentPart104(sourceSkill,"consume_heal",nativeAbilityNumber(sourceSkill,kind,"cast_6",0.7))*scale);
                break;
             case "nunu_c":
-               abilityShield(this,nativeAbilityNumber(sourceSkill,kind,"cast_0",1.2)); abilityState.channel={pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
+               abilityShield(this,equipmentPart104(sourceSkill,"channel_shield",nativeAbilityNumber(sourceSkill,kind,"cast_0",1.2))); abilityState.channel={pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
                break;
             case "alistar_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",500)); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
                targets=[primary].concat(abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_3",250),primary,nativeAbilityNumber(sourceSkill,kind,"cast_4",3),false,"nearest",[primary]));
                abilityHit(primary,nativeAbilityNumber(sourceSkill,kind,"cast_6",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_7",2),effect,nativeAbilityNumber(sourceSkill,kind,"cast_8",1.4)*scale);
-               for each(target in targets) if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_9",0.6)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_10",2),effect,target===primary ? nativeAbilityNumber(sourceSkill,kind,"cast_11",1.4)*scale : nativeAbilityNumber(sourceSkill,kind,"cast_12",0))) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_14",1));
+               for each(target in targets) if(abilityHit(target,equipmentPart104(sourceSkill,"pulverize",nativeAbilityNumber(sourceSkill,kind,"cast_9",0.6))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_10",2),effect,target===primary ? nativeAbilityNumber(sourceSkill,kind,"cast_11",1.4)*scale : nativeAbilityNumber(sourceSkill,kind,"cast_12",0))) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_14",1));
                addBuff("taunt",nativeAbilityNumber(sourceSkill,kind,"cast_16",2));
                break;
             case "alistar_c":
-               removeAllDebuff(); abilityHeal(this,nativeAbilityNumber(sourceSkill,kind,"cast_0",0.5));
+               removeAllDebuff(); abilityHeal(this,equipmentPart104(sourceSkill,"will_heal",nativeAbilityNumber(sourceSkill,kind,"cast_0",0.5)));
                abilityState.guard={kind:"alistar",charges:nativeAbilityNumber(sourceSkill,kind,"cast_2",3),until:abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_3",2),owner:this,manualEffectMultiplier:manualEffectMultiplier,debuff:false};
                break;
             case "diana_n":
@@ -1024,25 +1227,25 @@ package com.meng52.game.module.avatar
                for each(target in targets)
                {
                   marked=target.abilityHasMark(this,"moon"); abilityPull(target,this,nativeAbilityNumber(sourceSkill,kind,"cast_8",150));
-                  if(abilityHit(target,marked ? nativeAbilityNumber(sourceSkill,kind,"cast_9",2.7) : nativeAbilityNumber(sourceSkill,kind,"cast_10",1.8),nativeAbilityNumber(sourceSkill,kind,"cast_11",2),effect) && marked) delete target.abilityState["mark_moon_"+abilityIndex];
+                  if(abilityHit(target,marked ? equipmentPart104(sourceSkill,"moon_mark",nativeAbilityNumber(sourceSkill,kind,"cast_9",2.7)) : nativeAbilityNumber(sourceSkill,kind,"cast_10",1.8),nativeAbilityNumber(sourceSkill,kind,"cast_11",2),effect) && marked) delete target.abilityState["mark_moon_"+abilityIndex];
                }
-               abilityShield(this,nativeAbilityNumber(sourceSkill,kind,"cast_13",1));
+               abilityShield(this,equipmentPart104(sourceSkill,"moon_shield",nativeAbilityNumber(sourceSkill,kind,"cast_13",1)));
                break;
             case "khazix_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",500)); if(!enemies.length || !abilityDash(enemies[0])) return false;
-               abilityHit(enemies[0],(abilityIsolated(enemies[0]) ? nativeAbilityNumber(sourceSkill,kind,"cast_4",2.4) : nativeAbilityNumber(sourceSkill,kind,"cast_5",1.6))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_6",1),effect);
+               abilityHit(enemies[0],(abilityIsolated(enemies[0]) ? equipmentPart104(sourceSkill,"isolated_hit",nativeAbilityNumber(sourceSkill,kind,"cast_4",2.4)) : nativeAbilityNumber(sourceSkill,kind,"cast_5",1.6))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_6",1),effect);
                break;
             case "khazix_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",700),null,-1,true); primary=null;
                for each(target in enemies) if(abilityIsolated(target)) {primary=target; break;}
                if(!primary && enemies.length) primary=enemies[0]; if(!primary || !abilityDash(primary,true)) return false;
-               abilityHit(primary,abilityIsolated(primary) ? nativeAbilityNumber(sourceSkill,kind,"cast_3",4.2) : nativeAbilityNumber(sourceSkill,kind,"cast_4",2.8),nativeAbilityNumber(sourceSkill,kind,"cast_5",1),effect); addBuff("fleeup",nativeAbilityNumber(sourceSkill,kind,"cast_7",2),nativeAbilityNumber(sourceSkill,kind,"cast_8",800)*orangeFourStatBuffMultiplier);
+               abilityHit(primary,abilityIsolated(primary) ? nativeAbilityNumber(sourceSkill,kind,"cast_3",4.2) : nativeAbilityNumber(sourceSkill,kind,"cast_4",2.8),nativeAbilityNumber(sourceSkill,kind,"cast_5",1),effect); addBuff("fleeup",nativeAbilityNumber(sourceSkill,kind,"cast_7",2),equipmentPart104(sourceSkill,"escape_dodge",nativeAbilityNumber(sourceSkill,kind,"cast_8",800))*orangeFourStatBuffMultiplier);
                if(primary.hp<=0 && primary.getType()==1 && !primary.isManualSummonUnit) sourceSkill.abilityCooldownOverride=nativeAbilityNumber(sourceSkill,kind,"cast_11",3);
                break;
             case "malzahar_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
                if(target.buffs.purify) {target.removeBuff("purify",true); break;}
-               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1)*scale*manualDamageMultiplier,hops:0,debuff:true};
+               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1)*scale*manualDamageMultiplier*heroSkillOutputRate104(),hops:0,debuff:true};
                break;
             case "malzahar_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650)); if(!enemies.length) return false; target=enemies[0];
@@ -1052,12 +1255,12 @@ package com.meng52.game.module.avatar
             case "jinx_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650)); if(!enemies.length) return false; primary=enemies[0];
                abilityHit(primary,nativeAbilityNumber(sourceSkill,kind,"cast_2",1.5)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",1),effect);
-               for each(target in abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_4",250),primary,nativeAbilityNumber(sourceSkill,kind,"cast_5",2),false,"nearest",[primary])) abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_7",1.1)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_8",1),effect);
+               for each(target in abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_4",250),primary,nativeAbilityNumber(sourceSkill,kind,"cast_5",2),false,"nearest",[primary])) abilityHit(target,equipmentPart104(sourceSkill,"rocket_splash",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.1))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_8",1),effect);
                break;
             case "jinx_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",1000),null,nativeAbilityNumber(sourceSkill,kind,"cast_1",1),true,"ratio"); if(!enemies.length) return false; primary=enemies[0];
                targets=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_4",300),primary,nativeAbilityNumber(sourceSkill,kind,"cast_5",2),false,"nearest",[primary]);
-               abilityHit(primary,nativeAbilityNumber(sourceSkill,kind,"cast_7",2)+Math.min(nativeAbilityNumber(sourceSkill,kind,"cast_8",2)*getDamage(),(primary.hpMax-primary.hp)*nativeAbilityNumber(sourceSkill,kind,"cast_9",0.12))/Math.max(nativeAbilityNumber(sourceSkill,kind,"cast_10",1),getDamage()),nativeAbilityNumber(sourceSkill,kind,"cast_11",1),effect);
+               abilityHit(primary,nativeAbilityNumber(sourceSkill,kind,"cast_7",2)+Math.min(nativeAbilityNumber(sourceSkill,kind,"cast_8",2)*getDamage(),(primary.hpMax-primary.hp)*equipmentPart104(sourceSkill,"missing_hp",nativeAbilityNumber(sourceSkill,kind,"cast_9",0.12)))/Math.max(nativeAbilityNumber(sourceSkill,kind,"cast_10",1),getDamage()),nativeAbilityNumber(sourceSkill,kind,"cast_11",1),effect);
                for each(target in targets) abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_12",1.2),nativeAbilityNumber(sourceSkill,kind,"cast_13",1),effect);
                if(context && context.kills.length) {addBuff("strong",nativeAbilityNumber(sourceSkill,kind,"cast_15",2),nativeAbilityNumber(sourceSkill,kind,"cast_16",0.3)); addBuff("critup",nativeAbilityNumber(sourceSkill,kind,"cast_18",2),nativeAbilityNumber(sourceSkill,kind,"cast_19",800)*orangeFourStatBuffMultiplier); if(skill0) skill0.useSkill();}
                break;
@@ -1073,7 +1276,7 @@ package com.meng52.game.module.avatar
                break;
             case "caitlyn_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,scale,nativeAbilityNumber(sourceSkill,kind,"cast_2",1),effect)) abilityMark(target,"aim",nativeAbilityNumber(sourceSkill,kind,"cast_4",2),scale);
+               if(abilityHit(target,equipmentPart104(sourceSkill,"net_hit",scale),nativeAbilityNumber(sourceSkill,kind,"cast_2",1),effect)) abilityMark(target,"aim",nativeAbilityNumber(sourceSkill,kind,"cast_4",2),scale);
                checkMove(false,nativeAbilityNumber(sourceSkill,kind,"cast_5",250));
                break;
             case "caitlyn_c":
@@ -1083,11 +1286,11 @@ package com.meng52.game.module.avatar
                   if(team==1 ? other.pos>primary.pos && other.pos<pos : other.pos<primary.pos && other.pos>pos) {target=other; break;}
                }
                addBuff("hitup",nativeAbilityNumber(sourceSkill,kind,"cast_8",1),nativeAbilityNumber(sourceSkill,kind,"cast_9",800)*orangeFourStatBuffMultiplier); marked=target.abilityHasMark(this,"aim");
-               if(abilityHit(target,marked ? nativeAbilityNumber(sourceSkill,kind,"cast_11",5) : nativeAbilityNumber(sourceSkill,kind,"cast_12",4),nativeAbilityNumber(sourceSkill,kind,"cast_13",1),effect) && marked) delete target.abilityState["mark_aim_"+abilityIndex];
+               if(abilityHit(target,marked ? equipmentPart104(sourceSkill,"marked_shot",nativeAbilityNumber(sourceSkill,kind,"cast_11",5)) : nativeAbilityNumber(sourceSkill,kind,"cast_12",4),nativeAbilityNumber(sourceSkill,kind,"cast_13",1),effect) && marked) delete target.abilityState["mark_aim_"+abilityIndex];
                break;
             case "kaelthas_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2)*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
+               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
                break;
             case "kaelthas_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",700)); if(!enemies.length) return false; primary=enemies[0];
@@ -1095,7 +1298,7 @@ package com.meng52.game.module.avatar
                {
                   state=target.abilityState["bomb_"+abilityIndex];
                   target.abilityState.bombConsumeOwner=this;
-                  landed=abilityHit(target,state ? nativeAbilityNumber(sourceSkill,kind,"cast_6",4) : nativeAbilityNumber(sourceSkill,kind,"cast_7",2.2),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),effect);
+                  landed=abilityHit(target,state ? equipmentPart104(sourceSkill,"consume_bomb",nativeAbilityNumber(sourceSkill,kind,"cast_6",4)) : nativeAbilityNumber(sourceSkill,kind,"cast_7",2.2),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),effect);
                   delete target.abilityState.bombConsumeOwner;
                   if(landed && state) delete target.abilityState["bomb_"+abilityIndex];
                }
@@ -1106,7 +1309,7 @@ package com.meng52.game.module.avatar
                {
                   var bounceSource:Avatar = i == 0 ? this : primary;
                   if(i>0) { enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_6",300),primary,nativeAbilityNumber(sourceSkill,kind,"cast_7",1),false,"nearest",targets); if(!enemies.length) break; primary=enemies[0]; targets.push(primary); }
-                  if(abilityHit(primary,(i==0 ? nativeAbilityNumber(sourceSkill,kind,"cast_11",1.4) : nativeAbilityNumber(sourceSkill,kind,"cast_12",1))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_13",2),effect,0,bounceSource) && primary.getType()==1 && !primary.isManualSummonUnit) marked=true;
+                  if(abilityHit(primary,(i==0 ? nativeAbilityNumber(sourceSkill,kind,"cast_11",1.4) : equipmentPart104(sourceSkill,"lightning_bounce",nativeAbilityNumber(sourceSkill,kind,"cast_12",1)))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_13",2),effect,0,bounceSource) && primary.getType()==1 && !primary.isManualSummonUnit) marked=true;
                }
                if(marked) { abilityState.thunder=Math.min(nativeAbilityNumber(sourceSkill,kind,"cast_16",3),int(abilityState.thunder)+nativeAbilityNumber(sourceSkill,kind,"cast_17",1)); abilityFeedback("风暴电荷："+int(abilityState.thunder)+"/3","FX_A_1114_MAGIC"); }
                break;
@@ -1118,7 +1321,7 @@ package com.meng52.game.module.avatar
                   if(enemies.length>i) {i=enemies.length; targets=abilityCandidates(otherTeam,lane,pos,GameMapConfig.LINE_POS,nativeAbilityNumber(sourceSkill,kind,"cast_9",4),false,"front");}
                }
                i=0;
-               for each(target in targets) if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_12",1.8)+nativeAbilityNumber(sourceSkill,kind,"cast_13",0.4)*count,nativeAbilityNumber(sourceSkill,kind,"cast_14",2),effect) && count==nativeAbilityNumber(sourceSkill,kind,"cast_15",3) && target.getType()==1 && !target.isManualSummonUnit && i++<nativeAbilityNumber(sourceSkill,kind,"cast_17",2)) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_19",1));
+               for each(target in targets) if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_12",1.8)+equipmentPart104(sourceSkill,"storm_charge",nativeAbilityNumber(sourceSkill,kind,"cast_13",0.4))*count,nativeAbilityNumber(sourceSkill,kind,"cast_14",2),effect) && count==nativeAbilityNumber(sourceSkill,kind,"cast_15",3) && target.getType()==1 && !target.isManualSummonUnit && i++<nativeAbilityNumber(sourceSkill,kind,"cast_17",2)) abilityControl(target,"stun",nativeAbilityNumber(sourceSkill,kind,"cast_19",1));
                break;
             default: return false;
          }
@@ -1170,10 +1373,12 @@ package com.meng52.game.module.avatar
          if(allies.length == 0) return false;
          var target:Avatar;
          var amount:int;
+         var healingRate:Number = Number(sourceSkill.getNativeSetting("manualEffectMultiplier",1));
+         if(!isFinite(healingRate) || healingRate <= 0) healingRate = 1;
          if(kind == "nurse_n")
          {
             for each(target in allies) if(target.hp > 0) target.addBuff("purify",1);
-            amount = Tools.toInt(Tools.toInt(getDamage()*(1+checkTalent(1)))*Number(sourceSkill.getNativeAction()[4]));
+            amount = Tools.toInt(Tools.toInt(getDamage()*(1+checkTalent(1)))*Number(sourceSkill.getNativeAction()[4])*healingRate*heroSkillOutputRate104());
             for each(target in allies)
             {
                if(target.hp <= 0) continue;
@@ -1185,7 +1390,7 @@ package com.meng52.game.module.avatar
             var primary:Avatar = allies[0];
             for each(target in allies)
                if(Number(target.hp)/Math.max(1,target.hpMax) < Number(primary.hp)/Math.max(1,primary.hpMax)) primary = target;
-            amount = Tools.toInt(hpMax*0.5);
+            amount = Tools.toInt(hpMax*0.5*healingRate*heroSkillOutputRate104());
             // Keep both entries when the most injured target is this caster.
             for each(target in [primary,this])
             {
@@ -1352,8 +1557,7 @@ package com.meng52.game.module.avatar
             var before:Number = Number(context.damage);
             for each(target in targets) abilityHit(target,Number(params[5]),3,effect);
             abilityHit(primary,Number(params[6]),3,effect);
-            var restore:int = Tools.toInt(Math.max(0,Number(context.damage)-before)*Number(params[7]));
-            flushParallelVisualBatch();
+            var restore:int = Tools.toInt(Math.max(0,Number(context.damage)-before)*Number(params[7])*heroSkillOutputRate104());
             if(hp > 0 && restore > 0) injured(restore,1,null,4,null,false,this);
             return true;
          }
@@ -1687,6 +1891,24 @@ package com.meng52.game.module.avatar
          if(gate.hpBelow != null && Number(Math.max(0,hp))/Math.max(1,hpMax) > Number(gate.hpBelow)) return false;
          if(gate.requiredBuff && !hasModBuff(String(gate.requiredBuff))) return false;
          if(gate.absentBuff && hasModBuff(String(gate.absentBuff))) return false;
+         if(gate.otherHpBelow != null && (!other || Math.max(0,other.hp)/Math.max(1,other.hpMax) > Number(gate.otherHpBelow))) return false;
+         if(gate.otherRequiredBuff && (!other || !other.hasModBuff(String(gate.otherRequiredBuff)))) return false;
+         var nearbyRadius:Number = gate.nearbyRadius == null ? 600 : Number(gate.nearbyRadius);
+         var nearbyFriend:int = 0;
+         var nearbyFoe:int = 0;
+         var nearbySummon:int = 0;
+         var nearby:Avatar;
+         for each(nearby in GameMap.currentMap.getAliveList(team))
+         {
+            if(nearby === this || nearby.line != line || Math.abs(nearby.pos-pos) > nearbyRadius) continue;
+            ++nearbyFriend;
+            if(nearby.isManualSummonUnit || nearby.getType() == 2) ++nearbySummon;
+         }
+         for each(nearby in GameMap.currentMap.getAliveList(team == 1 ? 2 : 1))
+         {
+            if(nearby.line == line && Math.abs(nearby.pos-pos) <= nearbyRadius) ++nearbyFoe;
+         }
+         if(nearbyFriend < int(gate.nearbyAllies || 0) || nearbyFoe < int(gate.nearbyEnemies || 0) || nearbySummon < int(gate.nearbySummons || 0)) return false;
          var ownTurn:int = manualOwnerActionSerial;
          var readyTurn:int = abilityState.modEventReady == null ? skillB.skillSetData.warmup : int(abilityState.modEventReady);
          if(ownTurn < readyTurn) return false;
@@ -1697,6 +1919,12 @@ package com.meng52.game.module.avatar
          }
          var limit:int = gate.maxPerRound == null ? 1 : int(gate.maxPerRound);
          if(int(abilityState.modEventCount) >= limit) return false;
+         var every:int = gate.everyEvents == null ? 1 : int(gate.everyEvents);
+         if(every > 1)
+         {
+            abilityState.modFilteredEvents = int(abilityState.modFilteredEvents || 0)+1;
+            if(int(abilityState.modFilteredEvents) < every) return false;
+         }
          var previous:Object = skillB.modEventContext;
          skillB.modEventContext = {event:event,source:source,target:target,amount:Math.max(0,amount),overheal:Math.max(0,overheal)};
          if(!skillB.canModEventCast()) { skillB.modEventContext = previous; return false; }
@@ -1706,6 +1934,7 @@ package com.meng52.game.module.avatar
          abilityState.modEventBusy = true;
          abilityState.modEventCount = int(abilityState.modEventCount)+1;
          abilityState.modEventReady = ownTurn+skillB.skillSetData.cooldown;
+         abilityState.modFilteredEvents = 0;
          try { skillB.useSkill(); }
          finally { abilityState.modEventBusy = false; --modEventDepth; skillB.modEventContext = previous; }
          return true;
@@ -2097,6 +2326,14 @@ package com.meng52.game.module.avatar
 
       public function setDestinyAndDN(param1:String = "", param2:Array = null, param3:Array = null, param4:Object = null, param5:Object = null, param6:Boolean = false) : void
       {
+         if(GlobalData.$mConfig_simple.bonds_104)
+         {
+            bondLineup104 = param2;
+            mDestiny = null;
+            mDNdata = PanelDetailDN.getDNAttrsAllValue(param5);
+            updateBondSkills104();
+            return;
+         }
          mDestiny = PanelCenterDNTeam.getDestinyMyAll(param1 == "" ? id : param1,param2,param3,param4,param5,param6);
          mDNdata = PanelDetailDN.getDNAttrsAllValue(param5);
          if(mDestiny.skill0.length > 0)
@@ -2143,6 +2380,7 @@ package com.meng52.game.module.avatar
          if(!param1 || param1.length == 0)
          {
             skill2 = null;
+            updateBondSkills104();
             return;
          }
          if(param2)
@@ -2186,6 +2424,7 @@ package com.meng52.game.module.avatar
             }
          }
          skill2 = getBookSkill();
+         updateBondSkills104();
       }
 
       public function getIndex() : int
@@ -2878,6 +3117,10 @@ package com.meng52.game.module.avatar
       public function toDataObj() : Object
       {
          var _loc1_:Object = {};
+         _loc1_.equipment_bonds_104 = [];
+         for each(var equipmentBond104:Object in getEquipmentBondRows104()) _loc1_.equipment_bonds_104.push(String(equipmentBond104.equipment));
+         _loc1_.bonds_104 = [];
+         for each(var bond104:Object in getBondRows104()) _loc1_.bonds_104.push(String(bond104.id));
          _loc1_.aid = avatarData.id;
          _loc1_.ap = ap;
          _loc1_.morph = morph;
@@ -3229,6 +3472,7 @@ package com.meng52.game.module.avatar
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          var _loc11_:Buff = new Buff(param1,param2,param3);
          _loc11_.source = source;
+         if(param1 == "poison" && source && GlobalData.$mConfig_simple.hero_skill_output_rate_104 != null) _loc11_.poisonHpRate104 = source.poisonSkillOutputRate104();
          var _loc12_:Buff = buffs[param1];
          // A timed revival must never shorten an existing permanent one.
          // Legacy bless uses value 0; the explicit timed_bless action uses 1.
@@ -3412,6 +3656,7 @@ package com.meng52.game.module.avatar
                   break;
                case "poison":
                case "burn":
+                  _loc12_.poisonHpRate104 = Math.max(_loc12_.poisonHpRate104,_loc11_.poisonHpRate104);
                   _loc12_.value = int(_loc12_.value * _loc12_.round / _loc11_.round + _loc11_.value);
                   // Native DOT merges into one pool; the latest accepted applier owns it.
                   _loc12_.source = _loc11_.source;
@@ -3664,7 +3909,7 @@ package com.meng52.game.module.avatar
          if(_loc1_)
          {
             _loc5_ = DisplayTools.getAttrs("POISON_EFF");
-            injured(Tools.toInt(_loc1_.value + GlobalData.$mConfig_simple.attack[18] * hpMax),1,_loc5_,6,_loc1_.source,false,_loc1_.source,null,"poison");
+            injured(Tools.toInt(_loc1_.value + GlobalData.$mConfig_simple.attack[18] * hpMax * (_loc1_.poisonHpRate104 > 0 ? _loc1_.poisonHpRate104 : 1)),1,_loc5_,6,_loc1_.source,false,_loc1_.source,null,"poison");
             if(hp <= 0)
             {
                hp = 0;
@@ -3979,6 +4224,7 @@ package com.meng52.game.module.avatar
          _loc4_ = applyOwnedGuildResearch("hp",_loc4_);
          _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("hp")));
          _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("hp") / 100));
+         _loc4_ = Tools.toInt(bondPanel104("hp",_loc4_));
          return Math.max(_loc4_,0);
       }
 
@@ -4086,6 +4332,7 @@ package com.meng52.game.module.avatar
             _loc6_ = applyOwnedGuildResearch("ap",_loc6_);
          _loc6_ = Tools.toInt(_loc6_ * (1 + getBookCombatBonus("ap")));
          _loc6_ = Tools.toInt(_loc6_ * (1 + ownGrowthValue("attack") / 100));
+         _loc6_ = Tools.toInt(bondPanel104("ap",_loc6_));
          }
          var _loc4_:Number = 1;
          if(buffs)
@@ -4190,6 +4437,7 @@ package com.meng52.game.module.avatar
             _loc4_ = applyOwnedGuildResearch("de_ph",_loc4_);
          _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("de_ph")));
          _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("defense") / 100));
+         _loc4_ = Tools.toInt(bondPanel104("de_ph",_loc4_));
          }
          var _loc5_:Number = 1;
          if(buffs)
@@ -4276,6 +4524,7 @@ package com.meng52.game.module.avatar
             _loc4_ = applyOwnedGuildResearch("de_ma",_loc4_);
          _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("de_ma")));
          _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("defense") / 100));
+         _loc4_ = Tools.toInt(bondPanel104("de_ma",_loc4_));
          }
          var _loc5_:Number = 1;
          if(buffs)
@@ -4384,6 +4633,7 @@ package com.meng52.game.module.avatar
             }
          }
          if(!hpMax) _loc3_ = Tools.toInt(_loc3_ * (1 + getBookCombatBonus("hit")));
+         if(!hpMax) _loc3_ = Tools.toInt(bondPanel104("hit",_loc3_));
          if(buffs)
          {
             _loc1_ = buffs["hitup"] as Buff;
@@ -4424,6 +4674,7 @@ package com.meng52.game.module.avatar
             }
          }
          if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("flee")));
+         if(!hpMax) _loc2_ = Tools.toInt(bondPanel104("flee",_loc2_));
          if(buffs)
          {
             _loc1_ = buffs["fleeup"] as Buff;
@@ -4464,6 +4715,7 @@ package com.meng52.game.module.avatar
             }
          }
          if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("crit")));
+         if(!hpMax) _loc2_ = Tools.toInt(bondPanel104("crit",_loc2_));
          if(buffs)
          {
             _loc1_ = buffs["critup"] as Buff;
@@ -4504,6 +4756,7 @@ package com.meng52.game.module.avatar
             }
          }
          if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("tough")));
+         if(!hpMax) _loc2_ = Tools.toInt(bondPanel104("tough",_loc2_));
          if(buffs)
          {
             _loc1_ = buffs["toughup"] as Buff;
@@ -4851,6 +5104,7 @@ package com.meng52.game.module.avatar
 
       public function getPower(param1:Boolean = false, param2:int = -1, param3:Boolean = false) : Number
       {
+         updateBondSkills104();
          var _loc10_:Number = skill0 ? skill0.getPower() : 0;
          var _loc9_:Number = param1 ? (skill1 ? skill1.getPower() : 0) : 0;
          var _loc4_:Number = skill2 ? skill2.getPower() : 0;
@@ -4861,7 +5115,7 @@ package com.meng52.game.module.avatar
          {
             param2 = lv;
          }
-         var _loc5_:Number = Math.pow(getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA,2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(getHit() + getFlee() + getCrit() + getTough(),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
+         var _loc5_:Number = Math.pow(Math.max(0,getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA),1.5) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(Math.max(0,getHit() + getFlee() + getCrit() + getTough()),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
       }
@@ -5059,6 +5313,7 @@ package com.meng52.game.module.avatar
 
       public function initFightAttr() : void
       {
+         updateBondSkills104();
          initializingFightAttributes = true;
          if(!(mData && mData.tpl))
          {
@@ -5152,8 +5407,8 @@ package com.meng52.game.module.avatar
          {
             skillB.cooldown();
          }
-         emitModEvent("turn_start",this,this);
          getTeamHp();
+         emitModEvent("turn_start",this,this);
          if(checkBuffOfSkillB())
          {
             checkSkillB();

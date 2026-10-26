@@ -65,7 +65,7 @@ const context = vm.createContext({
       return Math.hypot(attrs.x2-attrs.x1,attrs.y2-attrs.y1)/attrs.sp;
     }},
   AvatarData: {isAttack() { return true; }, canMiss() { return true; }},
-  GlobalData: {$modRuntime:{}}, Sprite, Quad, Tween, trace: noop, int: Math.trunc,
+  GlobalData: {$modRuntime:{},$mConfig_skill:{}}, Sprite, Quad, Tween, trace: noop, int: Math.trunc,
   Math, Number, isFinite, Point, Rectangle, DragonBonesSprite
 });
 function install(target, name, params) {
@@ -88,7 +88,7 @@ if (input.mode === 'summon') {
       getPhaseLv() { return 0; }, getStar() { return Number(aid.split('_').at(-1)); },
       getCultivationGainFromSlope() { return 0; }, getSymp() { return [0,0,0,0]; },
       applyOwnedGuildResearch(key, value) { return value; },
-      initHalo:noop, initSkills:noop, ready:noop, initbuffs() { this.buffs = {}; },
+      updateBondSkills104:noop,bondPanel104:(stat,value)=>value,initHalo:noop, initSkills:noop, ready:noop, initbuffs() { this.buffs = {}; },
       addBuff(key, rounds) { this.buffs[key] = {rounds}; }});
     for (const key of fields) {
       let value=0;

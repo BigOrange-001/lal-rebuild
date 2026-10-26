@@ -70,12 +70,15 @@ package com.meng52.game.module.skill
 
       public function getStar() : int
       {
-         return getMechanismId().split("_")[2];
+         return skillSetData.id.split("_")[2];
       }
+
+      public function getMechanismId104() : String { return getMechanismId(); }
 
       public function getMechanismId() : String
       {
-         var source:String = activeNativeSource || skillSetData.modNativeSource;
+         var row104:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         var source:String = activeNativeSource || skillSetData.modNativeSource || (row104 ? row104.equipment_source_skill_104 : null);
          return source && GlobalData.$mConfig_skill && GlobalData.$mConfig_skill[source] ? source : skillSetData.id;
       }
 
@@ -446,6 +449,8 @@ package com.meng52.game.module.skill
       public function getPower() : Number
       {
          var _loc1_:int = getStar();
+         var bondRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         var bondRate:Number = bondRow && bondRow.bond_power_rate_104 != null ? Number(bondRow.bond_power_rate_104) : 1;
          if(isBookSkill)
          {
             if(isEquipUp)
@@ -456,9 +461,9 @@ package com.meng52.game.module.skill
          }
          if(!isSuper)
          {
-            return _loc1_ * Avatar.POWER_SKILL_0_STAR + lv * Avatar.POWER_SKILL_0_LV;
+            return (_loc1_ * Avatar.POWER_SKILL_0_STAR + lv * Avatar.POWER_SKILL_0_LV) * bondRate;
          }
-         return _loc1_ * Avatar.POWER_SKILL_1_STAR;
+         return _loc1_ * Avatar.POWER_SKILL_1_STAR * bondRate;
       }
 
       public function init() : void
@@ -622,6 +627,12 @@ package com.meng52.game.module.skill
          return hasCastTargets();
       }
 
+      private function baseActionCount104() : int
+      {
+         var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         return row && row.equipment_base_action_count_104 != null ? int(row.equipment_base_action_count_104) : skills.length;
+      }
+
       private function hasCastTargets() : Boolean
       {
          if(!avatar || (avatar.hp <= 0 && (!modEventContext || modEventContext.event != "death")) || !GameMap.currentMap || !skills || skills.length == 0) return false;
@@ -643,7 +654,7 @@ package com.meng52.game.module.skill
          var allyPrimary:Boolean = false;
          try
          {
-            for(var index:int = 0; index < skills.length; index++)
+            for(var index:int = 0; index < baseActionCount104(); index++)
             {
                var action:Array = skills[index];
                var kind:String = String(action[0]);
@@ -688,7 +699,7 @@ package com.meng52.game.module.skill
          if(!skills || !skillSetData.actionTargetPolicies) return false;
          var _loc5_:Vector.<Avatar> = GameMap.currentMap.getAliveList(avatar.team) as Vector.<Avatar>;
          _loc1_ = 0;
-         while(_loc1_ < skills.length)
+         while(_loc1_ < baseActionCount104())
          {
             _loc2_ = skills[_loc1_];
             _loc3_ = getActionPolicy(_loc1_);
@@ -3623,7 +3634,7 @@ package com.meng52.game.module.skill
          if(skillSetData.modNativeSource && policy)
             return String(policy.skillId) == skillSetData.id && int(policy.maxAlive) >= 1 && int(policy.maxAlive) <= 16 && int(policy.ttlOwnerTurns) >= 1 && int(policy.ttlOwnerTurns) <= 100;
          if(_loc2_.indexOf(_loc1_) < 0 || !policy) return false;
-         if(String(policy.skillId) != _loc1_ || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
+         if(String(policy.skillId) != skillSetData.id || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
          if(_loc1_.indexOf("1029_") >= 0) return String(policy.unitId) == "A_2002_5" && String(policy.familyKey) == "manual-1029-tibbers" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
          if(_loc1_.indexOf("1124_") >= 0) return String(policy.unitId) == "A_3002_2" && String(policy.familyKey) == "manual-1124-soldier" && int(policy.maxAlive) == 2 && Number(policy.attackRange) == 175 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true && int(policy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
          if(_loc1_.indexOf("1127_") >= 0) return GlobalData.baseModHeroId(String(policy.unitId)) == GlobalData.baseModHeroId(String(avatar.avatarData.id)) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
@@ -3660,7 +3671,9 @@ package com.meng52.game.module.skill
             return;
          }
          oldSkillId = String(avatar.skill0.skillSetData.id);
-         if(allowedNormalIds.indexOf(avatar.skill0.getMechanismId()) < 0 || avatar.skill0.getMechanismId() != "S_621132_" + getMechanismId().split("_")[2])
+         var normalDefinition104:Object = GlobalData.$mConfig_skill[oldSkillId];
+         var normalSource104:String = normalDefinition104 && normalDefinition104.builtin_native_source_104 ? String(normalDefinition104.builtin_native_source_104) : avatar.skill0.getMechanismId();
+         if(allowedNormalIds.indexOf(normalSource104) < 0 || normalSource104 != "S_621132_" + String(avatar.avatarData.id).substr(-1))
          {
             GameMapTools.gameTrace("分身仅允许复制同星已核验普通技能",skillSetData.id,oldSkillId,avatar.id);
             return;

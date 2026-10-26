@@ -215,8 +215,8 @@ def make_template(sid, native, base):
                      if len(row.get('pl',[]))>13 and row['pl'][13]==sid and row.get('skill_diff')})
     result={'id':'Template_'+sid, 'name':native.get('name',sid), 'description':native.get('info',''),
             'model':MODEL, 'nativeTemplate':{'source':'builtin:skill/'+sid,'sourceDigest':digest(native),
-                'settings':copy.deepcopy({k:v for k,v in native.items() if k not in ('id','name','info','skill')}),
-                'passiveTrigger':triggers[0] if len(triggers)==1 else 0, 'runtimeVersion':'1.0.3'},
+                'settings':copy.deepcopy({k:v for k,v in native.items() if k not in ('id','name','info','skill','modNativeSource','modPassiveTrigger','abilityParameters')}),
+                'passiveTrigger':triggers[0] if len(triggers)==1 else native.get('modPassiveTrigger',0), 'runtimeVersion':'1.0.3'},
             'actions':[{'type':a[0],'arguments':copy.deepcopy(a[1:])} for a in native.get('skill',[])],
             'upgrades':[]}
     kinds={a[1] for a in native.get('skill',[]) if a[0]=='manual_ability'}
@@ -453,7 +453,7 @@ def compile_template(skill,base,sid):
     result=copy.deepcopy(skill['nativeTemplate']['settings'])
     result.update(id=sid,name=skill['name'],skill=[[a['type']]+copy.deepcopy(a['arguments']) for a in skill['actions']])
     if 'info' in source or skill['description']:result['info']=skill['description']
-    result['modNativeSource']=source['id']
+    result['modNativeSource']=source.get('modNativeSource') or source.get('equipment_source_skill_104') or source.get('builtin_native_source_104') or source['id']
     result['modPassiveTrigger']=skill['nativeTemplate']['passiveTrigger']
     if 'abilityParameters' in skill['nativeTemplate']:
         result['nativeAbilityParameters']=copy.deepcopy(skill['nativeTemplate']['abilityParameters'])

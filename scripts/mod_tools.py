@@ -30,10 +30,20 @@ def load_base(path):
     document=apply_halo_progression(document)
     from mod_authoring_103 import apply_mod_authoring_103
     apply_mod_authoring_103(document)
+    from hero_packs_104 import apply_hero_packs_104
+    apply_hero_packs_104(document)
+    from orange_ascension_104 import apply_orange_ascension_104
+    apply_orange_ascension_104(document)
     from tower_rewards_103 import apply_tower_rewards_103
     from ancient_trial_103 import apply_ancient_trial_103
     from material_attempts_103 import apply_material_attempts_103
     for apply in (apply_tower_rewards_103,apply_ancient_trial_103,apply_material_attempts_103):apply(document)
+    from power_balance_104 import apply_power_balance_104
+    from resource_drops_104 import apply_resource_drops_104
+    from bonds_104 import apply_bonds_104
+    from equipment_bonds_104 import apply_equipment_bonds_104
+    from skill_output_104 import apply_skill_output_104
+    for apply in (apply_power_balance_104,apply_resource_drops_104,apply_bonds_104,apply_equipment_bonds_104,apply_skill_output_104):apply(document)
     document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
     return document
 

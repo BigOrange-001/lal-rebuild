@@ -20,6 +20,7 @@ TARGETS = ('self', 'all_allies', 'all_enemies', 'ally_radius',
 BUFFS = ('shield', 'purify', 'strong', 'weak', 'sunder', 'steel',
          'bless', 'critup', 'toughup', 'fleeup', 'hitup', 'stun','curse','timed_bless')
 CONDITION_BUFFS = BUFFS + ('root','poison','burn','evil','silence','taunt','armor','book_penetration')
+EVENT_FILTERS = {'otherHpBelow','otherRequiredBuff','nearbyEnemies','nearbyAllies','nearbySummons','nearbyRadius','everyEvents'}
 GROWTH_FIELDS = {'attackRatio': 5, 'maxHpRatio': 6, 'amount': 7,'eventRatio':18,'overhealRatio':19}
 DEFAULTS = dict(target='self', centerAction=-1, radius=0, attackRatio=0,
                 maxHpRatio=0, amount=0, buff='shield', duration=1, distance=0,
@@ -41,7 +42,7 @@ def validate(skill, path='skill'):
     number(skill['range'],path+'.range',0,10000,True)
     number(skill['maxLevel'],path+'.maxLevel',1,10,True)
     trigger=skill['trigger']
-    object_(trigger,path+'.trigger',('kind',),{'kind','buff','event','maxPerRound','allowChain','relation','unitType','minAmount','hpBelow','requiredBuff','absentBuff'})
+    object_(trigger,path+'.trigger',('kind',),{'kind','buff','event','maxPerRound','allowChain','relation','unitType','minAmount','hpBelow','requiredBuff','absentBuff'} | EVENT_FILTERS)
     enum(trigger['kind'],('ready','absent_buff','event'),path+'.trigger.kind')
     if trigger['kind']=='event':
         if 'buff' in trigger:fail('Use requiredBuff/absentBuff for event filters',path+'.trigger')
@@ -52,6 +53,12 @@ def validate(skill, path='skill'):
         enum(trigger.get('unitType','any'),('any','hero','summon'),path+'.trigger.unitType')
         number(trigger.get('minAmount',0),path+'.trigger.minAmount',0,10000000)
         number(trigger.get('hpBelow',1),path+'.trigger.hpBelow',0,1)
+        number(trigger.get('otherHpBelow',1),path+'.trigger.otherHpBelow',0,1)
+        number(trigger.get('nearbyRadius',600),path+'.trigger.nearbyRadius',0,10000)
+        for key in ('nearbyEnemies','nearbyAllies','nearbySummons'):
+            number(trigger.get(key,0),path+'.trigger.'+key,0,16,True)
+        number(trigger.get('everyEvents',1),path+'.trigger.everyEvents',1,100,True)
+        if trigger.get('otherRequiredBuff'):enum(trigger['otherRequiredBuff'],CONDITION_BUFFS,path+'.trigger.otherRequiredBuff')
         for key in ('requiredBuff','absentBuff'):
             if key in trigger:enum(trigger[key],CONDITION_BUFFS,path+'.trigger.'+key)
         if trigger.get('requiredBuff') and trigger.get('requiredBuff')==trigger.get('absentBuff'):fail('Contradictory buff filters',path+'.trigger')
@@ -164,7 +171,11 @@ def json_schema():
                                      obj({'kind':{'const':'event'},'event':{'enum':list(EVENTS)},'maxPerRound':num(1,16,True),
                                           'allowChain':{'type':'boolean'},'relation':{'enum':['any','self','ally','enemy']},
                                           'unitType':{'enum':['any','hero','summon']},'minAmount':num(0,10000000),'hpBelow':num(0,1),
-                                          'requiredBuff':{'enum':list(CONDITION_BUFFS)},'absentBuff':{'enum':list(CONDITION_BUFFS)}},('kind','event'))]},
+                                          'requiredBuff':{'enum':list(CONDITION_BUFFS)},'absentBuff':{'enum':list(CONDITION_BUFFS)},
+                                          'otherHpBelow':num(0,1),'otherRequiredBuff':{'enum':list(CONDITION_BUFFS)},
+                                          'nearbyEnemies':num(0,16,True),'nearbyAllies':num(0,16,True),
+                                          'nearbySummons':num(0,16,True),'nearbyRadius':num(0,10000),
+                                          'everyEvents':num(1,100,True)},('kind','event'))]},
                 'actions':{'type':'array','minItems':1,'maxItems':32,'items':obj(action,('type',))},
                 'rankInfoTemplate':text,'maxLevel':num(1,10,True)}
     return obj(properties,properties)

@@ -65,6 +65,8 @@ def highest_rarity_heroes(cfg: dict) -> list[str]:
 
 
 def opponent_ranks(player_rank: int) -> list[int]:
+    if player_rank > 100:
+        return list(range(91, 101))
     # Native PvP title bands cover ranks 1..100. Rank 1 (King) therefore
     # receives ranks 2..10, which are still selectable challenges.
     choices = sorted((rank for rank in range(1, 101) if rank != player_rank),
@@ -114,9 +116,9 @@ def generate_opponents(cfg: dict, owner_uid: str, generation: int, player_rank: 
     skills = [int(unit.get("slv", 1)) for unit in own_units]
     level = max(1, min(99, round(sum(levels) / len(levels))))
     skill = max(1, min(10, round(sum(skills) / len(skills))))
-    names = sample_bot_names(rng, 9)
     bots = []
     ranks = opponent_ranks(player_rank)
+    names = sample_bot_names(rng, len(ranks))
     for index, rank in enumerate(ranks):
         aids = rng.sample(pool, 5)
         team = [[aid, level, skill, slot % 3, .12 if slot < 3 else .02,

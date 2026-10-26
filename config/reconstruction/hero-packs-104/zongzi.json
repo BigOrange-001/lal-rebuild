@@ -1,0 +1,525 @@
+{
+  "assets": [],
+  "data": {
+    "heroes": {
+      "heroes": [
+        {
+          "actionType": "forward",
+          "attackRange": 150,
+          "baseStats": {
+            "attack": 604.0,
+            "health": 2630.0,
+            "magicDefense": 218.0,
+            "physicalDefense": 255.0
+          },
+          "damageType": "physical",
+          "description": "紫色召唤单位，由「召唤粽子」生成，继承召唤者即时战斗面板80%，自带1级「美味粽子」。",
+          "growth": {
+            "attack": 72.0,
+            "health": 316.0,
+            "magicDefense": 26.0,
+            "physicalDefense": 31.0
+          },
+          "id": "zongzi",
+          "integrationDefaults": {},
+          "leadership": 0,
+          "levelCap": 99,
+          "name": "粽子",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_2002_5",
+            "portrait": "builtin:portrait/A_2002_5",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 5,
+          "role": "",
+          "signType": "attack",
+          "skills": {
+            "captain": null,
+            "normal": "self:skill/my_skill",
+            "passive": null
+          },
+          "speed": 350,
+          "unitType": "summon",
+          "variant": "quality5"
+        },
+        {
+          "actionType": "forward",
+          "attackRange": 337,
+          "baseStats": {
+            "attack": 200.0,
+            "health": 2600.0,
+            "magicDefense": 100.0,
+            "physicalDefense": 120.0
+          },
+          "damageType": "magic",
+          "description": "橙色英雄；小技能召唤具有独立治疗与攻击技能的粽子，队长技治疗并提高全队四维，被动在自身击杀时为友军施加限时神佑、净化，并对敌人造成真实伤害。",
+          "growth": {
+            "attack": 14.0,
+            "health": 160.0,
+            "magicDefense": 6.0,
+            "physicalDefense": 8.0
+          },
+          "id": "zongzi_girl",
+          "integrationDefaults": {},
+          "leadership": 26,
+          "levelCap": 99,
+          "name": "粽子少女",
+          "presentation": {
+            "basicAttackEffect": "builtin:effect/E_008",
+            "icon": "builtin:icon/A_1001_5",
+            "portrait": "builtin:portrait/A_1001_5",
+            "voice": null
+          },
+          "progression": {
+            "preset": "builtin:progression/default-player-hero",
+            "starUp": null
+          },
+          "quality": 6,
+          "role": "",
+          "signType": "assist",
+          "skills": {
+            "captain": "self:skill/my_skill_3",
+            "normal": "self:skill/my_skill_2",
+            "passive": "self:skill/my_skill_4"
+          },
+          "speed": 245,
+          "unitType": "hero",
+          "variant": "quality6"
+        }
+      ]
+    },
+    "patches": {
+      "patches": []
+    },
+    "skills": {
+      "skills": [
+        {
+          "actions": [
+            {
+              "coefficient": 0.6,
+              "effect": "builtin:effect/FX_S9120_CURE",
+              "maxTargets": 2,
+              "targetPolicy": "ally_lane_lowest_hp_ratio_any",
+              "type": "cure"
+            },
+            {
+              "coefficient": 0.4,
+              "damageType": "physical",
+              "effect": "builtin:effect/E_008",
+              "maxTargets": 2,
+              "targetPolicy": "enemy_lane_all",
+              "type": "damage"
+            }
+          ],
+          "aoe": 0,
+          "banStand": true,
+          "cooldown": 1,
+          "description": "以60%原生治疗倍率为范围内同路血量百分比最低的最多两名友方恢复生命；对范围内同路最多两名敌人造成40%攻击力物理伤害。两项倍率每级各加10个百分点，10级分别为150%和130%；召唤出场时固定1级。原生治疗并非纯攻击公式，还包含自身最大生命项与治疗修正。",
+          "id": "my_skill",
+          "maxLevel": 10,
+          "name": "美味粽子",
+          "range": 150,
+          "rankInfoTemplate": "以{rank:0:1}原生治疗倍率为范围内同路血量百分比最低的最多两名友方恢复生命；对范围内同路最多两名敌人造成{rank:1:1}攻击力的物理伤害。召唤物出场时技能固定1级。原生治疗含自身最大生命项与治疗修正。",
+          "targetPolicy": "enemy_lane_frontmost",
+          "timingUnit": "ownerTurns",
+          "upgrades": [
+            {
+              "action": 0,
+              "field": "coefficient",
+              "perLevel": 0.1
+            },
+            {
+              "action": 1,
+              "field": "coefficient",
+              "perLevel": 0.1
+            }
+          ],
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "lifetime": 99,
+              "maxAlive": 2,
+              "statRatio": 0.8,
+              "target": "self",
+              "type": "summon",
+              "unit": "self:hero/zongzi/quality5"
+            }
+          ],
+          "cooldown": 1,
+          "description": "在自身所在分路的接口默认召唤位置生成一个粽子，继承召唤者即时战斗面板的80%，存活99个自身行动回合，带有1级「美味粽子」。每名施法者同时最多保留2个；再次召唤会替换最早的存活粽子。准备0，冷却1。",
+          "id": "my_skill_2",
+          "maxLevel": 1,
+          "model": "effect-sequence-v1",
+          "name": "召唤粽子",
+          "range": 650,
+          "rankInfoTemplate": "在本路召唤一个粽子，继承即时战斗面板的{rank:0:12}，存活{flat:0:13}个自身行动回合，同时上限{flat:0:14}个；满额时替换最早的存活粽子。召唤位置由接口确定。",
+          "trigger": {
+            "kind": "ready"
+          },
+          "warmup": 0
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                0.2,
+                "FX_S9120_CURE"
+              ],
+              "origin": "builtin:skill/S_9120_5",
+              "type": "cure"
+            },
+            {
+              "arguments": [
+                0.15,
+                "hit",
+                0,
+                2,
+                "FX_S9140_HIT"
+              ],
+              "origin": "builtin:skill/S_9140_5",
+              "type": "attrup"
+            },
+            {
+              "arguments": [
+                0.15,
+                "flee",
+                0,
+                2,
+                "FX_S9140_FLEE"
+              ],
+              "origin": "builtin:skill/S_9140_5",
+              "type": "attrup"
+            },
+            {
+              "arguments": [
+                0.15,
+                "crit",
+                0,
+                2,
+                "FX60_HIT"
+              ],
+              "origin": "builtin:skill/S_9140_5",
+              "type": "attrup"
+            },
+            {
+              "arguments": [
+                0.15,
+                "tough",
+                0,
+                2,
+                "FX60_STRONG"
+              ],
+              "origin": "builtin:skill/S_9140_5",
+              "type": "attrup"
+            }
+          ],
+          "description": "以20%原生治疗倍率为范围内全场友方恢复生命，并分别附加粽子少女命中、闪避、暴击、韧性面板15%的对应固定增益，持续2回合。准备0，冷却1。原生治疗含自身最大生命项与治疗修正。原设计的「每存活一个粽子效果增加100%」暂未实现，效果不随粽子数量变化。",
+          "id": "my_skill_3",
+          "model": "native-template-v1",
+          "name": "粽子飘香",
+          "nativeTemplate": {
+            "passiveTrigger": 0,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "actionTargetPolicies": [
+                "ally_all",
+                "ally_all",
+                "ally_all",
+                "ally_all",
+                "ally_all"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                1,
+                650,
+                0,
+                0,
+                1
+              ],
+              "res": "S_9140_5",
+              "skillUp": null,
+              "skillUpPaths": []
+            },
+            "source": "builtin:skill/S_9140_5",
+            "sourceDigest": "c8a9363ffc8a62ce2e8ef4e54f80a247b2ac85175b2de35020024bee4a75e677"
+          },
+          "upgrades": []
+        },
+        {
+          "actions": [
+            {
+              "arguments": [
+                2,
+                "FX_S9160_STRONG"
+              ],
+              "origin": "builtin:skill/S_631137_5",
+              "type": "timed_bless"
+            },
+            {
+              "arguments": [
+                2,
+                "FX_S9140_PURIFY"
+              ],
+              "origin": "builtin:skill/S_9140_5",
+              "type": "purify"
+            },
+            {
+              "arguments": [
+                0.05,
+                "FX60_GAREN_R"
+              ],
+              "origin": "builtin:skill/S_301001_3",
+              "type": "true_damage"
+            }
+          ],
+          "description": "自身击杀敌人时，为范围内全场友方施加持续2回合的神佑与净化，并对范围内全场敌人造成自身攻击力5%的真实伤害。准备0，冷却1。当前采用击杀触发的兼容方案，不是粽子死亡触发；未实现其他粽子攻击力增加10%并无限叠加。",
+          "id": "my_skill_4",
+          "model": "native-template-v1",
+          "name": "粽香余韵",
+          "nativeTemplate": {
+            "passiveTrigger": 3,
+            "runtimeVersion": "1.0.3",
+            "settings": {
+              "actionTargetGroups": [
+                null,
+                null,
+                null
+              ],
+              "actionTargetLocks": [
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                -1,
+                -1,
+                -1
+              ],
+              "actionTargetPolicies": [
+                "ally_all",
+                "ally_all",
+                "enemy_lane_all"
+              ],
+              "actionTargetPolicyArgs": [
+                {
+                  "laneFilter": "all"
+                },
+                {
+                  "laneFilter": "all"
+                },
+                {
+                  "laneFilter": "all"
+                }
+              ],
+              "damageShareGroups": [],
+              "pl": [
+                0,
+                1,
+                4000,
+                0,
+                10,
+                1
+              ],
+              "res": "S_303081_3",
+              "skillUp": null,
+              "skillUpPaths": null
+            },
+            "source": "builtin:skill/S_631081_3",
+            "sourceDigest": "d98fa3cce0f9a3a7f2fa843825cfab2863579ef71cce50644550d52953f10b8e"
+          },
+          "upgrades": []
+        }
+      ]
+    }
+  },
+  "format": "lal-hero-project-v1",
+  "manifest": {
+    "author": "粽子工坊",
+    "dependencies": [],
+    "description": "粽子与粽子少女兼容修订版：保留原单位、美术和主要数值，修正召唤引用、技能格式、模板来源及被动触发。当前不实现召唤数量缩放与召唤死亡无限叠层。",
+    "engineApi": "1",
+    "entrypoints": {
+      "heroes": "heroes.json",
+      "skills": "skills.json"
+    },
+    "files": [
+      {
+        "path": "heroes.json",
+        "sha256": "345a973899d2693c95f76829a748360afdebe90338631ac983a71f851b46b5d3"
+      },
+      {
+        "path": "skills.json",
+        "sha256": "ed7e94cbcd5ff2be49b21e8a8cdc836c4c9f023138b156e40b81e1c3220c9b77"
+      }
+    ],
+    "format": "lal-mod-v1",
+    "integrationDefaults": {},
+    "kind": "new",
+    "name": "粽子与粽子少女",
+    "packageId": "e09a0008-5612-4096-857b-0af09406888d",
+    "requiredCapabilities": [
+      "effect.reference.builtin",
+      "hero.register",
+      "progression.default-player-hero",
+      "skill.cure",
+      "skill.damage",
+      "skill.description.rank-template",
+      "skill.effect-sequence.v1",
+      "skill.native-template.103",
+      "skill.native-template.v1",
+      "skill.reference.builtin",
+      "unit.summon.v1"
+    ],
+    "version": "1.0.1"
+  },
+  "metadata": {
+    "format": "lal-hero-project-v1",
+    "gameSource": {
+      "baselineSync": {
+        "changedFiles": [
+          "config/reconstruction/hero-iteration-1.0.3.json",
+          "server/captain_strength.py",
+          "server/gameplay_economy.py",
+          "server/gameplay_energy.py",
+          "server/hero_accuracy_103.py",
+          "server/hero_iteration_103.py",
+          "server/hero_skills_103.py",
+          "server/mod_authoring_103.py",
+          "server/skill_books.py"
+        ],
+        "interfaceChanges": false,
+        "previousCommit": "69085940c7b2b7ba718c267ba2f13b1ccf5e2c7a",
+        "pullRequest": "https://github.com/BigOrange-001/lal-rebuild/pull/22",
+        "reason": "Fix sourceDigest and patch guards generated from the pre-calibration 1.0.3 baseline"
+      },
+      "commit": "c82ad0b7c6d744ff9ebdb4b5b910be4f35d25a25",
+      "engineApi": "1",
+      "files": {
+        "config/reconstruction/competition-config.json": "41dfb2c9e00319259212263f22259a22e1d98418c3e20b64a40cdfb601e2764e",
+        "config/reconstruction/equipment-calibration.json": "68e843a8388166fdc4e31ff514f41ffdb675a7dfe8b5130e853bb6e784426e84",
+        "config/reconstruction/full-config.json": "f6a65a6081dbf83e3d9b2e83d1955a2c0e5ec43d0fdb197a5c9f98cdb4c03cc3",
+        "config/reconstruction/hero-balance-1.0.3.json": "b886e47cfd2a5d717dfcb14133ef29e660a2ff9b06687ad015107725da16edb2",
+        "config/reconstruction/hero-iteration-1.0.3.json": "cf25acb33615363c01dc86040b34cb07be7212160db399f3020c344a8861e965",
+        "config/reconstruction/roster-config.json": "efe440ae815cdff93000dccfac92b67578f57b28959c0d6aeb0b35a049378686",
+        "config/reconstruction/summon-calibration.json": "30184cd7967dc4816c4de365cabbd1459b08b6ffcc54acaed9b22eff823091db",
+        "schemas/mod-effect-sequence.schema.json": "b6b3ca9edd8583c1370724feb173111b825711b83965b9753ce6e035975a04be",
+        "schemas/mod-engine-api-v1.json": "9b859e890ebb9dcb5ffcd073f92d8512a665f8e7b42cf1b8d71a297511461196",
+        "schemas/mod-heroes.schema.json": "fea3a6eec723887aae8c7eaa7fda907481c2962a1a6c1afc6774d1b50390e1ba",
+        "schemas/mod-manifest.schema.json": "6fdb11313cd7db5f35b5fbf95e5d372bb732611c143c70f88762fc83d0a01cbb",
+        "schemas/mod-native-template.schema.json": "697d6cb4f82f7d044928e19ace13d2a6b336c623093e6a255205c2b65446ab11",
+        "schemas/mod-patches.schema.json": "ff326aa2b4f9741928c8a98f76fd80fa384f5b35e4ebadfe687ee0085827c454",
+        "schemas/mod-skills.schema.json": "fc867de46cd4554670d662b2b698d00c0484874cd3d91ce905396fbdc276b047",
+        "server/adventure_tasks.py": "93871548038192705c5b95a776c31151a58085a42d191b6b3438b0c211307ba0",
+        "server/battle_status_effects.py": "9ec728265e577c0f3e1405e79a5e00e0cd202d050783db67d83d10da3b672f75",
+        "server/captain_strength.py": "ea2148fff05ab162cdd65308e4723ff56fce6603d42e3e3d211f7f2052be6ce5",
+        "server/captain_timing.py": "97a2f72870c1c4f8f4ca632fc742f9bcc38ed3d90e645e9e35c2ca41c949c6a5",
+        "server/cat_katarina_103.py": "0532cda879d874b56e978e0adc9c4cf5b2e3f8004b33a3a24674963924cdc29b",
+        "server/check_in_rewards.py": "585ed504e5cdbfb66221a605626063999d56f2cd4a46811f41b932923014f675",
+        "server/cultivation_rules.py": "b8a5f541f6c0b620e0693b9525bec63bc88c5099a26d94ade6011e8867d82d20",
+        "server/dot_rules_103.py": "04171b4aa03fc08759ce8cfc558cc182458650ab9ca5d9fa61f1dfd6756ca108",
+        "server/equipment_capacity.py": "758129ade6ed505eec30f8f38ea67597c3f8b354b3480bc80943bb87a451d873",
+        "server/equipment_growth_v2.py": "1e9162fc72d9866d0a3f35129be977b9dbfa5a17384045724b8aa3508fa93618",
+        "server/equipment_upgrade_cost.py": "9f2c22da01285887c9f7d48eb4dd70014e1d85c7d4226fb593b8b0edddb3120f",
+        "server/game_clock.py": "22ca863afa6f68c4735bb7fe7eeda43abc3e47cc0f9568b69aad02a9b7b72942",
+        "server/gameplay_common.py": "ad0c928e4c9a1ce1f6bf0de65b66adf3466465c4f299f308840ef3f245694b00",
+        "server/gameplay_economy.py": "55f9095e97d05d66d94fcff1fae9465e0097b4b383ca18f874883b0efb3ad771",
+        "server/gameplay_energy.py": "978e650e0db9940bac6b7b55fc9c382e559f594371503bfc49e503de38f7f2b7",
+        "server/halo_progression.py": "6c780fc876560040548319730cf11140615fdbfb3e109791c1c6c83b24b8b19b",
+        "server/hero_accuracy_103.py": "f0ddff1568d6d1aaee7c3bb531f149f08f351539dbd83afbcaff11700fedd94a",
+        "server/hero_balance_103.py": "f0e2008ccc89fdf30da15a1ab8adf27799f23249b0642115f8902e936b7dc61a",
+        "server/hero_iteration_103.py": "eb1d1e729ba889d1707b27c0f6dc6bda09485ee9cc58d7be99947018bcd4563f",
+        "server/hero_skills_103.py": "942ae7ce7ecee0c1558d1bc77a87c08796cf14dd9317a4b82fc3ca2995afe86c",
+        "server/mod_authoring_103.py": "d0adfbe511fd0ea4628fdd86ff5907e9ebdbcd5dad09ee2bb1ee06108ddabbf4",
+        "server/mod_compile.py": "619b40fb119f1371aee28eb08aa75059fc67b6e1ae8fb68f3e7608d91efb954f",
+        "server/mod_effects.py": "2e0f04386e187384f4e876d4911f7cd3fb5fe7a8f98601b9a6c58813b83cf860",
+        "server/mod_native.py": "111f7c56017368ef36de866b282ca3b5bdfd2d12c15068ec7318d1c9b0dc8594",
+        "server/mod_packages.py": "6a3c437ae944e6d4ba152481b2ba218961c5427a3e0e778d584b53c8d0d6467b",
+        "server/mod_policy.py": "14f40f588be632fa6e4ccadef2623172e32a67738e3034001712a92dc49adb5a",
+        "server/mod_schema.py": "d44b08adb02b44987b06b3d0fb807139a258bd3674e49c1021311a6d3bb77028",
+        "server/native_ability_parameters.json": "9ea4f9fac14ea5a8c6c0e425a48e97e0734b169eb7d109e99fa9beb04f7e07d1",
+        "server/native_skill_snapshot.py": "d6465b10771fb11b7a7c58b29799a5c409f3f6b5178d22a1fa98704425e450ba",
+        "server/nurse_akali_103.py": "2508142bb0b50895e898d6cf48b5468c4226b3b0699b1dc6bf151321da47d366",
+        "server/player_store.py": "9a7433ef995ccacf630fd2cf93e0d4e28d931706518244964bf5b0d1145ae472",
+        "server/polar_ashe_103.py": "f6bac6167eeb09b317b7b7fc61023ef6dedf95543adb4884f8cfc362064ec6a4",
+        "server/recruit_exchange.py": "8a3f7e0f03630c131396df20dd9be188cfc13dce2b4524edc15933e591f9d0fe",
+        "server/santa_veigar_103.py": "b095b44efd4e949b0a835f6b10ae4c73e4564e68216e3a0258884dd3b4fce187",
+        "server/skill_balance_overlay.py": "104dba8f470de8e2fc0c2f7faa259603b850da1aad947bea44af1e1a515dcc9f",
+        "server/skill_books.py": "3d8c21912a1ec5cbf4ceb8596bed328e92c94fdd00fc9dc3d0285578fcc18fb9",
+        "server/spending_budget.py": "ef51e957d5697e9e4d53b8a1a8d5d42066c0656985ed44673dcfb96299315198",
+        "server/summon_panel_103.py": "fcbeb9d8bfe41865f382ea8d38b0ab417cf84f18b8a66a9205112d1856171323",
+        "server/summon_pools.py": "0426e8f49ef395ad73592831adb618707812bda820e57e43a430d1ed25f2f0bb",
+        "server/talent_stats_103.py": "efb425db490f84fabdd0579059cbfb88115a1b56f6d18dce40a4a2ae25480dc1",
+        "server/upstream_hero_config.py": "8cb2c86828c3eaca8f3d2b7b190e6462ba9fefff1744ba8f4b164265d6ade366",
+        "server/upstream_hero_config_delta.json": "12dfb7d8c9ed81fd79b9adb5a3a463beb6208e462d3c8156ed51a05252063baa",
+        "server/upstream_skill_priority.py": "f09114418933bca2a18f2262b1e61a9d19e4fb59464a4160cbb2f76d8c6af50b",
+        "server/vip_campaign.py": "6ac24f75d88fa9acae6fcec89a855f2f149fcd573e6eb2c4856a853b905dc941"
+      },
+      "gameVersion": "1.0.3",
+      "localExtension": {
+        "name": "game-1.0.3-authoring-and-events",
+        "newCapabilities": [
+          "skill.native-template.103",
+          "skill.events.v1"
+        ],
+        "pullRequest": "https://github.com/BigOrange-001/lal-rebuild/pull/21",
+        "status": "game PR #21 merged; review fixes synchronized; static checks only; no functional tests or packaging"
+      },
+      "note": "Offline authoring snapshot pinned to merged game PR #22 / main c82ad0b. Includes the final 1.0.3 hero skill calibration used by the shipped Android runtime. Pure hero/skill overlays and snapshot codec only; no gateway or battle simulator is bundled.",
+      "repository": "https://github.com/BigOrange-001/lal-rebuild",
+      "textNormalization": "LF; one inherited extra EOF blank line removed; hashes describe the vendored snapshot",
+      "workingTreeChanges": false
+    },
+    "limitations": [
+      "召唤使用默认位置，不能保证前方50码或最前友军位置。",
+      "召唤满2个时替换最早存活单位，不是拒绝召唤。",
+      "未实现按粽子存活数量缩放队长技能。",
+      "保留包内声明的击杀近似触发，不实现特定粽子死亡事件及无限攻击叠层。",
+      "保留原包群体原生治疗公式及60%/20%倍率；含最大生命项和治疗修正，不是纯攻击治疗。"
+    ],
+    "repairSource": {
+      "filename": "粽子与粽子少女(3)(5).heropack",
+      "sha256": "b913a17eef06f2053113c86e85519797ff622cbde5d004a59edb99c7fdb5fddd",
+      "version": "1.0.0"
+    }
+  },
+  "builtinImport104": {
+    "sourceFile": "粽子与粽子少女-1.0.1.lalhero",
+    "sha256": "97d5601a4b085a24ef29d23ec5a41a5d3325caabaee57d97612abc820a5b7216"
+  }
+}

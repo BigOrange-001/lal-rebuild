@@ -51,7 +51,7 @@ def _equipment_pools(cfg: dict) -> dict[int, list[str]]:
 
 def _enemy_team(cfg: dict, tier: int) -> list[list]:
     star = HERO_STARS[tier - 1]
-    blocked = set(cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", []))
+    blocked = set(cfg.get("system_simple", {}).get("skin_hero_ids", [])) | set(cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", []))
     candidates = sorted(aid for aid in cfg.get("avatar", {})
                         if aid.startswith("A_1") and aid.endswith(f"_{star}")
                         and aid not in blocked)

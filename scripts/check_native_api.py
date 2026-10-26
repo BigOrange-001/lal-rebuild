@@ -12,7 +12,7 @@ import zipfile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT),str(ROOT/'server')]
 from scripts.mod_tools import load_base
-from mod_native import make_template,compile_template,validate_template,reorder_actions,remove_action,argument_label,ability_contract
+from mod_native import requires_103,make_template,compile_template,validate_template,reorder_actions,remove_action,argument_label,ability_contract
 from mod_schema import ModError,canonical
 from mod_packages import ModCatalog,inspect_package
 from mod_compile import target_digest
@@ -38,11 +38,14 @@ def package(path,skills,*,patch=False,base=None):
             'expect':{'path':'skills.normal','sha256':target_digest(base,'A_1001_5','skills.normal')},
             'operations':[{'op':'replace','path':'skills.normal','value':'self:skill/'+skills[0]['id']}]}]}
     else:
-        row=hero();row['skills']['normal']='self:skill/'+skills[0]['id'];data['heroes']={'heroes':[row]}
+        row=hero()
+        passive = skills[0]['nativeTemplate']['passiveTrigger'] or any(a['type'] in ('cat_passive','polar_basic','santa_kill','nurse_healing','book_passive') for a in skills[0]['actions'])
+        row['skills']['passive' if passive else 'normal']='self:skill/'+skills[0]['id']
+        data['heroes']={'heroes':[row]}
     payload={name+'.json':canonical(value) for name,value in data.items()}
     manifest={'format':'lal-mod-v1','kind':'patch' if patch else 'new','packageId':str(uuid.uuid4()),
         'name':'Native API acceptance','author':'Acceptance','version':'1.0.0','engineApi':'1',
-        'requiredCapabilities':['skill.native-template.v1','hero.patch.skill' if patch else 'hero.register']+([] if patch else ['hero.damage.true']),
+        'requiredCapabilities':['skill.native-template.v1','hero.patch.skill' if patch else 'hero.register']+([] if patch else ['hero.damage.true'])+(['skill.native-template.103'] if any(requires_103(s) for s in skills) else []),
         'entrypoints':{name:name+'.json' for name in data},'dependencies':[],
         'files':[{'path':name,'sha256':hashlib.sha256(raw).hexdigest()} for name,raw in payload.items()]}
     with zipfile.ZipFile(path,'w',zipfile.ZIP_DEFLATED) as archive:
@@ -60,7 +63,8 @@ def rejected(fn):
 def normalized(result,source):
     row=copy.deepcopy(result)
     for key in ('modNativeSource','modPassiveTrigger','nativeAbilityParameters','modScaleActionIndex','nativeActionSources','nativeActionSettings'):
-        row.pop(key,None)
+        if key in source:row[key]=copy.deepcopy(source[key])
+        else:row.pop(key,None)
     row['id']=source['id']
     for key in ('manualSummonPolicy','manualClonePolicy'):
         if isinstance(row.get(key),dict) and 'skillId' in row[key]:row[key]['skillId']=source['id']
@@ -70,6 +74,8 @@ def normalized(result,source):
 def main():
     base=load_base(ROOT/'config/reconstruction/full-config.json');templates=[];reorders=0
     for sid,source in base['cfg']['skill'].items():
+        # Effect-sequence skills use their own authoring model, not native templates.
+        if source.get('modEffectSequence'):continue
         skill=make_template(sid,source,base);validate_template(skill,base)
         result=compile_template(skill,base,'S_800000_1')
         assert normalized(result,source)==source,sid

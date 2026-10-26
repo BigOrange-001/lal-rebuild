@@ -71,5 +71,6 @@ def _native_skill_snapshot(config, skill_id, level=1):
         "manualSummonPolicy": copy.deepcopy(row.get("manualSummonPolicy")),
         "manualClonePolicy": copy.deepcopy(row.get("manualClonePolicy")),
         "captainSummonMultiplier": row.get("captainSummonMultiplier", 1),
+        "equipment_source_skill_104": row.get("equipment_source_skill_104"),
         "chainDot": copy.deepcopy(row.get("chainDot")),
     }

@@ -23,9 +23,9 @@ def methods(filename, definitions):
     result = {}
     for name, params in definitions.items():
         body = method_body(source, name)
-        body = re.sub(r'for each\(var (\w+) in ([^)]+)\)', r'for(var \1 of Object.values(\2))', body)
+        body = re.sub(r'for each\(var (\w+) in (\w+\(\)|[^)]+)\)', r'for(var \1 of Object.values(\2))', body)
         body = re.sub(r'for each\((\w+) in ([^)]+)\)', r'for(\1 of Object.values(\2))', body)
-        body = re.sub(r'(\w+(?:\.\w+)*) is Array', r'Array.isArray(\1)', body)
+        body = re.sub(r'(\w+(?:\.\w+|\[\w+\])*) is Array', r'Array.isArray(\1)', body)
         body = re.sub(r'(\w+) is String', r'typeof \1 === "string"', body)
         result[name] = [params, body]
     return result
@@ -35,7 +35,7 @@ HARNESS = r'''
 const input=JSON.parse(require('fs').readFileSync(0,'utf8'));
 const cfg=input.cfg,profile=input.profile,int=v=>Math.trunc(Number(v)||0),uint=int,trace=()=>{};
 const Tools={toInt:v=>int(Number(Number(v).toFixed(5)))};
-const GlobalData={modChannelAllowed:()=>true,$userData:profile,$mConfig_simple:cfg.system_simple,$mGuild_simple:cfg.association_simple,$mConfig_talent:cfg.talent};
+const GlobalData={modChannelAllowed:(aid,key)=>cfg.mod_runtime?.heroes?.[aid]?.channels?.[key]!==false,$userData:profile,$mConfig_simple:cfg.system_simple,$mGuild_simple:cfg.association_simple,$mConfig_talent:cfg.talent,$mConfig_avatar:cfg.avatar,$mConfig_skill:cfg.skill};
 const GameMap={currentMap:null};
 const GlobalFunction={setOtherCfgAvatar:()=>{throw Error('stale owned DN snapshot was used');}};
 function attach(unit,definitions){for(const [name,[params,body]] of Object.entries(definitions))unit[name]=eval('(function('+params+'){with(this){'+body+String.fromCharCode(10)+'}})');return unit;}
@@ -46,8 +46,9 @@ function Skill(sid,lv=1,superSkill=false,book=false){
  if(Array.isArray(up)&&up.length){if(Array.isArray(up[0])){for(let [a,v,step] of up)actions[a][v]+=step*(lv-1);}
  else actions[up[0]][1]+=up[1]*(lv-1);}
  return attach({skills:actions,skillSetData:row,lv,isSuper:superSkill,isBookSkill:book||!!row.bookRule,
- isEquipUp:actions[0]?.[0]==='equipup',getStar:()=>int(sid.split('_').at(-1))},input.skillMethods);
+ isEquipUp:actions[0]?.[0]==='equipup',activeNativeSource:null},input.skillMethods);
 }
+function SkillSet(sid,owner,lv=1,superSkill=false){return Skill(sid,lv,superSkill);}
 function Equipment(id){
  let row=profile.my_equips[id],d=cfg.equip[row.eid],p=d.pl;
  let unit=attach({my_data:row,id,lv:row.lv||1,slv:row.slv||1,haloLv:row.halo?.lv||row.haloLv||0,
@@ -61,12 +62,12 @@ function Equipment(id){
 function Avatar(id,data=null){
  let row=data||profile.avatars[id],aid=(row.aid||id).split('|')[0],d=cfg.avatar[aid],p=d.pl;
  let tid=typeof row.talent==='string'?row.talent:row.talent?.id,t=cfg.talent[tid];
- let unit=attach({id,mData:row,team:0,otherTeam:0,isOthers:false,lv:row.lv||1,phase:row.phase||0,
+ let unit=attach({id,mData:row,team:0,otherTeam:0,isOthers:false,lv:row.lv||1,slv:row.slv||1,phase:row.phase||0,
  hp:0,hpMax:0,ap:0,dePh:0,deMa:0,hit:0,flee:0,crit:0,tough:0,speed:0,range:0,
  hpP:row.hp||0,apP:row.ap||0,dePhP:row.de_ph||0,deMaP:row.de_ma||0,cultureSchema:row.culture_schema||'',
- equips:[],mDestiny:null,mDNdata:null,buffs:{},abilityState:{},abilityEntryAttack:0,manualAttackRangeOverride:NaN,
+ equips:[],bondLineup104:profile.team[0],mDestiny:null,mDNdata:null,buffs:{},abilityState:{},abilityEntryAttack:0,manualAttackRangeOverride:NaN,
  initializingFightAttributes:false,previewTeamTalentBonuses:null,getManualBattleStack:()=>0,getManualTimedStack:()=>0,clear:()=>{},
- avatarData:{id:aid,hp0:p[0],hp1:p[1],ap0:p[2],ap1:p[3],d10:p[4],d11:p[5],d20:p[6],d21:p[7],speed:p[8],range:p[9]},
+ avatarData:{id:aid,hp0:p[0],hp1:p[1],ap0:p[2],ap1:p[3],d10:p[4],d11:p[5],d20:p[6],d21:p[7],speed:p[8],range:p[9],skill0:p[10],skill1:p[11]},
  skill0:Skill(p[10],row.slv||1),skill1:Skill(p[11],1,true),skillB:Skill(p[13]),skill2:null,
  talent:t?{my_HaloData:{dataObj:t,plType:t.pl[0],plNum:t.pl[1],plUse:t.pl[2],getStar:()=>int(tid.split('_').at(-1))}}:null},input.avatarMethods);
  if(unit.talent)attach(unit.talent,input.talentMethods);
@@ -91,7 +92,8 @@ for(let [slot,id] of profile.team[0].entries()){
  unit.initFightAttr();
  out.push({id,hp:unit.getHpMax(),ap:unit.getDamage(),de_ph:unit.getDePh(),de_ma:unit.getDeMa(),
  speed:unit.getSpeed(),range:unit.getRange(),hit:unit.hit,flee:unit.flee,crit:unit.crit,tough:unit.tough,
- power:unit.getPower(slot===0,-1,true),beforeInitPower:barePower});
+ power:unit.getPower(slot===0,-1,true),beforeInitPower:barePower,skillId:unit.skill0?.skillSetData.id,captainId:unit.skill1?.skillSetData.id,
+ captainStar:unit.skill1?.getStar(),captainMechanism:unit.skill1?.getMechanismId()});
 }
 console.log(JSON.stringify({units:out,dn:bonus}));
 '''
@@ -105,6 +107,7 @@ class StatPower103Tests(unittest.TestCase):
         cls.document = copy.deepcopy(backend.config)
         backend.db.close()
         cls.avatar_methods = methods('137_Avatar.as', {
+            'getBondRows104':'','bondPanel104':'stat,value','updateBondSkills104':'','getEquipmentBondRows104':'','equipmentSkillId104':'source','equipmentOutputRate104':'',
             'getHpMax':'param1=-1,param2=-1,param3=false','getDamage':'param1=-1,param2=-1,param3=false',
             'getDePh':'param1=-1,param2=-1,param3=false','getDeMa':'param1=-1,param2=-1,param3=false',
             'getPhysicalDefense':'param1,param2,param3,ignoreSunder','getMagicDefense':'param1,param2,param3,ignoreSunder',
@@ -122,7 +125,7 @@ class StatPower103Tests(unittest.TestCase):
             'getStar':'','getAddStar':'','getHaloUpAttrs':'','getNativeStatGrowth':'param1',
             'getPersistedStatRollRate':'','getMagicBonus':'param1','getMagicStage':'',
             'getMagicMainStatRate':'','getRuneBonus':'param1','getEquipAlchemyRate':'param1,param2'})
-        cls.skill_methods = methods('139_SkillSet.as', {'getPower':'','getEquipRate':'param1'})
+        cls.skill_methods = methods('139_SkillSet.as', {'getPower':'','getEquipRate':'param1','getStar':'','getMechanismId':''})
         cls.dn_methods = methods('142_PanelDetailDN.as', {'getDNAttrsAllValue':'param1=null','getDNaddValue':'param1,param2'})
         cls.projection_methods = methods('045_GlobalFunction.as', {'getRosterTalentPreview':'ids,extra=null'})
         cls.talent_methods = methods('145_Talent.as', {'getPower':''})
@@ -145,6 +148,7 @@ class StatPower103Tests(unittest.TestCase):
 
     def native(self, profile, cfg):
         selected = {key:cfg[key] for key in ('system_simple','association_simple','avatar','equip','skill','talent')}
+        selected['mod_runtime']=cfg.get('mod_runtime',{})
         payload = {'cfg':selected,'profile':profile,'avatarMethods':self.avatar_methods,'equipMethods':self.equip_methods,
                    'skillMethods':self.skill_methods,'dnMethods':self.dn_methods,'talentMethods':self.talent_methods,
                    'projectionMethods':self.projection_methods}

@@ -91,7 +91,7 @@ console.log(JSON.stringify(GlobalData.$tempFoodForBook));'''
 
     def test_passive_preview_and_cached_battle_stats_are_applied_once(self):
         script = '''const Tools={toInt:Math.trunc};
-const unit={mData:null,hpMax:0,hit:0,equips:[{getHit:()=>100}],mDestiny:{hit:10,hitP:0},buffs:{hitup:{value:5}},
+const unit={bondPanel104:(stat,value)=>value,mData:null,hpMax:0,hit:0,equips:[{getHit:()=>100}],mDestiny:{hit:10,hitP:0},buffs:{hitup:{value:5}},
 skill2:{getEquipRate:()=>1},getBookCombatBonus:()=>.45,initializingFightAttributes:false,teamTalentFlat:()=>0};
 '''
         script += method('137_Avatar.as', 'getHit')

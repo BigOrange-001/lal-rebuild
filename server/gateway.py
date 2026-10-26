@@ -141,9 +141,23 @@ class Backend:
    apply_hero_accuracy_103(self.config)
    apply_hero_iteration_103(self.config)
    apply_energy_purchase_103(self.config)
+   from hero_packs_104 import apply_hero_packs_104
+   apply_hero_packs_104(self.config)
+   from orange_ascension_104 import apply_orange_ascension_104
+   apply_orange_ascension_104(self.config)
    apply_tower_rewards_103(self.config)
    apply_ancient_trial_103(self.config)
    apply_material_attempts_103(self.config)
+   from power_balance_104 import apply_power_balance_104
+   apply_power_balance_104(self.config)
+   from resource_drops_104 import apply_resource_drops_104
+   apply_resource_drops_104(self.config)
+   from bonds_104 import apply_bonds_104
+   apply_bonds_104(self.config)
+   from equipment_bonds_104 import apply_equipment_bonds_104
+   apply_equipment_bonds_104(self.config)
+   from skill_output_104 import apply_skill_output_104
+   apply_skill_output_104(self.config)
    apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
    self.config['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
   self.players=PlayerStore(self.db,self.config,self.clock)

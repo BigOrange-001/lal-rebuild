@@ -2433,8 +2433,8 @@ class GameplayRosterEquipment:
         equip_simple = self.simple
         equip_cfg = equip_simple.get("equip_config", [])
         equip_wash = equip_simple.get("equipwash", [])
-        slot = (None if hero_only else next((i for squad in profile.get("team", [])
-                  for i, member in enumerate(squad) if member == key), None))
+        from equipment_bonds_104 import equipment_slot
+        slot = None if hero_only else equipment_slot(profile, key)
         book_skill = None
         symp_counts = [0, 0, 0, 0]
         if slot is not None and slot < len(groups):
@@ -2494,8 +2494,28 @@ class GameplayRosterEquipment:
                     stats[action[2]] = self._equip_to_int(stats[action[2]] * (1 + float(action[1])))
         from talent_stats_103 import apply_stat_talent
         apply_stat_talent(stats, talent_row)
+        from bonds_104 import profile_bonds, apply_stats, skill_ids
+        bond_config = self.full_config.get('cfg', self.full_config)
+        bonds = profile_bonds(bond_config, profile, key, hero_only=hero_only)
+        apply_stats(stats, aid, bonds)
+        bond_skills = skill_ids(bond_config, aid, bonds)
         skill0 = self._skill(pl[10], max(1, int(hero.get("slv", 1))))
         skill1 = self._skill(pl[11]); skillb = self._skill(pl[13]) if len(pl) > 13 else None
+        if bond_skills.get('skill'):
+            skill0 = self._skill(bond_skills['skill'], max(1, int(hero.get('slv', 1))))
+        if bond_skills.get('leader_skill'):
+            skill1 = self._skill(bond_skills['leader_skill'])
+        stats['bonds_104'] = [bond['id'] for bond in bonds]
+        from equipment_bonds_104 import profile_equipment_bonds, skill_id as equipment_skill_id
+        equipment_bonds=profile_equipment_bonds(bond_config,profile,key,hero_only)
+        stats['equipment_bonds_104']=[r['equipment'] for r in equipment_bonds]
+        def equipment_skill(snapshot,level=1):
+            if not snapshot:return snapshot
+            sid=equipment_skill_id(bond_config,aid,snapshot['skid'],equipment_bonds)
+            return self._skill(sid,level) if sid!=snapshot['skid'] else snapshot
+        skill0=equipment_skill(skill0,max(1,int(hero.get('slv',1))))
+        skill1=equipment_skill(skill1)
+        skillb=equipment_skill(skillb)
         return {"aid": aid, **stats, "growth_stats_applied": True, "hp_max": stats["hp"], "sign_type": int(tl[0]), "action_type": int(tl[1]), "damage_type": int(tl[2]), "skill": skill0, "leader_skill": skill1, "book_skill": book_skill, "skillB": skillb, "talent": talent_id, "phase": phase, "morph": int(hero.get("morph", 0)), "lv": lv, "slv": int(hero.get("slv", 1)), "culture_schema": hero.get("culture_schema") if weighted_hero else None, "tpl": [int(tl[i]) for i in (0, 1, 2)] + [stats["speed"], stats["range"]]}
 
     def _skill(self, skill_id, level=1):

@@ -195,6 +195,62 @@
                 "armor",
                 "book_penetration"
               ]
+            },
+            "otherHpBelow": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "otherRequiredBuff": {
+              "enum": [
+                "shield",
+                "purify",
+                "strong",
+                "weak",
+                "sunder",
+                "steel",
+                "bless",
+                "critup",
+                "toughup",
+                "fleeup",
+                "hitup",
+                "stun",
+                "curse",
+                "timed_bless",
+                "root",
+                "poison",
+                "burn",
+                "evil",
+                "silence",
+                "taunt",
+                "armor",
+                "book_penetration"
+              ]
+            },
+            "nearbyEnemies": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "nearbyAllies": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "nearbySummons": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "nearbyRadius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "everyEvents": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           },
           "required": [

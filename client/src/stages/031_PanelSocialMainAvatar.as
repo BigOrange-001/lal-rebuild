@@ -556,7 +556,7 @@ package com.meng52.game.ui.screen
                if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_))
                {
                   _loc2_ = new Avatar(_loc5_);
-                  _loc12_ = _loc3_[_loc8_];
+                  _loc12_ = Tools.clone(_loc3_[_loc8_]);
                   _loc12_["id"] = _loc5_;
                   _loc12_["indn"] = PanelCenterDNTeam.checkIsInDn(_loc2_.id) == null ? 0 : 1;
                   _loc12_["teamNum"] = GlobalFunction.getTeamMemberNum(_loc12_["id"]);
@@ -610,7 +610,7 @@ package com.meng52.game.ui.screen
                if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_))
                {
                   _loc2_ = new Avatar(_loc5_);
-                  _loc12_ = _loc3_[_loc8_];
+                  _loc12_ = Tools.clone(_loc3_[_loc8_]);
                   _loc12_["id"] = _loc5_;
                   _loc12_["indn"] = PanelCenterDNTeam.checkIsInDn(_loc2_.id) == null ? 0 : 1;
                   _loc12_["teamNum"] = GlobalFunction.getTeamMemberNum(_loc5_);
@@ -661,7 +661,7 @@ package com.meng52.game.ui.screen
                if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_))
                {
                   _loc2_ = new Avatar(_loc5_);
-                  _loc12_ = _loc3_[_loc8_];
+                  _loc12_ = Tools.clone(_loc3_[_loc8_]);
                   _loc12_["id"] = _loc5_;
                   _loc12_["indn"] = PanelCenterDNTeam.checkIsInDn(_loc2_.id) == null ? 0 : 1;
                   _loc12_["teamNum"] = GlobalFunction.getTeamMemberNum(_loc5_);
@@ -732,7 +732,7 @@ package com.meng52.game.ui.screen
                if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_) || GlobalData.$tempSell.indexOf(_loc5_) > -1 && GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_))
                {
                   _loc2_ = new Avatar(_loc5_);
-                  _loc12_ = _loc3_[_loc8_];
+                  _loc12_ = Tools.clone(_loc3_[_loc8_]);
                   _loc12_["id"] = _loc5_;
                   _loc12_["sort_1"] = _loc2_.getSellValue();
                   _loc12_["lock"] = _loc6_ || _loc4_ ? 1 : 0;

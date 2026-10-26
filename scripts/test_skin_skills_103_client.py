@@ -24,7 +24,7 @@ function endAbilityAttack(c){if(currentAbilityAttack()!==c)throw Error('context 
 function Buff(type,round,value=0){this.type=type;this.round=round;this.value=value;}
 const Random={getRandom:n=>(picks++)%n};
 let enemies=Array.from({length:4},(_,i)=>({id:'enemy'+i,team:2,hp:10000,hpMax:10000,line:0,pos:1600-100*i,ap:300,abilityIndex:10+i,buffs:{},getDamage(){return this.ap;},addBuff(kind,round,value=0){this.buffs[kind]=new Buff(kind,round,value);}}));
-const unit={id:'owner',team:1,otherTeam:2,line:0,pos:2200,hp:5000,hpMax:10000,abilityIndex:1,
+const unit={heroSkillOutputRate104:()=>1,equipmentPart104:(skill,part,value)=>value,id:'owner',team:1,otherTeam:2,line:0,pos:2200,hp:5000,hpMax:10000,abilityIndex:1,
 abilityState:{},parallelVisualBatches:[],buffs:{},skillB:null,m_buff:{},showBuff:noop,abilityFeedback:noop,checkTalent:()=>0,flushParallelVisualBatch:noop,
 abilityDirectMultiplier:()=>1,getTough:()=>0,getBookCombatBonus:()=>0,hasManualDotKind:()=>false,abilityRecordDamage:noop,
 ap:300,abilityEntryAttack:0,getManualBattleStack:()=>0,getManualTimedStack:()=>0,
@@ -58,6 +58,7 @@ const GameMap={roundNum:0,actionDelay:0,currentMap:{roundNum:0,getAliveList(side
             if name in ('executeCatSkin','executePolarSkin','executeSantaSkin','executeNurseSkin'):
                 # Skill doubles expose the current node, matching the native API.
                 body='if(sourceSkill && !sourceSkill.getNativeAction) sourceSkill.getNativeAction=function(){return this.skills[0]||[];};'+body
+                body='if(sourceSkill && !sourceSkill.getNativeSetting) sourceSkill.getNativeSetting=function(k,f){return this[k] == null ? f : this[k];};'+body
             body=re.sub(r'for each\s*\(([^)]+) in ([^)]+)\)',r'for (\1 of \2)',body)
             body=re.sub(r'function\(([^)]*)\)',lambda m:'function('+re.sub(r':\w+','',m[1])+')',body)
             script+=f'unit.{name}=function({args}){{with(this){{{body}}}}};\n'

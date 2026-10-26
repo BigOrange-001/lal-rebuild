@@ -111,7 +111,7 @@ if(input.dead) enemies[0].hp=0;
 if(input.immune) enemies.forEach(enemy=>enemy.buffs.purify=new Buff('purify',1));
 const row=input.skill;context.GlobalData.$mConfig_skill={[row.id]:row};
 const groups=input.fullCast ? {} : {cluster:enemies.slice()};
-const skill={avatar:caster,skills:row.skill,skillSetData:{...row,range:row.pl[2],aoe:row.pl[4],banStand:false},
+const skill={baseActionCount104:()=>row.skill.length,avatar:caster,skills:row.skill,skillSetData:{...row,range:row.pl[2],aoe:row.pl[4],banStand:false},
   currentActionTargets:[],currentTargetGroups:groups,preparingCast:false,sortAnchor:null,
   isSuper:false,abilityHasCast:false,abilityCooldownOverride:-1,inKillRecast:false,lv:1,
   m_cooldownNum:-1,activeNativeSource:null,activeNativeAction:null,activeNativeSettings:null,getNativeAction(){return this.activeNativeAction||null;},isModEffectSequence:()=>false,getNativeSetting:(key,fallback=null)=>Object.hasOwn(row,key)?row[key]:fallback,getMechanismId:()=>row.id};

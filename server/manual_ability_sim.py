@@ -136,9 +136,14 @@ class SkillCompleteBattle(ReferenceBattle):
         units=self.candidates(owner,3-self._team_number(owner),owner['line'],owner['pos'],distance,-1,True,order)
         return next((u for u in units if self.marked(owner,u,mark)),units[0] if units else None)
 
+    def hero_output_rate_104(self, owner):
+        from equipment_bonds_104 import output_rate
+        return float(self._config.get('system_simple',{}).get('hero_skill_output_rate_104',1))*output_rate(self._config,owner.get('aid'),owner.get('equipment_bonds_104')) if str(owner.get('aid','')).startswith('A_1') else 1.0
+
     def hit(self, owner, target, coefficient, damage_type, shared_total=0):
         if not target or target.get('hp',0)<=0 or owner.get('hp',0)<=0:return False
         ctx=self._context(owner);factor=ctx['damage_factor'] if ctx else 1
+        factor*=self.hero_output_rate_104(owner)
         coefficient*=factor
         self._event('hit',owner,target,coefficient=coefficient,damage_type=damage_type)
         # True-damage manual actions cancel countDamage's native 0.3 factor.
@@ -151,13 +156,13 @@ class SkillCompleteBattle(ReferenceBattle):
         if target and target.get('hp',0)>0:
             ctx=self._context(owner);factor=ctx['effect_factor'] if ctx else 1
             self._event('heal',owner,target,coefficient=coefficient*factor)
-            amount=_to_int(self._heal_channel_value(owner,coefficient)*factor)
+            amount=_to_int(self._heal_channel_value(owner,coefficient*self.hero_output_rate_104(owner))*factor)
             self._injured(target,amount,4,source=owner)
 
     def shield(self, owner, target, coefficient, duration=2, health=False):
         if target and target.get('hp',0)>0:
             ctx=self._context(owner);factor=ctx['effect_factor'] if ctx else 1
-            amount=_to_int((self._get_hp(owner) if health else self._get_damage(owner)+self._get_hp(owner)*.1)*coefficient)
+            amount=_to_int((self._get_hp(owner) if health else self._get_damage(owner)+self._get_hp(owner)*.1)*coefficient*self.hero_output_rate_104(owner))
             self._event('shield',owner,target,amount=amount,duration=duration)
             self._add_buff(target,'shield',duration,amount)
 
@@ -217,6 +222,10 @@ class SkillCompleteBattle(ReferenceBattle):
             result[key]=self._stat_buff(owner,key)+(int(self._get_manual_battle_stack(owner,'flee')) if key=='flee' else 0)
         return result
 
+    def equipment_part(self, skill, part, value):
+        row=self._config.get('skill',{}).get(skill.get('skid'),{})
+        return value*float(row.get('equipment_parts_104',{}).get(part,1))
+
     def execute(self, owner, kind, scale, skill):
         if kind in ('cat_n','cat_c'):return self.execute_cat_skin(owner,kind,skill)
         if kind in ('polar_n','polar_c'):return self.execute_polar_skin(owner,kind,skill)
@@ -239,8 +248,8 @@ class SkillCompleteBattle(ReferenceBattle):
                 if not enemies:return False
                 count=0
                 for target in group(enemies[0],250,3):
-                    if hit(target,1.2*scale,1) and self.hero(target):count+=1
-                if count:self.heal(owner,owner,.15*min(3,count)*scale)
+                    if hit(target,self.equipment_part(skill,'tentacle_hit',1.2)*scale,1) and self.hero(target):count+=1
+                if count:self.heal(owner,owner,self.equipment_part(skill,'tentacle_heal',.15)*min(3,count)*scale)
             case 'illaoi_c':
                 for target in en(350,maximum=3):hit(target,2,1)
                 state['counter']=dict(until=serial+2,left=2,seen=set(),damage=damage,effect=effect,debuff=False)
@@ -253,8 +262,8 @@ class SkillCompleteBattle(ReferenceBattle):
                     for target in en(200,primary,1,excluded=[primary]):hit(target,.8*scale,1)
                 else:
                     if not self.dash(owner,primary):return False
-                    if hit(primary,1.8*scale,1):self._check_move(primary,False,200,True)
-                    self.shield(owner,owner,.5*scale)
+                    if hit(primary,self.equipment_part(skill,'hammer_hit',1.8)*scale,1):self._check_move(primary,False,200,True)
+                    self.shield(owner,owner,self.equipment_part(skill,'hammer_shield',.5)*scale)
                 form['hammer']=not form['hammer']
             case 'jayce_c':
                 enemies=en(700)
@@ -270,16 +279,16 @@ class SkillCompleteBattle(ReferenceBattle):
                 if not enemies:return False
                 target=enemies[0];reach=abs((skill.get('pl') or [0,0,650])[2])
                 coefficient=(1+min(reach,abs(owner['pos']-target['pos']))/max(1,reach))*scale
-                if hit(target,coefficient,2):self.mark(owner,target,'hunt',3)
+                if hit(target,self.equipment_part(skill,'spear',coefficient),2):self.mark(owner,target,'hunt',3)
             case 'nidalee_c':
-                self.heal(owner,self.ally(owner),.7);target=self.marked_target(owner,'hunt',700)
+                self.heal(owner,self.ally(owner),self.equipment_part(skill,'primal_heal',.7));target=self.marked_target(owner,'hunt',700)
                 if target and self.dash(owner,target):
                     marked=self.marked(owner,target,'hunt')
                     if hit(target,3.2 if marked else 2.2,2) and marked:self.state(target).pop(('mark','hunt',state['index']),None)
             case 'kayle_n':
                 enemies=en(500)
-                if enemies and hit(enemies[0],1.2*scale,2):ctl(enemies[0],'sunder',2,.2*scale)
-                self.heal(owner,self.ally(owner),.45*scale)
+                if enemies and hit(enemies[0],self.equipment_part(skill,'holy_hit',1.2)*scale,2):ctl(enemies[0],'sunder',2,.2*scale)
+                self.heal(owner,self.ally(owner),self.equipment_part(skill,'holy_heal',.45)*scale)
             case 'kayle_c':
                 target=self.ally(owner,600)
                 if target is None:return False
@@ -288,11 +297,11 @@ class SkillCompleteBattle(ReferenceBattle):
                 enemies=en(500)
                 if not enemies or not self.dash(owner,enemies[0]):return False
                 if hit(enemies[0],scale,2):ctl(enemies[0],'root',1)
-                state['sap']=dict(until=serial+2,effect=effect,debuff=False)
+                state['sap']=dict(until=serial+2,effect=self.equipment_part(skill,'sap_heal',effect),debuff=False)
             case 'maokai_c':
                 for target in en(700,maximum=3,forward=True):
                     if hit(target,1.8,2):ctl(target,'root',2)
-                self.shield(owner,owner,.2,2,True)
+                self.shield(owner,owner,self.equipment_part(skill,'root_shield',.2),2,True)
             case 'wukong_n':
                 enemies=en(175)
                 if not enemies:return False
@@ -332,39 +341,39 @@ class SkillCompleteBattle(ReferenceBattle):
                 if not enemies:return False
                 if hit(enemies[0],1.2*scale,2) and self.hero(enemies[0]):
                     old=state.get('evil_stacks',0);state['evil_stacks']=min(10,old+1)
-                    if state['evil_stacks']>old:state['evil_bonus']=state.get('evil_bonus',0)+.03*effect
+                    if state['evil_stacks']>old:state['evil_bonus']=state.get('evil_bonus',0)+self.equipment_part(skill,'evil_stack',.03)*effect
             case 'veigar_c':
                 enemies=en(700,hero=True,order='ratio') or en(700)
                 if not enemies:return False
                 target=enemies[0];old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+30000
-                try:hit(target,2+3*(1-target['hp']/target['hp_max']),2)
+                try:hit(target,2+self.equipment_part(skill,'execution',3)*(1-target['hp']/target['hp_max']),2)
                 finally:state['veigar_cast_hit']=old
             case 'elise_n':
                 enemies=en(600)
                 if not enemies:return False
                 target=enemies[0];ap=self._get_damage(owner)
-                coef=scale+min(ap,target['hp']*.04*scale)/max(1,ap)
+                coef=scale+min(ap,target['hp']*self.equipment_part(skill,'current_hp',.04)*scale)/max(1,ap)
                 if hit(target,coef,2):ctl(target,'stun',1)
             case 'elise_c':
                 enemies=en(650,hero=True,order='ratio')
                 if not enemies or not self.dash(owner,enemies[0]):return False
                 target=enemies[0];ap=self._get_damage(owner)
-                hit(target,1.8+min(ap*1.8,(target['hp_max']-target['hp'])*.12)/max(1,ap),2)
+                hit(target,1.8+min(ap*1.8,(target['hp_max']-target['hp'])*self.equipment_part(skill,'venom_execute',.12))/max(1,ap),2)
                 self.summon(owner,'A_2013_5',2,.3,2,'elise')
             case 'riven_n':
                 enemies=en(450)
                 if not enemies or not self.dash(owner,enemies[0]):return False
                 primary=enemies[0];count=state.get('riven_step',0)%3+1;state['riven_step']=count%3
                 for target in group(primary,200,2):
-                    if hit(target,(1.4 if count==3 else .8)*scale,1) and count==3:ctl(target,'stun',1)
-                if count==2:self.shield(owner,owner,.6*scale)
+                    if hit(target,(self.equipment_part(skill,'third_dance',1.4) if count==3 else .8)*scale,1) and count==3:ctl(target,'stun',1)
+                if count==2:self.shield(owner,owner,self.equipment_part(skill,'second_shield',.6)*scale)
             case 'riven_c':
                 buff('strong',2,.35)
                 for target in en(700,maximum=3,forward=True):hit(target,1.6+.96*(1-target['hp']/target['hp_max']),1)
                 state['riven_step']=2
             case 'orianna_n':
                 target=self.ally(owner,3001,'front',True) or owner;state['ball']=target
-                self.shield(owner,target,.8*scale)
+                self.shield(owner,target,self.equipment_part(skill,'ball_shield',.8)*scale)
                 for enemy in en(300,target,2):hit(enemy,scale,2)
             case 'orianna_c':
                 ally=state.get('ball')
@@ -372,16 +381,16 @@ class SkillCompleteBattle(ReferenceBattle):
                 state['ball']=ally
                 for target in en(350,ally,3):
                     self._check_move(target,True,200,True)
-                    if hit(target,2.2,2):ctl(target,'stun',1)
+                    if hit(target,self.equipment_part(skill,'shockwave',2.2),2):ctl(target,'stun',1)
                 self.shield(owner,ally,.8)
             case 'nunu_n':
                 enemies=en(175)
                 if not enemies:return False
                 target=enemies[0];summoned=bool(target.get('summon_owner'))
                 hit(target,(3 if summoned else 1.4)*scale,3 if summoned else 2)
-                self.heal(owner,owner,.7*scale)
+                self.heal(owner,owner,self.equipment_part(skill,'consume_heal',.7)*scale)
             case 'nunu_c':
-                self.shield(owner,owner,1.2)
+                self.shield(owner,owner,self.equipment_part(skill,'channel_shield',1.2))
                 state['channel']=dict(pos=owner['pos'],line=owner['line'],damage=damage,effect=effect)
             case 'alistar_n':
                 enemies=en(500)
@@ -389,10 +398,10 @@ class SkillCompleteBattle(ReferenceBattle):
                 primary=enemies[0];targets=group(primary,250,3)
                 hit(primary,.8*scale,2,1.4*scale)
                 for target in targets:
-                    if hit(target,.6*scale,2,1.4*scale if target is primary else 0):ctl(target,'stun',1)
+                    if hit(target,self.equipment_part(skill,'pulverize',.6)*scale,2,1.4*scale if target is primary else 0):ctl(target,'stun',1)
                 buff('taunt',2)
             case 'alistar_c':
-                self._remove_all_debuff(owner);self.heal(owner,owner,.5)
+                self._remove_all_debuff(owner);self.heal(owner,owner,self.equipment_part(skill,'will_heal',.5))
                 state['guard']=dict(kind='alistar',charges=3,until=serial+2,owner=owner,effect=effect,debuff=False)
             case 'diana_n':
                 enemies=en(650)
@@ -406,24 +415,24 @@ class SkillCompleteBattle(ReferenceBattle):
                 if all(u is not primary for u in targets):targets=([primary]+targets)[:3]
                 for target in targets:
                     marked=self.marked(owner,target,'moon');self._check_move(target,True,150,True)
-                    if hit(target,2.7 if marked else 1.8,2) and marked:self.state(target).pop(('mark','moon',state['index']),None)
-                self.shield(owner,owner,1)
+                    if hit(target,self.equipment_part(skill,'moon_mark',2.7) if marked else 1.8,2) and marked:self.state(target).pop(('mark','moon',state['index']),None)
+                self.shield(owner,owner,self.equipment_part(skill,'moon_shield',1))
             case 'khazix_n':
                 enemies=en(500)
                 if not enemies or not self.dash(owner,enemies[0]):return False
-                hit(enemies[0],(2.4 if self.isolated(enemies[0]) else 1.6)*scale,1)
+                hit(enemies[0],(self.equipment_part(skill,'isolated_hit',2.4) if self.isolated(enemies[0]) else 1.6)*scale,1)
             case 'khazix_c':
                 enemies=en(700,maximum=-1,hero=True)
                 primary=next((u for u in enemies if self.isolated(u)),enemies[0] if enemies else None)
                 if primary is None or not self.dash(owner,primary,True):return False
-                hit(primary,4.2 if self.isolated(primary) else 2.8,1);buff('fleeup',2,800*orange)
+                hit(primary,4.2 if self.isolated(primary) else 2.8,1);buff('fleeup',2,self.equipment_part(skill,'escape_dodge',800)*orange)
                 if primary['hp']<=0 and self.hero(primary):owner['_ability_cd_override']=3
             case 'malzahar_n':
                 enemies=en(600)
                 if not enemies:return False
                 target=enemies[0]
                 if self._buff(target,'purify'):self._remove_buff(target,'purify',consume=True)
-                else:self.state(target)[('malz',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,ticks=3,tick_damage=self._get_damage(owner)*scale*damage,hops=0,debuff=True)
+                else:self.state(target)[('malz',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,ticks=3,tick_damage=self._get_damage(owner)*scale*damage*self.hero_output_rate_104(owner),hops=0,debuff=True)
             case 'malzahar_c':
                 enemies=en(650)
                 if not enemies:return False
@@ -434,12 +443,12 @@ class SkillCompleteBattle(ReferenceBattle):
                 enemies=en(650)
                 if not enemies:return False
                 primary=enemies[0];hit(primary,1.5*scale,1)
-                for target in en(250,primary,2,excluded=[primary]):hit(target,1.1*scale,1)
+                for target in en(250,primary,2,excluded=[primary]):hit(target,self.equipment_part(skill,'rocket_splash',1.1)*scale,1)
             case 'jinx_c':
                 enemies=en(1000,hero=True,order='ratio')
                 if not enemies:return False
                 primary=enemies[0];targets=en(300,primary,2,excluded=[primary]);ap=self._get_damage(owner)
-                hit(primary,2+min(2*ap,(primary['hp_max']-primary['hp'])*.12)/max(1,ap),1)
+                hit(primary,2+min(2*ap,(primary['hp_max']-primary['hp'])*self.equipment_part(skill,'missing_hp',.12))/max(1,ap),1)
                 for target in targets:hit(target,1.2,1)
                 if ctx['kills']:
                     buff('strong',2,.3);buff('critup',2,800*orange)
@@ -456,7 +465,7 @@ class SkillCompleteBattle(ReferenceBattle):
             case 'caitlyn_n':
                 enemies=en(600)
                 if not enemies:return False
-                if hit(enemies[0],scale,1):self.mark(owner,enemies[0],'aim',2,scale)
+                if hit(enemies[0],self.equipment_part(skill,'net_hit',scale),1):self.mark(owner,enemies[0],'aim',2,scale)
                 self._check_move(owner,False,250)
             case 'caitlyn_c':
                 primary=self.marked_target(owner,'aim',1000,'farthest')
@@ -466,20 +475,20 @@ class SkillCompleteBattle(ReferenceBattle):
                     if primary['pos']<other['pos']<owner['pos'] if self._team_number(owner)==1 else owner['pos']<other['pos']<primary['pos']:
                         target=other;break
                 buff('hitup',1,800*orange);marked=self.marked(owner,target,'aim')
-                if hit(target,5 if marked else 4,1) and marked:self.state(target).pop(('mark','aim',state['index']),None)
+                if hit(target,self.equipment_part(skill,'marked_shot',5) if marked else 4,1) and marked:self.state(target).pop(('mark','aim',state['index']),None)
             case 'kaelthas_n':
                 enemies=en(600)
                 if not enemies:return False
                 target=enemies[0]
                 if hit(target,.8*scale,2) and target['hp']>0 and not self._buff(target,'purify'):
-                    self.state(target)[('bomb',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,coefficient=1.2*scale,damage=damage,debuff=True)
+                    self.state(target)[('bomb',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,coefficient=self.equipment_part(skill,'bomb_burst',1.2)*scale,damage=damage,debuff=True)
             case 'kaelthas_c':
                 enemies=en(700)
                 if not enemies:return False
                 for target in group(enemies[0],300,3):
                     key=('bomb',state['index']);bomb=self.state(target).get(key)
                     self.state(target)['bomb_consume_owner']=owner
-                    landed=hit(target,4 if bomb else 2.2,2)
+                    landed=hit(target,self.equipment_part(skill,'consume_bomb',4) if bomb else 2.2,2)
                     self.state(target).pop('bomb_consume_owner',None)
                     if landed and bomb:self.state(target).pop(key,None)
             case 'aoxing_n':
@@ -491,7 +500,7 @@ class SkillCompleteBattle(ReferenceBattle):
                         enemies=en(300,primary,1,excluded=targets)
                         if not enemies:break
                         primary=enemies[0];targets.append(primary)
-                    if hit(primary,(1.4 if i==0 else 1)*scale,2) and self.hero(primary):marked=True
+                    if hit(primary,(1.4 if i==0 else self.equipment_part(skill,'lightning_bounce',1))*scale,2) and self.hero(primary):marked=True
                 if marked:state['thunder']=min(3,state.get('thunder',0)+1)
             case 'aoxing_c':
                 count=state.get('thunder',0);state['thunder']=0;largest=-1;targets=[]
@@ -501,7 +510,7 @@ class SkillCompleteBattle(ReferenceBattle):
                         largest=len(found);targets=self.candidates(owner,3-self._team_number(owner),lane,owner['pos'],self._LINE_POS,4,False,'front')
                 stuns=0
                 for target in targets:
-                    if hit(target,1.8+.4*count,2) and count==3 and self.hero(target) and stuns<2:
+                    if hit(target,1.8+self.equipment_part(skill,'storm_charge',.4)*count,2) and count==3 and self.hero(target) and stuns<2:
                         stuns+=1;ctl(target,'stun',1)
         self.manual_casts[kind]=self.manual_casts.get(kind,0)+1
         return True
@@ -542,16 +551,17 @@ class SkillCompleteBattle(ReferenceBattle):
         if owner.get('hp',0)<=0:return False
         allies=[u for u in (self.a if self._team_number(owner)==1 else self.b) if u.get('hp',0)>0]
         if not allies:return False
+        rate=self._factor(self._config.get('skill',{}).get(skill.get('skid'),{}).get('manualEffectMultiplier'))
         if kind=='nurse_n':
             for target in allies:self._add_buff(target,'purify',1)
-            amount=_to_int(self._ap_with_talent(owner)*float(skill['skills'][0][4]))
+            amount=_to_int(self._ap_with_talent(owner)*float(skill['skills'][0][4])*rate*self.hero_output_rate_104(owner))
             for target in allies:
                 if target.get('hp',0)<=0:continue
                 self._injured(target,amount,4,source=owner)
         else:
             # Select once; healing the first target must not retarget the second.
             primary=min(allies,key=lambda u:u['hp']/max(1,u['hp_max']))
-            amount=_to_int(owner['hp_max']*.5)
+            amount=_to_int(owner['hp_max']*.5*rate*self.hero_output_rate_104(owner))
             for target in (primary,owner):
                 if owner.get('hp',0)<=0:break
                 if target.get('hp',0)<=0:continue
@@ -651,7 +661,7 @@ class SkillCompleteBattle(ReferenceBattle):
             for target in targets:self.hit(owner,target,float(params[5]),3)
             self.hit(owner,primary,float(params[6]),3)
             dealt=ctx.get('hp_damage',0)-before
-            if owner['hp']>0:self._injured(owner,_to_int(dealt*float(params[7])),4,source=owner)
+            if owner['hp']>0:self._injured(owner,_to_int(dealt*float(params[7])*self.hero_output_rate_104(owner)),4,source=owner)
         else:
             if not self.opponents(owner):return False
             self.add_purify_charges(owner,2);ctx.update(cat_capture=True,cat_crits=0)
@@ -682,10 +692,10 @@ class SkillCompleteBattle(ReferenceBattle):
                         self.hit(owner,target,float(policy[1]),3)
         finally:state.update(cat_busy=False,cat_pending=0)
 
-    def _add_buff(self, unit, kind, rounds, value=0, source=None):
+    def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
         ctx=self._context()
         if ctx and value and kind!='summon':value*=ctx['effect_factor']
-        return super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None))
+        return super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
 
     def _remove_all_debuff(self, unit):
         super()._remove_all_debuff(unit)
@@ -827,7 +837,7 @@ class SkillCompleteBattle(ReferenceBattle):
                 if entry['ticks']<=0:state.pop(key,None)
             elif key=='grey' and serial>=entry['until']:
                 state.pop(key,None)
-                if owner['hp']>0 and entry['value']>0:self._add_buff(owner,'shield',2,int(entry['value']))
+                if owner['hp']>0 and entry['value']>0:self._add_buff(owner,'shield',2,_to_int(entry['value']*self.hero_output_rate_104(owner)))
             elif 'until' in entry and serial>entry['until']:state.pop(key,None)
         zone=state.get('zone')
         if zone and owner['hp']>0:

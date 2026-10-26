@@ -22,6 +22,7 @@
     "skill.damage",
     "skill.description.rank-template",
     "skill.effect-sequence.v1",
+    "skill.events.filters104.v1",
     "skill.events.v1",
     "skill.hp_shield",
     "skill.move_to_target",
@@ -196,7 +197,7 @@
   },
   "nativeTemplates": {
     "model": "native-template-v1",
-    "skillCount": 1207,
+    "skillCount": 4141,
     "operations": [
       "armor",
       "attrup",
@@ -239,6 +240,7 @@
       "locked_sequence_area",
       "manual_ability",
       "manual_dot",
+      "mod_step",
       "move_enemy_side_target",
       "move_self",
       "move_to_ally",

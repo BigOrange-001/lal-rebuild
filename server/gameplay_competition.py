@@ -274,20 +274,14 @@ class GameplayCompetition:
                 actions=row.get("skill",[]) if isinstance(row,dict) else []
                 if actions and isinstance(actions[0],(list,tuple)) and actions[0] and actions[0][0]=="equipup": return 0.0
                 return star*float(power_cfg[11])+lv*float(power_cfg[12])
-            if super_skill: return star*0.5
-            return star*0.1+lv*0.1
+            rate=float(self.cfg.get('skill',{}).get(sid,{}).get('bond_power_rate_104',1))
+            if super_skill: return star*0.5*rate
+            return (star*0.1+lv*0.1)*rate
         def talent_factor(talent):
             if isinstance(talent,dict): talent=talent.get("id")
             if not isinstance(talent,str) or talent not in self.cfg.get("talent",{}): return 0.0
-            # TalentData.getStar reads the ID suffix, not its combat effect
-            # percentage. Talent.getPower indexes talent_power[star - 2].
-            try: index=int(talent.rsplit("_",1)[-1])-2
-            except ValueError: return 0.0
-            weights=self.simple.get("talent_power",[])
-            if not isinstance(weights,list) or not 0<=index<len(weights): return 0.0
-            try: factor=float(weights[index])
-            except (TypeError,ValueError): return 0.0
-            return factor if math.isfinite(factor) and factor >= 0 else 0.0
+            from power_balance_104 import talent_power_factor
+            return talent_power_factor(self.cfg['talent'][talent])
         def native_floor(value):
             rounded=Decimal(str(value)).quantize(Decimal("0.00001"),rounding=ROUND_HALF_UP)
             return math.floor(rounded)
@@ -330,7 +324,7 @@ class GameplayCompetition:
             multiplier=1.0+skill_factor(unit.get("skill"),level=slv)+skill_factor(unit.get("leader_skill"),True)+skill_factor(book,book=True,level=book.get("slv",1) if isinstance(book,dict) else 1)+skill_factor(unit.get("skillB"))
             weighted=hp*float(power_cfg[1])+ap*float(power_cfg[2])+de_ph*float(power_cfg[3])+de_ma*float(power_cfg[4])
             stat_multiplier=1.0+math.pow(max(0.0,substats),1.0/float(power_cfg[10]))*float(power_cfg[9]) if float(power_cfg[10])>0 else 1.0
-            value=(weighted**2)*multiplier*(float(power_cfg[5])+speed+reach)*stat_multiplier*float(power_cfg[0])
+            value=(max(0.0,weighted)**1.5)*multiplier*(float(power_cfg[5])+speed+reach)*stat_multiplier*float(power_cfg[0])
             if math.isfinite(value) and value>0:
                 value=native_floor(value)+value*talent_factor(unit.get("talent"))
                 if math.isfinite(value) and value>0: total+=native_floor(value)
@@ -444,7 +438,7 @@ class GameplayCompetition:
         if (not refresh and isinstance(batch,dict) and batch.get("player_rank")==self._rank(profile)
                 and batch.get("power_order_schema")==POWER_ORDER_SCHEMA
                 and batch.get("combat_config_sha256")==combat_signature
-                and isinstance(batch.get("bots"),list) and len(batch["bots"])==9):
+                and isinstance(batch.get("bots"),list) and len(batch["bots"])==(10 if self._rank(profile)>100 else 9)):
             return batch
         old_generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
         generation=old_generation+1 if refresh or old_generation else 1

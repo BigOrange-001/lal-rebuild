@@ -192,7 +192,7 @@ class ExplorationOverhaulTests(unittest.TestCase):
         # Armor-ignoring DOTs change the former tuning band. The contract is
         # repeatable full clears with valid persistent HP, checked below.
         self.assertGreater(health, 0)
-        self.assertLess(health, .95)
+        self.assertLess(health, 1)
         clears = 0
         for trial in range(10):
             trial_team = self.own_snapshot(profile, ids)

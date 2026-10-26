@@ -384,8 +384,8 @@ class GameplayCombat:
             line = max(0, min(2, int(row[1]))) if len(row) > 2 else 0
             pos = max(0.0, min(1.0, float(row[2]))) if len(row) > 2 else 0.5
             overrides = {key: avatar.get(key) for key in (
-                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "growth_stats_applied",
-                "skill", "leader_skill", "book_skill", "skillB")}
+                "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema",
+                "skill", "leader_skill", "book_skill", "skillB", "bonds_104", "equipment_bonds_104", "growth_stats_applied")}
             overrides["leader_skill"] = avatar.get("leader_skill") if is_friend else None
             overrides["new_4attrs"] = {
                 key: (avatar.get("new_4attrs") or {}).get(key, 0)
@@ -1003,7 +1003,7 @@ class GameplayCombat:
                     # retain stale multi-lane indices from another mode.
                     _, pos = (int(row[1]), float(row[2])) if len(row) >= 3 else (0, .2 + .24 * i)
                     line = 0
-                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "growth_stats_applied", "skill", "leader_skill", "book_skill", "skillB")}
+                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "skill", "leader_skill", "book_skill", "skillB", "growth_stats_applied", "bonds_104", "equipment_bonds_104")}
                     # Native exploration marks every selected hero as captain.
                     overrides["leader_skill"] = raw.get("leader_skill")
                     overrides["hp"] = current_hp

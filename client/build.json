@@ -1,6 +1,6 @@
 {
   "schema": "lal-client-build-v2",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "stage_count": 166,
   "unique_class_count": 147,
   "stages": [
@@ -20,7 +20,7 @@
       "index": 3,
       "class": "com.meng52.net.SendAndSelect",
       "source": "client/src/stages/003_SendAndSelect.as",
-      "source_sha256": "a08e850f9b3f2953369c1ae9d735de1279d459a36b174ff9d9cd7c494b8eb465"
+      "source_sha256": "dd4c57db3432647f07ce8c915ccbd39ffffc6bd1e8a25af2c7583e07d8511df6"
     },
     {
       "index": 4,
@@ -182,13 +182,13 @@
       "index": 30,
       "class": "com.meng52.game.ui.screen.PanelAvatarSell",
       "source": "client/src/stages/030_PanelAvatarSell.as",
-      "source_sha256": "54f6fb02bc264305126c16712813b05dec4f316b480b82aae46d21b78b205093"
+      "source_sha256": "5e93d15d082063eee16464d4f998f0eb60641d93dd228bc38d693c085f6b8c34"
     },
     {
       "index": 31,
       "class": "com.meng52.game.ui.screen.PanelSocialMainAvatar",
       "source": "client/src/stages/031_PanelSocialMainAvatar.as",
-      "source_sha256": "0653da636498c035f9976edbd506b732bd601e7f060626d4fb11d3cfed163844"
+      "source_sha256": "aecbec337066d4381451abf14fbc695c3497c91d63abdfb1b4f2cd75d257d451"
     },
     {
       "index": 32,
@@ -206,7 +206,7 @@
       "index": 34,
       "class": "com.meng52.game.ui.panel.PanelBetterSelect",
       "source": "client/src/stages/034_PanelBetterSelect.as",
-      "source_sha256": "4af5358e3cb628fc81ac4262e05a9e793754a08e9760f2ff6a352a3f074213c2"
+      "source_sha256": "e3ec49f0c842455103ff19e5ea588408ddc66ed20b8651754766328a0e350c04"
     },
     {
       "class": "com.meng52.game.ui.stage.LayoutUIAnimation",
@@ -512,7 +512,7 @@
       "index": 85,
       "class": "com.meng52.game.module.map.GameMap",
       "source": "client/src/stages/083_GameMap.as",
-      "source_sha256": "0ef2f7715f1eef058afd6354cad70184558340c33db701f5e614739b1775f002"
+      "source_sha256": "27346894965221ac300f1fca2f58c069919f900fcd4a1c2de930ac156ed3ac42"
     },
     {
       "index": 86,
@@ -830,13 +830,13 @@
       "index": 138,
       "class": "MainLLOL",
       "source": "client/src/stages/136_MainLLOL.as",
-      "source_sha256": "768ea4b6539ea2c46607425a92f6637984e2a2f83b8f25f56f2408e290ce580c"
+      "source_sha256": "14ec80fb5d48728be8e22071219647083c0a8619d2d402ab95727adf486e52c7"
     },
     {
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "7cb498f88125c27a7bc445cc86916b0c00a503d8964ebc7b0c4d60ab139a0c6f"
+      "source_sha256": "82b1a7836d1b921ef872b58c07d88bcc9019a7b1fb0b3b2a57f5c2ea432ffd02"
     },
     {
       "index": 140,
@@ -848,13 +848,13 @@
       "index": 141,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "c8092ee24d839ded7ab5b2dc1183ce5f35f131f48ea5840cb81ed5fc6ba61c9c"
+      "source_sha256": "f0174d86227315594cdd632d4f0690643497efbd96c3ab16c6d47768bca51963"
     },
     {
       "index": 142,
       "class": "com.meng52.game.module.skill.Buff",
       "source": "client/src/stages/140_Buff.as",
-      "source_sha256": "b66731ac58fd794a122c176fd80bfe07c038fc9fbea4be102a836bfe2338ac63"
+      "source_sha256": "a7d1346325d5d1fa2598b23eb972b0c9989ba802891785b5b9c0ec982056bac2"
     },
     {
       "index": 143,
@@ -884,7 +884,7 @@
       "index": 147,
       "class": "com.meng52.game.module.talent.Talent",
       "source": "client/src/stages/145_Talent.as",
-      "source_sha256": "2f1084f70dec7ce58c38638f861e1cd360bebb22c4c0215acb040215dd6c23c5"
+      "source_sha256": "1ee2509b72aa9ae5bb4144eb09a18c44635241ab771c230af766ff53d1dd0e78"
     },
     {
       "index": 148,
@@ -1007,7 +1007,7 @@
   },
   "descriptor": {
     "path": "client/air/application.xml",
-    "sha256": "e5d4a1a77ad22e75ab371c0fa7b54213c4dc92d9872a291f37b9e631a08a0f4f"
+    "sha256": "1cc5bc1bccb0dbe83739b8cb420942fa6ff87b3cf91df1485af210530f10b07a"
   },
   "assets_manifest": {
     "path": "client/resources/assets-manifest.json",

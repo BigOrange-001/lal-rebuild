@@ -192,7 +192,7 @@ class HeroSkills103Tests(unittest.TestCase):
         self.assertEqual(tuning['source'],'S_9150_6')
         plan=json.loads((ROOT/'config/reconstruction/hero-iteration-1.0.3.json').read_text('utf8'))
         final_factor=next((r['skill_factor'] for r in plan['heroes'] if r['aid']=='A_1137_6'),1)
-        self.assertAlmostEqual(cfg['skill'][passive]['skill'][0][1],.75*tuning['factor']*final_factor)
+        self.assertAlmostEqual(cfg['skill'][passive]['skill'][0][1],.75*tuning['factor']*final_factor*.8)
         for aid,normal in (('A_1129_6','S_271129_6'),('A_1202_6','S_271202_6'),('A_1217_6','S_271217_6')):
             self.assertEqual(base_unit(cfg,aid,slv=10)['skill']['skid'],normal)
         # Native banStand is true for pl[5] == 0. A whole-team defensive
@@ -214,13 +214,13 @@ class HeroSkills103Tests(unittest.TestCase):
                 self.assertEqual(s['pl'][:2],[1,3])
                 self.assertAlmostEqual(s['skills'][4][2],stat*factor)
                 self.assertAlmostEqual(s['skills'][5][2],stat*factor)
-                self.assertAlmostEqual(s['skills'][6][1],damage*factor)
+                self.assertAlmostEqual(s['skills'][6][1],damage*factor*.8)
             for level,stat in ((1,4500),(10,9000)):
                 s=_native_skill_snapshot(cfg,f'S_201311_{q}',level)
                 self.assertEqual(s['pl'][:2],[0,0])
                 for index in (2,3,4):self.assertAlmostEqual(s['skills'][index][2],stat)
                 self.assertEqual(s['skills'][5][0],'caster_hp_heal')
-                self.assertAlmostEqual(s['skills'][5][1],.12 if level==1 else .18)
+                self.assertAlmostEqual(s['skills'][5][1],(.12 if level==1 else .18)*.8)
             self.assertEqual(cfg['skill'][f'S_301311_{q}']['skill'][1][2],1500)
             self.assertEqual(cfg['skill'][f'S_301311_{q}']['pl'][:2],[0,0])
             captain=cfg['skill'][cfg['avatar'][f'A_1137_{q}']['pl'][11]]

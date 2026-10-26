@@ -61,6 +61,8 @@ package com.meng52.game.module.talent
       public function getPower() : Number
       {
          if(!my_HaloData || !GlobalData.$mConfig_simple) return 0;
+         var row:Object = my_HaloData.dataObj;
+         if(row && row.power_factor_104 != null) return Math.max(0,Number(row.power_factor_104));
          var index:int = int(my_HaloData.getStar())-2;
          var weights:Array = GlobalData.$mConfig_simple.talent_power as Array;
          if(!weights || index < 0 || index >= weights.length) return 0;

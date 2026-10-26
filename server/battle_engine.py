@@ -101,7 +101,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     result["culture_schema"] = ""
     if limit_break or npc_limit_break: result["limit_break"] = 1
     if overrides:
-        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema","growth_stats_applied"):
+        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema","growth_stats_applied","bonds_104","equipment_bonds_104"):
             if key in overrides: result[key] = overrides[key]
     result["culture_schema"] = str(result.get("culture_schema") or "")
     if not result.get('growth_stats_applied'):
@@ -180,12 +180,15 @@ def serialize_player_team(config, profile, team_num, submitted_team, attributes_
         if type(raw_line) not in (int, float) or isinstance(raw_line, bool) or not math.isfinite(float(raw_line)) or float(raw_line) != int(raw_line):
             raise ValueError("formation lane must be an integer native line index")
         line = int(raw_line)
-        raw = attributes_fn(profile,iid) if attributes_fn else {}
+        projection_profile = {**profile, 'attrs': {**profile.get('attrs', {}), 'team_num': index}}
+        raw = attributes_fn(projection_profile,iid) if attributes_fn else {}
         overrides={"hp":raw.get("hp"),"hp_max":raw.get("hp_max",raw.get("hp")),"ap":raw.get("ap"),"de_ph":raw.get("de_ph"),"de_ma":raw.get("de_ma"),"tpl":raw.get("tpl"),"talent":raw.get("talent"),"growth_stats_applied":raw.get("growth_stats_applied",False),"morph":raw.get("morph"),"skill":raw.get("skill"),"leader_skill":raw.get("leader_skill") if slot == 0 else None,"book_skill":raw.get("book_skill"),"skillB":raw.get("skillB"),"new_4attrs":{"hit":raw.get("hit",0),"flee":raw.get("flee",0),"crit":raw.get("crit",0),"tough":raw.get("tough",0)}} if attributes_fn else None
         result.append(base_unit(config,aid,int(instance.get("lv",1)),int(instance.get("slv",1)),line,max(0.0,min(1.0,pos)),slot==0,1,iid,overrides,
                                 limit_break=instance.get("limit_break") == 1))
         # Read progression from the owned roster, never from submitted tuples.
         result[-1]["phase"] = max(0, int(instance.get("phase", 0)))
+        result[-1]['bonds_104'] = list(raw.get('bonds_104', []))
+        result[-1]['equipment_bonds_104'] = list(raw.get('equipment_bonds_104', []))
         result[-1]["culture_schema"] = str(raw.get("culture_schema", instance.get("culture_schema", "")) or "")
     if not result: raise ValueError("battle requires at least one saved formation avatar")
     return result
@@ -260,9 +263,10 @@ def _percent_debuff_value(raw):
 
 class _Buff:
     """Mirror of Buff(type, round, value) from 140_Buff.as."""
-    __slots__ = ("type", "round", "value", "source")
+    __slots__ = ("type", "round", "value", "source", "poison_hp_rate_104")
 
-    def __init__(self, kind, rounds, value=0, source=None):
+    def __init__(self, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
+        self.poison_hp_rate_104 = poison_hp_rate_104
         self.type = str(kind)
         self.round = _to_int(rounds)
         self.value = value
@@ -338,7 +342,7 @@ class ReferenceBattle:
         entry = ReferenceBattle._buff(unit, kind)
         return entry.value if entry is not None else default
 
-    def _add_buff(self, unit, kind, rounds, value=0, source=None):
+    def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
         """addBuff tail (137_Avatar.as:2619): merge rules differ per buff.
 
         Two compare arms and one merge arm; a kind in neither arm has its new
@@ -347,7 +351,7 @@ class ReferenceBattle:
         kind = str(kind)
         container = unit.setdefault("_buffs", {})
         current = container.get(kind)
-        incoming = _Buff(kind, rounds, value, source)
+        incoming = _Buff(kind, rounds, value, source, poison_hp_rate_104)
         if kind == 'bless' and current is not None:
             if current.value <= 0 < incoming.value:
                 return
@@ -389,6 +393,7 @@ class ReferenceBattle:
         if kind in ("poison", "burn"):
             # Remaining total damage is preserved and re-spread over the new
             # duration (137_Avatar.as:2669).
+            current.poison_hp_rate_104 = max(current.poison_hp_rate_104,incoming.poison_hp_rate_104)
             if incoming.round != 0:
                 current.value = _to_int(current.value * current.round / incoming.round
                                         + incoming.value)
@@ -450,7 +455,7 @@ class ReferenceBattle:
                 del container[kind]
         poison = container.get("poison")
         if poison is not None:
-            tick = _to_int(poison.value + self._poison_hp_fraction * int(unit.get("hp_max", 0)))
+            tick = _to_int(poison.value + self._poison_hp_fraction * int(unit.get("hp_max", 0)) * poison.poison_hp_rate_104)
             self._injured(unit, tick, damage_type=6, dot_kind='poison', source=poison.source)
             if int(unit.get("hp", 0)) <= 0:
                 unit["hp"] = 0
@@ -1480,7 +1485,13 @@ class ReferenceBattle:
         total = 0
         for target in targets:
             total += self._native_damage(attacker, target, action[1], action[2])
-            self._add_buff(target, "poison", int(action[4]), magnitude, source=attacker)
+            definition=self._config.get('avatar',{}).get(attacker.get('aid'),{})
+            pack=definition.get('builtin_pack_104')
+            rate=float(self._config.get('system_simple',{}).get('hero_skill_output_rate_104',1)) if pack or str(attacker.get('aid','')).startswith('A_1') else 1
+            if pack=='nine':rate*=2/3
+            from equipment_bonds_104 import output_rate
+            rate*=output_rate(self._config,attacker.get('aid'),attacker.get('equipment_bonds_104'))
+            self._add_buff(target, "poison", int(action[4]), magnitude, source=attacker, poison_hp_rate_104=rate)
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(targets)
         if targets:
@@ -2399,7 +2410,7 @@ class ReferenceBattle:
         if not isinstance(fraction, (int, float)) or isinstance(fraction, bool) \
                 or not math.isfinite(float(fraction)) or not 0.01 <= float(fraction) <= 100:
             return
-        bounded = self._has_bounded_summon_policy(str(skill.get("skid", "")))
+        bounded = self._has_bounded_summon_policy(str(skill.get("equipment_source_skill_104") or skill.get("skid", "")))
         level = max(1, _to_int(float(fraction) * _to_int(attacker.get("lv", 1))))
         skill_id = str(skill.get("skid", ""))
         if bounded and self._has_live_bounded_summon(attacker, skill_id):
@@ -2531,7 +2542,7 @@ class ReferenceBattle:
 
     def _spawn_summon(self, owner, aid, scale, rounds, level=None, bounded=False,
                       bounded_skill_id=None, ap_factor=None, stat_ratios=None,
-                      extra_multiplier=1):
+                      extra_multiplier=1, skill_level=None):
         """Create a live-panel snapshot; never use template growth as inherited stats."""
         if type(scale) not in (int, float) or not math.isfinite(scale) or not 0.01 <= scale <= 100:
             return None
@@ -2547,7 +2558,7 @@ class ReferenceBattle:
             level = max(1, _to_int(owner.get("lv", 1)))
         try:
             unit = base_unit(self._config, aid, max(1, _to_int(level)),
-                             max(1, _to_int(owner.get("slv", 1))),
+                             max(1, _to_int(owner.get("slv", 1) if skill_level is None else skill_level)),
                              int(owner.get("line", 0)), 0.0, False,
                              self._team_number(owner),
                              enforce_avatar_level_cap=False, summoned=True)
@@ -2601,7 +2612,7 @@ class ReferenceBattle:
         """summon_turret (139_SkillSet.as:1917 -> executeHeimerTurretSummon)."""
         if len(action) < 11:
             raise ValueError("summon_turret requires the authored 11-argument row")
-        skid = str(skill.get("skid", ""))
+        skid = str(skill.get("equipment_source_skill_104") or skill.get("skid", ""))
         if not self._is_heimer_turret_skill(skid) or not self._has_bounded_summon_policy(skid):
             return
         if str(action[2]) != "A_2001_4":
@@ -2636,20 +2647,29 @@ class ReferenceBattle:
         What can be checked from the serialized row is applied; the rest is
         flagged rather than guessed.
         """
-        skid = str(skill.get("skid", ""))
+        skid = str(skill.get("equipment_source_skill_104") or skill.get("skid", ""))
         if skid not in ("S_631132_5", "S_631132_6"):
             return
         owner_aid = str(attacker.get("aid", ""))
         if not owner_aid.endswith(skid.rsplit("_", 1)[-1]):
             return
         policy = skill.get("manualClonePolicy")
-        known_policy = isinstance(policy, dict) and policy.get("skillId") == skid
+        known_policy = isinstance(policy, dict) and policy.get("skillId") == skill.get("skid")
+        normal=attacker.get('skill') or {}
+        source=self._config.get('skill',{}).get(normal.get('skid'),{})
+        normal_id=source.get('builtin_native_source_104',normal.get('skid'))
+        if not known_policy or normal_id!='S_621132_'+owner_aid.rsplit('_',1)[1]:return
         ratio = policy.get("panelStatRatio", 1) if known_policy else 1
         ttl = policy.get("ttlOwnTurns", 1) if known_policy else 1
         clone = self._spawn_summon(attacker, owner_aid, ratio, ttl)
         if clone is None:
             return
         clone["_clone_of"] = owner_aid
+        clone['skill']=copy.deepcopy(normal)
+        clone['skillB']=clone['leader_skill']=clone['book_skill']=None
+        live=[u for u in allies if u.get('_clone_of')==owner_aid and u.get('summon_owner_token')==attacker.get('_owner_token') and u.get('hp',0)>0]
+        while len(live)>=int(policy.get('maxAlive',1)):
+            live.pop(0)['hp']=0
         if not known_policy:
             clone["_clone_policy_unavailable"] = True
         context["targets"][index] = clone

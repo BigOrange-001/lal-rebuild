@@ -62,6 +62,11 @@ def config_tables(config):
 def runtime(config):
     cfg = config_tables(config)
     value = cfg.get("mod_runtime", {})
+    # Built-in image transport is not a save-local Mod policy. In particular,
+    # ordinary saves must not acquire Mod instance sequences or enemy caches
+    # merely because the current release ships new PNGs.
+    if isinstance(value, dict) and set(value) <= {"assets"}:
+        return {}
     return value if isinstance(value, dict) else {}
 
 

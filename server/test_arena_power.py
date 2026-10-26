@@ -1,4 +1,4 @@
-"""Native AIR golden values for talent power and its two rounding stages."""
+"""Power 1.0.4: panel-only talents and independent arithmetic golden values."""
 import copy
 import json
 import sys
@@ -26,28 +26,32 @@ class ArenaPowerTest(unittest.TestCase):
             'book_skill': {'skid': 'S_9001_6', 'slv': 2},
         }
 
-    def test_talent_and_captain_skill_match_native(self):
-        self.assertEqual(self.game._team_power([self.unit]), 21243450)
-        no_talent = {**self.unit, 'talent': None}
-        self.assertEqual(self.game._team_power([no_talent]), 10621725)
-        no_captain = {**self.unit, 'leader_skill': None}
-        self.assertEqual(self.game._team_power([no_captain]), 11127520)
-        self.assertEqual(self.game._team_power([no_talent, no_captain]), 21749245)
+    @staticmethod
+    def expected(ap=26829, captain=True, sunder=0):
+        # Independent Decimal oracle for this fixed fixture, including both floors.
+        from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
+        D = Decimal
+        weighted = D(290957)/2 + D(ap)*2 + D(14431+13219)*D('.625')
+        skills = D('1')+D('1.5')+D('.8')+(D('3') if captain else 0)
+        value = weighted * weighted.sqrt() * skills * 1927 * (1+D(7535).sqrt()/100) * D('1e-8')
+        floor = lambda v: int(v.quantize(D('.00001'), rounding=ROUND_HALF_UP).to_integral_value(rounding=ROUND_FLOOR))
+        rate = D(str(sunder))
+        return floor(D(floor(value))+value*D('.25')*rate/(1-rate))
 
-    def test_native_five_decimal_floor_boundary(self):
-        self.assertEqual(self.game._team_power([{**self.unit, 'talent': None, 'ap': 51766}]),
-                         16081432)
-        self.assertEqual(self.game._team_power([{**self.unit, 'talent': None, 'ap': 482327}]),
-                         288254415)
+    def test_talent_and_captain_skill_match_formula(self):
+        self.assertEqual(self.game._team_power([self.unit]), self.expected(sunder=.15))
+        self.assertEqual(self.game._team_power([{**self.unit,'talent':None}]), self.expected())
+        self.assertEqual(self.game._team_power([{**self.unit,'leader_skill':None}]), self.expected(captain=False,sunder=.15))
 
-    def test_invalid_or_legacy_talent_is_finite_without_bonus(self):
-        for talent in (None, 'unknown', 'T_03_01', {}, {'id': 'unknown'}):
-            with self.subTest(talent=talent):
-                unit = copy.deepcopy(self.unit)
-                unit['talent'] = talent
-                self.assertEqual(self.game._team_power([unit]), 10621725)
-        self.assertEqual(self.game._team_power([{**self.unit, 'talent': {'id': 'T_03_02'}}]),
-                         21243450)
+    def test_rounding_at_different_panel_sizes(self):
+        for ap in (51766,482327):
+            self.assertEqual(self.game._team_power([{**self.unit,'talent':None,'ap':ap}]),self.expected(ap=ap))
+
+    def test_unknown_and_panel_talents_add_no_base_power(self):
+        for talent in (None,'unknown','T_01_01',{}, {'id':'unknown'}):
+            self.assertEqual(self.game._team_power([{**self.unit,'talent':talent}]),self.expected())
+        self.assertEqual(self.game._team_power([{**self.unit,'talent':{'id':'T_03_02'}}]),self.expected(sunder=.15))
+        self.assertEqual(self.game._team_power([{**self.unit,'talent':'T_03_01'}]),self.expected(sunder=.10))
 
 
 if __name__ == '__main__':

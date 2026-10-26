@@ -705,7 +705,7 @@ package com.meng52.game.ui.panel
             if(GlobalFunction.checkSearchTypeByType(_loc6_,_loc12_) || _loc15_ == -1 && GlobalFunction.checkSearchTypeByType(_loc6_,_loc12_))
             {
                _loc1_ = new Avatar(_loc6_);
-               _loc14_ = _loc3_[_loc9_];
+               _loc14_ = Tools.clone(_loc3_[_loc9_]);
                _loc14_["id"] = _loc6_;
                _loc14_["status"] = _loc15_;
                _loc14_["canBetter"] = 0;

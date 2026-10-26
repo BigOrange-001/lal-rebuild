@@ -621,7 +621,7 @@ package com.meng52.game.ui.screen
             if(GlobalFunction.checkSearchTypeByType(_loc6_,this.mTabBar.selectedIndex) || GlobalData.$tempSell.indexOf(_loc6_) > -1 && GlobalFunction.checkSearchTypeByType(_loc6_,this.mTabBar.selectedIndex))
             {
                _loc1_ = new Avatar(_loc6_);
-               _loc9_ = _loc3_[_loc10_];
+               _loc9_ = Tools.clone(_loc3_[_loc10_]);
                _loc9_["id"] = _loc6_;
                _loc9_["sort_1"] = _loc1_.getSellValue();
                _loc9_["lock"] = _loc7_ || _loc5_ ? 1 : 0;

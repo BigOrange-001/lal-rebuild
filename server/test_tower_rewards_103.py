@@ -44,7 +44,7 @@ class TowerRewards103Tests(unittest.TestCase):
             self.assertEqual(self.config['cfg'][table],self.config[table])
             self.assertEqual(self.config['cfg'][table],self.config['pve'][table])
     def test_new_floor_power_grows_smoothly_and_matches_serialized_snapshots(self):
-        previous=self.config['combat_ploy']['P_200_150']['recommended_power']
+        previous=self.config['combat_ploy']['P_200_150']['recommended_power_original_104']['0']
         for floor in range(151,181):
             stage=self.config['combat_ploy'][f'P_200_{floor}']
             self.assertEqual(len(stage['team2']),9)

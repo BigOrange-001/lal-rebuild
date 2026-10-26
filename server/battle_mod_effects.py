@@ -53,7 +53,7 @@ def execute(battle,owner,enemies,allies,skill,action,index,context):
         family=str(skill.get('skid',''))+':'+str(index)
         existing=[u for u in allies if u.get('_effect_summon_owner')==owner.get('_owner_token')
                   and u.get('_effect_summon_family')==family]
-        unit=battle._spawn_summon(owner,action[11],action[12],action[13],bounded=True)
+        unit=battle._spawn_summon(owner,action[11],action[12],action[13],bounded=True,skill_level=1)
         if unit:
             while len(existing)>=action[14]:
                 expired=existing.pop(0);expired['hp']=0

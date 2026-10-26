@@ -1,0 +1,5471 @@
+{
+  "schema": "1.0.4",
+  "bonds": [
+    {
+      "id": "b001",
+      "name": "德玛西亚守护",
+      "relation": "region",
+      "families": [
+        "A_1009",
+        "A_1001",
+        "A_1007"
+      ],
+      "benefits": {
+        "A_1009": {},
+        "A_1001": {
+          "stats": {
+            "hp": 0.13333333333333333,
+            "de_ph": 0.13333333333333333,
+            "de_ma": 0.13333333333333333
+          }
+        },
+        "A_1007": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1009",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "德玛西亚守护·战技",
+          "actions": [
+            [
+              "caster_hp_shield",
+              0.18,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_self",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "获得自身18%最大生命护盾并净化，持续2回合。"
+        }
+      }
+    },
+    {
+      "id": "b002",
+      "name": "光盾王庭",
+      "relation": "region",
+      "families": [
+        "A_1007",
+        "A_1054",
+        "A_1060",
+        "A_1130"
+      ],
+      "benefits": {
+        "A_1007": {},
+        "A_1054": {
+          "stats": {
+            "hp": 0.17333333333333334,
+            "de_ph": 0.17333333333333334,
+            "de_ma": 0.17333333333333334
+          }
+        },
+        "A_1060": {
+          "skill_rate": 0.44
+        },
+        "A_1130": {
+          "stats": {
+            "hp": 0.17333333333333334,
+            "de_ph": 0.17333333333333334,
+            "de_ma": 0.17333333333333334
+          }
+        }
+      },
+      "focus": "A_1007",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "王庭战旗",
+          "actions": [
+            [
+              "sunder_percent",
+              2.8,
+              1,
+              0.25,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "strong",
+              0.25,
+              2,
+              "FX60_STRONG"
+            ],
+            [
+              "taunt",
+              1,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_lane_all",
+            "ally_self"
+          ],
+          "caps": [
+            2,
+            3,
+            1
+          ],
+          "info": "击穿本路两名前排：280%攻击物伤并削弱25%双防2回合；本路3名友军力量+25%持续2回合，自身嘲讽1回合。强化每级伤害+28%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.28
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "光盾壁垒",
+          "actions": [
+            [
+              "damage",
+              4.8,
+              1,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "caster_hp_shield",
+              0.4,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "caps": [
+            3,
+            3,
+            3
+          ],
+          "info": "对本路3名敌人造成480%攻击物伤；为全场生命比例最低的3名友军净化并赋予施法者40%最大生命护盾2回合。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b003",
+      "name": "不屈前锋",
+      "relation": "role",
+      "families": [
+        "A_1001",
+        "A_1019"
+      ],
+      "benefits": {
+        "A_1001": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1019": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b004",
+      "name": "光明之誓",
+      "relation": "region",
+      "families": [
+        "A_1060",
+        "A_1001"
+      ],
+      "benefits": {
+        "A_1060": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1001": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b005",
+      "name": "龙血禁卫",
+      "relation": "region",
+      "families": [
+        "A_1054",
+        "A_1009"
+      ],
+      "benefits": {
+        "A_1054": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1009": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b006",
+      "name": "虚空破阵",
+      "relation": "role",
+      "families": [
+        "A_1097",
+        "A_1008"
+      ],
+      "benefits": {
+        "A_1097": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1008": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b007",
+      "name": "潜锋壁垒",
+      "relation": "role",
+      "families": [
+        "A_1018",
+        "A_1015",
+        "A_1077"
+      ],
+      "benefits": {
+        "A_1018": {},
+        "A_1015": {
+          "stats": {
+            "hp": 0.13333333333333333,
+            "de_ph": 0.13333333333333333,
+            "de_ma": 0.13333333333333333
+          }
+        },
+        "A_1077": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1018",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "潜锋壁垒·战技",
+          "actions": [
+            [
+              "caster_hp_shield",
+              0.18,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_self",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "获得自身18%最大生命护盾并净化，持续2回合。"
+        }
+      }
+    },
+    {
+      "id": "b008",
+      "name": "忍法诡术",
+      "relation": "role",
+      "families": [
+        "A_1022",
+        "A_1018"
+      ],
+      "benefits": {
+        "A_1022": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1018": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b009",
+      "name": "暗夜追猎",
+      "relation": "role",
+      "families": [
+        "A_1023",
+        "A_1010",
+        "A_1136",
+        "A_1033"
+      ],
+      "benefits": {
+        "A_1023": {},
+        "A_1010": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        },
+        "A_1136": {
+          "skill_rate": 0.44
+        },
+        "A_1033": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1023",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "割喉追猎",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "damage",
+              3.6,
+              1,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "stat_flat",
+              "flee",
+              1500,
+              1,
+              "FX60_HIT"
+            ]
+          ],
+          "policies": [
+            "enemy_global_lowest_hp_ratio_hero",
+            "enemy_global_lowest_hp_ratio_hero",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1,
+            1
+          ],
+          "info": "跨路锁定最低生命比例英雄，驱散其增益后造成360%攻击物伤；自身闪避+1500持续1回合。强化每级伤害+36%。",
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            0,
+            1
+          ],
+          "upgrades": [
+            [
+              1,
+              1,
+              0.36
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "群鸦刃幕",
+          "actions": [
+            [
+              "sunder_percent",
+              0,
+              1,
+              0.35,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "locked_combo_group",
+              3,
+              4,
+              1.5,
+              1,
+              0,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "enemy_global_highest_attack_hero"
+          ],
+          "caps": [
+            3,
+            3
+          ],
+          "info": "跨路压制攻击最高的3名英雄，先降低35%双防2回合，再逐人四连击，每击150%攻击物伤。专克多核心后排。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b010",
+      "name": "无声猎杀",
+      "relation": "role",
+      "families": [
+        "A_1033",
+        "A_1128"
+      ],
+      "benefits": {
+        "A_1033": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1128": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b011",
+      "name": "伏击双锋",
+      "relation": "role",
+      "families": [
+        "A_1105",
+        "A_1023"
+      ],
+      "benefits": {
+        "A_1105": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1023": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b012",
+      "name": "疾风剑心",
+      "relation": "role",
+      "families": [
+        "A_1119",
+        "A_1012",
+        "A_1056"
+      ],
+      "benefits": {
+        "A_1119": {},
+        "A_1012": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1056": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1119",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "疾风剑心·战技",
+          "actions": [
+            [
+              "sunder_percent",
+              0.4,
+              1,
+              0.2,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "caster_hp_shield",
+              0.15,
+              1,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "打击前排造成40%攻击伤害并削弱20%双防2回合，自身获得15%最大生命护盾1回合。"
+        }
+      }
+    },
+    {
+      "id": "b013",
+      "name": "霜锁剑诀",
+      "relation": "role",
+      "families": [
+        "A_1012",
+        "A_1117"
+      ],
+      "benefits": {
+        "A_1012": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1117": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b014",
+      "name": "幻世灵契",
+      "relation": "skin",
+      "families": [
+        "A_1139",
+        "A_1134",
+        "A_1138",
+        "A_1227",
+        "A_1132"
+      ],
+      "benefits": {
+        "A_1139": {},
+        "A_1134": {
+          "stats": {
+            "ap": 0.32,
+            "hp": 0.32
+          }
+        },
+        "A_1138": {
+          "skill_rate": 0.56
+        },
+        "A_1227": {
+          "stats": {
+            "ap": 0.32,
+            "hp": 0.32
+          }
+        },
+        "A_1132": {
+          "stats": {
+            "ap": 0.32,
+            "hp": 0.32
+          }
+        }
+      },
+      "focus": "A_1139",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "灵链救赎",
+          "actions": [
+            [
+              "cure",
+              1.8,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "caster_hp_shield",
+              0.15,
+              2,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "caps": [
+            2,
+            2,
+            2
+          ],
+          "info": "跨路救援生命比例最低的2名友军，治疗180%恢复基数、净化并提供施法者15%最大生命护盾2回合。强化每级治疗+18%。",
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.18
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "艾欧尼亚之魂",
+          "actions": [
+            [
+              "cure",
+              3.2,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "caster_hp_shield",
+              0.3,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "strong",
+              0.25,
+              2,
+              "FX60_STRONG"
+            ]
+          ],
+          "policies": [
+            "ally_all",
+            "ally_all",
+            "ally_all",
+            "ally_all"
+          ],
+          "caps": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "info": "治疗全队320%恢复基数并净化；全队获得施法者30%最大生命护盾与25%力量，持续2回合。适合多路承压后的反攻。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b015",
+      "name": "灵境守望",
+      "relation": "role",
+      "families": [
+        "A_1082",
+        "A_1126"
+      ],
+      "benefits": {
+        "A_1082": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1126": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b016",
+      "name": "雷霆武道",
+      "relation": "role",
+      "families": [
+        "A_1016",
+        "A_1026",
+        "A_1005"
+      ],
+      "benefits": {
+        "A_1016": {},
+        "A_1026": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1005": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1016",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "雷霆武道·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              2,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b017",
+      "name": "离群之刃",
+      "relation": "role",
+      "families": [
+        "A_1015",
+        "A_1056"
+      ],
+      "benefits": {
+        "A_1015": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1056": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b018",
+      "name": "意志锋芒",
+      "relation": "role",
+      "families": [
+        "A_1024",
+        "A_1119"
+      ],
+      "benefits": {
+        "A_1024": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1119": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b019",
+      "name": "远古符文",
+      "relation": "region",
+      "families": [
+        "A_1003",
+        "A_1095"
+      ],
+      "benefits": {
+        "A_1003": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1095": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b020",
+      "name": "奥术风暴",
+      "relation": "role",
+      "families": [
+        "A_1126",
+        "A_1003",
+        "A_1114"
+      ],
+      "benefits": {
+        "A_1126": {},
+        "A_1003": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1114": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1126",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "奥术风暴·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              2,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b021",
+      "name": "凛冬战歌",
+      "relation": "role",
+      "families": [
+        "A_1049",
+        "A_1002",
+        "A_1006"
+      ],
+      "benefits": {
+        "A_1049": {},
+        "A_1002": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1006": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1049",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "凛冬战歌·战技",
+          "actions": [
+            [
+              "weak_percent",
+              0.4,
+              2,
+              0.2,
+              2,
+              "FX60_WEAK"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            2
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "命中本路2名敌人，造成40%攻击魔法伤害并降低20%攻击2回合。"
+        }
+      }
+    },
+    {
+      "id": "b022",
+      "name": "阿瓦罗萨",
+      "relation": "region",
+      "families": [
+        "A_1002",
+        "A_1028"
+      ],
+      "benefits": {
+        "A_1002": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1028": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b023",
+      "name": "冰原守望",
+      "relation": "region",
+      "families": [
+        "A_1081",
+        "A_1073",
+        "A_1106"
+      ],
+      "benefits": {
+        "A_1081": {},
+        "A_1073": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1106": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1081",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "冰原守望·战技",
+          "actions": [
+            [
+              "weak_percent",
+              0.4,
+              2,
+              0.2,
+              2,
+              "FX60_WEAK"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            2
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "命中本路2名敌人，造成40%攻击魔法伤害并降低20%攻击2回合。"
+        }
+      }
+    },
+    {
+      "id": "b024",
+      "name": "寒地坚壁",
+      "relation": "role",
+      "families": [
+        "A_1073",
+        "A_1049"
+      ],
+      "benefits": {
+        "A_1073": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1049": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b025",
+      "name": "冰封突阵",
+      "relation": "role",
+      "families": [
+        "A_1005",
+        "A_1081"
+      ],
+      "benefits": {
+        "A_1005": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1081": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b026",
+      "name": "狂战士",
+      "relation": "role",
+      "families": [
+        "A_1028",
+        "A_1101",
+        "A_1113"
+      ],
+      "benefits": {
+        "A_1028": {},
+        "A_1101": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1113": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1028",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "狂战士·战技",
+          "actions": [
+            [
+              "sunder_percent",
+              0.4,
+              1,
+              0.2,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "caster_hp_shield",
+              0.15,
+              1,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "打击前排造成40%攻击伤害并削弱20%双防2回合，自身获得15%最大生命护盾1回合。"
+        }
+      }
+    },
+    {
+      "id": "b027",
+      "name": "酒与火药",
+      "relation": "role",
+      "families": [
+        "A_1106",
+        "A_1011"
+      ],
+      "benefits": {
+        "A_1106": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1011": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b028",
+      "name": "比尔吉沃特",
+      "relation": "region",
+      "families": [
+        "A_1030",
+        "A_1011",
+        "A_1053",
+        "A_1096"
+      ],
+      "benefits": {
+        "A_1030": {},
+        "A_1011": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1053": {
+          "skill_rate": 0.44
+        },
+        "A_1096": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1030",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "赏金穿甲弹",
+          "actions": [
+            [
+              "sunder_percent",
+              2.5,
+              1,
+              0.3,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "damage",
+              2.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_behind_primary_nearest"
+          ],
+          "caps": [
+            1,
+            2
+          ],
+          "info": "前排承受250%攻击物伤与30%双防削弱2回合，随后穿透其身后2个目标，各造成250%攻击物伤。强化每级两段系数各+25%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.25
+            ],
+            [
+              1,
+              1,
+              0.25
+            ]
+          ],
+          "policy_args": [
+            null,
+            {
+              "centerActionIndex": 0,
+              "distinctFromActionIndices": [
+                0
+              ]
+            }
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "港湾封锁",
+          "actions": [
+            [
+              "sunder_percent",
+              0,
+              1,
+              0.35,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "locked_combo_group",
+              5,
+              6,
+              0.75,
+              1,
+              0,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "weak_percent",
+              0,
+              1,
+              0.2,
+              1,
+              "FX60_WEAK"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            5,
+            5,
+            5
+          ],
+          "info": "压制本路最多5名敌人：双防降低35%持续2回合，六轮弹幕每轮75%攻击物伤，并降低20%力量1回合。",
+          "pl": [
+            2,
+            3,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b029",
+      "name": "双枪追猎",
+      "relation": "role",
+      "families": [
+        "A_1053",
+        "A_1136"
+      ],
+      "benefits": {
+        "A_1053": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1136": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b030",
+      "name": "深渊守望",
+      "relation": "role",
+      "families": [
+        "A_1143",
+        "A_1052",
+        "A_1205"
+      ],
+      "benefits": {
+        "A_1143": {},
+        "A_1052": {
+          "stats": {
+            "ap": 0.2,
+            "hp": 0.2
+          }
+        },
+        "A_1205": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1143",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "深渊守望·战技",
+          "actions": [
+            [
+              "cure",
+              1.2,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_lane_lowest_current_hp_hero",
+            "ally_lane_lowest_current_hp_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "治疗本路最低生命英雄120%恢复基数并净化。"
+        }
+      }
+    },
+    {
+      "id": "b031",
+      "name": "潮汐回响",
+      "relation": "role",
+      "families": [
+        "A_1131",
+        "A_1052"
+      ],
+      "benefits": {
+        "A_1131": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1052": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b032",
+      "name": "雾港同行",
+      "relation": "role",
+      "families": [
+        "A_1142",
+        "A_1030"
+      ],
+      "benefits": {
+        "A_1142": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1030": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b033",
+      "name": "风雪庇护",
+      "relation": "role",
+      "families": [
+        "A_1004",
+        "A_1117",
+        "A_1094"
+      ],
+      "benefits": {
+        "A_1004": {},
+        "A_1117": {
+          "stats": {
+            "ap": 0.2,
+            "hp": 0.2
+          }
+        },
+        "A_1094": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1004",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "风雪庇护·战技",
+          "actions": [
+            [
+              "cure",
+              1.2,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_lane_lowest_current_hp_hero",
+            "ally_lane_lowest_current_hp_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "治疗本路最低生命英雄120%恢复基数并净化。"
+        }
+      }
+    },
+    {
+      "id": "b034",
+      "name": "巨神峰之光",
+      "relation": "region",
+      "families": [
+        "A_1020",
+        "A_1017",
+        "A_1086",
+        "A_1093"
+      ],
+      "benefits": {
+        "A_1020": {},
+        "A_1017": {
+          "stats": {
+            "ap": 0.26,
+            "hp": 0.26
+          }
+        },
+        "A_1086": {
+          "skill_rate": 0.44
+        },
+        "A_1093": {
+          "stats": {
+            "ap": 0.26,
+            "hp": 0.26
+          }
+        }
+      },
+      "focus": "A_1020",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "曙光拦截",
+          "actions": [
+            [
+              "stun",
+              3.0,
+              2,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "caster_hp_shield",
+              0.2,
+              2,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_highest_attack_hero",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "info": "打击本路攻击最高英雄，造成300%攻击魔伤并眩晕1回合；自身获得20%最大生命护盾2回合。强化每级伤害+30%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            0,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.3
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "日冕庇护",
+          "actions": [
+            [
+              "stun",
+              4.0,
+              2,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "caster_hp_shield",
+              0.35,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "steel",
+              0.5,
+              2,
+              "FX60_STEEL"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "ally_all",
+            "ally_all"
+          ],
+          "caps": [
+            2,
+            -1,
+            -1
+          ],
+          "info": "跨路眩晕攻击最高的2名敌方英雄1回合并造成400%攻击魔伤；全队获得施法者35%最大生命护盾及50%双防2回合。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b035",
+      "name": "月下和弦",
+      "relation": "role",
+      "families": [
+        "A_1086",
+        "A_1006"
+      ],
+      "benefits": {
+        "A_1086": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1006": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b036",
+      "name": "星辰旅人",
+      "relation": "region",
+      "families": [
+        "A_1004",
+        "A_1093"
+      ],
+      "benefits": {
+        "A_1004": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1093": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b037",
+      "name": "不屈凡人",
+      "relation": "role",
+      "families": [
+        "A_1017",
+        "A_1008"
+      ],
+      "benefits": {
+        "A_1017": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1008": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b038",
+      "name": "皮城守望",
+      "relation": "region",
+      "families": [
+        "A_1025",
+        "A_1021",
+        "A_1041"
+      ],
+      "benefits": {
+        "A_1025": {},
+        "A_1021": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1041": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1025",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "皮城守望·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b039",
+      "name": "明日科技",
+      "relation": "role",
+      "families": [
+        "A_1041",
+        "A_1071",
+        "A_1014",
+        "A_1125"
+      ],
+      "benefits": {
+        "A_1041": {},
+        "A_1071": {
+          "stats": {
+            "ap": 0.52
+          }
+        },
+        "A_1014": {
+          "skill_rate": 0.44
+        },
+        "A_1125": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1041",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "超载加速炮",
+          "actions": [
+            [
+              "sunder_percent",
+              3.2,
+              2,
+              0.2,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "push_aoe",
+              3000,
+              500,
+              "push"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_all"
+          ],
+          "caps": [
+            3,
+            3
+          ],
+          "info": "炮击本路3名敌人造成320%攻击魔伤，降低20%双防2回合并击退500码。强化每级伤害+32%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.32
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "苍穹电场",
+          "actions": [
+            [
+              "damage",
+              6.0,
+              2,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "weak_percent",
+              0,
+              2,
+              0.3,
+              2,
+              "FX60_WEAK"
+            ],
+            [
+              "stat_flat",
+              "hit",
+              2500,
+              2,
+              "FX60_HIT"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "enemy_global_highest_attack_hero",
+            "ally_all"
+          ],
+          "caps": [
+            3,
+            3,
+            -1
+          ],
+          "info": "跨路电击攻击最高的3名英雄造成600%攻击魔伤并降低30%力量2回合；全队精准+2500持续2回合。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b040",
+      "name": "野性铁拳",
+      "relation": "role",
+      "families": [
+        "A_1123",
+        "A_1013"
+      ],
+      "benefits": {
+        "A_1123": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1013": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b041",
+      "name": "双城追逐",
+      "relation": "region",
+      "families": [
+        "A_1115",
+        "A_1025"
+      ],
+      "benefits": {
+        "A_1115": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1025": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b042",
+      "name": "爆破狂欢",
+      "relation": "role",
+      "families": [
+        "A_1125",
+        "A_1115",
+        "A_1083"
+      ],
+      "benefits": {
+        "A_1125": {},
+        "A_1115": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1083": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1125",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "爆破狂欢·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b043",
+      "name": "爆裂工坊",
+      "relation": "role",
+      "families": [
+        "A_1014",
+        "A_1029"
+      ],
+      "benefits": {
+        "A_1014": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1029": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b044",
+      "name": "风与炼金",
+      "relation": "region",
+      "families": [
+        "A_1094",
+        "A_1112",
+        "A_1099"
+      ],
+      "benefits": {
+        "A_1094": {},
+        "A_1112": {
+          "stats": {
+            "ap": 0.2,
+            "hp": 0.2
+          }
+        },
+        "A_1099": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1094",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "风与炼金·战技",
+          "actions": [
+            [
+              "cure",
+              1.2,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_lane_lowest_current_hp_hero",
+            "ally_lane_lowest_current_hp_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "治疗本路最低生命英雄120%恢复基数并净化。"
+        }
+      }
+    },
+    {
+      "id": "b045",
+      "name": "不息生灵",
+      "relation": "role",
+      "families": [
+        "A_1112",
+        "A_1142"
+      ],
+      "benefits": {
+        "A_1112": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1142": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b046",
+      "name": "班德尔远征",
+      "relation": "region",
+      "families": [
+        "A_1082",
+        "A_1083",
+        "A_1045",
+        "A_1108",
+        "A_1123"
+      ],
+      "benefits": {
+        "A_1082": {},
+        "A_1083": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1045": {
+          "skill_rate": 0.56
+        },
+        "A_1108": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1123": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      },
+      "focus": "A_1082",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "游击毒云",
+          "actions": [
+            [
+              "poison",
+              1.6,
+              2,
+              0.55,
+              3,
+              "FX60_SUNDER"
+            ],
+            [
+              "stat_flat",
+              "flee",
+              2000,
+              2,
+              "FX60_HIT"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "caps": [
+            3,
+            1
+          ],
+          "info": "向本路3名敌人施放160%攻击魔伤和每回合55%攻击中毒，持续3回合；自身闪避+2000持续2回合。强化每级直伤+16%、毒伤+5.5%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.16
+            ],
+            [
+              0,
+              3,
+              0.055
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "班德尔伏击阵",
+          "actions": [
+            [
+              "poison",
+              2.5,
+              2,
+              1.0,
+              3,
+              "FX60_SUNDER"
+            ],
+            [
+              "weak_percent",
+              0,
+              2,
+              0.3,
+              2,
+              "FX60_WEAK"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_hpmax_hero",
+            "enemy_global_highest_hpmax_hero"
+          ],
+          "caps": [
+            5,
+            5
+          ],
+          "info": "跨路伏击最多5名高生命英雄：250%攻击魔伤、每回合100%攻击中毒3回合，并降低30%力量2回合。以持续伤害压制厚血阵容。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b047",
+      "name": "幻境奇术",
+      "relation": "role",
+      "families": [
+        "A_1045",
+        "A_1022"
+      ],
+      "benefits": {
+        "A_1045": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1022": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b048",
+      "name": "钢心守卫",
+      "relation": "role",
+      "families": [
+        "A_1108",
+        "A_1071"
+      ],
+      "benefits": {
+        "A_1108": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1071": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b049",
+      "name": "黑暗童话",
+      "relation": "role",
+      "families": [
+        "A_1027",
+        "A_1029",
+        "A_1128"
+      ],
+      "benefits": {
+        "A_1027": {},
+        "A_1029": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1128": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1027",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "黑暗童话·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              2,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b050",
+      "name": "熔炉过载",
+      "relation": "role",
+      "families": [
+        "A_1068",
+        "A_1013"
+      ],
+      "benefits": {
+        "A_1068": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1013": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b051",
+      "name": "诡术盟约",
+      "relation": "region",
+      "families": [
+        "A_1127",
+        "A_1063",
+        "A_1109"
+      ],
+      "benefits": {
+        "A_1127": {},
+        "A_1063": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        },
+        "A_1109": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1127",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "诡术盟约·战技",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_global_lowest_hp_ratio_hero",
+            "enemy_global_lowest_hp_ratio_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "跨路追击最低生命比例英雄，驱散增益并造成50%攻击伤害。"
+        }
+      }
+    },
+    {
+      "id": "b052",
+      "name": "帝国铁壁",
+      "relation": "region",
+      "families": [
+        "A_1019",
+        "A_1127"
+      ],
+      "benefits": {
+        "A_1019": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1127": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b053",
+      "name": "猩红锁链",
+      "relation": "role",
+      "families": [
+        "A_1109",
+        "A_1032"
+      ],
+      "benefits": {
+        "A_1109": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1032": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b054",
+      "name": "毒性蔓延",
+      "relation": "role",
+      "families": [
+        "A_1063",
+        "A_1040"
+      ],
+      "benefits": {
+        "A_1063": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1040": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b055",
+      "name": "幽冥异客",
+      "relation": "skin",
+      "families": [
+        "A_1137",
+        "A_1103",
+        "A_1132",
+        "A_1139",
+        "A_1138"
+      ],
+      "benefits": {
+        "A_1137": {},
+        "A_1103": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1132": {
+          "skill_rate": 0.56
+        },
+        "A_1139": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1138": {
+          "stats": {
+            "ap": 0.64
+          }
+        }
+      },
+      "focus": "A_1137",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "冥界收割",
+          "actions": [
+            [
+              "sunder_percent",
+              3.5,
+              2,
+              0.25,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "heal_damage_sum",
+              0.25,
+              "FX60_HEAL"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "caps": [
+            2,
+            1
+          ],
+          "info": "对本路2名敌人造成350%攻击魔伤并削弱25%双防2回合，自身恢复本次累计伤害的25%。强化每级伤害+35%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.35
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "不朽冥军",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "damage",
+              7.0,
+              2,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "caster_hp_shield",
+              0.4,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "heal_damage_sum",
+              0.3,
+              "FX60_HEAL"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_hpmax_hero",
+            "enemy_global_highest_hpmax_hero",
+            "ally_all",
+            "ally_self"
+          ],
+          "caps": [
+            2,
+            2,
+            3,
+            1
+          ],
+          "info": "剥离跨路两名高生命英雄的增益并造成700%攻击魔伤；3名友军获得施法者40%最大生命护盾2回合，自身恢复累计伤害的30%。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b056",
+      "name": "命运契约",
+      "relation": "role",
+      "families": [
+        "A_1096",
+        "A_1032"
+      ],
+      "benefits": {
+        "A_1096": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1032": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b057",
+      "name": "腐毒荒林",
+      "relation": "role",
+      "families": [
+        "A_1099",
+        "A_1205"
+      ],
+      "benefits": {
+        "A_1099": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1205": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b058",
+      "name": "诡林惊惧",
+      "relation": "role",
+      "families": [
+        "A_1205",
+        "A_1036"
+      ],
+      "benefits": {
+        "A_1205": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1036": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b059",
+      "name": "荆棘密林",
+      "relation": "role",
+      "families": [
+        "A_1040",
+        "A_1036",
+        "A_1105"
+      ],
+      "benefits": {
+        "A_1040": {},
+        "A_1036": {
+          "stats": {
+            "ap": 0.2,
+            "hp": 0.2
+          }
+        },
+        "A_1105": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1040",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "荆棘密林·战技",
+          "actions": [
+            [
+              "cure",
+              1.2,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_lane_lowest_current_hp_hero",
+            "ally_lane_lowest_current_hp_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "治疗本路最低生命英雄120%恢复基数并净化。"
+        }
+      }
+    },
+    {
+      "id": "b060",
+      "name": "猎杀双锋",
+      "relation": "role",
+      "families": [
+        "A_1135",
+        "A_1010"
+      ],
+      "benefits": {
+        "A_1135": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1010": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b061",
+      "name": "宿命猎杀",
+      "relation": "region",
+      "families": [
+        "A_1097",
+        "A_1135"
+      ],
+      "benefits": {
+        "A_1097": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1135": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b062",
+      "name": "虚空冥约",
+      "relation": "skin",
+      "families": [
+        "A_1134",
+        "A_1137",
+        "A_1103"
+      ],
+      "benefits": {
+        "A_1134": {},
+        "A_1137": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        },
+        "A_1103": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1134",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "虚空冥约·战技",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_global_lowest_hp_ratio_hero",
+            "enemy_global_lowest_hp_ratio_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "跨路追击最低生命比例英雄，驱散增益并造成50%攻击伤害。"
+        }
+      }
+    },
+    {
+      "id": "b063",
+      "name": "破界锋芒",
+      "relation": "role",
+      "families": [
+        "A_1130",
+        "A_1024"
+      ],
+      "benefits": {
+        "A_1130": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1024": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b064",
+      "name": "沙漠帝国",
+      "relation": "region",
+      "families": [
+        "A_1124",
+        "A_1101",
+        "A_1078",
+        "A_1090"
+      ],
+      "benefits": {
+        "A_1124": {},
+        "A_1101": {
+          "stats": {
+            "hp": 0.17333333333333334,
+            "de_ph": 0.17333333333333334,
+            "de_ma": 0.17333333333333334
+          }
+        },
+        "A_1078": {
+          "skill_rate": 0.44
+        },
+        "A_1090": {
+          "stats": {
+            "hp": 0.17333333333333334,
+            "de_ph": 0.17333333333333334,
+            "de_ma": 0.17333333333333334
+          }
+        }
+      },
+      "focus": "A_1124",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "沙兵突击",
+          "actions": [
+            [
+              "locked_combo_group",
+              3,
+              3,
+              1.0,
+              2,
+              0,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "sunder_percent",
+              0,
+              2,
+              0.2,
+              2,
+              "FX60_SUNDER"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3,
+            3
+          ],
+          "info": "沙兵向本路3名敌人各刺击3次，每击100%攻击魔伤，并削弱20%双防2回合。强化每级每击+10%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              3,
+              0.1
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "帝国禁军壁垒",
+          "actions": [
+            [
+              "damage",
+              6.0,
+              2,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "push_aoe",
+              3000,
+              1200,
+              "push"
+            ],
+            [
+              "caster_hp_shield",
+              0.3,
+              2,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_all",
+            "ally_all"
+          ],
+          "caps": [
+            5,
+            5,
+            -1
+          ],
+          "info": "禁军冲击本路最多5人，造成600%攻击魔伤并击退1200码；全队获得施法者30%最大生命护盾2回合，形成反突进屏障。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b065",
+      "name": "沙海宝藏",
+      "relation": "region",
+      "families": [
+        "A_1078",
+        "A_1021"
+      ],
+      "benefits": {
+        "A_1078": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1021": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b066",
+      "name": "古墓守卫",
+      "relation": "role",
+      "families": [
+        "A_1074",
+        "A_1090"
+      ],
+      "benefits": {
+        "A_1074": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1090": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b067",
+      "name": "远古守护",
+      "relation": "role",
+      "families": [
+        "A_1077",
+        "A_1085",
+        "A_1095"
+      ],
+      "benefits": {
+        "A_1077": {},
+        "A_1085": {
+          "stats": {
+            "hp": 0.13333333333333333,
+            "de_ph": 0.13333333333333333,
+            "de_ma": 0.13333333333333333
+          }
+        },
+        "A_1095": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1077",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "远古守护·战技",
+          "actions": [
+            [
+              "caster_hp_shield",
+              0.18,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_self",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "获得自身18%最大生命护盾并净化，持续2回合。"
+        }
+      }
+    },
+    {
+      "id": "b068",
+      "name": "雷霆壁垒",
+      "relation": "role",
+      "families": [
+        "A_1085",
+        "A_1016"
+      ],
+      "benefits": {
+        "A_1085": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1016": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b069",
+      "name": "孤独灵魂",
+      "relation": "role",
+      "families": [
+        "A_1074",
+        "A_1079"
+      ],
+      "benefits": {
+        "A_1074": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1079": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b070",
+      "name": "堕落天翼",
+      "relation": "role",
+      "families": [
+        "A_1120",
+        "A_1133"
+      ],
+      "benefits": {
+        "A_1120": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1133": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b071",
+      "name": "天界裁决",
+      "relation": "fan",
+      "families": [
+        "A_1998",
+        "A_1120"
+      ],
+      "benefits": {
+        "A_1998": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1120": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b072",
+      "name": "暗裔战火",
+      "relation": "region",
+      "families": [
+        "A_1113",
+        "A_1133"
+      ],
+      "benefits": {
+        "A_1113": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1133": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b073",
+      "name": "龙与烈焰",
+      "relation": "fan",
+      "families": [
+        "A_1114",
+        "A_1098",
+        "A_1143"
+      ],
+      "benefits": {
+        "A_1114": {},
+        "A_1098": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1143": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1114",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "龙与烈焰·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              2,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b074",
+      "name": "烈焰法王",
+      "relation": "role",
+      "families": [
+        "A_1098",
+        "A_1068"
+      ],
+      "benefits": {
+        "A_1098": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1068": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b075",
+      "name": "金甲神将",
+      "relation": "skin",
+      "families": [
+        "A_1226",
+        "A_1201",
+        "A_1215"
+      ],
+      "benefits": {
+        "A_1226": {},
+        "A_1201": {
+          "stats": {
+            "hp": 0.13333333333333333,
+            "de_ph": 0.13333333333333333,
+            "de_ma": 0.13333333333333333
+          }
+        },
+        "A_1215": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1226",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "金甲神将·战技",
+          "actions": [
+            [
+              "caster_hp_shield",
+              0.18,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_self",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "获得自身18%最大生命护盾并净化，持续2回合。"
+        }
+      }
+    },
+    {
+      "id": "b076",
+      "name": "神装破阵",
+      "relation": "skin",
+      "families": [
+        "A_1222",
+        "A_1226"
+      ],
+      "benefits": {
+        "A_1222": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1226": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b077",
+      "name": "极地救援",
+      "relation": "skin",
+      "families": [
+        "A_1202",
+        "A_1309"
+      ],
+      "benefits": {
+        "A_1202": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1309": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b078",
+      "name": "冬夜急援",
+      "relation": "skin",
+      "families": [
+        "A_1217",
+        "A_1202",
+        "A_1208"
+      ],
+      "benefits": {
+        "A_1217": {},
+        "A_1202": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1208": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1217",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "冬夜急援·战技",
+          "actions": [
+            [
+              "weak_percent",
+              0.4,
+              2,
+              0.2,
+              2,
+              "FX60_WEAK"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            2
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "命中本路2名敌人，造成40%攻击魔法伤害并降低20%攻击2回合。"
+        }
+      }
+    },
+    {
+      "id": "b079",
+      "name": "节庆巡演",
+      "relation": "skin",
+      "families": [
+        "A_1221",
+        "A_1217",
+        "A_1207"
+      ],
+      "benefits": {
+        "A_1221": {},
+        "A_1217": {
+          "stats": {
+            "ap": 0.2,
+            "hp": 0.2
+          }
+        },
+        "A_1207": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1221",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "节庆巡演·战技",
+          "actions": [
+            [
+              "cure",
+              1.2,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "policies": [
+            "ally_lane_lowest_current_hp_hero",
+            "ally_lane_lowest_current_hp_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "治疗本路最低生命英雄120%恢复基数并净化。"
+        }
+      }
+    },
+    {
+      "id": "b080",
+      "name": "新春佳节",
+      "relation": "skin",
+      "families": [
+        "A_1212",
+        "A_1221"
+      ],
+      "benefits": {
+        "A_1212": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1221": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b081",
+      "name": "兔耳派对",
+      "relation": "skin",
+      "families": [
+        "A_1210",
+        "A_1209"
+      ],
+      "benefits": {
+        "A_1210": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1209": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b082",
+      "name": "假面夜行",
+      "relation": "skin",
+      "families": [
+        "A_1129",
+        "A_1209",
+        "A_1208"
+      ],
+      "benefits": {
+        "A_1129": {},
+        "A_1209": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        },
+        "A_1208": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1129",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "假面夜行·战技",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_global_lowest_hp_ratio_hero",
+            "enemy_global_lowest_hp_ratio_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "跨路追击最低生命比例英雄，驱散增益并造成50%攻击伤害。"
+        }
+      }
+    },
+    {
+      "id": "b083",
+      "name": "舞会护卫",
+      "relation": "skin",
+      "families": [
+        "A_1210",
+        "A_1201",
+        "A_1206"
+      ],
+      "benefits": {
+        "A_1210": {},
+        "A_1201": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1206": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1210",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "舞会护卫·战技",
+          "actions": [
+            [
+              "sunder_percent",
+              0.4,
+              1,
+              0.2,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "caster_hp_shield",
+              0.15,
+              1,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "打击前排造成40%攻击伤害并削弱20%双防2回合，自身获得15%最大生命护盾1回合。"
+        }
+      }
+    },
+    {
+      "id": "b084",
+      "name": "羽翼追猎",
+      "relation": "skin",
+      "families": [
+        "A_1216",
+        "A_1206"
+      ],
+      "benefits": {
+        "A_1216": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1206": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b085",
+      "name": "夜色魅影",
+      "relation": "skin",
+      "families": [
+        "A_1206",
+        "A_1129",
+        "A_1208"
+      ],
+      "benefits": {
+        "A_1206": {},
+        "A_1129": {
+          "secondary": [
+            "flee",
+            "hit"
+          ]
+        },
+        "A_1208": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1206",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "夜色魅影·战技",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_global_lowest_hp_ratio_hero",
+            "enemy_global_lowest_hp_ratio_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "跨路追击最低生命比例英雄，驱散增益并造成50%攻击伤害。"
+        }
+      }
+    },
+    {
+      "id": "b086",
+      "name": "端午舞台",
+      "relation": "skin",
+      "families": [
+        "A_1228",
+        "A_1212"
+      ],
+      "benefits": {
+        "A_1228": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1212": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b087",
+      "name": "全明星赛",
+      "relation": "skin",
+      "families": [
+        "A_1213",
+        "A_1207",
+        "A_1228"
+      ],
+      "benefits": {
+        "A_1213": {},
+        "A_1207": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1228": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1213",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "全明星赛·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b088",
+      "name": "司法追猎",
+      "relation": "skin",
+      "families": [
+        "A_1211",
+        "A_1214",
+        "A_1223"
+      ],
+      "benefits": {
+        "A_1211": {},
+        "A_1214": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1223": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1211",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "司法追猎·战技",
+          "actions": [
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost"
+          ],
+          "caps": [
+            3
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "对本路最多3名敌人造成50%攻击伤害，压制密集阵容。"
+        }
+      }
+    },
+    {
+      "id": "b089",
+      "name": "夜幕追猎",
+      "relation": "skin",
+      "families": [
+        "A_1223",
+        "A_1218"
+      ],
+      "benefits": {
+        "A_1223": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1218": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b090",
+      "name": "冠军契约",
+      "relation": "skin",
+      "families": [
+        "A_1214",
+        "A_1213"
+      ],
+      "benefits": {
+        "A_1214": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1213": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b091",
+      "name": "未来战线",
+      "relation": "skin",
+      "families": [
+        "A_1219",
+        "A_1204",
+        "A_1222",
+        "A_1310"
+      ],
+      "benefits": {
+        "A_1219": {},
+        "A_1204": {
+          "stats": {
+            "ap": 0.52
+          }
+        },
+        "A_1222": {
+          "skill_rate": 0.44
+        },
+        "A_1310": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1219",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "源代码切割",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "sunder_percent",
+              3.6,
+              1,
+              0.25,
+              2,
+              "FX60_SUNDER"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_highest_attack_hero",
+            "enemy_lane_highest_attack_hero"
+          ],
+          "caps": [
+            2,
+            2
+          ],
+          "info": "优先切割本路攻击最高的2名英雄，驱散增益后造成360%攻击物伤，并削弱25%双防2回合。强化每级伤害+36%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              1,
+              1,
+              0.36
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "协议零式",
+          "actions": [
+            [
+              "stun",
+              5.5,
+              1,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "damage",
+              2.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "stat_flat",
+              "flee",
+              3000,
+              2,
+              "FX60_HIT"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "enemy_global_highest_attack_hero",
+            "ally_self"
+          ],
+          "caps": [
+            3,
+            3,
+            1
+          ],
+          "info": "跨路锁定3名高攻击英雄，先造成550%攻击物伤并眩晕1回合，再追加250%攻击物伤；自身闪避+3000持续2回合。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b092",
+      "name": "机械与气焰",
+      "relation": "skin",
+      "families": [
+        "A_1204",
+        "A_1311"
+      ],
+      "benefits": {
+        "A_1204": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        },
+        "A_1311": {
+          "stats": {
+            "hp": 0.09333333333333334,
+            "de_ph": 0.09333333333333334,
+            "de_ma": 0.09333333333333334
+          }
+        }
+      }
+    },
+    {
+      "id": "b093",
+      "name": "英雄降临",
+      "relation": "fan",
+      "families": [
+        "A_1309",
+        "A_1222",
+        "A_1311"
+      ],
+      "benefits": {
+        "A_1309": {},
+        "A_1222": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1311": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1309",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "英雄降临·战技",
+          "actions": [
+            [
+              "sunder_percent",
+              0.4,
+              1,
+              0.2,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "caster_hp_shield",
+              0.15,
+              1,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "打击前排造成40%攻击伤害并削弱20%双防2回合，自身获得15%最大生命护盾1回合。"
+        }
+      }
+    },
+    {
+      "id": "b094",
+      "name": "合金羽翼",
+      "relation": "skin",
+      "families": [
+        "A_1310",
+        "A_1216"
+      ],
+      "benefits": {
+        "A_1310": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1216": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b095",
+      "name": "恶魔幽影",
+      "relation": "skin",
+      "families": [
+        "A_1203",
+        "A_1218"
+      ],
+      "benefits": {
+        "A_1203": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1218": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b096",
+      "name": "夜巡执法",
+      "relation": "skin",
+      "families": [
+        "A_1201",
+        "A_1203",
+        "A_1211"
+      ],
+      "benefits": {
+        "A_1201": {},
+        "A_1203": {
+          "stats": {
+            "ap": 0.4
+          }
+        },
+        "A_1211": {
+          "skill_rate": 0.32
+        }
+      },
+      "focus": "A_1201",
+      "mechanism": {
+        "normal": {
+          "replace": false,
+          "name": "夜巡执法·战技",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "damage",
+              0.5,
+              1,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_global_lowest_hp_ratio_hero",
+            "enemy_global_lowest_hp_ratio_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null,
+          "info": "跨路追击最低生命比例英雄，驱散增益并造成50%攻击伤害。"
+        }
+      }
+    },
+    {
+      "id": "b097",
+      "name": "疾风龙拳",
+      "relation": "skin",
+      "families": [
+        "A_1219",
+        "A_1215"
+      ],
+      "benefits": {
+        "A_1219": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1215": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      }
+    },
+    {
+      "id": "b098",
+      "name": "日光潮汐",
+      "relation": "role",
+      "families": [
+        "A_1020",
+        "A_1131"
+      ],
+      "benefits": {
+        "A_1020": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1131": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b099",
+      "name": "帝王威仪",
+      "relation": "role",
+      "families": [
+        "A_1124",
+        "A_1027"
+      ],
+      "benefits": {
+        "A_1124": {
+          "stats": {
+            "ap": 0.28
+          }
+        },
+        "A_1027": {
+          "stats": {
+            "ap": 0.28
+          }
+        }
+      }
+    },
+    {
+      "id": "b100",
+      "name": "天火圣辉",
+      "relation": "fan",
+      "families": [
+        "A_1998",
+        "A_1098"
+      ],
+      "benefits": {
+        "A_1998": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1098": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b101",
+      "name": "年节乐章",
+      "relation": "skin",
+      "families": [
+        "A_1221",
+        "A_1228"
+      ],
+      "benefits": {
+        "A_1221": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1228": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    },
+    {
+      "id": "b102",
+      "name": "寒霜议会",
+      "relation": "region",
+      "families": [
+        "A_1081",
+        "A_1002",
+        "A_1117",
+        "A_1049"
+      ],
+      "benefits": {
+        "A_1081": {},
+        "A_1002": {
+          "stats": {
+            "ap": 0.52
+          }
+        },
+        "A_1117": {
+          "skill_rate": 0.44
+        },
+        "A_1049": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1081",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "霜翼封路",
+          "actions": [
+            [
+              "weak_percent",
+              2.8,
+              2,
+              0.25,
+              2,
+              "FX60_WEAK"
+            ],
+            [
+              "push_aoe",
+              3000,
+              450,
+              "push"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_all"
+          ],
+          "caps": [
+            3,
+            3
+          ],
+          "info": "对本路3名敌人造成280%攻击魔伤，削弱25%攻击2回合并击退450码，延缓前排推进。强化每级伤害+28%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.28
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "极寒禁域",
+          "actions": [
+            [
+              "stun",
+              4.2,
+              2,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "weak_percent",
+              0,
+              2,
+              0.35,
+              2,
+              "FX60_WEAK"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "enemy_global_highest_attack_hero"
+          ],
+          "caps": [
+            3,
+            3
+          ],
+          "info": "跨路冻结攻击最高的3名英雄1回合，造成420%攻击魔伤并削弱35%攻击2回合，压制多核心爆发。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b103",
+      "name": "艾欧尼亚护法",
+      "relation": "role",
+      "families": [
+        "A_1018",
+        "A_1015",
+        "A_1016",
+        "A_1026"
+      ],
+      "benefits": {
+        "A_1018": {},
+        "A_1015": {
+          "stats": {
+            "hp": 0.17333333333333334,
+            "de_ph": 0.17333333333333334,
+            "de_ma": 0.17333333333333334
+          }
+        },
+        "A_1016": {
+          "skill_rate": 0.44
+        },
+        "A_1026": {
+          "stats": {
+            "hp": 0.17333333333333334,
+            "de_ph": 0.17333333333333334,
+            "de_ma": 0.17333333333333334
+          }
+        }
+      },
+      "focus": "A_1018",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "影护结界",
+          "actions": [
+            [
+              "damage",
+              2.8,
+              1,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "caster_hp_shield",
+              0.22,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "taunt",
+              1,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_all_lowest_hp_ratio",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            2,
+            1
+          ],
+          "info": "打击本路前排造成280%攻击物伤，跨路为生命比例最低的2名友军提供施法者22%最大生命护盾2回合，自身嘲讽1回合。强化每级伤害+28%。",
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.28
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "万里慈悲",
+          "actions": [
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "caster_hp_shield",
+              0.5,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "steel",
+              0.4,
+              2,
+              "FX60_STEEL"
+            ]
+          ],
+          "policies": [
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "caps": [
+            3,
+            3,
+            3
+          ],
+          "info": "跨路救援生命比例最低的3名友军：净化、施法者50%最大生命护盾和40%双防，持续2回合，保护分路残血核心。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b104",
+      "name": "战地救援",
+      "relation": "role",
+      "families": [
+        "A_1004",
+        "A_1006",
+        "A_1131",
+        "A_1094"
+      ],
+      "benefits": {
+        "A_1004": {},
+        "A_1006": {
+          "stats": {
+            "ap": 0.26,
+            "hp": 0.26
+          }
+        },
+        "A_1131": {
+          "skill_rate": 0.44
+        },
+        "A_1094": {
+          "stats": {
+            "ap": 0.26,
+            "hp": 0.26
+          }
+        }
+      },
+      "focus": "A_1004",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "星落续命",
+          "actions": [
+            [
+              "weak_percent",
+              2.2,
+              2,
+              0.2,
+              1,
+              "FX60_WEAK"
+            ],
+            [
+              "cure",
+              2.0,
+              "FX60_HEAL"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_highest_attack_hero",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "caps": [
+            1,
+            2
+          ],
+          "info": "削弱本路最高攻击英雄20%攻击1回合并造成220%攻击魔伤；治疗全场生命比例最低的2名友军200%恢复基数。强化每级伤害+22%、治疗+20%。",
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.22
+            ],
+            [
+              1,
+              1,
+              0.2
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "群星回春",
+          "actions": [
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "cure",
+              4.0,
+              "FX60_HEAL"
+            ],
+            [
+              "caster_hp_shield",
+              0.2,
+              2,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "ally_all",
+            "ally_all",
+            "ally_all"
+          ],
+          "caps": [
+            -1,
+            -1,
+            -1
+          ],
+          "info": "先净化全队，再治疗400%恢复基数并赋予施法者20%最大生命护盾2回合，用于多路消耗战后的恢复。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b105",
+      "name": "幽冥攻防",
+      "relation": "role",
+      "families": [
+        "A_1032",
+        "A_1142",
+        "A_1136",
+        "A_1079"
+      ],
+      "benefits": {
+        "A_1032": {},
+        "A_1142": {
+          "stats": {
+            "ap": 0.52
+          }
+        },
+        "A_1136": {
+          "skill_rate": 0.44
+        },
+        "A_1079": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1032",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "引魂灯笼",
+          "actions": [
+            [
+              "sunder_percent",
+              2.6,
+              2,
+              0.25,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "caster_hp_shield",
+              0.25,
+              2,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "caps": [
+            2,
+            2
+          ],
+          "info": "剥离本路2名前排25%双防2回合并造成260%攻击魔伤；为全场生命比例最低的2名友军提供施法者25%最大生命护盾2回合。强化每级伤害+26%。",
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.26
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "幽牢审判",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "stun",
+              4.8,
+              2,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "heal_damage_sum",
+              0.3,
+              "FX60_HEAL"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "caps": [
+            4,
+            4,
+            1
+          ],
+          "info": "驱散本路4名敌人的增益，再造成480%攻击魔伤并眩晕1回合，自身恢复累计伤害的30%，专克同路密集增益阵容。",
+          "pl": [
+            2,
+            3,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b106",
+      "name": "赏金猎团",
+      "relation": "role",
+      "families": [
+        "A_1053",
+        "A_1096",
+        "A_1105",
+        "A_1135"
+      ],
+      "benefits": {
+        "A_1053": {},
+        "A_1096": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        },
+        "A_1105": {
+          "skill_rate": 0.44
+        },
+        "A_1135": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1053",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "破阵霰弹",
+          "actions": [
+            [
+              "sunder_percent",
+              3.2,
+              1,
+              0.3,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "push_aoe",
+              3000,
+              350,
+              "push"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_all"
+          ],
+          "caps": [
+            2,
+            2
+          ],
+          "info": "轰击本路2名前排造成320%攻击物伤并削弱30%双防2回合，击退350码，为猎团打开火力窗口。强化每级伤害+32%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.32
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "悬赏清场",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "locked_combo_group",
+              2,
+              3,
+              2.2,
+              1,
+              0,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_global_lowest_hp_ratio_hero",
+            "enemy_global_lowest_hp_ratio_hero"
+          ],
+          "caps": [
+            2,
+            2
+          ],
+          "info": "跨路锁定生命比例最低的2名英雄，先驱散增益，再各轰击3次，每击220%攻击物伤，收割分散的残血目标。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b107",
+      "name": "奇境夜巡",
+      "relation": "skin",
+      "families": [
+        "A_1217",
+        "A_1202",
+        "A_1216",
+        "A_1218"
+      ],
+      "benefits": {
+        "A_1217": {},
+        "A_1202": {
+          "stats": {
+            "ap": 0.52
+          }
+        },
+        "A_1216": {
+          "skill_rate": 0.44
+        },
+        "A_1218": {
+          "stats": {
+            "ap": 0.52
+          }
+        }
+      },
+      "focus": "A_1217",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "坏孩子礼盒",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "weak_percent",
+              3.0,
+              2,
+              0.25,
+              2,
+              "FX60_WEAK"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "enemy_global_highest_attack_hero"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "info": "把诅咒礼盒送给跨路最高攻击英雄，驱散增益、造成300%攻击魔伤并削弱25%攻击2回合。强化每级伤害+30%。",
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": [
+            [
+              1,
+              1,
+              0.3
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "午夜惊喜",
+          "actions": [
+            [
+              "stun",
+              4.4,
+              2,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "sunder_percent",
+              0,
+              2,
+              0.3,
+              2,
+              "FX60_SUNDER"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "enemy_global_highest_attack_hero"
+          ],
+          "caps": [
+            3,
+            3
+          ],
+          "info": "礼盒在跨路3名高攻击英雄身上炸开：440%攻击魔伤、眩晕1回合、双防降低30%持续2回合，配合夜巡队压制后排。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b108",
+      "name": "符文灾变",
+      "relation": "role",
+      "families": [
+        "A_1003",
+        "A_1068",
+        "A_1126",
+        "A_1029",
+        "A_1027"
+      ],
+      "benefits": {
+        "A_1003": {},
+        "A_1068": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1126": {
+          "skill_rate": 0.56
+        },
+        "A_1029": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1027": {
+          "stats": {
+            "ap": 0.64
+          }
+        }
+      },
+      "focus": "A_1003",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "符文裂解",
+          "actions": [
+            [
+              "sunder_percent",
+              3.0,
+              2,
+              0.3,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "damage",
+              2.0,
+              2,
+              "FX60_SLASH_COMBO"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_behind_primary_nearest"
+          ],
+          "caps": [
+            1,
+            2
+          ],
+          "info": "裂解本路前排：300%攻击魔伤并降低30%双防2回合；符文向其身后2名不同目标扩散，各造成200%攻击魔伤。强化每级两段伤害分别+30%、20%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            99,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.3
+            ],
+            [
+              1,
+              1,
+              0.2
+            ]
+          ],
+          "policy_args": [
+            null,
+            {
+              "centerActionIndex": 0,
+              "distinctFromActionIndices": [
+                0
+              ]
+            }
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "奥术崩解",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "sunder_percent",
+              5.5,
+              2,
+              0.35,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "heal_damage_sum",
+              0.2,
+              "FX60_HEAL"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_hpmax_hero",
+            "enemy_global_highest_hpmax_hero",
+            "ally_self"
+          ],
+          "caps": [
+            4,
+            4,
+            1
+          ],
+          "info": "跨路瓦解4名高生命英雄的增益，造成550%攻击魔伤并降低35%双防2回合，自身恢复累计伤害20%，为法师队打开厚甲阵线。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b109",
+      "name": "机械火力",
+      "relation": "role",
+      "families": [
+        "A_1071",
+        "A_1041",
+        "A_1013",
+        "A_1014",
+        "A_1115"
+      ],
+      "benefits": {
+        "A_1071": {},
+        "A_1041": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1013": {
+          "skill_rate": 0.56
+        },
+        "A_1014": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1115": {
+          "stats": {
+            "ap": 0.64
+          }
+        }
+      },
+      "focus": "A_1071",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "魔偶交叉火力",
+          "actions": [
+            [
+              "weak_percent",
+              2.8,
+              2,
+              0.2,
+              2,
+              "FX60_WEAK"
+            ],
+            [
+              "caster_hp_shield",
+              0.18,
+              2,
+              "FX60_SHIELD"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "caps": [
+            3,
+            2
+          ],
+          "info": "魔偶扫射本路3人造成280%攻击魔伤并削弱20%攻击2回合；为跨路生命比例最低的2名友军提供施法者18%最大生命护盾2回合。强化每级伤害+28%。",
+          "pl": [
+            0,
+            2,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.28
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "过载奇点",
+          "actions": [
+            [
+              "stun",
+              4.5,
+              2,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "sunder_percent",
+              0,
+              2,
+              0.3,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "stat_flat",
+              "hit",
+              4000,
+              2,
+              "FX60_HIT"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost",
+            "ally_all"
+          ],
+          "caps": [
+            5,
+            5,
+            -1
+          ],
+          "info": "奇点压制本路5人：450%攻击魔伤、眩晕1回合、双防降低30%持续2回合；全队精准+4000持续2回合，支援后续集火。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            99,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b110",
+      "name": "武道争锋",
+      "relation": "role",
+      "families": [
+        "A_1008",
+        "A_1012",
+        "A_1005",
+        "A_1056",
+        "A_1130"
+      ],
+      "benefits": {
+        "A_1008": {},
+        "A_1012": {
+          "stats": {
+            "ap": 0.32,
+            "hp": 0.32
+          }
+        },
+        "A_1005": {
+          "skill_rate": 0.56
+        },
+        "A_1056": {
+          "stats": {
+            "ap": 0.64
+          }
+        },
+        "A_1130": {
+          "secondary": [
+            "crit",
+            "hit"
+          ]
+        }
+      },
+      "focus": "A_1008",
+      "mechanism": {
+        "normal": {
+          "replace": true,
+          "name": "宗师破势",
+          "actions": [
+            [
+              "sunder_percent",
+              3.4,
+              1,
+              0.3,
+              2,
+              "FX60_SUNDER"
+            ],
+            [
+              "stat_flat",
+              "flee",
+              2500,
+              2,
+              "FX60_HIT"
+            ]
+          ],
+          "policies": [
+            "enemy_lane_highest_attack_hero",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1
+          ],
+          "info": "迎战本路攻击最高英雄：340%攻击物伤并降低30%双防2回合；自身闪避+2500持续2回合，适合对抗单路强敌。强化每级伤害+34%。",
+          "pl": [
+            0,
+            2,
+            3000,
+            0,
+            0,
+            0
+          ],
+          "upgrades": [
+            [
+              0,
+              1,
+              0.34
+            ]
+          ]
+        },
+        "captain": {
+          "replace": true,
+          "name": "百武归一",
+          "actions": [
+            [
+              "dispel_good",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "locked_combo_group",
+              1,
+              5,
+              1.6,
+              1,
+              0,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "caster_hp_shield",
+              0.35,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "heal_damage_sum",
+              0.25,
+              "FX60_HEAL"
+            ]
+          ],
+          "policies": [
+            "enemy_global_highest_attack_hero",
+            "enemy_global_highest_attack_hero",
+            "ally_self",
+            "ally_self"
+          ],
+          "caps": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "info": "跨路挑战最高攻击英雄，驱散增益后五连击，每击160%攻击物伤；自身获得35%最大生命护盾2回合并恢复累计伤害25%，集中压制敌方主核。",
+          "pl": [
+            2,
+            3,
+            9999,
+            0,
+            0,
+            1
+          ],
+          "upgrades": null
+        }
+      }
+    },
+    {
+      "id": "b111",
+      "name": "白蛇端阳",
+      "relation": "skin",
+      "families": [
+        "A_1227",
+        "A_1212"
+      ],
+      "benefits": {
+        "A_1227": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        },
+        "A_1212": {
+          "stats": {
+            "ap": 0.14,
+            "hp": 0.14
+          }
+        }
+      }
+    }
+  ]
+}

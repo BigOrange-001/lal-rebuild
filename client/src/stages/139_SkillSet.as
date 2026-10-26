@@ -61,6 +61,12 @@ package com.meng52.game.module.skill
          return m_data as SkillSetData;
       }
 
+      public function getMechanismId104() : String
+      {
+         var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         return row && row.equipment_source_skill_104 ? String(row.equipment_source_skill_104) : skillSetData.id;
+      }
+
       public function getStar() : int
       {
          return skillSetData.id.split("_")[2];
@@ -104,6 +110,8 @@ package com.meng52.game.module.skill
 
       public function getInfo() : String
       {
+         var calibratedBook:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         if(calibratedBook && calibratedBook.bookRule) return getLevelInfo();
          var _loc5_:Array = null;
          var _loc2_:String = null;
          var _loc1_:String = null;
@@ -168,7 +176,7 @@ package com.meng52.game.module.skill
       private function getLevelInfo() : String
       {
          var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
-         if(!row || !row.rankInfoTemplate || isSuper) return skillSetData.info;
+         if(!row || !row.rankInfoTemplate || (isSuper && !row.modEffectSequence)) return skillSetData.info;
          var actions:Array = skills;
          return String(row.rankInfoTemplate).replace(/\{rank:(\d+):([0-9.]+)\}|\{scale:([0-9.]+):([0-9.]+)\}|\{flat:(\d+):([0-9.]+)\}/g,function(...parts):String
          {
@@ -282,10 +290,10 @@ package com.meng52.game.module.skill
                   _loc1_["sunder"] = GlobalLanguageStr.getLanguageStr(25003);
                   break;
                case "poison":
-                  _loc1_["poison"] = GlobalLanguageStr.getLanguageStr(25004,GameMapTools.toPercentage(GlobalData.$mConfig_simple.attack[18]));
+                  _loc1_["poison"] = "中毒：无视双防的持续伤害；普通中毒每次另加5%生命上限伤害；期间受到伤害提高20%。";
                   break;
                case "burn":
-                  _loc1_["burn"] = GlobalLanguageStr.getLanguageStr(25005,GameMapTools.toPercentage(GlobalData.$mConfig_simple.attack[17]));
+                  _loc1_["burn"] = "灼伤：无视双防的持续伤害；期间受到治疗降低40%。";
                   break;
                case "evil":
                   _loc1_["evil"] = GlobalLanguageStr.getLanguageStr(25017);
@@ -371,7 +379,8 @@ package com.meng52.game.module.skill
 
       public function get isBookSkill() : Boolean
       {
-         return skillSetData.id.slice(0,1) == "K";
+         var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         return skillSetData.id.slice(0,1) == "K" || Boolean(row && row.bookRule);
       }
 
       public function getPassiveType() : String
@@ -422,6 +431,8 @@ package com.meng52.game.module.skill
       public function getPower() : Number
       {
          var _loc1_:int = getStar();
+         var bondRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         var bondRate:Number = bondRow && bondRow.bond_power_rate_104 != null ? Number(bondRow.bond_power_rate_104) : 1;
          if(isBookSkill)
          {
             if(isEquipUp)
@@ -432,9 +443,9 @@ package com.meng52.game.module.skill
          }
          if(!isSuper)
          {
-            return _loc1_ * Avatar.POWER_SKILL_0_STAR + lv * Avatar.POWER_SKILL_0_LV;
+            return (_loc1_ * Avatar.POWER_SKILL_0_STAR + lv * Avatar.POWER_SKILL_0_LV) * bondRate;
          }
-         return _loc1_ * Avatar.POWER_SKILL_1_STAR;
+         return _loc1_ * Avatar.POWER_SKILL_1_STAR * bondRate;
       }
 
       public function init() : void
@@ -568,7 +579,7 @@ package com.meng52.game.module.skill
          var _loc3_:int = _loc4_.range;
          if(avatar.abilityState.root && skills)
          {
-            var requiredMove:Array = ["maokai_n","wukong_c","elise_c","riven_n","alistar_n","diana_c","khazix_n","khazix_c"];
+            var requiredMove:Array = ["maokai_n","wukong_c","elise_c","riven_n","alistar_n","diana_c","khazix_n","khazix_c","cat_n"];
             for each(var rootAction:Array in skills)
             {
                if(rootAction[0] == "manual_ability" && requiredMove.indexOf(rootAction[1]) >= 0) return false;
@@ -597,9 +608,22 @@ package com.meng52.game.module.skill
          return hasCastTargets();
       }
 
+      private function baseActionCount104() : int
+      {
+         var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         return row && row.equipment_base_action_count_104 != null ? int(row.equipment_base_action_count_104) : skills.length;
+      }
+
       private function hasCastTargets() : Boolean
       {
          if(!avatar || avatar.hp <= 0 || !GameMap.currentMap || !skills || skills.length == 0) return false;
+         if(isModEffectSequence())
+         {
+            if(!modConditionReady()) return false;
+            var firstMod:Array = skills[0];
+            if(firstMod[2] == "self" || firstMod[2] == "all_allies" || firstMod[2] == "ally_radius") return true;
+            return modSelectTargets(firstMod).length > 0;
+         }
          var actions:Array = [];
          var groups:Object = {};
          var oldActions:Array = currentActionTargets;
@@ -611,7 +635,7 @@ package com.meng52.game.module.skill
          var allyPrimary:Boolean = false;
          try
          {
-            for(var index:int = 0; index < skills.length; index++)
+            for(var index:int = 0; index < baseActionCount104(); index++)
             {
                var action:Array = skills[index];
                var kind:String = String(action[0]);
@@ -656,7 +680,7 @@ package com.meng52.game.module.skill
          if(!skills || !skillSetData.actionTargetPolicies) return false;
          var _loc5_:Vector.<Avatar> = GameMap.currentMap.getAliveList(avatar.team) as Vector.<Avatar>;
          _loc1_ = 0;
-         while(_loc1_ < skills.length)
+         while(_loc1_ < baseActionCount104())
          {
             _loc2_ = skills[_loc1_];
             _loc3_ = getActionPolicy(_loc1_);
@@ -687,8 +711,166 @@ package com.meng52.game.module.skill
          return _loc1_;
       }
 
+      public function isModEffectSequence() : Boolean
+      {
+         var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         return row != null && row.modEffectSequence == 1;
+      }
+
+      public function modConditionReady() : Boolean
+      {
+         var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         var gate:Object = row ? row.modCondition : null;
+         if(gate && gate.kind == "event") return modEventContext != null;
+         return !gate || gate.kind != "absent_buff" || !avatar.hasModBuff(String(gate.buff));
+      }
+
+      private function modSelectTargets(step:Array) : Array
+      {
+         var selector:String = String(step[2]);
+         var anchor:Object = int(step[3]) >= 0 ? modStepAnchors[int(step[3])] : null;
+         var result:Array = [];
+         var unit:Avatar;
+         if(selector == "event_source" || selector == "event_target")
+         {
+            unit = modEventContext ? (selector == "event_source" ? modEventContext.source : modEventContext.target) as Avatar : null;
+            var beneficialEvent:Boolean = step[1] == "heal" || step[1] == "buff" && ["weak","sunder","stun","curse"].indexOf(step[8]) < 0;
+            if(unit && unit.hp > 0 && (beneficialEvent ? unit.team == avatar.team : unit.team != avatar.team)) result.push(unit);
+            return result;
+         }
+         if(selector == "previous")
+         {
+            if(anchor) for each(unit in anchor.units) if(unit && unit.hp > 0) result.push(unit);
+            return result;
+         }
+         if(selector == "self") return avatar.hp > 0 ? [avatar] : [];
+         if(selector == "enemy_radius" && !anchor) return result;
+         var allied:Boolean = selector == "all_allies" || selector == "ally_radius";
+         var source:Vector.<Avatar> = GameMap.currentMap.getAliveList(allied ? avatar.team : avatar.otherTeam) as Vector.<Avatar>;
+         var centerLine:int = anchor ? int(anchor.line) : avatar.line;
+         var centerPos:int = anchor ? int(anchor.pos) : avatar.pos;
+         var best:Avatar = null;
+         var score:Number;
+         var bestScore:Number = Number.POSITIVE_INFINITY;
+         for each(unit in source)
+         {
+            if(!unit || unit.hp <= 0) continue;
+            if(selector == "all_allies" || selector == "all_enemies") { result.push(unit); continue; }
+            if(selector == "lane_front" || selector == "lane_lowest_hp")
+            {
+               if(unit.line != avatar.line || Math.abs(unit.pos-avatar.pos) > Math.abs(skillSetData.range)) continue;
+               score = selector == "lane_front" ? Math.abs(unit.pos-avatar.pos) : Number(unit.hp)/Math.max(1,unit.getHpMax());
+               if(score < bestScore || (score == bestScore && best && Math.abs(unit.pos-avatar.pos) < Math.abs(best.pos-avatar.pos)))
+               { best = unit; bestScore = score; }
+               continue;
+            }
+            if(unit.line != centerLine || Math.abs(unit.pos-centerPos) > Number(step[4])) continue;
+            if(step[15] === true && anchor && anchor.units.indexOf(unit) >= 0) continue;
+            result.push(unit);
+         }
+         if(best) result.push(best);
+         return result;
+      }
+
+      private function executeModStep(step:Array,index:int) : Boolean
+      {
+         if(!isModEffectSequence() || !step || (step.length != 18 && step.length != 20)) return false;
+         var kind:String = String(step[1]);
+         var selected:Array = modSelectTargets(step);
+         var center:Avatar = selected.length > 0 ? selected[0] : avatar;
+         // Preserve the position before damage/knockback, including when the primary dies.
+         modStepAnchors[index] = {"units":selected.concat(),"line":center.line,"pos":center.pos};
+         var unit:Avatar;
+         var value:Number;
+         var eventValue:Number = modEventContext && step.length == 20 ? Number(modEventContext.amount)*Number(step[18])+Number(modEventContext.overheal)*Number(step[19]) : 0;
+         var effect:String = String(step[17]);
+         var ratio:Number = Number(step[12]);
+         var family:String = "mod:" + skillSetData.id + ":" + index;
+         var summons:Vector.<Avatar>;
+         var retained:Vector.<Avatar>;
+         var expired:Avatar;
+         var expiredUnits:Array = [];
+         var singleton:Vector.<Avatar>;
+         var distance:int;
+         if(kind == "summon")
+         {
+            if(!avatar.manualSummonFamilies) avatar.manualSummonFamilies = {};
+            summons = avatar.manualSummonFamilies[family] as Vector.<Avatar>;
+            retained = new Vector.<Avatar>();
+            if(summons) for each(unit in summons) if(unit && unit.hp > 0) retained.push(unit);
+            var unitDefinition:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[String(step[11])] : null;
+            if(!unitDefinition || unitDefinition.modUnitType != "summon") return false;
+            unit = new Avatar(String(step[11]),{"lv":avatar.lv,"slv":1});
+            unit.goFight(avatar.team,avatar.line,0,false);
+            unit.ap = Math.max(1,int(avatar.getDamage()*ratio));
+            unit.hpMax = Math.max(1,int(avatar.getHpMax()*ratio));
+            unit.hp = unit.hpMax;
+            unit.dePh = Math.max(0,int(avatar.getDePh()*ratio));
+            unit.deMa = Math.max(0,int(avatar.getDeMa()*ratio));
+            unit.hit = Math.max(0,int(avatar.getHit()*ratio));
+            unit.flee = Math.max(0,int(avatar.getFlee()*ratio));
+            unit.crit = Math.max(0,int(avatar.getCrit()*ratio));
+            unit.tough = Math.max(0,int(avatar.getTough()*ratio));
+            unit.addBuff("summon",int(step[13]));
+            while(retained.length >= int(step[14]))
+            {
+               expired = retained.shift(); expiredUnits.push(expired); expired.hp = 0;
+            }
+            // addAvatar registers the unit and returns void, not a success flag.
+            GameMap.currentMap.addAvatar(unit,avatar.team,avatar.line,avatar.team == 1 ? avatar.pos - GameMapConfig.SUMMON_POS : avatar.pos + GameMapConfig.SUMMON_POS,false);
+            retained.push(unit);
+            avatar.manualSummonFamilies[family] = retained;
+            // Retire replaced units through the normal visual/death lifecycle.
+            for each(expired in expiredUnits) expired.dead();
+            var summonEffect:Object = DisplayTools.getAttrs(effect || "SUMMON_EFF");
+            if(summonEffect) { summonEffect.a1 = unit; summonEffect.par = GameMapLayer.gl.effectLayer; GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,summonEffect); }
+            return false;
+         }
+         for each(unit in selected)
+         {
+            if(!unit || unit.hp <= 0) continue;
+            if(modEventContext)
+            {
+               var eventFriendly:Boolean = kind == "heal" || kind == "buff" && ["weak","sunder","stun","curse"].indexOf(step[8]) < 0;
+               if(eventFriendly != (unit.team == avatar.team)) continue;
+            }
+            if(kind == "heal")
+            {
+               value = int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6])+eventValue);
+               unit.injured(int(value),1,DisplayTools.getAttrs(effect),4,avatar,false,avatar);
+            }
+            else if(kind == "damage")
+            {
+               if(modEventContext && Number(step[5]) <= 0 && eventValue <= 0) continue;
+               singleton = new Vector.<Avatar>(); singleton.push(unit);
+               avatar.checkAttack(singleton,null,100000,false,int(step[16]),int(step[16]) == 3 ? (Number(step[5])+eventValue/Math.max(1,avatar.getDamage()))/Avatar.REAL_DAMAGE_RATE : Number(step[5])+eventValue/Math.max(1,avatar.getDamage()),0,effect);
+            }
+            else if(kind == "buff")
+            {
+               value = Number(step[7]);
+               if(step[8] == "shield") value += int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6])+eventValue);
+               unit.addBuff(step[8] == "timed_bless" ? "bless" : String(step[8]),int(step[9]),step[8] == "timed_bless" ? 1 : value);
+            }
+            else if(kind == "push") unit.addBuff("push",1,Number(step[10]));
+            else if(kind == "move")
+            {
+               distance = Math.max(0,Math.abs(unit.pos-avatar.pos)-40);
+               if(Number(step[10]) > 0) distance = Math.min(distance,int(step[10]));
+               if(distance > 0) avatar.checkMove(avatar.team == 1 ? unit.pos < avatar.pos : unit.pos > avatar.pos,distance,unit,-1,false,effect);
+            }
+         }
+         if(kind == "move" || kind == "push") GameMap.actionDelay += 0.2;
+         return kind == "move" && selected.length > 0;
+      }
+
+
+      private var modStepAnchors:Array = [];
+      public var modEventContext:Object;
+      public function canModEventCast() : Boolean { return hasCastTargets(); }
+
       public function useSkill() : Boolean
       {
+         modStepAnchors = [];
          if(!hasCastTargets()) return false;
          var wholeAttack:Object = Avatar.beginAbilityAttack(avatar,"active");
          wholeAttack.skill = this;
@@ -833,10 +1015,51 @@ package com.meng52.game.module.skill
                    _loc1_ = avatar.checkAttack(_loc3_,isSuper && _loc19_.targetPolicy == "lowest_current_hp" ? sortOnLowestCurrentHp : getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,_loc20_[2],directDamageShareTotal,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],null,directDamageShareQ);
                   if(_loc1_) actionTargets[_loc14_] = _loc1_;
                   break;
+               case "mod_step":
+                  _loc4_ = executeModStep(_loc20_,_loc14_) || _loc4_;
+                  break;
                case "select_target":
                   var selectPolicy:String = getActionPolicy(_loc14_);
                   var selectedInstances:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,selectPolicy && selectPolicy.indexOf("ally_") == 0);
                   if(selectedInstances.length > 0) actionTargets[_loc14_] = selectedInstances[0];
+                  break;
+               case "book_bonus":
+                  if(_loc20_[2] == "penetration") avatar.addBuff("book_penetration",int(_loc20_[3]),Number(_loc20_[1]));
+                  break;
+               case "book_burn":
+                  var bookBurnTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,false);
+                  for each(var bookBurnTarget:Avatar in bookBurnTargets)
+                  {
+                     bookBurnTarget.addBookBurn(Tools.toInt(avatar.getDamage() * Number(_loc20_[1])),int(_loc20_[2]),avatar);
+                     queueDirectActionEffect(String(_loc20_[3]),bookBurnTarget);
+                  }
+                  break;
+               case "caster_ap_shield":
+                  var bookShieldTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  var bookShieldBase:Number = avatar.getDamage();
+                  for each(var bookShieldTarget:Avatar in bookShieldTargets)
+                  {
+                     bookShieldTarget.addBuff("shield",int(_loc20_[2]),Tools.toInt(bookShieldBase * Number(_loc20_[1])));
+                     queueDirectActionEffect(String(_loc20_[3]),bookShieldTarget);
+                  }
+                  GameMap.actionDelay += 0.15 * bookShieldTargets.length;
+                  break;
+               case "caster_hp_heal":
+                  var hpHealTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  var hpHealAmount:int = Tools.toInt(avatar.hpMax * Number(_loc20_[1]));
+                  for each(var hpHealTarget:Avatar in hpHealTargets)
+                  {
+                     hpHealTarget.injured(hpHealAmount,1,DisplayTools.getAttrs(String(_loc20_[2])),4,avatar,false,avatar);
+                  }
+                  GameMap.actionDelay += 0.15 * hpHealTargets.length;
+                  break;
+               case "timed_bless":
+                  var timedBlessTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  for each(var timedBlessTarget:Avatar in timedBlessTargets)
+                  {
+                     timedBlessTarget.addBuff("bless",int(_loc20_[1]),1);
+                     queueDirectActionEffect(String(_loc20_[2]),timedBlessTarget);
+                  }
                   break;
                case "hp_shield":
                case "caster_hp_shield":
@@ -862,7 +1085,7 @@ package com.meng52.game.module.skill
                      var healHitContext:Object = actionKillContexts[int(_loc20_[3])];
                      var healHitCount:int = healHitContext && healHitContext.hitHeroes is Array ? healHitContext.hitHeroes.length : 0;
                      var heroRefund:Number = castMissingHp * Math.min(Number(_loc20_[2]),healHitCount * Number(_loc20_[1]));
-                     if(heroRefund > 0) avatar.injured(Math.min(avatar.hpMax-avatar.hp,int(heroRefund * avatar.getRecoveryTalentMultiplier())),1,DisplayTools.getAttrs(String(_loc20_[4])),4,avatar,false,avatar);
+                     if(heroRefund > 0) avatar.injured(int(heroRefund * avatar.getRecoveryTalentMultiplier()),1,DisplayTools.getAttrs(String(_loc20_[4])),4,avatar,false,avatar);
                   }
                   break;
                case "kill_buff":
@@ -924,7 +1147,7 @@ package com.meng52.game.module.skill
                         dashStrikeOne.push(dashStrikeTarget);
                         avatar.attackAimList(dashStrikeOne,int(_loc20_[2]),Number(_loc20_[1]),0,String(_loc20_[4]),false,null,GameMapConfig.LINE_POS + 1);
                         var dashStrikeHeal:int = int(Number(_loc20_[3]) * (avatar.getDamage()+avatar.getHpMax()*.1) * getActiveRecoveryMultiplier());
-                        if(dashStrikeHeal > 0) avatar.injured(Math.min(avatar.hpMax-avatar.hp,dashStrikeHeal),1,DisplayTools.getAttrs("FX60_HEAL"),4,avatar,false,avatar);
+                        if(dashStrikeHeal > 0) avatar.injured(dashStrikeHeal,1,DisplayTools.getAttrs("FX60_HEAL"),4,avatar,false,avatar);
                         GameMap.actionDelay += .2;
                      }
                      dashStrikeIndex++;
@@ -1247,7 +1470,7 @@ package com.meng52.game.module.skill
                         missingHealTarget = missingHealTargets[missingHealIndex];
                         if(missingHealTarget && missingHealTarget.hp > 0)
                         {
-                           missingHealAmount = Math.max(0,Math.min(missingHealTarget.hpMax - missingHealTarget.hp,int((missingHealTarget.hpMax - missingHealTarget.hp) * Number(_loc20_[1]) * avatar.getRecoveryTalentMultiplier())));
+                           missingHealAmount = Math.max(0,int((missingHealTarget.hpMax - missingHealTarget.hp) * Number(_loc20_[1]) * avatar.getRecoveryTalentMultiplier()));
                            if(missingHealAmount > 0)
                            {
                               missingHealTarget.injured(missingHealAmount,1,DisplayTools.getAttrs(String(_loc20_[2])),4,avatar, false, avatar);
@@ -1287,7 +1510,7 @@ package com.meng52.game.module.skill
                         dealtHealTarget = dealtHealTargets[dealtHealIndex];
                         if(dealtHealTarget && dealtHealTarget.hp > 0 && dealtHealTotal > 0)
                         {
-                           dealtHealAmount = Math.max(0,Math.min(dealtHealTarget.hpMax - dealtHealTarget.hp,int(dealtHealTotal * Number(_loc20_[1]) * getActiveRecoveryMultiplier())));
+                           dealtHealAmount = Math.max(0,int(dealtHealTotal * Number(_loc20_[1]) * getActiveRecoveryMultiplier()));
                            if(dealtHealAmount > 0)
                            {
                               dealtHealTarget.injured(dealtHealAmount,1,DisplayTools.getAttrs(String(_loc20_[3])),4,avatar, false, avatar);
@@ -1900,7 +2123,7 @@ package com.meng52.game.module.skill
                      }
                      boundedSummons = new Vector.<Avatar>();
                   }
-                  summonLevel = Tools.toInt(_loc20_[1] * avatar.lv);
+                  summonLevel = Math.max(1,Tools.toInt(_loc20_[1] * avatar.lv));
                   if(limitedSummon && summonLevel < 1)
                   {
                      summonLevel = 1;
@@ -1915,20 +2138,9 @@ package com.meng52.game.module.skill
                   summonApFactor = getSummonCombatSnapshotApFactor();
                   if(summonApFactor > 0)
                   {
-                     _loc1_.hpMax = int(avatar.getHpMax() * 0.20);
-                     if(_loc1_.hpMax < 1) _loc1_.hpMax = 1;
-                     _loc1_.hp = _loc1_.hpMax;
-                     _loc1_.ap = int(avatar.getDamage() * summonApFactor);
-                     if(_loc1_.ap < 1) _loc1_.ap = 1;
-                     _loc1_.dePh = int(avatar.getDePh() * 0.40);
-                     if(_loc1_.dePh < 1) _loc1_.dePh = 1;
-                     _loc1_.deMa = int(avatar.getDeMa() * 0.40);
-                     if(_loc1_.deMa < 1) _loc1_.deMa = 1;
+                     if(!_loc1_.inheritSummonPanel(avatar,summonApFactor,0.20,0.40,0.40,Number(_loc20_[1]))) break;
                   }
-                  _loc1_.hit = avatar.getHit();
-                  _loc1_.flee = avatar.getFlee();
-                  _loc1_.crit = avatar.getCrit();
-                  _loc1_.tough = avatar.getTough();
+                  else if(!_loc1_.inheritSummonPanel(avatar,Number(_loc20_[1]))) break;
                   if(captainSummonMultiplier != 1)
                   {
                      _loc1_.hpMax = Math.max(1,int(_loc1_.hpMax * captainSummonMultiplier));
@@ -3116,7 +3328,7 @@ package com.meng52.game.module.skill
 
       private function hasBoundedSummonPolicy() : Boolean
       {
-         var _loc1_:Array = skillSetData.id.split("_");
+         var _loc1_:Array = getMechanismId104().split("_");
          if(_loc1_.length != 3 || _loc1_[0] != "S" || int(_loc1_[2]) < 2 || int(_loc1_[2]) > 6)
          {
             return false;
@@ -3150,7 +3362,7 @@ package com.meng52.game.module.skill
 
       private function isHeimerTurretSkill() : Boolean
       {
-         switch(skillSetData.id)
+         switch(getMechanismId104())
          {
             case "S_621014_3":
             case "S_621014_4":
@@ -3197,15 +3409,7 @@ package com.meng52.game.module.skill
          turretLevel = Math.max(1,avatar.lv);
          turret = new Avatar(String(param1[2]),{"lv":turretLevel,"slv":1});
          turret.goFight(avatar.team,avatar.line,0,false);
-         turret.hpMax = Math.max(1,int(avatar.getHpMax() * turretScale));
-         turret.hp = turret.hpMax;
-         turret.ap = Math.max(1,int(avatar.getDamage() * turretScale));
-         turret.dePh = Math.max(1,int(avatar.getDePh() * turretScale));
-         turret.deMa = Math.max(1,int(avatar.getDeMa() * turretScale));
-         turret.hit = Math.max(1,int(avatar.getHit() * turretScale));
-         turret.flee = Math.max(1,int(avatar.getFlee() * turretScale));
-         turret.crit = Math.max(1,int(avatar.getCrit() * turretScale));
-         turret.tough = Math.max(1,int(avatar.getTough() * turretScale));
+         if(!turret.inheritSummonPanel(avatar,turretScale)) return;
          turret.skill0 = null;
          turret.skill1 = null;
          turret.skill2 = null;
@@ -3321,11 +3525,7 @@ package com.meng52.game.module.skill
          }
          _loc2_ = new Avatar(String(param1[2]),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
          _loc2_.goFight(avatar.team,summonLine,0,false);
-         _loc2_.ap = Math.max(1,int(avatar.getDamage() * _loc8_));
-         _loc2_.hpMax = Math.max(1,int(avatar.getHpMax() * summonHpRatio));
-         _loc2_.hp = _loc2_.hpMax;
-         _loc2_.dePh = Math.max(1,int(avatar.getDePh() * summonDePhRatio));
-         _loc2_.deMa = Math.max(1,int(avatar.getDeMa() * summonDeMaRatio));
+         if(!_loc2_.inheritSummonPanel(avatar,_loc8_,summonHpRatio,summonDePhRatio,summonDeMaRatio,_loc8_)) return;
          if(_loc1_.clearSkills === true)
          {
             _loc2_.skill0 = null;
@@ -3335,10 +3535,6 @@ package com.meng52.game.module.skill
          }
          if(typeof _loc1_.actionType == "number" && (_loc1_.actionType == 1 || _loc1_.actionType == 2 || _loc1_.actionType == 4)) _loc2_.manualActionTypeOverride = int(_loc1_.actionType);
          if(Number(_loc1_.attackRange) > 0) _loc2_.manualAttackRangeOverride = Number(_loc1_.attackRange);
-         _loc2_.hit = avatar.hit;
-         _loc2_.flee = avatar.flee;
-         _loc2_.crit = avatar.crit;
-         _loc2_.tough = avatar.tough;
          var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
          var captainFactor:Number = captainRow ? Number(captainRow.captainSummonMultiplier) : 1;
          if(isFinite(captainFactor) && captainFactor > 0 && captainFactor != 1)
@@ -3386,11 +3582,11 @@ package com.meng52.game.module.skill
 
       private function isManualSummonPolicyAllowed() : Boolean
       {
-         var _loc1_:String = skillSetData.id;
+         var _loc1_:String = getMechanismId104();
          var _loc2_:Array = ["S_631029_5","S_631029_6","S_621040_4","S_621040_5","S_621040_6","S_631040_4","S_631040_5","S_631040_6","S_621124_5","S_621124_6","S_631124_5","S_631124_6","S_631127_5","S_631127_6","S_621128_5","S_621128_6","S_631128_5","S_631128_6"];
          var policy:Object = skillSetData.manualSummonPolicy;
          if(_loc2_.indexOf(_loc1_) < 0 || !policy) return false;
-         if(String(policy.skillId) != _loc1_ || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
+         if(String(policy.skillId) != skillSetData.id || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
          if(_loc1_.indexOf("1029_") >= 0) return String(policy.unitId) == "A_2002_5" && String(policy.familyKey) == "manual-1029-tibbers" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
          if(_loc1_.indexOf("1124_") >= 0) return String(policy.unitId) == "A_3002_2" && String(policy.familyKey) == "manual-1124-soldier" && int(policy.maxAlive) == 2 && Number(policy.attackRange) == 175 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true && int(policy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
          if(_loc1_.indexOf("1127_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
@@ -3400,7 +3596,7 @@ package com.meng52.game.module.skill
 
       private function isNativeCloneSummonSkill() : Boolean
       {
-         return skillSetData.id == "S_631127_5" || skillSetData.id == "S_631127_6";
+         return getMechanismId104() == "S_631127_5" || getMechanismId104() == "S_631127_6";
       }
 
       private function executeManualNormalClone(param1:Array) : void
@@ -3421,13 +3617,15 @@ package com.meng52.game.module.skill
          var oldSkillId:String = "";
          var targetPos:int = 0;
          var cloneEffect:Object = null;
-         if(!policy || allowedIds.indexOf(skillSetData.id) < 0 || String(policy.skillId) != skillSetData.id || familyKey != "manual-1132-shadow-clone" || capacity != 1 || !Avatar.isValidSummonMultiplier(ratio) || ttl < 1 || ttl > 4 || policy.replaceOldest !== true || !avatar.skill0 || !avatar.skill0.isActive())
+         if(!policy || allowedIds.indexOf(getMechanismId104()) < 0 || String(policy.skillId) != skillSetData.id || familyKey != "manual-1132-shadow-clone" || capacity != 1 || !Avatar.isValidSummonMultiplier(ratio) || ttl < 1 || ttl > 4 || policy.replaceOldest !== true || !avatar.skill0 || !avatar.skill0.isActive())
          {
             GameMapTools.gameTrace("拒绝未授权普通技能分身",skillSetData.id);
             return;
          }
          oldSkillId = String(avatar.skill0.skillSetData.id);
-         if(allowedNormalIds.indexOf(oldSkillId) < 0 || oldSkillId != "S_621132_" + String(avatar.avatarData.id).substr(-1))
+         var normalDefinition104:Object = GlobalData.$mConfig_skill[oldSkillId];
+         var normalSource104:String = normalDefinition104 && normalDefinition104.builtin_native_source_104 ? String(normalDefinition104.builtin_native_source_104) : oldSkillId;
+         if(allowedNormalIds.indexOf(normalSource104) < 0 || normalSource104 != "S_621132_" + String(avatar.avatarData.id).substr(-1))
          {
             GameMapTools.gameTrace("分身仅允许复制同星已核验普通技能",skillSetData.id,oldSkillId,avatar.id);
             return;
@@ -3452,15 +3650,7 @@ package com.meng52.game.module.skill
          }
          clone = new Avatar(String(avatar.id),{"lv":Math.max(1,avatar.lv),"slv":1});
          clone.goFight(avatar.team,avatar.line,0,false);
-         clone.ap = Math.max(1,int(avatar.getDamage() * ratio));
-         clone.hpMax = Math.max(1,int(avatar.getHpMax() * ratio));
-         clone.hp = clone.hpMax;
-         clone.dePh = Math.max(1,int(avatar.getDePh() * ratio));
-         clone.deMa = Math.max(1,int(avatar.getDeMa() * ratio));
-         clone.hit = Math.max(0,int(avatar.hit * ratio));
-         clone.flee = Math.max(0,int(avatar.flee * ratio));
-         clone.crit = Math.max(0,int(avatar.crit * ratio));
-         clone.tough = Math.max(0,int(avatar.tough * ratio));
+         if(!clone.inheritSummonPanel(avatar,ratio)) return;
          clone.skill0 = new SkillSet(oldSkillId,clone,Math.max(1,avatar.skill0.lv),false);
          clone.skill1 = null;
          clone.skill2 = null;
@@ -3519,7 +3709,7 @@ package com.meng52.game.module.skill
 
       private function getSummonCombatSnapshotApFactor() : Number
       {
-         switch(skillSetData.id)
+         switch(getMechanismId104())
          {
             case "S_32551036_4":
             case "S_32551036_5":

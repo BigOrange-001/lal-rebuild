@@ -2111,6 +2111,8 @@ package com.meng52.game.ui.panel
                {
                   _loc5_ = GlobalFunction.getUserCombat(GlobalData.$tempPVE_type,GlobalData.$tempPVE_combatID);
                   _loc5_ = _loc2_.getLimit(_loc6_) - _loc5_;
+                  if(GlobalData.$tempPVE_type == "status_pve_activities" && GlobalFunction.getMaterialChallenge(GlobalData.$tempPVE_combatID))
+                     _loc5_ = int(GlobalFunction.getMaterialChallenge(GlobalData.$tempPVE_combatID).remaining);
                   if(_loc5_ <= 0)
                   {
                      GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90031));
@@ -2166,6 +2168,8 @@ package com.meng52.game.ui.panel
                            }
                            _loc5_ = GlobalFunction.getUserCombat(GlobalData.$tempPVE_type,GlobalData.$tempPVE_combatID);
                            _loc5_ = _loc2_.getLimit(_loc6_) - _loc5_;
+                           if(GlobalData.$tempPVE_type == "status_pve_activities" && GlobalFunction.getMaterialChallenge(GlobalData.$tempPVE_combatID))
+                              _loc5_ = int(GlobalFunction.getMaterialChallenge(GlobalData.$tempPVE_combatID).remaining);
                            if(_loc5_ > 0)
                            {
                               _loc3_ = true;
@@ -2339,6 +2343,15 @@ package com.meng52.game.ui.panel
          {
             return;
          }
+         var resourceQuote:Object = GlobalData.$tempPVE_type == "status_pve_activities" ? GlobalFunction.getMaterialChallenge(GlobalData.$tempPVE_combatID) : null;
+         if(resourceQuote && int(resourceQuote.remaining) <= 0)
+         {
+            GameMapLayer.isAuto = false;
+            mBox_btn.visible = true;
+            if(mAutoTF) mAutoTF.visible = false;
+            GlobalFunction.popError("今日该副本挑战次数已用完，可返回副本列表购买次数。");
+            return;
+         }
          var _loc1_:* = GameMap.lastRe;
          _loc1_ = GameMap.lastRe.params;
          SendServiceAMFFun.send_user_pk_combat_main(reAutoFight,_loc1_);
@@ -2354,6 +2367,12 @@ package com.meng52.game.ui.panel
       
       protected function reFight(param1:Event) : void
       {
+         var resourceQuote:Object = GlobalData.$tempPVE_type == "status_pve_activities" ? GlobalFunction.getMaterialChallenge(GlobalData.$tempPVE_combatID) : null;
+         if(resourceQuote && int(resourceQuote.remaining) <= 0)
+         {
+            GlobalFunction.popError("今日该副本挑战次数已用完，可返回副本列表购买次数。");
+            return;
+         }
          var _loc4_:int = 0;
          var _loc2_:GameMapData = null;
          var _loc5_:int = 0;

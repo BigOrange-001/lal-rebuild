@@ -58,6 +58,8 @@ class GameplayRosterEquipment:
         "user.equip_wash_save", "user.equip_sell", "user.equip_alchemy", "user.add_magic",
         "user.equip_rune_up",
         "user.set_defensive_squad", "user.get_newzone_ranks",
+        "user.team_preset_save", "user.team_preset_load", "user.team_preset_delete",
+        "user.inventory_lock",
     }
     CURRENCY = {"gold", "coin", "score", "medal", "mark"}
     ATTRS = {"dust", "sp", "dn_stone", "culture_book"}
@@ -108,6 +110,8 @@ class GameplayRosterEquipment:
         self.equipment = self.config.get("equipment", {})
         self.skills = self.config.get("skills", {})
         self.talents = self.config.get("talents", {})
+        from summon_pools import SummonPools
+        self.summon_pools = SummonPools.from_config(self.full_config)
         self.rng = random.SystemRandom()
 
     @staticmethod
@@ -157,6 +161,8 @@ class GameplayRosterEquipment:
         key = f"{method}:{action}" if isinstance(action, (str, int)) else None
         def mutate(profile):
             self._migrate_hero_level_caps(profile)
+            from inventory_locks import migrate_preset_locks
+            migrate_preset_locks(profile)
             normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
             self._normalize_profile_equips(profile)
             result = change(profile) or {}
@@ -1044,6 +1050,22 @@ class GameplayRosterEquipment:
         return p["gold"]
 
     def _mutate(self, p, m, x):
+        if m == 'user.inventory_lock':
+            kind, locked = x.get('kind'), x.get('locked')
+            if kind not in ('hero', 'equipment') or type(locked) is not bool:
+                self._fail('InvalidSelection', 'Lock kind and boolean state are required')
+            key = self._id(x.get('id'), 'id')
+            field = 'avatars' if kind == 'hero' else 'my_equips'
+            if key not in p.get(field, {}):
+                self._fail('UnknownHero' if kind == 'hero' else 'UnknownEquipment', 'Inventory instance does not belong to this account')
+            key, item = self._hero(p, key) if kind == 'hero' else self._equip(p, key)
+            item['lock'] = 1 if locked else 0
+            if 'locked' in item:
+                item['locked'] = bool(locked)
+            return {'id': key, 'kind': kind, 'locked': locked}
+        if m in ('user.team_preset_save', 'user.team_preset_load', 'user.team_preset_delete'):
+            from team_presets import mutate
+            return mutate(self, p, m, x)
         if m == "user.avatar_limit_break":
             pending = p.get("pending_limit_break")
             if not isinstance(pending, dict) or not isinstance(pending.get("candidate_ids"), list):
@@ -1162,6 +1184,9 @@ class GameplayRosterEquipment:
         if m == "user.add_magic":
             eqid, item = self._equip(p, self._id(x.get("eqid"), "eqid"))
             color = self._num(x.get("color"), "color", 0, 4)
+            times = x.get('times', 1)
+            if type(times) is not int or times not in (1, 10) or color == 4 and times != 1:
+                self._fail('InvalidSelection', 'Elemental magic supports one or ten upgrades')
             dust_cfg = self.simple.get("dust", {})
             costs = ((dust_cfg.get("add_magic") or [[1, 1, 1, 1]])[0])
             caps = dust_cfg.get("max", [100, 100, 100, 100])
@@ -1188,15 +1213,33 @@ class GameplayRosterEquipment:
             if int(magic[color]) >= int(caps[color]): self._fail("MagicAtMaximum", "This equipment magic stat is already at maximum")
             if color > 0 and int(magic[color - 1]) <= 0:
                 self._fail("MagicLocked", "Upgrade the preceding enchantment tier first")
-            cost = magic_upgrade_cost(self.simple, color, int(magic[color]))
-            if int(dust[color]) < cost: self._fail("InsufficientResource", "Not enough dust")
-            dust[color] = int(dust[color]) - cost
-            magic[color] = int(magic[color]) + 1
+            previous_level, spent, completed = int(magic[color]), 0, 0
+            stop_reason = 'completed'
+            for _ in range(times):
+                if int(magic[color]) >= int(caps[color]):
+                    stop_reason = 'maximum'
+                    break
+                cost = magic_upgrade_cost(self.simple, color, int(magic[color]))
+                if int(dust[color]) < cost:
+                    if completed == 0:
+                        self._fail('InsufficientResource', 'Not enough dust')
+                    stop_reason = 'insufficient_dust'
+                    break
+                dust[color] = int(dust[color]) - cost
+                magic[color] = int(magic[color]) + 1
+                spent += cost
+                completed += 1
+                item['symp'] = random.randrange(4)
             item["magic"] = magic
             # Each successful elemental enchantment draws a new rune type.
             # An idempotent replay returns the stored result without drawing.
-            item["symp"] = random.randrange(4)
-            return copy.deepcopy(item)
+            answer = copy.deepcopy(item)
+            if times == 10:
+                answer['magic_batch'] = {'requested': times, 'completed': completed,
+                                         'color': color, 'dust_spent': spent,
+                                         'before': previous_level, 'after': int(magic[color]),
+                                         'stop_reason': stop_reason}
+            return answer
         if m == "user.wager_avatar":
             kind, times = x.get("wager_type", "coin"), self._num(x.get("times", 1), "times", 1, 10)
             if kind not in ("coin", "score"): self._fail("InvalidWager", "Unsupported wager type")
@@ -1234,37 +1277,45 @@ class GameplayRosterEquipment:
                 p[kind] -= price
             medal_index = 11 if free else (12 if times == 1 else 13)
             if kind == "coin": p["medal"] = p.get("medal", 0) + max(0, int(wager_cfg[medal_index]))
-            categories = self.draw_pools.get(kind, []) if isinstance(self.draw_pools, dict) else []
-            active = [row for row in categories if isinstance(row, dict) and row.get("ids")
-                      and int(row.get("weight", 0)) > 0
-                      and all(aid in self.heroes for aid in row["ids"])]
-            if not active:
-                self._fail("InvalidConfig", f"No valid {kind} draw pool")
-            new = []
-            total_weight = sum(int(row["weight"]) for row in active)
-            pity_period = max(1, int(wager_cfg[14]) + 1)
-            pity_count = max(0, int(attrs.get("wager_coin_1_count", 0)))
-            purple_rows = [row for row in active if row.get("category") == "purple_hero"]
-            for _ in range(times):
-                force_purple = kind == "coin" and pity_count >= pity_period - 1
-                if force_purple:
-                    if not purple_rows:
-                        self._fail("InvalidConfig", "Coin draw pity has no purple hero pool")
-                    selected = purple_rows[0]
-                else:
-                    ticket = self.rng.randrange(total_weight)
-                    selected = active[-1]
-                    for row in active:
-                        ticket -= int(row["weight"])
-                        if ticket < 0:
-                            selected = row
-                            break
-                aid = selected["ids"][self.rng.randrange(len(selected["ids"]))]
-                inst = self._new_hero(p, aid); new.append(inst)
+            if self.summon_pools is not None:
+                pool = "advanced" if kind == "coin" else "normal"
+                new = [self._new_hero(p, self.summon_pools.draw(pool, self.rng))
+                       for _ in range(times)]
+                # The calibrated quality distribution replaces the old forced-purple pity.
                 if kind == "coin":
-                    pity_count = 0 if selected.get("category") == "purple_hero" else pity_count + 1
-            if kind == "coin":
-                attrs["wager_coin_1_count"] = pity_count
+                    attrs["wager_coin_1_count"] = 0
+            else:
+                categories = self.draw_pools.get(kind, []) if isinstance(self.draw_pools, dict) else []
+                active = [row for row in categories if isinstance(row, dict) and row.get("ids")
+                          and int(row.get("weight", 0)) > 0
+                          and all(aid in self.heroes for aid in row["ids"])]
+                if not active:
+                    self._fail("InvalidConfig", f"No valid {kind} draw pool")
+                new = []
+                total_weight = sum(int(row["weight"]) for row in active)
+                pity_period = max(1, int(wager_cfg[14]) + 1)
+                pity_count = max(0, int(attrs.get("wager_coin_1_count", 0)))
+                purple_rows = [row for row in active if row.get("category") == "purple_hero"]
+                for _ in range(times):
+                    force_purple = kind == "coin" and pity_count >= pity_period - 1
+                    if force_purple:
+                        if not purple_rows:
+                            self._fail("InvalidConfig", "Coin draw pity has no purple hero pool")
+                        selected = purple_rows[0]
+                    else:
+                        ticket = self.rng.randrange(total_weight)
+                        selected = active[-1]
+                        for row in active:
+                            ticket -= int(row["weight"])
+                            if ticket < 0:
+                                selected = row
+                                break
+                    aid = selected["ids"][self.rng.randrange(len(selected["ids"]))]
+                    inst = self._new_hero(p, aid); new.append(inst)
+                    if kind == "coin":
+                        pity_count = 0 if selected.get("category") == "purple_hero" else pity_count + 1
+                if kind == "coin":
+                    attrs["wager_coin_1_count"] = pity_count
             self.store.adventure.record_draw(p)
             new_map = {obj["id"]: obj for obj in new}
             return {"attrs": p["attrs"], "records": p.get("records", {}),
@@ -1282,6 +1333,8 @@ class GameplayRosterEquipment:
                     hid, material = self._hero(p, v)
                     self._check_not_pending_culture(p, hid)
                     if hid == tid or hid in ids: self._fail("InvalidMaterials", "Target and duplicate heroes cannot be consumed")
+                    if material.get('lock') or material.get('locked'):
+                        self._fail('HeroLocked', 'Unlock material heroes before upgrading')
                     self._check_not_team(p, hid); self._check_not_dn(p, hid); ids.append(hid); materials.append(material)
                 target_aid = target.get("aid", tid).split("|")[0]
                 level_cap = self._hero_level_cap(target_aid, target)
@@ -1337,34 +1390,49 @@ class GameplayRosterEquipment:
                 return {"avatars": p["avatars"], "avatar": copy.deepcopy(target),
                         "team": p.get("team"), "gold": p["gold"]}
             tid, target = self._equip(p, target_id)
-            ids = []
-            for v in consumed:
-                eid, _ = self._equip(p, v)
-                if eid == tid or eid in ids: self._fail("InvalidMaterials", "Target and duplicate books cannot be consumed")
-                if any(eid in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip material first")
-                ids.append(eid)
-            target_eid = target.get("eid", "")
-            if "E_6" not in target_eid: self._fail("InvalidTarget", "Select a skill book to upgrade")
-            for eid in ids:
-                if "E_6" not in p["my_equips"][eid].get("eid", ""):
-                    self._fail("InvalidMaterials", "Only skill books can be consumed here")
-            try: book_rank = max(1, int(target_eid.split("_")[2]))
-            except (IndexError, TypeError, ValueError): book_rank = 1
-            book_cfg = self.simple.get("skill_book_exp", [10, 20, 30, 10, 1, 10, 1])
-            if not isinstance(book_cfg, list) or len(book_cfg) <= 5:
-                book_cfg = [10, 20, 30, 10, 1, 10, 1]
+            target_definition = self.equipment.get(target.get("eid"), {})
+            if target_definition.get("type") != 6:
+                self._fail("InvalidTarget", "Select a skill book to upgrade")
             current_level = max(1, int(target.get("slv", 0)))
-            cap = max(1, int(book_cfg[3]))
-            new_level = min(cap, current_level + len(ids))
-            if new_level <= current_level: self._fail("MaxGrowth", "This skill book is already at maximum level")
+            book_cfg = self.simple.get("skill_book_exp", [])
+            if not isinstance(book_cfg, list) or len(book_cfg) <= 5:
+                self._fail("InvalidConfig", "Skill-book upgrade costs are missing")
+            cap = min(10, max(1, int(book_cfg[3])))
+            if current_level >= cap:
+                self._fail("MaxGrowth", "This skill book is already at maximum level")
+            if len(consumed) > 5:
+                self._fail("InvalidMaterials", "Select at most five material books")
+            ids, definitions = [], []
+            pending = p.get("attrs", {}).get("equip_wash", {})
+            for value in consumed:
+                eid, material = self._equip(p, value)
+                if eid == tid or eid in ids:
+                    self._fail("InvalidMaterials", "Target and duplicate books cannot be consumed")
+                if any(eid in squad for squad in p.get("as_equips", [])):
+                    self._fail("EquipmentInUse", "Unequip material first")
+                if material.get("lock") or material.get("locked"):
+                    self._fail("EquipmentLocked", "Unlock material books before upgrading")
+                if isinstance(pending, dict) and pending.get("eqid") == eid:
+                    self._fail("PendingOperation", "Finish the pending material operation first")
+                definition = self.equipment.get(material.get("eid"), {})
+                if definition.get("type") != 6:
+                    self._fail("InvalidMaterials", "Only skill books can be consumed here")
+                ids.append(eid)
+                definitions.append(definition)
+            from skill_books import upgrade_probability
+            probability = upgrade_probability(self.simple, current_level, definitions)
+            if probability <= 0:
+                self._fail("InvalidMaterials", "These materials have no chance to improve the book")
+            book_rank = int(target_definition["quality"])
             price = current_level * book_rank * max(0, int(book_cfg[5]))
             self._cost(p, {"gold": price})
-            target["slv"] = new_level
-            for i in ids: del p["my_equips"][i]
-            # PanelEquipBook.re_bookUP reads the updated target under
-            # response.data.equip and the currency under response.data.gold.
-            # Returning only my_equips leaves the client holding a stale book.
-            return {"equip": copy.deepcopy(target), "gold": p.get("gold", 0)}
+            succeeded = self.rng.randrange(100) < int(round(probability * 100))
+            target["slv"] = current_level + int(succeeded)
+            for eid in ids:
+                del p["my_equips"][eid]
+            return {"equip": copy.deepcopy(target), "gold": p.get("gold", 0),
+                    "success": succeeded, "probability": probability,
+                    "consumed_eqids": ids}
         if m in ("user.star_up", "user.phase_up"):
             target_id = self._id(x.get("aid"), "aid"); consumed = x.get("aids", [])
             if not isinstance(consumed, list):
@@ -1379,6 +1447,8 @@ class GameplayRosterEquipment:
             for v in consumed:
                 hid, mat = self._hero(p, v)
                 if hid == tid or hid in ids: self._fail("InvalidMaterials", "Target and duplicate heroes cannot be consumed")
+                if mat.get('lock') or mat.get('locked'):
+                    self._fail('HeroLocked', 'Unlock material heroes before ascension')
                 self._check_not_team(p, hid)
                 self._check_not_dn(p, hid)
                 if m == "user.phase_up":
@@ -2009,11 +2079,13 @@ class GameplayRosterEquipment:
             self._migrate_hero_level_caps(profile)
         culture_changed = normalize_culture_profile(profile, self.full_config.get("cfg", self.full_config))
         equipment_changed = self._normalize_profile_equips(profile)
+        from inventory_locks import migrate_preset_locks
+        locks_changed = migrate_preset_locks(profile)
         after = (
             profile.get("attrs", {}).get("avatar_exp_curve_version"),
             profile.get("attrs", {}).get("roster_caps_version"),
         )
-        return before != after or culture_changed or equipment_changed
+        return before != after or culture_changed or equipment_changed or locks_changed
 
     def _legacy_exp_requirement(self, aid, level, exp_rate=None):
         """Old native polynomial cumulative XP, used for migration/fallback."""
@@ -2172,19 +2244,8 @@ class GameplayRosterEquipment:
                 # Native lookup produces no assigned hero for stale bindings.
                 continue
             bound = copy.deepcopy(bound)
-            # Older DN slots may carry the native setOtherCfgAvatar snapshot
-            # [lv, hp, ap, de_ph, de_ma, phase] in their third entry. The
-            # client prefers that snapshot over the current roster instance.
-            if len(node) > 2 and isinstance(node[2], (list, tuple)) and len(node[2]) >= 6:
-                try:
-                    snapshot = {"lv": int(node[2][0]), "phase": int(node[2][5])}
-                    if not (weighted_culture_active(self.simple, bound)
-                            and bound.get("culture_schema") == WEIGHTED_CULTURE_SCHEMA):
-                        snapshot.update({"hp": int(node[2][1]), "ap": int(node[2][2]),
-                                         "de_ph": int(node[2][3]), "de_ma": int(node[2][4])})
-                    bound.update(snapshot)
-                except (TypeError, ValueError):
-                    continue
+            # Owned bindings always read current growth. Legacy node[2]
+            # snapshots can otherwise hide later levels, phases and talents.
             aid = str(bound.get("aid", node[1])).split("|")[0]
             hero_row = self.heroes.get(aid, {})
             pl = hero_row.get("pl", [])
@@ -2234,8 +2295,8 @@ class GameplayRosterEquipment:
             bound_talent = bound.get("talent")
             bound_talent = bound_talent.get("id") if isinstance(bound_talent, dict) else bound_talent
             talent_row = self.talents.get(bound_talent, {})
-            if talent_row.get("growth_effect") == "hp":
-                base_stats["hp"] = int(base_stats["hp"] * (1 + float(talent_row.get("growth_value", 0)) / 100))
+            from talent_stats_103 import apply_stat_talent
+            apply_stat_talent(base_stats, talent_row)
             attribute = str(config[5])
             targets = base_stats.keys() if attribute == "all" else (attribute,)
             for stat in targets:
@@ -2272,7 +2333,7 @@ class GameplayRosterEquipment:
         # later five-decimal rounding would otherwise turn values such as
         # 62594.99999999999 into 62595.
         base_stats = {key: int(value) for key, value in base_stats.items()}
-        stats = {**base_stats, "speed": int(pl[8]), "range": int(pl[9]), "hit": int(hero.get("hit", 0)), "flee": int(hero.get("flee", 0)), "crit": int(hero.get("crit", 0)), "tough": int(hero.get("tough", 0))}
+        stats = {**base_stats, "speed": int(pl[8]), "range": int(pl[9]), "hit": max(0, int(hero.get("hit", 0))), "flee": max(0, int(hero.get("flee", 0))), "crit": max(0, int(hero.get("crit", 0))), "tough": max(0, int(hero.get("tough", 0)))}
         # Avatar stores cultivation as raw point counts. `culture_pith` is the
         # native UI progress scale; combat growth uses the local per-point rate
         # and each hero's matching level-growth slope, as Avatar now does.
@@ -2325,6 +2386,9 @@ class GameplayRosterEquipment:
                 halo_rate = 1 + (float(equip_wash[4]) if isinstance(equip_wash, list) and len(equip_wash) > 4 else 0) * halo_lv
                 alchemy_rate = self._equip_alchemy_rate(inst, 0) if "alchemy" in inst else 1.0
                 rune_stats = equipment_rune_bonus(self.simple, inst)
+                for stat_key, value_index in (('speed', 4), ('range', 5)):
+                    if len(vals) > value_index:
+                        stats[stat_key] += self._native_tools_to_int(float(vals[value_index]) * halo_rate)
                 for k, idx in (("hp", 0), ("ap", 1), ("de_ph", 2), ("de_ma", 3)):
                     if len(vals) > idx:
                         base = equipment_main_stat(float(vals[idx]), equipment_level, equip_simple, inst,
@@ -2344,7 +2408,6 @@ class GameplayRosterEquipment:
                     book_slv = max(1, int(inst.get("slv", 1)))
                     book_skill = self._skill(skill_id, book_slv)
                     book_skill["slv"] = book_slv
-                    break
         if not hero_only:
             for stat_key, amount in magic_symp_bonuses(self.simple, symp_counts).items():
                 stats[stat_key] += amount
@@ -2360,11 +2423,35 @@ class GameplayRosterEquipment:
         if not hero_only:
             self._apply_owned_guild_research(profile, stats)
         talent_row = self.talents.get(talent_id, {})
-        if talent_row.get("growth_effect") == "hp":
-            stats["hp"] = int(stats["hp"] * (1 + float(talent_row.get("growth_value", 0)) / 100))
+        if book_skill and not book_skill.get("pl"):
+            for action in book_skill.get("skills", []):
+                if isinstance(action, list) and len(action) > 2 and action[0] == "book_passive" and action[2] in stats:
+                    stats[action[2]] = self._equip_to_int(stats[action[2]] * (1 + float(action[1])))
+        from talent_stats_103 import apply_stat_talent
+        apply_stat_talent(stats, talent_row)
+        from bonds_104 import profile_bonds, apply_stats, skill_ids
+        bond_config = self.full_config.get('cfg', self.full_config)
+        bonds = profile_bonds(bond_config, profile, key, hero_only=hero_only)
+        apply_stats(stats, aid, bonds)
+        bond_skills = skill_ids(bond_config, aid, bonds)
         skill0 = self._skill(pl[10], max(1, int(hero.get("slv", 1))))
         skill1 = self._skill(pl[11]); skillb = self._skill(pl[13]) if len(pl) > 13 else None
-        return {"aid": aid, **stats, "hp_max": stats["hp"], "sign_type": int(tl[0]), "action_type": int(tl[1]), "damage_type": int(tl[2]), "skill": skill0, "leader_skill": skill1, "book_skill": book_skill, "skillB": skillb, "talent": talent_id, "phase": phase, "morph": int(hero.get("morph", 0)), "lv": lv, "slv": int(hero.get("slv", 1)), "culture_schema": hero.get("culture_schema") if weighted_hero else None, "tpl": [int(tl[i]) for i in (0, 1, 2)] + [stats["speed"], stats["range"]]}
+        if bond_skills.get('skill'):
+            skill0 = self._skill(bond_skills['skill'], max(1, int(hero.get('slv', 1))))
+        if bond_skills.get('leader_skill'):
+            skill1 = self._skill(bond_skills['leader_skill'])
+        stats['bonds_104'] = [bond['id'] for bond in bonds]
+        from equipment_bonds_104 import profile_equipment_bonds, skill_id as equipment_skill_id
+        equipment_bonds=profile_equipment_bonds(bond_config,profile,key,hero_only)
+        stats['equipment_bonds_104']=[r['equipment'] for r in equipment_bonds]
+        def equipment_skill(snapshot,level=1):
+            if not snapshot:return snapshot
+            sid=equipment_skill_id(bond_config,aid,snapshot['skid'],equipment_bonds)
+            return self._skill(sid,level) if sid!=snapshot['skid'] else snapshot
+        skill0=equipment_skill(skill0,max(1,int(hero.get('slv',1))))
+        skill1=equipment_skill(skill1)
+        skillb=equipment_skill(skillb)
+        return {"aid": aid, **stats, "growth_stats_applied": True, "hp_max": stats["hp"], "sign_type": int(tl[0]), "action_type": int(tl[1]), "damage_type": int(tl[2]), "skill": skill0, "leader_skill": skill1, "book_skill": book_skill, "skillB": skillb, "talent": talent_id, "phase": phase, "morph": int(hero.get("morph", 0)), "lv": lv, "slv": int(hero.get("slv", 1)), "culture_schema": hero.get("culture_schema") if weighted_hero else None, "tpl": [int(tl[i]) for i in (0, 1, 2)] + [stats["speed"], stats["range"]]}
 
     def _skill(self, skill_id, level=1):
         row = self.skills.get(skill_id)
@@ -2437,6 +2524,12 @@ class GameplayRosterEquipment:
             "actionTargetPolicyArgs": copy.deepcopy(row.get("actionTargetPolicyArgs") or []),
             "actionTargetMaxTargets": copy.deepcopy(row.get("actionTargetMaxTargets") or []),
             "actionTargetGroups": copy.deepcopy(row.get("actionTargetGroups") or []),
+            "modEffectSequence": row.get('modEffectSequence',0),
+            "modCondition": copy.deepcopy(row.get('modCondition')),
+            "manualSummonPolicy": copy.deepcopy(row.get('manualSummonPolicy')),
+            "manualClonePolicy": copy.deepcopy(row.get('manualClonePolicy')),
+            "captainSummonMultiplier": row.get('captainSummonMultiplier',1),
+            "equipment_source_skill_104": row.get('equipment_source_skill_104'),
         }
 
     def _native_skill_level_cap(self):

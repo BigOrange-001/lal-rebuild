@@ -83,7 +83,8 @@ class PveFeedbackOverlayTest(unittest.TestCase):
             self.assertTrue(all(row[2] == expected for row in stage["team2"]))
             self.assertEqual(stage["recommended_power"], _power(
                 self.config["cfg"], stage["team2"], stage["enemy_unit_stats_by_diff"]["0"]))
-        for invalid in (0, 151):
+        self.assertEqual(tower_skill_level(180),10)
+        for invalid in (0, 181):
             with self.assertRaises(ValueError):
                 tower_skill_level(invalid)
         db = sqlite3.connect(":memory:", check_same_thread=False)

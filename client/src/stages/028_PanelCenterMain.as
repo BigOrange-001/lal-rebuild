@@ -10,6 +10,8 @@ package com.meng52.game.ui.screen
    import com.meng52.game.ui.effect.DisplayTools;
    import com.meng52.game.ui.element.LOL_Button;
    import com.meng52.game.ui.element.LOL_TeamSet;
+   import com.meng52.game.ui.element.LOL_Scale9Button;
+   import com.meng52.game.ui.element.LOL_TextField;
    import com.meng52.game.ui.panel.PanelRollInfo;
    import com.meng52.game.ui.panel.PanelSocialMail;
    import com.meng52.game.ui.stage.GuideTools;
@@ -18,6 +20,7 @@ package com.meng52.game.ui.screen
    import com.meng52.global.SocketManager;
    import com.meng52.net.SendAndSelect;
    import com.meng52.net.SendServiceAMFFun;
+   import com.meng52.events.NetEvent;
    import com.meng52.utils.Tools;
    import flash.display.BitmapData;
    import flash.display.PNGEncoderOptions;
@@ -33,6 +36,7 @@ package com.meng52.game.ui.screen
    import starling.display.Image;
    import starling.display.MovieClip;
    import starling.display.Sprite;
+   import starling.display.Quad;
    import starling.events.EnterFrameEvent;
    import starling.events.Event;
    import starling.filters.ColorMatrixFilter;
@@ -156,6 +160,13 @@ package com.meng52.game.ui.screen
       private var openStatus:int;
 
       private var mPanelGeneration:int = 0;
+
+      private var mPresetPopup:Sprite;
+      private var mPresetRows:Sprite;
+      private var mPresetGeneration:int = 0;
+      private var mPresetBusy:Boolean = false;
+      private var mPresetActionID:String = "";
+      private var mPresetNotice:String = "";
       
       public function PanelCenterMain()
       {
@@ -275,6 +286,11 @@ package com.meng52.game.ui.screen
          mEdit.y = 15;
          addChild(mEdit);
          mEdit.addEventListener("triggered",button_triggeredHandler);
+         var presetButton:LOL_Scale9Button = new LOL_Scale9Button("阵容预设",102,30,"UI_btn_enterGame_0_0000");
+         presetButton.x = GlobalData.$mStageWidth - 116;
+         presetButton.y = 169;
+         presetButton.addEventListener("triggered",openTeamPresets);
+         addChild(presetButton);
          mBtn_casino = new LOL_Button("","UI_btn_mainFun0000",false,false);
          mBtn_casino.name = "center_casino";
          mBtn_casino.width = getConstProperty(mBtn_casino.name,ConfigManager.WIDTH);
@@ -661,6 +677,7 @@ package com.meng52.game.ui.screen
       
       public function clearByManual() : void
       {
+         closeTeamPresets();
          GlobalData.$mEventDispatcher.removeEventListener("update_team_power",onUpdateHomeTeamStats);
          if(mPanelTeamSet)
          {
@@ -674,6 +691,7 @@ package com.meng52.game.ui.screen
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         closeTeamPresets();
          mPanelGeneration += 1;
          GlobalData.$mEventDispatcher.removeEventListener("update_team_power",onUpdateHomeTeamStats);
          if(mPanelTeamSet)
@@ -688,6 +706,207 @@ package com.meng52.game.ui.screen
          GlobalData.$mEventDispatcher.removeEventListener("update_chat_server",resetChatIcon);
       }
       
+      private function presetText(parent:Sprite, text:String, x:Number, y:Number, w:int, h:int, size:int = 18, color:uint = 16777215) : void
+      {
+         var label:LOL_TextField = new LOL_TextField(text,w,h);
+         label.x = x;
+         label.y = y;
+         label.fontSize = size;
+         label.fontColor = color;
+         label.touchable = false;
+         parent.addChild(label);
+      }
+
+      private function presetPending() : Boolean
+      {
+         var methods:Array = ["user.fix_team","user.equip_dress","user.team_preset_save","user.team_preset_load","user.team_preset_delete"];
+         for each(var method:String in methods)
+         {
+            if(SendAndSelect.checkRepeat(method,"")) return true;
+         }
+         return false;
+      }
+
+      private function openTeamPresets(event:Event) : void
+      {
+         if(mPresetPopup || GlobalData.$mGameClassObject.isPopUp_Open()) return;
+         if(GlobalData.$isForceGuide)
+         {
+            GlobalFunction.popAlert("阵容预设","完成新手引导后可保存阵容。");
+            return;
+         }
+         mPresetGeneration++;
+         mPresetBusy = false;
+         mPresetNotice = "保存会覆盖该槽位；载入同步恢复英雄、装备和德诺阵。";
+         mPresetPopup = new Sprite();
+         var background:Quad = new Quad(600,690,1449514);
+         mPresetPopup.addChild(background);
+         var header:Quad = new Quad(600,62,2569029);
+         header.touchable = false;
+         mPresetPopup.addChild(header);
+         presetText(mPresetPopup,"阵容预设",20,12,320,38,26,16766464);
+         var close:LOL_Scale9Button = new LOL_Scale9Button("关闭",72,34,"UI_btn_enterGame_0_0000");
+         close.x = 508;
+         close.y = 15;
+         close.addEventListener("triggered",closeTeamPresets);
+         mPresetPopup.addChild(close);
+         mPresetRows = new Sprite();
+         mPresetPopup.addChild(mPresetRows);
+         var scale:Number = Math.min(1,(GlobalData.$mStageWidth-24)/600,(GlobalData.$mStageHeight-72)/690);
+         mPresetPopup.scaleX = mPresetPopup.scaleY = scale;
+         mPresetPopup.addEventListener("removedFromStage",onPresetPopupRemoved);
+         renderTeamPresets();
+         GlobalData.$mGameClassObject.openPopUp(mPresetPopup);
+      }
+
+      private function closeTeamPresets(event:Event = null) : void
+      {
+         if(mPresetPopup && mPresetPopup.stage) GlobalData.$mGameClassObject.closePopUp();
+      }
+
+      private function onPresetPopupRemoved(event:Event) : void
+      {
+         // Child removals during a redraw must not invalidate the popup.
+         if(event.target != mPresetPopup) return;
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onPresetError);
+         mPresetGeneration++;
+         mPresetPopup = null;
+         mPresetRows = null;
+         mPresetBusy = false;
+         mPresetActionID = "";
+      }
+
+      private function presetButton(parent:Sprite, label:String, command:String, x:int, y:int, enabled:Boolean) : void
+      {
+         var button:LOL_Scale9Button = new LOL_Scale9Button(label,72,30,"UI_btn_enterGame_0_0000");
+         button.name = command;
+         button.x = x;
+         button.y = y;
+         button.enabled = enabled;
+         button.addEventListener("triggered",onPresetCommand);
+         parent.addChild(button);
+      }
+
+      private function renderTeamPresets() : void
+      {
+         if(!mPresetRows || !GlobalData.$userData) return;
+         mPresetRows.removeChildren(0,-1,true);
+         var saved:Array = GlobalData.$userData.attrs.team_presets as Array;
+         for(var i:int = 0; i < 4; i++)
+         {
+            var preset:Object = saved && i < saved.length ? saved[i] : null;
+            var row:Sprite = new Sprite();
+            row.x = 14;
+            row.y = 76 + i * 138;
+            var bg:Quad = new Quad(572,130,i % 2 == 0 ? 2175290 : 1846063);
+            bg.touchable = false;
+            row.addChild(bg);
+            mPresetRows.addChild(row);
+            presetText(row,"阵容"+(i+1),10,2,84,28,20,16766464);
+            var equipmentCount:int = 0;
+            var dnCount:int = 0;
+            if(preset)
+            {
+               for each(var group:Array in preset.as_equips)
+                  for each(var eqid:* in group) if(eqid) equipmentCount++;
+               for each(var binding:* in preset.dn_bindings) if(binding) dnCount++;
+            }
+            presetText(row,preset ? "装备 "+equipmentCount+"  ·  德诺阵 "+dnCount : "尚未保存",94,3,240,26,15,11978439);
+            presetButton(row,preset ? "覆盖保存" : "保存当前","save:"+(i+1),336,2,!mPresetBusy);
+            presetButton(row,"载入","load:"+(i+1),414,2,preset != null && !mPresetBusy);
+            presetButton(row,"清空","delete:"+(i+1),492,2,preset != null && !mPresetBusy);
+            for(var j:int = 0; j < 5; j++)
+            {
+               var hero:Object = preset && preset.preview && j < preset.preview.length ? preset.preview[j] : null;
+               var x:int = 12 + j * 112;
+               var frame:Quad = new Quad(72,72,hero ? 4213081 : 1251098);
+               frame.x = x+10;
+               frame.y = 36;
+               frame.touchable = false;
+               row.addChild(frame);
+               var name:String = "空位";
+               if(hero)
+               {
+                  var owned:Object = GlobalData.$userData.avatars[hero.id];
+                  var aid:String = owned && owned.aid ? String(owned.aid).split("|")[0] : String(hero.aid);
+                  var cfg:Object = GlobalFunction.getAvatarCfg(aid);
+                  var icon:Image = GlobalFunction.getAvatarIcon(cfg && cfg.res ? String(cfg.res) : aid);
+                  icon.width = icon.height = 68;
+                  icon.x = x+12;
+                  icon.y = 38;
+                  icon.alpha = owned ? 1 : 0.35;
+                  row.addChild(icon);
+                  name = owned && cfg ? String(cfg.name) : String(hero.name)+"（缺失）";
+                  if(j == 0)
+                  {
+                     var captain:Quad = new Quad(42,20,15115822);
+                     captain.x = x+10;
+                     captain.y = 36;
+                     captain.touchable = false;
+                     row.addChild(captain);
+                     presetText(row,"队长",x+13,36,38,20,14,1449514);
+                  }
+               }
+               presetText(row,name,x,108,108,22,14,hero ? 16777215 : 8425111);
+            }
+         }
+         presetText(mPresetRows,mPresetBusy ? "正在保存或载入，请稍候…" : mPresetNotice,22,635,556,40,16,11978439);
+      }
+
+      private function onPresetCommand(event:Event) : void
+      {
+         if(mPresetBusy) return;
+         if(presetPending())
+         {
+            mPresetNotice = "配队操作尚未完成，请稍后重试。";
+            renderTeamPresets();
+            return;
+         }
+         var command:Array = String(event.currentTarget.name).split(":");
+         var method:String = "user.team_preset_"+command[0];
+         var slot:int = int(command[1]);
+         var uid:String = String(GlobalData.$userData.uid);
+         var generation:int = mPresetGeneration;
+         var owner:PanelCenterMain = this;
+         var params:Object = {"slot":slot};
+         mPresetBusy = true;
+         renderTeamPresets();
+         SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",onPresetError);
+         SendAndSelect.sendAndSelectService(method,params,function(receipt:Object):void
+         {
+            if(!GlobalData.$userData || String(GlobalData.$userData.uid) != uid) return;
+            if(method == "user.team_preset_load")
+            {
+               GlobalData.$tempTeamID = int(GlobalData.$userData.attrs.team_num);
+               GlobalData.$tempTeam = GlobalData.$userData.team[GlobalData.$tempTeamID];
+               GlobalFunction.formateTeamToObj();
+               GlobalData.$tempTeamPowerTemp = GlobalFunction.getTeamPower(GlobalData.$userData.team[0]);
+               GlobalData.$mEventDispatcher.dispatchEventWith("update_dn_team_ui");
+               GlobalData.$mEventDispatcher.dispatchEventWith("update_team_power");
+               GlobalData.$mEventDispatcher.dispatchEventWith("update_center_main_teamset");
+            }
+            if(generation != owner.mPresetGeneration || !owner.mPresetPopup) return;
+            SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",owner.onPresetError);
+            owner.mPresetBusy = false;
+            owner.mPresetActionID = "";
+            owner.mPresetNotice = "阵容"+slot+(command[0] == "save" ? "已保存。" : command[0] == "load" ? "已载入，英雄、装备和德诺阵已同步。" : "已清空。");
+            owner.renderTeamPresets();
+         });
+         mPresetActionID = String(params.actionID);
+      }
+
+      private function onPresetError(event:NetEvent) : void
+      {
+         var error:Object = event.data;
+         var receipt:Object = error && error.profile_receipt ? error.profile_receipt : error;
+         if(!receipt || !receipt.params || String(receipt.params.actionID) != mPresetActionID) return;
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onPresetError);
+         mPresetBusy = false;
+         mPresetActionID = "";
+         mPresetNotice = error.profile_sync_error ? "服务器操作已返回，数据同步失败，请重新登录确认。" : "操作未完成，当前配队保持不变。";
+         renderTeamPresets();
+      }
+
       private function checkBoosTag() : void
       {
          var _loc1_:Array = GlobalData.$mConfig_simple.wager_avatar as Array;

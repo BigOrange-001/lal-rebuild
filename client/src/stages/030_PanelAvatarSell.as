@@ -15,12 +15,98 @@ package com.meng52.game.ui.screen
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.Tools;
    import flash.utils.getQualifiedClassName;
+   import starling.display.Sprite;
    import starling.events.Event;
    
    public class PanelAvatarSell extends PanelCenterMainAvatar
    {
 
       public static const SELL_BATCH_MAX:int = 100;
+
+      public static function createRosterFilters(state:Object, refresh:Function, width:Number) : Sprite
+      {
+         var bar:Sprite = new Sprite();
+         var quality:LOL_Scale9Button = new LOL_Scale9Button("",140,30,"UI_btn_enterGame_0_0000");
+         var order:LOL_Scale9Button = new LOL_Scale9Button("",150,30,"UI_btn_enterGame_0_0000");
+         var direction:LOL_Scale9Button = new LOL_Scale9Button("",110,30,"UI_btn_enterGame_0_0000");
+         var labels:Array = ["全部","灰","白","绿","蓝","紫","橙","红"];
+         var orders:Array = ["默认排序","按等级","按上阵情况"];
+         var repaint:Function = function():void
+         {
+            quality.text = "品质："+labels[int(state.quality)];
+            order.text = orders[int(state.order)];
+            direction.text = state.descending ? "降序 ↓" : "升序 ↑";
+         };
+         quality.x = (width-412)*0.5;
+         order.x = quality.x+146;
+         direction.x = order.x+156;
+         for each(var button:LOL_Scale9Button in [quality,order,direction])
+         {
+            button.fontSize = 17;
+            bar.addChild(button);
+         }
+         quality.addEventListener("triggered",function(event:Event):void
+         {
+            state.quality = (int(state.quality)+1)%8;
+            repaint();refresh();
+         });
+         order.addEventListener("triggered",function(event:Event):void
+         {
+            state.order = (int(state.order)+1)%3;
+            repaint();refresh();
+         });
+         direction.addEventListener("triggered",function(event:Event):void
+         {
+            state.descending = !state.descending;
+            repaint();refresh();
+         });
+         repaint();
+         return bar;
+      }
+
+      public static function filterRosterRows(rows:Array, state:Object) : Array
+      {
+         var result:Array = [];
+         var ranks:Object = {};
+         var profile:Object = GlobalData.$userData;
+         var member:Object;
+         var node:Object;
+         if(profile && profile.attrs && profile.attrs.dn)
+         {
+            for each(node in profile.attrs.dn)
+            {
+               if(node is Array && node.length > 1 && node[1] != null) ranks[String(node[1])] = 2;
+            }
+         }
+         var main:Array = state.previewTeam is Array ? state.previewTeam as Array : (profile && profile.team ? profile.team[0] as Array : null);
+         if(main)
+         {
+            for each(member in main) if(member != null) ranks[String(member)] = 3;
+         }
+         for each(var row:Object in rows)
+         {
+            if(!row || row.id == null) continue;
+            var id:String = String(row.id);
+            var base:String = row.aid ? String(row.aid).split("|")[0] : id.split("|")[0];
+            var parts:Array = base.split("_");
+            var star:int = parts.length > 2 ? int(parts[2]) : int(row.star);
+            if(int(state.quality) == 0 || star == int(state.quality)) result.push(row);
+         }
+         if(int(state.order) > 0)
+         {
+            result.sort(function(a:Object,b:Object):int
+            {
+               var av:Number = int(state.order) == 1 ? Number(a.lv || 1) : (ranks[String(a.id)] || 1);
+               var bv:Number = int(state.order) == 1 ? Number(b.lv || 1) : (ranks[String(b.id)] || 1);
+               if(av != bv) return (av > bv ? 1 : -1)*(state.descending ? -1 : 1);
+               var aid:String = String(a.id);
+               var bid:String = String(b.id);
+               return aid < bid ? -1 : (aid > bid ? 1 : 0);
+            });
+         }
+         else if(!state.descending) result.reverse();
+         return result;
+      }
       
       public static var $tabBarSelectedIndex:int = 0;
       
@@ -535,7 +621,7 @@ package com.meng52.game.ui.screen
             if(GlobalFunction.checkSearchTypeByType(_loc6_,this.mTabBar.selectedIndex) || GlobalData.$tempSell.indexOf(_loc6_) > -1 && GlobalFunction.checkSearchTypeByType(_loc6_,this.mTabBar.selectedIndex))
             {
                _loc1_ = new Avatar(_loc6_);
-               _loc9_ = _loc3_[_loc10_];
+               _loc9_ = Tools.clone(_loc3_[_loc10_]);
                _loc9_["id"] = _loc6_;
                _loc9_["sort_1"] = _loc1_.getSellValue();
                _loc9_["lock"] = _loc7_ || _loc5_ ? 1 : 0;

@@ -153,9 +153,9 @@ class ReferenceBattleActionTests(unittest.TestCase):
                     hits = []
                     injured = battle._injured
 
-                    def record_hit(target, amount, damage_type=0):
+                    def record_hit(target, amount, damage_type=0, source=None):
                         hits.append((target["line"], amount, damage_type))
-                        return injured(target, amount, damage_type)
+                        return injured(target, amount, damage_type, source=source)
 
                     battle._injured = record_hit
                     self.assertTrue(battle._apply_native_skill(caster, enemy_side))
@@ -408,7 +408,7 @@ class ReferenceBattleActionTests(unittest.TestCase):
         self.assertEqual(summoned['aid'], 'A_2003_3')
         self.assertEqual(summoned['skill']['skid'], 'S_9002_2')
 
-    def test_summons_use_authored_base_and_growth_not_owner_multipliers(self):
+    def test_summons_inherit_live_owner_panel_instead_of_template_growth(self):
         authored = {
             'A_2003_2': [3729.6,447.3,1073.8,128.8,385,46.2,464.8,56],
             'A_2018_2': [6393.6,766.8,1840.8,220.8,660,79.2,796.8,96],
@@ -438,7 +438,7 @@ class ReferenceBattleActionTests(unittest.TestCase):
                         pl = authored[aid]
                         self.assertEqual(self.config['avatar'][aid]['pl'][:8], pl)
                         self.assertEqual([summoned[k] for k in ('hp_max', 'ap', 'de_ph', 'de_ma')],
-                                         [int(pl[i]+pl[i+1]*(level-1)) for i in (0,2,4,6)])
+                                         [1000, 300, 70, 80])
                         self.assertEqual(summoned['hp'], summoned['hp_max'])
                         self.assertEqual(summoned['new_4attrs'], owner['new_4attrs'])
                         self.assertEqual(summoned['isme'], team == 1)
@@ -458,7 +458,7 @@ class ReferenceBattleActionTests(unittest.TestCase):
         summons = [unit for unit in battle.a if unit.get('_bounded_summon')]
         self.assertEqual(len(summons), 1)
 
-    def test_summon_base_stats_ignore_owner_buffs_but_copy_secondary_getters(self):
+    def test_summon_panel_includes_all_current_owner_buffs(self):
         owner = self.unit('A_1209_4', 1, 2200, hp=1000, attack=301)
         owner.update({'lv': 10, 'slv': 1, 'de_ph': 100, 'de_ma': 120,
                       'new_4attrs': {'hit': 11, 'flee': 12, 'crit': 13, 'tough': 14}})
@@ -472,7 +472,7 @@ class ReferenceBattleActionTests(unittest.TestCase):
         self.assertTrue(battle._apply_native_skill(owner, battle.b))
         summoned = battle.a[-1]
         self.assertEqual([summoned[k] for k in ('hp_max', 'ap', 'de_ph', 'de_ma')],
-                         [7755, 2233, 800, 968])
+                         [1000, 451, 180, 180])
         self.assertEqual(summoned['new_4attrs'], {'hit': 16, 'flee': 18, 'crit': 20, 'tough': 22})
 
     def test_real_summons_deal_damage_and_survive_an_ordinary_hit(self):
@@ -533,14 +533,16 @@ class ReferenceBattleActionTests(unittest.TestCase):
                            _native_skill_snapshot(self.config, 'S_201209_4'))
         self.assertEqual(battle.b[0]['hp'], 808)
 
-    def test_poison_tick_deals_twenty_percent_of_max_hp(self):
+    def test_poison_tick_deals_five_percent_with_poison_vulnerability(self):
         target = self.unit('A_1001_5', 2, 600, hp=10000)
-        battle = ReferenceBattle([], [target], config=self.config)
+        config = copy.deepcopy(self.config)
+        config['system_simple']['attack'][18] = .05
+        battle = ReferenceBattle([], [target], config=config)
         battle._add_buff(target, 'poison', 2, 0)
         battle._tick_buffs(target)
-        self.assertEqual(target['hp'], 8000)
+        self.assertEqual(target['hp'], 9400)
         battle._tick_buffs(target)
-        self.assertEqual(target['hp'], 6000)
+        self.assertEqual(target['hp'], 8800)
         self.assertNotIn('poison', target['_buffs'])
 
     def test_teemo_passive_cleanses_curse_and_root(self):

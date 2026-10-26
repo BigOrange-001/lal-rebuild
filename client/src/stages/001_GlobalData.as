@@ -668,7 +668,16 @@ package com.meng52.game.global
          }
          _data.avatar_soul = _profile.avatar_soul;
          _data.equip_soul = _profile.equip_soul;
+         var committedTempIndex:int = -1;
+         if(_data.team is Array)
+         {
+            for(var teamIndex:int = 0; teamIndex < _data.team.length; teamIndex++)
+            {
+               if($tempTeam === _data.team[teamIndex]) committedTempIndex = teamIndex;
+            }
+         }
          _data.team = _profile.team;
+         if(committedTempIndex >= 0 && committedTempIndex < _data.team.length) $tempTeam = _data.team[committedTempIndex];
          _data.fragment = _profile.fragment;
          if(_profile.hasOwnProperty("pending_pve"))
          {

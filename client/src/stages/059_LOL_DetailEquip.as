@@ -4,6 +4,7 @@ package com.meng52.game.ui.element
    import com.meng52.game.global.GlobalConfig;
    import com.meng52.game.global.GlobalData;
    import com.meng52.game.global.GlobalFunction;
+   import com.meng52.game.ui.element.LOL_Scale9Button;
    import com.meng52.game.global.GlobalLanguageStr;
    import com.meng52.game.global.GlobalTextStyle;
    import com.meng52.game.module.equip.Equip;
@@ -22,6 +23,23 @@ package com.meng52.game.ui.element
    
    public class LOL_DetailEquip extends Sprite
    {
+      private var mLockButton:LOL_Scale9Button;
+
+      private function refreshInventoryLock() : void
+      {
+         if(!stage || !mLockButton || !_data || !(_data is Object)) return;
+         var row:Object = GlobalData.$userData.my_equips[_data.id];
+         mLockButton.text = row && (row.lock || row.locked) ? "已上锁 · 解锁" : "上锁保护";
+         mLockButton.touchable = true;
+      }
+
+      private function toggleInventoryLock(event:Event) : void
+      {
+         var row:Object = GlobalData.$userData.my_equips[_data.id];
+         if(!row || !mLockButton) return;
+         mLockButton.touchable = false;
+         GlobalFunction.setInventoryLock("equipment",String(_data.id),!(row.lock || row.locked),refreshInventoryLock);
+      }
       
       private var _equip:Equip;
       
@@ -117,6 +135,16 @@ package com.meng52.game.ui.element
          else
          {
             equip();
+         }
+         if(!(_data is String) && _data && GlobalData.$userData.my_equips[_data.id])
+         {
+            mLockButton = new LOL_Scale9Button("",145,30,"UI_btn_enterGame_0_0000");
+            mLockButton.x = _width-165;
+            mLockButton.y = _iconBg.y+_iconBg.height+8;
+            mLockButton.fontSize = 17;
+            mLockButton.addEventListener("triggered",toggleInventoryLock);
+            addChild(mLockButton);
+            refreshInventoryLock();
          }
       }
       

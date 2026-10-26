@@ -32,7 +32,7 @@ _SCALE_TOKEN = re.compile(r"\{scale:([0-9.]+):([0-9.]+)\}")
 # limits, status flags and summon level ratios deliberately do not.
 _EXTRA_PATHS = {
     "armor": ((1,),), "attrup": ((1,),), "back": ((1,),),
-    "caster_hp_shield": ((1,),), "cure": ((1,),),
+    "caster_hp_shield": ((1,),), "caster_hp_heal": ((1,),), "cure": ((1,),),
     "dash_group_strike": ((3,),), "heal_missing_hp": ((1,),),
     "hp_shield": ((1,),), "kill_buff": ((2,),),
     "lethal_floor": ((3,),), "manual_dot": ((3,),),
@@ -43,12 +43,16 @@ _EXTRA_PATHS = {
     "target_hp_shield": ((1,),), "timed_stack": ((2,),),
     "weak": ((3,),), "weak_percent": ((3,),),
     "summon_turret": ((1,),),
+    "caster_ap_shield": ((1,),), "hitup": ((1,),), "fleeup": ((1,),),
+    "shield_followup": ((1,),), "heal_missing_hp_per_hero": ((1,), (2,)),
+    "battle_stack": ((2,),), "battle_stack_unconditional": ((2,),),
 }
 _STRUCTURAL = {
     "bless", "clone_normal", "dash", "dispel_good", "evil", "heal_damage_sum", "manual_ability",
     "move_self", "move_to_ally", "move_to_target_lane",
     "normal_on_hero_kill", "purify", "push_aoe", "recast_on_kill",
-    "select_target", "shield_dispel", "summon", "taunt",
+    "select_target", "shield_dispel", "summon", "taunt", "curse", "timed_bless",
+    "pull", "pull_group", "move_to_target", "focus_fire",
 }
 # Base paths cover the existing damage and DOT operator families.  The
 # supplemental list above covers their independent healing/buff magnitudes.
@@ -105,19 +109,19 @@ def _numeric(value, sid: str, action_index: int, path: tuple[int, ...]) -> float
     return value
 
 
-def _update_growth(row: dict, scaled: set[tuple[int, ...]]) -> None:
+def _update_growth(row: dict, scaled: set[tuple[int, ...]], factor: float = FACTOR) -> None:
     upgrades = row.get("skillUp")
     if isinstance(upgrades, list) and upgrades:
         if isinstance(upgrades[0], list):
             for entry in upgrades:
                 if isinstance(entry, list) and len(entry) >= 3 and (int(entry[0]), int(entry[1])) in scaled:
-                    entry[2] = _number(entry[2] * FACTOR)
+                    entry[2] = _number(entry[2] * factor)
         elif len(upgrades) >= 2 and (int(upgrades[0]), 1) in scaled:
-            upgrades[1] = _number(upgrades[1] * FACTOR)
+            upgrades[1] = _number(upgrades[1] * factor)
     for entry in row.get("skillUpPaths", []) or []:
         if isinstance(entry, list) and len(entry) >= 3 and isinstance(entry[1], list):
             if (int(entry[0]), *map(int, entry[1])) in scaled:
-                entry[2] = _number(entry[2] * FACTOR)
+                entry[2] = _number(entry[2] * factor)
 
 
 def _update_text(row: dict, changes: dict[str, set[str]], unchanged: set[str]) -> None:
@@ -140,7 +144,7 @@ def _update_text(row: dict, changes: dict[str, set[str]], unchanged: set[str]) -
         row[key] = pieces[0] + "".join(token + piece for token, piece in zip(tokens, pieces[1:]))
 
 
-def _update_manual_text(row: dict, kind: str) -> None:
+def _update_manual_text(row: dict, kind: str, factor: float = FACTOR) -> None:
     """Scale audited manual magnitudes, leaving mechanics and conditions."""
     if kind not in _MANUAL_DAMAGE_PERCENT_INDICES:
         raise ValueError(f"unreviewed captain manual ability: {kind}")
@@ -154,7 +158,7 @@ def _update_manual_text(row: dict, kind: str) -> None:
             nonlocal index
             selected = index in positions
             index += 1
-            return _pct(_number(float(match.group(1)) * FACTOR / 100)) if selected else match.group(0)
+            return _pct(_number(float(match.group(1)) * factor / 100)) if selected else match.group(0)
 
         row["info"] = _PERCENT.sub(replace_info, row["info"])
         if positions | preserved != set(range(index)):
@@ -169,7 +173,7 @@ def _update_manual_text(row: dict, kind: str) -> None:
                 if match.group(2) != label:
                     return match.group(0)
                 seen += 1
-                value = _number(float(match.group(1)) * FACTOR)
+                value = _number(float(match.group(1)) * factor)
                 return f"{value:g}点{label}"
 
             row["info"] = _FLAT_STAT.sub(replace_flat, row["info"])
@@ -185,12 +189,12 @@ def _update_manual_text(row: dict, kind: str) -> None:
             index += 1
             if not selected:
                 return match.group(0)
-            return f"{{scale:{_number(float(match.group(1)) * FACTOR)}:{_number(float(match.group(2)) * FACTOR)}}}"
+            return f"{{scale:{_number(float(match.group(1)) * factor)}:{_number(float(match.group(2)) * factor)}}}"
 
         row["rankInfoTemplate"] = _SCALE_TOKEN.sub(replace_scale, template)
 
 
-def _scale_captain_row(source: dict) -> tuple[dict, Counter, dict]:
+def _scale_captain_row(source: dict, factor: float = FACTOR, *, scale_displacement: bool = True) -> tuple[dict, Counter, dict]:
     row = copy.deepcopy(source)
     sid = row["id"]
     counts = Counter()
@@ -210,6 +214,8 @@ def _scale_captain_row(source: dict) -> tuple[dict, Counter, dict]:
         counts[kind] += 1
         damage, steal, defense = _action_paths(action)
         paths = set(damage + defense + list(_EXTRA_PATHS.get(kind, ())))
+        if kind == "push" and not scale_displacement:
+            paths.discard((1,))
         if kind == "manual_ability":
             if len(action) < 3 or not isinstance(action[1], str):
                 raise ValueError(f"malformed captain manual ability: {sid} {index}")
@@ -224,7 +230,7 @@ def _scale_captain_row(source: dict) -> tuple[dict, Counter, dict]:
             old = _numeric(_get(action, path), sid, index, path)
             if old == 0:
                 continue
-            new = _number(old * FACTOR)
+            new = _number(old * factor)
             _set(action, path, new)
             scaled.add((index, *path))
             changes[_pct(old)].add(_pct(new))
@@ -235,34 +241,34 @@ def _scale_captain_row(source: dict) -> tuple[dict, Counter, dict]:
             unchanged.add(_pct(old))
     if len(manual_kinds) > 1:
         raise ValueError(f"multiple captain manual abilities: {sid}")
-    _update_growth(row, scaled)
+    _update_growth(row, scaled, factor)
     chain_dot = row.get("chainDot")
     if isinstance(chain_dot, list) and len(chain_dot) >= 2:
         old = _numeric(chain_dot[1], sid, -1, (1,))
-        chain_dot[1] = _number(old * FACTOR)
+        chain_dot[1] = _number(old * factor)
         changes[_pct(old)].add(_pct(chain_dot[1]))
         counts["chainDot"] += 1
     if manual_kinds:
         old_factor = row.get("manualDamageMultiplier", 1)
         _numeric(old_factor, sid, -1, ())
-        row["manualDamageMultiplier"] = _number(old_factor * FACTOR)
+        row["manualDamageMultiplier"] = _number(old_factor * factor)
         old_effect = row.get("manualEffectMultiplier", 1)
         _numeric(old_effect, sid, -1, ())
-        row["manualEffectMultiplier"] = _number(old_effect * FACTOR)
-        _update_manual_text(row, manual_kinds[0])
+        row["manualEffectMultiplier"] = _number(old_effect * factor)
+        _update_manual_text(row, manual_kinds[0], factor)
     else:
         _update_text(row, changes, unchanged)
     if generic_summon:
         # Native code scales spawned unit combat stats through this field;
         # changing action[1] would change summon level instead.
-        row["captainSummonMultiplier"] = FACTOR
+        row["captainSummonMultiplier"] = _number(row.get("captainSummonMultiplier", 1) * factor)
     clone_action = any(a[0] == "clone_normal" for a in actions)
     clone_policy = row.get("manualClonePolicy")
     if clone_action and not isinstance(clone_policy, dict):
         raise ValueError(f"captain clone has no stat policy: {sid}")
     if clone_action:
         old = _numeric(clone_policy["panelStatRatio"], sid, -1, ())
-        clone_policy["panelStatRatio"] = _number(old * FACTOR)
+        clone_policy["panelStatRatio"] = _number(old * factor)
         changes[_pct(old)].add(_pct(clone_policy["panelStatRatio"]))
         _update_text(row, changes, unchanged)
     notes = {"derived_heals": derived_heals,

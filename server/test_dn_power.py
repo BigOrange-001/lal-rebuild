@@ -10,7 +10,7 @@ from gameplay_roster import GameplayRosterEquipment
 
 
 class DnPowerTest(unittest.TestCase):
-    def test_weighted_bound_snapshot_ap_uses_guild_research_before_dn_floor(self):
+    def test_weighted_bound_current_ap_uses_guild_research_before_dn_floor(self):
         cfg = json.loads((Path(__file__).resolve().parents[1] /
                           "config/reconstruction/full-config.json").read_text(encoding="utf-8"))
         roster = GameplayRosterEquipment(None, cfg)
@@ -22,13 +22,15 @@ class DnPowerTest(unittest.TestCase):
             "attrs": {"dn": {"1": [2, iid, [90, 0, 0, 0, 0, 1]]},
                       "guild_graduate_skill": {"guild_attack": 1}},
         }
-        # AIR PanelDetailDN.getDNAttrsAllValue with the same authored row
-        # yields AP 70. Without guild research it yields 68. The receiver
-        # applies research separately after adding this flat DN amount.
-        self.assertEqual(roster._destiny_team_bonuses(profile)["ap"], 70)
+        # A legacy snapshot at level 90 must not hide the owned hero's
+        # current level 99. Guild research is applied before the DN floor.
+        self.assertEqual(roster._destiny_team_bonuses(profile)["ap"], 75)
+        refreshed = copy.deepcopy(profile)
+        refreshed['attrs']['dn']['1'] = [2, iid]
+        self.assertEqual(roster._destiny_team_bonuses(profile), roster._destiny_team_bonuses(refreshed))
         no_research = copy.deepcopy(profile)
         no_research["attrs"]["guild_graduate_skill"] = {}
-        self.assertEqual(roster._destiny_team_bonuses(no_research)["ap"], 68)
+        self.assertEqual(roster._destiny_team_bonuses(no_research)["ap"], 74)
 
 
 if __name__ == "__main__":

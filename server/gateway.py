@@ -16,8 +16,20 @@ from equipment_capacity import apply_equipment_capacity
 from equipment_upgrade_cost import apply_equipment_upgrade_config
 from captain_timing import apply_captain_timing
 from upstream_skill_priority import apply_upstream_skill_priority
+from summon_panel_103 import apply_summon_panel_config
 from battle_status_effects import apply_battle_status_effects
 from halo_progression import apply_halo_progression
+from hero_skills_103 import apply_hero_skills_103, finalize_hero_skills_103
+from talent_stats_103 import apply_talent_stats_103
+from hero_balance_103 import apply_hero_balance_103
+from dot_rules_103 import apply_dot_rules_103
+from tower_rewards_103 import apply_tower_rewards_103
+from material_attempts_103 import apply_material_attempts_103
+from ancient_trial_103 import apply_ancient_trial_103
+from cat_katarina_103 import apply_cat_katarina_103
+from polar_ashe_103 import apply_polar_ashe_103
+from santa_veigar_103 import apply_santa_veigar_103
+from nurse_akali_103 import apply_nurse_akali_103
 from recruit_exchange import apply_recruit_exchange_config
 from help_pages import render_help,render_notice
 
@@ -110,7 +122,34 @@ class Backend:
    apply_captain_timing(self.config)
    apply_upstream_skill_priority(self.config)
    apply_battle_status_effects(self.config)
+   apply_summon_panel_config(self.config)
    self.config=apply_halo_progression(self.config)
+   from skill_books import apply_equipment_calibration
+   apply_equipment_calibration(self.config)
+   apply_hero_skills_103(self.config)
+   apply_talent_stats_103(self.config)
+   apply_hero_balance_103(self.config)
+   finalize_hero_skills_103(self.config)
+   apply_dot_rules_103(self.config)
+   apply_cat_katarina_103(self.config)
+   apply_polar_ashe_103(self.config)
+   apply_santa_veigar_103(self.config)
+   apply_nurse_akali_103(self.config)
+   from hero_packs_104 import apply_hero_packs_104
+   apply_hero_packs_104(self.config)
+   apply_tower_rewards_103(self.config)
+   apply_ancient_trial_103(self.config)
+   apply_material_attempts_103(self.config)
+   from power_balance_104 import apply_power_balance_104
+   apply_power_balance_104(self.config)
+   from resource_drops_104 import apply_resource_drops_104
+   apply_resource_drops_104(self.config)
+   from bonds_104 import apply_bonds_104
+   apply_bonds_104(self.config)
+   from equipment_bonds_104 import apply_equipment_bonds_104
+   apply_equipment_bonds_104(self.config)
+   from skill_output_104 import apply_skill_output_104
+   apply_skill_output_104(self.config)
    apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
   self.players=PlayerStore(self.db,self.config,self.clock)
   self.players.lock=self.lock

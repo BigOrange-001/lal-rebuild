@@ -1,0 +1,1257 @@
+{
+  "schema": "hero-tier-source-v1",
+  "source": "1.0.2版本英雄强度与T级表.xlsx",
+  "source_sha256": "355db969a2e27ce5224af51650e63d9ff77e10393425c3d0bd7c88cf514ed62c",
+  "heroes": [
+    {
+      "aid": "A_1226_6",
+      "name": "二郎真君赵信",
+      "quality": "橙卡",
+      "old_rank": 1,
+      "old_win_rate": 0.9903,
+      "old_draw_rate": 0.0024,
+      "tier": "T0",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1052_6",
+      "name": "菲兹",
+      "quality": "橙卡",
+      "old_rank": 2,
+      "old_win_rate": 0.7651,
+      "old_draw_rate": 0.0114,
+      "tier": "T0",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1310_6",
+      "name": "钢铁侠提莫",
+      "quality": "橙卡",
+      "old_rank": 3,
+      "old_win_rate": 0.7407,
+      "old_draw_rate": 0.0157,
+      "tier": "T0",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1219_6",
+      "name": "源计划亚索",
+      "quality": "橙卡",
+      "old_rank": 4,
+      "old_win_rate": 0.7112,
+      "old_draw_rate": 0.0242,
+      "tier": "T0",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1130_6",
+      "name": "菲奥娜",
+      "quality": "橙卡",
+      "old_rank": 5,
+      "old_win_rate": 0.7083,
+      "old_draw_rate": 0.0227,
+      "tier": "T0",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1040_6",
+      "name": "婕拉",
+      "quality": "橙卡",
+      "old_rank": 6,
+      "old_win_rate": 0.6912,
+      "old_draw_rate": 0.008,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1119_6",
+      "name": "亚索",
+      "quality": "橙卡",
+      "old_rank": 7,
+      "old_win_rate": 0.6874,
+      "old_draw_rate": 0.0249,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1108_6",
+      "name": "波比",
+      "quality": "橙卡",
+      "old_rank": 8,
+      "old_win_rate": 0.6452,
+      "old_draw_rate": 0.0335,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1026_6",
+      "name": "李青",
+      "quality": "橙卡",
+      "old_rank": 9,
+      "old_win_rate": 0.6336,
+      "old_draw_rate": 0.0247,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1009_5",
+      "name": "赵信",
+      "quality": "紫卡(橙模)",
+      "old_rank": 10,
+      "old_win_rate": 0.6233,
+      "old_draw_rate": 0.1048,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1030_6",
+      "name": "厄运小姐",
+      "quality": "橙卡",
+      "old_rank": 11,
+      "old_win_rate": 0.6202,
+      "old_draw_rate": 0.0178,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1134_6",
+      "name": "卡萨丁",
+      "quality": "橙卡",
+      "old_rank": 12,
+      "old_win_rate": 0.6163,
+      "old_draw_rate": 0.0226,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1133_6",
+      "name": "莫甘娜",
+      "quality": "橙卡",
+      "old_rank": 13,
+      "old_win_rate": 0.6137,
+      "old_draw_rate": 0.0311,
+      "tier": "T1",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1033_6",
+      "name": "伊芙琳",
+      "quality": "橙卡",
+      "old_rank": 14,
+      "old_win_rate": 0.5914,
+      "old_draw_rate": 0.019,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1228_6",
+      "name": "DJ娑娜",
+      "quality": "橙卡",
+      "old_rank": 15,
+      "old_win_rate": 0.5781,
+      "old_draw_rate": 0.1306,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1142_6",
+      "name": "千珏",
+      "quality": "橙卡",
+      "old_rank": 16,
+      "old_win_rate": 0.5548,
+      "old_draw_rate": 0.0298,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1128_6",
+      "name": "萨科",
+      "quality": "橙卡",
+      "old_rank": 17,
+      "old_win_rate": 0.5539,
+      "old_draw_rate": 0.0189,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1095_6",
+      "name": "基兰",
+      "quality": "橙卡",
+      "old_rank": 18,
+      "old_win_rate": 0.5497,
+      "old_draw_rate": 0.0254,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1090_6",
+      "name": "拉莫斯",
+      "quality": "橙卡",
+      "old_rank": 19,
+      "old_win_rate": 0.5452,
+      "old_draw_rate": 0.0276,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1081_6",
+      "name": "艾尼维亚",
+      "quality": "橙卡",
+      "old_rank": 20,
+      "old_win_rate": 0.5437,
+      "old_draw_rate": 0.0236,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1125_6",
+      "name": "吉格斯",
+      "quality": "橙卡",
+      "old_rank": 21,
+      "old_win_rate": 0.5401,
+      "old_draw_rate": 0.0192,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1135_6",
+      "name": "雷恩加尔",
+      "quality": "橙卡",
+      "old_rank": 22,
+      "old_win_rate": 0.538,
+      "old_draw_rate": 0.0209,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1015_5",
+      "name": "阿卡丽",
+      "quality": "紫卡(橙模)",
+      "old_rank": 23,
+      "old_win_rate": 0.5323,
+      "old_draw_rate": 0.0185,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1001_5",
+      "name": "盖伦",
+      "quality": "紫卡(橙模)",
+      "old_rank": 24,
+      "old_win_rate": 0.5322,
+      "old_draw_rate": 0.0576,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1024_6",
+      "name": "艾瑞莉娅",
+      "quality": "橙卡",
+      "old_rank": 25,
+      "old_win_rate": 0.5319,
+      "old_draw_rate": 0.0227,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1063_6",
+      "name": "卡西奥佩娅",
+      "quality": "橙卡",
+      "old_rank": 26,
+      "old_win_rate": 0.53,
+      "old_draw_rate": 0.0264,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1309_6",
+      "name": "超人提莫",
+      "quality": "橙卡",
+      "old_rank": 27,
+      "old_win_rate": 0.525,
+      "old_draw_rate": 0.0208,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1101_6",
+      "name": "雷克顿",
+      "quality": "橙卡",
+      "old_rank": 28,
+      "old_win_rate": 0.5213,
+      "old_draw_rate": 0.0388,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1096_6",
+      "name": "崔斯特",
+      "quality": "橙卡",
+      "old_rank": 29,
+      "old_win_rate": 0.5158,
+      "old_draw_rate": 0.0213,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1129_6",
+      "name": "猫女卡特琳娜",
+      "quality": "橙卡",
+      "old_rank": 30,
+      "old_win_rate": 0.5151,
+      "old_draw_rate": 0.0206,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1078_6",
+      "name": "希维尔",
+      "quality": "橙卡",
+      "old_rank": 31,
+      "old_win_rate": 0.5136,
+      "old_draw_rate": 0.0242,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1204_6",
+      "name": "苹果机器人布里茨",
+      "quality": "橙卡",
+      "old_rank": 32,
+      "old_win_rate": 0.5071,
+      "old_draw_rate": 0.026,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1106_6",
+      "name": "古拉加斯",
+      "quality": "橙卡",
+      "old_rank": 33,
+      "old_win_rate": 0.506,
+      "old_draw_rate": 0.0294,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1010_5",
+      "name": "卡特琳娜",
+      "quality": "紫卡(橙模)",
+      "old_rank": 34,
+      "old_win_rate": 0.5054,
+      "old_draw_rate": 0.0189,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1018_5",
+      "name": "慎",
+      "quality": "紫卡(橙模)",
+      "old_rank": 35,
+      "old_win_rate": 0.5054,
+      "old_draw_rate": 0.0837,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1217_6",
+      "name": "邪恶圣诞老人维嘉",
+      "quality": "橙卡",
+      "old_rank": 36,
+      "old_win_rate": 0.5015,
+      "old_draw_rate": 0.0205,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1223_6",
+      "name": "猎手薇恩",
+      "quality": "橙卡",
+      "old_rank": 37,
+      "old_win_rate": 0.5012,
+      "old_draw_rate": 0.0244,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1054_6",
+      "name": "希瓦娜",
+      "quality": "橙卡",
+      "old_rank": 38,
+      "old_win_rate": 0.5005,
+      "old_draw_rate": 0.0349,
+      "tier": "T2",
+      "group": "unchanged"
+    },
+    {
+      "aid": "A_1028_6",
+      "name": "泰达米尔",
+      "quality": "橙卡",
+      "old_rank": 39,
+      "old_win_rate": 0.4997,
+      "old_draw_rate": 0.0347,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1998_6",
+      "name": "大天使长",
+      "quality": "橙卡",
+      "old_rank": 40,
+      "old_win_rate": 0.4997,
+      "old_draw_rate": 0.0219,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1137_6",
+      "name": "莫德凯撒",
+      "quality": "橙卡",
+      "old_rank": 41,
+      "old_win_rate": 0.4995,
+      "old_draw_rate": 0.0374,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1113_6",
+      "name": "亚托克斯",
+      "quality": "橙卡",
+      "old_rank": 42,
+      "old_win_rate": 0.4991,
+      "old_draw_rate": 0.048,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1013_5",
+      "name": "布里茨",
+      "quality": "紫卡(橙模)",
+      "old_rank": 43,
+      "old_win_rate": 0.498,
+      "old_draw_rate": 0.0233,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1053_6",
+      "name": "格雷福斯",
+      "quality": "橙卡",
+      "old_rank": 44,
+      "old_win_rate": 0.4971,
+      "old_draw_rate": 0.0196,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1004_5",
+      "name": "索拉卡",
+      "quality": "紫卡(橙模)",
+      "old_rank": 45,
+      "old_win_rate": 0.4917,
+      "old_draw_rate": 0.1165,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1222_6",
+      "name": "超级伊泽瑞尔",
+      "quality": "橙卡",
+      "old_rank": 46,
+      "old_win_rate": 0.4914,
+      "old_draw_rate": 0.0254,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1020_5",
+      "name": "蕾欧娜",
+      "quality": "紫卡(橙模)",
+      "old_rank": 47,
+      "old_win_rate": 0.49,
+      "old_draw_rate": 0.0257,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1214_6",
+      "name": "逆转裁判崔斯特",
+      "quality": "橙卡",
+      "old_rank": 48,
+      "old_win_rate": 0.4898,
+      "old_draw_rate": 0.0231,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1060_6",
+      "name": "拉克丝",
+      "quality": "橙卡",
+      "old_rank": 49,
+      "old_win_rate": 0.4894,
+      "old_draw_rate": 0.0287,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1218_6",
+      "name": "幽魂费德提克",
+      "quality": "橙卡",
+      "old_rank": 50,
+      "old_win_rate": 0.4889,
+      "old_draw_rate": 0.0235,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1068_6",
+      "name": "布兰德",
+      "quality": "橙卡",
+      "old_rank": 51,
+      "old_win_rate": 0.4855,
+      "old_draw_rate": 0.0214,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1094_6",
+      "name": "迦娜",
+      "quality": "橙卡",
+      "old_rank": 52,
+      "old_win_rate": 0.4834,
+      "old_draw_rate": 0.0523,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1211_6",
+      "name": "沙漠治安官凯瑟琳",
+      "quality": "橙卡",
+      "old_rank": 53,
+      "old_win_rate": 0.4828,
+      "old_draw_rate": 0.0233,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1014_5",
+      "name": "黑默丁格",
+      "quality": "紫卡(橙模)",
+      "old_rank": 54,
+      "old_win_rate": 0.4803,
+      "old_draw_rate": 0.0186,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1045_6",
+      "name": "璐璐",
+      "quality": "橙卡",
+      "old_rank": 55,
+      "old_win_rate": 0.4795,
+      "old_draw_rate": 0.0373,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1008_5",
+      "name": "贾克斯",
+      "quality": "紫卡(橙模)",
+      "old_rank": 56,
+      "old_win_rate": 0.4779,
+      "old_draw_rate": 0.035,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1006_5",
+      "name": "娑娜",
+      "quality": "紫卡(橙模)",
+      "old_rank": 57,
+      "old_win_rate": 0.4754,
+      "old_draw_rate": 0.0552,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1019_5",
+      "name": "德莱厄斯",
+      "quality": "紫卡(橙模)",
+      "old_rank": 58,
+      "old_win_rate": 0.4742,
+      "old_draw_rate": 0.027,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1079_6",
+      "name": "费德提克",
+      "quality": "橙卡",
+      "old_rank": 59,
+      "old_win_rate": 0.4735,
+      "old_draw_rate": 0.0224,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1049_6",
+      "name": "瑟庄妮",
+      "quality": "橙卡",
+      "old_rank": 60,
+      "old_win_rate": 0.4727,
+      "old_draw_rate": 0.022,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1132_6",
+      "name": "劫",
+      "quality": "橙卡",
+      "old_rank": 61,
+      "old_win_rate": 0.472,
+      "old_draw_rate": 0.0192,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1023_6",
+      "name": "泰隆",
+      "quality": "橙卡",
+      "old_rank": 62,
+      "old_win_rate": 0.4708,
+      "old_draw_rate": 0.025,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1073_6",
+      "name": "努努",
+      "quality": "橙卡",
+      "old_rank": 63,
+      "old_win_rate": 0.4708,
+      "old_draw_rate": 0.0209,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1221_6",
+      "name": "新年安妮",
+      "quality": "橙卡",
+      "old_rank": 64,
+      "old_win_rate": 0.4678,
+      "old_draw_rate": 0.0238,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1213_6",
+      "name": "足球先生伊泽瑞尔",
+      "quality": "橙卡",
+      "old_rank": 65,
+      "old_win_rate": 0.4668,
+      "old_draw_rate": 0.0239,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1131_6",
+      "name": "娜美",
+      "quality": "橙卡",
+      "old_rank": 66,
+      "old_win_rate": 0.4657,
+      "old_draw_rate": 0.0921,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1904_5",
+      "name": "伊芙蕾雅",
+      "quality": "紫卡(橙模)",
+      "old_rank": 67,
+      "old_win_rate": 0.4638,
+      "old_draw_rate": 0.0242,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1017_5",
+      "name": "潘森",
+      "quality": "紫卡(橙模)",
+      "old_rank": 68,
+      "old_win_rate": 0.4629,
+      "old_draw_rate": 0.0265,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1082_6",
+      "name": "提莫",
+      "quality": "橙卡",
+      "old_rank": 69,
+      "old_win_rate": 0.4627,
+      "old_draw_rate": 0.0222,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1127_6",
+      "name": "乐芙兰",
+      "quality": "橙卡",
+      "old_rank": 70,
+      "old_win_rate": 0.4621,
+      "old_draw_rate": 0.0216,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1074_6",
+      "name": "阿木木",
+      "quality": "橙卡",
+      "old_rank": 71,
+      "old_win_rate": 0.4605,
+      "old_draw_rate": 0.0235,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1136_6",
+      "name": "卢锡安",
+      "quality": "橙卡",
+      "old_rank": 72,
+      "old_win_rate": 0.4575,
+      "old_draw_rate": 0.0231,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1201_6",
+      "name": "黄金骑士盖伦",
+      "quality": "橙卡",
+      "old_rank": 73,
+      "old_win_rate": 0.4573,
+      "old_draw_rate": 0.0268,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1905_5",
+      "name": "Miss大小姐",
+      "quality": "紫卡(橙模)",
+      "old_rank": 74,
+      "old_win_rate": 0.457,
+      "old_draw_rate": 0.023,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1029_6",
+      "name": "安妮",
+      "quality": "橙卡",
+      "old_rank": 75,
+      "old_win_rate": 0.4567,
+      "old_draw_rate": 0.0254,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1022_6",
+      "name": "阿狸",
+      "quality": "橙卡",
+      "old_rank": 76,
+      "old_win_rate": 0.4563,
+      "old_draw_rate": 0.0208,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1216_6",
+      "name": "联盟之喙艾维尼亚",
+      "quality": "橙卡",
+      "old_rank": 77,
+      "old_win_rate": 0.4539,
+      "old_draw_rate": 0.0267,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1202_6",
+      "name": "极地射手艾希",
+      "quality": "橙卡",
+      "old_rank": 78,
+      "old_win_rate": 0.4533,
+      "old_draw_rate": 0.0229,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1210_6",
+      "name": "兔女郎瑞雯",
+      "quality": "橙卡",
+      "old_rank": 79,
+      "old_win_rate": 0.4531,
+      "old_draw_rate": 0.0273,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1086_6",
+      "name": "黛安娜",
+      "quality": "橙卡",
+      "old_rank": 80,
+      "old_win_rate": 0.4524,
+      "old_draw_rate": 0.0214,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1083_6",
+      "name": "崔丝塔娜",
+      "quality": "橙卡",
+      "old_rank": 81,
+      "old_win_rate": 0.4515,
+      "old_draw_rate": 0.0192,
+      "tier": "T3",
+      "group": "T3-mid"
+    },
+    {
+      "aid": "A_1093_6",
+      "name": "塔里克",
+      "quality": "橙卡",
+      "old_rank": 82,
+      "old_win_rate": 0.4491,
+      "old_draw_rate": 0.0552,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1215_6",
+      "name": "龙的传人李青",
+      "quality": "橙卡",
+      "old_rank": 83,
+      "old_win_rate": 0.4466,
+      "old_draw_rate": 0.0294,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1103_6",
+      "name": "马尔扎哈",
+      "quality": "橙卡",
+      "old_rank": 84,
+      "old_win_rate": 0.4451,
+      "old_draw_rate": 0.0213,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1123_6",
+      "name": "纳尔",
+      "quality": "橙卡",
+      "old_rank": 85,
+      "old_win_rate": 0.4431,
+      "old_draw_rate": 0.0223,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1126_6",
+      "name": "辛德拉",
+      "quality": "橙卡",
+      "old_rank": 86,
+      "old_win_rate": 0.44,
+      "old_draw_rate": 0.0243,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1011_5",
+      "name": "普朗克船长",
+      "quality": "紫卡(橙模)",
+      "old_rank": 87,
+      "old_win_rate": 0.4397,
+      "old_draw_rate": 0.0224,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1208_6",
+      "name": "护士阿卡丽",
+      "quality": "橙卡",
+      "old_rank": 88,
+      "old_win_rate": 0.4377,
+      "old_draw_rate": 0.0203,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1007_5",
+      "name": "嘉文四世",
+      "quality": "紫卡(橙模)",
+      "old_rank": 89,
+      "old_win_rate": 0.4354,
+      "old_draw_rate": 0.0319,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1207_6",
+      "name": "偶像歌手阿狸",
+      "quality": "橙卡",
+      "old_rank": 90,
+      "old_win_rate": 0.4331,
+      "old_draw_rate": 0.0282,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1117_6",
+      "name": "丽桑卓",
+      "quality": "橙卡",
+      "old_rank": 91,
+      "old_win_rate": 0.433,
+      "old_draw_rate": 0.0242,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1209_6",
+      "name": "兔宝宝提莫",
+      "quality": "橙卡",
+      "old_rank": 92,
+      "old_win_rate": 0.432,
+      "old_draw_rate": 0.0286,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1124_6",
+      "name": "阿兹尔",
+      "quality": "橙卡",
+      "old_rank": 93,
+      "old_win_rate": 0.424,
+      "old_draw_rate": 0.021,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1016_5",
+      "name": "凯南",
+      "quality": "紫卡(橙模)",
+      "old_rank": 94,
+      "old_win_rate": 0.4234,
+      "old_draw_rate": 0.0235,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1099_6",
+      "name": "图奇",
+      "quality": "橙卡",
+      "old_rank": 95,
+      "old_win_rate": 0.4223,
+      "old_draw_rate": 0.0243,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1212_6",
+      "name": "粽子少女",
+      "quality": "橙卡",
+      "old_rank": 96,
+      "old_win_rate": 0.4196,
+      "old_draw_rate": 0.0217,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1077_6",
+      "name": "墨菲特",
+      "quality": "橙卡",
+      "old_rank": 97,
+      "old_win_rate": 0.418,
+      "old_draw_rate": 0.026,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1098_6",
+      "name": "凯尔萨斯",
+      "quality": "橙卡",
+      "old_rank": 98,
+      "old_win_rate": 0.4141,
+      "old_draw_rate": 0.0245,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1097_6",
+      "name": "卡兹克",
+      "quality": "橙卡",
+      "old_rank": 99,
+      "old_win_rate": 0.4121,
+      "old_draw_rate": 0.0219,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1032_6",
+      "name": "锤石",
+      "quality": "橙卡",
+      "old_rank": 100,
+      "old_win_rate": 0.4114,
+      "old_draw_rate": 0.0292,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1206_6",
+      "name": "觅心猎手薇恩",
+      "quality": "橙卡",
+      "old_rank": 101,
+      "old_win_rate": 0.4097,
+      "old_draw_rate": 0.0238,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1203_6",
+      "name": "恶魔男爵瑞兹",
+      "quality": "橙卡",
+      "old_rank": 102,
+      "old_win_rate": 0.4096,
+      "old_draw_rate": 0.0252,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1909_5",
+      "name": "小智",
+      "quality": "紫卡(橙模)",
+      "old_rank": 103,
+      "old_win_rate": 0.406,
+      "old_draw_rate": 0.0286,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1003_5",
+      "name": "雷兹",
+      "quality": "紫卡(橙模)",
+      "old_rank": 104,
+      "old_win_rate": 0.4037,
+      "old_draw_rate": 0.0229,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1112_6",
+      "name": "扎克",
+      "quality": "橙卡",
+      "old_rank": 105,
+      "old_win_rate": 0.4033,
+      "old_draw_rate": 0.0288,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1115_6",
+      "name": "金克斯",
+      "quality": "橙卡",
+      "old_rank": 106,
+      "old_win_rate": 0.4016,
+      "old_draw_rate": 0.0241,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1012_5",
+      "name": "易大师",
+      "quality": "紫卡(橙模)",
+      "old_rank": 107,
+      "old_win_rate": 0.4007,
+      "old_draw_rate": 0.0278,
+      "tier": "T3",
+      "group": "T3-low"
+    },
+    {
+      "aid": "A_1071_6",
+      "name": "奥利安娜",
+      "quality": "橙卡",
+      "old_rank": 108,
+      "old_win_rate": 0.3979,
+      "old_draw_rate": 0.0245,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1021_5",
+      "name": "伊泽瑞尔",
+      "quality": "紫卡(橙模)",
+      "old_rank": 109,
+      "old_win_rate": 0.3973,
+      "old_draw_rate": 0.0303,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1143_6",
+      "name": "俄洛伊",
+      "quality": "橙卡",
+      "old_rank": 110,
+      "old_win_rate": 0.3954,
+      "old_draw_rate": 0.0284,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1002_5",
+      "name": "艾希",
+      "quality": "紫卡(橙模)",
+      "old_rank": 111,
+      "old_win_rate": 0.3911,
+      "old_draw_rate": 0.0288,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1114_6",
+      "name": "敖兴",
+      "quality": "橙卡",
+      "old_rank": 112,
+      "old_win_rate": 0.3909,
+      "old_draw_rate": 0.023,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1027_6",
+      "name": "维嘉",
+      "quality": "橙卡",
+      "old_rank": 113,
+      "old_win_rate": 0.3876,
+      "old_draw_rate": 0.0285,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1041_6",
+      "name": "杰斯",
+      "quality": "橙卡",
+      "old_rank": 114,
+      "old_win_rate": 0.3832,
+      "old_draw_rate": 0.0276,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1025_6",
+      "name": "凯瑟琳",
+      "quality": "橙卡",
+      "old_rank": 115,
+      "old_win_rate": 0.3831,
+      "old_draw_rate": 0.0248,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1085_6",
+      "name": "阿里斯塔",
+      "quality": "橙卡",
+      "old_rank": 116,
+      "old_win_rate": 0.3821,
+      "old_draw_rate": 0.0258,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1903_5",
+      "name": "JY大魔王",
+      "quality": "紫卡(橙模)",
+      "old_rank": 117,
+      "old_win_rate": 0.379,
+      "old_draw_rate": 0.0304,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1120_6",
+      "name": "凯尔",
+      "quality": "橙卡",
+      "old_rank": 118,
+      "old_win_rate": 0.3783,
+      "old_draw_rate": 0.0243,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1005_5",
+      "name": "悟空",
+      "quality": "紫卡(橙模)",
+      "old_rank": 119,
+      "old_win_rate": 0.3754,
+      "old_draw_rate": 0.0234,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1105_6",
+      "name": "奈德丽",
+      "quality": "橙卡",
+      "old_rank": 120,
+      "old_win_rate": 0.3754,
+      "old_draw_rate": 0.0215,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1138_6",
+      "name": "塔姆肯奇",
+      "quality": "橙卡",
+      "old_rank": 121,
+      "old_win_rate": 0.3724,
+      "old_draw_rate": 0.0254,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1205_6",
+      "name": "茂凯",
+      "quality": "橙卡",
+      "old_rank": 122,
+      "old_win_rate": 0.3695,
+      "old_draw_rate": 0.0262,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1036_6",
+      "name": "伊丽丝",
+      "quality": "橙卡",
+      "old_rank": 123,
+      "old_win_rate": 0.3629,
+      "old_draw_rate": 0.0271,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1109_6",
+      "name": "弗拉基米尔",
+      "quality": "橙卡",
+      "old_rank": 124,
+      "old_win_rate": 0.3597,
+      "old_draw_rate": 0.0307,
+      "tier": "T4",
+      "group": "T4"
+    },
+    {
+      "aid": "A_1056_6",
+      "name": "锐雯",
+      "quality": "橙卡",
+      "old_rank": 125,
+      "old_win_rate": 0.3414,
+      "old_draw_rate": 0.0258,
+      "tier": "T4",
+      "group": "T4"
+    }
+  ]
+}

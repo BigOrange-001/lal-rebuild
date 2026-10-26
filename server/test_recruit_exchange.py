@@ -84,10 +84,8 @@ class RecruitExchangeTest(unittest.TestCase):
         profile = self.store.profile(self.uid)
         for aid in SKIN_SOUL_IDS:
             self.assertEqual(profile['avatar_soul'][aid], 0)
-            self.assertEqual(profile['attrs']['tower_skin_soul_credit'][aid], 0)
-            with self.assertRaises(GameplayFault) as blocked:
-                grant_reward(profile, {'heroes': [{'aid': aid, 'num': 1}]}, self.config)
-            self.assertEqual(blocked.exception.code, 'SkinAcquisitionRestricted')
+            self.assertEqual(profile['attrs']['tower_skin_soul_credit'][aid], 320)
+            grant_reward(profile, {'heroes': [{'aid': aid, 'num': 1}]}, self.config)
 
     def test_rejected_fake_form_is_removed_from_an_older_overlay(self):
         document = copy.deepcopy(self.config)

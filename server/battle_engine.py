@@ -74,6 +74,13 @@ def _native_skill_snapshot(config, skill_id, level=1):
         "actionTargetPolicyArgs": copy.deepcopy(row.get("actionTargetPolicyArgs") or []),
         "actionTargetMaxTargets": copy.deepcopy(row.get("actionTargetMaxTargets") or []),
         "actionTargetGroups": copy.deepcopy(row.get("actionTargetGroups") or []),
+        "manualSummonPolicy": copy.deepcopy(row.get("manualSummonPolicy")),
+        "manualClonePolicy": copy.deepcopy(row.get("manualClonePolicy")),
+        "captainSummonMultiplier": row.get("captainSummonMultiplier", 1),
+        "chainDot": copy.deepcopy(row.get("chainDot")),
+        "modEffectSequence": row.get("modEffectSequence",0),
+        "modCondition": copy.deepcopy(row.get("modCondition")),
+        "equipment_source_skill_104": row.get("equipment_source_skill_104"),
     }
 
 
@@ -113,7 +120,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     limit_break = bool(limit_break and int(team) == 1 and instance_id
                        and str(aid).rsplit("_", 1)[-1] in ("5", "6"))
     npc_limit_break = bool(npc_limit_break and int(team) == 2 and not instance_id
-                           and str(aid).rsplit("_", 1)[-1] == "6")
+                           and str(aid).rsplit("_", 1)[-1] in ("5", "6"))
     if npc_limit_break and (enforce_avatar_level_cap or not 100 <= level <= 125):
         raise ValueError("limit-broken NPC requires an authored level 100..125 stage row")
     if limit_break and level > 125:
@@ -155,9 +162,24 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     result["culture_schema"] = ""
     if limit_break or npc_limit_break: result["limit_break"] = 1
     if overrides:
-        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema"):
+        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema","growth_stats_applied","bonds_104","equipment_bonds_104"):
             if key in overrides: result[key] = overrides[key]
     result["culture_schema"] = str(result.get("culture_schema") or "")
+    if not result.get('growth_stats_applied'):
+        from talent_stats_103 import apply_stat_talent
+        talent_id = result.get('talent')
+        talent_id = talent_id.get('id') if isinstance(talent_id, dict) else talent_id
+        row = config.get('talent', {}).get(talent_id, {}) if isinstance(talent_id, str) else {}
+        current_hp = int(result['hp'])
+        previous_max = int(result.get('hp_max', current_hp))
+        result['hp'] = previous_max
+        apply_stat_talent(result, row)
+        result['hp_max'] = int(result['hp'])
+        result['hp'] = min(result['hp_max'], max(0, current_hp))
+        if row.get('growth_effect') == 'hp' and previous_max > 0:
+            from combat_math import to_int
+            result['hp'] = min(result['hp_max'], max(0, to_int(current_hp * result['hp_max'] / previous_max)))
+        result['growth_stats_applied'] = True
     return result
 
 
@@ -170,8 +192,8 @@ def serialize_stage_team(config, entries, team=2):
         tower_break = len(entry) > 13 and entry[13] == 1
         if tower_break:
             star = str(entry[0]).rsplit("_", 1)[-1]
-            if star != "6":
-                raise ValueError("limit-broken NPC must be an orange hero")
+            if star not in ("5", "6"):
+                raise ValueError("limit-broken NPC must be a purple or orange hero")
             phase_rows = config.get("system_simple", {}).get("phase_config", [])
             try:
                 phase_cap = int(phase_rows[0][star][1])
@@ -215,12 +237,15 @@ def serialize_player_team(config, profile, team_num, submitted_team, attributes_
         if type(raw_line) not in (int, float) or isinstance(raw_line, bool) or not math.isfinite(float(raw_line)) or float(raw_line) != int(raw_line):
             raise ValueError("formation lane must be an integer native line index")
         line = int(raw_line)
-        raw = attributes_fn(profile,iid) if attributes_fn else {}
-        overrides={"hp":raw.get("hp"),"hp_max":raw.get("hp_max",raw.get("hp")),"ap":raw.get("ap"),"de_ph":raw.get("de_ph"),"de_ma":raw.get("de_ma"),"tpl":raw.get("tpl"),"talent":raw.get("talent"),"morph":raw.get("morph"),"skill":raw.get("skill"),"leader_skill":raw.get("leader_skill") if slot == 0 else None,"book_skill":raw.get("book_skill"),"skillB":raw.get("skillB"),"new_4attrs":{"hit":raw.get("hit",0),"flee":raw.get("flee",0),"crit":raw.get("crit",0),"tough":raw.get("tough",0)}} if attributes_fn else None
+        projection_profile = {**profile, 'attrs': {**profile.get('attrs', {}), 'team_num': index}}
+        raw = attributes_fn(projection_profile,iid) if attributes_fn else {}
+        overrides={"hp":raw.get("hp"),"hp_max":raw.get("hp_max",raw.get("hp")),"ap":raw.get("ap"),"de_ph":raw.get("de_ph"),"de_ma":raw.get("de_ma"),"tpl":raw.get("tpl"),"talent":raw.get("talent"),"growth_stats_applied":raw.get("growth_stats_applied",False),"morph":raw.get("morph"),"skill":raw.get("skill"),"leader_skill":raw.get("leader_skill") if slot == 0 else None,"book_skill":raw.get("book_skill"),"skillB":raw.get("skillB"),"new_4attrs":{"hit":raw.get("hit",0),"flee":raw.get("flee",0),"crit":raw.get("crit",0),"tough":raw.get("tough",0)}} if attributes_fn else None
         result.append(base_unit(config,aid,int(instance.get("lv",1)),int(instance.get("slv",1)),line,max(0.0,min(1.0,pos)),slot==0,1,iid,overrides,
                                 limit_break=instance.get("limit_break") == 1))
         # Read progression from the owned roster, never from submitted tuples.
         result[-1]["phase"] = max(0, int(instance.get("phase", 0)))
+        result[-1]['bonds_104'] = list(raw.get('bonds_104', []))
+        result[-1]['equipment_bonds_104'] = list(raw.get('equipment_bonds_104', []))
         result[-1]["culture_schema"] = str(raw.get("culture_schema", instance.get("culture_schema", "")) or "")
     if not result: raise ValueError("battle requires at least one saved formation avatar")
     return result
@@ -232,7 +257,7 @@ _REAL_DAMAGE_RATE = 0.3
 
 # Buff.LIST_BUFF / Buff.LIST_DEBUFF (140_Buff.as:57/59).
 _GOOD_BUFFS = frozenset(["shield", "strong", "taunt", "bless", "steel", "armor",
-                         "hitup", "fleeup", "critup", "toughup", "purify"])
+                         "hitup", "fleeup", "critup", "toughup", "purify", "book_penetration"])
 _DEBUFFS = frozenset(["root", "stun", "silence", "weak", "sunder", "poison", "burn", "evil", "curse"])
 
 # checkBuffOfSkillB's literal OR list (079_Avatar.as:3547-3552). This is the
@@ -295,9 +320,10 @@ def _percent_debuff_value(raw):
 
 class _Buff:
     """Mirror of Buff(type, round, value) from 140_Buff.as."""
-    __slots__ = ("type", "round", "value")
+    __slots__ = ("type", "round", "value", "poison_hp_rate_104")
 
-    def __init__(self, kind, rounds, value=0):
+    def __init__(self, kind, rounds, value=0, poison_hp_rate_104=1):
+        self.poison_hp_rate_104 = poison_hp_rate_104
         self.type = str(kind)
         self.round = _to_int(rounds)
         self.value = value
@@ -320,6 +346,7 @@ class ReferenceBattle:
                 unit.setdefault("_owner_token", unit.get("instance_id") or f"{side}:{index}")
         self.rng = CombatRandom(int(seed))
         self.max_rounds = max(1, int(max_rounds))
+        self.round_index=0
         # Kept for the avatar-table lookups the action handlers need (cast
         # range, ranged-caster classification). Serialized unit dicts are never
         # widened to carry it.
@@ -329,7 +356,7 @@ class ReferenceBattle:
         battle = simple.get("battle", []) if isinstance(simple, dict) else []
         # attack[18] is the poison hpMax-fraction term; attack[20] the bless
         # revival fraction (137_Avatar.as:2908 / 5707).
-        self._poison_hp_fraction = float(attack[18]) if isinstance(attack, list) and len(attack) > 18 else 0.01
+        self._poison_hp_fraction = float(attack[18]) if isinstance(attack, list) and len(attack) > 18 else 0.05
         self._bless_fraction = float(attack[20]) if isinstance(attack, list) and len(attack) > 20 else 0.5
         # Native authored bounds; keep the module constants as the default so
         # the class stays usable without a config.
@@ -371,7 +398,7 @@ class ReferenceBattle:
         entry = ReferenceBattle._buff(unit, kind)
         return entry.value if entry is not None else default
 
-    def _add_buff(self, unit, kind, rounds, value=0):
+    def _add_buff(self, unit, kind, rounds, value=0, poison_hp_rate_104=1):
         """addBuff tail (137_Avatar.as:2619): merge rules differ per buff.
 
         Two compare arms and one merge arm; a kind in neither arm has its new
@@ -380,7 +407,12 @@ class ReferenceBattle:
         kind = str(kind)
         container = unit.setdefault("_buffs", {})
         current = container.get(kind)
-        incoming = _Buff(kind, rounds, value)
+        incoming = _Buff(kind, rounds, value, poison_hp_rate_104)
+        if kind == 'bless' and current is not None:
+            if current.value <= 0 < incoming.value:
+                return
+            if incoming.value <= 0 < current.value:
+                incoming.round = max(incoming.round, current.round)
         # Purify has priority over every debuff, including evil and curse. It
         # must clear them before the one-shot evil/purify guards are checked.
         if kind == "purify":
@@ -388,7 +420,7 @@ class ReferenceBattle:
             unit.pop("_curse_window_started", None)
         if container.get("purify") is not None and kind in _DEBUFFS:
             # An armed purify refuses one incoming debuff and is consumed.
-            del container["purify"]
+            self._remove_buff(unit,'purify',consume=True)
             return
         if container.get("curse") is not None and kind in _GOOD_BUFFS and kind != "purify":
             # Unlike evil's one-shot guard, curse rejects positive buffs while
@@ -404,6 +436,7 @@ class ReferenceBattle:
             elif kind == "evil":
                 self._remove_all_good(unit)
             return
+        if kind=='purify' and current.value>0:return
         if kind in ("stun", "silence", "purify", "evil", "curse", "taunt", "bless"):
             # Round-compare arm: the longer duration wins outright.
             if incoming.round >= current.round:
@@ -416,22 +449,27 @@ class ReferenceBattle:
         if kind in ("poison", "burn"):
             # Remaining total damage is preserved and re-spread over the new
             # duration (137_Avatar.as:2669).
+            current.poison_hp_rate_104 = max(current.poison_hp_rate_104,incoming.poison_hp_rate_104)
             if incoming.round != 0:
                 current.value = _to_int(current.value * current.round / incoming.round
                                         + incoming.value)
             current.round = incoming.round
             return
         if kind in ("root", "weak", "sunder", "shield", "strong", "steel", "armor",
-                    "hitup", "fleeup", "critup", "toughup"):
+                    "hitup", "fleeup", "critup", "toughup", "book_penetration"):
             # Value-compare arm.
             if incoming.value >= current.value:
                 container[kind] = incoming
             return
         # back / summon and every other kind: the new buff is discarded.
 
-    def _remove_buff(self, unit, kind):
+    def _remove_buff(self, unit, kind, consume=False):
         container = unit.get("_buffs")
         if isinstance(container, dict):
+            current=container.get(str(kind))
+            if consume and kind=='purify' and current and current.value>1:
+                current.value-=1
+                return
             container.pop(str(kind), None)
 
     def _remove_all_good(self, unit):
@@ -442,6 +480,8 @@ class ReferenceBattle:
             del container[kind]
 
     def _remove_all_debuff(self, unit):
+        if isinstance(unit.get("_manual_dots"), dict):
+            unit["_manual_dots"].clear()
         container = unit.get("_buffs")
         if not isinstance(container, dict):
             return
@@ -458,9 +498,10 @@ class ReferenceBattle:
             entry = container.get(kind)
             if entry is None:
                 continue
-            # Bless stays armed until a lethal hit consumes it.
-            if kind == "bless":
+            # Ordinary revival stays armed; the explicit timed variant expires.
+            if kind == "bless" and entry.value <= 0:
                 continue
+            if kind=='purify' and entry.value>0:continue
             entry.round -= 1
             if kind == "summon" and entry.round < 0:
                 unit["hp"] = 0
@@ -469,28 +510,29 @@ class ReferenceBattle:
                 del container[kind]
         poison = container.get("poison")
         if poison is not None:
-            tick = _to_int(poison.value * _REAL_DAMAGE_RATE
-                           + self._poison_hp_fraction * int(unit.get("hp_max", 0)))
-            self._injured(unit, tick, damage_type=3)
+            tick = _to_int(poison.value + self._poison_hp_fraction * int(unit.get("hp_max", 0)) * poison.poison_hp_rate_104)
+            self._injured(unit, tick, damage_type=6, dot_kind='poison')
             if int(unit.get("hp", 0)) <= 0:
                 unit["hp"] = 0
                 return True
-            if poison.round <= 0:
-                del container["poison"]
+            if poison.round <= 0 and container.get("poison") is poison:
+                container.pop("poison", None)
         burn = container.get("burn")
         if burn is not None:
-            self._injured(unit, _to_int(burn.value * _REAL_DAMAGE_RATE), damage_type=3)
+            self._injured(unit, _to_int(burn.value), damage_type=7, dot_kind="burn")
             if int(unit.get("hp", 0)) <= 0:
                 unit["hp"] = 0
                 return True
-            if burn.round <= 0:
-                del container["burn"]
+            if burn.round <= 0 and container.get("burn") is burn:
+                container.pop("burn", None)
         return self._tick_manual_skill_dots(unit)
 
     # --------------------------------------------------------------- getters
 
     @staticmethod
     def _talent(unit, index):
+        if unit.get("_summon_stat_snapshot") and index in (1, 2, 3):
+            return 0.0
         talent = unit.get("talent")
         if isinstance(talent, (list, tuple)) and len(talent) > index:
             value = talent[index]
@@ -577,7 +619,47 @@ class ReferenceBattle:
 
     # ---------------------------------------------------------------- damage
 
-    def _injured(self, target, amount, damage_type=0):
+    @staticmethod
+    def _book_bonus(unit, stat):
+        skill = unit.get('book_skill') or {}
+        value = sum(float(a[1]) for a in skill.get('skills', [])
+                    if isinstance(a, list) and len(a) > 2 and a[0] == 'book_passive'
+                    and a[2] == stat) if not skill.get('pl') else 0.0
+        if stat == 'penetration':
+            bonus = (unit.get('_buffs') or {}).get('book_penetration')
+            value += float(bonus.value) if bonus else 0
+            return max(0.0, min(1.0, value))
+        return max(0.0, value)
+
+    def _on_healing_received(self, target, amount):
+        """Receive nominal healing after modifiers and before the HP cap."""
+
+    def _emit_mod_event(self, owner, event, source=None, target=None, amount=0, overheal=0):
+        from battle_mod_events import emit
+        return emit(self,owner,event,source,target,amount,overheal)
+
+    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
+        before=int(target.get('hp',0));shield=self._buff(target,'shield')
+        had_shield=shield is not None and shield.value>0
+        result=self._injured_base(target,amount,damage_type,source,dot_kind)
+        actual=max(0,before-max(0,int(target.get('hp',0)))) if damage_type!=4 else 0
+        if receipt is not None:receipt.update(actual=actual,before=before,after=int(target.get('hp',0)))
+        killed=before>0 and target.get('hp',0)<=0
+        shield_broke=had_shield and (self._buff(target,'shield') is None or self._buff(target,'shield').value<=0)
+        if before>0 and damage_type not in (0,4,5):
+            if actual:
+                self._emit_mod_event(target,'damage_taken',source,target,actual)
+                self._emit_mod_event(source,'damage_dealt',source,target,actual)
+            if damage_type in (1,2,3) and source is not None:
+                self._emit_mod_event(source,'hit',source,target,actual)
+            if shield_broke:
+                self._emit_mod_event(target,'shield_break',source,target,actual)
+            if killed:
+                if source is not None and self._team_number(source)!=self._team_number(target):self._emit_mod_event(source,'kill',source,target,actual)
+                self._emit_mod_event(target,'death',source,target,actual)
+        return result
+
+    def _injured_base(self, target, amount, damage_type=0, source=None, dot_kind=None):
         """injured (137_Avatar.as:5545): the shield pool absorbs before HP.
 
         Returns the HP actually lost. ``damage_type`` 4 heals and 5/0 applies
@@ -585,16 +667,38 @@ class ReferenceBattle:
         """
         amount = _to_int(amount)
         if int(damage_type) == 4:
+            if target.get("hp", 0) <= 0:
+                return 0
+            amount = _to_int(amount * (1 + self._book_bonus(source if source is not None else target, 'healing')))
+            if self._has_manual_dot_kind(target, "burn"):
+                amount = _to_int(amount * .6)
+            was_alive = target.get("hp", 0) > 0
             missing = max(0, int(target.get("hp_max", 0)) - int(target.get("hp", 0)))
             healed = max(0, min(missing, amount))
             target["hp"] = int(target.get("hp", 0)) + healed
+            if was_alive and amount > 0:
+                self._on_healing_received(target, amount)
             return -healed
         if int(damage_type) in (0, 5) or amount <= 0:
             return 0
+        if dot_kind:
+            # DOTs bypass countDamage/armor and the legacy real-damage coefficient.
+            attack = self._config.get('system_simple', {}).get('attack') or []
+            if len(attack) > 21:
+                amount = _to_int(amount * float(attack[21]))
+                tough = max(0, self._get_tough(target))
+                amount = _to_int(amount / (1 + tough * float(attack[15]) / (tough + float(attack[13]))))
+            amount = _to_int(amount * (1 + self._talent(target, 16)))
+        if self._has_manual_dot_kind(target, 'poison'):
+            amount = _to_int(amount * 1.2)
         shield = self._buff(target, "shield")
         if shield is not None:
-            absorbed = min(max(0, _to_int(shield.value)), amount)
-            shield.value = _to_int(shield.value) - absorbed
+            factor = 1 + self._book_bonus(source, 'shield_damage') if source is not None else 1
+            if dot_kind in ('bleed', 'phantasm'):
+                factor *= 3
+            spent = min(max(0, _to_int(shield.value)), _to_int(amount * factor))
+            absorbed = min(amount, math.ceil(spent / factor))
+            shield.value = _to_int(shield.value) - spent
             if shield.value <= 0:
                 self._remove_buff(target, "shield")
             amount -= absorbed
@@ -619,7 +723,7 @@ class ReferenceBattle:
             return
         target["hp"] = 0
 
-    def _injured_absolute(self, target, amount, damage_type):
+    def _injured_absolute(self, target, amount, damage_type, source=None):
         """attackAimList's damageType -1: an absolute value, no scaling stage.
 
         Every other channel multiplies ``getDamage()`` by a coefficient first;
@@ -634,26 +738,30 @@ class ReferenceBattle:
             defense = max(0, self._get_de_ma(target)) if damage_type == 2 else 0
         else:
             defense = 0
+        if source is not None:
+            defense = _to_int(defense * (1 - self._book_bonus(source, 'penetration')))
         if damage_type == 3:
             dealt = _to_int(amount * _REAL_DAMAGE_RATE)
         elif damage_type in (1, 2):
             dealt = max(_to_int(amount * _MIN_DAMAGE_RATE), amount - defense)
         else:
             dealt = amount
-        return self._injured(target, dealt, damage_type)
+        return self._injured(target, dealt, damage_type, source=source)
 
     def _native_damage(self, attacker, target, multiplier, damage_type):
         """countDamage (137_Avatar.as:1283) plus the getters' buff multipliers."""
         damage_type = _to_int(damage_type)
         if damage_type == 1:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
-            dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - max(0, self._get_de_ph(target)))
+            defense = _to_int(max(0, self._get_de_ph(target)) * (1 - self._book_bonus(attacker, 'penetration')))
+            dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - defense)
         elif damage_type == 3:
             dealt = _to_int(max(1, _to_int(self._get_damage(attacker) * float(multiplier))) * _REAL_DAMAGE_RATE)
         else:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
-            dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - max(0, self._get_de_ma(target)))
-        return self._injured(target, dealt, damage_type)
+            defense = _to_int(max(0, self._get_de_ma(target)) * (1 - self._book_bonus(attacker, 'penetration')))
+            dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - defense)
+        return self._injured(target, dealt, damage_type, source=attacker)
 
     # -------------------------------------------------------------- targeting
 
@@ -695,7 +803,7 @@ class ReferenceBattle:
         if policy == "ally_all":
             return sorted(alive, key=lambda u: (u is not attacker, u.get("line", 0),
                                                 float(u.get("pos", 0))))
-        if policy in ("enemy_lane_all", "enemy_lane_all_in_radius"):
+        if policy in ("enemy_lane_all", "enemy_lane_all_in_radius", "ally_lane_all"):
             args = self._policy_args(skill, index) or {}
             if args.get("laneFilter") != "all":
                 alive = [u for u in alive
@@ -767,7 +875,7 @@ class ReferenceBattle:
         if _to_int(rounds) < 1:
             return False
         if self._buff(target, "purify") is not None:
-            self._remove_buff(target, "purify")
+            self._remove_buff(target, "purify",consume=True)
             return False
         if stack:
             self._manual_dot_serial = int(getattr(self, "_manual_dot_serial", 0)) + 1
@@ -780,18 +888,20 @@ class ReferenceBattle:
             "round": _to_int(rounds),
             "source": source,
         }
-        # The dot also shows as a native poison/burn buff; bleed renders as
-        # poison (140_Buff.as). Merged, so the visual is additive on reapply.
-        visual_kind = "poison" if kind == "bleed" else str(kind)
-        self._add_buff(target, visual_kind, _to_int(rounds), max(0, _to_int(ap_tick)))
+        # Avatar.addManualSkillDot calls showBuff for presentation only; it
+        # does not add a native damaging buff. Registering one here would
+        # double-tick the DOT through the separate native burn/poison path.
         return True
 
     def _has_manual_dot_kind(self, unit, kind):
         """137_Avatar.as:2426 hasManualDotKind."""
+        if kind == 'phantasm':
+            return any(isinstance(k, tuple) and k[0] == 'malz' and isinstance(v, dict) and v.get('ticks', 0) > 0
+                       for k, v in (unit.get('_ability') or {}).items())
         if kind in ("poison", "burn") and self._buff(unit, kind) is not None:
             return True
         for entry in (unit.get("_manual_dots") or {}).values():
-            if isinstance(entry, dict) and _to_int(entry.get("round", 0)) > 0 and entry.get("kind") == kind:
+            if isinstance(entry, dict) and _to_int(entry.get("round", -1)) >= 0 and entry.get("kind") == kind:
                 return True
         return False
 
@@ -803,7 +913,7 @@ class ReferenceBattle:
         for key in list(container):
             entry = container.get(key)
             if not isinstance(entry, dict):
-                del container[key]
+                container.pop(key, None)
                 continue
             entry["round"] = _to_int(entry.get("round", 0)) - 1
             if entry["round"] < 0:
@@ -811,7 +921,14 @@ class ReferenceBattle:
                 continue
             tick = _to_int(entry.get("apTick", 0)) + _to_int(float(entry.get("hpMaxFraction", 0.0))
                                                              * int(unit.get("hp_max", 0)))
-            self._injured(unit, tick, damage_type=_to_int(entry.get("damageType", 0)))
+            if 'bookRemaining' in entry:
+                tick = math.ceil(entry['bookRemaining'] / max(1, entry['bookTicks']))
+                entry['bookRemaining'] -= tick
+                entry['bookTicks'] -= 1
+            kind = entry["kind"]
+            self._injured(unit, tick, damage_type=7 if kind == "burn" else 6, source=entry.get("source"), dot_kind=kind)
+            if entry["round"] <= 0 and container.get(key) is entry:
+                container.pop(key, None)
             if int(unit.get("hp", 0)) <= 0:
                 unit["hp"] = 0
                 return True
@@ -822,7 +939,8 @@ class ReferenceBattle:
         stacks = unit.get("_manual_battle_stacks")
         if not isinstance(stacks, dict):
             return 0
-        return max(0, _to_int(stacks.get(str(stat), 0)))
+        value = stacks.get(str(stat), 0)
+        return max(0.0, float(value)) if type(value) in (int, float) and math.isfinite(value) else 0.0
 
     def _add_manual_battle_stack(self, unit, stat, value, cap):
         """137_Avatar.as:2293 addManualBattleStack (attack/defense/flee only)."""
@@ -1191,7 +1309,7 @@ class ReferenceBattle:
         allies = [u for u in attacker.get("_team", []) if int(u.get("hp", 0)) > 0]
         context = {"targets": {}, "damage": {}, "kills": {}, "target_groups": {},
                    "precast_dot": {id(u) for u in enemies if any(
-                       self._has_manual_dot_kind(u, kind) for kind in ("burn", "bleed", "poison"))},
+                       self._has_manual_dot_kind(u, kind) for kind in ("burn", "bleed", "poison", "phantasm"))},
                    "precast_burn": {id(u) for u in enemies if self._has_manual_dot_kind(u, "burn")}}
         for index, action in enumerate(actions):
             if not isinstance(action, list) or not action:
@@ -1201,7 +1319,8 @@ class ReferenceBattle:
                 # No matching case in the native switch: skip and carry on.
                 continue
             try:
-                handler(self, attacker, enemies, allies, skill, action, index, context)
+                applied=handler(self, attacker, enemies, allies, skill, action, index, context)
+                if action[0]=='manual_ability' and applied is False:return False
             except (TypeError, ValueError, IndexError, KeyError):
                 return False
         return True
@@ -1402,7 +1521,13 @@ class ReferenceBattle:
         total = 0
         for target in targets:
             total += self._native_damage(attacker, target, action[1], action[2])
-            self._add_buff(target, "poison", int(action[4]), magnitude)
+            definition=self._config.get('avatar',{}).get(attacker.get('aid'),{})
+            pack=definition.get('builtin_pack_104')
+            rate=float(self._config.get('system_simple',{}).get('hero_skill_output_rate_104',1)) if pack or str(attacker.get('aid','')).startswith('A_1') else 1
+            if pack=='nine':rate*=2/3
+            from equipment_bonds_104 import output_rate
+            rate*=output_rate(self._config,attacker.get('aid'),attacker.get('equipment_bonds_104'))
+            self._add_buff(target, "poison", int(action[4]), magnitude, poison_hp_rate_104=rate)
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(targets)
         if targets:
@@ -1427,10 +1552,10 @@ class ReferenceBattle:
             context["targets"][index] = targets[0]
 
     def _act_strong(self, attacker, enemies, allies, skill, action, index, context):
-        self._self_value_buff(attacker, action, "strong")
+        self._act_value_buff(attacker, allies, skill, action, index, 'strong')
 
     def _act_steel(self, attacker, enemies, allies, skill, action, index, context):
-        self._self_value_buff(attacker, action, "steel")
+        self._act_value_buff(attacker, allies, skill, action, index, 'steel')
 
     def _act_armor(self, attacker, enemies, allies, skill, action, index, context):
         self._self_value_buff(attacker, action, "armor")
@@ -1445,6 +1570,10 @@ class ReferenceBattle:
         for target in self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
                                               skill=skill, index=index):
             self._add_buff(target, "bless", int(rounds), 0)
+
+    def _act_timed_bless(self, attacker, enemies, allies, skill, action, index, context):
+        for target in self._ally_buff_targets(attacker, allies, skill.get('pl') or [], skill=skill, index=index):
+            self._add_buff(target, 'bless', int(action[1]), 1)
 
     def _act_purify(self, attacker, enemies, allies, skill, action, index, context):
         """purify (139_SkillSet.as:1974): rounds at ``[1]``, no value argument.
@@ -1467,9 +1596,15 @@ class ReferenceBattle:
         amount = self._heal_channel_value(attacker, action[1])
         for target in self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
                                               skill=skill, index=index):
-            missing = int(target.get("hp_max", 0)) - int(target.get("hp", 0))
-            if missing > 0:
-                self._injured(target, min(missing, amount), damage_type=4)
+            self._injured(target, amount, damage_type=4, source=attacker)
+
+    def _act_caster_hp_heal(self, attacker, enemies, allies, skill, action, index, context):
+        """A fixed fraction of caster max HP, with no AP or precision term."""
+        if len(action)<3 or not math.isfinite(float(action[1])) or float(action[1])<=0:
+            return
+        amount=_to_int(int(attacker.get('hp_max',0))*float(action[1]))
+        for target in self._ally_buff_targets(attacker,allies,skill.get('pl') or [],skill=skill,index=index):
+            self._injured(target,amount,4,source=attacker)
 
     def _act_evil(self, attacker, enemies, allies, skill, action, index, context):
         """evil (139_SkillSet.as:1808): rounds at ``[1]``, zero damage.
@@ -1609,6 +1744,29 @@ class ReferenceBattle:
         for ally in recipients:
             self._add_buff(ally, "shield", rounds, max(0, amount))
 
+    def _act_caster_ap_shield(self, attacker, enemies, allies, skill, action, index, context):
+        recipients = self._ally_buff_targets(attacker, allies, skill.get("pl") or [], skill=skill, index=index)
+        amount = _to_int(max(0, self._get_damage(attacker)) * float(action[1]))
+        for target in recipients:
+            self._add_buff(target, "shield", int(action[2]), amount)
+
+    def _add_book_burn(self, target, total, rounds, source):
+        total = max(0, _to_int(total))
+        if total <= 0 or int(target.get('hp', 0)) <= 0:
+            return
+        self._book_burn_serial = getattr(self, '_book_burn_serial', 0) + 1
+        key = 'book-burn:' + str(self._book_burn_serial)
+        if self._add_manual_skill_dot(target, key, 'burn', 0, 0, rounds, source, 7, False):
+            target['_manual_dots'][key].update(bookRemaining=total, bookTicks=rounds)
+
+    def _act_book_burn(self, attacker, enemies, allies, skill, action, index, context):
+        for target in self._skill_targets(attacker, enemies, skill.get('pl') or [], skill=skill, index=index):
+            self._add_book_burn(target, self._get_damage(attacker) * float(action[1]), int(action[2]), attacker)
+
+    def _act_book_bonus(self, attacker, enemies, allies, skill, action, index, context):
+        if action[2] == 'penetration':
+            self._add_buff(attacker, 'book_penetration', int(action[3]), max(0, float(action[1])))
+
     def _act_shield_composite(self, attacker, enemies, allies, skill, action, index, context):
         """shield_composite (139_SkillSet.as:1147): AP + 10% hpMax + defences.
 
@@ -1716,7 +1874,7 @@ class ReferenceBattle:
             missing = int(ally.get("hp_max", 0)) - int(ally.get("hp", 0))
             amount = max(0, min(missing, _to_int(missing * fraction)))
             if amount > 0:
-                self._injured(ally, amount, damage_type=4)
+                self._injured(ally, amount, damage_type=4, source=attacker)
 
     def _act_heal_damage_sum(self, attacker, enemies, allies, skill, action, index, context):
         """heal_damage_sum (139_SkillSet.as:1248): heal off earlier actions' damage."""
@@ -1738,10 +1896,9 @@ class ReferenceBattle:
         if total <= 0:
             return
         for ally in [u for u in allies if int(u.get("hp", 0)) > 0]:
-            missing = int(ally.get("hp_max", 0)) - int(ally.get("hp", 0))
-            amount = max(0, min(missing, _to_int(total * fraction)))
+            amount = max(0, _to_int(total * fraction))
             if amount > 0:
-                self._injured(ally, amount, damage_type=4)
+                self._injured(ally, amount, damage_type=4, source=attacker)
 
     def _act_heal_missing_hp_per_hero(self, attacker, enemies, allies, skill, action, index, context):
         """heal_missing_hp_per_hero (139_SkillSet.as:846): cast-time snapshot."""
@@ -1758,8 +1915,7 @@ class ReferenceBattle:
         missing_at_cast = max(0, int(attacker.get("hp_max", 0)) - int(attacker.get("hp", 0)))
         refund = missing_at_cast * multiplier
         if refund > 0:
-            missing = int(attacker.get("hp_max", 0)) - int(attacker.get("hp", 0))
-            self._injured(attacker, min(missing, _to_int(refund)), damage_type=4)
+            self._injured(attacker, _to_int(refund), damage_type=4)
 
     def _act_locked_sequence(self, attacker, enemies, allies, skill, action, index, context):
         """locked_sequence (139_SkillSet.as:1412): N hits on one locked target."""
@@ -1957,6 +2113,14 @@ class ReferenceBattle:
         self._add_buff(attacker, str(action[1]), int(action[3]), float(action[2]))
 
     # --- small shared helpers -------------------------------------------
+
+    def _act_value_buff(self, attacker, allies, skill, action, index, kind):
+        # Preserve legacy simulator self targeting unless the authored skill
+        # explicitly names its recipients, as the two new team buffs do.
+        if not skill.get('actionTargetPolicies'):
+            return self._self_value_buff(attacker, action, kind)
+        for target in self._ally_buff_targets(attacker, allies, skill.get('pl') or [], skill=skill, index=index):
+            self._self_value_buff(target, action, kind)
 
     def _self_value_buff(self, attacker, action, kind):
         """strong/steel/armor: value is arg[1] and rounds arg[2], applied to self."""
@@ -2194,7 +2358,10 @@ class ReferenceBattle:
             raise ValueError("push_aoe needs a search radius and a push distance")
         radius = self._skill_area_radius(action[1])
         distance = _to_int(action[2])
-        for target in self._find_aim_list(attacker, self._living_opponents(attacker), radius, False):
+        candidates = self._living_opponents(attacker)
+        if skill.get('actionTargetPolicies'):
+            candidates = self._skill_targets(attacker, candidates, skill.get('pl') or [], skill=skill, index=index)
+        for target in self._find_aim_list(attacker, candidates, radius, False):
             if int(target.get("hp", 0)) <= 0:
                 continue
             self._check_move(target, False, distance, forced=True)
@@ -2206,7 +2373,6 @@ class ReferenceBattle:
         targets = self._custom_targets(attacker, skill, ally=False)
         if not targets:
             return
-        target = targets[0]
         kind = str(action[1])
         ap_tick = float(action[2]) * self._get_damage(attacker) if isinstance(action[2], (int, float)) else 0
         fraction = float(action[3]) if isinstance(action[3], (int, float)) else 0.0
@@ -2222,9 +2388,10 @@ class ReferenceBattle:
             refresh = str(skill.get("skid", "")) + ":" + str(index)
         stacked = len(action) >= 9 and bool(action[7])
         key = "%s:%s" % (attacker.get("aid", "?"), refresh)
-        self._add_manual_skill_dot(target, key, kind, ap_tick, fraction, rounds,
-                                   attacker, damage_type, stacked)
-        context["targets"][index] = target
+        for target in targets:
+            self._add_manual_skill_dot(target, key, kind, ap_tick, fraction, rounds,
+                                       attacker, damage_type, stacked)
+        context["targets"][index] = targets[0]
 
     def _act_battle_stack(self, attacker, enemies, allies, skill, action, index, context):
         """battle_stack (139_SkillSet.as:1287): permanent stack, gated on a hit.
@@ -2266,15 +2433,7 @@ class ReferenceBattle:
         self._add_manual_timed_stack(attacker, action[1], action[2], action[3], action[4])
 
     def _act_summon(self, attacker, enemies, allies, skill, action, index, context):
-        """summon (139_SkillSet.as:1850 -> executeManualSummon).
-
-        ``action[1]`` is a level fraction: the unit spawns at
-        ``toInt(fraction * owner.lv)``, floored at 1 for the bounded-policy ids
-        (139_SkillSet.as:3067 hasBoundedSummonPolicy). The native placement uses
-        ``GameMapConfig.SUMMON_POS``, which is not declared anywhere in the
-        reconstructed source; rather than invent a value the unit is placed on
-        the caster's own line and slot and the unavailable offset is flagged.
-        """
+        """Summon from the owner's live panel, preserving authored ratios."""
         if len(action) < 5:
             raise ValueError("summon needs a scale, an avatar id, rounds and a vfx")
         aid = str(action[2])
@@ -2285,21 +2444,28 @@ class ReferenceBattle:
             return
         fraction = action[1]
         if not isinstance(fraction, (int, float)) or isinstance(fraction, bool) \
-                or not math.isfinite(float(fraction)):
+                or not math.isfinite(float(fraction)) or not 0.01 <= float(fraction) <= 100:
             return
-        bounded = self._has_bounded_summon_policy(str(skill.get("skid", "")))
-        level = _to_int(float(fraction) * _to_int(attacker.get("lv", 1)))
-        if bounded:
-            level = max(1, level)
-        elif level < 1:
-            return
+        bounded = self._has_bounded_summon_policy(str(skill.get("equipment_source_skill_104") or skill.get("skid", "")))
+        level = max(1, _to_int(float(fraction) * _to_int(attacker.get("lv", 1))))
         skill_id = str(skill.get("skid", ""))
         if bounded and self._has_live_bounded_summon(attacker, skill_id):
             return
+        ratios = None
+        policy = skill.get("manualSummonPolicy")
+        if isinstance(policy, dict) and policy.get("skillId") == skill_id and policy.get("unitId") == aid:
+            base_ratio = policy.get("apRatio")
+            if not isinstance(base_ratio, (int, float)) or not math.isfinite(base_ratio) or base_ratio <= 0:
+                return
+            ratios = {key: float(fraction) * float(policy.get(name, base_ratio)) / base_ratio
+                      for key, name in (("hp_max", "hpRatio"), ("de_ph", "dePhRatio"), ("de_ma", "deMaRatio"))}
+        extra = skill.get("captainSummonMultiplier", 1)
+        if not isinstance(extra, (int, float)) or not math.isfinite(extra) or extra <= 0:
+            extra = 1
         clone = self._spawn_summon(attacker, aid, float(fraction), rounds, level=level,
-                                   bounded=bounded,
-                                   bounded_skill_id=skill_id,
-                                   ap_factor=self._summon_ap_factor(skill_id))
+                                   bounded=bounded, bounded_skill_id=skill_id,
+                                   ap_factor=self._summon_ap_factor(skill_id),
+                                   stat_ratios=ratios, extra_multiplier=extra)
         if clone is not None:
             context["targets"][index] = clone
 
@@ -2356,11 +2522,7 @@ class ReferenceBattle:
 
     @staticmethod
     def _summon_ap_factor(skill_id):
-        """139_SkillSet.as:3447 getSummonCombatSnapshotApFactor.
-
-        Only two families rescale a summoned unit's combat snapshot; every
-        other summon keeps the spawned avatar's own stats.
-        """
+        """Explicit nonuniform owner ratios for the spider and voidling families."""
         parts = str(skill_id).split("_")
         if len(parts) != 3 or parts[0] != "S":
             return 0.0
@@ -2371,48 +2533,84 @@ class ReferenceBattle:
             return 0.30
         return 0.0
 
-    def _spawn_summon(self, owner, aid, scale, rounds, level=None, bounded=False,
-                      bounded_skill_id=None, ap_factor=None):
-        """Build one summoned unit from the owner's live stats (executeManualSummon).
+    def _summon_panel_snapshot(self, owner):
+        """Read the same live eight stats as Avatar.getSummonPanelSnapshot."""
+        attack = _to_int(self._get_damage(owner) * (1 + self._get_manual_battle_stack(owner, "attack")
+                                                  + self._get_manual_timed_stack(owner, "attack")))
+        result = {"hp_max": _to_int(owner.get("hp_max", 1)),
+                  "ap": _to_int(attack * (1 + self._talent(owner, 1)))}
+        defense_stack = 1 + self._get_manual_battle_stack(owner, "defense")
+        for key, talent_index in (("de_ph", 2), ("de_ma", 3)):
+            value = float(owner.get(key, 0)) * defense_stack
+            sunder, steel = self._buff_value(owner, "sunder"), self._buff_value(owner, "steel")
+            if sunder:
+                value /= 1 + float(sunder)
+            if steel:
+                value *= 1 + float(steel)
+            value = max(0, _to_int(value))
+            if key == "de_ph":
+                value = max(0, _to_int(value * (1 + float(self._buff_value(owner, "armor")))))
+            result[key] = _to_int(value * (1 + self._talent(owner, talent_index)))
+        aura = {key: 0 for key in ("hit", "flee", "crit", "tough")}
+        if not owner.get("_summon_stat_snapshot"):
+            for ally in owner.get("_team") or []:
+                if int(ally.get("hp", 0)) <= 0:
+                    continue
+                talent = ally.get("talent")
+                talent_id = talent.get("id") if isinstance(talent, dict) else talent
+                row = self._config.get("talent", {}).get(talent_id, {}) if isinstance(talent_id, str) else {}
+                key = str(row.get("growth_effect", "")).removeprefix("team_")
+                value = row.get("growth_value", 0)
+                if key in aura and isinstance(value, (int, float)) and math.isfinite(value):
+                    aura[key] = max(aura[key], max(0, _to_int(value)))
+        for key in aura:
+            value = self._stat_buff(owner, key) + aura[key]
+            if key == "flee":
+                value += _to_int(self._get_manual_battle_stack(owner, "flee"))
+            result[key] = max(0, _to_int(value))
+        return result
 
-        ``ap_factor`` selects the native stat model the caller is emulating.
-        ``None`` keeps the historical uniform rescale used by the turret and
-        clone paths. A number applies 139_SkillSet.as:1878-1889: the rescale
-        runs only when the factor is positive, in which case hpMax, ap, dePh
-        and deMa come from the *owner* — and the four secondary attrs are
-        copied from the owner unconditionally, outside that gate.
-        """
+    @staticmethod
+    def _scaled_summon_stat(value, ratio, minimum=0):
+        if not isinstance(value, (int, float)) or not math.isfinite(value):
+            return minimum
+        return min(2147483647, max(minimum, math.floor(value * ratio)))
+
+    def _spawn_summon(self, owner, aid, scale, rounds, level=None, bounded=False,
+                      bounded_skill_id=None, ap_factor=None, stat_ratios=None,
+                      extra_multiplier=1, skill_level=None):
+        """Create a live-panel snapshot; never use template growth as inherited stats."""
+        if type(scale) not in (int, float) or not math.isfinite(scale) or not 0.01 <= scale <= 100:
+            return None
+        ratios = {key: float(scale) for key in ("hp_max", "ap", "de_ph", "de_ma", "hit", "flee", "crit", "tough")}
+        if ap_factor is not None and math.isfinite(float(ap_factor)) and float(ap_factor) > 0:
+            ratios.update(hp_max=0.20, ap=float(ap_factor), de_ph=0.40, de_ma=0.40)
+        if stat_ratios:
+            ratios.update(stat_ratios)
+        if any(type(value) not in (int, float) or not math.isfinite(value) or not 0.01 <= value <= 100
+               for value in (*ratios.values(), extra_multiplier)):
+            return None
         if level is None:
             level = max(1, _to_int(owner.get("lv", 1)))
         try:
             unit = base_unit(self._config, aid, max(1, _to_int(level)),
-                             max(1, _to_int(owner.get("slv", 1))),
+                             max(1, _to_int(owner.get("slv", 1) if skill_level is None else skill_level)),
                              int(owner.get("line", 0)), 0.0, False,
                              self._team_number(owner),
                              enforce_avatar_level_cap=False, summoned=True)
         except (ValueError, KeyError, TypeError, IndexError):
             return None
-        if ap_factor is None:
-            ratio = float(scale) if isinstance(scale, (int, float)) and not isinstance(scale, bool) else 1.0
-            if not math.isfinite(ratio) or ratio <= 0:
-                ratio = 1.0
-            owner_ap = max(1, _to_int(self._get_damage(owner)))
-            owner_hp = max(1, _to_int(owner.get("hp_max", 1)))
-            unit["ap"] = max(1, _to_int(owner_ap * ratio))
-            unit["hp_max"] = max(1, _to_int(owner_hp * ratio))
-            unit["de_ph"] = max(1, _to_int(_to_int(owner.get("de_ph", 0)) * ratio))
-            unit["de_ma"] = max(1, _to_int(_to_int(owner.get("de_ma", 0)) * ratio))
-            unit["hp"] = unit["hp_max"]
-        else:
-            factor = float(ap_factor)
-            if math.isfinite(factor) and factor > 0:
-                unit["hp_max"] = max(1, _to_int(_to_int(owner.get("hp_max", 1)) * 0.20))
-                unit["ap"] = max(1, _to_int(self._get_damage(owner) * factor))
-                unit["de_ph"] = max(1, _to_int(_to_int(owner.get("de_ph", 0)) * 0.40))
-                unit["de_ma"] = max(1, _to_int(_to_int(owner.get("de_ma", 0)) * 0.40))
-                unit["hp"] = unit["hp_max"]
-            for key in ("hit", "flee", "crit", "tough"):
-                unit["new_4attrs"][key] = max(0, _to_int(self._stat_buff(owner, key)))
+        panel = self._summon_panel_snapshot(owner)
+        for key, ratio in ratios.items():
+            minimum = 1 if key in ("hp_max", "ap") else 0
+            value = self._scaled_summon_stat(panel[key], ratio, minimum)
+            value = self._scaled_summon_stat(value, extra_multiplier, minimum)
+            if key in ("hit", "flee", "crit", "tough"):
+                unit["new_4attrs"][key] = value
+            else:
+                unit[key] = value
+        unit["hp"] = unit["hp_max"]
+        unit["_summon_stat_snapshot"] = True
         if bounded:
             unit["_bounded_summon"] = True
             if bounded_skill_id is not None:
@@ -2450,14 +2648,14 @@ class ReferenceBattle:
         """summon_turret (139_SkillSet.as:1917 -> executeHeimerTurretSummon)."""
         if len(action) < 11:
             raise ValueError("summon_turret requires the authored 11-argument row")
-        skid = str(skill.get("skid", ""))
+        skid = str(skill.get("equipment_source_skill_104") or skill.get("skid", ""))
         if not self._is_heimer_turret_skill(skid) or not self._has_bounded_summon_policy(skid):
             return
         if str(action[2]) != "A_2001_4":
             return
         scale = action[1]
         if not isinstance(scale, (int, float)) or isinstance(scale, bool) \
-                or not math.isfinite(float(scale)) or not 0 < float(scale) <= 1:
+                or not math.isfinite(float(scale)) or not 0.01 <= float(scale) <= 100:
             return
         rounds = _to_int(action[3])
         if rounds < 1 or _to_int(action[4]) != 0 or _to_int(action[5]) != 0:
@@ -2471,12 +2669,6 @@ class ReferenceBattle:
                                     bounded=True, bounded_skill_id=skid)
         if turret is None:
             return
-        # executeHeimerTurretSummon scales all four secondary stats too, and
-        # clears skill0/skill1/skill2/skillB (139:3158) — the clearing lives
-        # here, not in _spawn_summon, because the generic summon path keeps the
-        # summoned unit's own kit.
-        for key in ("hit", "flee", "crit", "tough"):
-            turret["new_4attrs"][key] = max(0, _to_int(self._raw_attr(attacker, key) * float(scale)))
         turret["skill"] = None
         turret["leader_skill"] = None
         turret["skillB"] = None
@@ -2491,17 +2683,31 @@ class ReferenceBattle:
         What can be checked from the serialized row is applied; the rest is
         flagged rather than guessed.
         """
-        skid = str(skill.get("skid", ""))
+        skid = str(skill.get("equipment_source_skill_104") or skill.get("skid", ""))
         if skid not in ("S_631132_5", "S_631132_6"):
             return
         owner_aid = str(attacker.get("aid", ""))
         if not owner_aid.endswith(skid.rsplit("_", 1)[-1]):
             return
-        clone = self._spawn_summon(attacker, owner_aid, 1.0, 1)
+        policy = skill.get("manualClonePolicy")
+        known_policy = isinstance(policy, dict) and policy.get("skillId") == skill.get("skid")
+        normal=attacker.get('skill') or {}
+        source=self._config.get('skill',{}).get(normal.get('skid'),{})
+        normal_id=source.get('builtin_native_source_104',normal.get('skid'))
+        if not known_policy or normal_id!='S_621132_'+owner_aid.rsplit('_',1)[1]:return
+        ratio = policy.get("panelStatRatio", 1) if known_policy else 1
+        ttl = policy.get("ttlOwnTurns", 1) if known_policy else 1
+        clone = self._spawn_summon(attacker, owner_aid, ratio, ttl)
         if clone is None:
             return
         clone["_clone_of"] = owner_aid
-        clone["_clone_policy_unavailable"] = True
+        clone['skill']=copy.deepcopy(normal)
+        clone['skillB']=clone['leader_skill']=clone['book_skill']=None
+        live=[u for u in allies if u.get('_clone_of')==owner_aid and u.get('summon_owner_token')==attacker.get('_owner_token') and u.get('hp',0)>0]
+        while len(live)>=int(policy.get('maxAlive',1)):
+            live.pop(0)['hp']=0
+        if not known_policy:
+            clone["_clone_policy_unavailable"] = True
         context["targets"][index] = clone
 
     def _act_focus_fire(self, attacker, enemies, allies, skill, action, index, context):
@@ -2522,7 +2728,9 @@ class ReferenceBattle:
                 continue
             if abs(_to_int(ally.get("pos", 0)) - _to_int(target.get("pos", 0))) > self._get_range(ally):
                 continue
-            self._injured_absolute(target, self._get_damage(ally), 1)
+            before = int(target.get('hp', 0))
+            self._injured_absolute(target, self._get_damage(ally), 1, source=ally)
+            self._book_attack_effects(ally, target, max(0, before - int(target.get('hp', 0))))
 
     def _act_dash_group_strike(self, attacker, enemies, allies, skill, action, index, context):
         """dash_group_strike (139_SkillSet.as:899): reline and strike each target."""
@@ -2779,6 +2987,11 @@ class ReferenceBattle:
             before_hp = int(target.get("hp", 0))
             effective = coefficient / _REAL_DAMAGE_RATE if damage_type == 3 else coefficient
             self._native_damage(attacker, target, effective, damage_type)
+            dot = skill.get('chainDot')
+            if dot and int(target.get('hp', 0)) > 0 and getattr(self, '_ability_last_hit', True):
+                key = str(attacker.get('_owner_token', id(attacker))) + ':' + str(dot[4])
+                self._add_manual_skill_dot(target, key, dot[0], float(dot[1]) * self._get_damage(attacker),
+                                           0, int(dot[2]), attacker, int(dot[3]), False)
             if hit_index == 0:
                 primary_killed_on_first = before_hp > 0 and int(target.get("hp", 0)) <= 0
             counts[id(target)] = counts.get(id(target), 0) + 1
@@ -2807,6 +3020,8 @@ class ReferenceBattle:
         action reports no effect and the skill continues, exactly as an unknown
         kind does.
         """
+        execute=getattr(self,'execute',None)
+        if execute is not None:return execute(attacker,str(action[1]),float(action[2]),skill)
 
 
     def run(self):
@@ -2816,12 +3031,14 @@ class ReferenceBattle:
                 unit.setdefault("hp", unit.get("hp_max", 1))
                 unit.setdefault("hp_max", unit["hp"])
                 unit.setdefault("_skill_cd", int((unit.get("skill") or {}).get("pl", [0, 0])[0]))
+                unit.setdefault("_skill_cd_book", int((unit.get("book_skill") or {}).get("pl", [0, 0])[0]) if (unit.get("book_skill") or {}).get("pl") else 0)
                 unit.setdefault("_skill_cd_b", int((unit.get("skillB") or {}).get("pl", [0, 0])[0]))
                 unit.setdefault("_skill_cd_leader",
                                 int((unit.get("leader_skill") or {}).get("pl", [0, 0])[0]))
                 unit.setdefault("_buffs", {})
         rounds = 0
         for rounds in range(1, self.max_rounds + 1):
+            self.round_index=rounds-1
             for side in (1, 2):
                 for attacker in (x for x in sides[side] if x["hp"] > 0):
                     if not self._run_unit_turn(attacker, sides, side):
@@ -2843,7 +3060,7 @@ class ReferenceBattle:
         enemies = [x for x in sides[3 - side] if x["hp"] > 0]
         if not enemies:
             return False
-        for cd_key in ("_skill_cd", "_skill_cd_b", "_skill_cd_leader"):
+        for cd_key in ("_skill_cd", "_skill_cd_b", "_skill_cd_leader", "_skill_cd_book"):
             self._tick_slot_cd(attacker, cd_key)
         # Avatar.checkSkillB() runs after cooldowns and before checkBuff(). A
         # passive such as Steel Teemo's purify therefore gets a chance to
@@ -2860,6 +3077,9 @@ class ReferenceBattle:
         skill = attacker.get("skill")
         silenced = self._buff(attacker, "silence") is not None
         acted = False
+        book = attacker.get("book_skill")
+        if isinstance(book, dict) and book.get("pl") and not silenced:
+            acted = self._use_skill_slot(attacker, enemies, "book_skill", "_skill_cd_book") or acted
         if isinstance(skill, dict) and skill.get("skills") and not silenced:
             acted = self._use_skill_slot(attacker, enemies, "skill", "_skill_cd") or acted
         # checkSkill() tries skill0 and then the leader skill independently;
@@ -2896,6 +3116,8 @@ class ReferenceBattle:
         skill = attacker.get(slot)
         if not isinstance(skill, dict) or not skill.get("skills"):
             return False
+        from battle_mod_effects import condition_ready
+        if not condition_ready(self,attacker,skill):return False
         if int(attacker.get(cd_key, -1)) >= 0:
             return False
         if not self._apply_native_skill(attacker, enemies, slot=slot):
@@ -2905,6 +3127,8 @@ class ReferenceBattle:
 
     def _use_turn_start_passive(self, attacker, enemies):
         """skillB, evaluated at the top of the owner's turn (079_Avatar.as:3340)."""
+        attacker['_mod_owner_turn']=attacker.get('_mod_owner_turn',0)+1
+        self._emit_mod_event(attacker,'turn_start',attacker,attacker)
         skill_b = attacker.get("skillB")
         if not isinstance(skill_b, dict) or not skill_b.get("skills"):
             return False
@@ -2923,6 +3147,9 @@ class ReferenceBattle:
         every turn *unless* the unit holds one of the 17 guard buffs — an early
         return inside the scan — and diff 19 while any listed debuff is held.
         """
+        if (attacker.get('skillB') or {}).get('modEffectSequence'):
+            from battle_mod_effects import condition_ready
+            return condition_ready(self,attacker,attacker['skillB'])
         diff = _to_int(attacker.get("skill_diff", 0))
         if diff <= 0:
             return False
@@ -2945,11 +3172,25 @@ class ReferenceBattle:
     def _basic_attack(self, attacker, target):
         """A physical auto-attack, routed through the native damage pipeline."""
         damage = max(1, _to_int(self._get_damage(attacker)))
-        dealt = max(_to_int(damage * _MIN_DAMAGE_RATE), damage - max(0, self._get_de_ph(target)))
-        self._injured(target, dealt, damage_type=1)
+        before = int(target.get('hp', 0))
+        self._injured_absolute(target, damage, 1, source=attacker)
+        self._book_attack_effects(attacker, target, max(0, before - int(target.get('hp', 0))))
 
+    def _book_attack_effects(self, attacker, target, dealt):
+        if dealt <= 0 or int(target.get('hp', 0)) <= 0:
+            return
+        burn = self._book_bonus(attacker, 'attack_burn')
+        if burn > 0:
+            self._add_book_burn(target, dealt * burn, 3, attacker)
+        chance = self._book_bonus(attacker, 'attack_curse')
+        if chance > 0 and self.rng.get_random(10000) < round(chance * 10000):
+            self._add_buff(target, 'curse', 3, 0)
+
+
+from battle_mod_effects import execute as execute_mod_step
 
 _ACTION_HANDLERS = {
+    "mod_step": execute_mod_step,
     "dash": ReferenceBattle._act_dash,
     "damage": ReferenceBattle._act_damage,
     "true_damage": ReferenceBattle._act_true_damage,
@@ -2968,8 +3209,10 @@ _ACTION_HANDLERS = {
     "steel": ReferenceBattle._act_steel,
     "armor": ReferenceBattle._act_armor,
     "bless": ReferenceBattle._act_bless,
+    "timed_bless": ReferenceBattle._act_timed_bless,
     "purify": ReferenceBattle._act_purify,
     "cure": ReferenceBattle._act_cure,
+    "caster_hp_heal": ReferenceBattle._act_caster_hp_heal,
     "evil": ReferenceBattle._act_evil,
     "curse": ReferenceBattle._act_curse,
     "taunt": ReferenceBattle._act_taunt,
@@ -2980,6 +3223,9 @@ _ACTION_HANDLERS = {
     "target_hp_shield": ReferenceBattle._act_target_hp_shield,
     "shield": ReferenceBattle._act_shield,
     "shield_composite": ReferenceBattle._act_shield_composite,
+    "caster_ap_shield": ReferenceBattle._act_caster_ap_shield,
+    "book_burn": ReferenceBattle._act_book_burn,
+    "book_bonus": ReferenceBattle._act_book_bonus,
     "shield_followup": ReferenceBattle._act_shield_followup,
     "shield_dispel": ReferenceBattle._act_shield_dispel,
     "dispel_good": ReferenceBattle._act_dispel_good,

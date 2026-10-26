@@ -16,7 +16,7 @@ from pve_formation import stagger_lane_offsets
 
 
 TOWER_CHAPTER = "P_200"
-TOWER_MAX_FLOOR = 150
+TOWER_MAX_FLOOR = 180
 
 
 def _retune_variant(cfg: dict, stage: dict, team: list[list], diff: str,

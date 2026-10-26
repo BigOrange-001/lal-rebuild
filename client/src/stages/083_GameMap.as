@@ -34,7 +34,7 @@ package com.meng52.game.module.map
       
       public static const BATTLE_OF_THE_PEAK_ID:String = "battle_of_the_peak";
       
-      public static var ROUND_MAX:int = 30;
+      public static var ROUND_MAX:int = 40;
       
       public static var damageNum:int = 0;
       
@@ -1073,7 +1073,7 @@ package com.meng52.game.module.map
          }
          if(_loc2_.win[0] != -3)
          {
-            if(winner == 0 && roundNum >= ROUND_MAX)
+            if(GlobalData.$isPVE && winner == 0 && roundNum >= ROUND_MAX)
             {
                winner = 2;
             }
@@ -2434,7 +2434,7 @@ package com.meng52.game.module.map
                   return;
                }
             }
-            else if(roundNum >= ROUND_MAX)
+            else if(GlobalData.$isPVE && roundNum >= ROUND_MAX)
             {
                winner = 2;
                endFight();

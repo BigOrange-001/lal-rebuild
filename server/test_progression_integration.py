@@ -158,7 +158,7 @@ class ProgressionIntegrationTest(unittest.TestCase):
                 "key": "1", "lv": 50, "actionID": "dn-over-cap"})
         self.assertEqual(caught.exception.code, "MaxLevel")
 
-    def test_biscuit_activity_has_no_shared_daily_attempt_limit(self):
+    def test_biscuit_activity_spends_no_attempt_at_fight_start(self):
         team = self.team()
         for index in range(4):
             self.combat._start_main(self.uid, {"cid": "P_109_1", "diff": 0,

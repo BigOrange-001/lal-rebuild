@@ -31,6 +31,8 @@ class GameplayEconomy:
     }
     def __init__(self, store, config):
         self.store, self.config = store, (config or {}).get("cfg", config or {})
+        from summon_pools import SummonPools
+        self.summon_pools = SummonPools.from_config(self.config)
 
     def _op_key(self, method, params):
         action_id = params.get("actionID") or params.get("order_id") or params.get("orderID")
@@ -881,16 +883,16 @@ class GameplayEconomy:
             # below and are checked against their configured chapter length.
             chapter = None
         is_tower_completion = is_activity and bid == "P_200"
-        if is_tower_completion and chapter_count != 150:
-            raise GameplayFault("InvalidConfig", "The tower completion reward requires exactly 150 floors")
+        tower_count=int(self.config.get('tower_rewards_103',{}).get('floors',150))
+        if is_tower_completion and chapter_count != tower_count:
+            raise GameplayFault("InvalidConfig", "Tower completion reward does not match its configured floor count")
         key = self._op_key("user.get_pass_battle_gift", params)
         def mutate(p):
             mode = "normal" if diff == 0 else "hard" if diff == 1 else "ploy"
             score_bucket = p.setdefault("combat_score", {}).setdefault(mode, {})
             score_entry = score_bucket.get(bid)
             claimed = p.setdefault("records", {}).setdefault("pass_battle_gift", {}).setdefault(str(diff), [])
-            # A reward claimed under the previous 100-floor tower remains
-            # claimed after the tower extends to 150 floors.
+            # Previously claimed tower completion rewards remain claimed.
             if bid in claimed: raise GameplayFault("AlreadyClaimed", "Stage reward already claimed")
             if chapter is not None:
                 # The native chapter reward button is enabled only after every
@@ -913,7 +915,7 @@ class GameplayEconomy:
                     raise GameplayFault("StageRewardLocked", "Complete every stage in this chapter with three stars")
                 if is_tower_completion:
                     # The frontier or a single aggregate star count cannot
-                    # prove that all 150 distinct floors were actually won.
+                    # prove that every distinct floor was actually won.
                     expected = {f"P_200_{index}" for index in range(1, chapter_count + 1)}
                     cleared = p.get("ploy_cids", {}).get(bid, [])
                     wins = p.get("records", {}).get("combat_ploy", {})
@@ -922,7 +924,7 @@ class GameplayEconomy:
                             or not isinstance(wins, dict)
                             or any(type(wins.get(cid)) is not int or wins[cid] < 1 for cid in expected)
                             or any(star != 3 for star in stage_stars)):
-                        raise GameplayFault("StageRewardLocked", "Earn three stars on each of the 150 tower floors")
+                        raise GameplayFault("StageRewardLocked", f"Earn three stars on each of the {chapter_count} tower floors")
 
                 # Match the native combat_score marker as well as the durable
                 # record list, so the panel immediately disables its button.
@@ -1218,18 +1220,19 @@ class GameplayEconomy:
         if flag not in (0,1): raise GameplayFault("InvalidLottery", "Lottery type is invalid")
         extract=(self.config.get("ploy_system_simple") or {}).get("extract_avatar") or {}
         cost=int(extract.get("coin_one",280) if flag==0 else extract.get("coin_ten",2500))
-        pool=extract.get("activity_pool",[])
-        if not isinstance(pool,list) or not pool:
-            raise GameplayFault("LotteryUnavailable", "VIP activity pool is not configured")
-        valid=[]; weight_total=0
-        avatar_defs=self.config.get("avatar",{})
-        blocked=skin_acquisition_blocked_ids(self.config)
-        for row in pool:
-            if not isinstance(row,dict) or row.get("kind") not in {"avatar","avatar_soul"}: continue
-            aid=row.get("aid"); weight=row.get("weight",0)
-            if not isinstance(aid,str) or aid not in avatar_defs or aid in blocked or type(weight) is not int or weight<=0: continue
-            valid.append((row,weight));weight_total+=weight
-        if not valid or weight_total<=0: raise GameplayFault("LotteryUnavailable", "VIP activity pool has no valid hero records")
+        if self.summon_pools is None:
+            pool=extract.get("activity_pool",[])
+            if not isinstance(pool,list) or not pool:
+                raise GameplayFault("LotteryUnavailable", "VIP activity pool is not configured")
+            valid=[]; weight_total=0
+            avatar_defs=self.config.get("avatar",{})
+            blocked=skin_acquisition_blocked_ids(self.config)
+            for row in pool:
+                if not isinstance(row,dict) or row.get("kind") not in {"avatar","avatar_soul"}: continue
+                aid=row.get("aid"); weight=row.get("weight",0)
+                if not isinstance(aid,str) or aid not in avatar_defs or aid in blocked or type(weight) is not int or weight<=0: continue
+                valid.append((row,weight));weight_total+=weight
+            if not valid or weight_total<=0: raise GameplayFault("LotteryUnavailable", "VIP activity pool has no valid hero records")
         key=self._op_key("user.get_lottery_activity",params)
         def mutate(p):
             if int(p.get("coin",0))<cost: raise GameplayFault("InsufficientCoin", "Not enough coin")
@@ -1241,13 +1244,20 @@ class GameplayEconomy:
             if start_value is not None and prior_start is not None and prior_start!=start_value:
                 state={"score":0,"last_time":None}
             state.setdefault("score",0)
-            picks=[]
-            for _ in range(draws):
-                ticket=random.randrange(weight_total)
-                for row,weight in valid:
-                    ticket-=weight
-                    if ticket<0:
-                        picks.append(row);break
+            if self.summon_pools is not None:
+                capacity = int(attrs.get("avatar_len", 1000))
+                if len(p.get("avatars", {})) + draws > capacity:
+                    raise GameplayFault("RosterFull", "Hero roster is full")
+                picks = [{"kind": "avatar", "aid": self.summon_pools.draw("vip", random)}
+                         for _ in range(draws)]
+            else:
+                picks=[]
+                for _ in range(draws):
+                    ticket=random.randrange(weight_total)
+                    for row,weight in valid:
+                        ticket-=weight
+                        if ticket<0:
+                            picks.append(row);break
             direct={}; souls={}
             for row in picks:
                 aid=row["aid"]

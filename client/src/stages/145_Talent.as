@@ -60,9 +60,14 @@ package com.meng52.game.module.talent
 
       public function getPower() : Number
       {
-         var _loc1_:uint = uint(my_HaloData.getStar());
-         var _loc2_:Array = GlobalData.$mConfig_simple.talent_power;
-         return _loc2_[_loc1_ - 2];
+         if(!my_HaloData || !GlobalData.$mConfig_simple) return 0;
+         var row:Object = my_HaloData.dataObj;
+         if(row && row.power_factor_104 != null) return Math.max(0,Number(row.power_factor_104));
+         var index:int = int(my_HaloData.getStar())-2;
+         var weights:Array = GlobalData.$mConfig_simple.talent_power as Array;
+         if(!weights || index < 0 || index >= weights.length) return 0;
+         var value:Number = Number(weights[index]);
+         return isFinite(value) && value >= 0 ? value : 0;
       }
    }
 }

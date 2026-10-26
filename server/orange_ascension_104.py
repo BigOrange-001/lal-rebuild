@@ -21,6 +21,9 @@ def apply_orange_ascension_104(document):
     plan = json.loads(PLAN.read_text('utf-8'))
     assets = json.loads((MEDIA/'manifest.json').read_text('utf-8'))
     avatars, skills = cfg['avatar'], cfg['skill']
+    # The native turret is an explicit non-collectible summon. Effect-sequence
+    # clients require this same classification before constructing a unit.
+    avatars['A_2001_4']['modUnitType'] = 'summon'
     added = []
     next_order = max(int(h.get('tl', [0]*10)[9]) for h in avatars.values() if len(h.get('tl', [])) > 9) + 1
     for index, design in enumerate(plan['heroes']):

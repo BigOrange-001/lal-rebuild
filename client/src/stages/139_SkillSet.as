@@ -70,7 +70,7 @@ package com.meng52.game.module.skill
 
       public function getStar() : int
       {
-         return getMechanismId().split("_")[2];
+         return skillSetData.id.split("_")[2];
       }
 
       public function getMechanismId104() : String { return getMechanismId(); }

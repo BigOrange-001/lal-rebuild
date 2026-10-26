@@ -46,7 +46,7 @@ function Skill(sid,lv=1,superSkill=false,book=false){
  if(Array.isArray(up)&&up.length){if(Array.isArray(up[0])){for(let [a,v,step] of up)actions[a][v]+=step*(lv-1);}
  else actions[up[0]][1]+=up[1]*(lv-1);}
  return attach({skills:actions,skillSetData:row,lv,isSuper:superSkill,isBookSkill:book||!!row.bookRule,
- isEquipUp:actions[0]?.[0]==='equipup',getStar:()=>int(sid.split('_').at(-1))},input.skillMethods);
+ isEquipUp:actions[0]?.[0]==='equipup',activeNativeSource:null},input.skillMethods);
 }
 function SkillSet(sid,owner,lv=1,superSkill=false){return Skill(sid,lv,superSkill);}
 function Equipment(id){
@@ -92,7 +92,8 @@ for(let [slot,id] of profile.team[0].entries()){
  unit.initFightAttr();
  out.push({id,hp:unit.getHpMax(),ap:unit.getDamage(),de_ph:unit.getDePh(),de_ma:unit.getDeMa(),
  speed:unit.getSpeed(),range:unit.getRange(),hit:unit.hit,flee:unit.flee,crit:unit.crit,tough:unit.tough,
- power:unit.getPower(slot===0,-1,true),beforeInitPower:barePower,skillId:unit.skill0?.skillSetData.id,captainId:unit.skill1?.skillSetData.id});
+ power:unit.getPower(slot===0,-1,true),beforeInitPower:barePower,skillId:unit.skill0?.skillSetData.id,captainId:unit.skill1?.skillSetData.id,
+ captainStar:unit.skill1?.getStar(),captainMechanism:unit.skill1?.getMechanismId()});
 }
 console.log(JSON.stringify({units:out,dn:bonus}));
 '''
@@ -124,7 +125,7 @@ class StatPower103Tests(unittest.TestCase):
             'getStar':'','getAddStar':'','getHaloUpAttrs':'','getNativeStatGrowth':'param1',
             'getPersistedStatRollRate':'','getMagicBonus':'param1','getMagicStage':'',
             'getMagicMainStatRate':'','getRuneBonus':'param1','getEquipAlchemyRate':'param1,param2'})
-        cls.skill_methods = methods('139_SkillSet.as', {'getPower':'','getEquipRate':'param1'})
+        cls.skill_methods = methods('139_SkillSet.as', {'getPower':'','getEquipRate':'param1','getStar':'','getMechanismId':''})
         cls.dn_methods = methods('142_PanelDetailDN.as', {'getDNAttrsAllValue':'param1=null','getDNaddValue':'param1,param2'})
         cls.projection_methods = methods('045_GlobalFunction.as', {'getRosterTalentPreview':'ids,extra=null'})
         cls.talent_methods = methods('145_Talent.as', {'getPower':''})

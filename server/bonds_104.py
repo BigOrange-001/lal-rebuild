@@ -105,6 +105,10 @@ def _scale_skill(source, factor):
         if action[0] == 'mod_step':
             from skill_output_104 import output_paths
             extras.extend(output_paths(action))
+            # Bonds strengthen numeric buffs too; the global 80% output pass
+            # intentionally excludes them and is not the bond magnitude map.
+            if action[1] == 'buff':
+                extras.extend((i,) for i in (5,6,7,18,19) if i < len(action))
         if action[0] in ('heal_ap', 'heal_max_hp'):
             extras.append((1,))
         for path in set(damage + defense + extras):

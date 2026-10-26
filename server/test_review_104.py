@@ -107,4 +107,47 @@ class Review104Tests(unittest.TestCase):
             b.execute_nurse_skin(b.a[0],'nurse_n',b.a[0]['skill'])
             self.assertEqual(actual,b.a[0]['hp']-5000);self.assertEqual(actual,int(700*.8*rate))
 
+    def test_effect_sequence_bond_scales_attribute_buffs_and_growth(self):
+        from bonds_104 import _scale_skill
+        aid=next(a for a,h in self.cfg['avatar'].items() if h['name']=='猎手薇恩' and a.endswith('_6'))
+        bond=next(b for b in self.cfg['system_simple']['bonds_104'] if b['id']=='b088')
+        original=self.cfg['avatar'][aid]['pl'][11]
+        enhanced=skill_ids(self.cfg,aid,[bond])['leader_skill']
+        seen=[]
+        for before,after in zip(self.cfg['skill'][original]['skill'],self.cfg['skill'][enhanced]['skill']):
+            if before[:2]==['mod_step','buff'] and before[8] in ('fleeup','critup'):
+                self.assertEqual(before[7],10000);self.assertEqual(after[7],13200);seen.append(before[8])
+        self.assertEqual(set(seen),{'fleeup','critup'})
+        row=copy.deepcopy(self.cfg['skill'][original]);index=next(i for i,a in enumerate(row['skill']) if a[8]=='fleeup')
+        row['skillUp']=[[index,7,100]];scaled=_scale_skill(row,1.32)
+        self.assertEqual(scaled['skillUp'],[[index,7,132]])
+
+    def test_native_skill_quality_is_independent_of_mechanism_source(self):
+        p=self.profile(['A_1001_6'])
+        row=self.native.native(p,self.cfg)['units'][0]
+        self.assertEqual(int(row['captainStar']),6)
+        self.assertEqual(row['captainMechanism'],'S_301001_5')
+        self.native.compare(p,self.doc)
+
+    def test_backup_turret_executes_actual_client_summon_action(self):
+        sys.path.insert(0,str(ROOT/'scripts'))
+        from test_summon_panel_103_client import translated
+        aid='A_1014_6';sid=self.cfg['avatar'][aid]['pl'][13];step=self.cfg['skill'][sid]['skill'][0]
+        body=translated((ROOT/'client/src/stages/139_SkillSet.as').read_text('utf-8'),'executeModStep')
+        script=r'''
+const input=JSON.parse(require('fs').readFileSync(0,'utf8')),int=Math.trunc,added=[];
+const GlobalData={$mConfig_avatar:{[input.step[11]]:input.definition},modDefinitionId:id=>id};
+const GameMapConfig={SUMMON_POS:200},GameMap={actionDelay:0,currentMap:{addAvatar:u=>added.push(u)}};
+const DisplayTools={getAttrs:()=>null};
+function Avatar(id){this.id=id;this.hp=1;this.goFight=()=>{};this.addBuff=(name,turns)=>this.buff=[name,turns];this.dead=()=>{};}
+const owner={hp:10000,team:1,line:0,pos:1500,lv:60,getDamage:()=>1000,getHpMax:()=>10000,getDePh:()=>300,getDeMa:()=>200,getHit:()=>100,getFlee:()=>100,getCrit:()=>100,getTough:()=>100};
+const skill={avatar:owner,skillSetData:{id:input.sid},isModEffectSequence:()=>true,modStepAnchors:[],modEventContext:null,modSelectTargets:()=>[owner]};
+skill.execute=eval('(function(step,index){with(this){'+input.body+'}})');
+skill.execute(input.step,0);skill.execute(input.step,0);
+console.log(JSON.stringify(added.map(u=>({id:u.id,hp:u.hp,ap:u.ap,buff:u.buff}))));
+'''
+        run=subprocess.run(['node','-e',script],input=json.dumps(dict(body=body,step=step,sid=sid,definition=self.cfg['avatar'][step[11]])),capture_output=True,text=True,encoding='utf-8')
+        self.assertEqual(run.returncode,0,run.stderr)
+        self.assertEqual(json.loads(run.stdout),[dict(id='A_2001_4',hp=0,ap=1000,buff=['summon',2]),dict(id='A_2001_4',hp=10000,ap=1000,buff=['summon',2])])
+
 if __name__=='__main__':unittest.main()

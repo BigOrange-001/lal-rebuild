@@ -25,7 +25,7 @@ def main():
                 request={'method':method,'uid':owner['uid'],'sessionid':owner['sessionid'],
                          'params':{'actionID':str(serial),**(params or {})},
                          'mod_digest':backend.mods.config(owner['uid'])['digest']}
-                if native:request['client_capabilities']=['skill.native-template.v1']
+                if native:request['client_capabilities']=['skill.native-template.v1','skill.native-template.103']
                 response=backend.call(request)
                 assert response['return_code']==expected,response
                 return response['data']
@@ -55,7 +55,7 @@ def main():
                 old_login=backend.call({'method':'user.login','params':{**credentials,'actionID':'old-login-'+str(attempt)}})
                 assert old_login['return_code']==1 and old_login['data']['error_code']=='ModClientIncompatible',old_login
                 assert login_state()==before,'Rejected login changed profile, session, rewards or revision'
-            new_login=backend.call({'method':'user.login','params':{**credentials,'actionID':'new-login'},'client_capabilities':['skill.native-template.v1']})
+            new_login=backend.call({'method':'user.login','params':{**credentials,'actionID':'new-login'},'client_capabilities':['skill.native-template.v1','skill.native-template.103']})
             assert new_login['return_code']==0,new_login
             backup=rpc('user.mods_backup')
             disabled={'expectedRevision':1,'selections':[]}

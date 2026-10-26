@@ -1882,6 +1882,24 @@ package com.meng52.game.module.avatar
          if(gate.hpBelow != null && Number(Math.max(0,hp))/Math.max(1,hpMax) > Number(gate.hpBelow)) return false;
          if(gate.requiredBuff && !hasModBuff(String(gate.requiredBuff))) return false;
          if(gate.absentBuff && hasModBuff(String(gate.absentBuff))) return false;
+         if(gate.otherHpBelow != null && (!other || Math.max(0,other.hp)/Math.max(1,other.hpMax) > Number(gate.otherHpBelow))) return false;
+         if(gate.otherRequiredBuff && (!other || !other.hasModBuff(String(gate.otherRequiredBuff)))) return false;
+         var nearbyRadius:Number = gate.nearbyRadius == null ? 600 : Number(gate.nearbyRadius);
+         var nearbyFriend:int = 0;
+         var nearbyFoe:int = 0;
+         var nearbySummon:int = 0;
+         var nearby:Avatar;
+         for each(nearby in GameMap.currentMap.getAliveList(team))
+         {
+            if(nearby === this || nearby.line != line || Math.abs(nearby.pos-pos) > nearbyRadius) continue;
+            ++nearbyFriend;
+            if(nearby.isManualSummonUnit || nearby.getType() == 2) ++nearbySummon;
+         }
+         for each(nearby in GameMap.currentMap.getAliveList(team == 1 ? 2 : 1))
+         {
+            if(nearby.line == line && Math.abs(nearby.pos-pos) <= nearbyRadius) ++nearbyFoe;
+         }
+         if(nearbyFriend < int(gate.nearbyAllies || 0) || nearbyFoe < int(gate.nearbyEnemies || 0) || nearbySummon < int(gate.nearbySummons || 0)) return false;
          var ownTurn:int = manualOwnerActionSerial;
          var readyTurn:int = abilityState.modEventReady == null ? skillB.skillSetData.warmup : int(abilityState.modEventReady);
          if(ownTurn < readyTurn) return false;
@@ -1892,6 +1910,12 @@ package com.meng52.game.module.avatar
          }
          var limit:int = gate.maxPerRound == null ? 1 : int(gate.maxPerRound);
          if(int(abilityState.modEventCount) >= limit) return false;
+         var every:int = gate.everyEvents == null ? 1 : int(gate.everyEvents);
+         if(every > 1)
+         {
+            abilityState.modFilteredEvents = int(abilityState.modFilteredEvents || 0)+1;
+            if(int(abilityState.modFilteredEvents) < every) return false;
+         }
          var previous:Object = skillB.modEventContext;
          skillB.modEventContext = {event:event,source:source,target:target,amount:Math.max(0,amount),overheal:Math.max(0,overheal)};
          if(!skillB.canModEventCast()) { skillB.modEventContext = previous; return false; }
@@ -1901,6 +1925,7 @@ package com.meng52.game.module.avatar
          abilityState.modEventBusy = true;
          abilityState.modEventCount = int(abilityState.modEventCount)+1;
          abilityState.modEventReady = ownTurn+skillB.skillSetData.cooldown;
+         abilityState.modFilteredEvents = 0;
          try { skillB.useSkill(); }
          finally { abilityState.modEventBusy = false; --modEventDepth; skillB.modEventContext = previous; }
          return true;

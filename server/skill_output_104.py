@@ -99,6 +99,9 @@ def apply_skill_output_104(document):
         for note in row.get('equipment_notes_104',[]):
             for field in ('info','rankInfoTemplate'):
                 if isinstance(row.get(field),str):row[field]+='\n'+note
+        if row.get('orange_ascension_104') and row.get('modEffectSequence'):
+            from hero_iteration_103 import _render_base_info
+            _render_base_info(row)
         cfg['skill'][sid]=row
         audit.append(sid)
     cfg['system_simple']['hero_skill_output_rate_104']=RATE

@@ -43,7 +43,7 @@ ACTIONS = frozenset(("damage", "cure", "shield", "hp_shield", "caster_hp_shield"
 CAPABILITIES = frozenset(("hero.register", "hero.patch.skill", "hero.patch.stats", "hero.patch.presentation",
  "hero.patch.text", "skill.reference.builtin", "asset.image", "asset.sound", "effect.reference.builtin",
  "patch.scopes", "progression.default-player-hero", "hero.damage.true", "hero.patch.damage-type", "skill.target.lock-only",
- "skill.target.unlimited", "skill.description.rank-template", "skill.native-template.v1", "skill.native-template.103", "asset.image.card-frame", "skill.effect-sequence.v1", "skill.events.v1", "unit.summon.v1") + tuple("skill."+a for a in ACTIONS))
+ "skill.target.unlimited", "skill.description.rank-template", "skill.native-template.v1", "skill.native-template.103", "asset.image.card-frame", "skill.effect-sequence.v1", "skill.events.v1", "skill.events.filters104.v1", "unit.summon.v1") + tuple("skill."+a for a in ACTIONS))
 LOCAL_ID = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
@@ -230,6 +230,8 @@ def skill_extension_capabilities(skill):
     if skill.get('model')=='effect-sequence-v1':
         caps={'skill.effect-sequence.v1'}
         if skill.get('trigger',{}).get('kind')=='event':caps.add('skill.events.v1')
+        from mod_effects import EVENT_FILTERS
+        if EVENT_FILTERS & set(skill.get('trigger',{})):caps.add('skill.events.filters104.v1')
         if any(a.get('buff')=='timed_bless' for a in skill.get('actions',[])) or 'timed_bless' in [skill.get('trigger',{}).get(k) for k in ('buff','requiredBuff','absentBuff')]:caps.add('skill.native-template.103')
         return caps
     if skill.get('model')=='native-template-v1':

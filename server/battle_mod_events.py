@@ -23,11 +23,22 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     if amount<gate.get('minAmount',0) or max(0,owner.get('hp',0))/max(1,owner.get('hp_max',1))>gate.get('hpBelow',1):return False
     if gate.get('requiredBuff') and not has_buff(battle,owner,gate['requiredBuff']):return False
     if gate.get('absentBuff') and has_buff(battle,owner,gate['absentBuff']):return False
+    if 'otherHpBelow' in gate and (other is None or max(0,other.get('hp',0))/max(1,other.get('hp_max',1))>gate['otherHpBelow']):return False
+    if gate.get('otherRequiredBuff') and (other is None or not has_buff(battle,other,gate['otherRequiredBuff'])):return False
+    radius=gate.get('nearbyRadius',600)
+    near=[u for u in battle.a+battle.b if u is not owner and u.get('hp',0)>0 and u.get('line')==owner.get('line') and abs(u.get('pos',0)-owner.get('pos',0))<=radius]
+    friendly=[u for u in near if battle._team_number(u)==battle._team_number(owner)]
+    summoned=[u for u in friendly if battle._get_type(u)==2 or u.get('summoned') or u.get('unitType')=='summon' or battle._buff(u,'summon') is not None]
+    if len(near)-len(friendly)<gate.get('nearbyEnemies',0) or len(friendly)<gate.get('nearbyAllies',0) or len(summoned)<gate.get('nearbySummons',0):return False
     turn=owner.get('_mod_owner_turn',0)
     if turn<owner.get('_mod_event_ready',(skill.get('pl') or [0])[0]):return False
     round_=getattr(battle,'round_index',0)
     if owner.get('_mod_event_round')!=round_:owner.update(_mod_event_round=round_,_mod_event_count=0)
     if owner.get('_mod_event_count',0)>=gate.get('maxPerRound',1):return False
+    every=gate.get('everyEvents',1)
+    if every>1:
+        owner['_mod_filtered_events']=owner.get('_mod_filtered_events',0)+1
+        if owner['_mod_filtered_events']<every:return False
     enemies=[u for u in (battle.b if battle._team_number(owner)==1 else battle.a) if u.get('hp',0)>0]
     if not enemies and all(a[1] in ('damage','push','move') for a in skill.get('skills',[])):return False
     previous=owner.get('_mod_event');owner['_mod_event']={'event':event,'source':source,'target':target,'amount':max(0,amount),'overheal':max(0,overheal),'sourceAlly':source is not None and battle._team_number(source)==battle._team_number(owner),'targetAlly':target is not None and battle._team_number(target)==battle._team_number(owner)}
@@ -41,5 +52,6 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     battle._mod_event_budget-=1;battle._mod_event_depth=depth+1;owner['_mod_event_busy']=True
     owner['_mod_event_count']=owner.get('_mod_event_count',0)+1
     owner['_mod_event_ready']=turn+skill['pl'][1]
+    owner['_mod_filtered_events']=0
     try:return battle._apply_native_skill(owner,enemies,'skillB')
     finally:owner['_mod_event_busy']=False;owner['_mod_event']=previous;battle._mod_event_depth=depth

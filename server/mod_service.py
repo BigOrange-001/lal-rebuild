@@ -628,6 +628,13 @@ class ModService:
             raise _mod_fault(error) from error
 
     def asset(self, content_digest, path):
+        from orange_ascension_104 import builtin_asset
+        try:
+            built_in = builtin_asset(self.base.get('cfg',self.base), content_digest, path)
+        except (ValueError,OSError) as error:
+            raise GameplayFault('ModAssetUnavailable', '内置英雄资源不可用，请校验游戏文件。') from error
+        if built_in is not None:
+            return built_in
         try:
             file = self.catalog.resolve_digest_asset(content_digest, path)
         except ModError as error:

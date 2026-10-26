@@ -143,6 +143,8 @@ class Backend:
    apply_energy_purchase_103(self.config)
    from hero_packs_104 import apply_hero_packs_104
    apply_hero_packs_104(self.config)
+   from orange_ascension_104 import apply_orange_ascension_104
+   apply_orange_ascension_104(self.config)
    apply_tower_rewards_103(self.config)
    apply_ancient_trial_103(self.config)
    apply_material_attempts_103(self.config)

@@ -60,6 +60,7 @@
           "skill.damage",
           "skill.description.rank-template",
           "skill.effect-sequence.v1",
+          "skill.events.filters104.v1",
           "skill.events.v1",
           "skill.hp_shield",
           "skill.move_to_target",

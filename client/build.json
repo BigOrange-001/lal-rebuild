@@ -20,7 +20,7 @@
       "index": 3,
       "class": "com.meng52.net.SendAndSelect",
       "source": "client/src/stages/003_SendAndSelect.as",
-      "source_sha256": "a08e850f9b3f2953369c1ae9d735de1279d459a36b174ff9d9cd7c494b8eb465"
+      "source_sha256": "dd4c57db3432647f07ce8c915ccbd39ffffc6bd1e8a25af2c7583e07d8511df6"
     },
     {
       "index": 4,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "02dcb4c5c8fda0f665202051a9726b62aee455ddbf80c68ead325e4688de4adf"
+      "source_sha256": "f1fcbc46c498e9bb36c74b8553b5b6d89429290440765bfb31898862b2571d59"
     },
     {
       "index": 140,

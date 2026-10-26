@@ -32,6 +32,8 @@ def load_base(path):
     apply_mod_authoring_103(document)
     from hero_packs_104 import apply_hero_packs_104
     apply_hero_packs_104(document)
+    from orange_ascension_104 import apply_orange_ascension_104
+    apply_orange_ascension_104(document)
     from tower_rewards_103 import apply_tower_rewards_103
     from ancient_trial_103 import apply_ancient_trial_103
     from material_attempts_103 import apply_material_attempts_103

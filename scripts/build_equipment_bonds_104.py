@@ -10,6 +10,11 @@ ROLES={
  '法术输出': [1022,1027,1029,1033,1036,1040,1052,1060,1063,1068,1071,1079,1081,1082,1086,1096,1098,1103,1105,1106,1109,1114,1117,1120,1124,1125,1126,1127,1128,1129,1133,1134,1137,1203,1207,1209,1214,1216,1217,1218,1221,1227,1309,1310],
  '辅助': [1045,1093,1094,1095,1131,1139,1208,1212,1228,1998],
 }
+ROLES['射手'] += [1002,1021]
+ROLES['物理战士/刺客'] += [1001,1005,1007,1008,1009,1011,1012,1017,1019]
+ROLES['坦克'] += [1013,1018,1020]
+ROLES['法术输出'] += [1003,1010,1014,1015,1016]
+ROLES['辅助'] += [1004,1006]
 # One additional effect per exclusive item, attached to the ordinary skill.
 # These are authored tactical budgets around 20%, not measured win-rate gains.
 # Damage/healing/shield coefficients subsequently receive the global output pass.
@@ -109,6 +114,8 @@ def build():
                     signature=[a[0] for a in rewritten['skill']],operator=rewritten['skill'][ri][0],
                     info=part_info(name,rpart,strength2,share2,budget))
             hero['affinities'].append(target)
+    # Preserve the existing catalogue order; append the new ascensions.
+    heroes=dict(sorted(heroes.items(),key=lambda item:1001 <= int(item[0].split('_')[1]) <= 1021))
     doc={'schema':'equipment-bonds-1.0.4-v4',
          'stacking':'hero-specific existing skill components; no generic extra effects',
          'heroes':heroes,'exclusive':exclusive}

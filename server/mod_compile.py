@@ -100,6 +100,7 @@ class Compiler:
         self.roster=copy.deepcopy(roster or {});self.allow_missing=allow_missing
         self.packages={};self.selected={};self.hero_refs={};self.skill_refs={};self.hero_authored={}
         self.assets={};self.texture_aliases={};self.preview={"added":[],"patches":[],"missing":[],"packages":[],"warnings":[]}
+        self.assets.update({r['alias']:copy.deepcopy(r) for r in self.cfg.get('builtin_assets_104',{}).get('assets',[])})
         self.warnings=[];self.metadata={};self.missing=[];self.resolving=set();self.writes={}
         self.scoped={scope:{} for scope in SCOPES};self.aliases={}
         for table in ("avatar","skill","effect"):self.cfg.setdefault(table,{})
@@ -570,12 +571,16 @@ class Compiler:
             runtime.setdefault('requiredClientCapabilities',[]).append('skill.native-template.103')
         if any(a[0]=='mod_step' and a[8]=='timed_bless' for row in capability_skills.values() for a in row.get('skill',[])) or any('timed_bless' in [(row.get('modCondition') or {}).get(k) for k in ('buff','requiredBuff','absentBuff')] for row in capability_skills.values()):
             if 'skill.native-template.103' not in runtime.setdefault('requiredClientCapabilities',[]):runtime['requiredClientCapabilities'].append('skill.native-template.103')
-        if any(row.get('cardFrame') for row in self.assets.values()):
+        builtin_aliases={r['alias'] for r in self.cfg.get('builtin_assets_104',{}).get('assets',[])}
+        if any(row.get('cardFrame') for alias,row in self.assets.items() if alias not in builtin_aliases):
             runtime.setdefault('requiredClientCapabilities',[]).append('asset.image.card-frame')
         if any(row.get('modEffectSequence') for row in capability_skills.values()):
             runtime.setdefault('requiredClientCapabilities',[]).append('skill.effect-sequence.v1')
         if any((row.get('modCondition') or {}).get('kind')=='event' for row in capability_skills.values()):
             runtime.setdefault('requiredClientCapabilities',[]).append('skill.events.v1')
+        from mod_effects import EVENT_FILTERS
+        if any(EVENT_FILTERS & set(row.get('modCondition') or {}) for row in capability_skills.values()):
+            runtime.setdefault('requiredClientCapabilities',[]).append('skill.events.filters104.v1')
         for aid,hero in self.cfg['avatar'].items():
             for slot in (10,11):
                 sid=hero.get('pl',[])[slot] if len(hero.get('pl',[]))>slot else None

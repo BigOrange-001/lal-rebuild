@@ -25,7 +25,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
     def test_complete_catalogue_two_ordinary_distinct_slots_and_exclusive_coverage(self):
         definitions=self.cfg['system_simple']['equipment_bonds_104']
         eligible={a for a in self.cfg['avatar'] if a.endswith('_6') and a.rsplit('_',1)[0] in {f for b in self.cfg['system_simple']['bonds_104'] for f in b['families']}}
-        self.assertEqual(set(definitions),eligible);self.assertEqual(len(eligible),103)
+        self.assertEqual(set(definitions),eligible);self.assertEqual(len(eligible),124)
         exclusive=set(self.cfg['system_simple']['equipment_roll_policy']['exclusive_ids'])
         found=set();counts=Counter()
         for aid,rows in definitions.items():

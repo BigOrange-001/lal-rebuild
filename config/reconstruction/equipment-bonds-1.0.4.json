@@ -6217,6 +6217,1376 @@
           "reworks": {}
         }
       ]
+    },
+    "A_1002_6": {
+      "role": "射手",
+      "equipment": [
+        "E_1004_5",
+        "E_5001_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            1
+          ],
+          "part": "寒冰箭齐射伤害",
+          "strength": 0.2666666666666666,
+          "equipment": "E_1004_5",
+          "benefit_share": 0.45,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "寒冰箭",
+          "mode": "part",
+          "action": null,
+          "operator": "sunder_percent",
+          "signature": [
+            "sunder_percent",
+            "weak_percent"
+          ],
+          "info": "《寒冰箭》：仅寒冰箭齐射伤害提高26.67%。该部分按技能等效收益的45.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            5
+          ],
+          "part": "对眩晕英雄的霜封追击",
+          "strength": 0.1200000000000001,
+          "equipment": "E_5001_5",
+          "benefit_share": 1,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "霜封追猎",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step"
+          ],
+          "info": "《霜封追猎》：仅对眩晕英雄的霜封追击提高12.00%。该部分按技能等效收益的100.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1021_6": {
+      "role": "射手",
+      "equipment": [
+        "E_1004_5",
+        "E_5002_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 1,
+          "path": [
+            1
+          ],
+          "part": "秘术射击的直接命中",
+          "strength": 0.17142857142857149,
+          "equipment": "E_1004_5",
+          "benefit_share": 0.7,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "秘术射击",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "stat_flat",
+            "damage",
+            "battle_stack"
+          ],
+          "info": "《秘术射击》：仅秘术射击的直接命中提高17.14%。该部分按技能等效收益的70.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "captain",
+          "index": 9,
+          "path": [
+            1
+          ],
+          "part": "精准弹幕第四目标的末段伤害",
+          "strength": 0.72,
+          "equipment": "E_5002_5",
+          "benefit_share": 0.16666666666666666,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "真-精准弹幕",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "move_self",
+            "stat_flat",
+            "select_target",
+            "damage",
+            "select_target",
+            "damage",
+            "select_target",
+            "damage",
+            "select_target",
+            "damage"
+          ],
+          "info": "《真-精准弹幕》：仅精准弹幕第四目标的末段伤害提高72.00%。该部分按技能等效收益的16.67%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1001_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1016_6",
+        "E_3003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 1,
+          "path": [
+            1
+          ],
+          "part": "突进后的正义斩击",
+          "strength": 0.22857142857142865,
+          "equipment": "E_1016_6",
+          "benefit_share": 0.35,
+          "benefit_curve": 1,
+          "skill_budget": 0.08,
+          "skill_name": "德玛西亚正义",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "move_to_target",
+            "damage",
+            "hp_shield",
+            "silence"
+          ],
+          "info": "《德玛西亚正义》：仅突进后的正义斩击提高22.86%。该部分按技能等效收益的35.00%估值，整项技能目标提升8%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            6
+          ],
+          "part": "破盾绝境的生命回复",
+          "strength": 0.21599999999999997,
+          "equipment": "E_3003_5",
+          "benefit_share": 0.5555555555555556,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "不屈之心",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《不屈之心》：仅破盾绝境的生命回复提高21.60%。该部分按技能等效收益的55.56%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1005_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1016_6",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            5
+          ],
+          "part": "诱敌闪避后的反击伤害",
+          "strength": 0.10666666666666669,
+          "equipment": "E_1016_6",
+          "benefit_share": 0.75,
+          "benefit_curve": 1,
+          "skill_budget": 0.08,
+          "skill_name": "真假难辨",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《真假难辨》：仅诱敌闪避后的反击伤害提高10.67%。该部分按技能等效收益的75.00%估值，整项技能目标提升8%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 1,
+          "path": [
+            6
+          ],
+          "part": "真假难辨的生命护盾",
+          "strength": 0.48,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.25,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "真假难辨",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《真假难辨》：仅真假难辨的生命护盾提高48.00%。该部分按技能等效收益的25.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1007_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1016_6",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 1,
+          "path": [
+            1
+          ],
+          "part": "军旗突进的物理伤害",
+          "strength": 0.1454545454545455,
+          "equipment": "E_1016_6",
+          "benefit_share": 0.55,
+          "benefit_curve": 1,
+          "skill_budget": 0.08,
+          "skill_name": "德邦军旗",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "move_to_target",
+            "damage",
+            "stun",
+            "strong"
+          ],
+          "info": "《德邦军旗》：仅军旗突进的物理伤害提高14.55%。该部分按技能等效收益的55.00%估值，整项技能目标提升8%；其他部分不变。",
+          "reworks": {
+            "王庭战旗": {
+              "index": 0,
+              "path": [
+                1
+              ],
+              "part": "王庭战旗的破阵伤害",
+              "strength": 0.13333333333333333,
+              "benefit_share": 0.6,
+              "benefit_curve": 1,
+              "skill_budget": 0.08,
+              "signature": [
+                "sunder_percent",
+                "strong",
+                "taunt"
+              ],
+              "operator": "sunder_percent",
+              "info": "《王庭战旗》：仅王庭战旗的破阵伤害提高13.33%。该部分按技能等效收益的60.00%估值，整项技能目标提升8%；其他部分不变。"
+            }
+          }
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            6
+          ],
+          "part": "孤军破阵的生命护盾",
+          "strength": 0.18461538461538463,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.65,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "孤军破阵",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《孤军破阵》：仅孤军破阵的生命护盾提高18.46%。该部分按技能等效收益的65.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1008_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1001_5",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            1
+          ],
+          "part": "反击风暴的直接打击",
+          "strength": 0.30000000000000004,
+          "equipment": "E_1001_5",
+          "benefit_share": 0.4,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "反击风暴",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "damage",
+            "shield_followup",
+            "purify"
+          ],
+          "info": "《反击风暴》：仅反击风暴的直接打击提高30.00%。该部分按技能等效收益的40.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {
+            "宗师破势": {
+              "index": 0,
+              "path": [
+                1
+              ],
+              "part": "宗师破势的直接打击",
+              "strength": 0.1846153846153846,
+              "benefit_share": 0.65,
+              "benefit_curve": 1,
+              "skill_budget": 0.12,
+              "signature": [
+                "sunder_percent",
+                "stat_flat"
+              ],
+              "operator": "sunder_percent",
+              "info": "《宗师破势》：仅宗师破势的直接打击提高18.46%。该部分按技能等效收益的65.00%估值，整项技能目标提升12%；其他部分不变。"
+            }
+          }
+        },
+        {
+          "slot": "normal",
+          "index": 1,
+          "path": [
+            1
+          ],
+          "part": "反击风暴的生命护盾",
+          "strength": 0.30000000000000004,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.4,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "反击风暴",
+          "mode": "part",
+          "action": null,
+          "operator": "shield_followup",
+          "signature": [
+            "damage",
+            "shield_followup",
+            "purify"
+          ],
+          "info": "《反击风暴》：仅反击风暴的生命护盾提高30.00%。该部分按技能等效收益的40.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {
+            "宗师破势": {
+              "index": 1,
+              "path": [
+                2
+              ],
+              "part": "宗师破势提供的闪避",
+              "strength": 0.6,
+              "benefit_share": 0.2,
+              "benefit_curve": 1,
+              "skill_budget": 0.12,
+              "signature": [
+                "sunder_percent",
+                "stat_flat"
+              ],
+              "operator": "stat_flat",
+              "info": "《宗师破势》：仅宗师破势提供的闪避提高60.00%。该部分按技能等效收益的20.00%估值，整项技能目标提升12%；其他部分不变。"
+            }
+          }
+        }
+      ]
+    },
+    "A_1009_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1001_5",
+        "E_3003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            4
+          ],
+          "part": "三段突刺的第三击",
+          "strength": 0.2666666666666666,
+          "equipment": "E_1001_5",
+          "benefit_share": 0.45,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "三段突刺",
+          "mode": "part",
+          "action": null,
+          "operator": "locked_sequence",
+          "signature": [
+            "locked_sequence",
+            "stun",
+            "heal_ap"
+          ],
+          "info": "《三段突刺》：仅三段突刺的第三击提高26.67%。该部分按技能等效收益的45.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "normal",
+          "index": 2,
+          "path": [
+            1
+          ],
+          "part": "三段突刺的攻击力回复",
+          "strength": 0.8,
+          "equipment": "E_3003_5",
+          "benefit_share": 0.15,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "三段突刺",
+          "mode": "part",
+          "action": null,
+          "operator": "heal_ap",
+          "signature": [
+            "locked_sequence",
+            "stun",
+            "heal_ap"
+          ],
+          "info": "《三段突刺》：仅三段突刺的攻击力回复提高80.00%。该部分按技能等效收益的15.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1011_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1004_5",
+        "E_3004_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "passive",
+          "index": 1,
+          "path": [
+            5
+          ],
+          "part": "绝境烈酒后的追击枪火",
+          "strength": 0.17142857142857149,
+          "equipment": "E_1004_5",
+          "benefit_share": 0.7,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "绝境烈酒",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《绝境烈酒》：仅绝境烈酒后的追击枪火提高17.14%。该部分按技能等效收益的70.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            6
+          ],
+          "part": "绝境烈酒的生命护盾",
+          "strength": 0.3999999999999999,
+          "equipment": "E_3004_5",
+          "benefit_share": 0.3,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "绝境烈酒",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《绝境烈酒》：仅绝境烈酒的生命护盾提高40.00%。该部分按技能等效收益的30.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1012_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_4003_5",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            5
+          ],
+          "part": "无极续战的击杀回复",
+          "strength": 0.264,
+          "equipment": "E_4003_5",
+          "benefit_share": 0.45454545454545453,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "无极续战",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《无极续战》：仅无极续战的击杀回复提高26.40%。该部分按技能等效收益的45.45%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 1,
+          "path": [
+            5
+          ],
+          "part": "无极续战的攻击力护盾",
+          "strength": 0.21999999999999997,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.5454545454545454,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "无极续战",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《无极续战》：仅无极续战的攻击力护盾提高22.00%。该部分按技能等效收益的54.55%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1017_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1016_6",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 2,
+          "path": [
+            1
+          ],
+          "part": "跃至前排后的长矛重击",
+          "strength": 0.22857142857142865,
+          "equipment": "E_1016_6",
+          "benefit_share": 0.35,
+          "benefit_curve": 1,
+          "skill_budget": 0.08,
+          "skill_name": "贯日长矛",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "damage",
+            "move_to_target_lane",
+            "damage",
+            "stun",
+            "shield"
+          ],
+          "info": "《贯日长矛》：仅跃至前排后的长矛重击提高22.86%。该部分按技能等效收益的35.00%估值，整项技能目标提升8%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "normal",
+          "index": 4,
+          "path": [
+            1
+          ],
+          "part": "贯日长矛的攻击力护盾",
+          "strength": 0.6000000000000001,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.2,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "贯日长矛",
+          "mode": "part",
+          "action": null,
+          "operator": "shield",
+          "signature": [
+            "damage",
+            "move_to_target_lane",
+            "damage",
+            "stun",
+            "shield"
+          ],
+          "info": "《贯日长矛》：仅贯日长矛的攻击力护盾提高60.00%。该部分按技能等效收益的20.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1019_6": {
+      "role": "物理战士/刺客",
+      "equipment": [
+        "E_1016_6",
+        "E_3003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 2,
+          "path": [
+            1
+          ],
+          "part": "回旋斧直接命中伤害",
+          "strength": 0.2666666666666666,
+          "equipment": "E_1016_6",
+          "benefit_share": 0.3,
+          "benefit_curve": 1,
+          "skill_budget": 0.08,
+          "skill_name": "旋斧回旋",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "pull_group",
+            "sunder_percent",
+            "damage",
+            "manual_dot",
+            "heal_missing_hp_per_hero"
+          ],
+          "info": "《旋斧回旋》：仅回旋斧直接命中伤害提高26.67%。该部分按技能等效收益的30.00%估值，整项技能目标提升8%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            6
+          ],
+          "part": "血战不息的击杀回复",
+          "strength": 0.16363636363636358,
+          "equipment": "E_3003_5",
+          "benefit_share": 0.7333333333333334,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "血战不息",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《血战不息》：仅血战不息的击杀回复提高16.36%。该部分按技能等效收益的73.33%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1013_6": {
+      "role": "坦克",
+      "equipment": [
+        "E_1503_5",
+        "E_3004_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 2,
+          "path": [
+            3
+          ],
+          "part": "火箭铁拳附加的衰弱幅度",
+          "strength": 0.6000000000000001,
+          "equipment": "E_1503_5",
+          "benefit_share": 0.2,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "火箭铁拳",
+          "mode": "part",
+          "action": null,
+          "operator": "weak_percent",
+          "signature": [
+            "pull",
+            "stun",
+            "weak_percent",
+            "sunder_percent"
+          ],
+          "info": "《火箭铁拳》：仅火箭铁拳附加的衰弱幅度提高60.00%。该部分按技能等效收益的20.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            6
+          ],
+          "part": "濒死应急屏障的厚度",
+          "strength": 0.1200000000000001,
+          "equipment": "E_3004_5",
+          "benefit_share": 1,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "应急屏障",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step"
+          ],
+          "info": "《应急屏障》：仅濒死应急屏障的厚度提高12.00%。该部分按技能等效收益的100.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1018_6": {
+      "role": "坦克",
+      "equipment": [
+        "E_1503_5",
+        "E_3003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            1
+          ],
+          "part": "守护屏障的攻击力护盾",
+          "strength": 0.2666666666666666,
+          "equipment": "E_1503_5",
+          "benefit_share": 0.45,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "守护屏障",
+          "mode": "part",
+          "action": null,
+          "operator": "shield",
+          "signature": [
+            "shield",
+            "steel",
+            "taunt"
+          ],
+          "info": "《守护屏障》：仅守护屏障的攻击力护盾提高26.67%。该部分按技能等效收益的45.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {
+            "影护结界": {
+              "index": 1,
+              "path": [
+                1
+              ],
+              "part": "影护结界的生命护盾",
+              "strength": 0.26666666666666666,
+              "benefit_share": 0.45,
+              "benefit_curve": 1,
+              "skill_budget": 0.12,
+              "signature": [
+                "damage",
+                "caster_hp_shield",
+                "taunt"
+              ],
+              "operator": "caster_hp_shield",
+              "info": "《影护结界》：仅影护结界的生命护盾提高26.67%。该部分按技能等效收益的45.00%估值，整项技能目标提升12%；其他部分不变。"
+            }
+          }
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            6
+          ],
+          "part": "舍身佑护的生命护盾部分",
+          "strength": 0.30000000000000004,
+          "equipment": "E_3003_5",
+          "benefit_share": 0.4,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "舍身佑护",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step"
+          ],
+          "info": "《舍身佑护》：仅舍身佑护的生命护盾部分提高30.00%。该部分按技能等效收益的40.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1020_6": {
+      "role": "坦克",
+      "equipment": [
+        "E_1005_5",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 1,
+          "path": [
+            1
+          ],
+          "part": "破晓重击的魔法伤害",
+          "strength": 0.30000000000000004,
+          "equipment": "E_1005_5",
+          "benefit_share": 0.4,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "破晓重击",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "move_to_target_lane",
+            "damage",
+            "stun",
+            "steel"
+          ],
+          "info": "《破晓重击》：仅破晓重击的魔法伤害提高30.00%。该部分按技能等效收益的40.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {
+            "曙光拦截": {
+              "index": 0,
+              "path": [
+                1
+              ],
+              "part": "曙光拦截的魔法打击",
+              "strength": 0.1846153846153846,
+              "benefit_share": 0.65,
+              "benefit_curve": 1,
+              "skill_budget": 0.12,
+              "signature": [
+                "stun",
+                "caster_hp_shield"
+              ],
+              "operator": "stun",
+              "info": "《曙光拦截》：仅曙光拦截的魔法打击提高18.46%。该部分按技能等效收益的65.00%估值，整项技能目标提升12%；其他部分不变。"
+            }
+          }
+        },
+        {
+          "slot": "normal",
+          "index": 3,
+          "path": [
+            1
+          ],
+          "part": "破晓重击后的双抗增益",
+          "strength": 0.30000000000000004,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.4,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "破晓重击",
+          "mode": "part",
+          "action": null,
+          "operator": "steel",
+          "signature": [
+            "move_to_target_lane",
+            "damage",
+            "stun",
+            "steel"
+          ],
+          "info": "《破晓重击》：仅破晓重击后的双抗增益提高30.00%。该部分按技能等效收益的40.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {
+            "曙光拦截": {
+              "index": 1,
+              "path": [
+                1
+              ],
+              "part": "曙光拦截的生命护盾",
+              "strength": 0.48,
+              "benefit_share": 0.25,
+              "benefit_curve": 1,
+              "skill_budget": 0.12,
+              "signature": [
+                "stun",
+                "caster_hp_shield"
+              ],
+              "operator": "caster_hp_shield",
+              "info": "《曙光拦截》：仅曙光拦截的生命护盾提高48.00%。该部分按技能等效收益的25.00%估值，整项技能目标提升12%；其他部分不变。"
+            }
+          }
+        }
+      ]
+    },
+    "A_1003_6": {
+      "role": "法术输出",
+      "equipment": [
+        "E_1002_5",
+        "E_3003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            1
+          ],
+          "part": "超负荷直接伤害",
+          "strength": 0.15999999999999992,
+          "equipment": "E_1002_5",
+          "benefit_share": 0.75,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "超负荷",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "damage",
+            "stun"
+          ],
+          "info": "《超负荷》：仅超负荷直接伤害提高16.00%。该部分按技能等效收益的75.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {
+            "符文裂解": {
+              "index": 0,
+              "path": [
+                1
+              ],
+              "part": "符文裂解首段破甲伤害",
+              "strength": 0.25,
+              "benefit_share": 0.48,
+              "benefit_curve": 1,
+              "skill_budget": 0.12,
+              "signature": [
+                "sunder_percent",
+                "damage"
+              ],
+              "operator": "sunder_percent",
+              "info": "《符文裂解》：仅符文裂解首段破甲伤害提高25.00%。该部分按技能等效收益的48.00%估值，整项技能目标提升12%；其他部分不变。"
+            }
+          }
+        },
+        {
+          "slot": "passive",
+          "index": 1,
+          "path": [
+            5
+          ],
+          "part": "符文逆涌的攻击力治疗",
+          "strength": 0.469090909090909,
+          "equipment": "E_3003_5",
+          "benefit_share": 0.2558139534883721,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "符文逆涌",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《符文逆涌》：仅符文逆涌的攻击力治疗提高46.91%。该部分按技能等效收益的25.58%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1010_6": {
+      "role": "法术输出",
+      "equipment": [
+        "E_1015_5",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 2,
+          "path": [
+            1
+          ],
+          "part": "瞬步贴身后的斩击",
+          "strength": 0.30000000000000004,
+          "equipment": "E_1015_5",
+          "benefit_share": 0.4,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "瞬步斩",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "damage",
+            "move_to_target",
+            "damage",
+            "steel"
+          ],
+          "info": "《瞬步斩》：仅瞬步贴身后的斩击提高30.00%。该部分按技能等效收益的40.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "normal",
+          "index": 3,
+          "path": [
+            1
+          ],
+          "part": "瞬步结束的双抗增益",
+          "strength": 0.34285714285714297,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.35,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "瞬步斩",
+          "mode": "part",
+          "action": null,
+          "operator": "steel",
+          "signature": [
+            "damage",
+            "move_to_target",
+            "damage",
+            "steel"
+          ],
+          "info": "《瞬步斩》：仅瞬步结束的双抗增益提高34.29%。该部分按技能等效收益的35.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1014_6": {
+      "role": "法术输出",
+      "equipment": [
+        "E_1002_5",
+        "E_5004_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            1
+          ],
+          "part": "普通炮台的面板继承比例",
+          "strength": 0.07847979991034015,
+          "equipment": "E_1002_5",
+          "benefit_share": 1,
+          "benefit_curve": 1.5,
+          "skill_budget": 0.12,
+          "skill_name": "微型炮台",
+          "mode": "part",
+          "action": null,
+          "operator": "summon_turret",
+          "signature": [
+            "summon_turret"
+          ],
+          "info": "《微型炮台》：仅普通炮台的面板继承比例提高7.85%。该部分按技能等效收益的100.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "captain",
+          "index": 1,
+          "path": [
+            3
+          ],
+          "part": "海克斯弹幕每发魔弹伤害",
+          "strength": 0.34285714285714297,
+          "equipment": "E_5004_5",
+          "benefit_share": 0.35,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "真-海克斯弹幕",
+          "mode": "part",
+          "action": null,
+          "operator": "locked_combo_group",
+          "signature": [
+            "summon_turret",
+            "locked_combo_group",
+            "weak_percent"
+          ],
+          "info": "《真-海克斯弹幕》：仅海克斯弹幕每发魔弹伤害提高34.29%。该部分按技能等效收益的35.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1015_6": {
+      "role": "法术输出",
+      "equipment": [
+        "E_1015_5",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 3,
+          "path": [
+            1
+          ],
+          "part": "折返贴身的主斩伤害",
+          "strength": 0.2666666666666666,
+          "equipment": "E_1015_5",
+          "benefit_share": 0.45,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "影刃突袭",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "damage",
+            "dash",
+            "move_to_target",
+            "damage",
+            "damage",
+            "steel"
+          ],
+          "info": "《影刃突袭》：仅折返贴身的主斩伤害提高26.67%。该部分按技能等效收益的45.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "normal",
+          "index": 5,
+          "path": [
+            1
+          ],
+          "part": "折返后的双抗增益",
+          "strength": 0.48,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.25,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "影刃突袭",
+          "mode": "part",
+          "action": null,
+          "operator": "steel",
+          "signature": [
+            "damage",
+            "dash",
+            "move_to_target",
+            "damage",
+            "damage",
+            "steel"
+          ],
+          "info": "《影刃突袭》：仅折返后的双抗增益提高48.00%。该部分按技能等效收益的25.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1016_6": {
+      "role": "法术输出",
+      "equipment": [
+        "E_1005_5",
+        "E_5003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 2,
+          "path": [
+            1
+          ],
+          "part": "雷电标记的最终魔法打击",
+          "strength": 0.24,
+          "equipment": "E_1005_5",
+          "benefit_share": 0.5,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "雷电标记",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "damage",
+            "damage",
+            "damage",
+            "stun"
+          ],
+          "info": "《雷电标记》：仅雷电标记的最终魔法打击提高24.00%。该部分按技能等效收益的50.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "captain",
+          "index": 4,
+          "path": [
+            1
+          ],
+          "part": "雷霆领域的生命护盾",
+          "strength": 0.24,
+          "equipment": "E_5003_5",
+          "benefit_share": 0.5,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "真-雷霆领域",
+          "mode": "part",
+          "action": null,
+          "operator": "hp_shield",
+          "signature": [
+            "damage",
+            "damage",
+            "damage",
+            "stun",
+            "hp_shield"
+          ],
+          "info": "《真-雷霆领域》：仅雷霆领域的生命护盾提高24.00%。该部分按技能等效收益的50.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1004_6": {
+      "role": "辅助",
+      "equipment": [
+        "E_1015_5",
+        "E_5002_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            1
+          ],
+          "part": "星之灌注的攻击力治疗",
+          "strength": 0.2666666666666666,
+          "equipment": "E_1015_5",
+          "benefit_share": 0.45,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "星之灌注",
+          "mode": "part",
+          "action": null,
+          "operator": "cure",
+          "signature": [
+            "cure",
+            "purify",
+            "attrup"
+          ],
+          "info": "《星之灌注》：仅星之灌注的攻击力治疗提高26.67%。该部分按技能等效收益的45.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {
+            "星落续命": {
+              "index": 1,
+              "path": [
+                1
+              ],
+              "part": "星落续命的治疗",
+              "strength": 0.24,
+              "benefit_share": 0.5,
+              "benefit_curve": 1,
+              "skill_budget": 0.12,
+              "signature": [
+                "weak_percent",
+                "cure"
+              ],
+              "operator": "cure",
+              "info": "《星落续命》：仅星落续命的治疗提高24.00%。该部分按技能等效收益的50.00%估值，整项技能目标提升12%；其他部分不变。"
+            }
+          }
+        },
+        {
+          "slot": "passive",
+          "index": 0,
+          "path": [
+            6
+          ],
+          "part": "垂星救赎的生命上限治疗",
+          "strength": 0.34285714285714297,
+          "equipment": "E_5002_5",
+          "benefit_share": 0.35,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "垂星救赎",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step"
+          ],
+          "info": "《垂星救赎》：仅垂星救赎的生命上限治疗提高34.29%。该部分按技能等效收益的35.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1006_6": {
+      "role": "辅助",
+      "equipment": [
+        "E_4002_5",
+        "E_3003_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 2,
+          "path": [
+            1
+          ],
+          "part": "坚毅咏叹调的力量增益",
+          "strength": 0.34285714285714297,
+          "equipment": "E_4002_5",
+          "benefit_share": 0.35,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "坚毅咏叹调",
+          "mode": "part",
+          "action": null,
+          "operator": "strong",
+          "signature": [
+            "cure",
+            "attrup",
+            "strong"
+          ],
+          "info": "《坚毅咏叹调》：仅坚毅咏叹调的力量增益提高34.29%。该部分按技能等效收益的35.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "passive",
+          "index": 1,
+          "path": [
+            6
+          ],
+          "part": "救赎和弦的生命护盾",
+          "strength": 0.21818181818181825,
+          "equipment": "E_3003_5",
+          "benefit_share": 0.55,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "救赎和弦",
+          "mode": "part",
+          "action": null,
+          "operator": "mod_step",
+          "signature": [
+            "mod_step",
+            "mod_step"
+          ],
+          "info": "《救赎和弦》：仅救赎和弦的生命护盾提高21.82%。该部分按技能等效收益的55.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
     }
   },
   "exclusive": [

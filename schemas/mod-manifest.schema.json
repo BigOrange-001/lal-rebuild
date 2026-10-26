@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lal.local/schemas/mod-manifest.schema.json",
+  "title": "mod-manifest API 1",
+  "$comment": "Editor schema. Runtime additionally validates references, semantic action contracts, duplicate IDs/paths, media, dependencies and post-upgrade bounds.",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "lal-mod-v1"
+    },
+    "kind": {
+      "enum": [
+        "new",
+        "patch"
+      ]
+    },
+    "packageId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f-]{36}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "engineApi": {
+      "const": "1"
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "asset.image",
+          "asset.image.card-frame",
+          "asset.sound",
+          "effect.reference.builtin",
+          "hero.damage.true",
+          "hero.patch.damage-type",
+          "hero.patch.presentation",
+          "hero.patch.skill",
+          "hero.patch.stats",
+          "hero.patch.text",
+          "hero.register",
+          "patch.scopes",
+          "progression.default-player-hero",
+          "skill.armor",
+          "skill.burn",
+          "skill.caster_hp_shield",
+          "skill.cure",
+          "skill.damage",
+          "skill.description.rank-template",
+          "skill.effect-sequence.v1",
+          "skill.events.v1",
+          "skill.hp_shield",
+          "skill.move_to_target",
+          "skill.native-template.103",
+          "skill.native-template.v1",
+          "skill.poison",
+          "skill.purify",
+          "skill.reference.builtin",
+          "skill.shield",
+          "skill.silence",
+          "skill.strong",
+          "skill.stun",
+          "skill.sunder",
+          "skill.target.lock-only",
+          "skill.target.unlimited",
+          "skill.target_hp_shield",
+          "skill.weak",
+          "unit.summon.v1"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "entrypoints": {
+      "type": "object",
+      "properties": {
+        "heroes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "patches": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skills": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effects": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 512
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f-]{36}$"
+          },
+          "version": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "packageId",
+          "version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "integrationDefaults": {
+      "type": "object",
+      "properties": {
+        "appearance.arena_enemy": {
+          "type": "boolean"
+        },
+        "acquisition.summon.normal": {
+          "type": "boolean"
+        },
+        "acquisition.summon.advanced": {
+          "type": "boolean"
+        },
+        "acquisition.shop.hero_soul": {
+          "type": "boolean"
+        },
+        "appearance.fragment_enemy": {
+          "type": "boolean"
+        },
+        "appearance.exploration_enemy": {
+          "type": "boolean"
+        },
+        "appearance.expedition_enemy": {
+          "type": "boolean"
+        },
+        "appearance.campaign_random_enemy": {
+          "type": "boolean"
+        },
+        "appearance.assist_bot": {
+          "type": "boolean"
+        },
+        "acquisition.summon.activity": {
+          "type": "boolean"
+        },
+        "acquisition.exchange.hero": {
+          "type": "boolean"
+        },
+        "acquisition.exchange.activity": {
+          "type": "boolean"
+        },
+        "acquisition.drop.campaign": {
+          "type": "boolean"
+        },
+        "acquisition.drop.activity": {
+          "type": "boolean"
+        },
+        "acquisition.drop.tower_hero": {
+          "type": "boolean"
+        },
+        "acquisition.drop.tower_soul": {
+          "type": "boolean"
+        },
+        "usage.friend_assist": {
+          "type": "boolean"
+        },
+        "usage.destiny": {
+          "type": "boolean"
+        },
+        "usage.auxiliary_formation": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "description": {
+      "type": "string"
+    },
+    "preview": {
+      "type": "string"
+    },
+    "sourceNotes": {},
+    "signature": {}
+  },
+  "required": [
+    "format",
+    "kind",
+    "packageId",
+    "name",
+    "author",
+    "version",
+    "engineApi",
+    "requiredCapabilities",
+    "entrypoints",
+    "files"
+  ],
+  "additionalProperties": false
+}

@@ -142,7 +142,7 @@ package com.meng52.game.command.map
             _loc9_ = team2List[_loc8_];
             if(_loc9_ != null)
             {
-               _loc2_ = new Avatar(_loc9_[0],_loc9_.slice(0,11));
+               _loc2_ = new Avatar(GlobalData.modDefinitionId(String(_loc9_[0]),"pveEnemy"),_loc9_.slice(0,11));
                _loc7_ += getAvatarPower(_loc2_,0,getEnemyStatOverride(_loc8_,0,String(_loc9_[0])));
                _loc2_.clear();
             }
@@ -157,7 +157,7 @@ package com.meng52.game.command.map
             _loc9_ = _loc10_[_loc8_];
             if(_loc9_ != null)
             {
-               _loc2_ = new Avatar(_loc9_[0],_loc9_.slice(0,11));
+               _loc2_ = new Avatar(GlobalData.modDefinitionId(String(_loc9_[0]),"pveEnemy"),_loc9_.slice(0,11));
                _loc5_ += getAvatarPower(_loc2_,param1,getEnemyStatOverride(_loc8_,param1,String(_loc9_[0])));
                _loc2_.clear();
             }

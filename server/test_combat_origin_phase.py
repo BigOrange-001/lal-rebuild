@@ -72,6 +72,47 @@ class CombatOriginPhaseTests(unittest.TestCase):
         reply = self.combat._dispatch_exploration(self.uid, 'user.exploration_combat', {'team': self.team})
         self.assertEqual([unit['phase'] for unit in reply['orgin_team_a']], [0, 1, 2])
 
+    def stat_talents(self):
+        talents=[next(sid for sid,row in self.config['cfg']['talent'].items()
+                      if row.get('growth_effect')==effect and row.get('growth_value',0)>0)
+                 for effect in ('attack','defense','hp')]
+        def assign(profile):
+            for iid,talent in zip(self.ids,talents):profile['avatars'][iid]['talent']=talent
+            return profile,{}
+        self.store.atomic_update(self.uid,assign)
+        self.profile=self.store.profile_raw(self.uid)
+
+    def test_exploration_panel_and_difficulty_apply_stat_talents_once(self):
+        self.stat_talents()
+        raw=[self.roster.battle_attributes(self.profile,iid,hero_only=True) for iid in self.ids]
+        self.combat._dispatch_exploration(self.uid,'user.exploration_make_army',{'aids':self.ids})
+        state=self.store.profile_raw(self.uid)['exploration']
+        for key in ('hp_max','ap','de_ph','de_ma'):
+            self.assertEqual(state['difficulty']['stat_totals'][key],sum(row[key] for row in raw))
+        def wound(profile):
+            profile['exploration']['stage_mode']=['ap','all',1,1]
+            profile['exploration']['army'][self.ids[2]]['current_hp']=raw[2]['hp_max']//2
+            return profile,{}
+        self.store.atomic_update(self.uid,wound)
+        reply=self.combat._dispatch_exploration(self.uid,'user.exploration_combat',{'team':self.team})
+        for index,unit in enumerate(reply['orgin_team_a']):
+            for key in ('hp_max','ap','de_ph','de_ma'):self.assertEqual(unit[key],raw[index][key])
+            self.assertTrue(unit['growth_stats_applied'])
+        self.assertEqual(reply['orgin_team_a'][2]['hp'],raw[2]['hp_max']//2)
+
+    def test_assist_snapshots_preserve_each_precomputed_stat_talent(self):
+        self.stat_talents()
+        for iid in self.ids:
+            with self.subTest(hero=iid):
+                aid=iid.split('|')[0]
+                avatar=self.roster.battle_attributes(self.profile,iid)
+                avatar.update(aid=aid,new_4attrs={k:0 for k in ('hit','flee','crit','tough')})
+                helper={'avatar':avatar,'avatar_id':iid}
+                with patch.object(GameplaySocial,'lookup_assist',return_value=copy.deepcopy(helper)):
+                    unit=self.combat._resolve_assist(self.profile,{'team':[None]*5+[[aid,0,.2,'92000001',0]]})['battle_snapshot']
+                for key in ('hp','hp_max','ap','de_ph','de_ma'):self.assertEqual(unit[key],avatar[key])
+                self.assertTrue(unit['growth_stats_applied'])
+
     def test_player_nested_skill_growth_matches_npc_and_preserves_config(self):
         skill_id = self.config['cfg']['avatar']['A_1030_5']['pl'][10]
         row = self.config['cfg']['skill'][skill_id]

@@ -20,6 +20,7 @@ const vm = require('node:vm');
 const input = JSON.parse(fs.readFileSync(0, 'utf8'));
 const noop = () => {};
 const hits = [], scheduled = [], tweens = [], visuals = [];
+const attackContext = {kind:'active'};
 const map = {getAliveList() { return []; }, getShowLine(line) { return input.reverse ? 2-line : line; }};
 const GameMap = {currentMap: map, actionDelay: 1};
 function Sprite() { this.children = []; this.scaleY = 1; this.alpha = 1; }
@@ -48,7 +49,7 @@ const rendered={parent:{},x:37,y:476,pivotX:0,pivotY:0,
 const layer = {
   effectLayer: {addChild(child) { visuals.push(child); },globalToLocal(p){return new Point(p.x-10,p.y-20);}},
   getLineSpr(){return lineSprite;},
-  delayCall(fn, delay, ...args) { scheduled.push({delay, args}); },
+  delayCall(fn, delay, ...args) { scheduled.push({delay, args,bullet:fn===context.DisplayTools.addBullet}); },
   addTween(tween) { tweens.push(tween); }
 };
 const context = vm.createContext({
@@ -59,14 +60,19 @@ const context = vm.createContext({
   Tools: {toInt: Math.trunc, clone(v) { return v && {...v}; }},
   DisplayTools: {getAttrs() { return input.effect; },
     newDisplayObject(attrs){return new DragonBonesSprite(attrs);},
-    addBullet() { throw Error('Lane wave must not emit per-target projectiles'); }},
+    addBullet(attrs) {
+      if(input.mode!=='projectiles') throw Error('Lane wave must not emit per-target projectiles');
+      return Math.hypot(attrs.x2-attrs.x1,attrs.y2-attrs.y1)/attrs.sp;
+    }},
   AvatarData: {isAttack() { return true; }, canMiss() { return true; }},
-  GlobalData: {}, Sprite, Quad, Tween, trace: noop, int: Math.trunc,
+  GlobalData: {$modRuntime:{},$mConfig_skill:{}}, Sprite, Quad, Tween, trace: noop, int: Math.trunc,
   Math, Number, isFinite, Point, Rectangle, DragonBonesSprite
 });
 function install(target, name, params) {
   target[name] = vm.runInContext('(function(' + params + ') { with (this) {' + input.methods[name] + '\n} })', context);
 }
+install(context.GlobalData,'baseModHeroId','id');
+install(context.GlobalData,'modDefinitionId','id,scope');
 if (input.mode === 'summon') {
   const fields = ['hpMax','hp','ap','dePh','deMa','hit','flee','crit','tough',
     'lv','slv','phase','limitBreak','hpP','apP','dePhP','deMaP','exp','loveExp','morph'];
@@ -82,7 +88,7 @@ if (input.mode === 'summon') {
       getPhaseLv() { return 0; }, getStar() { return Number(aid.split('_').at(-1)); },
       getCultivationGainFromSlope() { return 0; }, getSymp() { return [0,0,0,0]; },
       applyOwnedGuildResearch(key, value) { return value; },
-      initHalo:noop, initSkills:noop, ready:noop, initbuffs() { this.buffs = {}; },
+      updateBondSkills104:noop,bondPanel104:(stat,value)=>value,initHalo:noop, initSkills:noop, ready:noop, initbuffs() { this.buffs = {}; },
       addBuff(key, rounds) { this.buffs[key] = {rounds}; }});
     for (const key of fields) {
       let value=0;
@@ -90,6 +96,8 @@ if (input.mode === 'summon') {
     }
     for (const name of ['getHpMax','getDamage','getDePh','getDeMa'])
       install(this,name,'param1=-1,param2=-1,param3=false');
+    for (const name of ['getPhysicalDefense','getMagicDefense'])
+      install(this,name,'param1,param2,param3,ignoreSunder');
     for (const name of ['getHit','getFlee','getCrit','getTough','initFightAttr']) install(this,name,'');
     install(this,'ownGrowthValue','effect');
     install(this,'inheritSummonPanel','owner,apRatio,hpRatio=-1,dePhRatio=-1,deMaRatio=-1,secondaryRatio=-1');
@@ -118,9 +126,11 @@ if (input.mode === 'summon') {
     buffs:input.buffed ? {hitup:{value:5},fleeup:{value:6},critup:{value:7},toughup:{value:8}} : {}};
   for (const name of ['getHit','getFlee','getCrit','getTough']) install(owner,name,'');
   install(owner,'getSummonPanelSnapshot','');
-  const skill = {avatar:owner, skillSetData:{id:input.skillId}, boundedSummons:[],
+  const skill = {avatar:owner, skillSetData:{id:input.skillId}, boundedSummons:[],activeNativeSettings:null,activeNativeSource:null,
     captainSummonMultiplier:input.captainSummonMultiplier,
     hasBoundedSummonPolicy(){return true;}};
+  install(skill,'getNativeSetting','key,fallback=null');
+  install(skill,'getMechanismId','');
   install(skill,'getSummonCombatSnapshotApFactor','');
   install(skill,'summonAction','_loc20_,_loc14_=0,actionTargets=null,targetGroups=null');
   context._loc16_=layer;
@@ -138,28 +148,39 @@ if (input.mode === 'summon') {
   process.stdout.write(JSON.stringify({panel:stats(panel),combat:stats(summoned),
     hp:summoned.hp,level:summoned.lv,secondary:[summoned.getHit(),summoned.getFlee(),
       summoned.getCrit(),summoned.getTough()],bounded:skill.boundedSummons.length}));
-} else if (input.mode === 'wave') {
+} else if (input.mode === 'wave' || input.mode === 'projectiles') {
   const targets = input.positions.map((pos, index) => ({pos, line: 1, offset: 0,
     getTeamHp: noop, injured(damage) {
       hits.push({index, delay: GameMap.actionDelay, damage});
       // Reactions must not shift the next enemy's wave impact.
-      if (index === 0) GameMap.actionDelay += .4;
+      if (index === 0 && input.mode==='wave') GameMap.actionDelay += .4;
       return damage;
     }}));
   const caster = {line: 1, pos: 1500, offset: 0, team: 1, otherTeam: 2,
-    currentAbilityAttack() { return {kind: 'active'}; }, purpleBondMultiplier() { return 1; },
+    prepareParallelVisualTarget:noop,playParallelAttackTween:()=>true,
+    parallelVisualBatches:[],currentAbilityAttack() { return attackContext; }, purpleBondMultiplier() { return 1; },
     queueRangePreview:noop,
     getTeamHp: noop, checkTalent() { return 0; }, getDamage() { return 100; },
     fightRes: {parent: null}, avatarData: {}, skillB: null, attackTween: noop,
     showLaneShockwave: noop, checkMiss(a, b) { return input.missIndex === targets.indexOf(b); },
     countDamage(a, b, base) { return [base, false]; }, checkCrit() { return 1; }};
   install(caster, 'attackAimList', 'param1,param2=-1,param3=1,param4=0,param5=null,param6=false,param7=null,param8=-1,param9=1,effectSource=null');
+  if(input.mode==='projectiles') {
+    for(const [name,args] of Object.entries({beginParallelVisualBatch:'',prepareParallelVisualTarget:'target,hit',
+      endParallelVisualBatch:'batch',playParallelAttackTween:''})) install(caster,name,args);
+  }
+  const batch=input.mode==='projectiles'?caster.beginParallelVisualBatch():null;
   let total = 0;
   for (let segment=0; segment<(input.segments || 1); segment++) {
+    if(input.mode==='projectiles') {
+      for(const target of targets) total+=caster.attackAimList([target],3,input.coefficient||3,0,'FX_S9130_COMBO');
+      continue;
+    }
     total += caster.attackAimList(targets, 1, input.coefficient || 3, targets.length-1,
       'FX_STEEL_LANE_WAVE');
   }
-  process.stdout.write(JSON.stringify({total,hits,scheduled:scheduled.map(p=>({delay:p.delay,args:p.args.map(a=>a===caster?'caster':a)})),endDelay:GameMap.actionDelay}));
+  if(batch) caster.endParallelVisualBatch(batch);
+  process.stdout.write(JSON.stringify({total,hits,scheduled:scheduled.map(p=>({delay:p.delay,bullet:p.bullet,args:p.args.map(a=>a===caster?'caster':a)})),endDelay:GameMap.actionDelay}));
 } else {
   const host = {};
   install(host, 'showLaneShockwave', 'source');
@@ -176,15 +197,19 @@ class TeemoClientCombatTests(unittest.TestCase):
         avatar = (ROOT / 'client/src/stages/137_Avatar.as').read_text(encoding='utf-8')
         skill = (ROOT / 'client/src/stages/139_SkillSet.as').read_text(encoding='utf-8')
         cls.methods = {}
+        global_data = (ROOT / 'client/src/stages/001_GlobalData.as').read_text(encoding='utf-8')
+        for name in ('baseModHeroId', 'modDefinitionId'):
+            cls.methods[name] = method_body(global_data, name)
         # Typed ActionScript locals have zero defaults; retain those in Node.
         avatar = re.sub(r'(var\s+\w+:int)\s*;', r'\1 = 0;', avatar)
         for source, names in ((avatar, ('attackAimList', 'showLaneShockwave', 'getHpMax',
-                                        'getDamage', 'getDePh', 'getDeMa', 'getHit',
+                                        'beginParallelVisualBatch','prepareParallelVisualTarget','endParallelVisualBatch','playParallelAttackTween',
+                                        'getDamage', 'getDePh', 'getDeMa', 'getPhysicalDefense','getMagicDefense', 'getHit',
                                         'getFlee', 'getCrit', 'getTough', 'init', 'goFight',
                                         'initFightAttr', 'getSpeed', 'getRange',
                                         'ownGrowthValue', 'teamTalentFlat', 'getBookCombatBonus',
                                         'isValidSummonMultiplier','inheritSummonPanel','scaledSummonStat','getSummonPanelSnapshot')),
-                              (skill, ('getSummonCombatSnapshotApFactor',))):
+                              (skill, ('getNativeSetting','getMechanismId','getSummonCombatSnapshotApFactor'))):
             for name in names:
                 body = method_body(source, name)
                 body = re.sub(r'for each\s*\(([^)]+) in ([^)]+)\)', r'for (\1 of \2)', body)
@@ -204,11 +229,12 @@ class TeemoClientCombatTests(unittest.TestCase):
                       if key != 'laneWave'}
 
     def run_client(self, **options):
+        effect=options.pop('effect',self.effect)
         if 'skillId' in options:
             options.setdefault('captainSummonMultiplier',
                                self.config['skill'][options['skillId']].get('captainSummonMultiplier', 1))
         result = subprocess.run([NODE, '-e', HARNESS],
-                                input=json.dumps(dict(methods=self.methods, effect=self.effect, rows=self.config["avatar"], **options)),
+                                input=json.dumps(dict(methods=self.methods, effect=effect, rows=self.config["avatar"], **options)),
                                 capture_output=True, text=True, encoding='utf-8', timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
@@ -276,6 +302,18 @@ class TeemoClientCombatTests(unittest.TestCase):
                 self.assertEqual(len({hit['delay'] for hit in result['hits']}), 1)
                 self.assertEqual(result['hits'][0]['delay'], 1.48)
                 self.assertGreaterEqual(result['endDelay'], 1.88)
+
+    def test_cat_launches_six_parallel_volleys_with_distance_based_impacts(self):
+        result=self.run_client(mode='projectiles',positions=[0,500,1000,2000,2500,3000],segments=6,
+                               effect={'b':{'id':'e203'},'h':{},'sp':850})
+        bullets=[s for s in result['scheduled'] if s['bullet']]
+        self.assertEqual(len(bullets),36)
+        self.assertEqual(len(result['hits']),36)
+        for wave in range(6):
+            self.assertEqual(len({s['delay'] for s in bullets[wave*6:wave*6+6]}),1)
+            hits=result['hits'][wave*6:wave*6+6]
+            self.assertGreater(hits[0]['delay'],hits[2]['delay'])
+            self.assertAlmostEqual(hits[0]['delay']-hits[2]['delay'],1000*680/3000/850)
 
     def test_three_steel_segments_schedule_three_lane_waves_and_hit_everyone(self):
         result = self.run_client(mode='wave', positions=[0, 1500, 3000],

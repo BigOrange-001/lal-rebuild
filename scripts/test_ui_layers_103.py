@@ -44,20 +44,17 @@ console.log(JSON.stringify({opened,closed:{native:unit.mNT_id.visible&&unit.mNT_
     def test_round_label_has_one_line_and_never_scales_or_moves_on_update(self):
         script=r'''
 const MainConfig={$isEnglish:false},GameMap={ROUND_MAX:40},GlobalConfig={FONT_0:'font'},SHADOW_ALPHA=.6;
-const GlobalData={$isPVE:true};
 const GameMapLayer={gl:{juggler:{removeTweens:()=>{}},addTween:()=>{}}};
 function TextField(width,height,text,font,size,color){Object.assign(this,{width,height,text,color,x:0,y:0});}
 function Tween(target){this.fadeTo=v=>target.alpha=v;}
 const children=[],unit={m_roundTF:null,m_roundTF2:null,m_sprFg:{addChild:v=>children.push(v)}};
 '''+function('163_UiLayer.as','addRound')+function('163_UiLayer.as','refreashRound','param1')+r'''
 const rows=[];for(const n of [1,9,10,39,40]){unit.refreashRound(n);rows.push({...unit.m_roundTF});}
-const shadow=unit.m_roundTF2.text;GlobalData.$isPVE=false;unit.refreashRound(1001);
-console.log(JSON.stringify({rows,children:children.length,shadow,unlimited:{text:unit.m_roundTF.text,color:unit.m_roundTF.color}}));
+console.log(JSON.stringify({rows,children:children.length,shadow:unit.m_roundTF2.text}));
 '''
         result=self.run_js(script)
         self.assertEqual(result['children'],2)
         self.assertEqual(result['shadow'],'回合 40 / 40')
-        self.assertEqual(result['unlimited'],{'text':'回合 1001','color':16777215})
         for row,n in zip(result['rows'],[1,9,10,39,40]):
             self.assertEqual(row['text'],f'回合 {n} / 40')
             self.assertEqual((row['x'],row['y'],row['width'],row['height']),(14,44,194,34))

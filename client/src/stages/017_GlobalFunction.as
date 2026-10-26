@@ -6495,6 +6495,46 @@ package com.meng52.game.global
          }
       }
       
+      public static function applyModConfig(envelope:Object) : Boolean
+      {
+         if(envelope == null || envelope.cfg == null || envelope.uid == null || envelope.digest == null) return false;
+         var cfg:Object = envelope.cfg;
+         if(cfg.avatar == null || cfg.skill == null || cfg.effect == null || cfg.system_simple == null) return false;
+         // This is a complete authenticated configuration, never merged into
+         // the installation-wide pre-login cache.
+         GlobalData.$mConfig = cfg;
+         GlobalData.$mConfig_avatar = cfg.avatar;
+         GlobalData.$mConfig_skill = cfg.skill;
+         GlobalData.$mConfig_book_skill = cfg.bookskill == null ? {} : cfg.bookskill;
+         GlobalData.$mConfig_effect = cfg.effect;
+         GlobalData.$mConfig_simple = cfg.system_simple;
+         GlobalData.$mConfig_destiny = cfg.destiny;
+         GlobalData.$mConfig_talent = cfg.talent;
+         GlobalData.$mConfig_equip = cfg.equip;
+         GlobalData.$mConfig_dn = cfg.dn;
+         GlobalData.$mConfig_pvp_robot = cfg.pvp_robot;
+         GlobalData.$mConfig_exchange = cfg.exchange;
+         GlobalData.$mConfig_festival = cfg.exchange_festival;
+         GlobalData.$mConfig_wager_festival = cfg.wager_festival;
+         GlobalData.$mConfig_ploy_cycle = cfg.ploy_cycle;
+         GlobalData.$mConfig_ploy_system_simple = cfg.ploy_system_simple;
+         GlobalData.$mConfig_battle_main = cfg.battle_main;
+         GlobalData.$mConfig_combat_main = cfg.combat_main;
+         GlobalData.$mConfig_battle_ploy = cfg.battle_ploy;
+         GlobalData.$mConfig_combat_ploy = cfg.combat_ploy;
+         GlobalData.$mConfig_battle_association = cfg.battle_association;
+         GlobalData.$mConfig_combat_association = cfg.combat_association;
+         GlobalData.$mConfig_check_in = cfg.check_in;
+         GlobalData.$mGuild_simple = cfg.association_simple;
+         // The manager singletons memoize parsed rows; merely assigning cfg
+         // leaves the old save's skills and heroes alive.
+         AvatarManager.clear();
+         SkillSetManager.clear();
+         EffectManager.clear();
+         EquipManager.clear();
+         return true;
+      }
+
       public static function check_noPayList() : Boolean
       {
          var _loc1_:Boolean = false;

@@ -12,6 +12,7 @@ import secrets
 
 from battle_engine import serialize_stage_team
 from bot_names import sample_bot_names
+from mod_policy import runtime as mod_runtime, candidate_ids, policy_signature
 
 
 STAT_KEYS = ("hp", "ap", "de_ph", "de_ma")
@@ -36,6 +37,8 @@ def combat_config_signature(cfg: dict) -> str:
     and opponent-order schema are unchanged.
     """
     combat = {name: cfg.get(name, {}) for name in COMBAT_CONFIG_TABLES}
+    if mod_runtime(cfg):
+        combat["mod_policy"] = policy_signature(cfg)
     payload = json.dumps({"schema": "arena-combat-config-v1", "tables": combat},
                          sort_keys=True, ensure_ascii=False, separators=(",", ":"),
                          default=_signature_date)
@@ -45,8 +48,11 @@ def combat_config_signature(cfg: dict) -> str:
 def highest_rarity_heroes(cfg: dict) -> list[str]:
     """One highest configured A_1xxx color per hero family, including skins."""
     selected: dict[str, tuple[int, str]] = {}
-    for aid in cfg.get("avatar", {}):
-        if not re.fullmatch(r"A_1\d{3}_[2-6]", aid):
+    candidates = [aid for aid in cfg.get("avatar", {}) if re.fullmatch(r"A_1\d{3}_[2-6]", aid)]
+    if mod_runtime(cfg):
+        candidates = candidate_ids(cfg, candidates, "appearance.arena_enemy", include_new=True)
+    for aid in candidates:
+        if not aid.rsplit("_", 1)[-1].isdigit():
             continue
         family, star_text = aid.rsplit("_", 1)
         candidate = (int(star_text), aid)
@@ -117,7 +123,7 @@ def generate_opponents(cfg: dict, owner_uid: str, generation: int, player_rank: 
         aids = rng.sample(pool, 5)
         team = [[aid, level, skill, slot % 3, .12 if slot < 3 else .02,
                  int(slot == 0)] for slot, aid in enumerate(aids)]
-        base = serialize_stage_team(cfg, team, team=2)
+        base = serialize_stage_team(cfg, team, team=2, scope="arenaEnemy")
         # Lower rank numbers are stronger. Keep the generated UID and rank in
         # their original order; only the target strength descends down the list.
         ratio = .5 + .75 * (len(ranks) - 1 - index) / (len(ranks) - 1)

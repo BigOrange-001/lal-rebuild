@@ -1,0 +1,402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "model": {
+      "const": "effect-sequence-v1"
+    },
+    "warmup": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "cooldown": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "range": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "trigger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ready"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "absent_buff"
+            },
+            "buff": {
+              "enum": [
+                "shield",
+                "purify",
+                "strong",
+                "weak",
+                "sunder",
+                "steel",
+                "bless",
+                "critup",
+                "toughup",
+                "fleeup",
+                "hitup",
+                "stun",
+                "curse",
+                "timed_bless",
+                "root",
+                "poison",
+                "burn",
+                "evil",
+                "silence",
+                "taunt",
+                "armor",
+                "book_penetration"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "buff"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "event"
+            },
+            "event": {
+              "enum": [
+                "turn_start",
+                "turn_end",
+                "basic_attack",
+                "skill_cast",
+                "hit",
+                "crit",
+                "miss",
+                "damage_taken",
+                "damage_dealt",
+                "healed",
+                "heal_done",
+                "dodge",
+                "kill",
+                "death",
+                "shield_break"
+              ]
+            },
+            "maxPerRound": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "allowChain": {
+              "type": "boolean"
+            },
+            "relation": {
+              "enum": [
+                "any",
+                "self",
+                "ally",
+                "enemy"
+              ]
+            },
+            "unitType": {
+              "enum": [
+                "any",
+                "hero",
+                "summon"
+              ]
+            },
+            "minAmount": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10000000
+            },
+            "hpBelow": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "requiredBuff": {
+              "enum": [
+                "shield",
+                "purify",
+                "strong",
+                "weak",
+                "sunder",
+                "steel",
+                "bless",
+                "critup",
+                "toughup",
+                "fleeup",
+                "hitup",
+                "stun",
+                "curse",
+                "timed_bless",
+                "root",
+                "poison",
+                "burn",
+                "evil",
+                "silence",
+                "taunt",
+                "armor",
+                "book_penetration"
+              ]
+            },
+            "absentBuff": {
+              "enum": [
+                "shield",
+                "purify",
+                "strong",
+                "weak",
+                "sunder",
+                "steel",
+                "bless",
+                "critup",
+                "toughup",
+                "fleeup",
+                "hitup",
+                "stun",
+                "curse",
+                "timed_bless",
+                "root",
+                "poison",
+                "burn",
+                "evil",
+                "silence",
+                "taunt",
+                "armor",
+                "book_penetration"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "event"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "heal",
+              "damage",
+              "buff",
+              "push",
+              "move",
+              "summon"
+            ]
+          },
+          "target": {
+            "enum": [
+              "self",
+              "all_allies",
+              "all_enemies",
+              "ally_radius",
+              "lane_lowest_hp",
+              "lane_front",
+              "enemy_radius",
+              "previous",
+              "event_source",
+              "event_target"
+            ]
+          },
+          "centerAction": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 30
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "attackRatio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "maxHpRatio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "buff": {
+            "enum": [
+              "shield",
+              "purify",
+              "strong",
+              "weak",
+              "sunder",
+              "steel",
+              "bless",
+              "critup",
+              "toughup",
+              "fleeup",
+              "hitup",
+              "stun",
+              "curse",
+              "timed_bless"
+            ]
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statRatio": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 100
+          },
+          "lifetime": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "maxAlive": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "excludeCenter": {
+            "type": "boolean"
+          },
+          "damageType": {
+            "enum": [
+              "physical",
+              "magic",
+              "true"
+            ]
+          },
+          "effect": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "eventRatio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "overhealRatio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "growth": {
+            "type": "object",
+            "properties": {
+              "attackRatio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "maxHpRatio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "amount": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "eventRatio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "overhealRatio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100000
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rankInfoTemplate": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "maxLevel": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "description",
+    "model",
+    "warmup",
+    "cooldown",
+    "range",
+    "trigger",
+    "actions",
+    "rankInfoTemplate",
+    "maxLevel"
+  ],
+  "additionalProperties": false
+}

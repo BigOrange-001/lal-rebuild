@@ -45,6 +45,13 @@ package com.meng52.game.module.skill
       private var currentActionTargets:Array;
       private var currentTargetGroups:Object;
       private var sortAnchor:Avatar;
+      private var modStepAnchors:Array = [];
+      public var modEventContext:Object;
+
+      public function canModEventCast() : Boolean { return hasCastTargets(); }
+      private var activeNativeSource:String;
+      private var activeNativeSettings:Object;
+      private var activeNativeAction:Array;
 
       public function SkillSet(param1:String, param2:Avatar, param3:int = 1, param4:Boolean = false)
       {
@@ -61,20 +68,30 @@ package com.meng52.game.module.skill
          return m_data as SkillSetData;
       }
 
-      public function getMechanismId104() : String
-      {
-         var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
-         return row && row.equipment_source_skill_104 ? String(row.equipment_source_skill_104) : skillSetData.id;
-      }
-
       public function getStar() : int
       {
-         return skillSetData.id.split("_")[2];
+         return getMechanismId().split("_")[2];
+      }
+
+      public function getMechanismId104() : String { return getMechanismId(); }
+
+      public function getMechanismId() : String
+      {
+         var row104:Object = GlobalData.$mConfig_skill[skillSetData.id];
+         var source:String = activeNativeSource || skillSetData.modNativeSource || (row104 ? row104.equipment_source_skill_104 : null);
+         return source && GlobalData.$mConfig_skill && GlobalData.$mConfig_skill[source] ? source : skillSetData.id;
       }
 
       public function isActive() : Boolean
       {
          return skillSetData.pl != null;
+      }
+
+      public function getNativeSetting(key:String, fallback:* = null) : *
+      {
+         if(activeNativeSettings && activeNativeSettings.hasOwnProperty(key)) return activeNativeSettings[key];
+         var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         return row && row.hasOwnProperty(key) ? row[key] : fallback;
       }
 
       public function getEquipRate(param1:String) : Number
@@ -193,7 +210,8 @@ package com.meng52.game.module.skill
                for each(var index:String in String(parts[2]).split(".")) value = value[int(index)];
                return (Math.round(Number(value)*10000)/100).toString()+"%";
             }
-            return (Math.round((Number(parts[3])+Number(parts[4])*Number(actions[0][2]))*100)/100).toString()+"%";
+            var scaleIndex:int = row.modScaleActionIndex !== undefined ? int(row.modScaleActionIndex) : 0;
+            return (Math.round((Number(parts[3])+Number(parts[4])*Number(actions[scaleIndex][2]))*100)/100).toString()+"%";
          });
       }
 
@@ -570,6 +588,7 @@ package com.meng52.game.module.skill
          {
             return false;
          }
+         if(!modConditionReady()) return false;
          var _loc5_:GameMap = GameMap.currentMap;
          if(_loc5_ == null)
          {
@@ -616,7 +635,7 @@ package com.meng52.game.module.skill
 
       private function hasCastTargets() : Boolean
       {
-         if(!avatar || avatar.hp <= 0 || !GameMap.currentMap || !skills || skills.length == 0) return false;
+         if(!avatar || (avatar.hp <= 0 && (!modEventContext || modEventContext.event != "death")) || !GameMap.currentMap || !skills || skills.length == 0) return false;
          if(isModEffectSequence())
          {
             if(!modConditionReady()) return false;
@@ -639,7 +658,7 @@ package com.meng52.game.module.skill
             {
                var action:Array = skills[index];
                var kind:String = String(action[0]);
-               if(kind == "manual_ability") return avatar.abilityCanCast(String(action[1]),getCastRange());
+               if(kind == "manual_ability") return avatar.abilityCanCast(String(action[1]),getCastRange(),this);
                var policy:String = getActionPolicy(index);
                var ally:Boolean = policy && policy.indexOf("ally_") == 0;
                var targeted:Boolean = isEnemyTargetAction(kind) || kind == "manual_dot" || kind == "suck" || kind == "dispel_good" || kind == "pending_area_strike" || kind == "move_to_target_lane";
@@ -800,7 +819,7 @@ package com.meng52.game.module.skill
             if(summons) for each(unit in summons) if(unit && unit.hp > 0) retained.push(unit);
             var unitDefinition:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[String(step[11])] : null;
             if(!unitDefinition || unitDefinition.modUnitType != "summon") return false;
-            unit = new Avatar(String(step[11]),{"lv":avatar.lv,"slv":1});
+            unit = new Avatar(GlobalData.modDefinitionId(String(step[11]),"summoned"),{"lv":avatar.lv,"slv":1});
             unit.goFight(avatar.team,avatar.line,0,false);
             unit.ap = Math.max(1,int(avatar.getDamage()*ratio));
             unit.hpMax = Math.max(1,int(avatar.getHpMax()*ratio));
@@ -826,6 +845,9 @@ package com.meng52.game.module.skill
             if(summonEffect) { summonEffect.a1 = unit; summonEffect.par = GameMapLayer.gl.effectLayer; GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,summonEffect); }
             return false;
          }
+         var modPresentation:Object = kind == "damage" && selected.length > 1 ? avatar.beginParallelVisualBatch() : null;
+         try
+         {
          for each(unit in selected)
          {
             if(!unit || unit.hp <= 0) continue;
@@ -834,6 +856,7 @@ package com.meng52.game.module.skill
                var eventFriendly:Boolean = kind == "heal" || kind == "buff" && ["weak","sunder","stun","curse"].indexOf(step[8]) < 0;
                if(eventFriendly != (unit.team == avatar.team)) continue;
             }
+            if(modPresentation) avatar.prepareParallelVisualTarget(unit,false);
             if(kind == "heal")
             {
                value = int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6])+eventValue);
@@ -859,21 +882,79 @@ package com.meng52.game.module.skill
                if(distance > 0) avatar.checkMove(avatar.team == 1 ? unit.pos < avatar.pos : unit.pos > avatar.pos,distance,unit,-1,false,effect);
             }
          }
+         }
+         finally { avatar.endParallelVisualBatch(modPresentation); }
          if(kind == "move" || kind == "push") GameMap.actionDelay += 0.2;
          return kind == "move" && selected.length > 0;
       }
 
 
-      private var modStepAnchors:Array = [];
-      public var modEventContext:Object;
-      public function canModEventCast() : Boolean { return hasCastTargets(); }
+      public function getNativeAction() : Array
+      {
+         return activeNativeAction;
+      }
+
+      private function executeParallelHits(targets:Vector.<Avatar>, hitCount:int, coefficients:Array, damageType:int, effect:String, actionIndex:int, castRange:int, banStand:Boolean, preDots:Vector.<Avatar>, preBurns:Vector.<Avatar>, interval:Number, targetCap:int = -1) : Number
+      {
+         var total:Number = 0;
+         var presentation:Object = avatar.beginParallelVisualBatch();
+         try
+         {
+            var targetIndex:int = 0;
+            while(targetIndex < targets.length && (targetCap < 0 || targetIndex < targetCap))
+            {
+               var target:Avatar = targets[targetIndex];
+               var hitIndex:int = 0;
+               while(hitIndex < hitCount && target.hp > 0)
+               {
+                  var one:Vector.<Avatar> = new Vector.<Avatar>();
+                  one.push(target);
+                  avatar.setParallelVisualWave(presentation,hitIndex,interval);
+                  var coefficient:Number = Number(coefficients[coefficients.length == 1 ? 0 : hitIndex]);
+                  var shared:Number = damageShareTotal(actionIndex,coefficient,target,preDots,preBurns);
+                  total += avatar.attackAimList(one,damageType,shared,0,effect,banStand,null,castRange,damageShareWeight(coefficient,shared));
+                  GameMap.actionDelay += interval;
+                  hitIndex++;
+               }
+               targetIndex++;
+            }
+         }
+         finally { avatar.endParallelVisualBatch(presentation); }
+         return total;
+      }
+
+      private function executeConditionalDamage(action:Array, actionIndex:int, actionTargets:Array, targetGroups:Object, castRange:int, banStand:Boolean, preDots:Vector.<Avatar>, preBurns:Vector.<Avatar>) : void
+      {
+         var targets:Vector.<Avatar> = getCustomActionTargets(actionIndex,actionTargets,targetGroups,false);
+         if(targets.length == 0 || action.length < 6) return;
+         var presentation:Object = avatar.beginParallelVisualBatch();
+         try
+         {
+            for each(var target:Avatar in targets)
+            {
+               avatar.prepareParallelVisualTarget(target,false);
+               var coefficient:Number = Number(action[1]);
+               if(conditionMatches(String(action[3]),target,preDots,preBurns)) coefficient += Number(action[4]);
+               var one:Vector.<Avatar> = new Vector.<Avatar>();
+               one.push(target);
+               if(int(action[2]) == 3) coefficient /= Avatar.REAL_DAMAGE_RATE;
+               var shared:Number = damageShareTotal(actionIndex,coefficient,target,preDots,preBurns);
+               if(avatar.checkAttack(one,getActionSortFunction(actionIndex,avatar.getSortOnFun()),getActionRange(actionIndex,castRange),banStand,int(action[2]),shared,0,String(action[5]),null,damageShareWeight(coefficient,shared))) actionTargets[actionIndex] = target;
+            }
+         }
+         finally { avatar.endParallelVisualBatch(presentation); }
+      }
 
       public function useSkill() : Boolean
       {
-         modStepAnchors = [];
          if(!hasCastTargets()) return false;
+         var previousNativeSource:String = activeNativeSource;
+         var modCastCompleted:Boolean = false;
+         var previousNativeAction:Array = activeNativeAction;
+         var previousNativeSettings:Object = activeNativeSettings;
          var wholeAttack:Object = Avatar.beginAbilityAttack(avatar,"active");
          wholeAttack.skill = this;
+         modStepAnchors = [];
          abilityHasCast = true;
          abilityCooldownOverride = -1;
          m_cooldownNum = skillSetData.cooldown;
@@ -976,8 +1057,13 @@ package com.meng52.game.module.skill
          _loc14_ = 0;
          while(_loc14_ < skills.length)
          {
+            var nativeNodeRow:Object = GlobalData.$mConfig_skill[skillSetData.id];
+            activeNativeSource = nativeNodeRow && nativeNodeRow.nativeActionSources ? nativeNodeRow.nativeActionSources[_loc14_] : null;
+            activeNativeSettings = nativeNodeRow && nativeNodeRow.nativeActionSettings ? nativeNodeRow.nativeActionSettings[_loc14_] : null;
+            captainSummonMultiplier = Number(getNativeSetting("captainSummonMultiplier",1));
+            if(!isFinite(captainSummonMultiplier) || captainSummonMultiplier <= 0) captainSummonMultiplier = 1;
             _loc20_ = skills[_loc14_];
-            if(avatar.hp <= 0)
+            if(avatar.hp <= 0 && (!modEventContext || modEventContext.event != "death"))
             {
                currentActionTargets = null;
                currentTargetGroups = null;
@@ -997,8 +1083,12 @@ package com.meng52.game.module.skill
                actionDamageCapture = {"active":true,"owner":avatar,"actionIndex":_loc14_,"total":0};
                avatar.manualSkillDamageCapture = actionDamageCapture;
             }
+            activeNativeAction = _loc20_;
             switch(_loc20_[0])
             {
+               case "mod_step":
+                  _loc4_ = executeModStep(_loc20_,_loc14_) || _loc4_;
+                  break;
                case "manual_ability":
                   var abilityBeforePosition:int = avatar.pos;
                   var abilityBeforeLane:int = avatar.line;
@@ -1014,9 +1104,6 @@ package com.meng52.game.module.skill
                    var directDamageShareQ:Number = damageShareWeight(directDamageCoeff,directDamageShareTotal);
                    _loc1_ = avatar.checkAttack(_loc3_,isSuper && _loc19_.targetPolicy == "lowest_current_hp" ? sortOnLowestCurrentHp : getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,_loc20_[2],directDamageShareTotal,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],null,directDamageShareQ);
                   if(_loc1_) actionTargets[_loc14_] = _loc1_;
-                  break;
-               case "mod_step":
-                  _loc4_ = executeModStep(_loc20_,_loc14_) || _loc4_;
                   break;
                case "select_target":
                   var selectPolicy:String = getActionPolicy(_loc14_);
@@ -1177,24 +1264,7 @@ package com.meng52.game.module.skill
                   }
                   break;
                case "conditional_damage":
-                  _loc3_ = getCustomActionTargets(_loc14_,actionTargets,targetGroups,false);
-                  if(_loc3_.length > 0 && _loc20_.length >= 6)
-                  {
-                     var conditionalIndex:int = 0;
-                     while(conditionalIndex < _loc3_.length)
-                     {
-                        _loc13_ = _loc3_[conditionalIndex];
-                        _loc23_ = Number(_loc20_[1]);
-                        if(conditionMatches(String(_loc20_[3]),_loc13_,preCastDotTargets,preCastBurnTargets)) _loc23_ += Number(_loc20_[4]);
-                        var conditionalOne:Vector.<Avatar> = new Vector.<Avatar>();
-                        conditionalOne.push(_loc13_);
-                         if(int(_loc20_[2]) == 3) _loc23_ /= Avatar.REAL_DAMAGE_RATE;
-                         var conditionalShareTotal:Number = damageShareTotal(_loc14_,_loc23_,_loc13_,preCastDotTargets,preCastBurnTargets);
-                         var conditionalShareQ:Number = damageShareWeight(_loc23_,conditionalShareTotal);
-                         if(avatar.checkAttack(conditionalOne,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,int(_loc20_[2]),conditionalShareTotal,0,String(_loc20_[5]),null,conditionalShareQ)) actionTargets[_loc14_] = _loc13_;
-                        conditionalIndex++;
-                     }
-                  }
+                  executeConditionalDamage(_loc20_,_loc14_,actionTargets,targetGroups,_loc24_,_loc2_,preCastDotTargets,preCastBurnTargets);
                   break;
                case "ricochet_bursts":
                   castRicochetBursts(_loc14_,_loc20_);
@@ -1534,7 +1604,7 @@ package com.meng52.game.module.skill
                   }
                   break;
                case "timed_stack":
-                  if(_loc20_.length >= 6 && String(_loc20_[1]) == "attack" && (skillSetData.id == "S_631134_5" || skillSetData.id == "S_631134_6"))
+                  if(_loc20_.length >= 6 && String(_loc20_[1]) == "attack" && (getMechanismId() == "S_631134_5" || getMechanismId() == "S_631134_6"))
                   {
                      avatar.addManualTimedStack(String(_loc20_[1]),Number(_loc20_[2]),int(_loc20_[3]),int(_loc20_[4]));
                      queueDirectActionEffect(String(_loc20_[5]),avatar);
@@ -1749,24 +1819,8 @@ package com.meng52.game.module.skill
                            targetGroups[areaGroupName] = areaTargets.concat();
                         }
                         actionTargets[_loc14_] = _loc1_;
-                        _loc23_ = 0;
-                        var areaTargetIndex:int = 0;
-                        while(areaTargetIndex < areaTargets.length)
-                        {
-                           _loc1_ = areaTargets[areaTargetIndex];
-                           var areaHitIndex:int = 0;
-                           while(areaHitIndex < areaHitCount && _loc1_.hp > 0)
-                           {
-                              _loc3_ = new Vector.<Avatar>();
-                              _loc3_.push(_loc1_);
-                               var areaHitCoeff:Number = Number(_loc20_[2 + areaHitIndex]);
-                               var areaShareTotal:Number = damageShareTotal(_loc14_,areaHitCoeff,_loc1_,preCastDotTargets,preCastBurnTargets);
-                               _loc23_ += avatar.attackAimList(_loc3_,int(_loc20_[2 + areaHitCount]),areaShareTotal,0,String(_loc20_[6 + areaHitCount]),_loc2_,null,getActionRange(_loc14_,_loc24_),damageShareWeight(areaHitCoeff,areaShareTotal));
-                              GameMap.actionDelay += 0.15;
-                              areaHitIndex++;
-                           }
-                           areaTargetIndex++;
-                        }
+                        _loc23_ = executeParallelHits(areaTargets,areaHitCount,_loc20_.slice(2,2+areaHitCount),int(_loc20_[2+areaHitCount]),String(_loc20_[6+areaHitCount]),_loc14_,getActionRange(_loc14_,_loc24_),_loc2_,preCastDotTargets,preCastBurnTargets,0.15);
+                        _loc1_ = areaTargets[areaTargets.length-1];
                         _loc5_ = Number(_loc20_[3 + areaHitCount]);
                         if(_loc5_ > 0 && Number(actionDamageCapture ? actionDamageCapture.total : _loc23_) > 0) avatar.injured(int(Number(actionDamageCapture ? actionDamageCapture.total : _loc23_) * _loc5_ * getActiveRecoveryMultiplier()),1,DisplayTools.getAttrs(String(_loc20_[6 + areaHitCount])),4);
                      }
@@ -1872,24 +1926,8 @@ package com.meng52.game.module.skill
                      _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                      _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
                      _loc3_ = avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_);
-                     _loc23_ = 0;
-                     var groupIndex:int = 0;
-                     while(groupIndex < _loc3_.length && groupIndex < int(_loc20_[1]))
-                     {
-                        _loc1_ = _loc3_[groupIndex];
-                        var groupHit:int = 0;
-                        while(groupHit < int(_loc20_[2]) && _loc1_.hp > 0)
-                        {
-                           var oneTarget:Vector.<Avatar> = new Vector.<Avatar>();
-                           oneTarget.push(_loc1_);
-                            var comboGroupCoeff:Number = Number(_loc20_[3]);
-                            var comboGroupShareTotal:Number = damageShareTotal(_loc14_,comboGroupCoeff,_loc1_,preCastDotTargets,preCastBurnTargets);
-                            _loc23_ += avatar.attackAimList(oneTarget,int(_loc20_[4]),comboGroupShareTotal,0,String(_loc20_[6]),_loc2_,null,getActionRange(_loc14_,_loc24_),damageShareWeight(comboGroupCoeff,comboGroupShareTotal));
-                           GameMap.actionDelay += 0.12;
-                           groupHit++;
-                        }
-                        groupIndex++;
-                     }
+                     _loc23_ = executeParallelHits(_loc3_,int(_loc20_[2]),[Number(_loc20_[3])],int(_loc20_[4]),String(_loc20_[6]),_loc14_,getActionRange(_loc14_,_loc24_),_loc2_,preCastDotTargets,preCastBurnTargets,0.12,int(_loc20_[1]));
+                     if(_loc3_.length > 0 && int(_loc20_[1]) > 0) _loc1_ = _loc3_[Math.min(_loc3_.length,int(_loc20_[1]))-1];
                      if(Number(_loc20_[5]) > 0 && _loc23_ > 0)
                      {
                         avatar.injured(int(Number(actionDamageCapture ? actionDamageCapture.total : _loc23_) * Number(_loc20_[5]) * getActiveRecoveryMultiplier()),1,DisplayTools.getAttrs(String(_loc20_[6])),4);
@@ -2103,7 +2141,7 @@ package com.meng52.game.module.skill
                   avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,_loc20_[2],pushActionTotal,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],new Buff("push",0,_loc20_[3]),damageShareWeight(Number(_loc20_[1]),pushActionTotal));
                   break;
                case "summon":
-                  if(skillSetData.manualSummonPolicy)
+                  if(getNativeSetting("manualSummonPolicy"))
                   {
                      executeManualSummon(_loc20_,_loc14_,actionTargets,targetGroups);
                      break;
@@ -2128,7 +2166,7 @@ package com.meng52.game.module.skill
                   {
                      summonLevel = 1;
                   }
-                  _loc1_ = new Avatar(_loc20_[2],{
+                  _loc1_ = new Avatar(GlobalData.modDefinitionId(String(_loc20_[2]),"summoned"),{
                      "lv":summonLevel,
                      "slv":1
                   });
@@ -2422,12 +2460,17 @@ package com.meng52.game.module.skill
          GameMap.actionDelay += 0.5 / 2;
          currentActionTargets = null;
          currentTargetGroups = null;
+         modCastCompleted = true;
          return _loc4_;
 
          }
          finally
          {
+            activeNativeSource = previousNativeSource;
+            activeNativeAction = previousNativeAction;
+            activeNativeSettings = previousNativeSettings;
             Avatar.endAbilityAttack(wholeAttack);
+            if(modCastCompleted && avatar && this !== avatar.skillB) avatar.emitModEvent("skill_cast",avatar,avatar);
             if(abilityCooldownOverride >= 0) m_cooldownNum = abilityCooldownOverride;
          }
       }
@@ -2853,7 +2896,8 @@ package com.meng52.game.module.skill
       public function getCastRange() : int
       {
          var distance:int = Math.abs(skillSetData.range);
-         if(avatar && skills && skills.length > 0 && skills[0][0] == "manual_ability" && skills[0][1] == "jayce_n") return avatar.abilityState.form && avatar.abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
+         var rangeAction:Array = getNativeAction() || (skills && skills.length ? skills[0] as Array : null);
+         if(avatar && rangeAction && rangeAction[0] == "manual_ability" && rangeAction[1] == "jayce_n") return avatar.abilityState.form && avatar.abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
          if(distance > 0 && distance <= GameMapConfig.LINE_POS && avatar && avatar.isRangedSkillCaster()) return GameMapConfig.LINE_POS;
          return distance;
       }
@@ -3328,7 +3372,7 @@ package com.meng52.game.module.skill
 
       private function hasBoundedSummonPolicy() : Boolean
       {
-         var _loc1_:Array = getMechanismId104().split("_");
+         var _loc1_:Array = getMechanismId().split("_");
          if(_loc1_.length != 3 || _loc1_[0] != "S" || int(_loc1_[2]) < 2 || int(_loc1_[2]) > 6)
          {
             return false;
@@ -3362,7 +3406,7 @@ package com.meng52.game.module.skill
 
       private function isHeimerTurretSkill() : Boolean
       {
-         switch(getMechanismId104())
+         switch(getMechanismId())
          {
             case "S_621014_3":
             case "S_621014_4":
@@ -3389,7 +3433,7 @@ package com.meng52.game.module.skill
          var turretScale:Number = NaN;
          var turret:Avatar = null;
          var turretFx:Object = null;
-         if(!isHeimerTurretSkill() || !hasBoundedSummonPolicy() || !param1 || param1.length < 11 || String(param1[2]) != "A_2001_4")
+         if(!isHeimerTurretSkill() || !hasBoundedSummonPolicy() || !param1 || param1.length < 11 || (!skillSetData.modNativeSource && String(param1[2]) != "A_2001_4"))
          {
             GameMapTools.gameTrace("拒绝非白名单炮台召唤技能",skillSetData.id);
             return;
@@ -3407,7 +3451,7 @@ package com.meng52.game.module.skill
          }
          boundedSummons = new Vector.<Avatar>();
          turretLevel = Math.max(1,avatar.lv);
-         turret = new Avatar(String(param1[2]),{"lv":turretLevel,"slv":1});
+         turret = new Avatar(GlobalData.modDefinitionId(String(param1[2]),"summoned"),{"lv":turretLevel,"slv":1});
          turret.goFight(avatar.team,avatar.line,0,false);
          if(!turret.inheritSummonPanel(avatar,turretScale)) return;
          turret.skill0 = null;
@@ -3431,7 +3475,7 @@ package com.meng52.game.module.skill
 
       private function executeManualSummon(param1:Array, param2:int, param3:Array, param4:Object) : void
       {
-         var _loc1_:Object = skillSetData.manualSummonPolicy;
+         var _loc1_:Object = getNativeSetting("manualSummonPolicy");
          var _loc2_:Avatar = null;
          var _loc3_:String = null;
          var _loc4_:int = 0;
@@ -3473,7 +3517,7 @@ package com.meng52.game.module.skill
          summonPos = summonTarget.pos;
          _loc3_ = String(_loc1_.familyKey);
          _loc4_ = int(_loc1_.maxAlive);
-         if(!_loc3_ || _loc4_ < 1 || _loc4_ > 3)
+         if(!_loc3_ || _loc4_ < 1 || _loc4_ > (skillSetData.modNativeSource ? 16 : 3))
          {
             GameMapTools.gameTrace("召唤家族策略无效",skillSetData.id);
             return;
@@ -3523,7 +3567,9 @@ package com.meng52.game.module.skill
             }
             avatar.manualSummonFamilies[_loc3_] = retainedSummons;
          }
-         _loc2_ = new Avatar(String(param1[2]),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
+         var summonDefinition:String = String(param1[2]);
+         if(skillSetData.modNativeSource && (getMechanismId().indexOf("1127_") >= 0 || getMechanismId().indexOf("1128_") >= 0)) summonDefinition = String(avatar.avatarData.id);
+         _loc2_ = new Avatar(GlobalData.modDefinitionId(summonDefinition,"summoned"),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
          _loc2_.goFight(avatar.team,summonLine,0,false);
          if(!_loc2_.inheritSummonPanel(avatar,_loc8_,summonHpRatio,summonDePhRatio,summonDeMaRatio,_loc8_)) return;
          if(_loc1_.clearSkills === true)
@@ -3536,7 +3582,7 @@ package com.meng52.game.module.skill
          if(typeof _loc1_.actionType == "number" && (_loc1_.actionType == 1 || _loc1_.actionType == 2 || _loc1_.actionType == 4)) _loc2_.manualActionTypeOverride = int(_loc1_.actionType);
          if(Number(_loc1_.attackRange) > 0) _loc2_.manualAttackRangeOverride = Number(_loc1_.attackRange);
          var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
-         var captainFactor:Number = captainRow ? Number(captainRow.captainSummonMultiplier) : 1;
+         var captainFactor:Number = Number(getNativeSetting("captainSummonMultiplier",1));
          if(isFinite(captainFactor) && captainFactor > 0 && captainFactor != 1)
          {
             _loc2_.hpMax = Math.max(1,int(_loc2_.hpMax * captainFactor));
@@ -3582,26 +3628,28 @@ package com.meng52.game.module.skill
 
       private function isManualSummonPolicyAllowed() : Boolean
       {
-         var _loc1_:String = getMechanismId104();
+         var _loc1_:String = getMechanismId();
          var _loc2_:Array = ["S_631029_5","S_631029_6","S_621040_4","S_621040_5","S_621040_6","S_631040_4","S_631040_5","S_631040_6","S_621124_5","S_621124_6","S_631124_5","S_631124_6","S_631127_5","S_631127_6","S_621128_5","S_621128_6","S_631128_5","S_631128_6"];
-         var policy:Object = skillSetData.manualSummonPolicy;
+         var policy:Object = getNativeSetting("manualSummonPolicy");
+         if(skillSetData.modNativeSource && policy)
+            return String(policy.skillId) == skillSetData.id && int(policy.maxAlive) >= 1 && int(policy.maxAlive) <= 16 && int(policy.ttlOwnerTurns) >= 1 && int(policy.ttlOwnerTurns) <= 100;
          if(_loc2_.indexOf(_loc1_) < 0 || !policy) return false;
          if(String(policy.skillId) != skillSetData.id || !Avatar.isValidSummonMultiplier(Number(policy.apRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.hpRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.dePhRatio)) || !Avatar.isValidSummonMultiplier(Number(policy.deMaRatio))) return false;
          if(_loc1_.indexOf("1029_") >= 0) return String(policy.unitId) == "A_2002_5" && String(policy.familyKey) == "manual-1029-tibbers" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
          if(_loc1_.indexOf("1124_") >= 0) return String(policy.unitId) == "A_3002_2" && String(policy.familyKey) == "manual-1124-soldier" && int(policy.maxAlive) == 2 && Number(policy.attackRange) == 175 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true && int(policy.ttlOwnerTurns) == (_loc1_.indexOf("S_621124_") == 0 ? 4 : 3);
-         if(_loc1_.indexOf("1127_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
-         if(_loc1_.indexOf("1128_") >= 0) return String(policy.unitId) == String(avatar.avatarData.id) && String(policy.familyKey) == "manual-1128-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
+         if(_loc1_.indexOf("1127_") >= 0) return GlobalData.baseModHeroId(String(policy.unitId)) == GlobalData.baseModHeroId(String(avatar.avatarData.id)) && String(policy.familyKey) == "manual-1127-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 0 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
+         if(_loc1_.indexOf("1128_") >= 0) return GlobalData.baseModHeroId(String(policy.unitId)) == GlobalData.baseModHeroId(String(avatar.avatarData.id)) && String(policy.familyKey) == "manual-1128-clone" && int(policy.maxAlive) == 1 && Number(policy.attackRange) == 125 && int(policy.ttlOwnerTurns) == 3 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
          return String(policy.unitId) == "A_2326_5" && String(policy.familyKey) == "manual-1040-plant" && int(policy.maxAlive) == 3 && Number(policy.attackRange) == 550 && policy.clearSkills === true && policy.actionType == 1 && policy.replaceOldest === true;
       }
 
       private function isNativeCloneSummonSkill() : Boolean
       {
-         return getMechanismId104() == "S_631127_5" || getMechanismId104() == "S_631127_6";
+         return getMechanismId() == "S_631127_5" || getMechanismId() == "S_631127_6";
       }
 
       private function executeManualNormalClone(param1:Array) : void
       {
-         var policy:Object = skillSetData.manualClonePolicy;
+         var policy:Object = getNativeSetting("manualClonePolicy");
          var allowedIds:Array = ["S_631132_5","S_631132_6"];
          var allowedNormalIds:Array = ["S_621132_5","S_621132_6"];
          var familyKey:String = policy ? String(policy.familyKey) : "";
@@ -3617,14 +3665,14 @@ package com.meng52.game.module.skill
          var oldSkillId:String = "";
          var targetPos:int = 0;
          var cloneEffect:Object = null;
-         if(!policy || allowedIds.indexOf(getMechanismId104()) < 0 || String(policy.skillId) != skillSetData.id || familyKey != "manual-1132-shadow-clone" || capacity != 1 || !Avatar.isValidSummonMultiplier(ratio) || ttl < 1 || ttl > 4 || policy.replaceOldest !== true || !avatar.skill0 || !avatar.skill0.isActive())
+         if(!policy || allowedIds.indexOf(getMechanismId()) < 0 || String(policy.skillId) != skillSetData.id || (!skillSetData.modNativeSource && familyKey != "manual-1132-shadow-clone") || capacity < 1 || capacity > 16 || !Avatar.isValidSummonMultiplier(ratio) || ttl < 1 || ttl > 100 || (!skillSetData.modNativeSource && policy.replaceOldest !== true) || !avatar.skill0 || !avatar.skill0.isActive())
          {
             GameMapTools.gameTrace("拒绝未授权普通技能分身",skillSetData.id);
             return;
          }
          oldSkillId = String(avatar.skill0.skillSetData.id);
          var normalDefinition104:Object = GlobalData.$mConfig_skill[oldSkillId];
-         var normalSource104:String = normalDefinition104 && normalDefinition104.builtin_native_source_104 ? String(normalDefinition104.builtin_native_source_104) : oldSkillId;
+         var normalSource104:String = normalDefinition104 && normalDefinition104.builtin_native_source_104 ? String(normalDefinition104.builtin_native_source_104) : avatar.skill0.getMechanismId();
          if(allowedNormalIds.indexOf(normalSource104) < 0 || normalSource104 != "S_621132_" + String(avatar.avatarData.id).substr(-1))
          {
             GameMapTools.gameTrace("分身仅允许复制同星已核验普通技能",skillSetData.id,oldSkillId,avatar.id);
@@ -3635,6 +3683,7 @@ package com.meng52.game.module.skill
          if(!existing) existing = new Vector.<Avatar>();
          if(avatar.getManualSummonSlots(familyKey,capacity) <= 0)
          {
+            if(policy.replaceOldest !== true) return;
             while(i < existing.length)
             {
                if(existing[i] && existing[i].hp > 0 && replaced == null)
@@ -3648,7 +3697,7 @@ package com.meng52.game.module.skill
             if(replaced == null) return;
             avatar.manualSummonFamilies[familyKey] = survivors;
          }
-         clone = new Avatar(String(avatar.id),{"lv":Math.max(1,avatar.lv),"slv":1});
+         clone = new Avatar(GlobalData.modDefinitionId(String(avatar.avatarData.id),"summoned"),{"lv":Math.max(1,avatar.lv),"slv":1});
          clone.goFight(avatar.team,avatar.line,0,false);
          if(!clone.inheritSummonPanel(avatar,ratio)) return;
          clone.skill0 = new SkillSet(oldSkillId,clone,Math.max(1,avatar.skill0.lv),false);
@@ -3709,7 +3758,10 @@ package com.meng52.game.module.skill
 
       private function getSummonCombatSnapshotApFactor() : Number
       {
-         switch(getMechanismId104())
+         var snapshotPolicy:Object = getNativeSetting("summonCombatPolicy");
+         if(skillSetData.modNativeSource && snapshotPolicy)
+            return Number(snapshotPolicy.owner_ap_ratio);
+         switch(getMechanismId())
          {
             case "S_32551036_4":
             case "S_32551036_5":

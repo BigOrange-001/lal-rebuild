@@ -1,0 +1,1 @@
+{"author":"请填写作者","dependencies":[],"engineApi":"1","entrypoints":{"patches":"patches.json"},"files":[{"path":"patches.json","sha256":"6065cf193363f328a6a8188e921df05a634a0b2024e17a1888c6c10f51c42bc3"}],"format":"lal-mod-v1","kind":"patch","name":"我的英雄还原补丁","packageId":"e12daeb5-0381-4e09-b770-3c572e06ab2e","requiredCapabilities":["hero.patch.stats"],"version":"1.0.0"}

@@ -707,7 +707,7 @@ package com.meng52.game.ui.element
                      }
                      else
                      {
-                        GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(20095),Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90002,_loc8_,_loc2_,_loc3_),GlobalTextStyle.COLOR_W_Y_Y_G),_loc7_);
+                        GlobalFunction.popEnergy();
                      }
                   }
                   else

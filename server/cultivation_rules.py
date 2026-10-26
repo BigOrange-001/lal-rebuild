@@ -99,6 +99,8 @@ def legacy_to_actual(raw: dict, avatar_row: dict, simple: dict) -> dict:
 
 def migrate_hero(hero: dict, avatar_row: dict, simple: dict) -> bool:
     """Keep exact old stat gain and the raw source values for audit/retry."""
+    if not isinstance(avatar_row, dict) or avatar_row.get("modMissing"):
+        return False
     if not active(simple, hero) or hero.get("culture_schema") == SCHEMA:
         return False
     raw = values(hero)
@@ -123,6 +125,10 @@ def normalize_profile(profile: dict, cfg: dict) -> bool:
         if not isinstance(hero, dict):
             continue
         aid = str(hero.get("aid", iid)).split("|", 1)[0]
+        metadata = cfg.get("mod_runtime", {}).get("heroes", {}).get(aid, {}) if isinstance(cfg, dict) else {}
+        row = avatar_rows.get(aid)
+        if (isinstance(row, dict) and row.get("modMissing")) or metadata.get("available") is False:
+            continue
         if not active(simple, {"aid": aid}):
             continue
         hero.setdefault("aid", iid)
@@ -137,7 +143,8 @@ def normalize_profile(profile: dict, cfg: dict) -> bool:
         if isinstance(hero, dict) and active(simple, hero):
             aid = str(hero.get("aid", iid)).split("|", 1)[0]
             row = avatar_rows.get(aid)
-            if isinstance(row, dict):
+            metadata = cfg.get("mod_runtime", {}).get("heroes", {}).get(aid, {})
+            if isinstance(row, dict) and not row.get("modMissing") and metadata.get("available") is not False:
                 changed = migrate_pending(pending, hero, row, simple) or changed
     return changed
 

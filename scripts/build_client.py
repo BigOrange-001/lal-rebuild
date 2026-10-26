@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import getpass
 import hashlib
 import json
@@ -174,6 +175,98 @@ def find_adt(sdk: Path) -> Path:
     raise FileNotFoundError("Could not find bin/adt.bat, bin/adt, or lib/adt.jar under --air-sdk")
 
 
+@contextlib.contextmanager
+def ascii_sdk_path(sdk: Path):
+    """Use an unused temporary Windows drive for ADT's non-ASCII SDK bug."""
+    sdk = Path(sdk).absolute()
+    if os.name != "nt" or str(sdk).isascii():
+        yield sdk
+        return
+    drive = next((letter + ":" for letter in "ZYXWVUTSRQPONMLKJIEB"
+                  if not os.path.exists(letter + ":\\")), None)
+    if drive is None:
+        raise RuntimeError("No unused drive is available for an ASCII AIR SDK alias")
+    checked_run(["subst", drive, str(sdk)], label="temporary AIR SDK alias")
+    try:
+        yield Path(drive + "\\")
+    finally:
+        checked_run(["subst", drive, "/D"], label="release temporary AIR SDK alias")
+
+
+def configure_android_gradle(tree: ET.ElementTree, android_sdk: Path) -> dict:
+    """Change only staged build settings; preserve published app identity/SDK policy."""
+    root = tree.getroot()
+    namespace = root.tag.split("}")[0].lstrip("{")
+    android = root.find("{" + namespace + "}android")
+    if android is None:
+        raise ValueError("AIR descriptor has no Android configuration")
+    compile_sdk = 36 if (android_sdk / "platforms/android-36/android.jar").is_file() else 35
+    settings = {"buildLegacyAPK":"false", "androidGradlePluginVersion":"8.9.1",
+                "gradleVersion":"8.13", "androidBuildToolsVersion":"35.0.0",
+                "androidCompileSdkVersion":str(compile_sdk)}
+    for key, value in settings.items():
+        node = android.find("{" + namespace + "}" + key)
+        if node is None:
+            node = ET.SubElement(android, "{" + namespace + "}" + key)
+        node.text = value
+    additions = android.find("{" + namespace + "}manifestAdditions")
+    if additions is None or not additions.text:
+        raise ValueError("AIR descriptor has no Android manifest additions")
+    manifest_text = additions.text
+    if "xmlns:android=" not in manifest_text:
+        manifest_text = manifest_text.replace("<manifest", '<manifest xmlns:android="http://schemas.android.com/apk/res/android"', 1)
+    manifest = ET.fromstring(manifest_text)
+    sdk_node = manifest.find("uses-sdk")
+    if sdk_node is None:
+        sdk_node = ET.Element("uses-sdk")
+        manifest.insert(0, sdk_node)
+    android_ns = "{http://schemas.android.com/apk/res/android}"
+    # These are the deployed main APK's existing AIR51 defaults, made explicit
+    # because the Gradle path otherwise changes them. Authored values win.
+    sdk_node.attrib.setdefault(android_ns + "minSdkVersion", "21")
+    sdk_node.attrib.setdefault(android_ns + "targetSdkVersion", "36")
+    ET.register_namespace("android", android_ns[1:-1])
+    # AIR binds its reserved android prefix itself and rejects an explicit
+    # xmlns:android attribute in manifestAdditions (descriptor error404).
+    additions.text = ET.tostring(manifest, encoding="unicode").replace(
+        ' xmlns:android="http://schemas.android.com/apk/res/android"', '')
+    ET.register_namespace("", namespace)
+    return settings
+
+
+def verify_apk_signature(apk: Path, java: str, *, android_sdk: Path | None = None,
+                         apksigner: Path | None = None, jarsigner: str = "jarsigner") -> tuple[str, str]:
+    """Android's verifier understands v1/v2/v3; JAR verification is legacy fallback."""
+    if apksigner is None and android_sdk:
+        candidate = android_sdk / "build-tools/35.0.0/lib/apksigner.jar"
+        if candidate.is_file():
+            apksigner = candidate
+    if apksigner:
+        apksigner = require_file(apksigner, "Android apksigner.jar")
+        verification = checked_run([java, "-Duser.language=en", "-Duser.country=US", "-jar", str(apksigner),
+                                    "verify", "--verbose", "--print-certs", str(apk)], label="Android APK signature verification")
+        if not re.search(r"^Verifies\s*$", verification, re.M):
+            raise RuntimeError("apksigner did not report a verified APK signature")
+        return verification, "apksigner"
+    executable = shutil.which(jarsigner)
+    if not executable:
+        raise FileNotFoundError("No Android apksigner or JDK jarsigner is available")
+    verification = checked_run([executable, "-J-Duser.language=en", "-J-Duser.country=US", "-J-Dfile.encoding=UTF-8",
+                                "-verify", "-verbose", "-certs", str(apk)], label="legacy JAR APK signature verification")
+    if not re.search(r"jar\s+verified\.?", verification, re.I):
+        raise RuntimeError("JAR/v1 signature verification failed; modern APKs require Android --apksigner or --android-sdk")
+    return verification, "jarsigner"
+
+
+def signature_evidence(verification: str, verifier: str) -> dict:
+    """Public verification evidence; certificate fingerprints contain no key material."""
+    return {"verified":True, "verifier":verifier,
+            "schemes":{name:value == "true" for name,value in re.findall(
+                r"Verified using (v[0-9.]+) scheme[^\r\n]*:\s*(true|false)", verification)},
+            "certificate_sha256":re.findall(r"Signer #\d+ certificate SHA-256 digest:\s*([0-9a-fA-F]+)", verification),
+            "verification_log_sha256":sha256_bytes(verification.encode("utf-8"))}
+
+
 def signing_material(args: argparse.Namespace) -> tuple[Path, str, str, str]:
     keytool = shutil.which(args.keytool)
     if not keytool:
@@ -206,6 +299,8 @@ def main() -> int:
     parser.add_argument("--ffdec", type=Path, required=True, help="External FFDec CLI executable, wrapper, or jar")
     parser.add_argument("--java", default=None, help="Java 17+ executable; defaults to JAVA_HOME or PATH")
     parser.add_argument("--android-sdk", type=Path, help="Optional Android SDK directory passed to ADT")
+    parser.add_argument("--android-gradle", action="store_true", help="Use HARMAN Gradle packaging with AGP8.9.1/Gradle8.13; requires --android-sdk")
+    parser.add_argument("--apksigner", type=Path, help="Android SDK apksigner.jar, including APK v2/v3 verification")
     parser.add_argument("--keystore", type=Path, help="Signing key; omitted uses an ignored local debug key")
     parser.add_argument("--alias", default="lal-rebuild-debug")
     parser.add_argument("--storepass-env", help="Environment variable holding the keystore password")
@@ -219,6 +314,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.prebuilt_swf and args.skip_swf_build:
         parser.error("--prebuilt-swf and --skip-swf-build are mutually exclusive")
+    if args.android_gradle and not args.android_sdk:
+        parser.error("--android-gradle requires --android-sdk")
 
     config, version, template, descriptor, _ = read_build_config()
     ffdec = require_file(args.ffdec, "FFDec CLI")
@@ -230,7 +327,6 @@ def main() -> int:
     if not java or java_major(java) < 17:
         raise RuntimeError("Java 17 or newer is required")
     ffdec_base = cli_command(ffdec, java)
-    adt_base = cli_command(adt, java)
 
     BUILD.mkdir(parents=True, exist_ok=True)
     # ADT hands paths to Gradle and Android tools that do not reliably handle
@@ -288,6 +384,9 @@ def main() -> int:
         raise ValueError("AIR must preserve the existing package id without adding another 'air.' prefix")
     if root.find("air:extensions", namespaces=ns) is not None:
         raise ValueError("AIR descriptor must not reference unavailable legacy ANEs")
+    gradle_settings = configure_android_gradle(descriptor_tree, args.android_sdk.expanduser().resolve()) if args.android_gradle else None
+    if gradle_settings:
+        descriptor_tree.write(package_descriptor, encoding="utf-8", xml_declaration=True)
 
     output_apk = (args.output or BUILD / f"lal-rebuild-{version}.apk").expanduser().resolve()
     output_apk.parent.mkdir(parents=True, exist_ok=True)
@@ -295,8 +394,12 @@ def main() -> int:
     keystore, alias, storepass, keypass = signing_material(args)
     adt_keystore = work / "signing.p12"
     shutil.copy2(keystore, adt_keystore)
-    command = adt_base + [
-        "-package", "-target", config["adt_target"], "-arch", "all",
+    command = ["-package", "-target", config["adt_target"]]
+    # SDK51 rejects 'all' for legacy APK, but Gradle needs it to avoid filtering
+    # the descriptor's armv7,armv8 list down to the default single architecture.
+    if args.android_gradle:
+        command += ["-arch", "all"]
+    command += [
         "-storetype", "pkcs12", "-keystore", str(adt_keystore),
         "-storepass", storepass, "-alias", alias, "-keypass", keypass,
     ]
@@ -305,22 +408,22 @@ def main() -> int:
         command += ["-platformsdk", str(args.android_sdk.expanduser().resolve())]
     command += ["MainLLOL.swf", "assets", "icons"]
     try:
-        adt_output = checked_run(command, label="HARMAN ADT APK package", cwd=package_dir)
+        with ascii_sdk_path(sdk) as adt_sdk:
+            adt_output = checked_run(cli_command(find_adt(adt_sdk), java) + command, label="HARMAN ADT APK package", cwd=package_dir)
+    except RuntimeError as error:
+        message = str(error)
+        for secret in (storepass, keypass):
+            if secret:
+                message = message.replace(secret, "<redacted>")
+        raise RuntimeError(message) from None
     finally:
         adt_keystore.unlink(missing_ok=True)
     if not adt_output_apk.is_file() or adt_output_apk.stat().st_size == 0:
         raise RuntimeError("ADT returned success without creating the APK")
 
-    jarsigner = shutil.which(args.jarsigner)
-    if not jarsigner:
-        raise FileNotFoundError(f"jarsigner not found: {args.jarsigner}")
-    verification = checked_run([
-        jarsigner, "-J-Duser.language=en", "-J-Duser.country=US", "-J-Dfile.encoding=UTF-8",
-        "-verify", "-verbose", "-certs", str(adt_output_apk),
-    ], label="APK signature verification")
-    if not re.search(r"jar\s+verified\.?", verification, re.I):
-        raise RuntimeError("jarsigner exited successfully without reporting a verified APK signature")
-    (BUILD / "jarsigner-verify.txt").write_text(verification, encoding="utf-8")
+    verification, signature_verifier = verify_apk_signature(adt_output_apk, java, android_sdk=args.android_sdk,
+                                                            apksigner=args.apksigner, jarsigner=args.jarsigner)
+    (BUILD / (signature_verifier + "-verify.txt")).write_text(verification, encoding="utf-8")
     with zipfile.ZipFile(adt_output_apk) as apk:
         names = set(apk.namelist())
         for required in ("assets/MainLLOL.swf", "assets/assets/audio/A_1001.mp3", "assets/assets/swfs/hero_A.swf"):
@@ -335,6 +438,9 @@ def main() -> int:
             raise RuntimeError(f"Android versionName mismatch: expected {release['version_name']}, got {version_name}")
         if not read_binary_manifest_cleartext(apk.read("AndroidManifest.xml")):
             raise RuntimeError("Packaged Android manifest must allow the game's local HTTP endpoint")
+        architectures = sorted(name.split("/")[1] for name in names if re.fullmatch(r"lib/[^/]+/libCore\.so", name))
+        if not {"armeabi-v7a", "arm64-v8a"}.issubset(architectures):
+            raise RuntimeError("Packaged APK must include both ARMv7 and ARM64 runtimes")
         embedded_descriptor = ET.fromstring(apk.read("assets/META-INF/AIR/application.xml"))
         embedded_ns = {"air": embedded_descriptor.tag.split("}")[0].lstrip("{")}
         if embedded_descriptor.findtext("air:versionNumber", namespaces=embedded_ns) != version or embedded_descriptor.findtext("air:versionLabel", namespaces=embedded_ns) != version:
@@ -344,6 +450,10 @@ def main() -> int:
         "version": version,
         "version_code": release["version_code"],
         "android_uses_cleartext_traffic": True,
+        "android_architectures": architectures,
+        "signature_verifier": signature_verifier,
+        "signature": signature_evidence(verification, signature_verifier),
+        "android_gradle": gradle_settings,
         "template_swf_sha256": config["template_swf"]["sha256"],
         "compiled_swf_sha256": swf_hash,
         "apk_sha256": sha256_file(adt_output_apk),

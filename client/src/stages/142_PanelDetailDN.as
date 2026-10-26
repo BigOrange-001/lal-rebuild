@@ -115,6 +115,7 @@ package com.meng52.game.ui.panel
             if(_loc14_ && _loc14_[1] != null && int(_loc9_) > 0)
             {
                _loc6_ = _loc14_[1];
+               if(!GlobalData.modChannelAllowed(_loc6_,"usage.auxiliary_formation")) continue;
                _loc4_ = null;
                _weightedOwned = (param1 == null || param1 === GlobalData.$userData.attrs.dn) && GlobalData.$userData.avatars ? GlobalData.$userData.avatars[_loc6_] : null;
                if(_loc14_[2] != null && !_weightedOwned)

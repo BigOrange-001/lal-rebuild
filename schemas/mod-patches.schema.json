@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lal.local/schemas/mod-patches.schema.json",
+  "title": "mod-patches API 1",
+  "$comment": "Editor schema. Runtime additionally validates references, semantic action contracts, duplicate IDs/paths, media, dependencies and post-upgrade bounds.",
+  "type": "object",
+  "properties": {
+    "patches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(builtin|self):[A-Za-z]+/.+|^mod:[0-9a-f-]+/[A-Za-z]+/.+"
+          },
+          "expect": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "enum": [
+                  "attackRange",
+                  "baseStats.attack",
+                  "baseStats.health",
+                  "baseStats.magicDefense",
+                  "baseStats.physicalDefense",
+                  "damageType",
+                  "description",
+                  "growth.attack",
+                  "growth.health",
+                  "growth.magicDefense",
+                  "growth.physicalDefense",
+                  "leadership",
+                  "name",
+                  "presentation.basicAttackEffect",
+                  "presentation.icon",
+                  "presentation.portrait",
+                  "presentation.voice",
+                  "role",
+                  "skills.captain",
+                  "skills.captain.cooldown",
+                  "skills.captain.description",
+                  "skills.captain.range",
+                  "skills.captain.warmup",
+                  "skills.normal",
+                  "skills.normal.cooldown",
+                  "skills.normal.description",
+                  "skills.normal.range",
+                  "skills.normal.warmup",
+                  "skills.passive",
+                  "skills.passive.cooldown",
+                  "skills.passive.description",
+                  "skills.passive.range",
+                  "skills.passive.warmup",
+                  "speed"
+                ]
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "value": {}
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "enum": [
+                    "clear",
+                    "replace",
+                    "set"
+                  ]
+                },
+                "path": {
+                  "enum": [
+                    "attackRange",
+                    "baseStats.attack",
+                    "baseStats.health",
+                    "baseStats.magicDefense",
+                    "baseStats.physicalDefense",
+                    "damageType",
+                    "description",
+                    "growth.attack",
+                    "growth.health",
+                    "growth.magicDefense",
+                    "growth.physicalDefense",
+                    "leadership",
+                    "name",
+                    "presentation.basicAttackEffect",
+                    "presentation.icon",
+                    "presentation.portrait",
+                    "presentation.voice",
+                    "role",
+                    "skills.captain",
+                    "skills.captain.cooldown",
+                    "skills.captain.description",
+                    "skills.captain.range",
+                    "skills.captain.warmup",
+                    "skills.normal",
+                    "skills.normal.cooldown",
+                    "skills.normal.description",
+                    "skills.normal.range",
+                    "skills.normal.warmup",
+                    "skills.passive",
+                    "skills.passive.cooldown",
+                    "skills.passive.description",
+                    "skills.passive.range",
+                    "skills.passive.warmup",
+                    "speed"
+                  ]
+                },
+                "value": {},
+                "expect": {}
+              },
+              "required": [
+                "op",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 64
+          },
+          "integrationDefaults": {
+            "type": "object",
+            "properties": {
+              "appearance.arena_enemy": {
+                "type": "boolean"
+              },
+              "acquisition.summon.normal": {
+                "type": "boolean"
+              },
+              "acquisition.summon.advanced": {
+                "type": "boolean"
+              },
+              "acquisition.shop.hero_soul": {
+                "type": "boolean"
+              },
+              "appearance.fragment_enemy": {
+                "type": "boolean"
+              },
+              "appearance.exploration_enemy": {
+                "type": "boolean"
+              },
+              "appearance.expedition_enemy": {
+                "type": "boolean"
+              },
+              "appearance.campaign_random_enemy": {
+                "type": "boolean"
+              },
+              "appearance.assist_bot": {
+                "type": "boolean"
+              },
+              "acquisition.summon.activity": {
+                "type": "boolean"
+              },
+              "acquisition.exchange.hero": {
+                "type": "boolean"
+              },
+              "acquisition.exchange.activity": {
+                "type": "boolean"
+              },
+              "acquisition.drop.campaign": {
+                "type": "boolean"
+              },
+              "acquisition.drop.activity": {
+                "type": "boolean"
+              },
+              "acquisition.drop.tower_hero": {
+                "type": "boolean"
+              },
+              "acquisition.drop.tower_soul": {
+                "type": "boolean"
+              },
+              "usage.friend_assist": {
+                "type": "boolean"
+              },
+              "usage.destiny": {
+                "type": "boolean"
+              },
+              "usage.auxiliary_formation": {
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "patchScopes": {
+            "type": "object",
+            "properties": {
+              "owned": {
+                "type": "boolean"
+              },
+              "arenaEnemy": {
+                "type": "boolean"
+              },
+              "pveEnemy": {
+                "type": "boolean"
+              },
+              "assist": {
+                "type": "boolean"
+              },
+              "summoned": {
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "target",
+          "expect",
+          "operations"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 256
+    }
+  },
+  "required": [
+    "patches"
+  ],
+  "additionalProperties": false
+}

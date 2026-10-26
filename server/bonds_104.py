@@ -12,6 +12,16 @@ MAIN = ('hp', 'ap', 'de_ph', 'de_ma')
 SECONDARY = ('hit', 'flee', 'crit', 'tough')
 
 
+def extend_action_metadata(row):
+    """Keep optional per-action metadata aligned after appended mechanics."""
+    for key, default in (('actionTargetPolicies', None), ('actionTargetLocks', None),
+                         ('actionTargetGroups', None), ('actionTargetMaxTargets', 1),
+                         ('actionTargetPolicyArgs', None)):
+        values = row.get(key)
+        if isinstance(values, list):
+            values.extend([default] * (len(row['skill']) - len(values)))
+
+
 def candidates(cfg, profile, lineup=None):
     teams = profile.get('team', [])
     index = int(profile.get('attrs', {}).get('team_num', 0))
@@ -153,7 +163,7 @@ def apply_bonds_104(document):
                             row['skillUp'] = copy.deepcopy(mechanism.get('upgrades'))
                             row.pop('skillUpPaths', None)
                             for attr in list(row):
-                                if attr.startswith('action') or attr in ('rankInfoTemplate', 'manualDamageMultiplier', 'modEffectSequence', 'modCondition', 'modPassiveTrigger', 'builtin_native_source_104'):
+                                if attr.startswith('action') or attr in ('rankInfoTemplate', 'manualDamageMultiplier', 'manualEffectMultiplier', 'manualSummonPolicy', 'manualClonePolicy', 'captainSummonMultiplier', 'chainDot', 'modEffectSequence', 'modCondition', 'modPassiveTrigger', 'builtin_native_source_104'):
                                     row.pop(attr, None)
                             row['actionTargetPolicies'] = copy.deepcopy(mechanism['policies'])
                             row['actionTargetMaxTargets'] = copy.deepcopy(mechanism['caps'])
@@ -176,6 +186,11 @@ def apply_bonds_104(document):
                     sid = 'S_7' + str(int(hashlib.sha256(f'{aid}:{key}:{slot}'.encode()).hexdigest()[:12], 16)) + '_' + aid.rsplit('_', 1)[1]
                     if sid in cfg['skill']:
                         raise ValueError('bond skill ID collision: ' + sid)
+                    extend_action_metadata(row)
+                    for policy_key in ('manualClonePolicy', 'manualSummonPolicy'):
+                        if isinstance(row.get(policy_key), dict):
+                            row['equipment_source_skill_104'] = row[policy_key]['skillId']
+                            row[policy_key]['skillId'] = sid
                     row['id'] = sid
                     row['bond_power_rate_104'] = factor * (1 + {2:.25,3:.32,4:.44,5:.56}[len(strongest['families'])] if strongest and (slot == 10 or len(strongest['families']) >= 4) else 1)
                     cfg['skill'][sid] = row

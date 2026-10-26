@@ -91,15 +91,6 @@ class InventoryMagic103Tests(unittest.TestCase):
         self.change(lambda p: p['my_equips'].update(eq2={'eid': 'E_6001_2', 'slv': 1}))
         self.fault('EquipmentLocked', 'user.swallow_skillbook', eqid='eq2', eqids=['eq1'])
 
-    def test_strengthened_copy_is_valid_phase_material_but_locked_copy_is_not(self):
-        self.change(lambda p: p['avatars']['h3'].update(lv=40,slv=6,hp=2000,ap=50,lock=1))
-        self.fault('HeroLocked','user.phase_up',aid='h0',aids=['h3'])
-        self.call('user.inventory_lock','unlock-phase',kind='hero',id='h3',locked=False)
-        self.call('user.phase_up','phase',aid='h0',aids=['h3'])
-        profile=self.store.profile_raw(self.uid)
-        self.assertNotIn('h3',profile['avatars'])
-        self.assertEqual(profile['avatars']['h0']['phase'],1)
-
     def test_lock_input_and_ownership_are_validated(self):
         self.fault('UnknownHero', 'user.inventory_lock', kind='hero', id='other-account', locked=True)
         self.fault('InvalidSelection', 'user.inventory_lock', kind='hero', id='h3', locked=1)

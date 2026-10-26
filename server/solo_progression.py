@@ -7,6 +7,8 @@ import random
 import copy
 from types import SimpleNamespace
 from pve_formation import stagger_lane_offsets
+from mod_policy import runtime as mod_runtime, candidate_ids, policy_signature, hero_available
+from player_store import GameplayFault
 
 
 def arena_equipment(config: dict, bot: dict, units: list[dict]) -> list[dict]:
@@ -59,7 +61,7 @@ def exploration_encounter(config: dict, profile: dict, state: dict, stage: int, 
     if ((not isinstance(baseline, dict) or baseline.get("stat_schema") != "hero-only-all-captains-v2"
             or "team_power" not in baseline)
             and isinstance(army, dict) and army and isinstance(roster, dict)):
-        selected = [iid for iid in army if iid in roster]
+        selected = [iid for iid in army if iid in roster and hero_available(config, roster[iid].get("aid", iid))]
         if selected:
             state["difficulty"] = exploration_difficulty(profile, selected, config)
     if template.get("campaign_workbook_fixed") and int(state.get("map_revision", 0)) == 0:
@@ -67,6 +69,9 @@ def exploration_encounter(config: dict, profile: dict, state: dict, stage: int, 
         return _calibrate_exploration(config, state, stage, authored)
     cfg = config.get("cfg", config)
     families = cfg.get("system_simple", {}).get("solo_hero_families", [])
+    if mod_runtime(config):
+        families = list(dict.fromkeys(list(families) + [aid.rsplit("_", 1)[0]
+                            for aid in candidate_ids(config, [], "appearance.exploration_enemy", include_new=True)]))
     avatars = cfg.get("avatar", {})
     seed = f'{profile.get("uid", "")}:explore:{state.get("map_revision", 0)}:{stage}'
     rng = random.Random(int.from_bytes(hashlib.sha256(seed.encode()).digest()[:8], "big"))
@@ -76,12 +81,16 @@ def exploration_encounter(config: dict, profile: dict, state: dict, stage: int, 
     candidates = []
     for family in families:
         members = [aid for aid in avatars if aid.rsplit("_", 1)[0] == family]
+        if mod_runtime(config):
+            members = candidate_ids(config, members, "appearance.exploration_enemy")
         if members:
             aid = min(members, key=lambda value: (abs(int(value.rsplit("_", 1)[-1]) - star), value))
             candidates.append(aid)
     rng.shuffle(candidates)
     selected = candidates[:3]
     if len(selected) < 3:
+        if mod_runtime(config):
+            raise GameplayFault("ModPoolEmpty", "探索随机敌人至少需要三个合法英雄家族")
         selected = [row[0] for row in template["team2"]][:3]
     team = [[aid, level, 4, 0, 0.08 + i * 0.12, int(i == 0)] for i, aid in enumerate(selected)]
     # Refreshed exploration maps are generated at runtime rather than read
@@ -254,7 +263,7 @@ def exploration_difficulty(profile: dict, selected: list[str], config: dict | No
     team = []
     for index, (_, iid, aid, hero, raw) in enumerate(ranked[:3]):
         overrides = {key: raw.get(key) for key in ("hp", "hp_max", "ap", "de_ph", "de_ma",
-                     "tpl", "talent", "morph", "phase", "culture_schema", "skill",
+                     "tpl", "talent", "morph", "phase", "culture_schema", "growth_stats_applied", "skill",
                      "leader_skill", "book_skill", "skillB")}
         overrides["leader_skill"] = raw.get("leader_skill")
         overrides["new_4attrs"] = {key: raw.get(key, 0) for key in ("hit", "flee", "crit", "tough")}

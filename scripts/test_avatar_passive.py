@@ -17,7 +17,7 @@ NODE = shutil.which('node')
 
 
 def method_body(source, name):
-    signature = re.search(r'function\s+' + re.escape(name) + r'\s*\([^)]*\)\s*:\s*\w+\s*\{', source)
+    signature = re.search(r'function\s+' + re.escape(name) + r'\s*\([^)]*\)\s*:\s*(?:\w+|\*)\s*\{', source)
     if signature is None:
         raise ValueError(f'Missing Avatar method: {name}')
     start = signature.end()
@@ -67,6 +67,7 @@ const context = vm.createContext({
   Math, Number
 });
 const passive = options.noPassive ? null : {
+  isModEffectSequence(){return false;},
   cd: options.directPassive ? -1 : (options.warmup || 0),
   getCastRange() { return options.range || 4000; },
   cooldown() { calls.ticks++; this.cd = Math.max(-1, this.cd - 1); },
@@ -82,6 +83,7 @@ const unit = {
   skill0: null, skill1: null, skill2: null, skillB: passive,
   fightRes: {parent: null},
   advanceManualOwnerAction: noop, getScale() { return 1; },
+  emitModEvent: noop,
   refreshIcon: noop, getTeamHp: noop, abilityTurnStart() { return false; },
   checkBuff() { return false; }, getEffectiveActionType() { return 2; },
   checkSkill() { calls.active++; return false; },

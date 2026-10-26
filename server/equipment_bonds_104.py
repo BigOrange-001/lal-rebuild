@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from captain_strength import _update_growth, _update_text
 from skill_balance_overlay import _get, _set, _pct
+from bonds_104 import extend_action_metadata
 
 PLAN=Path(__file__).resolve().parents[1]/'config/reconstruction/equipment-bonds-1.0.4.json'
 
@@ -136,10 +137,11 @@ def apply_equipment_bonds_104(document):
                         applied_effects.append(effect)
                         row.setdefault('equipment_notes_104',[]).append('装备·'+effect['name']+'：'+effect['info'])
                     if not applied_effects:continue
+                    extend_action_metadata(row)
                     sid='S_96'+str(int(hashlib.sha256(f'{aid}:{source}:{key}'.encode()).hexdigest()[:12],16))+'_6'
                     if sid in cfg['skill']:raise ValueError('Equipment skill collision')
                     row['id']=sid
-                    row['equipment_source_skill_104']=row.get('manualClonePolicy',{}).get('skillId') or row.get('manualSummonPolicy',{}).get('skillId') or source
+                    row['equipment_source_skill_104']=row.get('equipment_source_skill_104') or row.get('manualClonePolicy',{}).get('skillId') or row.get('manualSummonPolicy',{}).get('skillId') or source
                     row['equipment_output_rate_104']=1
                     row['equipment_bonds_104']=key.split('|')
                     row['bond_power_rate_104']=float(row.get('bond_power_rate_104',1))*(1+sum(e.get('power_budget',.12) for e in applied_effects))

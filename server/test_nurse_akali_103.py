@@ -86,7 +86,7 @@ class NurseAkali103Tests(unittest.TestCase):
         self.assertEqual((owner['hp'],friend['hp']), (10000,2000))
         self.assertTrue(all(b._buff(u,'bless').value==0 for u in b.a))
         self.assertTrue(all(b._buff(u,'purify') for u in b.a))
-        self.assertEqual([u['hp'] for u in b.b], [8000]*3)  # all 5000 nominal healing counts
+        self.assertEqual([u['hp'] for u in b.b], [6800]*3)  # 3000 effective at 40%, 2000 overheal at 100%
 
     def test_captain_self_target_is_applied_twice_even_when_first_heal_fills_hp(self):
         b = self.battle()
@@ -95,7 +95,7 @@ class NurseAkali103Tests(unittest.TestCase):
         self.cast(b,'leader_skill')
         self.assertEqual(owner['hp'],10000)
         self.assertIsNone(b._buff(b.a[1],'bless'))
-        self.assertEqual([u['hp'] for u in b.b], [6000]*3)
+        self.assertEqual([u['hp'] for u in b.b], [2400]*3)
         self.assertEqual(len([e for e in b.ability_events if e['kind']=='nurse_retribution']),6)
         self.assertEqual(b.ability_contexts,[])
 
@@ -108,9 +108,9 @@ class NurseAkali103Tests(unittest.TestCase):
         actual = b._injured(owner,1000,4,source=healer)  # 1000 * 1.5 * .6 = 900
         self.assertEqual(actual,-100)
         self.assertEqual(owner['hp'],10000)
-        self.assertEqual([u['hp'] for u in b.b],[9640]*3)
+        self.assertEqual([u['hp'] for u in b.b],[9160]*3)
         b._injured(healer,1000,4,source=owner)
-        self.assertEqual([u['hp'] for u in b.b],[9640]*3)
+        self.assertEqual([u['hp'] for u in b.b],[9160]*3)
 
     def test_passive_is_fixed_true_damage_and_common_defenses_still_apply(self):
         b = self.battle()
@@ -118,11 +118,18 @@ class NurseAkali103Tests(unittest.TestCase):
         owner['ap'] = 9999999
         b._add_buff(b.b[0],'shield',2,150)
         b._injured(owner,1000,4,source=owner)
-        self.assertEqual([u['hp'] for u in b.b], [9750,9600,9600])
+        self.assertEqual([u['hp'] for u in b.b], [9150,9000,9000])
         self.assertIsNone(b._buff(b.b[0],'shield'))
         self.assertEqual(b.state(owner)['nurse_pending'],[])
         self.assertFalse(b.state(owner)['nurse_busy'])
         self.assertEqual(b.ability_contexts,[])
+
+    def test_effective_and_overheal_have_separate_fixed_conversion_rates(self):
+        for hp,damage in ((5000,400),(9600,760),(10000,1000)):
+            with self.subTest(hp=hp):
+                b=self.battle();b.a[0]['hp']=hp
+                b._injured(b.a[0],1000,4,source=b.a[0])
+                self.assertEqual([u['hp'] for u in b.b],[10000-damage]*3)
 
     def test_dead_units_and_zero_healing_do_not_trigger_or_revive(self):
         b = self.battle()
@@ -141,11 +148,11 @@ class NurseAkali103Tests(unittest.TestCase):
         amount=b._heal_channel_value(healer,1)
         b._act_cure(healer,b.b,b.a,skill,['cure',1],0,{})
         self.assertEqual(owner['hp'],10000)
-        self.assertEqual([u['hp'] for u in b.b],[10000-int(amount*.4)]*3)
+        self.assertEqual([u['hp'] for u in b.b],[10000-int(amount)]*3)
         before=[u['hp'] for u in b.b]
         b._act_heal_damage_sum(healer,b.b,b.a,skill,['heal_damage_sum',.5,[0],'FX'],1,{'damage':{0:2000}})
         self.assertEqual(owner['hp'],10000)
-        self.assertEqual([u['hp'] for u in b.b],[hp-400 for hp in before])
+        self.assertEqual([u['hp'] for u in b.b],[hp-1000 for hp in before])
 
     def test_gateway_uses_same_panel_and_skills_after_generic_balance(self):
         from gateway import Backend
@@ -156,6 +163,10 @@ class NurseAkali103Tests(unittest.TestCase):
         self.assertEqual((h['role'],h['stat_profile'],h['tl'][2]),('双抗坦克',3,3))
         self.assertEqual(h['pl'][10:12],['S_271208_6','S_371208_6'])
         self.assertEqual(h['pl'][4:6],h['pl'][6:8])
+        from mod_tools import load_base
+        authored=load_base(ROOT/'config/reconstruction/full-config.json')['cfg']
+        for table in ('avatar','skill','equip'):
+            self.assertEqual(authored[table],cfg[table],table)
 
 
 if __name__=='__main__':unittest.main()

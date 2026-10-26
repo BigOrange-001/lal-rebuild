@@ -37,7 +37,7 @@ console.log(JSON.stringify({checked,badge:scaled.children[1].name,scale:scaled.c
         source=(STAGES/'045_GlobalFunction.as').read_text('utf8').replace('flash.display.Sprite','Sprite').replace('catch(_error:Error)','catch(_error)')
         script='''const originalGuide={width:72,height:72,frame:{width:96,height:96}};
 const assets={guideClick0000:originalGuide};let created=0;
-const GlobalData={$assetManager:{getTexture:key=>assets[key]||null,addTexture:(key,value)=>assets[key]=value}};
+const GlobalData={resolveModTexture:key=>key,$assetManager:{getTexture:key=>assets[key]||null,addTexture:(key,value)=>assets[key]=value}};
 const TEXTURE_DEFAULT='guideClick0000';
 const Texture={fromColor:(width,height,color)=>{created++;return {width,height,color};}};
 const getDefinitionByName=()=>{throw Error('missing');};

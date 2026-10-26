@@ -78,7 +78,7 @@ class SkillOutput104Tests(unittest.TestCase):
         script=r'''
 const input=JSON.parse(require('fs').readFileSync(0,'utf8')),out=[],int=Math.trunc;
 const GlobalData={$mConfig_simple:{hero_skill_output_rate_104:.8}},Tools={toInt:Math.trunc},REAL_DAMAGE_RATE=.3;
-const unit={equipmentOutputRate104:()=>1,hp:1000,getType:()=>1,getHpMax:()=>10000,getDamage:()=>1000,purpleBondMultiplier:()=>1};
+const unit={flushParallelVisualBatch:()=>{},equipmentOutputRate104:()=>1,hp:1000,getType:()=>1,getHpMax:()=>10000,getDamage:()=>1000,purpleBondMultiplier:()=>1};
 const context={owner:unit,manualDamageMultiplier:1.5,hitSerial:0};
 unit.currentAbilityAttack=()=>context;
 unit.attackAimList=(targets,type,coef)=>out.push(['output',type,coef]);

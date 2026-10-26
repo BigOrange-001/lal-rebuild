@@ -12,7 +12,10 @@ from solo_progression import expedition_stones, exploration_encounter, explorati
 from gameplay_energy import energy_state, write_energy_after_spend
 from equipment_elite_drop import roll_elite_drop
 from hero_drop import roll_campaign_hero_drop
-from tower_rewards_103 import roll_tower_reward, roll_tower_encounter, SCHEMA as TOWER_REWARD_SCHEMA
+from mod_policy import (runtime as mod_runtime, effective_digest, validate_battle_config,
+                        candidate_ids, ensure_reward, ensure_available, base_aid,
+                        hero_available, band_candidates, retain_frozen_intent)
+from tower_rewards_103 import roll_tower_reward, roll_tower_encounter, validate_tower_reward, SCHEMA as TOWER_REWARD_SCHEMA
 from material_attempts_103 import remaining as material_remaining, consume_win as consume_material_win, daily_state as material_daily, BUY_COST
 
 
@@ -194,7 +197,7 @@ class GameplayCombat:
                             continue
                         unit = enemy[index]
                         if (not isinstance(override, dict) or override.get("index") != index
-                                or override.get("aid") != unit.get("aid")):
+                                or override.get("aid") != base_aid(self.config, unit.get("aid"))):
                             raise GameplayFault("InvalidStage", "Enemy difficulty snapshot does not match team2 order")
                         try:
                             hp = max(0, int(override["hp"]))
@@ -224,6 +227,27 @@ class GameplayCombat:
                 except ValueError as exc:
                     raise GameplayFault("InvalidStage", "Stage enemies must cover every native route") from exc
                 energy_cost=max(0,int(stage.get('energy',0)))
+                if mod_runtime(self.config):
+                    channel = "acquisition.drop.activity" if is_activity else "acquisition.drop.campaign"
+                    ensure_reward(self.config, stage.get("reward", {}), channel)
+                    ensure_reward(self.config, stage.get("reward", {}).get("first_clear", {}), channel)
+                    if not is_activity:
+                        groups = {}
+                        for row in stage.get("hero_drop_candidates_by_diff", {}).get(str(diff), []):
+                            if isinstance(row, dict):
+                                groups.setdefault(row.get("star"), []).append(row.get("aid"))
+                        for quality, ids in groups.items():
+                            if not candidate_ids(self.config, ids, "acquisition.drop.campaign", include_new=True, quality=quality):
+                                raise GameplayFault("ModPoolEmpty", "主线英雄掉落的某个品阶池为空")
+                    if is_activity and stage.get("activity_kind") == "tower":
+                        if stage.get('tower_reward_rule',{}).get('schema') == TOWER_REWARD_SCHEMA:
+                            validate_tower_reward(self.full_config,stage)
+                        else:
+                            soul_pool = band_candidates(self.config, stage.get("soul_candidates", []), "acquisition.drop.tower_soul")
+                            if not soul_pool:
+                                raise GameplayFault("ModPoolEmpty", "爬塔英雄碎片池为空")
+                            if int(stage.get("tower_floor", 0)) > 100 and not candidate_ids(self.config, stage.get("tower_hero_candidates", []), "acquisition.drop.tower_hero", include_new=True, quality=6):
+                                raise GameplayFault("ModPoolEmpty", "爬塔整卡池为空")
                 energy_state=self._spend_energy(profile,energy_cost)
                 stage_copy = copy.deepcopy(stage)
                 stage_copy["line"] = map_line
@@ -237,8 +261,12 @@ class GameplayCombat:
                            "reward_seed": secrets.token_hex(32),
                            "kind":"activity" if is_activity else "main","stage": stage_copy, "created": int(self.store.clock.now()), "expires": int(self.store.clock.now())+3600,
                            "team_a": client_team_a, "team_b": enemy, "assist": copy.deepcopy(assist), "settled": False}
+                if effective_digest(self.config):
+                    pending["mod_digest"] = effective_digest(self.config)
                 profile.setdefault("pending_pve", {})[fight_id] = pending
-                profile["pending_pve"] = {k:v for k,v in profile["pending_pve"].items() if int(v.get("expires", 0)) > int(self.store.clock.now())}
+                profile["pending_pve"] = {k:v for k,v in profile["pending_pve"].items()
+                                          if int(v.get("expires", 0)) > int(self.store.clock.now())
+                                          or retain_frozen_intent(self.config, v)}
                 data = {"fight_id": fight_id, "fight_kind": "activity" if is_activity else "main_hard" if diff else "main", "metadata": {"cid": cid, "diff": diff}, "seed": seed, "poke_data": {}, "cid": cid, "diff": diff,
                         "line": stage_copy["line"], "team1": stage_copy.get("team1", []), "team2": stage_copy["team2"],
                         # Native GameMap.checkOrginTeam compares its locally
@@ -313,8 +341,9 @@ class GameplayCombat:
         row_id = str(row[0])
         avatar = helper.get("avatar") or {}
         expected_aid = str(avatar.get("aid", "")).split("|", 1)[0]
+        original_aid = base_aid(self.config, expected_aid)
         helper_avatar_id = str(helper.get("avatar_id", ""))
-        valid_helper_ids = {expected_aid, helper_avatar_id}
+        valid_helper_ids = {expected_aid, original_aid, helper_avatar_id}
         if row_id not in valid_helper_ids:
             prefix = expected_aid + "-"
             suffix = row_id[len(prefix):] if row_id.startswith(prefix) else ""
@@ -343,9 +372,9 @@ class GameplayCombat:
         # resource before applying the supplied battle stats. The friend-list
         # card intentionally exposes the base aid, so give only the battle
         # snapshot the helper's validated instance id.
-        if "|" not in helper_avatar_id or helper_avatar_id.split("|", 1)[0] != expected_aid:
+        if "|" not in helper_avatar_id or helper_avatar_id.split("|", 1)[0] != original_aid:
             raise GameplayFault("InvalidAssist", "Selected helper has an invalid avatar instance")
-        avatar["aid"] = helper_avatar_id
+        avatar["aid"] = expected_aid + "|" + helper_avatar_id.split("|", 1)[1]
         avatar["is_friend"] = bool(is_friend)
         avatar["cd_time"] = cd_time
         # Construct the exact native combatant snapshot alongside the
@@ -356,7 +385,7 @@ class GameplayCombat:
             pos = max(0.0, min(1.0, float(row[2]))) if len(row) > 2 else 0.5
             overrides = {key: avatar.get(key) for key in (
                 "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema",
-                "skill", "leader_skill", "book_skill", "skillB", "bonds_104", "growth_stats_applied")}
+                "skill", "leader_skill", "book_skill", "skillB", "bonds_104", "equipment_bonds_104", "growth_stats_applied")}
             overrides["leader_skill"] = avatar.get("leader_skill") if is_friend else None
             overrides["new_4attrs"] = {
                 key: (avatar.get("new_4attrs") or {}).get(key, 0)
@@ -364,7 +393,7 @@ class GameplayCombat:
             battle_snapshot = base_unit(
                 self.config, expected_aid, int(avatar.get("lv", 1)),
                 int(avatar.get("slv", 1)), line, pos, is_friend, 1,
-                helper_avatar_id, overrides, limit_break=avatar.get("limit_break") == 1)
+                helper_avatar_id, overrides, limit_break=avatar.get("limit_break") == 1, scope="assist")
         except (ValueError, TypeError, KeyError) as exc:
             raise GameplayFault("InvalidAssist", "Selected helper has invalid battle data") from exc
         return {"uid": uid, "is_friend": is_friend, "is_bot": True, "score_kind": "friend" if is_friend else "online",
@@ -414,6 +443,7 @@ class GameplayCombat:
             stage = pending["stage"]
             if pending.get("settled"):
                 raise GameplayFault("FightAlreadySettled", "Battle has already been settled")
+            validate_battle_config(self.config, pending)
             # Snapshots are bounded and validated for consistency, but never treated as server proof.
             self._validate_snapshots(snapshots, pending)
             profile.setdefault("combat_score", {"normal":{},"hard":{},"ploy":{}})
@@ -496,12 +526,16 @@ class GameplayCombat:
                     reward.update(tower_drop)
                 elif is_activity and stage.get("activity_kind") == "tower":
                     candidates = stage.get("soul_candidates", [])
+                    if mod_runtime(self.config):
+                        candidates = band_candidates(self.config, candidates, "acquisition.drop.tower_soul")
                     if not isinstance(candidates, list) or not candidates or any(aid not in self.config.get("avatar", {}) for aid in candidates):
                         raise GameplayFault("InvalidStage", "Tower soul pool is invalid")
                     tower_soul = self._reward_rng(uid, fight_id, pending, "tower-soul").choice(candidates)
                     reward["avatar_soul"] = {tower_soul: int(stage.get("soul_amount", 120))}
                     if int(stage.get("tower_floor", 0)) > 100:
                         heroes = stage.get("tower_hero_candidates", [])
+                        if mod_runtime(self.config):
+                            heroes = candidate_ids(self.config, heroes, "acquisition.drop.tower_hero", include_new=True, quality=6)
                         if (not isinstance(heroes, list) or not heroes
                                 or any(aid not in self.config.get("avatar", {})
                                        or not aid.startswith("A_1") or not aid.endswith("_6") for aid in heroes)):
@@ -789,6 +823,7 @@ class GameplayCombat:
             from gameplay_roster import GameplayRosterEquipment
             roster_rules=GameplayRosterEquipment(self.store,self.full_config)
             for aid in aids:
+                roster_rules._hero(profile, aid)
                 roster_rules._check_not_dn(profile,aid)
                 # Keep the native, localized error used for heroes in an
                 # unfinished mainline battle while sharing the exact live,
@@ -844,6 +879,8 @@ class GameplayCombat:
             for iid, hero in state.get("army", {}).items():
                 if not isinstance(hero, dict) or iid not in profile.get("avatars", {}):
                     continue
+                if mod_runtime(self.config) and not hero_available(self.config, profile["avatars"][iid].get("aid", iid)):
+                    continue
                 old = hero if hero.get("max_hp") else ledger.get(iid, {})
                 old_max = max(1, int(old.get("max_hp", 1)))
                 old_hp = max(0, min(old_max, int(old.get("current_hp", old_max))))
@@ -880,6 +917,9 @@ class GameplayCombat:
             stage_cfg = stages[stage_no - 1] if stages else {}
             stage_cfg = exploration_encounter(self.full_config, profile, state, stage_no, stage_cfg)
             if method == "user.exploration_start":
+                for intent in profile.get("pending_battles", {}).get("exploration", {}).values():
+                    if retain_frozen_intent(self.config, intent):
+                        validate_battle_config(self.config, intent)
                 # The original client does not serialize/reopen an in-progress
                 # GameMap fight after an app restart. Entering exploration
                 # again abandons an unreported battle instead of leaving a stale
@@ -934,7 +974,8 @@ class GameplayCombat:
                 pending = profile.setdefault("pending_battles", {}).setdefault("exploration", {})
                 now = int(self.store.clock.now())
                 pending = {key: value for key, value in pending.items()
-                           if isinstance(value, dict) and int(value.get("expires", 0)) > now}
+                           if isinstance(value, dict) and (int(value.get("expires", 0)) > now
+                           or retain_frozen_intent(self.config, value))}
                 if pending:
                     profile["pending_battles"]["exploration"] = pending
                     raise GameplayFault("ExplorationBattlePending", "Return to the exploration map before starting another battle")
@@ -962,7 +1003,7 @@ class GameplayCombat:
                     # retain stale multi-lane indices from another mode.
                     _, pos = (int(row[1]), float(row[2])) if len(row) >= 3 else (0, .2 + .24 * i)
                     line = 0
-                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "skill", "leader_skill", "book_skill", "skillB")}
+                    overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "skill", "leader_skill", "book_skill", "skillB", "growth_stats_applied", "bonds_104", "equipment_bonds_104")}
                     # Native exploration marks every selected hero as captain.
                     overrides["leader_skill"] = raw.get("leader_skill")
                     overrides["hp"] = current_hp
@@ -992,7 +1033,7 @@ class GameplayCombat:
                             continue
                         unit = enemy[index]
                         if (not isinstance(override, dict) or override.get("index") != index
-                                or override.get("aid") != unit.get("aid")):
+                                or override.get("aid") != base_aid(self.config, unit.get("aid"))):
                             raise GameplayFault("InvalidStage", "Exploration enemy snapshot does not match team2 order")
                         try:
                             hp = max(0, int(override["hp"]))
@@ -1020,7 +1061,9 @@ class GameplayCombat:
                 my_pr_power = _native_team_power(self.full_config, own)
                 pr_power = _native_team_power(self.full_config, enemy)
                 metadata = {"stage": stage_no}
-                intent = create_intent(profile, "exploration", metadata, own, enemy, now=self.store.clock.now())
+                intent = create_intent(profile, "exploration", metadata, own, enemy, now=self.store.clock.now(), config=self.config)
+                if effective_digest(self.config):
+                    profile["pending_battles"]["exploration"][intent["fight_id"]]["reward_snapshot"] = copy.deepcopy(stage_cfg.get("reward", {}))
                 state["combat_army"] = ids
                 return profile, {**self._exploration_response(profile), **intent, "fight_kind": "exploration",
                     "metadata": metadata, "seed": intent["seed"], "poke_data": {}, "cid": f"E_{stage_no:03d}_1",
@@ -1035,13 +1078,21 @@ class GameplayCombat:
             if method == "user.exploration_get_reward":
                 if int(state.get("current_stage_finish", 0)) != 1:
                     raise GameplayFault("NoExplorationReward", "Complete the current stage first")
-                reward = copy.deepcopy(stage_cfg.get("reward", {}))
+                frozen = state.get("mod_pending_reward")
+                if isinstance(frozen, dict):
+                    validate_battle_config(self.config, frozen)
+                    if int(frozen.get("stage", -1)) != stage_no:
+                        raise GameplayFault("InvalidBattle", "探索奖励与已完成关卡不匹配，原记录已保留")
+                    reward = copy.deepcopy(frozen.get("reward", {}))
+                else:
+                    reward = copy.deepcopy(stage_cfg.get("reward", {}))
                 reward.pop("first_clear", None)
                 grant_reward(profile, reward, self.full_config)
                 # Advance to map_max + 1 as a completion sentinel; clamping
                 # kept the final encounter selectable and repeatable forever.
                 state["stage"] = stage_no + 1
                 state["current_stage_finish"] = 0; state["combat_army"] = []
+                state.pop("mod_pending_reward", None)
                 if stage_no >= len(stages):
                     # The completion sentinel has no more combat/reward path.
                     # Release the old lineup so these heroes can be used for
@@ -1057,6 +1108,9 @@ class GameplayCombat:
                     "score": profile.get("score",0), "medal": profile.get("medal",0), "mark": profile.get("mark",0),
                     "exp": profile.get("exp",0), "lv": profile.get("lv",1), "attrs": profile.get("attrs",{})}
             if method == "user.exploration_refresh":
+                for intent in profile.get("pending_battles", {}).get("exploration", {}).values():
+                    if retain_frozen_intent(self.config, intent):
+                        validate_battle_config(self.config, intent)
                 # A completed encounter is an unclaimed asset. Refuse before
                 # charging or changing any state so refresh cannot erase it.
                 if int(state.get("current_stage_finish", 0)) == 1:
@@ -1126,13 +1180,21 @@ class GameplayCombat:
 
     def _finish_exploration(self, uid, params):
         def mutate(profile):
-            intent = consume_intent(profile, "exploration", params, metadata_keys=("stage",), now=self.store.clock.now())
+            intent = consume_intent(profile, "exploration", params, metadata_keys=("stage",), now=self.store.clock.now(), config=self.config)
             state, _ = self._exploration_defaults(profile)
             if int(intent.get("metadata", {}).get("stage", -1)) != int(state.get("stage", 1)):
                 raise GameplayFault("InvalidBattle", "Exploration stage changed during battle")
             sign = intent["sign"]
-            if sign == 1: state["current_stage_finish"] = 1
-            else: state["current_stage_finish"] = 0
+            if sign == 1:
+                state["current_stage_finish"] = 1
+                if intent.get("mod_digest"):
+                    state["mod_pending_reward"] = {"stage": state["stage"],
+                        "reward": copy.deepcopy(intent.get("reward_snapshot", {})),
+                        "mod_digest": intent["mod_digest"], "team_a": copy.deepcopy(intent["team_a"]),
+                        "team_b": copy.deepcopy(intent["team_b"])}
+            else:
+                state["current_stage_finish"] = 0
+                state.pop("mod_pending_reward", None)
             snapshot = intent.get("snapshots", {}).get("team_a", [])
             by_instance = {row["aid"]: row for row in snapshot if isinstance(row, dict) and isinstance(row.get("aid"), str)}
             for index, iid in enumerate(state.get("combat_army", [])):

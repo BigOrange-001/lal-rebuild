@@ -207,13 +207,13 @@ class SkillCompleteBattle(ReferenceBattle):
         value=max(0,value+_to_int(state['entry_ap']*state.get('evil_bonus',0)))
         return _to_int(value*(1+.05*state.get('santa_stacks',0)))
 
-    def _get_de_ph(self, unit):
+    def _get_de_ph(self, unit, ignore_sunder=False):
         base=dict(unit,de_ph=unit.get('de_ph',0)*(1+self._get_manual_battle_stack(unit,'defense')))
-        return super()._get_de_ph(base)
+        return super()._get_de_ph(base,ignore_sunder)
 
-    def _get_de_ma(self, unit):
+    def _get_de_ma(self, unit, ignore_sunder=False):
         base=dict(unit,de_ma=unit.get('de_ma',0)*(1+self._get_manual_battle_stack(unit,'defense')))
-        return super()._get_de_ma(base)
+        return super()._get_de_ma(base,ignore_sunder)
 
     def _summon_panel_snapshot(self, owner):
         result=dict(hp_max=self._get_hp(owner),ap=self._ap_with_talent(owner),
@@ -345,7 +345,9 @@ class SkillCompleteBattle(ReferenceBattle):
             case 'veigar_c':
                 enemies=en(700,hero=True,order='ratio') or en(700)
                 if not enemies:return False
-                target=enemies[0];hit(target,2+self.equipment_part(skill,'execution',3)*(1-target['hp']/target['hp_max']),2)
+                target=enemies[0];old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+30000
+                try:hit(target,2+self.equipment_part(skill,'execution',3)*(1-target['hp']/target['hp_max']),2)
+                finally:state['veigar_cast_hit']=old
             case 'elise_n':
                 enemies=en(600)
                 if not enemies:return False
@@ -524,7 +526,7 @@ class SkillCompleteBattle(ReferenceBattle):
         self._add_buff(owner,'purify',0,count)
 
     def _get_hit(self,owner):
-        return super()._get_hit(owner)+int(self.state(owner).get('polar_cast_hit',0))
+        return super()._get_hit(owner)+int(self.state(owner).get('polar_cast_hit',0))+int(self.state(owner).get('veigar_cast_hit',0))
 
     def execute_santa_skin(self,owner,kind,skill):
         targets=(self.candidates(owner,3-self._team_number(owner),owner['line'],owner['pos'],self._LINE_POS,-1)
@@ -568,11 +570,13 @@ class SkillCompleteBattle(ReferenceBattle):
         self.manual_casts[kind]=self.manual_casts.get(kind,0)+1
         return True
 
-    def _on_healing_received(self,target,amount):
+    def _on_healing_received(self,target,amount,overheal=0):
         actions=(target.get('skillB') or {}).get('skills') or []
         if target.get('hp',0)<=0 or amount<=0 or not actions or actions[0][0]!='nurse_healing':return
         state=self.state(target);pending=state.setdefault('nurse_pending',[])
-        pending.append(_to_int(amount*float(actions[0][1])))
+        overheal=max(0,min(amount,overheal))
+        overflow_rate=float(actions[0][2]) if len(actions[0])>2 else 1.0
+        pending.append(_to_int((amount-overheal)*float(actions[0][1])+overheal*overflow_rate))
         if state.get('nurse_busy'):return
         state['nurse_busy']=True
         try:
@@ -687,10 +691,10 @@ class SkillCompleteBattle(ReferenceBattle):
                         self.hit(owner,target,float(policy[1]),3)
         finally:state.update(cat_busy=False,cat_pending=0)
 
-    def _add_buff(self, unit, kind, rounds, value=0, poison_hp_rate_104=1):
+    def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
         ctx=self._context()
         if ctx and value and kind!='summon':value*=ctx['effect_factor']
-        return super()._add_buff(unit,kind,rounds,value,poison_hp_rate_104)
+        return super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
 
     def _remove_all_debuff(self, unit):
         super()._remove_all_debuff(unit)
@@ -704,14 +708,14 @@ class SkillCompleteBattle(ReferenceBattle):
         for key,value in list(state.items()):
             if isinstance(value,dict) and value.get('debuff') is False:state.pop(key,None)
 
-    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None):
+    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
         if ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')
-        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind)
+        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt)
         taken=max(0,before-max(0,target.get('hp',0)))+max(0,shield_before-self._buff_value(target,'shield'))
         grey=state.get('grey')
         if grey and taken>0 and damage_type!=4:
@@ -734,7 +738,10 @@ class SkillCompleteBattle(ReferenceBattle):
         hit=max(0,self._get_hit(attacker));flee=max(0,self._get_flee(target))
         action_type=(target.get('tpl') or [0,0])[1]
         if action_type!=3 and self.rng.get_random(100)<miss_chance(hit,flee,attack):
-            self._ability_last_hit=False;return 0
+            self._ability_last_hit=False
+            self._emit_mod_event(attacker,'miss',attacker,target)
+            self._emit_mod_event(target,'dodge',attacker,target)
+            return 0
         self._ability_last_hit=True
         critical=max(0,self._get_crit(attacker));tough=max(0,self._get_tough(target))
         crit=critical_multiplier(critical,attack) if self.rng.get_random(100)<crit_chance(critical,tough,attack) else 1
@@ -743,11 +750,13 @@ class SkillCompleteBattle(ReferenceBattle):
         row_a=self._config.get('avatar',{}).get(attacker.get('aid'),{});row_b=self._config.get('avatar',{}).get(target.get('aid'),{})
         sign_a=(row_a.get('tl') or [0,0,0])[0];sign_b=(row_b.get('tl') or [0,0,0])[0]
         raw=to_int(self._get_damage(attacker)*float(multiplier))
-        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._get_de_ph(target),self._get_de_ma(target),attack,share)
+        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share)
         amount=to_int(to_int(amount*crit)*attack[21])
         amount=to_int(amount/(1+tough*attack[15]/(tough+attack[13])))
-        result=self._injured(target,amount,damage_type,source=attacker)
+        receipt={}
+        result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt)
         self._ability_last_hit=True
+        if crit>1:self._emit_mod_event(attacker,'crit',attacker,target,receipt.get('actual',0))
         return result
 
     def _basic_attack(self, attacker, target):
@@ -756,6 +765,7 @@ class SkillCompleteBattle(ReferenceBattle):
             self._native_damage(attacker,target,1,damage_type)
             if self._ability_last_hit:self._book_attack_effects(attacker,target,max(0,before-target['hp']))
         self.polar_basic_attack(attacker)
+        self._emit_mod_event(attacker,'basic_attack',attacker,target)
 
     def _check_move(self, unit, forward, distance=0, forced=False):
         previous=unit['pos'];result=super()._check_move(unit,forward,distance,forced)
@@ -778,9 +788,7 @@ class SkillCompleteBattle(ReferenceBattle):
         row=self._config.get('skill',{}).get(skill.get('skid'),{})
         with self.context(attacker,'active',skill,self._factor(row.get('manualDamageMultiplier')) if manual else 1,
                           self._factor(row.get('manualEffectMultiplier')) if manual else 1):
-            if manual and len(actions)==1:
-                result=self.execute(attacker,str(manual[0][1]),float(manual[0][2]),skill)
-            else:result=super()._apply_native_skill(attacker,enemies,slot)
+            result=super()._apply_native_skill(attacker,enemies,slot)
         if result and slot=='skill':attacker['_ability_normal_cast']=True
         return result
 
@@ -845,7 +853,7 @@ class SkillCompleteBattle(ReferenceBattle):
             return True
         return owner['hp']<=0
 
-    def _run_unit_turn(self, attacker, sides, side):
+    def _run_unit_turn_base(self, attacker, sides, side):
         attacker['_team']=sides[side]
         self._resolve_pending_strike(attacker)
         if attacker['hp']<=0:return True

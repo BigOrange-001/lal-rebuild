@@ -242,7 +242,7 @@ class SkillBooksTests(unittest.TestCase):
             battle._native_damage(caster, target, 1, damage_type)
             self.assertEqual(target['hp'], 9944)
         caster['_team'] = battle.a
-        caster['book_skill'] = self.book_skill('E_6504_2', 10)  # 90% for one turn
+        caster['book_skill'] = self.book_skill('E_6504_7', 10)  # top quality: 90% for one turn
         self.assertTrue(battle._apply_native_skill(caster, battle.b, 'book_skill'))
         self.assertAlmostEqual(battle._book_bonus(caster, 'penetration'), .9)
         battle._tick_buffs(caster)
@@ -250,6 +250,39 @@ class SkillBooksTests(unittest.TestCase):
         self.assertEqual(battle._book_bonus(caster, 'penetration'), 0)
         caster['book_skill'] = self.book_skill('E_6008_7', 10)
         self.assertEqual(battle._book_bonus(caster, 'penetration'), 1)
+
+    def test_penetration_book_curve_scales_to_ninety_percent(self):
+        for quality in range(2,8):
+            for level in (1,5,10):
+                skill=self.book_skill(f'E_6504_{quality}',level)
+                self.assertAlmostEqual(skill['skills'][0][1],.9*(quality+1)/8*(level+5)/15)
+        row=self.config['cfg']['skill'][self.config['cfg']['equip']['E_6504_7']['skill']]
+        self.assertIn('只取最高值',row['info'])
+
+    def test_all_penetration_sources_take_maximum_for_native_and_absolute_damage(self):
+        from manual_ability_sim import SkillCompleteBattle
+        for cls in (ReferenceBattle,SkillCompleteBattle):
+            battle=cls([self.unit('caster')],[self.unit('enemy',False)])
+            caster,target=battle.a[0],battle.b[0]
+            target['de_ph']=target['de_ma']=1000
+            caster['ap']=1000
+            caster['book_skill']={'skills':[['book_passive',.2,'penetration'],['book_passive',.45,'penetration']]}
+            battle._add_buff(caster,'book_penetration',1,.6)
+            self.assertAlmostEqual(battle._book_bonus(caster,'penetration'),.6)
+            battle._add_buff(target,'sunder',3,1.5)  # also 60%, not 84% combined
+            for kind in (1,2):
+                self.assertEqual(battle._defense_against(caster,target,kind),400)
+                target['hp']=10000
+                battle._injured_absolute(target,1000,kind,source=caster)
+                self.assertEqual(target['hp'],9400)
+                target['hp']=10000
+                battle._native_damage(caster,target,1,kind)
+                self.assertEqual(target['hp'],9400)
+            battle._add_buff(target,'sunder',3,4)  # strongest reduction is now 80%
+            self.assertEqual(battle._defense_against(caster,target,1),200)
+            battle._remove_buff(caster,'book_penetration')
+            self.assertAlmostEqual(battle._book_bonus(caster,'penetration'),.45)
+            self.assertEqual(battle._defense_against(caster,target,2),200)
 
     def test_shield_bonus_spends_shield_without_amplifying_unshielded_hp_damage(self):
         battle = ReferenceBattle([self.unit('caster')], [self.unit('enemy', False)])

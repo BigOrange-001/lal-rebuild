@@ -40,8 +40,8 @@ class NewzonePowerTest(unittest.TestCase):
         ranks = roster._get_newzone_ranks("my-account")["power"]
         actual = next(row[3] for row in ranks if row[0] == "my-account")
         self.assertEqual(actual, expected)
-        self.assertGreater(actual, sum(roster.battle_attributes(profile, iid)[key]
-                                       for key in ("hp", "ap", "de_ph", "de_ma")))
+        plain = [{**unit, "leader_skill": None, "talent": None} for unit in units]
+        self.assertGreater(actual, arena._team_power(plain))
         npc = next(row for row in ranks if row[0] != "my-account")
         bot = next(bot for bot in arena.pvp_bots if bot["uid"] == npc[0])
         self.assertEqual(npc[1], bot_name_for_uid(npc[0]))

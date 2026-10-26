@@ -34,7 +34,7 @@ class ActivityTowerTest(unittest.TestCase):
 
     def test_color_tiers_native_power_and_three_table_publication(self):
         self.assertEqual((self.report["chapters"], self.report["stages"]), (11, 204))
-        self.assertEqual(self.config["cfg_version"], (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip())
+        self.assertEqual(self.config["cfg_version"], json.loads((Path(__file__).resolve().parents[1] / "config/reconstruction/full-config.json").read_text(encoding="utf-8"))["cfg_version"])
         pve = self.config["pve"]
         self.assertIn("P_001", pve["battle_ploy"])
         self.assertIn("P_001_3", pve["combat_ploy"])

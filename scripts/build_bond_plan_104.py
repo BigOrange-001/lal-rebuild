@@ -259,10 +259,10 @@ def customize_rework(bond, hero):
             ['enemy_global_highest_hpmax_hero']*2,[5,5],
             '跨路伏击最多5名高生命英雄：250%攻击魔伤、每回合100%攻击中毒3回合，并降低30%力量2回合。以持续伤害压制厚血阵容。',[2,3,9999,0,99,1])
     elif hero==1137:
-        put('normal','冥界收割', [['sunder_percent',3.5,2,.25,2,'FX60_SUNDER'],['heal_damage_sum',.25,heal]],
+        put('normal','冥界收割', [['sunder_percent',3.5,2,.25,2,'FX60_SUNDER'],['heal_damage_sum',.25,[0],heal]],
             ['enemy_lane_frontmost','ally_self'],[2,1],
             '对本路2名敌人造成350%攻击魔伤并削弱25%双防2回合，自身恢复本次累计伤害的25%。强化每级伤害+35%。',[0,2,3000,0,99,0],[[0,1,.35]])
-        put('captain','不朽冥军', [['dispel_good',1,'FX60_PURIFY'],['damage',7.0,2,slash],['caster_hp_shield',.4,2,shield],['heal_damage_sum',.3,heal]],
+        put('captain','不朽冥军', [['dispel_good',1,'FX60_PURIFY'],['damage',7.0,2,slash],['caster_hp_shield',.4,2,shield],['heal_damage_sum',.3,[1],heal]],
             ['enemy_global_highest_hpmax_hero','enemy_global_highest_hpmax_hero','ally_all','ally_self'],[2,2,3,1],
             '剥离跨路两名高生命英雄的增益并造成700%攻击魔伤；3名友军获得施法者40%最大生命护盾2回合，自身恢复累计伤害的30%。',[2,3,9999,0,99,1])
     elif hero==1124:
@@ -304,7 +304,7 @@ def customize_rework(bond, hero):
         put('normal','引魂灯笼', [['sunder_percent',2.6,2,.25,2,'FX60_SUNDER'],['caster_hp_shield',.25,2,shield]],
             ['enemy_lane_frontmost','ally_all_lowest_hp_ratio'],[2,2],
             '剥离本路2名前排25%双防2回合并造成260%攻击魔伤；为全场生命比例最低的2名友军提供施法者25%最大生命护盾2回合。强化每级伤害+26%。',[0,2,9999,0,99,1],[[0,1,.26]])
-        put('captain','幽牢审判', [['dispel_good',1,'FX60_PURIFY'],['stun',4.8,2,1,'FX60_STUN'],['heal_damage_sum',.3,heal]],
+        put('captain','幽牢审判', [['dispel_good',1,'FX60_PURIFY'],['stun',4.8,2,1,'FX60_STUN'],['heal_damage_sum',.3,[1],heal]],
             ['enemy_lane_frontmost','enemy_lane_frontmost','ally_self'],[4,4,1],
             '驱散本路4名敌人的增益，再造成480%攻击魔伤并眩晕1回合，自身恢复累计伤害的30%，专克同路密集增益阵容。',[2,3,3000,0,99,0])
     elif hero==1053:
@@ -326,7 +326,7 @@ def customize_rework(bond, hero):
             ['enemy_lane_frontmost','enemy_lane_behind_primary_nearest'],[1,2],
             '裂解本路前排：300%攻击魔伤并降低30%双防2回合；符文向其身后2名不同目标扩散，各造成200%攻击魔伤。强化每级两段伤害分别+30%、20%。',[0,2,3000,0,99,0],[[0,1,.3],[1,1,.2]])
         bond['mechanism']['normal']['policy_args']=[None,{'centerActionIndex':0,'distinctFromActionIndices':[0]}]
-        put('captain','奥术崩解', [['dispel_good',1,'FX60_PURIFY'],['sunder_percent',5.5,2,.35,2,'FX60_SUNDER'],['heal_damage_sum',.2,heal]],
+        put('captain','奥术崩解', [['dispel_good',1,'FX60_PURIFY'],['sunder_percent',5.5,2,.35,2,'FX60_SUNDER'],['heal_damage_sum',.2,[1],heal]],
             ['enemy_global_highest_hpmax_hero','enemy_global_highest_hpmax_hero','ally_self'],[4,4,1],
             '跨路瓦解4名高生命英雄的增益，造成550%攻击魔伤并降低35%双防2回合，自身恢复累计伤害20%，为法师队打开厚甲阵线。',[2,3,9999,0,99,1])
     elif hero==1071:
@@ -340,7 +340,7 @@ def customize_rework(bond, hero):
         put('normal','宗师破势', [['sunder_percent',3.4,1,.3,2,'FX60_SUNDER'],['stat_flat','flee',2500,2,'FX60_HIT']],
             ['enemy_lane_highest_attack_hero','ally_self'],[1,1],
             '迎战本路攻击最高英雄：340%攻击物伤并降低30%双防2回合；自身闪避+2500持续2回合，适合对抗单路强敌。强化每级伤害+34%。',[0,2,3000,0,0,0],[[0,1,.34]])
-        put('captain','百武归一', [['dispel_good',1,'FX60_PURIFY'],['locked_combo_group',1,5,1.6,1,0,slash],['caster_hp_shield',.35,2,shield],['heal_damage_sum',.25,heal]],
+        put('captain','百武归一', [['dispel_good',1,'FX60_PURIFY'],['locked_combo_group',1,5,1.6,1,0,slash],['caster_hp_shield',.35,2,shield],['heal_damage_sum',.25,[1],heal]],
             ['enemy_global_highest_attack_hero','enemy_global_highest_attack_hero','ally_self','ally_self'],[1,1,1,1],
             '跨路挑战最高攻击英雄，驱散增益后五连击，每击160%攻击物伤；自身获得35%最大生命护盾2回合并恢复累计伤害25%，集中压制敌方主核。',[2,3,9999,0,0,1])
     else:

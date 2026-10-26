@@ -35,7 +35,7 @@ HARNESS = r'''
 const input=JSON.parse(require('fs').readFileSync(0,'utf8'));
 const cfg=input.cfg,profile=input.profile,int=v=>Math.trunc(Number(v)||0),uint=int,trace=()=>{};
 const Tools={toInt:v=>int(Number(Number(v).toFixed(5)))};
-const GlobalData={$userData:profile,$mConfig_simple:cfg.system_simple,$mGuild_simple:cfg.association_simple,$mConfig_talent:cfg.talent,$mConfig_avatar:cfg.avatar,$mConfig_skill:cfg.skill};
+const GlobalData={modChannelAllowed:()=>true,$userData:profile,$mConfig_simple:cfg.system_simple,$mGuild_simple:cfg.association_simple,$mConfig_talent:cfg.talent,$mConfig_avatar:cfg.avatar,$mConfig_skill:cfg.skill};
 const GameMap={currentMap:null};
 const GlobalFunction={setOtherCfgAvatar:()=>{throw Error('stale owned DN snapshot was used');}};
 function attach(unit,definitions){for(const [name,[params,body]] of Object.entries(definitions))unit[name]=eval('(function('+params+'){with(this){'+body+String.fromCharCode(10)+'}})');return unit;}
@@ -109,6 +109,7 @@ class StatPower103Tests(unittest.TestCase):
             'getBondRows104':'','bondPanel104':'stat,value','updateBondSkills104':'','getEquipmentBondRows104':'','equipmentSkillId104':'source','equipmentOutputRate104':'',
             'getHpMax':'param1=-1,param2=-1,param3=false','getDamage':'param1=-1,param2=-1,param3=false',
             'getDePh':'param1=-1,param2=-1,param3=false','getDeMa':'param1=-1,param2=-1,param3=false',
+            'getPhysicalDefense':'param1,param2,param3,ignoreSunder','getMagicDefense':'param1,param2,param3,ignoreSunder',
             'getSpeed':'param1=false','getRange':'param1=false','getHit':'','getFlee':'','getCrit':'','getTough':'',
             'getStar':'','getType':'','getPhaseList':'','getPhaseLv':'','getSymp':'',
             'isWeightedCultivation':'','getCultivationGainFromSlope':'param1,param2',

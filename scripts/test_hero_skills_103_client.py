@@ -41,7 +41,7 @@ const unit={buffs:{},hp:1000,abilityState:{},tryndUndyingActive:false,manualSkil
 currentAbilityAttack:()=>null,checkTalent:()=>0,tickManualLethalFloors:noop,showBuff:noop,
 removeBuff(kind){delete this.buffs[kind];},removeAllDebuff:noop,removeAllGoodBuff:noop};
 '''
-        for name, params in [('addBuff', 'param1,param2,param3=0,param4=0,param5=-1'), ('checkBuff', '')]:
+        for name, params in [('addBuff', 'param1,param2,param3=0,param4=0,param5=-1,param6=null'), ('checkBuff', '')]:
             body = method_body(source, name).replace(' is Avatar', ' instanceof Avatar')
             script += f'unit.{name}=function({params}){{with(this){{{body}\n}}}};\n'
         script += '''const snapshot=()=>{let b=unit.buffs.bless;return b?[b.round,b.value]:null;};

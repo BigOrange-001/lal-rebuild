@@ -8,8 +8,9 @@ import copy, secrets, time
 from player_store import GameplayFault
 
 
-def create_intent(profile, kind, metadata, team_a, team_b, ttl=3600, now=None):
+def create_intent(profile, kind, metadata, team_a, team_b, ttl=3600, now=None, *, config=None):
     """Persist a one-shot intent in the caller's existing profile transaction."""
+    from mod_policy import effective_digest, retain_frozen_intent
     if not isinstance(kind, str) or not kind or len(kind) > 48:
         raise GameplayFault("InvalidBattle", "Battle kind is invalid")
     if not isinstance(metadata, dict) or not isinstance(team_a, list) or not isinstance(team_b, list):
@@ -20,16 +21,20 @@ def create_intent(profile, kind, metadata, team_a, team_b, ttl=3600, now=None):
     all_pending = profile.setdefault("pending_battles", {})
     pending = all_pending.setdefault(kind, {})
     all_pending[kind] = {key: value for key, value in pending.items()
-                         if isinstance(value, dict) and int(value.get("expires", 0)) > now}
+                         if isinstance(value, dict) and (int(value.get("expires", 0)) > now
+                         or (config is not None and retain_frozen_intent(config, value)))}
     intent = {"fight_id": fight_id, "kind": kind, "seed": seed,
               "metadata": copy.deepcopy(metadata), "team_a": copy.deepcopy(team_a),
               "team_b": copy.deepcopy(team_b), "created": now,
               "expires": now + max(60, min(int(ttl), 86400))}
+    if config is not None:
+        if effective_digest(config):
+            intent["mod_digest"] = effective_digest(config)
     all_pending[kind][fight_id] = intent
     return {"fight_id": fight_id, "seed": seed}
 
 
-def consume_intent(profile, kind, params, metadata_keys=(), allowed_signs=(1, 2), now=None):
+def consume_intent(profile, kind, params, metadata_keys=(), allowed_signs=(1, 2), now=None, *, config=None):
     """Validate and consume one intent in the same transaction as settlement."""
     if not isinstance(params, dict):
         raise GameplayFault("InvalidBattle", "Battle finish params must be an object")
@@ -41,6 +46,9 @@ def consume_intent(profile, kind, params, metadata_keys=(), allowed_signs=(1, 2)
     intents = profile.setdefault("pending_battles", {}).setdefault(kind, {})
     intent = intents.get(fight_id)
     now = int(time.time() if now is None else now)
+    if isinstance(intent, dict) and config is not None:
+        from mod_policy import validate_battle_config
+        validate_battle_config(config, intent)
     if not isinstance(intent, dict) or int(intent.get("expires", 0)) < now:
         intents.pop(fight_id, None)
         raise GameplayFault("UnknownFight", "Battle is expired or does not belong to this player")

@@ -554,7 +554,7 @@ package com.meng52.game.module.map
                // Avatar.init treats arrays of length >= 12 as arena compact
                // snapshots. Stage tuple extensions at 11/12 are metadata,
                // never compact hp/phase/morph/limit-break fields.
-               _loc2_ = new Avatar(_loc8_[0],_loc8_.slice(0,11));
+               _loc2_ = new Avatar(GlobalData.modDefinitionId(String(_loc8_[0]),"pveEnemy"),_loc8_.slice(0,11));
                _loc2_.actionNum = team1List.length;
                if(param1)
                {
@@ -582,7 +582,7 @@ package com.meng52.game.module.map
             _loc8_ = campaignEnemyRows[_loc9_];
             if(_loc8_ != null)
             {
-               _loc2_ = new Avatar(_loc8_[0],_loc8_.slice(0,11));
+               _loc2_ = new Avatar(GlobalData.modDefinitionId(String(_loc8_[0]),"pveEnemy"),_loc8_.slice(0,11));
                // Stage-only advancement metadata lives after offset/range.
                // Keep the constructor row short so Avatar.init never treats
                // it as an arena compact snapshot.
@@ -1602,7 +1602,7 @@ package com.meng52.game.module.map
             }
             else
             {
-               if(isLoad || GameMapLayer.isAuto || GlobalData.$tempPVE_type == "status_pve_guild")
+               if(isLoad || GameMapLayer.isAuto || GlobalData.$tempPVE_type == "status_pve_guild" || GlobalData.$modRuntime.digest != null)
                {
                   initByOrgin(re);
                   if(GlobalData.$tempPVE_type == "status_pve_guild")
@@ -2356,6 +2356,12 @@ package com.meng52.game.module.map
       
       public function endAction() : void
       {
+         actionDelay = 0;
+         if(currentAvatar && currentAvatar.emitModTurnEnd())
+         {
+            GameMapLayer.gl.delayCall(endAction,Math.max(0.1,actionDelay));
+            return;
+         }
          var _loc3_:int = 0;
          actionDelay = 0.4;
          var _loc1_:GameMapLayer = GameMapLayer.gl;

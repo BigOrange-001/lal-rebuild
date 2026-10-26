@@ -91,7 +91,7 @@ console.log(JSON.stringify(GlobalData.$tempFoodForBook));'''
 
     def test_passive_preview_and_cached_battle_stats_are_applied_once(self):
         script = '''const Tools={toInt:Math.trunc};
-const unit={mData:null,hpMax:0,hit:0,equips:[{getHit:()=>100}],mDestiny:{hit:10,hitP:0},buffs:{hitup:{value:5}},
+const unit={bondPanel104:(stat,value)=>value,mData:null,hpMax:0,hit:0,equips:[{getHit:()=>100}],mDestiny:{hit:10,hitP:0},buffs:{hitup:{value:5}},
 skill2:{getEquipRate:()=>1},getBookCombatBonus:()=>.45,initializingFightAttributes:false,teamTalentFlat:()=>0};
 '''
         script += method('137_Avatar.as', 'getHit')
@@ -104,11 +104,28 @@ console.log(JSON.stringify([raw,unit.getHit()]));'''
 const AvatarData={damageRate:()=>1},trace=()=>{};
 const unit={MIN_DAMAGE_RATE:.1,REAL_DAMAGE_RATE:.3,SIGN_DAMAGE_RATE:1.2};
 const source={avatarData:{},getBookCombatBonus:()=>.45};
-const target={avatarData:{},getDePh:()=>80,getDeMa:()=>80,checkTalent:()=>0};
+const target={avatarData:{},buffs:{},getDePh:()=>80,getDeMa:()=>80,getPhysicalDefense:()=>80,getMagicDefense:()=>80,checkTalent:()=>0};
 '''
         script += method('137_Avatar.as', 'countDamage', 'param1,param2,param3,param4,param5=1')
+        script += method('137_Avatar.as', 'getDefenseAgainst', 'source,damageType').replace('unit.getDefenseAgainst','target.getDefenseAgainst')
         script += '''console.log(JSON.stringify([unit.countDamage(source,target,100,1)[0],unit.countDamage(source,target,100,2)[0]]));'''
         self.assertEqual(self.run_js(script), [56, 56])
+
+    def test_penetration_and_sunder_take_highest_for_both_damage_channels(self):
+        script='''const Tools={toInt:v=>Math.trunc(Number(v.toFixed(5)))};
+const AvatarData={damageRate:()=>1},trace=()=>{};
+const unit={MIN_DAMAGE_RATE:.1,REAL_DAMAGE_RATE:.3,SIGN_DAMAGE_RATE:1.2};
+const source={avatarData:{},skill2:{skillSetData:{},skills:[['book_passive',.2,'penetration'],['book_passive',.45,'penetration']]},buffs:{book_penetration:{value:.6}}};
+const target={avatarData:{},buffs:{sunder:{value:1.5}},getPhysicalDefense:()=>1000,getMagicDefense:()=>1000,getDePh:()=>400,getDeMa:()=>400,checkTalent:()=>0};
+'''
+        script+=method('137_Avatar.as','getBookCombatBonus','stat').replace('unit.getBookCombatBonus','source.getBookCombatBonus')
+        script+=method('137_Avatar.as','getDefenseAgainst','source,damageType').replace('unit.getDefenseAgainst','target.getDefenseAgainst')
+        script+=method('137_Avatar.as','countDamage','param1,param2,param3,param4,param5=1')
+        script+='''const first=[source.getBookCombatBonus('penetration'),unit.countDamage(source,target,1000,1)[0],unit.countDamage(source,target,1000,2)[0]];
+target.buffs.sunder.value=4;first.push(unit.countDamage(source,target,1000,1)[0]);
+delete source.buffs.book_penetration;first.push(source.getBookCombatBonus('penetration'));
+console.log(JSON.stringify(first));'''
+        self.assertEqual(self.run_js(script),[.6,600,600,800,.45])
 
     def test_basic_hit_glyphs_use_actual_damage_and_curse_threshold(self):
         script = '''const Tools={toInt:v=>Math.trunc(Number(v.toFixed(5)))};

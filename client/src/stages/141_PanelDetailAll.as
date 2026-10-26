@@ -138,6 +138,9 @@ package com.meng52.game.ui.panel
       private function getAvatarVoiceId() : String
       {
          var _loc2_:String = _avatar.avatarData.soundId;
+         if(_loc2_.indexOf("MOD_") == 0 && GlobalData.$assetManager.getSound(_loc2_) != null) return _loc2_;
+         var voiceDefinition:Object = GlobalData.$mConfig_avatar[_avatar.avatarData.id];
+         if(voiceDefinition != null && voiceDefinition.hasOwnProperty("modVoice")) return _loc2_;
          // The exact asset audit found no dedicated family audio for these two
          // reviewed skins; use their confirmed prototype families instead.
          if(_loc2_ == "A_1213")

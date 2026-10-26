@@ -2,7 +2,7 @@
 from __future__ import annotations
 import argparse,datetime,hashlib,hmac,json,pathlib,secrets,shlex,sqlite3,sys,threading,time
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,unquote
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 PROJECT_VERSION=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
 if not PROJECT_VERSION:
@@ -30,6 +30,9 @@ from cat_katarina_103 import apply_cat_katarina_103
 from polar_ashe_103 import apply_polar_ashe_103
 from santa_veigar_103 import apply_santa_veigar_103
 from nurse_akali_103 import apply_nurse_akali_103
+from hero_accuracy_103 import apply_hero_accuracy_103
+from hero_iteration_103 import apply_hero_iteration_103
+from gameplay_energy import apply_energy_purchase_103
 from recruit_exchange import apply_recruit_exchange_config
 from help_pages import render_help,render_notice
 
@@ -98,7 +101,7 @@ def gameplay_fault_message(error):
  return GAMEPLAY_ERROR_MESSAGES_ZH.get(error.code,error.message)
 
 class Backend:
- def __init__(self,database,config=None):
+ def __init__(self,database,config=None,mods_root=None):
   database_path=str(database)
   if database_path!=':memory:':
    pathlib.Path(database_path).expanduser().resolve().parent.mkdir(parents=True,exist_ok=True)
@@ -135,6 +138,9 @@ class Backend:
    apply_polar_ashe_103(self.config)
    apply_santa_veigar_103(self.config)
    apply_nurse_akali_103(self.config)
+   apply_hero_accuracy_103(self.config)
+   apply_hero_iteration_103(self.config)
+   apply_energy_purchase_103(self.config)
    from hero_packs_104 import apply_hero_packs_104
    apply_hero_packs_104(self.config)
    apply_tower_rewards_103(self.config)
@@ -151,8 +157,12 @@ class Backend:
    from skill_output_104 import apply_skill_output_104
    apply_skill_output_104(self.config)
    apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
+   self.config['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
   self.players=PlayerStore(self.db,self.config,self.clock)
   self.players.lock=self.lock
+  from mod_service import ModService
+  default_mods=ROOT/'mods' if database_path==':memory:' else pathlib.Path(database_path).expanduser().resolve().parent/'mods'
+  self.mods=ModService(self.players,self.config,mods_root if mods_root is not None else default_mods)
  def password_hash(self,password,salt):
   return hashlib.pbkdf2_hmac('sha256',password.encode(),bytes.fromhex(salt),100000).hex()
  def call(self,request):
@@ -174,6 +184,11 @@ class Backend:
     apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
     # Return all configured tables: client merges them into its cached object.
     data=self.config
+    if request.get('uid'):
+     try:
+      owner=self.players.authenticate(request)
+      data=self.mods.config(owner)['config']
+     except GameplayFault as error:raise RpcFault(error.code,error.message) from error
    elif method in ('user.register','user.llogin','user.default_register','user.login'):
     if params.get('pf')!='local':
      raise RpcFault('UnsupportedPlatform','Only local accounts are supported; channel SDK authentication has not been reconstructed.')
@@ -196,7 +211,16 @@ class Backend:
      self.db.execute('INSERT INTO accounts(name,salt,password_hash,spending_tier) VALUES(?,?,?,?)',(name,salt,self.password_hash(password,salt),spending_tier))
      self.db.commit()
     if method=='user.default_register': data={'session_key':name,'sessionid':password}
-    elif method=='user.login': data=self.players.login(name,row[2])
+    elif method=='user.login':
+     try:
+      owner=self.db.execute('SELECT uid FROM players WHERE account=?',(name,)).fetchone()
+      if owner is not None:
+       self.mods.require_client(getattr(self.mods.context(owner[0]),'mod_resolved',None),request.get('client_capabilities'))
+      data=self.players.login(name,row[2])
+      data['mod_config']=self.mods.config(data['uid'])
+     except GameplayFault as error:
+      return {'method':method,'params':params,'return_code':1,'server_now':utc_datetime(self.clock.now()),
+              'data':{'msg':gameplay_fault_message(error),'error_code':error.code}}
    elif isinstance(method,str) and method.startswith('user.'):
     try:data=self.players.dispatch(request)
     except GameplayFault as error:
@@ -279,8 +303,36 @@ class Handler(BaseHTTPRequestHandler):
    self.send_body(200,render_help(path),'text/html; charset=utf-8')
   elif path=='/crossdomain.xml':
    self.send_body(200,b'<cross-domain-policy><allow-access-from domain="*" secure="false" /></cross-domain-policy>','application/xml')
+  elif path.startswith('/mods/assets/'):
+   parts=path[len('/mods/assets/'):].split('/',1)
+   try:
+    if len(parts)!=2:raise GameplayFault('InvalidModAsset','Invalid asset path')
+    with self.server.backend.lock:
+     body,media_type=self.server.backend.mods.asset(parts[0],unquote(parts[1]))
+    self.send_body(200,body,media_type)
+   except (GameplayFault,OSError,ValueError):self.send_body(404,b'Mod asset unavailable','text/plain')
   else: self.send_body(404,b'Not found','text/plain')
  def do_POST(self):
+  if urlsplit(self.path).path=='/mods/install':
+   try:
+    size=int(self.headers.get('Content-Length','0'))
+    backend=self.server.backend
+    if not 0<size<=backend.mods.MAX_UPLOAD_BYTES:raise GameplayFault('InvalidModPackage','英雄包为空或超过大小限制。')
+    if self.headers.get('Content-Type','').split(';',1)[0].strip()!='application/octet-stream':
+     raise GameplayFault('InvalidModPackage','上传必须是英雄包二进制文件。')
+    with backend.lock:
+     backend.players.authenticate({'uid':self.headers.get('X-Lal-Uid',''),'sessionid':self.headers.get('X-Lal-Session','')})
+    self.connection.settimeout(30)
+    payload=self.rfile.read(size)
+    if len(payload)!=size:raise GameplayFault('InvalidModPackage','上传文件不完整。')
+    with backend.lock:result=backend.mods.install_bytes(payload)
+    self.send_body(200,json.dumps({'ok':True,'package':result},ensure_ascii=False).encode('utf-8'),'application/json; charset=utf-8')
+   except GameplayFault as error:
+    status=401 if error.code=='InvalidSession' else 200
+    self.send_body(status,json.dumps({'ok':False,'error':{'code':error.code,'message':error.message}},ensure_ascii=False).encode('utf-8'),'application/json; charset=utf-8')
+   except (ValueError,OSError,OverflowError):
+    self.send_body(400,b'{"ok":false,"error":{"code":"InvalidModUpload","message":"Upload failed"}}','application/json')
+   return
   if urlsplit(self.path).path=='/debug/client-error':
    try:
     size=int(self.headers.get('Content-Length','0'))
@@ -392,8 +444,9 @@ def main():
  parser=argparse.ArgumentParser(description=__doc__)
  parser.add_argument('--host',default='127.0.0.1'); parser.add_argument('--port',default=8080,type=int)
  parser.add_argument('--database',default=str(ROOT/'server/local.sqlite3')); parser.add_argument('--config',default=str(ROOT/'config/reconstruction/full-config.json'))
+ parser.add_argument('--mods-root',default=None,help='Shared installed Mod directory (default: beside database)')
  args=parser.parse_args()
- backend=Backend(args.database,args.config)
+ backend=Backend(args.database,args.config,args.mods_root)
  service=make_server(args.host,args.port,backend)
  print(f'AMF gateway http://{service.server_address[0]}:{service.server_address[1]}/gateway/',flush=True)
  console=threading.Thread(target=_console_loop,args=(service,),name='server-console',daemon=True)

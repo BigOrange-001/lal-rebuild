@@ -1,0 +1,866 @@
+{
+  "schema": "hero-iteration-1.0.3-v1",
+  "status": "finalized",
+  "scope": "skill-magnitudes-only",
+  "heroes": [
+    {
+      "aid": "A_1001_5",
+      "name": "盖伦",
+      "panel_factor": 1,
+      "skill_factor": 1.021222,
+      "before_win_rate": 0.503,
+      "after_win_rate": 0.491
+    },
+    {
+      "aid": "A_1002_5",
+      "name": "艾希",
+      "panel_factor": 1,
+      "skill_factor": 0.866138,
+      "before_win_rate": 0.556,
+      "after_win_rate": 0.531
+    },
+    {
+      "aid": "A_1003_5",
+      "name": "雷兹",
+      "panel_factor": 1,
+      "skill_factor": 2.723144,
+      "before_win_rate": 0.373,
+      "after_win_rate": 0.489
+    },
+    {
+      "aid": "A_1004_5",
+      "name": "索拉卡",
+      "panel_factor": 1,
+      "skill_factor": 4,
+      "before_win_rate": 0.417,
+      "after_win_rate": 0.463
+    },
+    {
+      "aid": "A_1005_5",
+      "name": "悟空",
+      "panel_factor": 1,
+      "skill_factor": 0.771212,
+      "before_win_rate": 0.6,
+      "after_win_rate": 0.545
+    },
+    {
+      "aid": "A_1006_5",
+      "name": "娑娜",
+      "panel_factor": 1,
+      "skill_factor": 1.786205,
+      "before_win_rate": 0.448,
+      "after_win_rate": 0.451
+    },
+    {
+      "aid": "A_1007_5",
+      "name": "嘉文四世",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.486,
+      "after_win_rate": 0.523
+    },
+    {
+      "aid": "A_1008_5",
+      "name": "贾克斯",
+      "panel_factor": 1,
+      "skill_factor": 1.294652,
+      "before_win_rate": 0.468,
+      "after_win_rate": 0.455
+    },
+    {
+      "aid": "A_1009_5",
+      "name": "赵信",
+      "panel_factor": 1,
+      "skill_factor": 1.076529,
+      "before_win_rate": 0.496,
+      "after_win_rate": 0.458
+    },
+    {
+      "aid": "A_1010_5",
+      "name": "卡特琳娜",
+      "panel_factor": 1,
+      "skill_factor": 1.101988,
+      "before_win_rate": 0.505,
+      "after_win_rate": 0.502
+    },
+    {
+      "aid": "A_1011_5",
+      "name": "普朗克船长",
+      "panel_factor": 1,
+      "skill_factor": 0.937681,
+      "before_win_rate": 0.562,
+      "after_win_rate": 0.501
+    },
+    {
+      "aid": "A_1012_5",
+      "name": "易大师",
+      "panel_factor": 1,
+      "skill_factor": 0.676326,
+      "before_win_rate": 0.651,
+      "after_win_rate": 0.545
+    },
+    {
+      "aid": "A_1013_5",
+      "name": "布里茨",
+      "panel_factor": 1,
+      "skill_factor": 0.977507,
+      "before_win_rate": 0.501,
+      "after_win_rate": 0.525
+    },
+    {
+      "aid": "A_1014_5",
+      "name": "黑默丁格",
+      "panel_factor": 1,
+      "skill_factor": 0.957193,
+      "before_win_rate": 0.518,
+      "after_win_rate": 0.511
+    },
+    {
+      "aid": "A_1015_5",
+      "name": "阿卡丽",
+      "panel_factor": 1,
+      "skill_factor": 1.296002,
+      "before_win_rate": 0.442,
+      "after_win_rate": 0.496
+    },
+    {
+      "aid": "A_1016_5",
+      "name": "凯南",
+      "panel_factor": 1,
+      "skill_factor": 1.430604,
+      "before_win_rate": 0.475,
+      "after_win_rate": 0.471
+    },
+    {
+      "aid": "A_1017_5",
+      "name": "潘森",
+      "panel_factor": 1,
+      "skill_factor": 1.298691,
+      "before_win_rate": 0.464,
+      "after_win_rate": 0.445
+    },
+    {
+      "aid": "A_1018_5",
+      "name": "慎",
+      "panel_factor": 1,
+      "skill_factor": 1.100047,
+      "before_win_rate": 0.503,
+      "after_win_rate": 0.508
+    },
+    {
+      "aid": "A_1019_5",
+      "name": "德莱厄斯",
+      "panel_factor": 1,
+      "skill_factor": 0.960549,
+      "before_win_rate": 0.54,
+      "after_win_rate": 0.518
+    },
+    {
+      "aid": "A_1020_5",
+      "name": "蕾欧娜",
+      "panel_factor": 1,
+      "skill_factor": 1.091054,
+      "before_win_rate": 0.464,
+      "after_win_rate": 0.483
+    },
+    {
+      "aid": "A_1022_6",
+      "name": "阿狸",
+      "panel_factor": 1,
+      "skill_factor": 1.062865,
+      "before_win_rate": 0.52,
+      "after_win_rate": 0.5
+    },
+    {
+      "aid": "A_1023_6",
+      "name": "泰隆",
+      "panel_factor": 1,
+      "skill_factor": 1.887634,
+      "before_win_rate": 0.406,
+      "after_win_rate": 0.497
+    },
+    {
+      "aid": "A_1024_6",
+      "name": "艾瑞莉娅",
+      "panel_factor": 1,
+      "skill_factor": 1.253643,
+      "before_win_rate": 0.424,
+      "after_win_rate": 0.494
+    },
+    {
+      "aid": "A_1025_6",
+      "name": "凯瑟琳",
+      "panel_factor": 1,
+      "skill_factor": 1.281181,
+      "before_win_rate": 0.458,
+      "after_win_rate": 0.431
+    },
+    {
+      "aid": "A_1026_6",
+      "name": "李青",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.554,
+      "after_win_rate": 0.496
+    },
+    {
+      "aid": "A_1027_6",
+      "name": "维嘉",
+      "panel_factor": 1,
+      "skill_factor": 0.933852,
+      "before_win_rate": 0.549,
+      "after_win_rate": 0.522
+    },
+    {
+      "aid": "A_1028_6",
+      "name": "泰达米尔",
+      "panel_factor": 1,
+      "skill_factor": 1.412683,
+      "before_win_rate": 0.438,
+      "after_win_rate": 0.46
+    },
+    {
+      "aid": "A_1030_6",
+      "name": "厄运小姐",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.522,
+      "after_win_rate": 0.507
+    },
+    {
+      "aid": "A_1032_6",
+      "name": "锤石",
+      "panel_factor": 1,
+      "skill_factor": 1.187496,
+      "before_win_rate": 0.485,
+      "after_win_rate": 0.467
+    },
+    {
+      "aid": "A_1033_6",
+      "name": "伊芙琳",
+      "panel_factor": 1,
+      "skill_factor": 1.095226,
+      "before_win_rate": 0.503,
+      "after_win_rate": 0.51
+    },
+    {
+      "aid": "A_1036_6",
+      "name": "伊丽丝",
+      "panel_factor": 1,
+      "skill_factor": 1.432548,
+      "before_win_rate": 0.464,
+      "after_win_rate": 0.45
+    },
+    {
+      "aid": "A_1040_6",
+      "name": "婕拉",
+      "panel_factor": 1,
+      "skill_factor": 0.770589,
+      "before_win_rate": 0.619,
+      "after_win_rate": 0.533
+    },
+    {
+      "aid": "A_1041_6",
+      "name": "杰斯",
+      "panel_factor": 1,
+      "skill_factor": 0.924562,
+      "before_win_rate": 0.5,
+      "after_win_rate": 0.49
+    },
+    {
+      "aid": "A_1045_6",
+      "name": "璐璐",
+      "panel_factor": 1,
+      "skill_factor": 1.472445,
+      "before_win_rate": 0.462,
+      "after_win_rate": 0.469
+    },
+    {
+      "aid": "A_1049_6",
+      "name": "瑟庄妮",
+      "panel_factor": 1,
+      "skill_factor": 1.118115,
+      "before_win_rate": 0.461,
+      "after_win_rate": 0.491
+    },
+    {
+      "aid": "A_1053_6",
+      "name": "格雷福斯",
+      "panel_factor": 1,
+      "skill_factor": 1.28906,
+      "before_win_rate": 0.479,
+      "after_win_rate": 0.498
+    },
+    {
+      "aid": "A_1054_6",
+      "name": "希瓦娜",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.519,
+      "after_win_rate": 0.522
+    },
+    {
+      "aid": "A_1056_6",
+      "name": "锐雯",
+      "panel_factor": 1,
+      "skill_factor": 1.020329,
+      "before_win_rate": 0.531,
+      "after_win_rate": 0.518
+    },
+    {
+      "aid": "A_1060_6",
+      "name": "拉克丝",
+      "panel_factor": 1,
+      "skill_factor": 2.033651,
+      "before_win_rate": 0.432,
+      "after_win_rate": 0.475
+    },
+    {
+      "aid": "A_1063_6",
+      "name": "卡西奥佩娅",
+      "panel_factor": 1,
+      "skill_factor": 0.316843,
+      "before_win_rate": 0.718,
+      "after_win_rate": 0.558
+    },
+    {
+      "aid": "A_1068_6",
+      "name": "布兰德",
+      "panel_factor": 1,
+      "skill_factor": 0.789902,
+      "before_win_rate": 0.61,
+      "after_win_rate": 0.563
+    },
+    {
+      "aid": "A_1071_6",
+      "name": "奥利安娜",
+      "panel_factor": 1,
+      "skill_factor": 1.134519,
+      "before_win_rate": 0.503,
+      "after_win_rate": 0.47
+    },
+    {
+      "aid": "A_1073_6",
+      "name": "努努",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.52,
+      "after_win_rate": 0.49
+    },
+    {
+      "aid": "A_1074_6",
+      "name": "阿木木",
+      "panel_factor": 1,
+      "skill_factor": 1.268366,
+      "before_win_rate": 0.462,
+      "after_win_rate": 0.495
+    },
+    {
+      "aid": "A_1077_6",
+      "name": "墨菲特",
+      "panel_factor": 1,
+      "skill_factor": 1.354015,
+      "before_win_rate": 0.446,
+      "after_win_rate": 0.462
+    },
+    {
+      "aid": "A_1078_6",
+      "name": "希维尔",
+      "panel_factor": 1,
+      "skill_factor": 1.298934,
+      "before_win_rate": 0.439,
+      "after_win_rate": 0.527
+    },
+    {
+      "aid": "A_1079_6",
+      "name": "费德提克",
+      "panel_factor": 1,
+      "skill_factor": 1.647876,
+      "before_win_rate": 0.415,
+      "after_win_rate": 0.505
+    },
+    {
+      "aid": "A_1081_6",
+      "name": "艾尼维亚",
+      "panel_factor": 1,
+      "skill_factor": 1.257843,
+      "before_win_rate": 0.492,
+      "after_win_rate": 0.45
+    },
+    {
+      "aid": "A_1082_6",
+      "name": "提莫",
+      "panel_factor": 1,
+      "skill_factor": 0.97592,
+      "before_win_rate": 0.547,
+      "after_win_rate": 0.51
+    },
+    {
+      "aid": "A_1083_6",
+      "name": "崔丝塔娜",
+      "panel_factor": 1,
+      "skill_factor": 1.351416,
+      "before_win_rate": 0.47,
+      "after_win_rate": 0.449
+    },
+    {
+      "aid": "A_1085_6",
+      "name": "阿里斯塔",
+      "panel_factor": 1,
+      "skill_factor": 1.370311,
+      "before_win_rate": 0.468,
+      "after_win_rate": 0.462
+    },
+    {
+      "aid": "A_1086_6",
+      "name": "黛安娜",
+      "panel_factor": 1,
+      "skill_factor": 1.08425,
+      "before_win_rate": 0.485,
+      "after_win_rate": 0.455
+    },
+    {
+      "aid": "A_1090_6",
+      "name": "拉莫斯",
+      "panel_factor": 1,
+      "skill_factor": 1.05945,
+      "before_win_rate": 0.517,
+      "after_win_rate": 0.47
+    },
+    {
+      "aid": "A_1093_6",
+      "name": "塔里克",
+      "panel_factor": 1,
+      "skill_factor": 2.302679,
+      "before_win_rate": 0.421,
+      "after_win_rate": 0.448
+    },
+    {
+      "aid": "A_1094_6",
+      "name": "迦娜",
+      "panel_factor": 1,
+      "skill_factor": 1.430974,
+      "before_win_rate": 0.431,
+      "after_win_rate": 0.461
+    },
+    {
+      "aid": "A_1095_6",
+      "name": "基兰",
+      "panel_factor": 1,
+      "skill_factor": 1.629253,
+      "before_win_rate": 0.467,
+      "after_win_rate": 0.443
+    },
+    {
+      "aid": "A_1096_6",
+      "name": "崔斯特",
+      "panel_factor": 1,
+      "skill_factor": 1.270639,
+      "before_win_rate": 0.459,
+      "after_win_rate": 0.506
+    },
+    {
+      "aid": "A_1097_6",
+      "name": "卡兹克",
+      "panel_factor": 1,
+      "skill_factor": 0.72903,
+      "before_win_rate": 0.585,
+      "after_win_rate": 0.512
+    },
+    {
+      "aid": "A_1098_6",
+      "name": "凯尔萨斯",
+      "panel_factor": 1,
+      "skill_factor": 0.963195,
+      "before_win_rate": 0.544,
+      "after_win_rate": 0.503
+    },
+    {
+      "aid": "A_1099_6",
+      "name": "图奇",
+      "panel_factor": 1,
+      "skill_factor": 0.667404,
+      "before_win_rate": 0.611,
+      "after_win_rate": 0.535
+    },
+    {
+      "aid": "A_1101_6",
+      "name": "雷克顿",
+      "panel_factor": 1,
+      "skill_factor": 1.034714,
+      "before_win_rate": 0.508,
+      "after_win_rate": 0.487
+    },
+    {
+      "aid": "A_1103_6",
+      "name": "马尔扎哈",
+      "panel_factor": 1,
+      "skill_factor": 0.477522,
+      "before_win_rate": 0.684,
+      "after_win_rate": 0.529
+    },
+    {
+      "aid": "A_1105_6",
+      "name": "奈德丽",
+      "panel_factor": 1,
+      "skill_factor": 0.955817,
+      "before_win_rate": 0.493,
+      "after_win_rate": 0.455
+    },
+    {
+      "aid": "A_1106_6",
+      "name": "古拉加斯",
+      "panel_factor": 1,
+      "skill_factor": 1.031099,
+      "before_win_rate": 0.508,
+      "after_win_rate": 0.498
+    },
+    {
+      "aid": "A_1108_6",
+      "name": "波比",
+      "panel_factor": 1,
+      "skill_factor": 0.846865,
+      "before_win_rate": 0.568,
+      "after_win_rate": 0.534
+    },
+    {
+      "aid": "A_1109_6",
+      "name": "弗拉基米尔",
+      "panel_factor": 1,
+      "skill_factor": 1.132358,
+      "before_win_rate": 0.491,
+      "after_win_rate": 0.511
+    },
+    {
+      "aid": "A_1112_6",
+      "name": "扎克",
+      "panel_factor": 1,
+      "skill_factor": 1.785604,
+      "before_win_rate": 0.427,
+      "after_win_rate": 0.491
+    },
+    {
+      "aid": "A_1113_6",
+      "name": "亚托克斯",
+      "panel_factor": 1,
+      "skill_factor": 1.052245,
+      "before_win_rate": 0.486,
+      "after_win_rate": 0.447
+    },
+    {
+      "aid": "A_1114_6",
+      "name": "敖兴",
+      "panel_factor": 1,
+      "skill_factor": 1.106014,
+      "before_win_rate": 0.484,
+      "after_win_rate": 0.446
+    },
+    {
+      "aid": "A_1115_6",
+      "name": "金克斯",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.532,
+      "after_win_rate": 0.506
+    },
+    {
+      "aid": "A_1117_6",
+      "name": "丽桑卓",
+      "panel_factor": 1,
+      "skill_factor": 0.739226,
+      "before_win_rate": 0.632,
+      "after_win_rate": 0.533
+    },
+    {
+      "aid": "A_1119_6",
+      "name": "亚索",
+      "panel_factor": 1,
+      "skill_factor": 0.748701,
+      "before_win_rate": 0.602,
+      "after_win_rate": 0.553
+    },
+    {
+      "aid": "A_1120_6",
+      "name": "凯尔",
+      "panel_factor": 1,
+      "skill_factor": 1.43204,
+      "before_win_rate": 0.443,
+      "after_win_rate": 0.478
+    },
+    {
+      "aid": "A_1123_6",
+      "name": "纳尔",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.542,
+      "after_win_rate": 0.512
+    },
+    {
+      "aid": "A_1124_6",
+      "name": "阿兹尔",
+      "panel_factor": 1,
+      "skill_factor": 4,
+      "before_win_rate": 0.428,
+      "after_win_rate": 0.449
+    },
+    {
+      "aid": "A_1125_6",
+      "name": "吉格斯",
+      "panel_factor": 1,
+      "skill_factor": 1.0,
+      "before_win_rate": 0.56,
+      "after_win_rate": 0.558
+    },
+    {
+      "aid": "A_1126_6",
+      "name": "辛德拉",
+      "panel_factor": 1,
+      "skill_factor": 1.069539,
+      "before_win_rate": 0.552,
+      "after_win_rate": 0.51
+    },
+    {
+      "aid": "A_1127_6",
+      "name": "乐芙兰",
+      "panel_factor": 1,
+      "skill_factor": 1.18015,
+      "before_win_rate": 0.478,
+      "after_win_rate": 0.505
+    },
+    {
+      "aid": "A_1128_6",
+      "name": "萨科",
+      "panel_factor": 1,
+      "skill_factor": 0.679192,
+      "before_win_rate": 0.643,
+      "after_win_rate": 0.538
+    },
+    {
+      "aid": "A_1130_6",
+      "name": "菲奥娜",
+      "panel_factor": 1,
+      "skill_factor": 0.734962,
+      "before_win_rate": 0.608,
+      "after_win_rate": 0.53
+    },
+    {
+      "aid": "A_1131_6",
+      "name": "娜美",
+      "panel_factor": 1,
+      "skill_factor": 2.595414,
+      "before_win_rate": 0.4,
+      "after_win_rate": 0.479
+    },
+    {
+      "aid": "A_1132_6",
+      "name": "劫",
+      "panel_factor": 1,
+      "skill_factor": 3.982625,
+      "before_win_rate": 0.419,
+      "after_win_rate": 0.465
+    },
+    {
+      "aid": "A_1133_6",
+      "name": "莫甘娜",
+      "panel_factor": 1,
+      "skill_factor": 1.473507,
+      "before_win_rate": 0.475,
+      "after_win_rate": 0.487
+    },
+    {
+      "aid": "A_1134_6",
+      "name": "卡萨丁",
+      "panel_factor": 1,
+      "skill_factor": 1.718521,
+      "before_win_rate": 0.471,
+      "after_win_rate": 0.498
+    },
+    {
+      "aid": "A_1135_6",
+      "name": "雷恩加尔",
+      "panel_factor": 1,
+      "skill_factor": 1.376041,
+      "before_win_rate": 0.433,
+      "after_win_rate": 0.487
+    },
+    {
+      "aid": "A_1136_6",
+      "name": "卢锡安",
+      "panel_factor": 1,
+      "skill_factor": 1.819933,
+      "before_win_rate": 0.441,
+      "after_win_rate": 0.477
+    },
+    {
+      "aid": "A_1137_6",
+      "name": "莫德凯撒",
+      "panel_factor": 1,
+      "skill_factor": 1.266165,
+      "before_win_rate": 0.563,
+      "after_win_rate": 0.527
+    },
+    {
+      "aid": "A_1138_6",
+      "name": "塔姆肯奇",
+      "panel_factor": 1,
+      "skill_factor": 1.290735,
+      "before_win_rate": 0.485,
+      "after_win_rate": 0.456
+    },
+    {
+      "aid": "A_1139_6",
+      "name": "卡尔玛",
+      "panel_factor": 1,
+      "skill_factor": 1.54224,
+      "before_win_rate": 0.44,
+      "after_win_rate": 0.472
+    },
+    {
+      "aid": "A_1140_6",
+      "name": "橙阶英雄·序号140",
+      "panel_factor": 1,
+      "skill_factor": 4,
+      "before_win_rate": 0.34,
+      "after_win_rate": 0.457
+    },
+    {
+      "aid": "A_1142_6",
+      "name": "千珏",
+      "panel_factor": 1,
+      "skill_factor": 2.292583,
+      "before_win_rate": 0.451,
+      "after_win_rate": 0.505
+    },
+    {
+      "aid": "A_1143_6",
+      "name": "俄洛伊",
+      "panel_factor": 1,
+      "skill_factor": 1.05022,
+      "before_win_rate": 0.528,
+      "after_win_rate": 0.506
+    },
+    {
+      "aid": "A_1205_6",
+      "name": "茂凯",
+      "panel_factor": 1,
+      "skill_factor": 1.365896,
+      "before_win_rate": 0.462,
+      "after_win_rate": 0.494
+    },
+    {
+      "aid": "A_1224_6",
+      "name": "橙阶英雄·序号224",
+      "panel_factor": 1,
+      "skill_factor": 3.720068,
+      "before_win_rate": 0.354,
+      "after_win_rate": 0.495
+    },
+    {
+      "aid": "A_1225_6",
+      "name": "橙阶英雄·序号225",
+      "panel_factor": 1,
+      "skill_factor": 3.245889,
+      "before_win_rate": 0.351,
+      "after_win_rate": 0.47
+    },
+    {
+      "aid": "A_1227_6",
+      "name": "橙阶英雄·序号227",
+      "panel_factor": 1,
+      "skill_factor": 1.968795,
+      "before_win_rate": 0.404,
+      "after_win_rate": 0.495
+    },
+    {
+      "aid": "A_1903_5",
+      "name": "JY大魔王",
+      "panel_factor": 1,
+      "skill_factor": 1.601568,
+      "before_win_rate": 0.44,
+      "after_win_rate": 0.494
+    },
+    {
+      "aid": "A_1904_5",
+      "name": "伊芙蕾雅",
+      "panel_factor": 1,
+      "skill_factor": 1.754361,
+      "before_win_rate": 0.432,
+      "after_win_rate": 0.459
+    },
+    {
+      "aid": "A_1905_5",
+      "name": "Miss大小姐",
+      "panel_factor": 1,
+      "skill_factor": 1.803323,
+      "before_win_rate": 0.439,
+      "after_win_rate": 0.486
+    },
+    {
+      "aid": "A_1906_5",
+      "name": "紫阶英雄·序号906",
+      "panel_factor": 1,
+      "skill_factor": 2.1032,
+      "before_win_rate": 0.397,
+      "after_win_rate": 0.525
+    },
+    {
+      "aid": "A_1908_5",
+      "name": "紫阶英雄·序号908",
+      "panel_factor": 1,
+      "skill_factor": 2.775636,
+      "before_win_rate": 0.402,
+      "after_win_rate": 0.466
+    },
+    {
+      "aid": "A_1909_5",
+      "name": "小智",
+      "panel_factor": 1,
+      "skill_factor": 1.890894,
+      "before_win_rate": 0.424,
+      "after_win_rate": 0.485
+    },
+    {
+      "aid": "A_1910_5",
+      "name": "紫阶英雄·序号910",
+      "panel_factor": 1,
+      "skill_factor": 1.111892,
+      "before_win_rate": 0.494,
+      "after_win_rate": 0.475
+    },
+    {
+      "aid": "A_1997_6",
+      "name": "橙阶英雄·序号997",
+      "panel_factor": 1,
+      "skill_factor": 1.130522,
+      "before_win_rate": 0.485,
+      "after_win_rate": 0.49
+    },
+    {
+      "aid": "A_1998_6",
+      "name": "大天使长",
+      "panel_factor": 1,
+      "skill_factor": 1.502962,
+      "before_win_rate": 0.469,
+      "after_win_rate": 0.453
+    },
+    {
+      "aid": "A_1999_6",
+      "name": "橙阶英雄·序号999",
+      "panel_factor": 1,
+      "skill_factor": 1.845041,
+      "before_win_rate": 0.387,
+      "after_win_rate": 0.469
+    }
+  ],
+  "completion_reason": "user-requested-stop-after-current-round",
+  "final_iteration": 20,
+  "final_master_seed": 1440000000,
+  "source_results_sha256": "54d8ba217d929bce6c0b1a020ae4e89609881303a895fe1c19638277dd9d0412",
+  "final_results_sha256": "5e23f5ef852e07dbdef1767031e4779ab75b84083c12bef52d72e2940ff34592",
+  "target_range": [
+    0.44,
+    0.56
+  ],
+  "target_met": false,
+  "additional_confirmation_rounds": 0
+}

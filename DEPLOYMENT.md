@@ -55,12 +55,15 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 .\.venv\Scripts\python.exe .\scripts\build_client.py `
   --air-sdk C:\Tools\AIRSDK_51.4.1.1 `
   --android-sdk "$env:LOCALAPPDATA\Android\Sdk" `
+  --android-gradle `
   --ffdec C:\Tools\ffdec\ffdec-cli.jar
 ```
 
 脚本依次编译 `client/build.json` 声明的 ActionScript 类，将游戏资源与生成的 SWF 交给官方 ADT 打包，并验证 APK 签名与资源。首次打包需要网络获取工具链所需的依赖；构建结果留在被 Git 忽略的 `build` 目录；打包中间文件使用系统临时目录。
 
-默认输出为 `build/lal-rebuild-1.0.2.apk`，包含 ARM 与 ARM64 运行库；x86 模拟器需要启用 ARM 转译支持。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
+`--android-gradle` 使用现代 ADT／Gradle 打包分支，同时构建 ARMv7 与 ARM64，并使用 Android SDK 的 `apksigner` 校验签名。此分支需要已安装的 Android Build-Tools 35 及 Android 平台；当前交付使用 compileSDK 36。已有最终 SWF 时可加 `--prebuilt-swf .\build\mod-cold-final-v2\stage-161.swf` 只重新封装，仍应保留其完整冷编译报告。
+
+默认输出为 `build/lal-rebuild-1.0.4.apk`，包含 ARM 与 ARM64 运行库；x86 模拟器需要启用 ARM 转译支持。客户端已允许访问本地 HTTP 服务。首次构建会在本地生成测试签名密钥 `build/debug.p12`，后续构建复用它；不要提交密钥。
 
 需要自行签名时可使用 `--keystore`，并通过 `--storepass-env`、`--keypass-env` 指定保存密码的环境变量名称；省略时脚本交互询问密码。`--android-sdk` 应指向包含 `platforms`、`build-tools` 和 `platform-tools` 的 SDK 根目录。
 
@@ -72,14 +75,14 @@ Invoke-RestMethod http://127.0.0.1:8080/health
 
 ```powershell
 adb devices
-adb install -r .\build\lal-rebuild-1.0.2.apk
+adb install -r .\build\lal-rebuild-1.0.4.apk
 adb reverse tcp:8080 tcp:8080
 adb reverse --list
 ```
 
 连接了多台设备时，为每条 ADB 命令添加 `-s 设备序列号`。
 
-此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.2。
+此包与原游戏或旧测试包可能存在签名和 Android 版本号差异，不能保证直接覆盖安装。安装报签名冲突或版本降级时，先备份所需数据，再卸载设备上的旧包，重新安装；不要因此删除服务器数据库。项目版本为 1.0.4。
 
 保持服务器运行，打开游戏，在本地登录界面注册账号并登录即可开始游玩。设备断开或重启后重新执行端口映射。网络错误时依次检查服务器窗口、`/health` 和 `adb reverse --list`。
 
@@ -124,13 +127,44 @@ Copy-Item -LiteralPath .\data\local.sqlite3 -Destination .\data\local.backup.sql
 
 恢复时先停止服务器，用备份覆盖 `data/local.sqlite3`，再启动。更新源码或重新构建客户端不需要清空数据库。数据库、虚拟环境、日志、构建结果和密钥均不提交到 Git。
 
+启用 DIY 英雄包后，建议退出游戏并停止服务器，再备份整个 `data` 文件夹，包含 `local.sqlite3` 和同级 `mods` 安装目录。自定义了 `--mods-root` 时，也要备份该目录；其中 `registry.json` 保存永久身份映射，`packages` 保存固定版本及摘要对应的包文件。不要从其他设备单独覆盖注册表并继续游玩。
 
-## 1.0.3 召唤池标定
+只恢复数据库而没有恢复包文件时，新增英雄显示缺失并冻结，英雄和装备记录保留。服务端会在首次目录扫描前尝试恢复存档中保存的编号映射；若目标设备的编号已属于其他身份，此存档的 Mod 会冻结并报告需要身份迁移，避免误认其他英雄。重新导入对应版本和摘要的包后可恢复原实例。
+
+## 7. Mod 作者工具与 Windows 开发包
+
+作者工具使用当前有效基础配置校验目标合同。例如：
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\mod_tools.py template new .\build\my-hero
+.\.venv\Scripts\python.exe .\scripts\mod_tools.py pack .\build\my-hero .\build\my-hero.heropack
+.\.venv\Scripts\python.exe .\scripts\mod_tools.py validate .\build\my-hero.heropack
+```
+
+字段、限制、能力白名单及补丁目标摘要命令见 [作者说明](docs/mod-authoring.md)。包只能使用受支持的声明式数据和媒体文件。
+
+Windows 打包复用完整冷编译后的 SWF，额外生成桌面启动适配，不改 Android 的源码链。以下路径按实际依赖位置填写，输出必须是新目录：
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\build_mod_desktop.py `
+  --swf .\build\mod-cold-final-v2\stage-161.swf `
+  --air-sdk C:\Tools\AIRSDK_51.4.1.1 `
+  --ffdec C:\Tools\ffdec\ffdec.jar `
+  --java 'C:\Program Files\Java\jdk-17\bin\java.exe' `
+  --python-runtime C:\Tools\python-embed `
+  --python-deps C:\Tools\python-deps `
+  --output .\build\windows-mod
+```
+
+便携 Python 目录需要 `python.exe`、`pythonw.exe`、标准库 ZIP 和对应 DLL；依赖目录提供 `pyamf`、`cpyamf`、`defusedxml`、`tzdata`。打包脚本检验其可启动，复制干净的服务器、配置、资源及作者示例，不读取个人存档。解压后运行“开始游戏.cmd”，首次启动在包内创建 `data/local.sqlite3` 和 `data/mods`。日志在 `logs`；关闭游戏只结束本启动器创建的本地服务。
+
+
+## 1.0.4 召唤池标定
 
 `config/reconstruction/summon-calibration.json` 为已补齐重复项的正式标定：普通、高级、VIP 的品质出率分别保存；蓝、绿、紫的卡表及权重相同。VIP 橙池使用高级橙池卡表，普通橙卡权重不变，皮肤英雄权重乘 2。`normalization.skin_hero_ids` 保存精确皮肤 ID，避免把茂凯等普通英雄按编号误判为皮肤。
 
 每次先按品质百分比抽品质，再在该池该品质中按正数权重抽卡。小数权重转为精确整数比例抽取；空白对应缺少记录、零权重均不参与。旧高级召唤紫卡保底不再覆盖品质概率。VIP 只出整卡，价格、积分和单抽/十连协议保留。皮肤英雄的全局获取限制、碎片合成的爬塔来源限制均已解除；原有兑换入口保留。
 
-后端启动时加载标定；更新文件后重启后端。原始输入和补齐确认版另存于工作区 `outputs/召唤池标定-1.0.3/`，确认版可重新导入离线网页查看。
+后端启动时加载标定；更新文件后重启后端。原始输入和补齐确认版另存于工作区 `outputs/召唤池标定-1.0.4/`，确认版可重新导入离线网页查看。
 
 `summon_pools.confirm_custom_hero` 为确认导入接口：用户确认后向对应品质池添加权重 1 的记录，保留已有权重和品质概率。已应用 Mod 配置的 `mod_runtime.heroes` 会按各召唤渠道的确认状态自动加入，缺包、禁用、未开放渠道均不入池；新条目不修改基础配置。

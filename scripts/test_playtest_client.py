@@ -7,6 +7,7 @@ import json
 import re
 import shutil
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -27,8 +28,12 @@ def function(filename, name, params=''):
 @unittest.skipUnless(NODE, 'Node is needed for the ActionScript behavior harness')
 class PlaytestClientTests(unittest.TestCase):
     def run_js(self, script, options=None):
-        run = subprocess.run([NODE, '-e', script], input=json.dumps(options or {}),
-                             encoding='utf-8', capture_output=True, timeout=20)
+        # Native AS extracts can exceed Windows' 32 KiB command-line limit.
+        (ROOT/'build').mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='as-client-test-',dir=ROOT/'build') as folder:
+            source=Path(folder)/'case.cjs';source.write_text(script,encoding='utf-8')
+            run = subprocess.run([NODE, str(source)], input=json.dumps(options or {}),
+                                 encoding='utf-8', capture_output=True, timeout=20)
         self.assertEqual(run.returncode, 0, run.stderr)
         return json.loads(run.stdout)
 

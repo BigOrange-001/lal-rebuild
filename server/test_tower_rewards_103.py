@@ -2,7 +2,7 @@
 import copy,random,sqlite3,unittest
 from pathlib import Path
 from gateway import Backend
-from tower_rewards_103 import roll_tower_reward,apply_tower_rewards_103,_enemy_team
+from tower_rewards_103 import roll_tower_reward,apply_tower_rewards_103,_enemy_team,_enemy_pools
 from campaign_workbook_overlay import _power
 from gameplay_economy import GameplayEconomy
 from summon_pools import SummonPools
@@ -44,7 +44,7 @@ class TowerRewards103Tests(unittest.TestCase):
             self.assertEqual(self.config['cfg'][table],self.config[table])
             self.assertEqual(self.config['cfg'][table],self.config['pve'][table])
     def test_new_floor_power_grows_smoothly_and_matches_serialized_snapshots(self):
-        previous=self.config['combat_ploy']['P_200_150']['recommended_power']
+        previous=self.config['combat_ploy']['P_200_150']['recommended_power_original_104']['0']
         for floor in range(151,181):
             stage=self.config['combat_ploy'][f'P_200_{floor}']
             self.assertEqual(len(stage['team2']),9)
@@ -68,6 +68,29 @@ class TowerRewards103Tests(unittest.TestCase):
         self.assertEqual({u['line'] for u in units},{0,1,2})
         self.assertEqual(sum(u['leader'] for u in units),1)
         self.assertTrue(all((u['lv'],u['slv'],u['phase'],u['limit_break'])==(125,10,3,1) for u in units))
+
+    def test_mod_summons_missing_heroes_and_scoped_aliases_are_not_extra_candidates(self):
+        cfg=copy.deepcopy(self.config['cfg'])
+        template=copy.deepcopy(cfg['avatar']['A_1226_6'])
+        rows={'A_180002_6':('hero',True),'A_180003_6':('summon',True),
+              'A_180004_5':('summon',True),'A_180005_6':('hero',False),
+              'A_180006_6':('hero',True)}
+        metadata={}
+        for aid,(kind,available) in rows.items():
+            cfg['avatar'][aid]={**copy.deepcopy(template),'id':aid,'modUnitType':kind}
+            metadata[aid]={'kind':'new','unitType':kind,'available':available}
+        cfg['avatar']['A_170001_6']={**template,'modBaseAid':'A_1226_6'}
+        cfg['avatar']['A_170002_6']={**template,'modBaseAid':'A_180003_6'}
+        cfg['mod_runtime']={'heroes':metadata,'missingHeroIds':['A_180006_6'],
+                            'aliasBaseIds':{'A_170001_6':'A_1226_6','A_170002_6':'A_180003_6'}}
+        pools=_enemy_pools(cfg);aids=[a for group in pools.values() for a in group]
+        self.assertIn('A_180002_6',aids)
+        self.assertEqual(aids.count('A_1226_6'),1)
+        self.assertFalse(set(aids)&{'A_180003_6','A_180004_5','A_180005_6','A_180006_6',
+                                    'A_170001_6','A_170002_6','A_190001_5'})
+        store,uid,combat,team=self.store(153,{'cfg':cfg,**{k:v for k,v in self.config.items() if k!='cfg'}})
+        started=combat._start_main(uid,{'cid':'P_200_153','diff':0,'team':team,'actionID':'mod-enemies'})
+        self.assertTrue(all(u['modUnitType']=='hero' for u in started['orgin_team_b']))
     def test_random_encounters_are_bound_to_the_fight_and_final_floor_is_playable(self):
         store,uid,combat,team=self.store(180)
         first=combat._start_main(uid,{'cid':'P_200_180','diff':0,'team':team,'actionID':'start-one'})
@@ -162,6 +185,33 @@ class TowerRewards103Tests(unittest.TestCase):
         store,uid,combat,team=self.store(150,config);params=self.fight(combat,uid,team,150)
         before=store.profile_raw(uid)
         with self.assertRaises(GameplayFault):combat._finish(uid,params)
+        self.assertEqual(store.profile_raw(uid),before)
+
+    def test_modded_tower_uses_calibrated_rewards_at_low_orange_and_final_floors(self):
+        config=copy.deepcopy(self.config)
+        config['cfg']['mod_runtime']={'digest':'tower-review','heroes':{},'scopedAvatarIds':{},
+                                     'missingHeroIds':[],'knownHeroIds':[]}
+        for floor in (1,150,180):
+            with self.subTest(floor=floor):
+                store,uid,combat,team=self.store(floor,config)
+                params=self.fight(combat,uid,team,floor,action=f'mod-floor-{floor}')
+                won=combat._finish(uid,params)
+                self.assertEqual(won['tower_floor'],floor+1)
+                if floor==1:self.assertEqual(len(won['get_avatars']),1)
+                else:
+                    self.assertEqual(len(won['new_avatar_soul']),10)
+                    self.assertEqual(sum(won['new_avatar_soul'].values()),100+2*floor)
+
+    def test_modded_tower_filtered_vip_pool_rejects_before_spending_or_creating_intent(self):
+        config=copy.deepcopy(self.config)
+        cards=config['cfg']['summon_calibration']['pools']['vip']['qualities']['orange']['cards']
+        config['cfg']['mod_runtime']={'digest':'tower-review','heroes':{
+            row['id']:{'available':True,'channels':{'acquisition.summon.activity':False}}
+            for row in cards[9:]},'scopedAvatarIds':{},'missingHeroIds':[],'knownHeroIds':[]}
+        store,uid,combat,team=self.store(150,config)
+        before=store.profile_raw(uid)
+        with self.assertRaisesRegex(GameplayFault,'Not enough distinct heroes'):
+            combat._start_main(uid,{'cid':'P_200_150','diff':0,'team':team,'actionID':'invalid-mod-pool'})
         self.assertEqual(store.profile_raw(uid),before)
 
 if __name__=='__main__':unittest.main()

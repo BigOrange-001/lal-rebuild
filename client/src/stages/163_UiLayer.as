@@ -737,7 +737,7 @@ package com.meng52.game.ui.map
       public function addRound() : void
       {
          if(m_roundTF) return;
-         var text:String = (MainConfig.$isEnglish ? "Round " : "回合 ") + "0" + (GlobalData.$isPVE ? " / 40" : "");
+         var text:String = (MainConfig.$isEnglish ? "Round " : "回合 ") + "0 / " + GameMap.ROUND_MAX;
          m_roundTF2 = new TextField(194,34,text,GlobalConfig.FONT_0,22,0,true);
          m_roundTF2.x = 15;
          m_roundTF2.y = 46;
@@ -758,10 +758,10 @@ package com.meng52.game.ui.map
       public function refreashRound(param1:int) : void
       {
          if(!m_roundTF) addRound();
-         var text:String = (MainConfig.$isEnglish ? "Round " : "回合 ") + param1 + (GlobalData.$isPVE ? " / 40" : "");
+         var text:String = (MainConfig.$isEnglish ? "Round " : "回合 ") + param1 + " / " + GameMap.ROUND_MAX;
          m_roundTF.text = text;
          m_roundTF2.text = text;
-         m_roundTF.color = GlobalData.$isPVE ? (param1 >= 40 ? 16711680 : 40 - param1 < 5 ? 16776960 : 16777215) : 16777215;
+         m_roundTF.color = param1 >= GameMap.ROUND_MAX ? 16711680 : GameMap.ROUND_MAX - param1 < 5 ? 16776960 : 16777215;
          var layer:GameMapLayer = GameMapLayer.gl;
          if(layer)
          {

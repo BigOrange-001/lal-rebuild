@@ -26,7 +26,7 @@ CLIENT_PROFILE_SYNC_REQUIRED_FIELDS = (
  'create_time','add_time','friends','combat_main','combat_score','ploy_cids','tasks',
  'association','check_in','title','zone','spending',
 )
-CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','pending_limit_break','task','boss_state')
+CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','pending_limit_break','task','boss_state','mod_state')
 
 class PlayerStore:
  def __init__(self,db,config,clock=None):
@@ -39,17 +39,9 @@ CREATE TABLE IF NOT EXISTS gift_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,uid TE
 CREATE TABLE IF NOT EXISTS player_state_revision(uid TEXT PRIMARY KEY,revision INTEGER NOT NULL CHECK(revision>=0));
 INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM players;''')
   self.lock=threading.RLock()
-  from adventure_tasks import AdventureTasks
-  self.adventure=AdventureTasks(self,config or {})
-  from gameplay_economy import GameplayEconomy
-  self.economy=GameplayEconomy(self,config or {})
-  self.gameplay_handlers=[]
-  import importlib.util
-  for module_name,class_name in [('gameplay_combat','GameplayCombat'),('gameplay_roster','GameplayRosterEquipment'),('gameplay_competition','GameplayCompetition'),('gameplay_guild_boss','GameplayGuildBoss'),('gameplay_social','GameplaySocial')]:
-   if importlib.util.find_spec(module_name) is None: continue
-   module=__import__(module_name)
-   cls=getattr(module,class_name)
-   self.gameplay_handlers.append(cls(self,config or {}))
+  self.mod_service=None
+  self._mod_uid=None
+  self.configure_handlers(config)
   if 'read_at' not in {row[1] for row in db.execute('PRAGMA table_info(gift_mail)')}:
    db.execute('ALTER TABLE gift_mail ADD COLUMN read_at INTEGER NOT NULL DEFAULT 0');db.commit()
   if 'allow_skin' not in {row[1] for row in db.execute('PRAGMA table_info(gift_mail)')}:
@@ -69,6 +61,20 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
      if isinstance(avatar_gifts,dict) and blocked.intersection(avatar_gifts):
       db.execute('UPDATE gift_mail SET allow_skin=1 WHERE id=?',(mail_id,))
    db.commit()
+ def configure_handlers(self,config):
+  """Bind handlers to this store's immutable configuration, never another UID's."""
+  from adventure_tasks import AdventureTasks
+  from gameplay_economy import GameplayEconomy
+  import importlib.util
+  self.adventure=AdventureTasks(self,config or {})
+  self.economy=GameplayEconomy(self,config or {})
+  self.gameplay_handlers=[]
+  for module_name,class_name in [('gameplay_combat','GameplayCombat'),('gameplay_roster','GameplayRosterEquipment'),('gameplay_competition','GameplayCompetition'),('gameplay_guild_boss','GameplayGuildBoss'),('gameplay_social','GameplaySocial')]:
+   if importlib.util.find_spec(module_name) is None:continue
+   self.gameplay_handlers.append(getattr(__import__(module_name),class_name)(self,config or {}))
+ def context_for(self,uid):
+  if self.mod_service is None or self._mod_uid==str(uid):return self
+  return self.mod_service.context(str(uid))
  def _default_lottery_state(self):
   cfg=self.config.get('cfg',self.config) if isinstance(self.config,dict) else {}
   extract=((cfg.get('ploy_system_simple') or {}).get('extract_avatar') or {}) if isinstance(cfg,dict) else {}
@@ -164,6 +170,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    self.db.execute('INSERT OR IGNORE INTO player_state_revision(uid,revision) VALUES(?,0)',(uid,))
   token=secrets.token_urlsafe(32)
   self.db.execute('INSERT INTO sessions VALUES(?,?,?)',(token,uid,int(time.time())+86400*30));self.db.commit()
+  return self.context_for(uid)._login_profile(uid,token)
+ def _login_profile(self,uid,token):
   def track_login(p):
    normalize_energy_purchase_day(p,self.clock.now())
    receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
@@ -215,6 +223,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
  def state_snapshot(self,uid):
   """Read a consistent native-date profile and its per-player revision."""
   uid=str(uid)
+  context=self.context_for(uid)
+  if context is not self:return context.state_snapshot(uid)
   with self.lock:
    # Apply any legacy normalization first; its write increments the same UID revision.
    self.profile(uid)
@@ -237,6 +247,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    except Exception:
     self.db.rollback();raise
  def profile(self,uid):
+  context=self.context_for(uid)
+  if context is not self:return context.profile(uid)
   profile_row=self.db.execute('SELECT profile FROM players WHERE uid=?',(uid,)).fetchone()
   if not profile_row:raise GameplayFault('UnknownPlayer','Player does not exist')
   p=json.loads(profile_row[0])
@@ -624,6 +636,11 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   else:raise GameplayFault('InvalidGift','Invalid box/key mail quantity')
   attrs['box_key']=state
  def send_mail(self,account,title,gifts,request_key,*,allow_skin=False):
+  if self.mod_service is not None and self._mod_uid is None:
+   owner=self.db.execute('SELECT uid FROM players WHERE account=?',(account,)).fetchone()
+   if owner:
+    context=self.context_for(owner[0])
+    if context is not self:return context.send_mail(account,title,gifts,request_key,allow_skin=allow_skin)
   allowed={'gold','coin','score','medal','mark','dust','dn_stone','box_key','culture_book','sp'}
   if not isinstance(title,str) or not 1<=len(title)<=120:raise GameplayFault('InvalidTitle','Title must be 1 to 120 characters')
   if not isinstance(request_key,str) or not 1<=len(request_key)<=128:raise GameplayFault('InvalidRequestKey','Request key required')
@@ -743,6 +760,11 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   return {**p,**{k:a.get(k,0) for k in ['guild_contribute','dust','dn_stone','box_key','culture_book','sp']},'attr_energy_extra':a['energy_extra']}
  def dispatch(self,request):
   uid=self.authenticate(request);method=request['method'];params=request['params']
+  if self.mod_service is not None:
+   if method in self.mod_service.METHODS:return self.mod_service.dispatch(uid,method,params,request.get('client_capabilities'))
+   context=self.context_for(uid)
+   if self._mod_uid is None:self.mod_service.check_request(uid,request,context)
+   if context is not self:return context.dispatch(request)
   if method=='user.init_user':return self.profile(uid)
   if method=='user.do_guide':
    group=params.get('gid');code=params.get('code')

@@ -53,11 +53,11 @@ class ArenaGatewayTests(unittest.TestCase):
 
         initial = rpc('user.get_rank_list', 'rank-list')
         self.assertEqual(len(initial), 7)
-        self.assertEqual(len(initial[2]), 9)
+        self.assertEqual(len(initial[2]), 10)
         self.assertEqual(initial[1][0][1], login['uid'])
         self.assertEqual(rpc('user.get_rank_list', 'rank-list-retry')[2], initial[2])
         refreshed = rpc('user.refresh_pvp_opponents', 'refresh')
-        self.assertEqual(len(refreshed[2]), 9)
+        self.assertEqual(len(refreshed[2]), 10)
         self.assertNotEqual([row[1] for row in refreshed[2]], [row[1] for row in initial[2]])
         self.assertEqual(rpc('user.refresh_pvp_opponents', 'refresh')[2], refreshed[2])
         self.assertEqual(rpc('user.get_rank_list', 'rank-list-after-refresh')[2], refreshed[2])

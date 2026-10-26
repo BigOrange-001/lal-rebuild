@@ -22,7 +22,8 @@ function attach(target,source,names){for(const [name,params] of Object.entries(n
  target[name]=eval('(function('+params+'){with(this){'+source[name]+'\n}})');}
 function SkillSet(id){this.skillSetData={id};}
 const getters={getHpMax:'param1=-1,param2=-1,param3=false',getDamage:'param1=-1,param2=-1,param3=false',
- getDePh:'param1=-1,param2=-1,param3=false',getDeMa:'param1=-1,param2=-1,param3=false',getHit:'',getFlee:'',getCrit:'',getTough:'',
+ getDePh:'param1=-1,param2=-1,param3=false',getDeMa:'param1=-1,param2=-1,param3=false',
+ getPhysicalDefense:'param1,param2,param3,ignoreSunder',getMagicDefense:'param1,param2,param3,ignoreSunder',getHit:'',getFlee:'',getCrit:'',getTough:'',
  teamTalentFlat:'effect',getSummonPanelSnapshot:'',scaledSummonStat:'value,ratio,minimum',
  inheritSummonPanel:'owner,apRatio,hpRatio=-1,dePhRatio=-1,deMaRatio=-1,secondaryRatio=-1'};
 function Avatar(id){
@@ -106,6 +107,8 @@ class SummonPanelClientTests(unittest.TestCase):
         av_names = ('getHpMax','getDamage','getDePh','getDeMa','getHit','getFlee','getCrit','getTough',
                     'teamTalentFlat','getSummonPanelSnapshot','scaledSummonStat','inheritSummonPanel',
                     'isValidSummonMultiplier','checkTalent','abilitySummon')
+        if 'function getPhysicalDefense(' in av:
+            av_names += ('getPhysicalDefense','getMagicDefense')
         sk_names = ['getSummonCombatSnapshotApFactor','executeHeimerTurretSummon','executeManualSummon','executeManualNormalClone']
         if route == 'mod':
             sk_names.append('executeModStep')

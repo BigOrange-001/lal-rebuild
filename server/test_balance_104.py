@@ -13,6 +13,21 @@ from battle_engine import base_unit
 
 
 class Balance104Tests(StatPower103Tests):
+    def test_generated_native_action_links_and_parallel_arrays(self):
+        from mod_native import make_template, _validate_links
+        cfg = self.document['cfg']
+        checked = 0
+        for sid, row in cfg['skill'].items():
+            if not (row.get('bond_power_rate_104') or row.get('builtin_pack_104')) or row.get('modEffectSequence'):
+                continue
+            with self.subTest(skill=sid):
+                _validate_links(make_template(sid, row, self.document), sid)
+                for key in ('manualClonePolicy', 'manualSummonPolicy'):
+                    if row.get(key):
+                        self.assertEqual(row[key]['skillId'], sid)
+            checked += 1
+        self.assertGreater(checked, 100)
+
     def lineup(self, aids, level=60):
         ids = [aid+'|'+str(i) for i, aid in enumerate(aids)]
         return {'avatars': {iid: {'aid': aid, 'lv':level, 'slv':7, 'phase':0} for iid,aid in zip(ids,aids)},

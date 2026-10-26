@@ -432,11 +432,13 @@ package com.meng52.game.ui.screen
       {
          if(adventureStatus) return;
          var width:Number = GlobalData.$mStageWidth;
-         var header:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_6_0000",width - 24,168,new Rectangle(20,20,10,10));
+         var header:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_1_0000",width - 24,168,new Rectangle(83,94,88,100));
          header.x = 12;
          header.y = 4;
          header.touchable = false;
          addChild(header);
+         var titlePlate:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_3_0000",width - 100,40,new Rectangle(90,8,82,30));
+         titlePlate.x = 50;titlePlate.y = 8;titlePlate.touchable = false;addChild(titlePlate);
          var title:TextField = GlobalFunction.createTextField(width - 48,36,"奇遇任务","",28,16764006,true);
          title.x = 24;
          title.y = 10;
@@ -461,7 +463,7 @@ package com.meng52.game.ui.screen
          adventureUnderline.y = 100;
          adventureUnderline.touchable = false;
          addChild(adventureUnderline);
-         adventureStatus = GlobalFunction.createTextField(width - 52,56,"正在加载任务…","",18,16777215);
+         adventureStatus = GlobalFunction.createTextField(width - 52,56,"正在加载任务…","",18,0xBFC4CA);
          adventureStatus.x = 26;
          adventureStatus.y = 108;
          adventureStatus.autoScale = true;

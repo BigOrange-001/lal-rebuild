@@ -55,12 +55,24 @@ package com.meng52.game.module.skill
       
       public function getStar() : int
       {
-         return skillSetData.id.split("_")[2];
+         return getMechanismId().split("_")[2];
+      }
+
+      public function getMechanismId() : String
+      {
+         var source:String = skillSetData.modNativeSource;
+         return source && GlobalData.$mConfig_skill && GlobalData.$mConfig_skill[source] ? source : skillSetData.id;
       }
       
       public function isActive() : Boolean
       {
          return skillSetData.pl != null;
+      }
+
+      public function getNativeSetting(key:String, fallback:* = null) : *
+      {
+         var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         return row && row.hasOwnProperty(key) ? row[key] : fallback;
       }
       
       public function getEquipRate(param1:String) : Number
@@ -2455,7 +2467,7 @@ package com.meng52.game.module.skill
 
       private function hasBoundedSummonPolicy() : Boolean
       {
-         var _loc1_:Array = skillSetData.id.split("_");
+         var _loc1_:Array = getMechanismId().split("_");
          if(_loc1_.length != 3 || _loc1_[0] != "S" || int(_loc1_[2]) < 2 || int(_loc1_[2]) > 6)
          {
             return false;
@@ -2486,7 +2498,7 @@ package com.meng52.game.module.skill
 
       private function isHeimerTurretSkill() : Boolean
       {
-         switch(skillSetData.id)
+         switch(getMechanismId())
          {
             case "S_203014_3":
             case "S_203014_4":
@@ -2691,7 +2703,7 @@ package com.meng52.game.module.skill
 
       private function isManualSummonPolicyAllowed() : Boolean
       {
-         var _loc1_:String = skillSetData.id;
+         var _loc1_:String = getMechanismId();
          var _loc2_:Array = ["S_631029_5","S_631029_6","S_621040_4","S_621040_5","S_621040_6","S_631040_4","S_631040_5","S_631040_6"];
          if(_loc2_.indexOf(_loc1_) < 0 || !skillSetData.manualSummonPolicy) return false;
          if(String(skillSetData.manualSummonPolicy.skillId) != _loc1_) return false;
@@ -2728,7 +2740,7 @@ package com.meng52.game.module.skill
 
       private function getSummonCombatSnapshotApFactor() : Number
       {
-         switch(skillSetData.id)
+         switch(getMechanismId())
          {
             case "S_32551036_4":
             case "S_32551036_5":

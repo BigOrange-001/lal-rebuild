@@ -12,11 +12,27 @@ package com.meng52.game.global
    import feathers.display.Scale3Image;
    import feathers.textures.Scale3Textures;
    import flash.display.MovieClip;
+   import flash.display.Bitmap;
+   import flash.display.BitmapData;
+   import flash.display.Loader;
+   import flash.events.Event;
+   import flash.events.IOErrorEvent;
+   import flash.events.SecurityErrorEvent;
+   import flash.media.Sound;
+   import flash.net.URLLoader;
+   import flash.net.URLLoaderDataFormat;
+   import flash.net.URLRequest;
+   import flash.system.LoaderContext;
+   import flash.text.TextFormat;
+   import flash.utils.ByteArray;
+   import flash.utils.setTimeout;
+   import flash.utils.clearTimeout;
    import flash.geom.Rectangle;
    import flash.utils.Dictionary;
    import starling.core.Starling;
    import starling.events.EventDispatcher;
    import starling.utils.AssetManager;
+   import starling.textures.Texture;
    
    public class GlobalData
    {
@@ -102,6 +118,393 @@ package com.meng52.game.global
       public static var $isFightAwardIndex:int = -1;
       
       public static var $mConfig:Object = null;
+
+      public static var $modRuntime:Object = {};
+      public static var $modUid:String = "";
+      public static var $modRevision:Number = -1;
+      public static var $modDigest:String = "";
+      public static var $modReady:Boolean = true;
+      public static var $modError:String = "";
+      private static var $modGeneration:uint = 0;
+      private static var $modAssets:Array = [];
+      private static var $modBitmaps:Array = [];
+
+      // Aliases belong to the logged-in save. Nothing from the previous save
+      // is allowed to satisfy the next save's resource manifest.
+      public static function resetModResources() : uint
+      {
+         $modGeneration++;
+         for each(var asset:Object in $modAssets)
+         {
+            if(asset.kind == "sound") $assetManager.removeSound(String(asset.alias));
+            else $assetManager.removeTexture(String(asset.alias),true);
+         }
+         for each(var bitmap:BitmapData in $modBitmaps) bitmap.dispose();
+         $modAssets = [];
+         $modBitmaps = [];
+         $modRuntime = {};
+         $modUid = "";
+         $modRevision = -1;
+         $modDigest = "";
+         $modReady = false;
+         $modError = "";
+         return $modGeneration;
+      }
+
+      public static function resolveModTexture(name:String) : String
+      {
+         var aliases:Object = $modRuntime == null ? null : $modRuntime.textureAliases;
+         var seen:Object = {};
+         for(var i:int = 0; i < 8 && aliases != null && aliases[name] != null; i++)
+         {
+            if(seen[name]) return "__modMissingHero";
+            seen[name] = true;
+            name = String(aliases[name]);
+         }
+         return name;
+      }
+
+      public static function modCardFrame(name:String) : Array
+      {
+         name = resolveModTexture(name);
+         var assets:Array = $modRuntime == null ? null : $modRuntime.assets as Array;
+         if(assets) for each(var asset:Object in assets)
+         {
+            if(asset.alias != name || !(asset.cardFrame is Array)) continue;
+            var f:Array = asset.cardFrame;
+            if(f.length != 4) return null;
+            for(var i:int = 0; i < 4; i++) if(typeof f[i] != "number" || !isFinite(Number(f[i]))) return null;
+            if(f[0] < 0 || f[1] < 0 || f[2] < 8 || f[3] < 8 || f[0]+f[2] > asset.width || f[1]+f[3] > asset.height) return null;
+            return f;
+         }
+         return null;
+      }
+
+      public static function isMissingModHero(id:String) : Boolean
+      {
+         var base:String = id == null ? "" : id.split("|")[0].split("-")[0];
+         var heroes:Object = $modRuntime == null ? null : $modRuntime.heroes;
+         return heroes != null && heroes[base] != null && heroes[base].available === false;
+      }
+
+      public static function baseModHeroId(id:String) : String
+      {
+         var base:String = id == null ? "" : id.split("|")[0].split("-")[0];
+         var aliases:Object = $modRuntime == null ? null : $modRuntime.aliasBaseIds;
+         return aliases != null && aliases[base] != null ? String(aliases[base]) : base;
+      }
+
+      public static function modDefinitionId(id:String, scope:String) : String
+      {
+         var base:String = baseModHeroId(id);
+         var scopes:Object = $modRuntime == null ? null : $modRuntime.scopedAvatarIds;
+         return scopes != null && scopes[scope] != null && scopes[scope][base] != null ? String(scopes[scope][base]) : base;
+      }
+
+      public static function modChannelAllowed(id:String, channel:String) : Boolean
+      {
+         var heroes:Object = $modRuntime == null ? null : $modRuntime.heroes;
+         var metadata:Object = heroes == null ? null : heroes[baseModHeroId(id)];
+         return metadata == null || metadata.available !== false && (metadata.channels == null || metadata.channels[channel] !== false);
+      }
+
+      public static function canonicalModInstanceId(id:String) : String
+      {
+         if(id == null) return null;
+         var base:String = id.split("|")[0].split("-")[0];
+         return baseModHeroId(base) + id.substr(base.length);
+      }
+
+      // Adobe as3corelib SHA256/IntUtil byte hashing implementation (BSD-3-Clause).
+      // Source: https://github.com/mikechambers/as3corelib
+      // Full copyright, license and adaptation notes ship in assets/licenses/as3corelib-SHA256.txt.
+      public static function modAssetSha256(bytes:ByteArray) : String
+      {
+         var position:uint = bytes.position;
+         var result:String = "";
+         try
+         {
+            var hash:ByteArray = modShaBlocks(modShaCreateBlocks(bytes));
+            for(var i:int = 0; i < hash.length; i++) result += ("0" + hash[i].toString(16)).substr(-2);
+         }
+         finally { bytes.position = position; }
+         return result;
+      }
+
+      private static function modShaBlocks( blocks:Array ):ByteArray {
+               var h0:int = 0x6a09e667;
+               var h1:int = 0xbb67ae85;
+               var h2:int = 0x3c6ef372;
+               var h3:int = 0xa54ff53a;
+               var h4:int = 0x510e527f;
+               var h5:int = 0x9b05688c;
+               var h6:int = 0x1f83d9ab;
+               var h7:int = 0x5be0cd19;
+
+               var k:Array = new Array(0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2);
+
+               var len:int = blocks.length;
+               var w:Array = new Array( 64 );
+
+               // loop over all of the blocks
+               for ( var i:int = 0; i < len; i += 16 ) {
+
+                  var a:int = h0;
+                  var b:int = h1;
+                  var c:int = h2;
+                  var d:int = h3;
+                  var e:int = h4;
+                  var f:int = h5;
+                  var g:int = h6;
+                  var h:int = h7;
+
+                  for(var t:int = 0; t < 64; t++) {
+
+                     if ( t < 16 ) {
+                        w[t] = blocks[ i + t ];
+                        if(isNaN(w[t])) { w[t] = 0; }
+                     } else {
+                        var ws0:int = modShaRor(w[t-15], 7) ^ modShaRor(w[t-15], 18) ^ (w[t-15] >>> 3);
+                        var ws1:int = modShaRor(w[t-2], 17) ^ modShaRor(w[t-2], 19) ^ (w[t-2] >>> 10);
+                        w[t] = w[t-16] + ws0 + w[t-7] + ws1;
+                     }
+
+                     var s0:int = modShaRor(a, 2) ^ modShaRor(a, 13) ^ modShaRor(a, 22);
+                     var maj:int = (a & b) ^ (a & c) ^ (b & c);
+                     var t2:int = s0 + maj;
+                     var s1:int = modShaRor(e, 6) ^ modShaRor(e, 11) ^ modShaRor(e, 25);
+                     var ch:int = (e & f) ^ ((~e) & g);
+                     var t1:int = h + s1 + ch + k[t] + w[t];
+
+                     h = g;
+                     g = f;
+                     f = e;
+                     e = d + t1;
+                     d = c;
+                     c = b;
+                     b = a;
+                     a = t1 + t2;
+                  }
+
+                  //Add this chunk's hash to result so far:
+                  h0 += a;
+                  h1 += b;
+                  h2 += c;
+                  h3 += d;
+                  h4 += e;
+                  h5 += f;
+                  h6 += g;
+                  h7 += h;
+               }
+
+               var byteArray:ByteArray = new ByteArray();
+               byteArray.writeInt(h0);
+               byteArray.writeInt(h1);
+               byteArray.writeInt(h2);
+               byteArray.writeInt(h3);
+               byteArray.writeInt(h4);
+               byteArray.writeInt(h5);
+               byteArray.writeInt(h6);
+               byteArray.writeInt(h7);
+               byteArray.position = 0;
+               return byteArray;
+            }
+
+      private static function modShaCreateBlocks( data:ByteArray ):Array
+            {
+               var oldPosition:int = data.position;
+               data.position = 0;
+
+               var blocks:Array = new Array();
+               var len:int = data.length * 8;
+               var mask:int = 0xFF; // ignore hi byte of characters > 0xFF
+               for( var i:int = 0; i < len; i += 8 )
+               {
+                  blocks[ i >> 5 ] |= ( data.readByte() & mask ) << ( 24 - i % 32 );
+               }
+
+               // append padding and length
+               blocks[ len >> 5 ] |= 0x80 << ( 24 - len % 32 );
+               blocks[ ( ( ( len + 64 ) >> 9 ) << 4 ) + 15 ] = len;
+
+               data.position = oldPosition;
+
+               return blocks;
+            }
+
+      private static function modShaRor ( x:int, n:int ):uint {
+               var nn:int = 32 - n;
+               return ( x << nn ) | ( x >>> ( 32 - nn ) );
+            }
+
+      public static function modAssetMatches(bytes:ByteArray, row:Object) : Boolean
+      {
+         if(bytes == null || row == null || typeof row.bytes != "number" || Number(row.bytes) != bytes.length ||
+            typeof row.sha256 != "string" || !/^[a-f0-9]{64}$/.test(String(row.sha256))) return false;
+         return modAssetSha256(bytes) == String(row.sha256);
+      }
+
+      public static function loadModResources(envelope:Object, done:Function) : void
+      {
+         var generation:uint = resetModResources();
+         if(envelope == null || envelope.uid == null || envelope.cfg == null || envelope.digest == null)
+         {
+            $modError = "存档 Mod 配置不完整，请重新登录。";
+            done(false);
+            return;
+         }
+         $modUid = String(envelope.uid);
+         $modRevision = Number(envelope.revision);
+         $modDigest = String(envelope.digest);
+         $modRuntime = envelope.mod_runtime == null ? {} : envelope.mod_runtime;
+         var queue:Array = $modRuntime.assets is Array ? $modRuntime.assets.concat() : [];
+         var completed:Boolean = false;
+         var timeout:uint = 0;
+         var decodedBytes:Number = 0;
+         var fail:Function = function(message:String):void
+         {
+            if(generation != $modGeneration || completed) return;
+            completed = true;
+            clearTimeout(timeout);
+            $modError = message;
+            $modReady = false;
+            done(false);
+         };
+         var next:Function = function():void
+         {
+            if(generation != $modGeneration || completed) return;
+            clearTimeout(timeout);
+            if(queue.length == 0)
+            {
+               $modReady = true;
+               completed = true;
+               done(true);
+               return;
+            }
+            var row:Object = queue.shift();
+            timeout = setTimeout(function():void { fail("读取 Mod 资源超时，请检查英雄包后重新登录。"); },20000);
+            var path:String = String(row.path);
+            var digest:String = String(row.contentDigest);
+            if(!/^[a-f0-9]{64}$/.test(digest) || path.length == 0 || path.indexOf("..") >= 0 || path.charAt(0) == "/" || path.indexOf("\\") >= 0 || String(row.alias).indexOf("MOD_") != 0)
+            {
+               fail("Mod 资源索引无效：" + path);
+               return;
+            }
+            var segments:Array = path.split("/");
+            for(var i:int = 0; i < segments.length; i++) segments[i] = encodeURIComponent(String(segments[i]));
+            var request:URLRequest = new URLRequest(MainConfig.$SERVER_ADDRESS.replace(/\/$/,"") + "/mods/assets/" + digest + "/" + segments.join("/"));
+            var reader:URLLoader = new URLLoader();
+            reader.dataFormat = URLLoaderDataFormat.BINARY;
+            var error:Function = function(event:Object):void { fail("无法读取 Mod 资源：" + path); };
+            reader.addEventListener(IOErrorEvent.IO_ERROR,error);
+            reader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,error);
+            reader.addEventListener(flash.events.Event.COMPLETE,function(event:flash.events.Event):void
+            {
+               if(generation != $modGeneration || completed) return;
+               var bytes:ByteArray = reader.data as ByteArray;
+               if(bytes == null || bytes.length == 0 || bytes.length > 33554432)
+               {
+                  fail("Mod 资源大小无效：" + path);
+                  return;
+               }
+               try
+               {
+                  if(!modAssetMatches(bytes,row))
+                  {
+                     fail("Mod 资源大小或 SHA-256 校验失败：" + path);
+                     return;
+                  }
+               }
+               catch(integrityError:Error)
+               {
+                  fail("无法校验 Mod 资源完整性，请重新登录：" + path);
+                  return;
+               }
+               // Hashing is synchronous in this SWF33-compatible implementation.
+               // Give decoding its own budget after a verified download, even
+               // when hashing ran past the original network deadline.
+               clearTimeout(timeout);
+               timeout = setTimeout(function():void { fail("解码 Mod 资源超时，请检查英雄包后重新登录。"); },20000);
+               if(row.kind == "sound")
+               {
+                  try
+                  {
+                     var sound:Sound = new Sound();
+                     sound.loadCompressedDataFromByteArray(bytes,bytes.length);
+                     $assetManager.addSound(String(row.alias),sound);
+                     $modAssets.push(row);
+                     next();
+                  }
+                  catch(soundError:Error) { fail("Mod 音频解码失败：" + path); }
+                  return;
+               }
+               // loadBytes cannot execute a SWF, including one disguised as an
+               // image: reject its signature before touching the decoder.
+               if(row.kind != "image" || bytes.length < 4 || !((bytes[0] == 137 && bytes[1] == 80 && bytes[2] == 78 && bytes[3] == 71) || (bytes[0] == 255 && bytes[1] == 216)))
+               {
+                  fail("Mod 图像格式不受支持：" + path);
+                  return;
+               }
+               var loader:Loader = new Loader();
+               loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,error);
+               loader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,error);
+               loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,function(loaded:flash.events.Event):void
+               {
+                  if(generation != $modGeneration || completed) { loader.unloadAndStop(true); return; }
+                  var content:Bitmap = loader.content as Bitmap;
+                  if(content == null || content.bitmapData.width > 4096 || content.bitmapData.height > 4096 || decodedBytes + content.bitmapData.width * content.bitmapData.height * 4 > 134217728)
+                  {
+                     loader.unloadAndStop(true);
+                     fail("Mod 图像尺寸或类型无效：" + path);
+                     return;
+                  }
+                  try
+                  {
+                     var bitmap:BitmapData = content.bitmapData.clone();
+                     $modBitmaps.push(bitmap);
+                     var texture:Texture = Texture.fromBitmapData(bitmap,false,false);
+                     texture.root.onRestore = function():void { texture.root.uploadBitmapData(bitmap); };
+                     decodedBytes += bitmap.width * bitmap.height * 4;
+                     $assetManager.addTexture(String(row.alias),texture);
+                     $modAssets.push(row);
+                     loader.unloadAndStop(true);
+                     next();
+                  }
+                  catch(textureError:Error)
+                  {
+                     loader.unloadAndStop(true);
+                     fail("Mod 图像上传失败，请减少素材大小或数量：" + path);
+                  }
+               });
+               var context:LoaderContext = new LoaderContext();
+               context.allowCodeImport = false;
+               try { loader.loadBytes(bytes,context); }
+               catch(imageError:Error) { fail("Mod 图像解码失败：" + path); }
+            });
+            try { reader.load(request); }
+            catch(requestError:Error) { fail("无法读取 Mod 资源：" + path); }
+         };
+         next();
+      }
+
+      public static function missingModTexture() : Texture
+      {
+         var texture:Texture = $assetManager.getTexture("__modMissingHero");
+         if(texture == null)
+         {
+            var bitmap:BitmapData = new BitmapData(160,160,false,0x403846);
+            var label:flash.text.TextField = new flash.text.TextField();
+            label.defaultTextFormat = new TextFormat("Arial",94,0xDDC8D8,true,null,null,null,null,"center");
+            label.width = 160;
+            label.height = 145;
+            label.text = "?";
+            bitmap.draw(label);
+            texture = Texture.fromBitmapData(bitmap,false,false);
+            texture.root.onRestore = function():void { texture.root.uploadBitmapData(bitmap); };
+            $assetManager.addTexture("__modMissingHero",texture);
+         }
+         return texture;
+      }
       
       public static var $mConfig_simple:Object = null;
       
@@ -637,6 +1040,8 @@ package com.meng52.game.global
          _data.exp = _profile.exp;
          _data.gold = _profile.gold;
          _data.coin = _profile.coin;
+         if(_profile.hasOwnProperty("mod_state")) _data.mod_state = _profile.mod_state;
+         else delete _data.mod_state;
          if(_profile.hasOwnProperty("spending"))
          {
             _data.spending = _profile.spending;
@@ -886,4 +1291,3 @@ package com.meng52.game.global
       }
    }
 }
-

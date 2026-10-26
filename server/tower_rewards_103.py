@@ -2,8 +2,10 @@
 from __future__ import annotations
 import copy
 import random
+import re
 from player_store import GameplayFault
 from summon_pools import SummonPools,QUALITY_IDS
+from mod_policy import base_aid,hero_available,hero_metadata,new_heroes
 
 SCHEMA='tower-rewards-1.0.3-v2'
 MAX_FLOOR=180
@@ -14,8 +16,15 @@ QUALITY_NAMES={2:'白',3:'绿',4:'蓝',5:'紫',6:'橙'}
 def _enemy_pools(cfg):
     skins=set(cfg['system_simple'].get('skin_hero_ids',[]))
     pools={key:[] for key in ('skin_orange','orange','purple')}
-    for aid in sorted(cfg['avatar']):
-        if not aid.startswith('A_1'):continue
+    # Scoped aliases are definitions of the same hero, not extra lottery tickets.
+    # Mod summons share the A_1 prefix with heroes, so identity alone is unsafe.
+    candidates={base_aid(cfg,aid) for aid in cfg['avatar']
+                if re.fullmatch(r'A_1\d{3}_[56]',base_aid(cfg,aid))}
+    candidates.update(new_heroes(cfg))
+    for aid in sorted(candidates):
+        if not hero_available(cfg,aid):continue
+        if (hero_metadata(cfg,aid).get('unitType','hero')!='hero'
+                or cfg['avatar'][aid].get('modUnitType','hero')!='hero'):continue
         if aid.endswith('_6'):pools['skin_orange' if aid in skins else 'orange'].append(aid)
         elif aid.endswith('_5'):pools['purple'].append(aid)
     if any(not pool for pool in pools.values()):
@@ -71,7 +80,8 @@ def enemy_quality(stage):
     if not qualities:raise GameplayFault('InvalidStage','Tower enemy quality is unavailable')
     return max(qualities)
 
-def roll_tower_reward(config,stage,rng):
+def validate_tower_reward(config,stage):
+    """Use exactly the settlement pool and uniqueness rule for Mod preflight."""
     pools=SummonPools.from_config(config)
     if pools is None:raise GameplayFault('InvalidConfig','Tower requires calibrated summon pools')
     floor=int(stage.get('tower_floor',0))
@@ -80,9 +90,19 @@ def roll_tower_reward(config,stage,rng):
     if quality<6:
         key=next((key for key,value in QUALITY_IDS.items() if value==quality),None)
         if key is None:raise GameplayFault('InvalidStage','Unsupported tower quality')
-        aid=pools.draw_quality('advanced',key,rng)[0]
+        pools.validate_quality('advanced',key)
+        return pools,'advanced',key,1
+    pools.validate_quality('vip','orange',10)
+    return pools,'vip','orange',10
+
+
+def roll_tower_reward(config,stage,rng):
+    pools,pool,quality,count=validate_tower_reward(config,stage)
+    heroes=pools.draw_quality(pool,quality,rng,count)
+    if count==1:
+        aid=heroes[0]
         return {'heroes':[{'aid':aid,'num':1}]}
-    heroes=pools.draw_quality('vip','orange',rng,10)
+    floor=int(stage['tower_floor'])
     souls=dict.fromkeys(heroes,1)
     for _ in range(100+floor*2-10):souls[heroes[rng.randrange(10)]]+=1
     return {'avatar_soul':souls}

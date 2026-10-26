@@ -8,6 +8,18 @@ from __future__ import annotations
 
 import math
 
+ENERGY_PURCHASE_CAP = 500
+
+
+def apply_energy_purchase_103(document):
+    cfg = document.get('cfg', document)
+    cfg.setdefault('msg', {})['90002'] = (
+        '花费@0金砖购买体力，每次增加当前体力上限对应的体力，可超出自然上限。'
+        '最多储存500点，购买后超过500点则不能购买。'
+        '每日可购买@1次，剩余@2次。'
+    )
+    return document
+
 
 def normalize_energy_purchase_day(profile, now=None):
     """Reset only the daily energy-purchase counter, using Shanghai dates."""

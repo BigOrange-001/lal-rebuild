@@ -105,6 +105,7 @@ package com.meng52.game.command.skill
 
       // Optional local extension; absent values preserve native target sorting.
       public var targetPolicy:String;
+      public var modNativeSource:String;
       // Optional per-action selector names. Index matches skills[]; absent entries
       // leave the legacy whole-skill range/aoe/sort path unchanged.
       public var actionTargetPolicies:Array;
@@ -136,6 +137,7 @@ package com.meng52.game.command.skill
          skillUp = param1["skillUp"];
          skillUpPaths = param1["skillUpPaths"] as Array;
          targetPolicy = param1["targetPolicy"];
+         modNativeSource = param1["modNativeSource"];
          actionTargetPolicies = param1["actionTargetPolicies"] as Array;
          actionTargetLocks = param1["actionTargetLocks"] as Array;
          actionTargetGroups = param1["actionTargetGroups"] as Array;

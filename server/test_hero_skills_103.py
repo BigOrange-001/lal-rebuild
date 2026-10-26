@@ -40,9 +40,13 @@ class HeroSkills103Tests(unittest.TestCase):
         self.assertEqual(changed, {'A_1311_5', 'A_1311_6'})
         for q in (5, 6):
             hero = self.cfg['avatar'][f'A_1311_{q}']
+            self.assertIn(f'A_1311_{q}',self.cfg['system_simple']['skin_hero_ids'])
             self.assertEqual(hero['name'], '超级赛亚人孙悟空')
             self.assertEqual(hero['skill_diff'], 19)
             self.assertEqual(hero['res'], f'A_1311_{q}')
+            for sid in hero['pl'][10:12]:
+                self.assertEqual(self.cfg['skill'][sid]['pl'][:2],[0,0])
+                self.assertIn('准备0，冷却0',self.cfg['skill'][sid]['info'])
             self.assertEqual([self.cfg['skill'][sid]['name'] for sid in hero['pl'][10:12] + hero['pl'][13:14]],
                              ['超赛变身', '真·龟派气功', '绝境逢生'])
             for sid in (f'S_9004_{q}', f'S_9005_{q}'):
@@ -186,7 +190,9 @@ class HeroSkills103Tests(unittest.TestCase):
         passive=cfg['avatar']['A_1137_6']['pl'][13]
         tuning=next(x for x in cfg['hero_balance_103']['skill_changes'] if x['target']==passive)
         self.assertEqual(tuning['source'],'S_9150_6')
-        self.assertAlmostEqual(cfg['skill'][passive]['skill'][0][1],.75*tuning['factor'])
+        plan=json.loads((ROOT/'config/reconstruction/hero-iteration-1.0.3.json').read_text('utf8'))
+        final_factor=next((r['skill_factor'] for r in plan['heroes'] if r['aid']=='A_1137_6'),1)
+        self.assertAlmostEqual(cfg['skill'][passive]['skill'][0][1],.75*tuning['factor']*final_factor*.8)
         for aid,normal in (('A_1129_6','S_271129_6'),('A_1202_6','S_271202_6'),('A_1217_6','S_271217_6')):
             self.assertEqual(base_unit(cfg,aid,slv=10)['skill']['skid'],normal)
         # Native banStand is true for pl[5] == 0. A whole-team defensive
@@ -198,25 +204,30 @@ class HeroSkills103Tests(unittest.TestCase):
         backend=Backend(':memory:',ROOT/'config/reconstruction/full-config.json')
         self.addCleanup(backend.db.close)
         cfg=backend.config['cfg']
+        from hero_iteration_103 import PLAN
+        plan=json.loads(PLAN.read_text('utf8'))
+        factor=next((r['skill_factor'] for r in plan['heroes'] if r['aid']=='A_1137_6'),1)
         for q in (5,6):
             for level,stat,damage in ((1,6300,3.276),(10,12600,6.552)):
                 h=cfg['avatar'][f'A_1137_{q}']
                 s=_native_skill_snapshot(cfg,h['pl'][10],level)
                 self.assertEqual(s['pl'][:2],[1,3])
-                self.assertAlmostEqual(s['skills'][4][2],stat)
-                self.assertAlmostEqual(s['skills'][5][2],stat)
-                self.assertAlmostEqual(s['skills'][6][1],damage)
+                self.assertAlmostEqual(s['skills'][4][2],stat*factor)
+                self.assertAlmostEqual(s['skills'][5][2],stat*factor)
+                self.assertAlmostEqual(s['skills'][6][1],damage*factor*.8)
             for level,stat in ((1,4500),(10,9000)):
                 s=_native_skill_snapshot(cfg,f'S_201311_{q}',level)
+                self.assertEqual(s['pl'][:2],[0,0])
                 for index in (2,3,4):self.assertAlmostEqual(s['skills'][index][2],stat)
                 self.assertEqual(s['skills'][5][0],'caster_hp_heal')
-                self.assertAlmostEqual(s['skills'][5][1],.12 if level==1 else .18)
+                self.assertAlmostEqual(s['skills'][5][1],(.12 if level==1 else .18)*.8)
             self.assertEqual(cfg['skill'][f'S_301311_{q}']['skill'][1][2],1500)
+            self.assertEqual(cfg['skill'][f'S_301311_{q}']['pl'][:2],[0,0])
             captain=cfg['skill'][cfg['avatar'][f'A_1137_{q}']['pl'][11]]
-            self.assertEqual(captain['skill'][2][1],1)
-            self.assertIn('双防提高100%',captain['info'])
+            self.assertEqual(captain['skill'][2][1],factor)
+            self.assertIn(f'双防提高{100*factor:g}%',captain['info'])
             normal=cfg['skill'][cfg['avatar'][f'A_1137_{q}']['pl'][10]]
-            self.assertIn('各6300点',normal['info'])
+            self.assertIn(f'各{6300*factor:g}点',normal['info'])
 
     def test_goku_healing_uses_only_maximum_hp_at_both_skill_levels(self):
         for level,expected in ((1,1200),(10,1800)):

@@ -1,0 +1,76 @@
+      private function fxState104() : Array
+      {
+         var result:Array=[];var key:String;var state:Object;var unit:Avatar;var kind:String;var count:int;
+         if(hp<=0) return result;
+         for each(key in ["wanted","exposed","charmed","cold","airborne","contract","windmark"])
+            if(s2LiveMark(this,key)) result.push({key:key,kind:key,target:this});
+         for(key in skin2)
+         {
+            if(key.indexOf("rings_")==0 && skin2[key].count>0)
+            {
+               unit=null;
+               for each(var actor:Avatar in GameMap.currentMap.getAliveList(otherTeam)) if(key=="rings_"+actor.abilityIndex) {unit=actor;break;}
+               if(unit)result.push({key:key,kind:unit.s2Family()==1140 ? "time_rings" : "rings",target:this,count:skin2[key].count});
+            }
+         }
+         if(skin2.sonic && skin2.sonic.hp>0 && skin2.sonic.line==line) result.push({key:"sonic",kind:"sonic",target:skin2.sonic});
+         if(skin2.sonic && skin2.sonic.hp>0 && skin2.ward && skin2.ward.hp>0 && skin2.ward.line==line)result.push({key:"ward",kind:"guard",target:skin2.ward});
+         if(skin2.ball && skin2.ball.hp>0 && skin2.ball.line==line) result.push({key:"ball",kind:"ball",target:skin2.ball,link:this});
+         if(skin2.guarding && skin2.guarding.hp>0 && skin2.guarding.line==line && !skin2.guardUsed) result.push({key:"guarding",kind:"guard",target:skin2.guarding,link:this});
+         if(skin2.shotUntil!=undefined && skin2.shotUntil>=manualOwnerActionSerial) result.push({key:"shot",kind:"shot",target:this});
+         if(skin2.phase) result.push({key:"phase",kind:"phase",target:this});
+         if(skin2.penetrationEnd && skin2.penetrationEnd>=manualOwnerActionSerial)result.push({key:"penetration",kind:"phase",target:this});
+         if(skin2.awake) result.push({key:"awake",kind:"awake",target:this});
+         if(skin2.eggUntil) result.push({key:"rebirth",kind:"rebirth",target:this,body:true});
+         if(skin2.crows) result.push({key:"crows",kind:"crows",target:this,body:true});
+         if(skin2.growth) result.push({key:"growth",kind:"growth",target:this,count:skin2.growth});
+         if(skin2.bearGrowth) result.push({key:"bearGrowth",kind:"bear",target:this,count:skin2.bearGrowth});
+         if(skin2.command) result.push({key:"command",kind:"command",target:this});
+         if(s2Family()==1210) result.push({key:"dance",kind:"dance",target:this,count:int(skin2.dance||0)+1});
+         if(skin2.wind) result.push({key:"wind",kind:"windmark",target:this,count:skin2.wind});
+         if(skin2.windGuard && buffs.shield) result.push({key:"windGuard",kind:"guard",target:this});
+         if(skin2.trap) result.push({key:"trap",kind:"trap",lane:line,pos:pos,ground:true});
+         if(skin2.eggs) for(var i:int=0;i<skin2.eggs.length;i++)
+         {
+            state=skin2.eggs[i];result.push({key:"egg"+i,kind:state.ready<=manualOwnerActionSerial ? "egg_ready" : "egg",lane:state.line,pos:state.pos,ground:true});
+         }
+         if(skin2.frost && manualOwnerActionSerial<skin2.frost.end) result.push({key:"frost",kind:"cold",lane:skin2.frost.lane,pos:GameMapConfig.LINE_POS/2,span:GameMapConfig.LINE_POS,ground:true});
+         state=skin2.previous || skin2.record;
+         if(s2Family()==1140 && state) result.push({key:"record",kind:"time",lane:state.line,pos:state.pos,ground:true});
+         if(s2Family()==1228)
+         {
+            var weak:Boolean=false;for each(unit in s2Lane(true)) if(unit.hp/unit.hpMax<.6)weak=true;
+            result.push({key:"aura",kind:weak ? "aura_heal" : "aura_guard",target:this,body:true});
+         }
+         for(key in abilityState)
+         {
+            state=abilityState[key];kind="";
+            if(!state) continue;
+            if(typeof state=="object" && !(state is Avatar) && state.until!=undefined && abilitySerial>state.until) continue;
+            if(key.indexOf("mark_hunt_")==0)kind="hunt";
+            else if(key.indexOf("mark_moon_")==0)kind="moon";
+            else if(key.indexOf("mark_aim_")==0)kind="wanted";
+            else if(key.indexOf("bomb_")==0)kind="bomb";
+            else if(key.indexOf("malz_")==0)kind="infection";
+            else if(key=="guard" && state.charges>0)kind="guard";
+            else if(key=="counter" && state.left>0)kind="counter";
+            else if(key=="sap")kind="sap";
+            else if(key=="root")kind="root";
+            else if(key=="alistarGuard104")kind="guard";
+            else if(key=="reviewDashReady104")kind="phase";
+            else if(key=="grey")kind="grey";
+            else if(key=="highlander")kind="phase";
+            else if(key=="thunder" || key=="polarCount")kind="charge";
+            else if(key=="evilStacks" || key=="santaStacks")kind="growth";
+            else if(key=="form" && state.hammer)kind="hammer";
+            if(kind.length)result.push({key:key,kind:kind,target:this,count:(key=="thunder" || key=="polarCount" || key=="evilStacks" || key=="santaStacks") ? int(state) : 0});
+         }
+         if(abilityState.channel) result.push({key:"channel",kind:"channel",lane:abilityState.channel.line,pos:abilityState.channel.pos,span:800,ground:true});
+         if(abilityState.zone) result.push({key:"zone",kind:"zone",lane:abilityState.zone.line,pos:abilityState.zone.pos,span:700,ground:true});
+         if(abilityState.ball && abilityState.ball.hp>0 && abilityState.ball.line==line) result.push({key:"magicBall",kind:"ball",target:abilityState.ball,link:this});
+         if(manualBattleStacks) for(key in manualBattleStacks) if(Number(manualBattleStacks[key])>0) {result.push({key:"battleGrowth",kind:"growth",target:this});break;}
+         count=0;if(manualTimedStacks)for each(state in manualTimedStacks)if(state.expiresAt>=manualOwnerActionSerial)++count;
+         if(count)result.push({key:"timedGrowth",kind:"charge",target:this,count:count});
+         if(isManualSummonUnit && statisticsOwner104 && statisticsOwner104.hp>0) result.push({key:"summon",kind:"summon",target:this});
+         return result;
+      }

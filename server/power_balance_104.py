@@ -15,9 +15,23 @@ def talent_power_factor(row):
     return 0.0
 
 
+POWER_ANCHOR = 1_000_000
+POWER_SCHEMA = 'team-anchor-1m-104-v1'
+
+
+def normalize_team_power(value):
+    """Compress the complete squared-panel team budget once, never per member."""
+    import math
+    value = float(value)
+    if not math.isfinite(value) or value <= 0:
+        return 0
+    return math.floor(POWER_ANCHOR * (value / POWER_ANCHOR) ** .75 + .000005)
+
+
 def apply_power_balance_104(document):
     cfg = document.get('cfg', document)
-    cfg['system_simple']['power_exponent'] = 1.5
+    cfg['system_simple'].update(power_exponent=2, power_anchor=POWER_ANCHOR,
+                                power_team_exponent=.75, power_schema=POWER_SCHEMA)
     for row in cfg.get('talent', {}).values():
         row['power_factor_104'] = talent_power_factor(row)
     _scale_recommendations(document, cfg)
@@ -25,54 +39,29 @@ def apply_power_balance_104(document):
 
 
 def recommendation_blend(index, first, stop):
+    # Kept for older calibration callers; display units now change at every tier.
     return max(0.0, min(1.0, (stop - index) / (stop - first + 1)))
 
 
 def _scale_recommendations(document, cfg):
-    from battle_engine import serialize_stage_team
-    from campaign_workbook_overlay import _native_snapshot_power
-    from gameplay_competition import GameplayCompetition
-    from types import SimpleNamespace
-    estimator = SimpleNamespace(cfg=cfg, simple=cfg['system_simple'])
+    # Recommendations are authored difficulty budgets, not enemy stat changes.
+    # Always convert the saved original budget; never compound on reapplication.
     for table in ('combat_main', 'combat_ploy'):
-        for cid, stage in cfg.get(table, {}).items():
-            if stage.get('recommendation_schema') == 'power-1.0.4':
+        for stage in cfg.get(table, {}).values():
+            if stage.get('recommendation_schema') == POWER_SCHEMA:
                 continue
-            if table == 'combat_main':
-                index = int(cid.split('_')[1])
-                blend = recommendation_blend(index, 11, 26)
-            elif cid.startswith('P_200_'):
-                blend = recommendation_blend(int(cid.rsplit('_', 1)[1]), 80, 151)
-            else:
-                continue
-            originals = dict(stage.get('recommended_power_by_diff', {}))
-            if not originals and 'recommended_power' in stage:
-                originals = {'0': stage['recommended_power']}
+            originals = dict(stage.get('recommended_power_original_104',
+                                        stage.get('recommended_power_by_diff', {})))
+            if not originals:
+                originals = {'0': stage.get('recommended_power', stage.get('ulv', 0))}
             stage['recommended_power_original_104'] = originals
-            values = {}
-            for diff, original in originals.items():
-                team = stage.get('team2_by_diff', {}).get(diff, stage.get('team2', []))
-                units = serialize_stage_team(cfg, team, team=2)
-                stats = stage.get('enemy_unit_stats_by_diff', {}).get(diff)
-                if stats is not None:
-                    if len(stats) != len(units):
-                        raise ValueError(f'{cid}: recommendation snapshot length mismatch')
-                    for unit, row in zip(units, stats):
-                        if unit['aid'] != row['aid']:
-                            raise ValueError(f'{cid}: recommendation snapshot order mismatch')
-                        for key in ('hp', 'ap', 'de_ph', 'de_ma'):
-                            unit[key] = row[key]
-                        unit['hp_max'] = unit['hp']
-                        unit['new_4attrs'] = {k: row.get(k, 0) for k in ('hit', 'flee', 'crit', 'tough')}
-                old = _native_snapshot_power(cfg, units)
-                new = GameplayCompetition._team_power(estimator, units)
-                ratio = new / old if old > 0 else 1.0
-                values[diff] = max(1, round(original * (1 - blend + blend * ratio)))
+            values = {str(diff): normalize_team_power(value) for diff, value in originals.items()}
             stage['recommended_power_by_diff'] = values
             if '0' in values:
                 stage['recommended_power'] = values['0']
-            stage['recommendation_schema'] = 'power-1.0.4'
+            stage['recommendation_schema'] = POWER_SCHEMA
         if 'cfg' in document:
             document[table] = cfg[table]
             if isinstance(document.get('pve'), dict):
                 document['pve'][table] = cfg[table]
+    return document

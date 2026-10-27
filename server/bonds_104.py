@@ -99,10 +99,13 @@ def _scale_skill(source, factor):
     from captain_strength import _EXTRA_PATHS, _update_growth
     row = copy.deepcopy(source)
     paths = set()
+    changes = {}
+    from skill_balance_overlay import _pct
+    from captain_strength import _update_text, _update_manual_text
     for index, action in enumerate(row.get('skill', [])):
         damage, _, defense = _action_paths(action)
         extras = [] if action[0] == 'push' else list(_EXTRA_PATHS.get(action[0], ()))
-        if action[0] == 'mod_step':
+        if action[0] == 'mod_step' or action[0]=='manual_ability' and str(action[1]).startswith('skin2_'):
             from skill_output_104 import output_paths
             extras.extend(output_paths(action))
             # Bonds strengthen numeric buffs too; the global 80% output pass
@@ -112,14 +115,20 @@ def _scale_skill(source, factor):
         if action[0] in ('heal_ap', 'heal_max_hp'):
             extras.append((1,))
         for path in set(damage + defense + extras):
-            _set(action, path, _get(action, path) * factor)
+            before = _get(action,path)
+            changes.setdefault(_pct(before),set()).add(_pct(before*factor))
+            _set(action, path, before * factor)
             paths.add((index, *path))
     _update_growth(row, paths, factor)
-    if any(a[0] == 'manual_ability' for a in row.get('skill', [])):
+    if any(a[0] == 'manual_ability' for a in row.get('skill', [])) and not row.get('skin_revision_v2_104'):
         row['manualDamageMultiplier'] = row.get('manualDamageMultiplier', 1) * factor
         row['manualEffectMultiplier'] = row.get('manualEffectMultiplier', 1) * factor
-    row.pop('rankInfoTemplate', None)
-    row['info'] = row.get('info', '') + f'\n羁绊：技能伤害、治疗、护盾及数值增益系数×{factor:g}（持续时间、目标数量、位移距离不变）。'
+    kinds = [a[1] for a in row.get('skill',[]) if a[0]=='manual_ability']
+    if kinds:
+        from skill_description_104 import scale_manual_output_text
+        scale_manual_output_text(row,kinds[0],factor,all_effects=True)
+    else:
+        _update_text(row,changes,set())
     return row
 
 
@@ -176,7 +185,10 @@ def apply_bonds_104(document):
                     if not source:
                         continue
                     row = copy.deepcopy(source)
-                    if strongest and (slot == 10 or len(strongest['families']) >= 4):
+                    if strongest and source.get('skin_revision_v2_104') and (slot == 10 or len(strongest['families']) >= 4):
+                        from skin_revision_104 import update_bond_mechanism
+                        update_bond_mechanism(row,strongest,slot)
+                    elif strongest and (slot == 10 or len(strongest['families']) >= 4):
                         mechanism = strongest['mechanism']['normal' if slot == 10 else 'captain']
                         if mechanism.get('replace'):
                             row['skill'] = copy.deepcopy(mechanism['actions'])
@@ -199,7 +211,11 @@ def apply_bonds_104(document):
                                 row[attr] = values + copy.deepcopy(mechanism[source_key])
                         row['name'] = mechanism['name']
                         row['info'] = ('' if mechanism.get('replace') else row.get('info', '') + '\n') + mechanism['info']
-                        row.pop('rankInfoTemplate', None)
+                        if mechanism.get('replace'):
+                            row.pop('rankInfoTemplate', None)
+                            row.pop('rankDisplayFactors104',None)
+                        elif row.get('rankInfoTemplate'):
+                            row['rankInfoTemplate'] += '\n'+mechanism['info']
                     if factor != 1:
                         row = _scale_skill(row, factor)
                     if factor == 1 and not (strongest and (slot == 10 or len(strongest['families']) >= 4)):

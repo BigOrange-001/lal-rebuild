@@ -145,6 +145,12 @@ class Backend:
    apply_hero_packs_104(self.config)
    from orange_ascension_104 import apply_orange_ascension_104
    apply_orange_ascension_104(self.config)
+   from hero_revision_104 import apply_hero_revision_104
+   apply_hero_revision_104(self.config)
+   from hero_calibration_104 import apply_hero_calibration_104
+   apply_hero_calibration_104(self.config)
+   from skin_revision_104 import apply_skin_revision_104
+   apply_skin_revision_104(self.config)
    apply_tower_rewards_103(self.config)
    apply_ancient_trial_103(self.config)
    apply_material_attempts_103(self.config)
@@ -158,6 +164,8 @@ class Backend:
    apply_equipment_bonds_104(self.config)
    from skill_output_104 import apply_skill_output_104
    apply_skill_output_104(self.config)
+   from player_copy_104 import apply_player_copy_104
+   apply_player_copy_104(self.config)
    apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
    self.config['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
   self.players=PlayerStore(self.db,self.config,self.clock)

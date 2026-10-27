@@ -1,0 +1,244 @@
+      // Original project-painted atlases, animated in the battle clock. No legacy effect resources.
+      private static var fxAtlases104:Array = [];
+      private static var fxBitmaps104:Array = [];
+      private static var fxTextures104:Object = {};
+      private static var fxLoading104:Boolean = false;
+      private static var fxLoadFailed104:Boolean = false;
+      private static var fxTime104:Number = 0;
+      private static var fxNodes104:Object = {};
+      private static var fxMap104:Object;
+      private static var fxLayer104:Sprite;
+      private static var fxPoll104:Number = 0;
+      private static var fxPulseCount104:int = 0;
+      private static var fxEpoch104:int = 0;
+
+      public static function clearEffects104() : void
+      {
+         ++fxEpoch104;
+         if(fxLayer104)fxLayer104.removeFromParent(true);
+         fxLayer104=null;fxMap104=null;fxNodes104={};fxPoll104=0;fxPulseCount104=0;
+      }
+      private static function fxEnsure104() : Boolean
+      {
+         fxLoad104();
+         if(!fxAtlases104[0] || !fxAtlases104[1])return false;
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(!layer || !GameMap.currentMap)return false;
+         if(fxMap104!==GameMap.currentMap || !fxLayer104 || !fxLayer104.parent)
+         {
+            clearEffects104();fxMap104=GameMap.currentMap;
+            fxLayer104=new Sprite();fxLayer104.touchable=false;fxLayer104.name="nativeSkillEffects104";
+            layer.effectLayer.addChildAt(fxLayer104,0);
+         }
+         return true;
+      }
+      private static function fxOrigin104(unit:Avatar) : Point
+      {
+         if(!unit || !unit.m_fightRes || !unit.m_fightRes.parent || !fxLayer104)return null;
+         return fxLayer104.globalToLocal(unit.m_fightRes.localToGlobal(new Point(0,0)));
+      }
+      private static function fxPosition104(lane:int, position:Number) : Point
+      {
+         if(!GameMapLayer.gl || !fxLayer104)return null;
+         return fxLayer104.globalToLocal(GameMapLayer.gl.getLineSpr(lane).localToGlobal(new Point(0,GameMapConfig.posToPixel(position))));
+      }
+      private static function fxNative104(id:String, scale:Number = 1, alpha:Number = 1) : DisplayObject
+      {
+         var index:int=int(id.substr(1));var sheet:int=int(index/16);var cell:int=index%16;
+         if(id.charAt(0)!="c" || index<0 || index>=32 || !fxAtlases104[sheet])return null;
+         var texture:starling.textures.Texture=fxTextures104[id];
+         if(!texture)
+         {
+            var atlas:starling.textures.Texture=fxAtlases104[sheet];var size:Number=atlas.width/4;
+            texture=starling.textures.Texture.fromTexture(atlas,new Rectangle((cell%4)*size,int(cell/4)*size,size,size));fxTextures104[id]=texture;
+         }
+         var art:Image=new Image(texture);art.pivotX=texture.width/2;art.pivotY=texture.height/2;
+         art.touchable=false;art.scaleX=art.scaleY=96/texture.width*scale;art.alpha=alpha;
+         return art;
+      }
+      private static function fxLoad104() : void
+      {
+         if(fxLoading104 || fxLoadFailed104)return;fxLoading104=true;
+         fxLoadSheet104(0,"energy");fxLoadSheet104(1,"states");
+      }
+      private static function fxLoadSheet104(index:int, name:String) : void
+      {
+         var loader:flash.display.Loader=new flash.display.Loader();
+         loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,function(event:flash.events.Event):void
+         {
+            var decoded:flash.display.Bitmap=loader.content as flash.display.Bitmap;
+            if(!decoded) {fxLoadFailed104=true;trace("Custom VFX: invalid PNG "+name);return;}
+            var bitmap:flash.display.BitmapData=decoded.bitmapData.clone();fxBitmaps104[index]=bitmap;
+            var texture:starling.textures.Texture=starling.textures.Texture.fromBitmapData(bitmap,false,false);
+            texture.root.onRestore=function():void {texture.root.uploadBitmapData(bitmap);};fxAtlases104[index]=texture;
+            loader.unloadAndStop(true);
+         });
+         loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,function(event:flash.events.IOErrorEvent):void {fxLoadFailed104=true;trace("Custom VFX load failed: "+name+" "+event.text);});
+         loader.load(new flash.net.URLRequest("app:/assets/effects/custom104/"+name+".png"));
+      }
+      private static function fxPersistent104(row:Object) : Array
+      {
+         if(row.key=="frost")return ["c9","c12"];
+         if(row.key=="zone")return ["c8","c5"];
+         if(row.key=="channel")return ["c30","c12"];
+         if(row.kind=="egg" || row.kind=="egg_ready")return row.kind=="egg_ready" ? ["c17"] : ["c16"];
+         if(row.key=="trap")return ["c18"];
+         if(row.key=="record")return ["c26"];
+         if(row.key=="rebirth")return ["c21"];
+         if(row.key=="crows")return ["c20","c20","c20"];
+         if(row.key=="aura")return row.kind=="aura_heal" ? ["c14"] : ["c13"];
+         if(row.key=="cold")return ["c9"];
+         if(row.key=="windGuard")return ["c1"];
+         if(row.kind=="rings" || row.kind=="time_rings")
+         {
+            var rings:Array=[];for(var n:int=0;n<Math.min(3,int(row.count));n++)rings.push(row.kind=="rings" ? "c12" : "c26");return rings;
+         }
+         if(row.kind=="root")return ["c27"];
+         if(row.kind=="infection" || row.kind=="contract")return ["c10"];
+         if(row.kind=="wanted")return ["c7","c7"];
+         if(row.kind=="moon")return ["c1"];
+         if(row.kind=="windmark")return ["c1"];
+         if(row.kind=="awake")return ["c22","c2"];
+         if(row.kind=="dance") {var arcs:Array=[];for(n=0;n<Math.min(3,int(row.count));n++)arcs.push("c2");return arcs;}
+         if(row.kind=="command")return ["c29","c28"];
+         if(row.kind=="bear")return ["c29"];
+         if(row.kind=="shot")return ["c19","c15"];
+         if(row.kind=="ball")return ["c19"];
+         if(row.kind=="phase")return ["c26","c1"];
+         if(row.kind=="exposed")return ["c23"];
+         if(row.kind=="charmed")return ["c24"];
+         if(row.kind=="sonic")return ["c30"];
+         if(row.kind=="airborne")return ["c1","c30"];
+         if(row.kind=="hunt")return ["c23"];
+         if(row.kind=="guard")return ["c28","c13"];
+         if(row.kind=="growth")return ["c14"];
+         if(row.kind=="counter")return ["c0","c13"];
+         if(row.kind=="sap")return ["c14"];
+         if(row.kind=="grey")return ["c25"];
+         if(row.kind=="charge")return ["c15"];
+         if(row.kind=="hammer")return ["c0"];
+         if(row.kind=="bomb")return ["c5"];
+         if(row.kind=="summon")return ["c12"];
+         return [];
+      }
+      public static function advanceEffects104(elapsed:Number) : void
+      {
+         if(GameMapLayer.isFastest) {if(fxLayer104)clearEffects104();return;}
+         if(!fxEnsure104()) {clearEffects104();return;}
+         fxTime104+=elapsed;fxPoll104+=elapsed;if(fxPoll104<.04)return;fxPoll104=0;
+         var live:Object={};var unit:Avatar;var row:Object;var key:String;var node:Object;
+         for each(var side:int in [1,2])for each(unit in GameMap.currentMap.getAliveList(side))
+         {
+            if(!unit.m_fightRes || !unit.m_fightRes.parent)continue;
+            for each(row in unit.fxState104())
+            {
+               var ids:Array=fxPersistent104(row);if(!ids.length)continue;
+               var origin:Point=row.ground ? fxPosition104(row.lane,row.pos) : fxOrigin104(row.target);if(!origin)continue;
+               key=unit.abilityIndex+":"+row.key;live[key]=true;node=fxNodes104[key];
+               var signature:String=ids.join("|");
+               if(!node || node.signature!=signature)
+               {
+                  if(node)node.sprite.removeFromParent(true);
+                  var sprite:Sprite=new Sprite();sprite.touchable=false;var parts:Array=[];
+                  var copies:int=row.span ? 5 : ids.length;
+                  for(var i:int=0;i<copies;i++)
+                  {
+                     var art:DisplayObject=fxNative104(ids[i%ids.length],row.span ? .45 : .65,row.span ? .3 : .55);
+                     if(!art)continue;sprite.addChild(art);parts.push(art);
+                     if(row.key=="aura" || row.key=="trap" || row.key=="record")art.scaleY*=.45;
+                     if(row.key=="crows") {art.rotation=i*Math.PI;art.scaleX*=.6;art.scaleY*=.6;art.alpha=.7;}
+                     if(row.kind=="rings" || row.kind=="time_rings") {art.scaleX*=.8+i*.2;art.scaleY*=.3+i*.08;art.y=26;art.alpha=.42;}
+                     art.name=String(art.scaleX)+","+String(art.scaleY);
+                  }
+                  if(row.key=="record" && unit.m_icon)
+                  {
+                     var ghost:Image=new Image(unit.m_icon.texture);ghost.pivotX=ghost.width/2;ghost.pivotY=ghost.height/2;
+                     ghost.alpha=.2;ghost.color=0x70ddff;ghost.touchable=false;sprite.addChildAt(ghost,0);
+                  }
+                  fxLayer104.addChildAt(sprite,0);
+                  node={sprite:sprite,parts:parts,signature:signature};fxNodes104[key]=node;
+               }
+               node.sprite.x=origin.x;node.sprite.y=origin.y+(row.ground ? 0 : row.key=="aura" || row.key=="cold" ? 25 : 0);
+               for(i=0;i<node.parts.length;i++)fxAnimateState104(node.parts[i],row,i,unit.abilityIndex);
+               if(row.span)
+               {
+                  var low:Number=Math.max(0,row.pos-row.span/2);var high:Number=Math.min(GameMapConfig.LINE_POS,row.pos+row.span/2);
+                  for(i=0;i<node.parts.length;i++)
+                  {
+                     var point:Point=fxPosition104(row.lane,low+(high-low)*i/Math.max(1,node.parts.length-1));
+                     node.parts[i].x=point.x-origin.x;node.parts[i].y=point.y-origin.y;
+                  }
+               }
+            }
+         }
+         for(key in fxNodes104)if(!live[key]) {fxNodes104[key].sprite.removeFromParent(true);delete fxNodes104[key];}
+      }
+      private static function fxAnimateState104(art:DisplayObject, row:Object, index:int, seed:int) : void
+      {
+         var base:Array=art.name.split(",");var t:Number=fxTime104;var phase:Number=t*2+index*2.094+seed*.3;
+         art.scaleX=Number(base[0])*(1+.06*Math.sin(phase));art.scaleY=Number(base[1])*(1+.08*Math.cos(phase));
+         if(["crows","dance","phase","charge","windmark","sonic","airborne"].indexOf(row.kind)>=0)
+         {
+            art.x=Math.cos(phase)*30;art.y=Math.sin(phase)*14;art.rotation=phase+(row.kind=="crows" ? 0 : Math.PI/2);
+            if(row.kind=="crows") {art.rotation=Math.sin(phase)*.2;art.scaleY*=.8+.25*Math.sin(t*10+index);}
+         }
+         else if(row.kind=="awake") {art.rotation=(index ? -1 : 1)*t;art.alpha=.35+.12*Math.sin(phase);}
+         else if(row.kind=="shot" || row.kind=="ball") {art.x=Math.cos(phase)*19;art.y=20+Math.sin(phase)*5;art.rotation=t*2;}
+         else if(row.kind=="charmed") {art.rotation=t*.65;art.alpha=.55+.12*Math.sin(phase);}
+         else if(row.kind=="exposed") {art.alpha=.3+.25*(1+Math.sin(t*4))*.5;art.rotation=-.2;}
+         else if(row.kind=="growth" || row.kind=="bear" || row.kind=="command") {art.y=18-Math.sin(phase)*9;art.alpha=.3+.16*Math.sin(phase);}
+         else if(row.kind=="guard" || row.kind=="grey") {art.alpha=.38+.12*Math.sin(phase);art.rotation=0;}
+         else if(row.kind=="wanted") {art.x=(index ? 1 : -1)*(24+Math.sin(phase)*3);art.rotation=index ? Math.PI : 0;art.scaleX*=.5;art.scaleY*=.5;}
+         else if(row.kind=="time" || row.kind=="time_rings")art.rotation=-t*.65;
+         else if(row.kind=="egg_ready") {art.rotation=Math.sin(t*5)*.08;art.y=Math.sin(t*3)*3;}
+         else if(row.kind=="summon") {art.scaleY*=.35;art.y=28;art.rotation=t*.2;art.alpha=.25;}
+      }
+      private function fxPulse104(kind:String, target:Avatar = null, lane:int = -1, position:Number = 0) : void
+      {
+         if(GameMapLayer.isFastest)return;
+         if(!fxEnsure104())return;
+         var victim:Avatar=target || this;var profile:Array=fxProfile104(kind);var ground:Point=lane>=0 ? fxPosition104(lane,position) : null;
+         for each(var piece:Object in profile)
+            GameMapLayer.gl.delayCall(fxSpawn104,GameMap.actionDelay+Number(piece.delay),piece,this,victim,ground,GameMap.currentMap,fxEpoch104);
+      }
+      private function fxStrike104(target:Avatar) : void
+      {
+         var kind:String=String(s2Family());
+         if(skin2.castSkill && skin2.castSkill===skill1 && fxProfile104(kind+"_ult").length)kind+="_ult";
+         if(target)fxPulse104(kind,target);
+      }
+      private static function fxSpawn104(piece:Object, source:Avatar, target:Avatar, ground:Point, battle:Object, epoch:int) : void
+      {
+         if(battle!==GameMap.currentMap || epoch!=fxEpoch104 || !fxLayer104 || fxPulseCount104>=48)return;
+         var start:Point=fxOrigin104(source);var finish:Point=ground || fxOrigin104(target);
+         var origin:Point=piece.at=="source" || piece.at=="flight" ? start : finish;
+         if(!origin || !finish)return;
+         var art:DisplayObject=fxNative104(piece.id,piece.scale);if(!art)return;
+         var container:Sprite=new Sprite();container.touchable=false;container.x=origin.x;container.y=origin.y;
+         container.addChild(art);fxLayer104.addChild(container);++fxPulseCount104;
+         art.rotation=Number(piece.rotation||0);
+         var life:Number=Number(piece.life);
+         if(piece.at!="flight")
+         {
+            var baseScale:Number=art.scaleX;art.scaleX*=.35;art.scaleY*=.35;
+            var bloom:Tween=new Tween(art,Math.min(.18,life*.4),"easeOut");bloom.scaleTo(baseScale);GameMapLayer.gl.addTween(bloom);
+         }
+         if(piece.at=="flight")
+         {
+            art.rotation+=Math.atan2(finish.y-origin.y,finish.x-origin.x);
+            var travel:Tween=new Tween(container,life,"linear");travel.moveTo(finish.x,finish.y);GameMapLayer.gl.addTween(travel);
+         }
+         else if(piece.rise || piece.spin)
+         {
+            var motion:Tween=new Tween(art,life,"easeOut");
+            if(piece.rise)motion.animate("y",Number(piece.rise));
+            if(piece.spin)motion.animate("rotation",art.rotation+Number(piece.spin)*life);
+            GameMapLayer.gl.addTween(motion);
+         }
+         var fade:Tween=new Tween(container,.14,"linear");fade.delay=Math.max(0,life-.14);fade.fadeTo(0);
+         fade.onComplete=function():void {container.removeFromParent(true);if(epoch==fxEpoch104)fxPulseCount104=Math.max(0,fxPulseCount104-1);};GameMapLayer.gl.addTween(fade);
+      }
+      private function fxTransfer104(kind:String, receiver:Avatar) : void
+      {
+         if(!receiver)return;fxPulse104(kind=="ball" ? "ball" : "sonic",receiver);
+      }

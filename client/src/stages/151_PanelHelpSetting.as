@@ -442,7 +442,7 @@ package com.meng52.game.ui.panel
             mModSelections = mModInfo.selections is Array ? JSON.parse(JSON.stringify(mModInfo.selections)) : [];
             mModDirty = false;
             mModPlan = null;
-            mModStatus.text = "当前配置修订 " + mModInfo.revision + "。设置只影响此存档；导入和卸载作用于全部存档。";
+            mModStatus.text = "设置只影响此存档；导入和卸载作用于全部存档。";
             renderModList();
          });
       }
@@ -690,7 +690,7 @@ package com.meng52.game.ui.panel
          mModDirty = true;
          mModPlan = null;
          mModRequestId = "";
-         mModStatus.text = "有未保存变更。预览校验通过后才会提交；失败保留当前活动配置。";
+         mModStatus.text = "有未保存的修改，请预览并确认。";
          renderModList();
       }
 
@@ -940,7 +940,7 @@ package com.meng52.game.ui.panel
          mRestoreBackup = JSON.parse(JSON.stringify(backup));
          mRestorePlan = null;
          mRestoreRequestId = "";
-         mModStatus.text = "正在校验备份摘要、身份映射、缺失包和恢复影响…";
+         mModStatus.text = "正在检查备份和所需 Mod…";
          SendAndSelect.sendAndSelectService("user.mods_restore_plan",{"backup":mRestoreBackup,"expectedRevision":mModInfo.revision},function(reply:Object):void
          {
             if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
@@ -965,7 +965,7 @@ package com.meng52.game.ui.panel
          if(mModBusy || !modAlive() || !mModPreview || mRestorePlan == null || mRestorePlan.valid !== true || mRestoreBackup == null || mModDirty) return;
          var operation:Object = beginModOperation("user.mods_restore",true);
          if(mRestoreRequestId.length == 0) mRestoreRequestId = "restore_" + new Date().time + "_" + int(Math.random() * 1000000000);
-         mModStatus.text = "正在原子恢复 Mod 设置；失败不会覆盖当前活动配置。";
+         mModStatus.text = "正在恢复 Mod 设置…";
          SendAndSelect.sendAndSelectService("user.mods_restore",{"backup":mRestoreBackup,"expectedRevision":mRestorePlan.revision,"planDigest":mRestorePlan.planDigest,"requestId":mRestoreRequestId},function(reply:Object):void
          {
             if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;
@@ -1007,7 +1007,7 @@ package com.meng52.game.ui.panel
          if(mModBusy || !modAlive() || mModPlan == null || mModPlan.valid !== true) return;
          var operation:Object = beginModOperation("user.mods_apply",true);
          if(mModRequestId.length == 0) mModRequestId = "mods_" + new Date().time + "_" + int(Math.random() * 1000000000);
-         mModStatus.text = "正在原子保存；完成后重新登录同步。";
+         mModStatus.text = "正在保存，完成后请重新登录。";
          SendAndSelect.sendAndSelectService("user.mods_apply",{"expectedRevision":mModInfo.revision,"planDigest":mModPlan.planDigest,"selections":mModSelections,"requestId":mModRequestId},function(reply:Object):void
          {
             if(!modOperationMatches(operation) || !modReplyMatches(reply,String(operation.owner),modAlive())) return;

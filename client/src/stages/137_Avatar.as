@@ -192,6 +192,65 @@ package com.meng52.game.module.avatar
          if(captain && (!skill1 || skill1.skillSetData.id != captain)) skill1 = new SkillSet(captain,this,1,true);
       }
 
+      public function getBondEntries104() : Array
+      {
+         var entries:Array = [];
+         if(!avatarData) return entries;
+         var definitions:Array = GlobalData.$mConfig_simple.bonds_104 as Array;
+         var family:String = String(avatarData.id).split("_").slice(0,2).join("_");
+         var active:Array = getBondRows104();
+         var labels:Object = {hp:"生命",ap:"攻击",de_ph:"物防",de_ma:"法防",hit:"精准",flee:"闪避",crit:"暴击",tough:"韧性"};
+         for each(var bond:Object in definitions)
+         {
+            if(bond.families.indexOf(family)<0) continue;
+            var names:Array = [];
+            var body:String = "";
+            for each(var member:String in bond.families)
+            {
+               var quality:int = Math.max(getStar(),int(bond.minimum_quality[member]));
+               var hero:Object = GlobalData.$mConfig_avatar[member+"_"+quality];
+               if(!hero) hero = GlobalData.$mConfig_avatar[member+"_"+bond.minimum_quality[member]];
+               var name:String = hero ? hero.name : member;
+               names.push(name);
+               if(member != family) continue;
+               var benefit:Object = bond.benefits[member];
+               var effects:Array = [];
+               if(benefit.stats) for(var stat:String in benefit.stats) effects.push(labels[stat]+"提高"+Math.round(Number(benefit.stats[stat])*10000)/100+"%");
+               var flats:Object = benefit.flat_by_quality ? benefit.flat_by_quality[String(quality)] : null;
+               if(flats) for(stat in flats) effects.push(labels[stat]+"增加"+flats[stat]);
+               if(benefit.skill_rate) effects.push("技能数值提高"+Math.round(Number(benefit.skill_rate)*100)+"%");
+               if(bond.focus==member)
+               {
+                  var variantTable:Object = GlobalData.$mConfig_simple.bond_skill_variants_104;
+                  var memberVariants:Object = hero && variantTable ? variantTable[hero.id] : null;
+                  var binding:Object = memberVariants ? memberVariants[String(bond.id)] : null;
+                  var normalInfo:String = SkillSet.conciseInfo104(bond.mechanism.normal.info);
+                  var captainInfo:String = bond.mechanism.captain ? SkillSet.conciseInfo104(bond.mechanism.captain.info) : "";
+                  if(binding && binding.skill) normalInfo = new SkillSet(String(binding.skill),this,1).getInfo();
+                  if(binding && binding.leader_skill) captainInfo = new SkillSet(String(binding.leader_skill),this,1,true).getInfo();
+                  effects.push(bond.mechanism.normal.name+"："+normalInfo);
+                  if(bond.mechanism.captain) effects.push(bond.mechanism.captain.name+"："+captainInfo);
+               }
+               body += "\n\n"+effects.join("；\n");
+            }
+            var enabled:Boolean = active.indexOf(bond)>=0;
+            var info:String = "组合："+names.join("、")+body;
+            entries.push({txt:String(bond.name),isOK:enabled,info:info});
+         }
+         var all:Object = GlobalData.$mConfig_simple.equipment_bonds_104;
+         var equipmentRows:Array = all ? all[avatarData.id] as Array : null;
+         var equipped:Array = getEquipmentBondRows104();
+         for each(var row:Object in equipmentRows)
+         {
+            var equipment:Object = GlobalData.$mConfig_equip[row.equipment];
+            enabled = equipped.indexOf(row)>=0;
+            info = (enabled ? "已激活" : "未激活")+"\n本人装备"+(equipment ? equipment.name : row.equipment)+"\n"+SkillSet.conciseInfo104(row.info);
+            if(row.kind=="ordinary" && row.reworks) for(var rewriteName:String in row.reworks) info += "\n\n"+rewriteName+"："+SkillSet.conciseInfo104(row.reworks[rewriteName].info);
+            entries.push({txt:equipment ? String(equipment.name) : String(row.equipment),isOK:enabled,info:info});
+         }
+         return entries;
+      }
+
       public function getBondDescription104() : String
       {
          var definitions:Array = GlobalData.$mConfig_simple.bonds_104 as Array;
@@ -563,6 +622,7 @@ package com.meng52.game.module.avatar
 
       private function abilityDirectMultiplier(source:Avatar, damageType:int) : Number
       {
+         if(abilityState.alistarGuard104 && damageType != 4) return 0.2;
          var context:Object = currentAbilityAttack();
          if(!context || !source || context.owner !== source || damageType < 1 || damageType > 3 || (context.kind != "basic" && context.kind != "active")) return 1;
          var guard:Object = abilityState.guard;
@@ -572,6 +632,45 @@ package com.meng52.game.module.avatar
          var guardFactor:Number = Number(guard.manualEffectMultiplier);
          if(!isFinite(guardFactor) || guardFactor <= 0) guardFactor = 1;
          return Math.max(0,1 - 0.55 * guardFactor);
+      }
+
+      public var statisticsOwner104:Avatar;
+      public static var statisticsRows104:Array = [];
+      public static var statisticsRunning104:Boolean = false;
+
+      public static function resetStatistics104() : void
+      {
+         clearEffects104();
+         statisticsRows104 = [];
+         statisticsRunning104 = false;
+      }
+
+      public static function statisticsRow104(unit:Avatar) : Object
+      {
+         if(!unit) return null;
+         var seen:Array = [];
+         while(unit.statisticsOwner104 && seen.indexOf(unit) < 0)
+         {
+            seen.push(unit);
+            unit = unit.statisticsOwner104;
+         }
+         for each(var row:Object in statisticsRows104) if(row.unit === unit) return row;
+         row = {unit:unit,team:unit.team,name:String(unit.avatarData.name),damage:0,healing:0,taken:0};
+         statisticsRows104.push(row);
+         return row;
+      }
+
+      public static function recordStatistics104(source:Avatar, target:Avatar, damage:Number, healing:Number) : void
+      {
+         if(!statisticsRunning104 || !target) return;
+         var victim:Object = statisticsRow104(target);
+         var actor:Object = statisticsRow104(source);
+         if(isFinite(damage) && damage > 0)
+         {
+            victim.taken += damage;
+            if(actor && source.team != target.team) actor.damage += damage;
+         }
+         if(actor && isFinite(healing) && healing > 0) actor.healing += healing;
       }
 
       private function abilityRecordDamage(source:Avatar, damageType:int, before:int, damageTaken:Number = -1) : void
@@ -716,6 +815,7 @@ package com.meng52.game.module.avatar
       private function abilityControl(target:Avatar, kind:String, duration:int, value:Number = 0) : void
       {
          if(!target || target.hp <= 0) return;
+         if(target.abilityState.channel && ["stun","silence","root","pull","push"].indexOf(kind)>=0) return;
          if(kind == "root")
          {
             if(target.buffs["purify"]) { target.removeBuff("purify",true); return; }
@@ -794,6 +894,7 @@ package com.meng52.game.module.avatar
          if(secondaryRatio == -1) secondaryRatio = apRatio;
          if(!owner || !isValidSummonMultiplier(apRatio) || !isValidSummonMultiplier(hpRatio) || !isValidSummonMultiplier(dePhRatio) || !isValidSummonMultiplier(deMaRatio) || !isValidSummonMultiplier(secondaryRatio)) return false;
          var panel:Object = owner.getSummonPanelSnapshot();
+         statisticsOwner104 = owner;
          hpMax = scaledSummonStat(Number(panel.hpMax),hpRatio,1);
          hp = hpMax;
          ap = scaledSummonStat(Number(panel.ap),apRatio,1);
@@ -825,6 +926,7 @@ package com.meng52.game.module.avatar
 
       private function abilityBombExplode(bomb:Object) : void
       {
+         fxPulse104("bomb");
          var owner:Avatar = bomb.owner as Avatar;
          if(!owner || owner.hp <= 0) return;
          var context:Object = beginAbilityAttack(owner,"active");
@@ -917,7 +1019,7 @@ package com.meng52.game.module.avatar
                return true;
             }
          }
-         return hp <= 0;
+         return hp <= 0 || Boolean(skin2.eggUntil);
       }
       public static function skillAreaRadius(value:Number) : int
       {
@@ -955,6 +1057,7 @@ package com.meng52.game.module.avatar
       public function abilityCanCast(kind:String, distance:int, sourceSkill:* = null) : Boolean
       {
          if(hp <= 0 || !GameMap.currentMap) return false;
+         if(kind.indexOf("skin2_")==0) return skin2CanCast(kind,sourceSkill);
          var center:Avatar;
          switch(kind)
          {
@@ -990,6 +1093,901 @@ package com.meng52.game.module.avatar
          return abilityEnemies(distance).length > 0;
       }
 
+
+
+
+
+
+
+      // BEGIN SKIN REVISION V2
+      // Approved skin revision: state is owned by each combat incarnation.
+      private var skin2:Object = {};
+      private static var skin2Depth:int = 0;
+
+      private function s2Family() : int
+      {
+         var row:Object = GlobalData.$mConfig_avatar[avatarData.id];
+         return row ? int(row.skin_revision_v2_104 || 0) : 0;
+      }
+      private function s2Value(skill:*, key:String) : Number
+      {
+         if(!skill || !skill.skillSetData) return 0;
+         var row:Object = GlobalData.$mConfig_skill[skill.skillSetData.id];
+         if(!row || !row.skin_v2_keys) return 0;
+         var index:int = row.skin_v2_keys.indexOf(key);
+         return index < 0 ? 0 : Number(skill.skills[0][4+index]);
+      }
+      private function s2Lane(friendly:Boolean = false, order:String = "front") : Array
+      {
+         return abilityCandidates(friendly ? team : otherTeam,line,pos,GameMapConfig.LINE_POS,-1,false,order);
+      }
+      private function s2Pick(order:String = "front", friendly:Boolean = false, excludeSelf:Boolean = false) : Avatar
+      {
+         var list:Array = s2Lane(friendly,order == "attack" ? "front" : order);
+         if(order == "attack") list.sort(function(a:Avatar,b:Avatar):Number {return b.getDamage()-a.getDamage() || a.abilityIndex-b.abilityIndex;});
+         if(!friendly) for each(var focused:Avatar in list) if(s2LiveMark(focused,"charmed") && focused.skin2.charmed.owner.team==team) return focused;
+         for each(var unit:Avatar in list) if(!excludeSelf || unit !== this) return unit;
+         return null;
+      }
+      public function skin2Focus(list:Vector.<Avatar>) : Vector.<Avatar>
+      {
+         if(!list || list.length<2) return list;
+         for each(var target:Avatar in list) if(target.team!=team && s2LiveMark(target,"charmed") && target.skin2.charmed.owner.team==team)
+         {
+            var result:Vector.<Avatar> =list.concat();var index:int=result.indexOf(target);result.splice(index,1);result.unshift(target);return result;
+         }
+         return list;
+      }
+      public function skin2PoisonTick(target:Avatar) : void
+      {
+         if(s2Family()!=1209 || hp<=0 || !skin2.eggs) return;
+         for(var i:int=0;i<skin2.eggs.length;i++) if(skin2.eggs[i].ready<=manualOwnerActionSerial && skin2.eggs[i].line==target.line && Math.abs(skin2.eggs[i].pos-target.pos)<=300)
+         {s2ExplodeEgg(i);break;}
+      }
+      private function s2LiveMark(target:Avatar, name:String) : Boolean
+      {
+         var mark:Object = target ? target.skin2[name] : null;
+         return mark && mark.owner && mark.owner.hp > 0 && mark.owner.manualOwnerActionSerial <= mark.expires;
+      }
+      private function s2Mark(target:Avatar, name:String, duration:int) : void
+      {
+         if(target && target.buffs.purify) {target.removeBuff("purify",true);return;}
+         if(target && target.hp > 0) {target.skin2[name] = {owner:this,expires:manualOwnerActionSerial+duration};fxPulse104(name,target);}
+      }
+      private function skin2ClearDebuffs() : void
+      {
+         for each(var key:String in ["cold","wanted","charmed","exposed","airborne","contract","windmark"]) delete skin2[key];
+      }
+      private function s2Heal(target:Avatar, coefficient:Number) : void
+      {
+         if(target && target.hp > 0 && hp > 0) target.injured(Tools.toInt(getDamage()*coefficient),1,null,4,this,false,this);
+      }
+      private function s2Shield(target:Avatar, coefficient:Number, duration:int = 2) : void
+      {
+         if(target && target.hp > 0 && hp > 0) target.addBuff("shield",duration,Tools.toInt(getDamage()*coefficient),0,-1,this);
+      }
+      private function s2Hit(target:Avatar, coefficient:Number, kind:int = 2, rings:Boolean = false) : Boolean
+      {
+         if(!target || hp <= 0 || target.hp <= 0) return false;
+         fxStrike104(target);
+         var previous:Object = skin2.ringHit; skin2.ringHit = rings;
+         var context:Object = currentAbilityAttack();
+         var created:Object = context && context.owner === this ? null : beginAbilityAttack(this,"passive");
+         try { return abilityHit(target,coefficient/Math.max(0.000001,heroSkillOutputRate104()),kind,""); }
+         finally {skin2.ringHit = previous; if(created) endAbilityAttack(created);}
+      }
+      private function s2Dispel(target:Avatar, all:Boolean = false) : int
+      {
+         if(!target || target.hp <= 0) return 0;
+         var count:int = 0; var stolen:Number = 0; var keys:Array=[];
+         for(var key:String in target.buffs) if(Buff.LIST_BUFF.indexOf(key)>=0) keys.push(key);
+         keys.sort();
+         for each(key in keys)
+         {
+            if(key == "shield") stolen = Number(target.buffs[key].value);
+            target.removeBuff(key); ++count; if(!all) break;
+         }
+         if(count)fxPulse104("cleanse",target);
+         if(count && s2Family()==1214)
+         {
+            var ally:Avatar=s2Pick("ratio",true);
+            if(ally) ally.addBuff("shield",2,stolen>0 ? Math.min(stolen,s2Value(skillB,"stealCap")*getDamage()) : s2Value(skillB,"shield")*getDamage(),0,-1,this);
+         }
+         return count;
+      }
+      private function s2Pet() : Avatar
+      {
+         var units:Array=skin2.pets as Array;
+         if(units) for each(var pet:Avatar in units) if(pet && pet.hp>0) return pet;
+         return null;
+      }
+      private function s2BearStrike(skill:*) : void
+      {
+         for each(var target:Avatar in s2Lane()) s2Hit(target,s2Value(skill,"hit"));
+         abilityControl(s2Pick(),"stun",1);
+      }
+      private function s2Egg(target:Avatar, mature:Boolean = false) : void
+      {
+         if(!target) return;
+         if(!skin2.eggs) skin2.eggs=[];
+         var eggs:Array=skin2.eggs;
+         if(eggs.length>=6)
+         {
+            if(eggs[0].ready<=manualOwnerActionSerial) s2ExplodeEgg(0);
+            else eggs.shift();
+         }
+         eggs.push({line:target.line,pos:target.pos,ready:manualOwnerActionSerial+(mature ? 0 : 1)});
+         abilityFeedback(mature ? "彩蛋成熟" : "种下彩蛋");
+      }
+      private function s2ExplodeEgg(index:int) : void
+      {
+         var egg:Object=skin2.eggs.splice(index,1)[0];
+         fxPulse104("egg_ready",null,egg.line,egg.pos);
+         var targets:Array=abilityCandidates(otherTeam,egg.line,egg.pos,3001,2);
+         for each(var target:Avatar in targets) s2Hit(target,s2Value(skillB,"hit"));
+         s2Shield(s2Pick("ratio",true),s2Value(skillB,"shield"));
+      }
+      public function skin2CanCast(kind:String, sourceSkill:* = null) : Boolean
+      {
+         var parts:Array=kind.split("_"); var family:int=int(parts[1]);var slot:int=int(parts[2]);
+         if(slot==2 || hp<=0 || skin2.eggUntil) return false;
+         if(family==1219 && slot==1)
+         {
+            var row:Object=sourceSkill ? GlobalData.$mConfig_skill[sourceSkill.skillSetData.id] : null;
+            if(row && row.skin_v2_bond_size>=4) for each(var marked:Avatar in s2Lane()) if(s2LiveMark(marked,"windmark")) return true;
+            for each(var target:Avatar in abilityAllEnemies()) if(s2LiveMark(target,"airborne") && target.getType()==1 && !target.isManualSummonUnit) return true;
+            return false;
+         }
+         if(family==1228 && slot==0) return s2Lane(true).length>0;
+         return s2Lane().length>0;
+      }
+      private function executeSkin2(kind:String, skill:*) : Boolean
+      {
+         var family:int=int(kind.split("_")[1]);var slot:int=int(kind.split("_")[2]);
+         if(slot==2) return false;
+         var target:Avatar=s2Pick(); var ally:Avatar;var unit:Avatar;var targets:Array=s2Lane();var allies:Array=s2Lane(true,"ratio");
+         var value:Number;var before:Number;var i:int;var stage:int;var count:int;var row:Object;
+         if(!target && !(family==1228 && slot==0)) return false;
+         var previous:Object=skin2.castSkill;skin2.castSkill=skill;
+         row=GlobalData.$mConfig_skill[skill.skillSetData.id];
+         try
+         {
+         if(family==1219 && row.skin_v2_bond_size>=4)
+         {
+            if(slot==0)
+            {
+               for each(unit in targets) {var marked:Boolean=s2LiveMark(unit,"windmark");s2Hit(unit,s2Value(skill,"hit"),1);if(marked) {abilityControl(unit,"stun",1);if(unit.buffs.stun)s2Mark(unit,"airborne",1);}s2Mark(unit,"windmark",2);}
+               s2Shield(this,s2Value(skillB,"shield"));
+            }
+            else for(i=0;i<3;i++) {for each(unit in targets) if(s2LiveMark(unit,"windmark") || s2LiveMark(unit,"airborne"))s2Hit(unit,s2Value(skill,"hit"),1);s2Heal(this,.8);}
+            return true;
+         }
+         if(slot==0)
+         {
+            switch(family)
+            {
+               case 1201:
+                  if(s2Hit(target,s2Value(skill,"hit"),1)) abilityControl(target,"silence",1);
+                  s2Shield(this,s2Value(skill,"shield"));break;
+               case 1203:
+                  var cursed:Boolean=target.buffs.curse && s2LiveMark(target,"contract") && target.skin2.contract.owner===this;
+                  abilityControl(target,"curse",2);if(target.buffs.curse) s2Mark(target,"contract",2);
+                  s2Hit(target,s2Value(skill,"hit"));if(cursed) s2Heal(this,s2Value(skill,"heal"));break;
+               case 1204:
+                  target=s2Pick("farthest");abilityPull(target,this,GameMapConfig.LINE_POS);
+                  if(s2Hit(target,s2Value(skill,"hit"),1)) {abilityControl(target,"stun",1);s2Mark(target,"exposed",2);}break;
+               case 1206:
+                  for each(unit in targets) if(unit.skin2["rings_"+abilityIndex]) {target=unit;break;}
+                  for(i=0;i<2;i++) s2Hit(target,s2Value(skill,"hit"),1,true);break;
+               case 1207:
+                  for each(unit in targets.slice(0,2)) s2Hit(unit,s2Value(skill,"hit"));
+                  for each(unit in allies.slice(0,2)) s2Heal(unit,s2Value(skill,"heal"));break;
+               case 1209:
+                  s2Hit(target,s2Value(skill,"hit"));
+                  if(target.hp>0) {target.addBuff("poison",2,getDamage()*s2Value(skill,"poison"),0,-1,this);s2Egg(target);}break;
+               case 1210:
+                  stage=int(skin2.dance || 0);skin2.dance=(stage+1)%3;
+                  if(stage==0) {abilityDash(target);s2Shield(this,s2Value(skillB,"shield"));}
+                  before=Number(currentAbilityAttack().damage);
+                  for(i=0;i<(stage==2 ? 3 : 2);i++)
+                     for each(unit in (stage==2 && skin2.awake ? targets : [target])) s2Hit(unit,s2Value(skill,stage==2 ? "third" : "hit"),1);
+                  if(stage==1) s2Heal(this,Math.max(0,Number(currentAbilityAttack().damage)-before)*s2Value(skillB,"leech")/Math.max(1,getDamage()));
+                  if(stage==2) {abilityControl(target,"stun",1);if(!skin2.awake) s2Retreat();}break;
+               case 1211:
+                  target=s2Pick("attack");s2Hit(target,s2Value(skill,"hit"),1);s2Mark(target,"wanted",1);
+                  skin2.trap=true;break;
+               case 1213:
+                  s2Shield(this,s2Value(skill,"shield"),1);s2Hit(target,s2Value(skill,"hit"));
+                  if(!skin2.ball || skin2.ball.hp<=0 || skin2.ball.line!=line) {ally=s2Pick("attack",true,true);skin2.ball=ally || this;fxTransfer104("ball",skin2.ball);skin2.ballTurn=manualOwnerActionSerial;}
+                  else if(skin2.ball===this && manualOwnerActionSerial>int(skin2.ballTurn)) s2ReturnBall(target,true);
+                  break;
+               case 1214:
+                  count=-1;
+                  for each(unit in targets) {var good:int=0;for(var key:String in unit.buffs) if(Buff.LIST_BUFF.indexOf(key)>=0) ++good;if(good>count) {target=unit;count=good;}}
+                  s2Hit(target,s2Value(skill,"hit"));s2Dispel(target);break;
+               case 1215:
+                  target=skin2.sonic as Avatar;
+                  if(target && target.hp>0 && target.line==line)
+                  {
+                     abilityDash(target);s2Hit(target,s2Value(skill,"second")*(1+.4*(1-target.hp/target.hpMax)),1);skin2.sonic=null;
+                     ally=skin2.ward as Avatar;if(ally && ally.hp>0 && ally.line==line) reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,ally.pos+(team==1 ? -125 : 125))));
+                     s2Shield(this,s2Value(skillB,"shield"));
+                  }
+                  else {target=s2Pick();s2Hit(target,s2Value(skill,"first"),1);skin2.sonic=target;ally=s2Pick("ratio",true,true) || this;skin2.ward=ally;s2Shield(ally,s2Value(skillB,"shield"));}break;
+               case 1216:
+                  for each(unit in targets.slice(0,2)) {s2Hit(unit,s2Value(skill,s2LiveMark(unit,"cold") ? "cold" : "hit"));s2Mark(unit,"cold",2);}break;
+               case 1218:
+                  before=Number(currentAbilityAttack().damage);
+                  for each(unit in targets.slice(0,2)) s2Hit(unit,s2Value(skill,"hit"));
+                  s2Heal(this,Math.max(0,Number(currentAbilityAttack().damage)-before)*s2Value(skill,"leech")/Math.max(1,getDamage()));
+                  if(skin2.crows) skill.abilityCooldownOverride=0;break;
+               case 1219:
+                  if(int(skin2.wind || 0)>=2)
+                  {
+                     skin2.wind=0;
+                     for each(unit in targets) if(s2Hit(unit,s2Value(skill,"wind"),1)) {abilityControl(unit,"stun",1);if(unit.buffs.stun)s2Mark(unit,"airborne",1);}
+                     s2Shield(this,s2Value(skillB,"shield"));skin2.windGuard=true;
+                  }
+                  else {s2Hit(target,s2Value(skill,"hit"),1);skin2.wind=int(skin2.wind || 0)+1;}break;
+               case 1221:
+                  s2Hit(target,s2Value(skill,"hit"));if(targets.length>1) s2Hit(targets[1],s2Value(skill,"splash"));
+                  unit=s2Pet();if(unit) {unit.skin2.command=true;unit.manualFocusTarget=target;}break;
+               case 1228:
+                  if(allies.length && allies[0].hp/allies[0].hpMax<.6)
+                  {
+                     for each(unit in allies.slice(0,2)) {s2Heal(unit,s2Value(skill,"heal"));for(key in unit.buffs) if(Buff.LIST_DEBUFF.indexOf(key)>=0) {unit.removeBuff(key);break;}}
+                  }
+                  else for each(unit in allies) s2Shield(unit,s2Value(skill,"shield"));break;
+               case 1140:
+                  if(skin2.phase) {skin2.phase=false;s2Hit(target,Number(skin2.phaseValue),2,true);if(target.hp<=0)target=s2Pick();}
+                  s2Hit(target,s2Value(skill,"hit"),2,true);if(target.hp<=0) target=s2Pick();s2Hit(target,s2Value(skill,"hit"),2,true);break;
+            }
+         }
+         else
+         {
+            switch(family)
+            {
+               case 1201:
+                  target=s2Pick("ratio");s2Hit(target,s2Value(skill,"hit")*(1+.8*(1-target.hp/target.hpMax)),3);
+                  if(target.hp<=0 && target.getType()==1 && !target.isManualSummonUnit) for each(unit in allies) unit.addBuff("purify",1);break;
+               case 1203:
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));abilityControl(unit,"curse",2);if(unit.buffs.curse)s2Mark(unit,"contract",2);}
+                  addBuff("shield",2,hpMax*s2Value(skill,"hpShield"),0,-1,this);break;
+               case 1204:
+                  for each(unit in allies) {unit.addBuff("purify",1);s2Shield(unit,s2Value(skill,"shield"));}
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));if(s2LiveMark(unit,"exposed") && unit.skin2.exposed.owner===this) abilityControl(unit,"silence",1);}break;
+               case 1206:
+                  addBuff("strong",2,.3);addBuff("fleeup",2,6000);target=s2Pick("ratio");
+                  for(i=0;i<3;i++) s2Hit(target,s2Value(skill,"hit"),1,true);break;
+               case 1207:
+                  target=s2Pick("attack");abilityControl(target,"stun",1);if(target.buffs.stun)s2Mark(target,"charmed",1);
+                  s2Hit(target,s2Value(skill,"hit"));break;
+               case 1209:
+                  if(!skin2.eggs) skin2.eggs=[];
+                  for each(unit in targets.slice(0,3))
+                  {
+                     var found:Boolean=false;
+                     for each(var egg:Object in skin2.eggs) if(egg.line==unit.line && Math.abs(egg.pos-unit.pos)<125) {egg.ready=manualOwnerActionSerial;found=true;break;}
+                     if(!found) s2Egg(unit);
+                  }
+                  for(i=skin2.eggs.length-1;i>=0;i--) if(skin2.eggs[i].line==line && skin2.eggs[i].ready<=manualOwnerActionSerial) s2ExplodeEgg(i);break;
+               case 1210:
+                  addBuff("strong",2,.3);skin2.awake={end:manualOwnerActionSerial+2,skill:skill};
+                  for each(unit in targets) s2Hit(unit,s2Value(skill,"entry"),1);break;
+               case 1211:
+                  target=null;
+                  for each(unit in abilityAllEnemies()) if(s2LiveMark(unit,"wanted") && unit.skin2.wanted.owner===this && (!target || unit.hp/unit.hpMax<target.hp/target.hpMax)) target=unit;
+                  target=target || s2Pick("ratio");s2Hit(target,s2Value(skill,"hit"),1);
+                  if(target.hp<=0 && target.getType()==1 && !target.isManualSummonUnit) skill.abilityCooldownOverride=Math.max(0,skill.skillSetData.cooldown-1);break;
+               case 1213:
+                  for each(unit in targets) s2Hit(unit,s2Value(skill,"hit"));
+                  if(int(skin2.shotUntil || -1)>=manualOwnerActionSerial) {skin2.shotUntil=-1;s2Hit(s2Pick("ratio"),s2Value(skill,"shot"));}
+                  for each(unit in allies) unit.addBuff("strong",2,.3);break;
+               case 1214:
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));count=s2Dispel(unit,true);abilityControl(unit,"curse",2);if(count)s2Hit(unit,s2Value(skill,"bonus"),3);}break;
+               case 1215:
+                  target=skin2.sonic && skin2.sonic.hp>0 ? skin2.sonic : s2Pick();
+                  var collisions:Array=abilityCandidates(otherTeam,target.line,target.pos,500,2,false,"nearest",[target]);
+                  s2Hit(target,s2Value(skill,"hit"),1);if(target.hp>0) target.checkMove(false,350,this,-1,true);
+                  for each(unit in collisions) {s2Hit(unit,s2Value(skill,"collision"),1);abilityControl(unit,"stun",1);}break;
+               case 1216:
+                  skin2.frost={next:manualOwnerActionSerial+1,skill:skill,lane:line,end:manualOwnerActionSerial+2};
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));s2Mark(unit,"cold",2);}break;
+               case 1218:
+                  skin2.crows={left:2,skill:skill,start:manualOwnerActionSerial};skin2.crowGuard=false;
+                  for each(unit in targets) {abilityControl(unit,"stun",1);s2Hit(unit,skin2.lastHurt==manualOwnerActionSerial-1 ? s2Value(skill,"hit") : s2Value(skillB,"entry"));}break;
+               case 1219:
+                  target=null;for each(unit in abilityAllEnemies()) if(s2LiveMark(unit,"airborne")) {target=unit;break;}
+                  if(!target) return false;
+                  reline(target.line,Math.max(0,Math.min(GameMapConfig.LINE_POS,target.pos+(team==1 ? 125 : -125))));
+                  for each(unit in s2Lane()) if(s2LiveMark(unit,"airborne")) for(i=0;i<3;i++) s2Hit(unit,s2Value(skill,"hit"),1);
+                  skin2.windReturn=true;skin2.penetrationEnd=manualOwnerActionSerial+2;break;
+               case 1221:
+                  unit=s2Pet();
+                  if(unit) s2Heal(unit,unit.hpMax*.4/Math.max(1,getDamage()));
+                  else
+                  {
+                     abilitySummon("A_2002_5",1,.7,9999,"skin2bear");skin2.pets=abilityState.summons_skin2bear;
+                     unit=s2Pet();if(unit) {unit.skin2.bearOwner=this;unit.skin2.initialHp=unit.hpMax;unit.skin2.initialAttack=unit.getDamage();}
+                  }
+                  s2BearStrike(skill);break;
+               case 1228:
+                  for each(unit in targets) {abilityControl(unit,"stun",1);s2Hit(unit,s2Value(skill,"hit"));}
+                  for each(unit in allies) {unit.addBuff("purify",2);unit.addBuff("strong",2,.4);}break;
+               case 1227:
+                  for each(unit in targets) s2Hit(unit,s2Value(skill,"hit"));
+                  for each(unit in allies) s2Heal(unit,s2Value(skill,"heal"));
+                  var snake:Avatar=null;
+                  for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.statisticsOwner104===this && unit.isManualSummonUnit) {snake=unit;break;}
+                  if(snake) {for each(unit in targets) if(unit.buffs.curse) s2Hit(unit,s2Value(skill,"snake"));for each(unit in allies)s2Shield(unit,s2Value(skill,"shield"));s2Heal(snake,snake.hpMax*.4/Math.max(1,getDamage()));}break;
+               case 1140:
+                  var ghost:Object=skin2.previous || skin2.record;
+                  if(ghost)
+                  {
+                     fxPulse104("time",null,line,pos);fxPulse104("time",null,ghost.line,ghost.pos);removeAllDebuff();reline(ghost.line,ghost.pos);
+                     var loss:Number=Math.max(0,Number(skin2.lost || 0)-Number(ghost.lost || 0));
+                     s2Heal(this,Math.min(hpMax*.3,loss*s2Value(skill,"rewind"))/Math.max(1,getDamage()));
+                  }
+                  for each(unit in s2Lane().slice(0,2)) s2Hit(unit,s2Value(skill,"hit"),2,true);
+                  skin2.phase=true;skin2.phaseValue=s2Value(skill,"phase");break;
+            }
+         }
+         row=GlobalData.$mConfig_skill[skill.skillSetData.id];
+         if(row.skin_v2_bond)
+         {
+            if(slot==0)
+            {
+               if(family==1206) s2Hit(target,s2Value(skill,"hit"),1,true);
+               else if(family==1210 && stage==2) {addBuff("purify",1);s2Shield(this,1.2);}
+               else if(family==1211) s2Dispel(target);
+               else if(family==1213 && skin2.ball) s2Shield(skin2.ball,1.2);
+               else if(family==1221 && s2Pet()) s2Pet().skin2.commandSplash=true;
+               else if(family==1201) s2Shield(s2Pick("ratio",true,true),1.2);
+            }
+         }
+         return true;
+         }
+         finally {skin2.castSkill=previous;}
+      }
+      private function s2Retreat() : void
+      {
+         var ally:Avatar=s2Pick("front",true,true);
+         reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,(ally ? ally.pos : pos)+(team==1 ? 150 : -150))));
+      }
+      private function s2ReturnBall(target:Avatar, solo:Boolean = false) : void
+      {
+         if(skin2.ballReturn==manualOwnerActionSerial || !skin2.ball) return;
+         var holder:Avatar=skin2.ball;holder.fxTransfer104("ball",this);fxPulse104("ball",holder);fxPulse104("shot",this);skin2.ball=null;skin2.ballReturn=manualOwnerActionSerial;
+         s2Hit(target,s2Value(skillB,"hit")*(solo ? .5 : 1));s2Heal(holder,s2Value(skillB,"heal")*(solo ? .5 : 1));
+         skin2.shotUntil=manualOwnerActionSerial+2;abilityFeedback("射门机会");
+      }
+      private function skin2Event(event:String, source:Avatar, target:Avatar, amount:Number, overheal:Number) : void
+      {
+         if(!GameMap.currentMap || skin2Depth>=8) return;
+         var family:int=s2Family();var unit:Avatar;var state:Object;var i:int;var key:String;var count:int;
+         if(event=="turn_start")
+         {
+            if(family==1140) {skin2.previous=skin2.record;skin2.record={line:line,pos:pos,lost:Number(skin2.lost || 0)};}
+            if(family==1203 && int(skin2.growth || 0)<10)
+            {
+               for each(unit in s2Lane()) if(unit.getType()==1 && !unit.isManualSummonUnit && unit.buffs.curse && s2LiveMark(unit,"contract") && unit.skin2.contract.owner===this)
+               {
+                  if(!skin2.initialHp) {skin2.initialHp=hpMax;skin2.initialAttack=getDamage();}
+                  fxPulse104("growth");skin2.growth=int(skin2.growth || 0)+1;ap+=Number(skin2.initialAttack)*.04;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);break;
+               }
+            }
+            if(skin2.eggUntil && manualOwnerActionSerial>=int(skin2.eggUntil))
+            {
+               fxPulse104("rebirth");delete skin2.eggUntil;hp=Math.max(hp,int(hpMax*.4));
+               for each(unit in s2Lane()) if(s2LiveMark(unit,"cold")) {s2Hit(unit,s2Value(skillB,"hit"));abilityControl(unit,"stun",1);}
+            }
+            if(skin2.frost && manualOwnerActionSerial==skin2.frost.next)
+               for each(unit in abilityCandidates(otherTeam,skin2.frost.lane,pos,3001,-1)) {s2Hit(unit,s2Value(skin2.frost.skill,"hit"));s2Mark(unit,"cold",2);}
+            if(skin2.crows && manualOwnerActionSerial>skin2.crows.start)
+            {
+               if(buffs.stun || buffs.silence) delete skin2.crows;
+               else {for each(unit in s2Lane())s2Hit(unit,s2Value(skin2.crows.skill,"hit"));if(--skin2.crows.left<=0) delete skin2.crows;}
+            }
+            for each(unit in GameMap.currentMap.getAliveList(otherTeam)) if(unit.s2Family()==1211 && unit.skin2.trap && unit.line==line && Math.abs(unit.pos-pos)<=300 && getType()==1 && !isManualSummonUnit)
+            {unit.skin2.trap=false;unit.abilityControl(this,"root",1);unit.s2Hit(this,unit.s2Value(unit.skillB,"hit"),1);}
+         }
+         if(event=="turn_end")
+         {
+            if(family==1201) {skin2.guarding=s2Pick("ratio",true,true);skin2.guardUsed=false;}
+            if(skin2.windReturn) {skin2.windReturn=false;skin2.wind=2;}
+            if(skin2.awake && manualOwnerActionSerial>=skin2.awake.end)
+            {
+               state=skin2.awake;delete skin2.awake;
+               for each(unit in s2Lane())s2Hit(unit,s2Value(state.skill,"exit")*(1+.5*(1-unit.hp/unit.hpMax)),1);
+               s2Retreat();
+            }
+            if(skin2.bearOwner && skin2.bearOwner.hp>0 && int(skin2.bearGrowth || 0)<6)
+            {fxPulse104("bear");skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*.05;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);}
+         }
+         if(event=="damage_taken" && source && source.team!=team && source.getType()==1 && !source.isManualSummonUnit)
+         {skin2.lost=Number(skin2.lost || 0)+amount;skin2.lastHurt=manualOwnerActionSerial;}
+         if(event=="hit" && target && skin2Depth==0)
+         {
+            ++skin2Depth;
+            try
+            {
+               if((family==1206 || family==1140) && (skin2.ringHit || !skin2.castSkill && currentAbilityAttack() && currentAbilityAttack().kind=="basic"))
+               {
+                  key="rings_"+abilityIndex;state=target.skin2[key] || {count:0,round:-1,triggers:0};target.skin2[key]=state;
+                  if(state.round!=manualOwnerActionSerial) {state.round=manualOwnerActionSerial;state.triggers=0;}
+                  state.count=Math.min(3,int(state.count)+1);
+                  if(state.count>=3 && state.triggers<2)
+                  {fxPulse104(family==1206 ? "rings" : "time_rings",target);state.count=0;++state.triggers;s2Hit(target,s2Value(skillB,"hit"),family==1206 ? 3 : 2);if(family==1206)s2Heal(this,s2Value(skillB,"heal"));else s2Shield(this,s2Value(skillB,"shield"),1);}
+               }
+               if(skin2.command && skin2.bearOwner && skin2.bearOwner.hp>0)
+               {skin2.command=false;unit=skin2.bearOwner;unit.s2Hit(target,unit.s2Value(unit.skillB,"command"));if(skin2.commandSplash) {skin2.commandSplash=false;for each(var other:Avatar in unit.s2Lane()) if(other!==target) {unit.s2Hit(other,unit.s2Value(unit.skillB,"command"));break;}}}
+               var context:Object=currentAbilityAttack();
+               if(context && context.kind=="active") for each(unit in GameMap.currentMap.getAliveList(team)) if(unit!==this && unit.s2Family()==1213 && unit.skin2.ball===this) unit.s2ReturnBall(target);
+            }
+            finally {--skin2Depth;}
+         }
+         if(event=="heal_done" && family==1207 && target && overheal>0 && skin2Depth==0)
+         {target.addBuff("shield",2,overheal*s2Value(skillB,"overflow"),0,-1,this);}
+         if(event=="death")
+         {
+            if(s2LiveMark(this,"exposed")) {unit=skin2.exposed.owner;delete skin2.exposed;unit.s2Heal(unit.s2Pick("ratio",true),unit.s2Value(unit.skillB,"heal"));}
+            if(s2LiveMark(this,"charmed") && skin2Depth==0)
+            {
+               ++skin2Depth;unit=skin2.charmed.owner;delete skin2.charmed;
+               try {for each(var friend:Avatar in unit.s2Lane(true))unit.s2Heal(friend,unit.s2Value(unit.skillB,"heal"));unit.s2Hit(unit.s2Pick("ratio"),unit.s2Value(unit.skillB,"hit"));}
+               finally {--skin2Depth;}
+            }
+            for each(unit in GameMap.currentMap.getAliveList(otherTeam)) if(unit.s2Family()==1206 && skin2["rings_"+unit.abilityIndex])
+            {var next:Avatar=unit.s2Pick("ratio");if(next) next.skin2["rings_"+unit.abilityIndex]=skin2["rings_"+unit.abilityIndex];}
+         }
+         if(event=="kill" && family==1218 && skin2.crows && !skin2.crowGuard && target && target.getType()==1 && !target.isManualSummonUnit)
+         {skin2.crowGuard=true;s2Shield(this,s2Value(skillB,"shield"));}
+      }
+      private function skin2Incoming(amount:Number, source:Avatar, kind:int) : Number
+      {
+         if(!GameMap.currentMap || skin2Depth>0) return amount;
+         var context:Object=currentAbilityAttack();var active:Boolean=source && context && context.kind=="active" && context.owner===source;
+         var unit:Avatar;var state:Object;var family:int=s2Family();
+         if(kind==4)
+         {
+            for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1228 && unit.line==line && hp/hpMax<.6) {amount*=1.25;break;}
+            return amount;
+         }
+         if(!source || source.team==team || kind<1 || kind>3) return amount;
+         if(active)
+         {
+            if(s2LiveMark(this,"exposed")) amount*=1.15;
+            if(s2LiveMark(source,"exposed"))
+            {unit=source.skin2.exposed.owner;delete source.skin2.exposed;unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);}
+            if(family==1221 && s2Pet() && skin2.bearShieldTurn!=manualOwnerActionSerial)
+            {skin2.bearShieldTurn=manualOwnerActionSerial;s2Shield(this,s2Value(skillB,"shield"),1);}
+            if(family==1219 && skin2.windGuard && buffs.shield && source.range>300)
+            {skin2.windGuard=false;removeBuff("shield");return 0;}
+            for each(unit in GameMap.currentMap.getAliveList(team))
+            {
+               if(unit.line!=line) continue;
+               if(unit.s2Family()==1228)
+               {var weak:Boolean=false;for each(var ally:Avatar in unit.s2Lane(true)) if(ally.hp/ally.hpMax<.6)weak=true;if(!weak) {amount*=.85;break;}}
+            }
+            for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1201 && unit.line==line && !unit.skin2.guardUsed)
+            {
+               if(unit.skin2.guarding===this && unit!==this)
+               {
+                  unit.fxPulse104("guard",this);unit.skin2.guardUsed=true;var transfer:Number=amount*.35;amount-=transfer;
+                  ++skin2Depth;try {unit.injured(int(transfer*.5),1,null,8,source,false,source);}finally {--skin2Depth;}
+                  unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);break;
+               }
+               if(unit===this && unit.s2Lane(true).length==1) {unit.skin2.guardUsed=true;amount*=.75;break;}
+            }
+         }
+         for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1216 && unit.skin2.frost && unit.skin2.frost.lane==source.line && unit.manualOwnerActionSerial<unit.skin2.frost.end && unit.s2LiveMark(source,"cold")) {amount*=.75;break;}
+         return amount;
+      }
+      private function skin2Lethal() : void
+      {
+         if(hp>0 || s2Family()!=1216 || skin2.reborn) return;
+         skin2.reborn=true;skin2.eggUntil=manualOwnerActionSerial+2;
+         hp=Math.max(1,int(hpMax*.3));fxPulse104("rebirth");abilityFeedback("冰晶重生");
+      }
+      private function skin2Moved() : void
+      {
+         if(!GameMap.currentMap || hp<=0 || getType()!=1 || isManualSummonUnit) return;
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+            if(unit.s2Family()==1211 && unit.skin2.trap && unit.line==line && Math.abs(unit.pos-pos)<=300)
+            {unit.skin2.trap=false;unit.abilityControl(this,"root",1);unit.s2Hit(this,unit.s2Value(unit.skillB,"hit"),1);}
+      }
+
+      // END SKIN REVISION V2
+
+
+
+
+
+
+
+
+
+      // BEGIN BATTLE EFFECTS 104
+      private static function fxProfile104(kind:String) : Array
+      {
+         switch(kind)
+         {
+            case "1201": return [{"id":"c0","at":"target","delay":0,"scale":0.9,"life":0.65},{"id":"c8","at":"target","delay":0.12,"scale":0.65,"life":0.65}];
+            case "1203": return [{"id":"c4","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c10","at":"target","delay":0.24,"scale":0.75,"life":0.65},{"id":"c10","at":"target","delay":0.32,"scale":0.55,"life":0.65}];
+            case "1204": return [{"id":"c15","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c15","at":"target","delay":0.24,"scale":0.75,"life":0.65}];
+            case "1206": return [{"id":"c7","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c9","at":"target","delay":0.24,"scale":0.65,"life":0.65}];
+            case "1207": return [{"id":"c24","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c22","at":"target","delay":0.24,"scale":0.8,"life":0.65}];
+            case "1209": return [{"id":"c11","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c11","at":"target","delay":0.24,"scale":0.7,"life":0.65}];
+            case "1210": return [{"id":"c2","at":"target","delay":0,"scale":0.9,"life":0.65,"rotation":-0.45},{"id":"c1","at":"target","delay":0.12,"scale":0.8,"life":0.65,"rotation":0.55}];
+            case "1211": return [{"id":"c7","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c8","at":"target","delay":0.24,"scale":0.8,"life":0.65}];
+            case "1213": return [{"id":"c4","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c8","at":"target","delay":0.24,"scale":0.85,"life":0.65}];
+            case "1214": return [{"id":"c7","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c31","at":"target","delay":0.24,"scale":1.0,"life":0.65},{"id":"c10","at":"target","delay":0.3,"scale":0.45,"life":0.65}];
+            case "1215": return [{"id":"c4","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c15","at":"target","delay":0.24,"scale":0.85,"life":0.65}];
+            case "1216": return [{"id":"c4","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c9","at":"target","delay":0.24,"scale":0.9,"life":0.65}];
+            case "1218": return [{"id":"c20","at":"flight","delay":0,"scale":0.5,"life":0.28},{"id":"c10","at":"target","delay":0.2,"scale":0.8,"life":0.65}];
+            case "1219": return [{"id":"c1","at":"flight","delay":0,"scale":0.7,"life":0.2},{"id":"c0","at":"target","delay":0.15,"scale":0.85,"life":0.65},{"id":"c1","at":"target","delay":0.28,"scale":0.7,"life":0.65}];
+            case "1221": return [{"id":"c5","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c29","at":"target","delay":0.24,"scale":0.75,"life":0.65}];
+            case "1228": return [{"id":"c12","at":"source","delay":0,"scale":0.8,"life":0.65},{"id":"c15","at":"flight","delay":0,"scale":0.65,"life":0.28},{"id":"c9","at":"target","delay":0.28,"scale":0.6,"life":0.65}];
+            case "1227": return [{"id":"c6","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c14","at":"target","delay":0.24,"scale":0.85,"life":0.65}];
+            case "1140": return [{"id":"c26","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c26","at":"target","delay":0.24,"scale":0.9,"life":0.65}];
+            case "rings": return [{"id":"c13","at":"target","delay":0,"scale":0.8,"life":0.65},{"id":"c9","at":"target","delay":0.12,"scale":1.15,"life":0.65},{"id":"c0","at":"target","delay":0.2,"scale":0.65,"life":0.65}];
+            case "time_rings": return [{"id":"c26","at":"target","delay":0,"scale":1.05,"life":0.65,"rotation":-0.8},{"id":"c12","at":"target","delay":0.12,"scale":1.1,"life":0.65}];
+            case "egg_ready": return [{"id":"c17","at":"target","delay":0,"scale":0.65,"life":0.4,"rise":-12},{"id":"c14","at":"target","delay":0,"scale":0.8,"life":0.65},{"id":"c11","at":"target","delay":0.08,"scale":1.0,"life":0.65},{"id":"c22","at":"target","delay":0.18,"scale":0.7,"life":0.65}];
+            case "time": return [{"id":"c12","at":"target","delay":0,"scale":1.15,"life":0.8,"spin":-3},{"id":"c26","at":"target","delay":0.12,"scale":0.8,"life":0.65,"spin":-4},{"id":"c26","at":"target","delay":0.2,"scale":0.6,"life":0.65}];
+            case "guard": return [{"id":"c13","at":"target","delay":0,"scale":1.0,"life":0.7},{"id":"c31","at":"target","delay":0.1,"scale":0.75,"life":0.65}];
+            case "rebirth": return [{"id":"c21","at":"target","delay":0,"scale":1.15,"life":0.85},{"id":"c9","at":"target","delay":0.15,"scale":1.0,"life":0.65},{"id":"c9","at":"target","delay":0.3,"scale":1.1,"life":0.65}];
+            case "crows": return [{"id":"c20","at":"target","delay":0,"scale":1.2,"life":0.9,"spin":3},{"id":"c10","at":"target","delay":0.1,"scale":0.85,"life":0.65},{"id":"c20","at":"target","delay":0.22,"scale":0.9,"life":0.65,"spin":-3}];
+            case "cold": return [{"id":"c9","at":"target","delay":0,"scale":0.8,"life":0.65},{"id":"c9","at":"target","delay":0.12,"scale":0.7,"life":0.65}];
+            case "cleanse": return [{"id":"c14","at":"target","delay":0,"scale":0.8,"life":0.65},{"id":"c31","at":"target","delay":0.12,"scale":0.8,"life":0.65}];
+            case "growth": return [{"id":"c10","at":"target","delay":0,"scale":0.65,"life":0.7,"rise":-30},{"id":"c12","at":"target","delay":0.15,"scale":0.75,"life":0.65}];
+            case "bear": return [{"id":"c29","at":"target","delay":0,"scale":0.8,"life":0.8},{"id":"c8","at":"target","delay":0.18,"scale":0.65,"life":0.65}];
+            case "bomb": return [{"id":"c8","at":"target","delay":0,"scale":1,"life":0.65},{"id":"c8","at":"target","delay":0.14,"scale":0.9,"life":0.65}];
+            case "ball": return [{"id":"c19","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c12","at":"target","delay":0.24,"scale":0.55,"life":0.65}];
+            case "shot": return [{"id":"c30","at":"target","delay":0,"scale":0.65,"life":0.65},{"id":"c8","at":"target","delay":0.12,"scale":0.75,"life":0.65}];
+            case "wanted": return [{"id":"c7","at":"target","delay":0,"scale":0.75,"life":0.6}];
+            case "exposed": return [{"id":"c15","at":"target","delay":0,"scale":0.7,"life":0.65},{"id":"c8","at":"target","delay":0.1,"scale":0.6,"life":0.65}];
+            case "charmed": return [{"id":"c24","at":"target","delay":0,"scale":0.8,"life":0.7},{"id":"c22","at":"target","delay":0.15,"scale":0.55,"life":0.65}];
+            case "contract": return [{"id":"c10","at":"target","delay":0,"scale":0.7,"life":0.65},{"id":"c10","at":"target","delay":0.12,"scale":0.45,"life":0.65}];
+            case "airborne": return [{"id":"c1","at":"target","delay":0,"scale":0.9,"life":0.65,"rise":-45},{"id":"c30","at":"target","delay":0.1,"scale":0.8,"life":0.65,"rise":-30}];
+            case "windmark": return [{"id":"c1","at":"target","delay":0,"scale":0.8,"life":0.65},{"id":"c0","at":"target","delay":0.1,"scale":0.65,"life":0.65}];
+            case "sonic": return [{"id":"c12","at":"target","delay":0,"scale":0.7,"life":0.65},{"id":"c12","at":"target","delay":0.15,"scale":1.05,"life":0.65}];
+            case "sap": return [{"id":"c14","at":"target","delay":0,"scale":0.75,"life":0.65},{"id":"c11","at":"target","delay":0.1,"scale":0.45,"life":0.65}];
+            case "1201_ult": return [{"id":"c3","at":"target","delay":0,"scale":1.1,"life":0.65},{"id":"c8","at":"target","delay":0.12,"scale":0.8,"life":0.65}];
+            case "1203_ult": return [{"id":"c10","at":"target","delay":0,"scale":1.05,"life":0.65},{"id":"c10","at":"target","delay":0.18,"scale":0.8,"life":0.65}];
+            case "1204_ult": return [{"id":"c15","at":"target","delay":0,"scale":1,"life":0.65},{"id":"c15","at":"target","delay":0.14,"scale":0.85,"life":0.65}];
+            case "1207_ult": return [{"id":"c24","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c22","at":"target","delay":0.24,"scale":1.15,"life":0.65}];
+            case "1210_ult": return [{"id":"c1","at":"flight","delay":0,"scale":1.1,"life":0.22},{"id":"c0","at":"target","delay":0.22,"scale":1.2,"life":0.65}];
+            case "1211_ult": return [{"id":"c7","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c8","at":"target","delay":0.24,"scale":1.1,"life":0.65}];
+            case "1216_ult": return [{"id":"c9","at":"target","delay":0,"scale":1.15,"life":0.9},{"id":"c12","at":"target","delay":0.18,"scale":1,"life":0.65}];
+            case "1218_ult": return [{"id":"c20","at":"target","delay":0,"scale":1.3,"life":0.9,"spin":2},{"id":"c10","at":"target","delay":0.2,"scale":1.0,"life":0.65}];
+            case "1221_ult": return [{"id":"c29","at":"target","delay":0,"scale":1.1,"life":0.85},{"id":"c8","at":"target","delay":0.18,"scale":0.9,"life":0.65}];
+            case "1140_ult": return [{"id":"c12","at":"target","delay":0,"scale":1.3,"life":0.8,"spin":-3},{"id":"c26","at":"target","delay":0.15,"scale":1.15,"life":0.65,"spin":-4}];
+         }
+         return [];
+      }
+      private function fxState104() : Array
+      {
+         var result:Array=[];var key:String;var state:Object;var unit:Avatar;var kind:String;var count:int;
+         if(hp<=0) return result;
+         for each(key in ["wanted","exposed","charmed","cold","airborne","contract","windmark"])
+            if(s2LiveMark(this,key)) result.push({key:key,kind:key,target:this});
+         for(key in skin2)
+         {
+            if(key.indexOf("rings_")==0 && skin2[key].count>0)
+            {
+               unit=null;
+               for each(var actor:Avatar in GameMap.currentMap.getAliveList(otherTeam)) if(key=="rings_"+actor.abilityIndex) {unit=actor;break;}
+               if(unit)result.push({key:key,kind:unit.s2Family()==1140 ? "time_rings" : "rings",target:this,count:skin2[key].count});
+            }
+         }
+         if(skin2.sonic && skin2.sonic.hp>0 && skin2.sonic.line==line) result.push({key:"sonic",kind:"sonic",target:skin2.sonic});
+         if(skin2.sonic && skin2.sonic.hp>0 && skin2.ward && skin2.ward.hp>0 && skin2.ward.line==line)result.push({key:"ward",kind:"guard",target:skin2.ward});
+         if(skin2.ball && skin2.ball.hp>0 && skin2.ball.line==line) result.push({key:"ball",kind:"ball",target:skin2.ball,link:this});
+         if(skin2.guarding && skin2.guarding.hp>0 && skin2.guarding.line==line && !skin2.guardUsed) result.push({key:"guarding",kind:"guard",target:skin2.guarding,link:this});
+         if(skin2.shotUntil!=undefined && skin2.shotUntil>=manualOwnerActionSerial) result.push({key:"shot",kind:"shot",target:this});
+         if(skin2.phase) result.push({key:"phase",kind:"phase",target:this});
+         if(skin2.penetrationEnd && skin2.penetrationEnd>=manualOwnerActionSerial)result.push({key:"penetration",kind:"phase",target:this});
+         if(skin2.awake) result.push({key:"awake",kind:"awake",target:this});
+         if(skin2.eggUntil) result.push({key:"rebirth",kind:"rebirth",target:this,body:true});
+         if(skin2.crows) result.push({key:"crows",kind:"crows",target:this,body:true});
+         if(skin2.growth) result.push({key:"growth",kind:"growth",target:this,count:skin2.growth});
+         if(skin2.bearGrowth) result.push({key:"bearGrowth",kind:"bear",target:this,count:skin2.bearGrowth});
+         if(skin2.command) result.push({key:"command",kind:"command",target:this});
+         if(s2Family()==1210) result.push({key:"dance",kind:"dance",target:this,count:int(skin2.dance||0)+1});
+         if(skin2.wind) result.push({key:"wind",kind:"windmark",target:this,count:skin2.wind});
+         if(skin2.windGuard && buffs.shield) result.push({key:"windGuard",kind:"guard",target:this});
+         if(skin2.trap) result.push({key:"trap",kind:"trap",lane:line,pos:pos,ground:true});
+         if(skin2.eggs) for(var i:int=0;i<skin2.eggs.length;i++)
+         {
+            state=skin2.eggs[i];result.push({key:"egg"+i,kind:state.ready<=manualOwnerActionSerial ? "egg_ready" : "egg",lane:state.line,pos:state.pos,ground:true});
+         }
+         if(skin2.frost && manualOwnerActionSerial<skin2.frost.end) result.push({key:"frost",kind:"cold",lane:skin2.frost.lane,pos:GameMapConfig.LINE_POS/2,span:GameMapConfig.LINE_POS,ground:true});
+         state=skin2.previous || skin2.record;
+         if(s2Family()==1140 && state) result.push({key:"record",kind:"time",lane:state.line,pos:state.pos,ground:true});
+         if(s2Family()==1228)
+         {
+            var weak:Boolean=false;for each(unit in s2Lane(true)) if(unit.hp/unit.hpMax<.6)weak=true;
+            result.push({key:"aura",kind:weak ? "aura_heal" : "aura_guard",target:this,body:true});
+         }
+         for(key in abilityState)
+         {
+            state=abilityState[key];kind="";
+            if(!state) continue;
+            if(typeof state=="object" && !(state is Avatar) && state.until!=undefined && abilitySerial>state.until) continue;
+            if(key.indexOf("mark_hunt_")==0)kind="hunt";
+            else if(key.indexOf("mark_moon_")==0)kind="moon";
+            else if(key.indexOf("mark_aim_")==0)kind="wanted";
+            else if(key.indexOf("bomb_")==0)kind="bomb";
+            else if(key.indexOf("malz_")==0)kind="infection";
+            else if(key=="guard" && state.charges>0)kind="guard";
+            else if(key=="counter" && state.left>0)kind="counter";
+            else if(key=="sap")kind="sap";
+            else if(key=="root")kind="root";
+            else if(key=="alistarGuard104")kind="guard";
+            else if(key=="reviewDashReady104")kind="phase";
+            else if(key=="grey")kind="grey";
+            else if(key=="highlander")kind="phase";
+            else if(key=="thunder" || key=="polarCount")kind="charge";
+            else if(key=="evilStacks" || key=="santaStacks")kind="growth";
+            else if(key=="form" && state.hammer)kind="hammer";
+            if(kind.length)result.push({key:key,kind:kind,target:this,count:(key=="thunder" || key=="polarCount" || key=="evilStacks" || key=="santaStacks") ? int(state) : 0});
+         }
+         if(abilityState.channel) result.push({key:"channel",kind:"channel",lane:abilityState.channel.line,pos:abilityState.channel.pos,span:800,ground:true});
+         if(abilityState.zone) result.push({key:"zone",kind:"zone",lane:abilityState.zone.line,pos:abilityState.zone.pos,span:700,ground:true});
+         if(abilityState.ball && abilityState.ball.hp>0 && abilityState.ball.line==line) result.push({key:"magicBall",kind:"ball",target:abilityState.ball,link:this});
+         if(manualBattleStacks) for(key in manualBattleStacks) if(Number(manualBattleStacks[key])>0) {result.push({key:"battleGrowth",kind:"growth",target:this});break;}
+         count=0;if(manualTimedStacks)for each(state in manualTimedStacks)if(state.expiresAt>=manualOwnerActionSerial)++count;
+         if(count)result.push({key:"timedGrowth",kind:"charge",target:this,count:count});
+         if(isManualSummonUnit && statisticsOwner104 && statisticsOwner104.hp>0) result.push({key:"summon",kind:"summon",target:this});
+         return result;
+      }
+      // Original project-painted atlases, animated in the battle clock. No legacy effect resources.
+      private static var fxAtlases104:Array = [];
+      private static var fxBitmaps104:Array = [];
+      private static var fxTextures104:Object = {};
+      private static var fxLoading104:Boolean = false;
+      private static var fxLoadFailed104:Boolean = false;
+      private static var fxTime104:Number = 0;
+      private static var fxNodes104:Object = {};
+      private static var fxMap104:Object;
+      private static var fxLayer104:Sprite;
+      private static var fxPoll104:Number = 0;
+      private static var fxPulseCount104:int = 0;
+      private static var fxEpoch104:int = 0;
+
+      public static function clearEffects104() : void
+      {
+         ++fxEpoch104;
+         if(fxLayer104)fxLayer104.removeFromParent(true);
+         fxLayer104=null;fxMap104=null;fxNodes104={};fxPoll104=0;fxPulseCount104=0;
+      }
+      private static function fxEnsure104() : Boolean
+      {
+         fxLoad104();
+         if(!fxAtlases104[0] || !fxAtlases104[1])return false;
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(!layer || !GameMap.currentMap)return false;
+         if(fxMap104!==GameMap.currentMap || !fxLayer104 || !fxLayer104.parent)
+         {
+            clearEffects104();fxMap104=GameMap.currentMap;
+            fxLayer104=new Sprite();fxLayer104.touchable=false;fxLayer104.name="nativeSkillEffects104";
+            layer.effectLayer.addChildAt(fxLayer104,0);
+         }
+         return true;
+      }
+      private static function fxOrigin104(unit:Avatar) : Point
+      {
+         if(!unit || !unit.m_fightRes || !unit.m_fightRes.parent || !fxLayer104)return null;
+         return fxLayer104.globalToLocal(unit.m_fightRes.localToGlobal(new Point(0,0)));
+      }
+      private static function fxPosition104(lane:int, position:Number) : Point
+      {
+         if(!GameMapLayer.gl || !fxLayer104)return null;
+         return fxLayer104.globalToLocal(GameMapLayer.gl.getLineSpr(lane).localToGlobal(new Point(0,GameMapConfig.posToPixel(position))));
+      }
+      private static function fxNative104(id:String, scale:Number = 1, alpha:Number = 1) : DisplayObject
+      {
+         var index:int=int(id.substr(1));var sheet:int=int(index/16);var cell:int=index%16;
+         if(id.charAt(0)!="c" || index<0 || index>=32 || !fxAtlases104[sheet])return null;
+         var texture:starling.textures.Texture=fxTextures104[id];
+         if(!texture)
+         {
+            var atlas:starling.textures.Texture=fxAtlases104[sheet];var size:Number=atlas.width/4;
+            texture=starling.textures.Texture.fromTexture(atlas,new Rectangle((cell%4)*size,int(cell/4)*size,size,size));fxTextures104[id]=texture;
+         }
+         var art:Image=new Image(texture);art.pivotX=texture.width/2;art.pivotY=texture.height/2;
+         art.touchable=false;art.scaleX=art.scaleY=96/texture.width*scale;art.alpha=alpha;
+         return art;
+      }
+      private static function fxLoad104() : void
+      {
+         if(fxLoading104 || fxLoadFailed104)return;fxLoading104=true;
+         fxLoadSheet104(0,"energy");fxLoadSheet104(1,"states");
+      }
+      private static function fxLoadSheet104(index:int, name:String) : void
+      {
+         var loader:flash.display.Loader=new flash.display.Loader();
+         loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,function(event:flash.events.Event):void
+         {
+            var decoded:flash.display.Bitmap=loader.content as flash.display.Bitmap;
+            if(!decoded) {fxLoadFailed104=true;trace("Custom VFX: invalid PNG "+name);return;}
+            var bitmap:flash.display.BitmapData=decoded.bitmapData.clone();fxBitmaps104[index]=bitmap;
+            var texture:starling.textures.Texture=starling.textures.Texture.fromBitmapData(bitmap,false,false);
+            texture.root.onRestore=function():void {texture.root.uploadBitmapData(bitmap);};fxAtlases104[index]=texture;
+            loader.unloadAndStop(true);
+         });
+         loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,function(event:flash.events.IOErrorEvent):void {fxLoadFailed104=true;trace("Custom VFX load failed: "+name+" "+event.text);});
+         loader.load(new flash.net.URLRequest("app:/assets/effects/custom104/"+name+".png"));
+      }
+      private static function fxPersistent104(row:Object) : Array
+      {
+         if(row.key=="frost")return ["c9","c12"];
+         if(row.key=="zone")return ["c8","c5"];
+         if(row.key=="channel")return ["c30","c12"];
+         if(row.kind=="egg" || row.kind=="egg_ready")return row.kind=="egg_ready" ? ["c17"] : ["c16"];
+         if(row.key=="trap")return ["c18"];
+         if(row.key=="record")return ["c26"];
+         if(row.key=="rebirth")return ["c21"];
+         if(row.key=="crows")return ["c20","c20","c20"];
+         if(row.key=="aura")return row.kind=="aura_heal" ? ["c14"] : ["c13"];
+         if(row.key=="cold")return ["c9"];
+         if(row.key=="windGuard")return ["c1"];
+         if(row.kind=="rings" || row.kind=="time_rings")
+         {
+            var rings:Array=[];for(var n:int=0;n<Math.min(3,int(row.count));n++)rings.push(row.kind=="rings" ? "c12" : "c26");return rings;
+         }
+         if(row.kind=="root")return ["c27"];
+         if(row.kind=="infection" || row.kind=="contract")return ["c10"];
+         if(row.kind=="wanted")return ["c7","c7"];
+         if(row.kind=="moon")return ["c1"];
+         if(row.kind=="windmark")return ["c1"];
+         if(row.kind=="awake")return ["c22","c2"];
+         if(row.kind=="dance") {var arcs:Array=[];for(n=0;n<Math.min(3,int(row.count));n++)arcs.push("c2");return arcs;}
+         if(row.kind=="command")return ["c29","c28"];
+         if(row.kind=="bear")return ["c29"];
+         if(row.kind=="shot")return ["c19","c15"];
+         if(row.kind=="ball")return ["c19"];
+         if(row.kind=="phase")return ["c26","c1"];
+         if(row.kind=="exposed")return ["c23"];
+         if(row.kind=="charmed")return ["c24"];
+         if(row.kind=="sonic")return ["c30"];
+         if(row.kind=="airborne")return ["c1","c30"];
+         if(row.kind=="hunt")return ["c23"];
+         if(row.kind=="guard")return ["c28","c13"];
+         if(row.kind=="growth")return ["c14"];
+         if(row.kind=="counter")return ["c0","c13"];
+         if(row.kind=="sap")return ["c14"];
+         if(row.kind=="grey")return ["c25"];
+         if(row.kind=="charge")return ["c15"];
+         if(row.kind=="hammer")return ["c0"];
+         if(row.kind=="bomb")return ["c5"];
+         if(row.kind=="summon")return ["c12"];
+         return [];
+      }
+      public static function advanceEffects104(elapsed:Number) : void
+      {
+         if(GameMapLayer.isFastest) {if(fxLayer104)clearEffects104();return;}
+         if(!fxEnsure104()) {clearEffects104();return;}
+         fxTime104+=elapsed;fxPoll104+=elapsed;if(fxPoll104<.04)return;fxPoll104=0;
+         var live:Object={};var unit:Avatar;var row:Object;var key:String;var node:Object;
+         for each(var side:int in [1,2])for each(unit in GameMap.currentMap.getAliveList(side))
+         {
+            if(!unit.m_fightRes || !unit.m_fightRes.parent)continue;
+            for each(row in unit.fxState104())
+            {
+               var ids:Array=fxPersistent104(row);if(!ids.length)continue;
+               var origin:Point=row.ground ? fxPosition104(row.lane,row.pos) : fxOrigin104(row.target);if(!origin)continue;
+               key=unit.abilityIndex+":"+row.key;live[key]=true;node=fxNodes104[key];
+               var signature:String=ids.join("|");
+               if(!node || node.signature!=signature)
+               {
+                  if(node)node.sprite.removeFromParent(true);
+                  var sprite:Sprite=new Sprite();sprite.touchable=false;var parts:Array=[];
+                  var copies:int=row.span ? 5 : ids.length;
+                  for(var i:int=0;i<copies;i++)
+                  {
+                     var art:DisplayObject=fxNative104(ids[i%ids.length],row.span ? .45 : .65,row.span ? .3 : .55);
+                     if(!art)continue;sprite.addChild(art);parts.push(art);
+                     if(row.key=="aura" || row.key=="trap" || row.key=="record")art.scaleY*=.45;
+                     if(row.key=="crows") {art.rotation=i*Math.PI;art.scaleX*=.6;art.scaleY*=.6;art.alpha=.7;}
+                     if(row.kind=="rings" || row.kind=="time_rings") {art.scaleX*=.8+i*.2;art.scaleY*=.3+i*.08;art.y=26;art.alpha=.42;}
+                     art.name=String(art.scaleX)+","+String(art.scaleY);
+                  }
+                  if(row.key=="record" && unit.m_icon)
+                  {
+                     var ghost:Image=new Image(unit.m_icon.texture);ghost.pivotX=ghost.width/2;ghost.pivotY=ghost.height/2;
+                     ghost.alpha=.2;ghost.color=0x70ddff;ghost.touchable=false;sprite.addChildAt(ghost,0);
+                  }
+                  fxLayer104.addChildAt(sprite,0);
+                  node={sprite:sprite,parts:parts,signature:signature};fxNodes104[key]=node;
+               }
+               node.sprite.x=origin.x;node.sprite.y=origin.y+(row.ground ? 0 : row.key=="aura" || row.key=="cold" ? 25 : 0);
+               for(i=0;i<node.parts.length;i++)fxAnimateState104(node.parts[i],row,i,unit.abilityIndex);
+               if(row.span)
+               {
+                  var low:Number=Math.max(0,row.pos-row.span/2);var high:Number=Math.min(GameMapConfig.LINE_POS,row.pos+row.span/2);
+                  for(i=0;i<node.parts.length;i++)
+                  {
+                     var point:Point=fxPosition104(row.lane,low+(high-low)*i/Math.max(1,node.parts.length-1));
+                     node.parts[i].x=point.x-origin.x;node.parts[i].y=point.y-origin.y;
+                  }
+               }
+            }
+         }
+         for(key in fxNodes104)if(!live[key]) {fxNodes104[key].sprite.removeFromParent(true);delete fxNodes104[key];}
+      }
+      private static function fxAnimateState104(art:DisplayObject, row:Object, index:int, seed:int) : void
+      {
+         var base:Array=art.name.split(",");var t:Number=fxTime104;var phase:Number=t*2+index*2.094+seed*.3;
+         art.scaleX=Number(base[0])*(1+.06*Math.sin(phase));art.scaleY=Number(base[1])*(1+.08*Math.cos(phase));
+         if(["crows","dance","phase","charge","windmark","sonic","airborne"].indexOf(row.kind)>=0)
+         {
+            art.x=Math.cos(phase)*30;art.y=Math.sin(phase)*14;art.rotation=phase+(row.kind=="crows" ? 0 : Math.PI/2);
+            if(row.kind=="crows") {art.rotation=Math.sin(phase)*.2;art.scaleY*=.8+.25*Math.sin(t*10+index);}
+         }
+         else if(row.kind=="awake") {art.rotation=(index ? -1 : 1)*t;art.alpha=.35+.12*Math.sin(phase);}
+         else if(row.kind=="shot" || row.kind=="ball") {art.x=Math.cos(phase)*19;art.y=20+Math.sin(phase)*5;art.rotation=t*2;}
+         else if(row.kind=="charmed") {art.rotation=t*.65;art.alpha=.55+.12*Math.sin(phase);}
+         else if(row.kind=="exposed") {art.alpha=.3+.25*(1+Math.sin(t*4))*.5;art.rotation=-.2;}
+         else if(row.kind=="growth" || row.kind=="bear" || row.kind=="command") {art.y=18-Math.sin(phase)*9;art.alpha=.3+.16*Math.sin(phase);}
+         else if(row.kind=="guard" || row.kind=="grey") {art.alpha=.38+.12*Math.sin(phase);art.rotation=0;}
+         else if(row.kind=="wanted") {art.x=(index ? 1 : -1)*(24+Math.sin(phase)*3);art.rotation=index ? Math.PI : 0;art.scaleX*=.5;art.scaleY*=.5;}
+         else if(row.kind=="time" || row.kind=="time_rings")art.rotation=-t*.65;
+         else if(row.kind=="egg_ready") {art.rotation=Math.sin(t*5)*.08;art.y=Math.sin(t*3)*3;}
+         else if(row.kind=="summon") {art.scaleY*=.35;art.y=28;art.rotation=t*.2;art.alpha=.25;}
+      }
+      private function fxPulse104(kind:String, target:Avatar = null, lane:int = -1, position:Number = 0) : void
+      {
+         if(GameMapLayer.isFastest)return;
+         if(!fxEnsure104())return;
+         var victim:Avatar=target || this;var profile:Array=fxProfile104(kind);var ground:Point=lane>=0 ? fxPosition104(lane,position) : null;
+         for each(var piece:Object in profile)
+            GameMapLayer.gl.delayCall(fxSpawn104,GameMap.actionDelay+Number(piece.delay),piece,this,victim,ground,GameMap.currentMap,fxEpoch104);
+      }
+      private function fxStrike104(target:Avatar) : void
+      {
+         var kind:String=String(s2Family());
+         if(skin2.castSkill && skin2.castSkill===skill1 && fxProfile104(kind+"_ult").length)kind+="_ult";
+         if(target)fxPulse104(kind,target);
+      }
+      private static function fxSpawn104(piece:Object, source:Avatar, target:Avatar, ground:Point, battle:Object, epoch:int) : void
+      {
+         if(battle!==GameMap.currentMap || epoch!=fxEpoch104 || !fxLayer104 || fxPulseCount104>=48)return;
+         var start:Point=fxOrigin104(source);var finish:Point=ground || fxOrigin104(target);
+         var origin:Point=piece.at=="source" || piece.at=="flight" ? start : finish;
+         if(!origin || !finish)return;
+         var art:DisplayObject=fxNative104(piece.id,piece.scale);if(!art)return;
+         var container:Sprite=new Sprite();container.touchable=false;container.x=origin.x;container.y=origin.y;
+         container.addChild(art);fxLayer104.addChild(container);++fxPulseCount104;
+         art.rotation=Number(piece.rotation||0);
+         var life:Number=Number(piece.life);
+         if(piece.at!="flight")
+         {
+            var baseScale:Number=art.scaleX;art.scaleX*=.35;art.scaleY*=.35;
+            var bloom:Tween=new Tween(art,Math.min(.18,life*.4),"easeOut");bloom.scaleTo(baseScale);GameMapLayer.gl.addTween(bloom);
+         }
+         if(piece.at=="flight")
+         {
+            art.rotation+=Math.atan2(finish.y-origin.y,finish.x-origin.x);
+            var travel:Tween=new Tween(container,life,"linear");travel.moveTo(finish.x,finish.y);GameMapLayer.gl.addTween(travel);
+         }
+         else if(piece.rise || piece.spin)
+         {
+            var motion:Tween=new Tween(art,life,"easeOut");
+            if(piece.rise)motion.animate("y",Number(piece.rise));
+            if(piece.spin)motion.animate("rotation",art.rotation+Number(piece.spin)*life);
+            GameMapLayer.gl.addTween(motion);
+         }
+         var fade:Tween=new Tween(container,.14,"linear");fade.delay=Math.max(0,life-.14);fade.fadeTo(0);
+         fade.onComplete=function():void {container.removeFromParent(true);if(epoch==fxEpoch104)fxPulseCount104=Math.max(0,fxPulseCount104-1);};GameMapLayer.gl.addTween(fade);
+      }
+      private function fxTransfer104(kind:String, receiver:Avatar) : void
+      {
+         if(!receiver)return;fxPulse104(kind=="ball" ? "ball" : "sonic",receiver);
+      }
+
+      // END BATTLE EFFECTS 104
+
       public function equipmentPart104(sourceSkill:*, part:String, value:Number) : Number
       {
          var row:Object = sourceSkill && sourceSkill.skillSetData ? GlobalData.$mConfig_skill[sourceSkill.skillSetData.id] : null;
@@ -1009,6 +2007,7 @@ package com.meng52.game.module.avatar
 
       private function executeAbilityBody(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
+         if(kind.indexOf("skin2_")==0) return executeSkin2(kind,sourceSkill);
          if(kind == "cat_n" || kind == "cat_c") return executeCatSkin(kind,scale,effect,sourceSkill);
          if(kind == "polar_n" || kind == "polar_c") return executePolarSkin(kind,effect,sourceSkill);
          if(kind == "santa_n" || kind == "santa_c") return executeSantaSkin(kind,effect,sourceSkill);
@@ -1140,7 +2139,7 @@ package com.meng52.game.module.avatar
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600),null,-1); if(!enemies.length) return false;
                coefficient=(enemies.length==nativeAbilityNumber(sourceSkill,kind,"cast_2",1) ? nativeAbilityNumber(sourceSkill,kind,"cast_3",2) : nativeAbilityNumber(sourceSkill,kind,"cast_4",1.1))*scale;
                for each(target in enemies.slice(0,nativeAbilityNumber(sourceSkill,kind,"cast_6",3))) abilityHit(target,coefficient,nativeAbilityNumber(sourceSkill,kind,"cast_7",1),effect);
-               addBuff("fleeup",nativeAbilityNumber(sourceSkill,kind,"cast_9",1),nativeAbilityNumber(sourceSkill,kind,"cast_10",600)*scale*orangeFourStatBuffMultiplier);
+               if(!sourceSkill.getNativeSetting("reviewFleeQuality104",0)) addBuff("fleeup",nativeAbilityNumber(sourceSkill,kind,"cast_9",1),nativeAbilityNumber(sourceSkill,kind,"cast_10",600)*scale*orangeFourStatBuffMultiplier);
                break;
             case "yi_c":
                addBuff("strong",nativeAbilityNumber(sourceSkill,kind,"cast_1",3),nativeAbilityNumber(sourceSkill,kind,"cast_2",0.5)); addBuff("hitup",nativeAbilityNumber(sourceSkill,kind,"cast_4",3),nativeAbilityNumber(sourceSkill,kind,"cast_5",800)*orangeFourStatBuffMultiplier); removeBuff("weak");
@@ -1215,7 +2214,7 @@ package com.meng52.game.module.avatar
                break;
             case "alistar_c":
                removeAllDebuff(); abilityHeal(this,equipmentPart104(sourceSkill,"will_heal",nativeAbilityNumber(sourceSkill,kind,"cast_0",0.5)));
-               abilityState.guard={kind:"alistar",charges:nativeAbilityNumber(sourceSkill,kind,"cast_2",3),until:abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_3",2),owner:this,manualEffectMultiplier:manualEffectMultiplier,debuff:false};
+               abilityState.alistarGuard104={until:abilitySerial,debuff:false};
                break;
             case "diana_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650)); if(!enemies.length) return false; primary=enemies[0];
@@ -1288,6 +2287,14 @@ package com.meng52.game.module.avatar
                addBuff("hitup",nativeAbilityNumber(sourceSkill,kind,"cast_8",1),nativeAbilityNumber(sourceSkill,kind,"cast_9",800)*orangeFourStatBuffMultiplier); marked=target.abilityHasMark(this,"aim");
                if(abilityHit(target,marked ? equipmentPart104(sourceSkill,"marked_shot",nativeAbilityNumber(sourceSkill,kind,"cast_11",5)) : nativeAbilityNumber(sourceSkill,kind,"cast_12",4),nativeAbilityNumber(sourceSkill,kind,"cast_13",1),effect) && marked) delete target.abilityState["mark_aim_"+abilityIndex];
                break;
+            case "karthus_n":
+               enemies=abilityEnemies(600); if(!enemies.length) return false;
+               targets=[enemies[0]].concat(abilityEnemies(200,enemies[0],2,false,"nearest",[enemies[0]]));
+               for each(target in targets) abilityHit(target,0.875*scale*(targets.length==1 ? equipmentPart104(sourceSkill,"isolated_hit",2) : 1),2,effect);
+               break;
+            case "karthus_c":
+               for each(target in abilityAllEnemies()) abilityHit(target,2.75*(1+(target.hp<target.hpMax*0.4 ? equipmentPart104(sourceSkill,"requiem_finish",0.4) : 0)),2,effect);
+               break;
             case "kaelthas_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
                if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
@@ -1346,7 +2353,7 @@ package com.meng52.game.module.avatar
          if(kind == "santa_n")
          {
             // Lock this cast's repeat count before any of its hits can kill.
-            var count:int = 1+int(abilityState.santaKills);
+            var count:int = 1+int(int(abilityState.santaKills)/2);
             for(var i:int = 0;i < count;i++)
             {
                targets = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1);
@@ -1360,8 +2367,12 @@ package com.meng52.game.module.avatar
          }
          else
          {
-            for each(var target:Avatar in targets)
-               if(abilityHit(target,0.3,3,effect) && target.hp > 0) abilityControl(target,"stun",1);
+            var oldHit104:Number = Number(abilityState.veigarCastHit || 0);
+            abilityState.veigarCastHit = oldHit104+10000;
+            try {
+               for each(var target:Avatar in targets)
+                  if(abilityHit(target,0.3,3,effect) && target.hp > 0) abilityControl(target,"stun",1);
+            } finally { abilityState.veigarCastHit = oldHit104; }
          }
          return true;
       }
@@ -1424,6 +2435,7 @@ package com.meng52.game.module.avatar
                {
                   for each(var target:Avatar in abilityAllEnemies())
                   {
+                     if(target.line != line) continue;
                      if(hp <= 0) break;
                      // Fixed true damage enters after AP/armor/miss/crit math.
                      target.injured(damage,1,DisplayTools.getAttrs("FX_S9150_TRUE"),3,this,false,this);
@@ -1876,10 +2888,11 @@ package com.meng52.game.module.avatar
 
       public function emitModEvent(event:String,source:Avatar = null,target:Avatar = null,amount:Number = 0,overheal:Number = 0) : Boolean
       {
+         skin2Event(event,source,target,amount,overheal);
          if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;
          var row:Object = GlobalData.$mConfig_skill[skillB.skillSetData.id];
          var gate:Object = row ? row.modCondition : null;
-         if(!gate || gate.kind != "event" || gate.event != event || (hp <= 0 && event != "death")) return false;
+         if(!gate || gate.kind != "event" || (gate.event != event && !(gate.reviewDashResponse104 && event == "dodge")) || (hp <= 0 && event != "death")) return false;
          if(abilityState.modEventBusy || modEventDepth >= 8 || (modEventDepth > 0 && gate.allowChain !== true)) return false;
          var other:Avatar = source === this ? target : source;
          if(gate.relation == "self" && other !== this) return false;
@@ -1909,6 +2922,7 @@ package com.meng52.game.module.avatar
             if(nearby.line == line && Math.abs(nearby.pos-pos) <= nearbyRadius) ++nearbyFoe;
          }
          if(nearbyFriend < int(gate.nearbyAllies || 0) || nearbyFoe < int(gate.nearbyEnemies || 0) || nearbySummon < int(gate.nearbySummons || 0)) return false;
+         if(gate.reviewDashResponse104 && abilityState.reviewDashReady104 !== true) return false;
          var ownTurn:int = manualOwnerActionSerial;
          var readyTurn:int = abilityState.modEventReady == null ? skillB.skillSetData.warmup : int(abilityState.modEventReady);
          if(ownTurn < readyTurn) return false;
@@ -1931,6 +2945,7 @@ package com.meng52.game.module.avatar
          if(modEventDepth == 0) modEventBudget = 64;
          if(modEventBudget <= 0) { skillB.modEventContext = previous; return false; }
          --modEventBudget; ++modEventDepth;
+         if(gate.reviewDashResponse104) abilityState.reviewDashReady104 = false;
          abilityState.modEventBusy = true;
          abilityState.modEventCount = int(abilityState.modEventCount)+1;
          abilityState.modEventReady = ownTurn+skillB.skillSetData.cooldown;
@@ -2492,46 +3507,7 @@ package com.meng52.game.module.avatar
 
       public function showRange(param1:int, param2:int, param3:int) : void
       {
-         var _map:GameMap = GameMap.currentMap;
-         var _layer:GameMapLayer = GameMapLayer.gl;
-         if(!_map || !_map.isFight || GameMap.currentAvatar !== this || hp <= 0 || !m_fightRes || !m_fightRes.parent || !_layer || !_layer.effectLayer || !_layer.lineLayerList)
-         {
-            return;
-         }
-         var _showLine:int = _map.getShowLine(param1);
-         if(_showLine < 0 || _showLine >= _layer.lineLayerList.length) return;
-         var _bounds:Rectangle = rangePreviewBounds(param2,param3,_layer.lineLayerList.length,_layer.getLineX(_showLine));
-         if(!m_fightRange)
-         {
-            m_fightRange = new Sprite();
-            m_fightRange.name = "attackRangeOutline";
-            m_fightRange.touchable = false;
-            var _color:uint = team == 1 ? 3459327 : 16743262;
-            for(var _edge:int = 0;_edge < 4;_edge++)
-            {
-               m_fightRange.addChild(new Quad(1,1,_color));
-            }
-            m_fightRange.alpha = 0.7;
-         }
-         if(m_fightRange.parent != _layer.effectLayer)
-         {
-            m_fightRange.removeFromParent();
-            _layer.effectLayer.addChildAt(m_fightRange,0);
-         }
-         m_fightRange.x = _bounds.x;
-         m_fightRange.y = _bounds.y;
-         var _stroke:Number = Math.max(1,Math.min(3,_bounds.height / 4));
-         var _top:Quad = m_fightRange.getChildAt(0) as Quad;
-         var _bottom:Quad = m_fightRange.getChildAt(1) as Quad;
-         var _left:Quad = m_fightRange.getChildAt(2) as Quad;
-         var _right:Quad = m_fightRange.getChildAt(3) as Quad;
-         _top.width = _bottom.width = _bounds.width;
-         _top.height = _bottom.height = _stroke;
-         _bottom.y = _bounds.height - _stroke;
-         _left.width = _right.width = _stroke;
-         _left.height = _right.height = _bounds.height;
-         _right.x = _bounds.width - _stroke;
-         m_fightRange.visible = true;
+         hideRange();
       }
 
       public static function rangePreviewBounds(param1:int, param2:int, param3:int, param4:Number) : Rectangle
@@ -2558,8 +3534,8 @@ package com.meng52.game.module.avatar
          }
          rangePreviewQueued = true;
          var _schedule:Array = rangePreviewSchedule(GameMap.actionDelay,rangeMoveEndsAt);
-         GameMapLayer.gl.delayCall(showRange,_schedule[0],line,pos,getRange());
-         GameMapLayer.gl.delayCall(hideRange,_schedule[1]);
+
+
          GameMap.actionDelay = _schedule[1];
       }
 
@@ -2740,6 +3716,7 @@ package com.meng52.game.module.avatar
 
       public function newFightRes(param1:Sprite = null) : Sprite
       {
+         fxLoad104();
          var _loc2_:String = null;
          var _loc3_:Sprite = null;
          var _loc7_:Image = null;
@@ -3242,6 +4219,7 @@ package com.meng52.game.module.avatar
          manualBattleStacks = {};
          manualTimedStacks = [];
          manualOwnerActionSerial = 0;
+         skin2 = {};
          manualSummonFamilies = {};
          manualLethalFloor = {};
       }
@@ -3460,6 +4438,7 @@ package com.meng52.game.module.avatar
 
       public function addBuff(param1:String, param2:int, param3:Number = 0, param4:Number = 0, param5:int = -1, param6:Avatar = null) : void
       {
+         if(abilityState.channel && ["stun","silence","root","pull","push"].indexOf(param1)>=0) return;
          var _loc8_:* = 0;
          var _loc13_:String = null;
          var _loc9_:Boolean = false;
@@ -3823,6 +4802,7 @@ package com.meng52.game.module.avatar
 
       protected function removeAllDebuff() : void
       {
+         skin2ClearDebuffs();
          abilityClearStates(true);
          var _loc1_:String = null;
          for(_loc1_ in buffs)
@@ -3857,7 +4837,39 @@ package com.meng52.game.module.avatar
          delete buffs[param1];
       }
 
+      private var dotPopup104:Object = null;
+
       protected function checkBuff() : Boolean
+      {
+         dotPopup104 = {amount:0,color:53248,label:GlobalLanguageStr.getLanguageStr(30013)};
+         try
+         {
+            return settleBuffs104();
+         }
+         finally
+         {
+            var popup:Object = dotPopup104;
+            dotPopup104 = null;
+            if(popup && popup.amount > 0)
+            {
+               GameMap.actionDelay += 0.5;
+               GameMapLayer.gl.delayCall(GameMapLayer.gl.infoLayer.popInjuredForAvatar,GameMap.actionDelay,
+                  String(popup.label)+String(popup.amount),this,uint(popup.color),35,0.75,null,null);
+            }
+         }
+      }
+
+      private function collectDotPopup104(amount:Number, kind:int) : void
+      {
+         dotPopup104.amount += Math.max(0,amount);
+         if(kind == 7)
+         {
+            dotPopup104.color = 16737792;
+            dotPopup104.label = GlobalLanguageStr.getLanguageStr(30029);
+         }
+      }
+
+      protected function settleBuffs104() : Boolean
       {
          var _loc1_:Buff = null;
          var manualDotKey:String = null;
@@ -4357,6 +5369,10 @@ package com.meng52.game.module.avatar
       public function getDefenseAgainst(source:Avatar, damageType:int) : int
       {
          var penetration:Number = source ? source.getBookCombatBonus("penetration") : 0;
+         if(source && damageType==1) {
+            if(s2LiveMark(this,"wanted") && skin2.wanted.owner===source) penetration=Math.max(penetration,.25);
+            if(source.skin2.penetrationEnd && source.manualOwnerActionSerial<=source.skin2.penetrationEnd) penetration=Math.max(penetration,.3);
+         }
          var talent:Number = checkTalent(damageType == 1 ? 2 : 3);
          var defense:Number;
          if(penetration <= 0)
@@ -5102,7 +6118,18 @@ package com.meng52.game.module.avatar
          return _loc2_ + getIdValue();
       }
 
+      public static function normalizeTeamPower104(value:Number) : Number
+      {
+         if(!isFinite(value) || value <= 0) return 0;
+         return Math.floor(1000000 * Math.pow(value / 1000000,0.75) + 0.000005);
+      }
+
       public function getPower(param1:Boolean = false, param2:int = -1, param3:Boolean = false) : Number
+      {
+         return Avatar.normalizeTeamPower104(getPowerBase104(param1,param2,param3));
+      }
+
+      public function getPowerBase104(param1:Boolean = false, param2:int = -1, param3:Boolean = false) : Number
       {
          updateBondSkills104();
          var _loc10_:Number = skill0 ? skill0.getPower() : 0;
@@ -5115,7 +6142,7 @@ package com.meng52.game.module.avatar
          {
             param2 = lv;
          }
-         var _loc5_:Number = Math.pow(Math.max(0,getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA),1.5) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(Math.max(0,getHit() + getFlee() + getCrit() + getTough()),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
+         var _loc5_:Number = Math.pow(Math.max(0,getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA),2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(Math.max(0,getHit() + getFlee() + getCrit() + getTough()),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
       }
@@ -5689,6 +6716,8 @@ package com.meng52.game.module.avatar
 
       public function checkMove(param1:Boolean, param2:int = 0, param3:Avatar = null, param4:Number = -1, param5:Boolean = false, param6:String = null) : Number
       {
+         if(param5 && abilityState.channel) return 0;
+         if(!param5 && s2LiveMark(this,"cold") && param2>0) param2=Math.round(param2*.5);
          if(abilityState.root && !param5) return 0;
          var _loc18_:int = 0;
          var _loc13_:int = 0;
@@ -5810,6 +6839,7 @@ package com.meng52.game.module.avatar
          {
             GameMap.actionDelay += Math.max(0,_loc14_ - 0.08);
          }
+         skin2Moved();
          return _loc14_;
       }
 
@@ -5893,6 +6923,8 @@ package com.meng52.game.module.avatar
 
       public function reline(param1:int, param2:int = -2147483648, param3:int = -2147483648, param4:Number = 0, param5:Number = 0, forced:Boolean = false) : void
       {
+         if(forced && abilityState.channel) return;
+         if(!forced && s2LiveMark(this,"cold") && param2!=-2147483648) param2=pos+Math.round((param2-pos)*.5);
          if(abilityState.root && !forced) return;
          if(param1 != line) delete abilityState.channel;
          var _loc10_:* = undefined;
@@ -5940,6 +6972,7 @@ package com.meng52.game.module.avatar
          _loc10_.a1 = this;
          _loc10_.par = _loc7_.effectLayer;
          _loc7_.delayCall(DisplayTools.addEffects,GameMap.actionDelay + param4 + param5 + 2.8 / 2,_loc10_);
+         skin2Moved();
       }
 
       public function isResolvingSkill() : Boolean
@@ -6699,6 +7732,7 @@ package com.meng52.game.module.avatar
          var modShieldBefore:Number = buffs && buffs["shield"] ? Number(buffs["shield"].value) : 0;
          var nurseHealAmount:int = 0;
          var abilityDamageTaken:Number = 0;
+         var statisticsShield104:Number = 0;
          param1 = int(param1 * abilityDirectMultiplier(param7,param4));
          var _loc12_:String = null;
          var _loc21_:* = 0;
@@ -6772,13 +7806,13 @@ package com.meng52.game.module.avatar
          {
             _loc21_ = 53248;
             _loc14_ = 0.75;
-            GameMap.actionDelay += 1 / 2;
+            if(!dotPopup104) GameMap.actionDelay += 1 / 2;
          }
          else if(param4 == 7)
          {
             _loc21_ = 16737792;
             _loc14_ = 0.75;
-            GameMap.actionDelay += 1 / 2;
+            if(!dotPopup104) GameMap.actionDelay += 1 / 2;
          }
          else
          {
@@ -6788,6 +7822,7 @@ package com.meng52.game.module.avatar
          var _loc24_:* = GlobalData.$mConfig_simple.attack;
          if(param4 == 4)
          {
+            param1 = int(skin2Incoming(param1,param7 || param5,param4));
             var bookHealer:Avatar = param7 || param5 || this;
             param1 = Tools.toInt(param1 * (1 + bookHealer.getBookCombatBonus("healing")));
             if(hasManualDotKind("burn"))
@@ -6797,6 +7832,7 @@ package com.meng52.game.module.avatar
             nurseHealAmount = Math.max(0,param1);
             param1 = Math.min(param1,hpMax - hp);
             hp += param1;
+            recordStatistics104(bookHealer,this,0,Math.max(0,param1));
             GameMapTools.gameTrace(id + "治療++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + param1);
             _loc12_ = GlobalLanguageStr.getLanguageStr(30000) + param1;
             _loc14_ = 0.75;
@@ -6828,12 +7864,15 @@ package com.meng52.game.module.avatar
             }
             trace("最终伤害算减伤之后" + param1);
             if(hasManualDotKind("poison")) param1 = Tools.toInt(param1 * 1.2);
+            param1 = int(skin2Incoming(param1,param7 || param5,param4));
             _loc9_ = buffs["shield"] as Buff;
             if(_loc9_)
             {
                var bookShieldFactor:Number = 1 + (param7 ? param7.getBookCombatBonus("shield_damage") : 0);
                if(dotKind == "bleed" || dotKind == "phantasm") bookShieldFactor *= 3;
+               var statisticsBeforeShield104:Number = param1;
                param1 = absorbShieldDamage(param1,bookShieldFactor);
+               statisticsShield104 = Math.max(0,statisticsBeforeShield104-param1);
             }
             if(param7 && param7.manualSkillDamageCapture && param7.manualSkillDamageCapture.active === true && param7.manualSkillDamageCapture.owner === param7)
             {
@@ -6937,7 +7976,8 @@ package com.meng52.game.module.avatar
          }
          if(_loc21_ != 0)
          {
-            _loc19_.delayCall(_loc19_.infoLayer.popInjuredForAvatar,GameMap.actionDelay,_loc12_,this,_loc21_,_loc11_,_loc14_,_loc20_,param5);
+            if(dotPopup104 && (param4 == 6 || param4 == 7)) collectDotPopup104(param1,param4);
+            else _loc19_.delayCall(_loc19_.infoLayer.popInjuredForAvatar,GameMap.actionDelay,_loc12_,this,_loc21_,_loc11_,_loc14_,_loc20_,param5);
          }
          if(param8)
          {
@@ -6979,6 +8019,7 @@ package com.meng52.game.module.avatar
                GameMapTools.gameTrace(id + "触发限时保命，保留" + hp + "生命");
             }
          }
+         skin2Lethal();
          if(hp <= 0 && buffs["bless"])
          {
             removeAllDebuff();
@@ -6998,8 +8039,11 @@ package com.meng52.game.module.avatar
             _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp);
          }
          var modActualDamage:Number = param4 == 4 ? 0 : Math.max(0,abilityHpBefore-Math.max(0,hp));
+         if(param4 >= 1 && param4 != 4 && param4 != 5)
+            recordStatistics104(param7 || param5,this,abilityDamageTaken+statisticsShield104,0);
          var modActualHeal:Number = Math.min(Math.max(0,hpMax-abilityHpBefore),nurseHealAmount);
          var modOverheal:Number = Math.max(0,nurseHealAmount-modActualHeal);
+         if(param4==6 && param7 && param7.s2Family()==1209 && modActualDamage>0) param7.skin2PoisonTick(this);
          var modKilled:Boolean = abilityHpBefore > 0 && hp <= 0;
          var modShieldBroke:Boolean = modShieldBefore > 0 && (!buffs["shield"] || Number(buffs["shield"].value) <= 0);
          if(param4 == 4 && nurseHealAmount > 0)
@@ -7081,7 +8125,7 @@ package com.meng52.game.module.avatar
          if(hp <= 0 && abilityHpBefore > 0 && param7 && param7.team != team && param7.skillB && param7.skillB.skills && param7.skillB.skills.length && param7.skillB.skills[0][0] == "cat_passive")
             param7.queueCatSkinKill();
          if(hp <= 0 && abilityHpBefore > 0 && param7 && param7.team != team && param7.skillB && param7.skillB.skills && param7.skillB.skills.length && param7.skillB.skills[0][0] == "santa_kill")
-            param7.queueSantaKill();
+            if(getType() == 1 && !isManualSummonUnit) param7.queueSantaKill();
          if(param4 == 4 && nurseHealAmount > 0) queueNurseHealing(nurseHealAmount,Math.max(0,nurseHealAmount-Math.max(0,hpMax-abilityHpBefore)));
          return param1;
       }

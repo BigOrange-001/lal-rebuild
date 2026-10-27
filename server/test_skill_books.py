@@ -236,7 +236,7 @@ class SkillBooksTests(unittest.TestCase):
         battle = ReferenceBattle([self.unit('caster')], [self.unit('enemy', False)])
         caster, target = battle.a[0], battle.b[0]
         target['de_ph'] = target['de_ma'] = 80
-        caster['book_skill'] = self.book_skill('E_6008_2', 10)  # 45% penetration
+        caster['book_skill'] = self.book_skill('E_6008_7', 10)  # top passive quality: 45%
         for damage_type in (1, 2):
             target['hp'] = 10000
             battle._native_damage(caster, target, 1, damage_type)
@@ -249,7 +249,7 @@ class SkillBooksTests(unittest.TestCase):
         battle._tick_buffs(caster)
         self.assertEqual(battle._book_bonus(caster, 'penetration'), 0)
         caster['book_skill'] = self.book_skill('E_6008_7', 10)
-        self.assertEqual(battle._book_bonus(caster, 'penetration'), 1)
+        self.assertAlmostEqual(battle._book_bonus(caster, 'penetration'), .45)
 
     def test_penetration_book_curve_scales_to_ninety_percent(self):
         for quality in range(2,8):
@@ -257,7 +257,16 @@ class SkillBooksTests(unittest.TestCase):
                 skill=self.book_skill(f'E_6504_{quality}',level)
                 self.assertAlmostEqual(skill['skills'][0][1],.9*(quality+1)/8*(level+5)/15)
         row=self.config['cfg']['skill'][self.config['cfg']['equip']['E_6504_7']['skill']]
-        self.assertIn('只取最高值',row['info'])
+        self.assertNotIn('只取最高值',row['info'])
+
+    def test_passive_penetration_caps_at_forty_five_percent(self):
+        for quality in range(2,8):
+            for level in (1,5,10):
+                skill=self.book_skill(f'E_6008_{quality}',level)
+                self.assertAlmostEqual(skill['skills'][0][1],.45*(quality+1)/8*(level+5)/15)
+            row=self.config['cfg']['skill'][self.config['cfg']['equip'][f'E_6008_{quality}']['skill']]
+            for phrase in ('上限','最高值','不叠加'):
+                self.assertNotIn(phrase,row['info'])
 
     def test_all_penetration_sources_take_maximum_for_native_and_absolute_damage(self):
         from manual_ability_sim import SkillCompleteBattle

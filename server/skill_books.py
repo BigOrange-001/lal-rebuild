@@ -76,6 +76,7 @@ def apply_book_skill_rules(cfg):
     highest_impact = max(e['quality'] for eid, e in cfg['equip'].items() if eid.startswith('E_6505_'))
     highest_curse = max(e['quality'] for eid, e in cfg['equip'].items() if eid.startswith('E_6201_'))
     highest_penetration = max(e['quality'] for eid, e in cfg['equip'].items() if eid.startswith('E_6504_'))
+    highest_passive_penetration = max(e['quality'] for eid, e in cfg['equip'].items() if eid.startswith('E_6008_'))
     for eid, equip in cfg['equip'].items():
         if equip.get('type') != 6:
             continue
@@ -91,6 +92,9 @@ def apply_book_skill_rules(cfg):
         elif family == 'E_6201':
             scale = .08 / percentage(highest_curse, 10)
             lo, step = lo * scale, step * scale
+        elif family == 'E_6008':
+            scale = .45 / percentage(highest_passive_penetration, 10)
+            lo, step = lo * scale, step * scale
         elif family == 'E_6504':
             # Active books double this curve below: top quality/rank is 90%.
             scale = .45 / percentage(highest_penetration, 10)
@@ -105,8 +109,6 @@ def apply_book_skill_rules(cfg):
                 row['rankInfoTemplate'] = '普攻命中附加本次实际伤害{rank:0:1}的灼烧总伤害，分3回合结算。'
             elif family == 'E_6201':
                 row['rankInfoTemplate'] = '普攻命中有{rank:0:1}概率诅咒当前目标，持续3回合。'
-            elif family == 'E_6008':
-                row['rankInfoTemplate'] += '穿透上限100%；与其他破甲、穿透效果只取最高值，不叠加。'
         elif family in known_actives:
             row['pl'] = [2, 2, 0, 0, 0, 0]
             row['skill'] = [['attrup', lo * 2, known_actives[family], 0, 1, 'FX_S9002_SHIELD']]
@@ -114,8 +116,6 @@ def apply_book_skill_rules(cfg):
                 row['skill'] = [['book_bonus', lo * 2, 'penetration', 1]]
             row['skillUp'] = [0, step * 2]
             row['rankInfoTemplate'] = '每3回合使自身' + stat_names[known_actives[family]] + '提高{rank:0:1}，持续1回合。'
-            if family == 'E_6504':
-                row['rankInfoTemplate'] += '与其他破甲、穿透效果只取最高值，不叠加。'
         else:
             # The highest available quality is the 110%..200% baseline.
             # Lower tiers scale only the impact;

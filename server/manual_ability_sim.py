@@ -16,7 +16,7 @@ from combat_math import (miss_chance, crit_chance, critical_multiplier,
 KINDS = frozenset(f'{hero}_{slot}' for hero in (
     'illaoi','jayce','nidalee','kayle','maokai','wukong','gangplank','yi','veigar',
     'elise','riven','orianna','nunu','alistar','diana','khazix','malzahar','jinx',
-    'tahm','caitlyn','kaelthas','aoxing') for slot in ('n','c'))
+    'tahm','caitlyn','kaelthas','karthus','aoxing') for slot in ('n','c'))
 
 
 class SkillCompleteBattle(ReferenceBattle):
@@ -171,6 +171,7 @@ class SkillCompleteBattle(ReferenceBattle):
 
     def control(self, owner, target, kind, duration, value=0):
         if not target or target.get('hp',0)<=0:return
+        if self.state(target).get('channel') and kind in ('stun','silence','root','pull','push'):return
         if kind=='root':
             if self._buff(target,'purify'):
                 self._remove_buff(target,'purify',consume=True);return
@@ -331,7 +332,7 @@ class SkillCompleteBattle(ReferenceBattle):
                 enemies=en(600,maximum=-1)
                 if not enemies:return False
                 for target in enemies[:3]:hit(target,(2 if len(enemies)==1 else 1.1)*scale,1)
-                buff('fleeup',1,600*scale*orange)
+                if not row.get('reviewFleeQuality104'):buff('fleeup',1,600*scale*orange)
             case 'yi_c':
                 buff('strong',3,.5);buff('hitup',3,800*orange);self._remove_buff(owner,'weak')
                 state['highlander']=dict(until=serial+3,left=2,debuff=False)
@@ -402,7 +403,7 @@ class SkillCompleteBattle(ReferenceBattle):
                 buff('taunt',2)
             case 'alistar_c':
                 self._remove_all_debuff(owner);self.heal(owner,owner,self.equipment_part(skill,'will_heal',.5))
-                state['guard']=dict(kind='alistar',charges=3,until=serial+2,owner=owner,effect=effect,debuff=False)
+                state['alistar_guard104']=dict(until=serial,debuff=False)
             case 'diana_n':
                 enemies=en(650)
                 if not enemies:return False
@@ -476,6 +477,16 @@ class SkillCompleteBattle(ReferenceBattle):
                         target=other;break
                 buff('hitup',1,800*orange);marked=self.marked(owner,target,'aim')
                 if hit(target,self.equipment_part(skill,'marked_shot',5) if marked else 4,1) and marked:self.state(target).pop(('mark','aim',state['index']),None)
+            case 'karthus_n':
+                enemies=en(600)
+                if not enemies:return False
+                targets=group(enemies[0],200,2)
+                factor=self.equipment_part(skill,'isolated_hit',2) if len(targets)==1 else 1
+                for target in targets:hit(target,.875*scale*factor,2)
+            case 'karthus_c':
+                for target in list(self.opponents(owner)):
+                    bonus=self.equipment_part(skill,'requiem_finish',.4) if target['hp']<target['hp_max']*.4 else 0
+                    hit(target,2.75*(1+bonus),2)
             case 'kaelthas_n':
                 enemies=en(600)
                 if not enemies:return False
@@ -534,7 +545,7 @@ class SkillCompleteBattle(ReferenceBattle):
         if not targets or owner.get('hp',0)<=0:return False
         if kind=='santa_n':
             state=self.state(owner)
-            count=1+int(state.get('santa_kills',0))
+            count=1+int(state.get('santa_kills',0))//2
             for _ in range(count):
                 targets=self.candidates(owner,3-self._team_number(owner),owner['line'],owner['pos'],self._LINE_POS,-1)
                 if not targets or owner.get('hp',0)<=0:break
@@ -542,8 +553,11 @@ class SkillCompleteBattle(ReferenceBattle):
                 self.hit(owner,target,float(skill['skills'][0][4]),2)
                 state['santa_stacks']=state.get('santa_stacks',0)+1
         else:
-            for target in targets:
-                if self.hit(owner,target,.3,3) and target['hp']>0:self.control(owner,target,'stun',1)
+            state=self.state(owner);old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+10000
+            try:
+                for target in targets:
+                    if self.hit(owner,target,.3,3) and target['hp']>0:self.control(owner,target,'stun',1)
+            finally:state['veigar_cast_hit']=old
         self.manual_casts[kind]=self.manual_casts.get(kind,0)+1
         return True
 
@@ -586,6 +600,7 @@ class SkillCompleteBattle(ReferenceBattle):
                 if raw<=0:continue
                 with self.context(target,'passive'):
                     for victim in self.opponents(target):
+                        if victim['line']!=target['line']:continue
                         if target.get('hp',0)<=0:break
                         # A fixed true amount: no AP coefficient, miss or crit.
                         amount=raw
@@ -693,6 +708,7 @@ class SkillCompleteBattle(ReferenceBattle):
         finally:state.update(cat_busy=False,cat_pending=0)
 
     def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
+        if self.state(unit).get("channel") and kind in ("stun","silence","root","pull","push"):return
         ctx=self._context()
         if ctx and value and kind!='summon':value*=ctx['effect_factor']
         return super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
@@ -712,6 +728,7 @@ class SkillCompleteBattle(ReferenceBattle):
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
+        if state.get('alistar_guard104') and damage_type!=4:amount=_to_int(amount*.2)
         if ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
@@ -728,7 +745,7 @@ class SkillCompleteBattle(ReferenceBattle):
         if target.get('hp',0)<=0:self.death(target)
         if before>0 and target.get('hp',0)<=0 and source is not None and self._team_number(source)!=self._team_number(target):
             self.queue_cat_skin_kill(source)
-            self.queue_santa_kill(source)
+            if self.hero(target):self.queue_santa_kill(source)
         return dealt
 
     def _native_damage(self, attacker, target, multiplier, damage_type, share=1):
@@ -769,11 +786,13 @@ class SkillCompleteBattle(ReferenceBattle):
         self._emit_mod_event(attacker,'basic_attack',attacker,target)
 
     def _check_move(self, unit, forward, distance=0, forced=False):
+        if forced and self.state(unit).get("channel"):return False
         previous=unit['pos'];result=super()._check_move(unit,forward,distance,forced)
         if unit['pos']!=previous:self.state(unit).pop('channel',None)
         return result
 
     def _reline(self, unit, line, pos=None, offset=None, forced=False):
+        if forced and self.state(unit).get("channel"):return False
         previous=(unit['line'],unit['pos']);result=super()._reline(unit,line,pos,offset,forced)
         if (unit['line'],unit['pos'])!=previous:self.state(unit).pop('channel',None)
         return result

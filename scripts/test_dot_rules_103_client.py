@@ -11,7 +11,8 @@ class DotRulesClientTests(unittest.TestCase):
     def run_case(self,setup,actions):
         source=SOURCE.read_text('utf-8')
         code=r'''
-const int=Math.trunc,noop=()=>{},trace=noop;
+const int=Math.trunc,noop=()=>{},trace=noop,recordStatistics104=noop;
+const skin2Incoming=value=>value;
 const Tools={toInt:Math.trunc,clone:x=>x||{}};
 const GlobalLanguageStr={getLanguageStr:()=>''};
 const DisplayTools={getAttrs:()=>({})};
@@ -21,7 +22,7 @@ const GameMapLayer={gl:layer};
 const attack=[.1,.3,1.5,2,20,20,60,80,.5,3000,3000,3000,3000,3000,.5,.5,.5,.5,.05,.05,.5,1];
 const GlobalData={$mConfig_simple:{attack,battle:[40,3000,200,500,0,0]}};
 const GameMap={actionDelay:0,currentMap:{gameMapData:{win:[0]}}};
-const unit={id:'test',hp:10000,hpMax:10000,team:1,buffs:{},manualSkillDots:{},abilityState:{},m_buff:null,
+const unit={id:'test',hp:10000,hpMax:10000,team:1,buffs:{},manualSkillDots:{},dotPopup104:null,abilityState:{},m_buff:null,
  tryndUndyingActive:false,abilityDirectMultiplier:()=>1,getTough:()=>0,checkTalent:()=>0,
  getBookCombatBonus:()=>0,tickManualLethalFloors:noop,
  getDePh:()=>{throw Error('DOT read physical defense');},getDeMa:()=>{throw Error('DOT read magic defense');},
@@ -29,7 +30,7 @@ const unit={id:'test',hp:10000,hpMax:10000,team:1,buffs:{},manualSkillDots:{},ab
 GameMap.currentAvatar=unit;
 const caster={team:2,getBookCombatBonus:()=>0};
 '''
-        for method,params in [('hasManualDotKind','param1'),('absorbShieldDamage','amount,factor'),('checkBuff','')]:
+        for method,params in [('hasManualDotKind','param1'),('absorbShieldDamage','amount,factor'),('checkBuff',''),('settleBuffs104','')]:
             body=method_body(source,method)
             code+=f'unit.{method}=function({params}){{with(this){{{body}}}}};\n'
         body=method_body(source,'injured')
@@ -38,6 +39,21 @@ const caster={team:2,getBookCombatBonus:()=>0};
         code+='unit.injured=function(param1,param2=1,param3={},param4=-1,param5=null,param6=false,param7=null,param8=null,dotKind=""){with(this){'+body+'return param1;}};\n'
         code+=setup+'\n'+actions+'\nconsole.log(JSON.stringify({hp:unit.hp,buffs:unit.buffs,dots:unit.manualSkillDots}));'
         return self.run_js(code)
+    def test_dot_popups_merge_even_when_tick_kills(self):
+        source=SOURCE.read_text('utf8')
+        for killed in (False,True):
+            script="""let calls=[];const uint=Number;
+const GlobalLanguageStr={getLanguageStr:id=>id===30029?'灼烧':'中毒'};
+const GameMap={actionDelay:0};const GameMapLayer={gl:{infoLayer:{popInjuredForAvatar:()=>{}},delayCall:(...args)=>calls.push(args)}};
+const unit={dotPopup104:null};
+"""
+            for method,args in [('checkBuff',''),('collectDotPopup104','amount,kind')]:
+                script+='unit.'+method+'=function('+args+'){with(this){'+method_body(source,method)+'}};'
+            script+='unit.settleBuffs104=function(){this.collectDotPopup104(100,7);this.collectDotPopup104(250,7);return '+str(killed).lower()+';};'
+            script+='const result=unit.checkBuff();console.log(JSON.stringify({result,count:calls.length,label:calls[0][2],delay:GameMap.actionDelay,cleared:unit.dotPopup104===null}));'
+            result=self.run_js(script)
+            self.assertEqual(result,dict(result=killed,count=1,label='灼烧350',delay=.5,cleared=True))
+
     def test_native_poison_and_burn_are_not_rescaled_or_defended(self):
         poison=self.run_case('unit.buffs.poison={type:"poison",value:100,round:1};','unit.checkBuff();')
         self.assertEqual(poison['hp'],9280)

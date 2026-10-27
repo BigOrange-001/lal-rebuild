@@ -49,7 +49,8 @@ class TowerRewards103Tests(unittest.TestCase):
             stage=self.config['combat_ploy'][f'P_200_{floor}']
             self.assertEqual(len(stage['team2']),9)
             actual=_power(self.config['cfg'],stage['team2'],stage['enemy_unit_stats_by_diff']['0'])
-            self.assertEqual(stage['recommended_power'],actual)
+            from power_balance_104 import normalize_team_power
+            self.assertEqual(stage['recommended_power'],normalize_team_power(actual))
             self.assertTrue(previous<actual<previous*1.06)
             self.assertLess(abs(actual-stage['tower_enemy_rule']['target_power'])/actual,.00001)
             previous=actual
@@ -62,7 +63,8 @@ class TowerRewards103Tests(unittest.TestCase):
         cfg=self.config['cfg'];team=_enemy_team(cfg,Draws())
         skins=set(cfg['system_simple']['skin_hero_ids'])
         kinds=['skin' if row[0] in skins and row[0].endswith('_6') else 'orange' if row[0].endswith('_6') else 'purple' for row in team]
-        self.assertEqual(kinds,['skin','skin','skin','orange','orange','purple','purple','skin','orange'])
+        self.assertEqual(kinds,['skin','skin','skin','orange','orange','orange','orange','skin','orange'])
+        self.assertTrue(all(row[0].endswith('_6') for row in team))
         from battle_engine import serialize_stage_team
         units=serialize_stage_team(cfg,team)
         self.assertEqual({u['line'] for u in units},{0,1,2})

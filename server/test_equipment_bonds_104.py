@@ -25,7 +25,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
     def test_complete_catalogue_two_ordinary_distinct_slots_and_exclusive_coverage(self):
         definitions=self.cfg['system_simple']['equipment_bonds_104']
         eligible={a for a in self.cfg['avatar'] if a.endswith('_6') and a.rsplit('_',1)[0] in {f for b in self.cfg['system_simple']['bonds_104'] for f in b['families']}}
-        self.assertEqual(set(definitions),eligible);self.assertEqual(len(eligible),124)
+        self.assertEqual(set(definitions),eligible);self.assertEqual(len(eligible),125);self.assertIn("A_1140_6",eligible)
         exclusive=set(self.cfg['system_simple']['equipment_roll_policy']['exclusive_ids'])
         found=set();counts=Counter()
         for aid,rows in definitions.items():
@@ -115,7 +115,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
             before=self.cfg['skill'][source]
             total=lambda r:sum(a[1] for a in r['skill'] if a[0]=='damage')
             self.assertAlmostEqual(total(after)/total(before),1.12,places=8)
-            self.assertIn('整项技能目标提升12%',after['info'])
+            self.assertNotIn('整项技能目标提升',after['info'])
             self.assertEqual(len(after['skill']),len(before['skill']))
 
     def test_component_weights_recover_whole_skill_budget_including_reworks(self):

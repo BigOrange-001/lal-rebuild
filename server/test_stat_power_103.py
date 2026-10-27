@@ -73,6 +73,7 @@ function Avatar(id,data=null){
  if(unit.talent)attach(unit.talent,input.talentMethods);
  return unit;
 }
+Avatar.normalizeTeamPower104=new Function('value',input.normalizePower);
 Avatar.POWER_SKILL_0_STAR=.1;Avatar.POWER_SKILL_0_LV=.1;Avatar.POWER_SKILL_1_STAR=.5;
 const POWER_HP=.5,POWER_DAMAGE=2,POWER_DE_PH=.625,POWER_DE_MA=.625,POWER_SPEED_RANGE=1000,POWER_RATE=1e-8;
 const dn=attach({getDNattrName:k=>k},input.dnMethods);
@@ -92,7 +93,7 @@ for(let [slot,id] of profile.team[0].entries()){
  unit.initFightAttr();
  out.push({id,hp:unit.getHpMax(),ap:unit.getDamage(),de_ph:unit.getDePh(),de_ma:unit.getDeMa(),
  speed:unit.getSpeed(),range:unit.getRange(),hit:unit.hit,flee:unit.flee,crit:unit.crit,tough:unit.tough,
- power:unit.getPower(slot===0,-1,true),beforeInitPower:barePower,skillId:unit.skill0?.skillSetData.id,captainId:unit.skill1?.skillSetData.id,
+ power:unit.getPower(slot===0,-1,true),basePower:unit.getPowerBase104(slot===0,-1,true),beforeInitPower:barePower,skillId:unit.skill0?.skillSetData.id,captainId:unit.skill1?.skillSetData.id,
  captainStar:unit.skill1?.getStar(),captainMechanism:unit.skill1?.getMechanismId()});
 }
 console.log(JSON.stringify({units:out,dn:bonus}));
@@ -115,7 +116,7 @@ class StatPower103Tests(unittest.TestCase):
             'getStar':'','getType':'','getPhaseList':'','getPhaseLv':'','getSymp':'',
             'isWeightedCultivation':'','getCultivationGainFromSlope':'param1,param2',
             'applyOwnedGuildResearch':'param1,param2','getBookCombatBonus':'stat','ownGrowthValue':'effect',
-            'teamTalentFlat':'effect','getPower':'param1=false,param2=-1,param3=false','initFightAttr':''})
+            'teamTalentFlat':'effect','getPower':'param1=false,param2=-1,param3=false','getPowerBase104':'param1=false,param2=-1,param3=false','initFightAttr':''})
         cls.equip_methods = methods('084_Equip.as', {
             'getHpMax':'param1=-1,param2=false','getDamage':'param1=-1,param2=false',
             'getDePh':'param1=-1','getDeMa':'param1=-1','getSpeed':'','getRange':'',
@@ -151,7 +152,7 @@ class StatPower103Tests(unittest.TestCase):
         selected['mod_runtime']=cfg.get('mod_runtime',{})
         payload = {'cfg':selected,'profile':profile,'avatarMethods':self.avatar_methods,'equipMethods':self.equip_methods,
                    'skillMethods':self.skill_methods,'dnMethods':self.dn_methods,'talentMethods':self.talent_methods,
-                   'projectionMethods':self.projection_methods}
+                   'projectionMethods':self.projection_methods,'normalizePower':method_body((ROOT/'client/src/stages/137_Avatar.as').read_text('utf8'),'normalizeTeamPower104')}
         run = subprocess.run([shutil.which('node'), '-e', HARNESS], input=json.dumps(payload,default=str),
                              capture_output=True, encoding='utf-8', timeout=20)
         self.assertEqual(run.returncode, 0, run.stderr)
@@ -173,7 +174,7 @@ class StatPower103Tests(unittest.TestCase):
                              overrides={**raw,'leader_skill':raw['leader_skill'] if leader else None,
                                         'new_4attrs':{key:raw[key] for key in ('hit','flee','crit','tough')}})
             units.append(unit)
-        self.assertEqual(GameplayCompetition(None, doc)._team_power(units), sum(r['power'] for r in native['units']))
+        self.assertEqual(GameplayCompetition(None, doc)._team_power(units), __import__('power_balance_104').normalize_team_power(sum(r['basePower'] for r in native['units'])))
         self.assertEqual(roster._destiny_team_bonuses(profile), {key:native['dn'][key] for key in ('hp','ap','de_ph','de_ma')})
 
     def test_equipped_panel_and_cached_battle_match_all_three_stat_talents(self):

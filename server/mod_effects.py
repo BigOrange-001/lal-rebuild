@@ -16,7 +16,7 @@ EVENT_CAPABILITY = 'skill.events.v1'
 EVENTS = ('turn_start','turn_end','basic_attack','skill_cast','hit','crit','miss','damage_taken','damage_dealt','healed','heal_done','dodge','kill','death','shield_break')
 OPERATIONS = ('heal', 'damage', 'buff', 'push', 'move', 'summon')
 TARGETS = ('self', 'all_allies', 'all_enemies', 'ally_radius',
-           'lane_lowest_hp', 'lane_front', 'enemy_radius', 'previous','event_source','event_target')
+           'lane_lowest_hp', 'lane_front', 'lane_all', 'enemy_radius', 'previous','event_source','event_target')
 BUFFS = ('shield', 'purify', 'strong', 'weak', 'sunder', 'steel',
          'bless', 'critup', 'toughup', 'fleeup', 'hitup', 'stun','curse','timed_bless')
 CONDITION_BUFFS = BUFFS + ('root','poison','burn','evil','silence','taunt','armor','book_penetration')

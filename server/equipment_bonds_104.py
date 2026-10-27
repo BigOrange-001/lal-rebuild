@@ -54,6 +54,7 @@ def apply_part(row,effect):
     Hero-bond additions/scaling retain the original prefix; full rewrites do not.
     """
     effect=part_for_skill(row,effect)
+    if effect.get('review_source_104') and not row.get('calibration_104'):return False
     index=effect['index'];factor=1+effect['strength']
     if isinstance(index,str):
         if not any(a[:2]==['manual_ability',effect['manual_kind']] for a in row['skill']):return False
@@ -89,6 +90,10 @@ def apply_equipment_bonds_104(document):
     cfg=document.get('cfg',document);simple=cfg['system_simple']
     if simple.get('equipment_bonds_schema_104'):return document
     plan=json.loads(PLAN.read_text('utf-8'))
+    from skin_calibration_104 import update_equipment_parts
+    update_equipment_parts(cfg,plan)
+    from skin_revision_104 import update_equipment
+    update_equipment(cfg,plan)
     families={f for b in simple['bonds_104'] for f in b['families']}
     eligible={a for a in cfg['avatar'] if a.endswith('_6') and a.rsplit('_',1)[0] in families}
     if set(plan['heroes'])!=eligible:raise ValueError('Equipment bonds must cover exactly the named orange hero catalogue')

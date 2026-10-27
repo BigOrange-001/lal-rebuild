@@ -39,7 +39,9 @@ class OrangeAscension104Tests(unittest.TestCase):
         for ident in range(1001,1022):
             with self.subTest(hero=ident):
                 purple=self.cfg['avatar'][f'A_{ident}_5'];orange=self.cfg['avatar'][f'A_{ident}_6']
-                self.assertEqual(purple,self.old['avatar'][purple['id']])
+                expected_purple=copy.deepcopy(self.old['avatar'][purple['id']])
+                expected_purple['tl'][8]=['A_']
+                self.assertEqual(purple,expected_purple)
                 self.assertNotIn(orange['id'],self.cfg['system_simple']['skin_hero_ids'])
                 self.assertEqual(orange['pl'][8:11],purple['pl'][8:11])
                 self.assertEqual(orange['pl'][12],purple['pl'][12])
@@ -126,6 +128,50 @@ class OrangeAscension104Tests(unittest.TestCase):
             orange={c['id'] for c in new['orange']['cards']}
             self.assertEqual(added & orange,added if pool!='normal' else set())
 
+    def test_native_promotion_marker_and_acquisition_transactions(self):
+        from recruit_exchange import daily_orange_pool
+        from unittest.mock import Mock
+        store=self.backend.players
+        uid=store.login('orange-acquisition-audit')['uid']
+        roster=GameplayRosterEquipment(store,self.doc)
+        added=[f'A_{i}_6' for i in range(1001,1022)]
+        daily=set(daily_orange_pool(self.doc))
+        cost=self.cfg['system_simple']['soul_exchange']['avatar']['6']
+        def seed(p):
+            p['coin']=1000000
+            p['attrs']['avatar_len']=1000
+            p['avatar_soul']={aid:cost for aid in added}
+            return p,{}
+        store.atomic_update(uid,seed)
+        for aid in added:
+            with self.subTest(hero=aid):
+                purple=self.cfg['avatar'][aid[:-1]+'5']
+                # Both native UI gates require a nonempty starUp (tl[8]).
+                self.assertEqual(purple['tl'][8],self.cfg['avatar']['A_1022_5']['tl'][8])
+                self.assertTrue(purple['tl'][8])
+                self.assertEqual(self.cfg['avatar'][aid]['tl'][8],[])
+                self.assertIn(aid,daily)
+                for pool in ('advanced','vip'):
+                    cards=self.cfg['summon_calibration']['pools'][pool]['qualities']['orange']['cards']
+                    weights={c['id']:c['weight'] for c in cards}
+                    self.assertEqual(weights[aid],weights['A_1022_6'])
+                    rows=roster.summon_pools._cards[pool,'orange'][0]
+                    ticket=0
+                    for candidate,weight in rows:
+                        if candidate==aid:break
+                        ticket+=weight
+                    qualities=roster.summon_pools._qualities[pool][0]
+                    quality_ticket=sum(w for q,w in qualities if q!='orange')
+                    rng=Mock();rng.randrange.side_effect=[quality_ticket,ticket]
+                    self.assertEqual(roster.summon_pools.draw(pool,rng),aid)
+                    if pool=='advanced':
+                        roster.rng=Mock();roster.rng.randrange.side_effect=[quality_ticket,ticket]
+                        result=roster.dispatch(uid,'user.wager_avatar',dict(wager_type='coin',times=1,actionID='draw-'+aid))
+                        self.assertEqual(next(iter(result['new_avatars'].values()))['aid'].split('|')[0],aid)
+                result=roster.dispatch(uid,'user.soul_exchange_avatar',dict(aid=aid,num=1,actionID='soul-'+aid))
+                self.assertEqual(result['new_avatars'][0]['aid'].split('|')[0],aid)
+                self.assertEqual(store.profile(uid)['avatar_soul'].get(aid,0),0)
+
     def test_builtin_media_transport_and_mod_compile_preserve_assets(self):
         from mod_policy import runtime
         self.assertEqual(runtime(self.doc), {})
@@ -211,7 +257,7 @@ const int=Math.trunc; let modEventDepth=0,modEventBudget=0;
 const GameMap={currentMap:null},GlobalData={$mConfig_skill:{}};
 const emit=new Function('event','source','target','amount','overheal','with(this){'+input.body+'}');
 // Function constructor needs these globals just as AS sees its imported classes.
-global.GameMap=GameMap;global.GlobalData=GlobalData;global.int=int;
+global.GameMap=GameMap;global.GlobalData=GlobalData;global.int=int;global.skin2Event=()=>{};
 Object.defineProperty(global,'modEventDepth',{get:()=>modEventDepth,set:v=>modEventDepth=v});
 Object.defineProperty(global,'modEventBudget',{get:()=>modEventBudget,set:v=>modEventBudget=v});
 let results=[];

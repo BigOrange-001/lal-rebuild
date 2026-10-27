@@ -249,6 +249,10 @@ class GameplayCompetition:
     def _compact(units):
         return [[u.get("aid"),int(u.get("lv",1)),int(u.get("slv",1)),int(u.get("hp",0)),int(u.get("ap",0)),int(u.get("de_ph",0)),int(u.get("de_ma",0)),int(u.get("phase",0)),int(u.get("line",0)),float(u.get("pos",0)),u.get("talent"),int(u.get("morph",0)),int(u.get("limit_break",0))] for u in units]
     def _team_power(self, units):
+        from power_balance_104 import normalize_team_power
+        return normalize_team_power(GameplayCompetition._team_power_base(self, units))
+
+    def _team_power_base(self, units):
         """Compute the finite battle-power value consumed by DoorLayer.
 
         Native DoorLayer reads ``my_pr_power``/``pr_power`` from the battle
@@ -324,7 +328,7 @@ class GameplayCompetition:
             multiplier=1.0+skill_factor(unit.get("skill"),level=slv)+skill_factor(unit.get("leader_skill"),True)+skill_factor(book,book=True,level=book.get("slv",1) if isinstance(book,dict) else 1)+skill_factor(unit.get("skillB"))
             weighted=hp*float(power_cfg[1])+ap*float(power_cfg[2])+de_ph*float(power_cfg[3])+de_ma*float(power_cfg[4])
             stat_multiplier=1.0+math.pow(max(0.0,substats),1.0/float(power_cfg[10]))*float(power_cfg[9]) if float(power_cfg[10])>0 else 1.0
-            value=(max(0.0,weighted)**1.5)*multiplier*(float(power_cfg[5])+speed+reach)*stat_multiplier*float(power_cfg[0])
+            value=(max(0.0,weighted)**2)*multiplier*(float(power_cfg[5])+speed+reach)*stat_multiplier*float(power_cfg[0])
             if math.isfinite(value) and value>0:
                 value=native_floor(value)+value*talent_factor(unit.get("talent"))
                 if math.isfinite(value) and value>0: total+=native_floor(value)

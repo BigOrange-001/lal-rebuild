@@ -13,6 +13,7 @@ package com.meng52.game.ui.element
    import com.meng52.game.module.talent.Talent;
    import com.meng52.game.ui.effect.DisplayTools;
    import com.meng52.game.ui.panel.PanelDetailAvatar;
+   import com.meng52.game.ui.panel.PanelInforPop;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.StarlingTools;
@@ -64,6 +65,8 @@ package com.meng52.game.ui.element
       public var mAvatar:Avatar;
 
       private var mDestinyBox:Sprite;
+
+      private var mBondEntries104:Array = [];
 
       private var _width:int;
 
@@ -358,25 +361,97 @@ package com.meng52.game.ui.element
          }
          if(param1 == null)
          {
+            mBondEntries104 = [];
             return;
          }
+         mBondEntries104 = param1;
          var _loc7_:int = 0;
          var _loc5_:int = int(param1.length);
+         var cellWidth:Number = (_iconBg.width-20)/3;
+         var cellHeight:Number = Math.min(28,(_iconBg.height-20)/Math.max(1,Math.ceil(_loc5_/3)));
          var _loc6_:LOL_TextField = null;
          _loc7_ = 0;
          while(_loc7_ < _loc5_)
          {
-            _loc6_ = new LOL_TextField(param1[_loc7_].txt,155,30);
-            _loc6_.fontColor = param1[_loc7_].isOK ? 52479 : 8947848;
+            _loc6_ = new LOL_TextField(param1[_loc7_].txt,cellWidth-5,cellHeight);
+            _loc6_.fontColor = param1[_loc7_].isOK ? 0x55E889 : 0x888888;
+            _loc6_.fontSize = Math.min(17,cellHeight-4);
             _loc6_.hAlign = "left";
             _loc6_.vAlign = "center";
-            _loc6_.x = _loc7_ % 3 * 160;
-            _loc6_.y = Math.floor(_loc7_ / 3) * 29;
+            _loc6_.x = _loc7_ % 3 * cellWidth;
+            _loc6_.y = Math.floor(_loc7_ / 3) * cellHeight;
+            _loc6_.touchable = false;
             mDestinyBox.addChild(_loc6_);
+            var hit:Quad = new Quad(cellWidth-5,cellHeight);
+            hit.alpha = 0.01;
+            hit.x = _loc6_.x;
+            hit.y = _loc6_.y;
+            hit.name = String(_loc7_);
+            hit.addEventListener("touch",bondNameTouch104);
+            mDestinyBox.addChild(hit);
             _loc7_++;
          }
          mDestinyBox.x = param2 - 15;
          mDestinyBox.y = param3;
+      }
+
+      public static function bondInfoHtml104(entry:Object) : String
+      {
+         var status:String = entry.isOK ? "已激活" : "未激活";
+         var color:String = entry.isOK ? "#167431" : "#777777";
+         var html:String = "<font face='" + GlobalConfig.FONT_0 + "' size='21' color='#2D241A'><font color='" + color + "'>" + status + "</font><br>";
+         var lines:Array = String(entry.info).split("\n");
+         for each(var line:String in lines)
+         {
+            if(line == "已激活" || line == "未激活") continue;
+            line = line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+            if(line.indexOf("组合：") == 0 || line.indexOf("本人装备") == 0)
+               line = "<font color='#63350D'>" + line + "</font>";
+            else
+            {
+               line = line.replace(/^([^：]{1,18}：)/,"<font color='#55306B'>$1</font>");
+               line = line.replace(/(\d+(?:\.\d+)?%|[+＋]\d+(?:\.\d+)?)/g,"<font color='#9C3028'>$1</font>");
+            }
+            html += line + "<br>";
+         }
+         return html + "</font>";
+      }
+
+      public static function showBondInfo104(entry:Object) : void
+      {
+         GlobalData.$mGameClassObject.closePopUp();
+         var panel:PanelInforPop = new PanelInforPop(String(entry.txt),bondInfoHtml104(entry),600,630);
+         GlobalData.$mGameClassObject.openPopUp(panel);
+         for(var i:int=0;i<panel.numChildren;i++)
+         {
+            var text:ScrollScreenForTxt = panel.getChildAt(i) as ScrollScreenForTxt;
+            if(text)
+            {
+               text.y = 84;
+               text.setRecWH(-1,466);
+               text.clipContent = true;
+            }
+         }
+      }
+
+      private function bondNameTouch104(event:TouchEvent) : void
+      {
+         var hit:Quad = event.currentTarget as Quad;
+         var touch:Touch = event.getTouch(hit,"ended");
+         if(!touch || !mBondEntries104) return;
+         event.stopPropagation();
+         var entry:Object = mBondEntries104[int(hit.name)];
+         if(entry && entry.info) showBondInfo104(entry);
+      }
+
+      private function refreshBondNames104() : void
+      {
+         mTxt_destiny.reInit("");
+         var entries:Array = _avatar.getBondEntries104();
+         if(entries.length) setDestinyTxts(entries,mTxt_destiny.x,mTxt_destiny.y);
+         else if(_avatar.mDestiny && _avatar.mDestiny.nameArr) setDestinyTxts(_avatar.mDestiny.nameArr,mTxt_destiny.x,mTxt_destiny.y);
+         else setDestinyTxts(null);
+         if(mDestinyBox) setChildIndex(mDestinyBox,numChildren-1);
       }
 
       public function bind(param1:*, param2:Boolean = false) : void
@@ -461,7 +536,7 @@ package com.meng52.game.ui.element
          _quadRole.y = _icon.y;
          _quadRole.alpha = 0.01;
          _uiMain.addChild(_quadRole);
-         _quadRole.addEventListener("touch",quadRole_Touch);
+         _quadRole.touchable = false;
          _quadPith = new Quad(_bg2.width - 200,90);
          _quadPith.name = "_quadPith22";
          _quadPith.x = _bg2.x + 200;
@@ -491,14 +566,7 @@ package com.meng52.game.ui.element
                   _avatar.clearDNdata();
                }
             }
-            if(!_avatar.mDestiny || _avatar.mDestiny.nameArr == null || _avatar.getPurpleBondDescription() != "")
-            {
-               mTxt_destiny.reInit(_avatar.getDestinyDescription());
-            }
-            else
-            {
-               setDestinyTxts(_avatar.mDestiny.nameArr,mTxt_destiny.x,mTxt_destiny.y);
-            }
+            refreshBondNames104();
          }
          if(_type == "show_type_team")
          {
@@ -543,7 +611,7 @@ package com.meng52.game.ui.element
          _quadType.y = _loc30_.y;
          _quadType.alpha = 0.01;
          _uiMain.addChild(_quadType);
-         _quadType.addEventListener("touch",onType);
+
          var _loc3_:Array = [];
          _loc35_ = 0;
          while(_loc35_ < _loc42_.length)
@@ -1063,7 +1131,7 @@ package com.meng52.game.ui.element
                   _avatar.clearDNdata();
                }
             }
-            mTxt_destiny.reInit(_avatar.getDestinyDescription());
+            refreshBondNames104();
          }
          var _loc20_:Sprite = new Sprite();
          _loc20_.touchable = false;
@@ -1106,7 +1174,7 @@ package com.meng52.game.ui.element
          _quadType.y = _loc20_.y;
          _quadType.alpha = 0.01;
          _uiMain.addChild(_quadType);
-         _quadType.addEventListener("touch",onType);
+
          var _loc2_:Array = [];
          _loc61_ = 0;
          while(_loc61_ < _loc29_.length)
@@ -1826,14 +1894,7 @@ package com.meng52.game.ui.element
          mTxt_destiny.reInit("");
          if(_avatar)
          {
-            if(!_avatar.mDestiny || _avatar.mDestiny.nameArr == null || _avatar.getPurpleBondDescription() != "")
-            {
-               mTxt_destiny.reInit(_avatar.getDestinyDescription());
-            }
-            else
-            {
-               setDestinyTxts(_avatar.mDestiny.nameArr,mTxt_destiny.x,mTxt_destiny.y);
-            }
+            refreshBondNames104();
          }
          if(_loc9_.length == 0)
          {

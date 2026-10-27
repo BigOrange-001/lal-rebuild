@@ -10,7 +10,7 @@ def has_buff(battle,unit,kind):
 def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     if owner is None:return False
     skill=owner.get('skillB') or {};gate=skill.get('modCondition') or {}
-    if not skill.get('modEffectSequence') or gate.get('kind')!='event' or gate.get('event')!=event:return False
+    if not skill.get('modEffectSequence') or gate.get('kind')!='event' or (gate.get('event')!=event and not (gate.get('reviewDashResponse104') and event=='dodge')):return False
     if owner.get('hp',0)<=0 and event!='death':return False
     depth=getattr(battle,'_mod_event_depth',0)
     if owner.get('_mod_event_busy') or depth>=8 or depth and not gate.get('allowChain',False):return False
@@ -31,6 +31,7 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     summoned=[u for u in friendly if battle._get_type(u)==2 or u.get('summoned') or u.get('unitType')=='summon' or battle._buff(u,'summon') is not None]
     if len(near)-len(friendly)<gate.get('nearbyEnemies',0) or len(friendly)<gate.get('nearbyAllies',0) or len(summoned)<gate.get('nearbySummons',0):return False
     turn=owner.get('_mod_owner_turn',0)
+    if gate.get('reviewDashResponse104') and not owner.get('_review_dash_ready104'):return False
     if turn<owner.get('_mod_event_ready',(skill.get('pl') or [0])[0]):return False
     round_=getattr(battle,'round_index',0)
     if owner.get('_mod_event_round')!=round_:owner.update(_mod_event_round=round_,_mod_event_count=0)
@@ -50,6 +51,7 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     if depth==0:battle._mod_event_budget=64
     if battle._mod_event_budget<=0:owner['_mod_event']=previous;return False
     battle._mod_event_budget-=1;battle._mod_event_depth=depth+1;owner['_mod_event_busy']=True
+    if gate.get('reviewDashResponse104'):owner['_review_dash_ready104']=False
     owner['_mod_event_count']=owner.get('_mod_event_count',0)+1
     owner['_mod_event_ready']=turn+skill['pl'][1]
     owner['_mod_filtered_events']=0

@@ -99,6 +99,8 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     # the stored phase so origin checks compare the same progression state.
     result["phase"] = 0
     result["culture_schema"] = ""
+    result["bonds_104"] = []
+    result["equipment_bonds_104"] = []
     if limit_break or npc_limit_break: result["limit_break"] = 1
     if overrides:
         for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema","growth_stats_applied","bonds_104","equipment_bonds_104"):
@@ -2396,6 +2398,23 @@ class ReferenceBattle:
             return
         self._add_manual_timed_stack(attacker, action[1], action[2], action[3], action[4])
 
+    def _act_arm_dash_response104(self, attacker, enemies, allies, skill, action, index, context):
+        attacker['_review_dash_ready104']=True
+
+    def _act_rally_soldiers(self, attacker, enemies, allies, skill, action, index, context):
+        soldiers=[u for u in attacker.get('_team',[]) if u.get('hp',0)>0 and u.get('aid')=='A_3002_2'
+                  and u.get('summon_owner_token')==attacker.get('_owner_token') and u.get('summon_owner')==attacker.get('aid')]
+        if not soldiers:
+            for _ in range(2):
+                unit=self._spawn_summon(attacker,'A_3002_2',.45,3,bounded=True)
+                if unit:unit['skill']=unit['leader_skill']=unit['skillB']=None
+            return
+        for unit in soldiers:
+            ttl=self._buff(unit,'summon')
+            if ttl:ttl.round=max(3,ttl.round)
+            self._add_buff(unit,'strong',2,.5,source=attacker)
+            self._injured(unit,int(unit['hp_max']*.3),4,source=attacker)
+
     def _act_summon(self, attacker, enemies, allies, skill, action, index, context):
         """Summon from the owner's live panel, preserving authored ratios."""
         if len(action) < 5:
@@ -3231,6 +3250,8 @@ _ACTION_HANDLERS = {
     "battle_stack_unconditional": ReferenceBattle._act_battle_stack_unconditional,
     "timed_stack": ReferenceBattle._act_timed_stack,
     "summon": ReferenceBattle._act_summon,
+    "rally_soldiers": ReferenceBattle._act_rally_soldiers,
+    "arm_dash_response_104": ReferenceBattle._act_arm_dash_response104,
     "summon_turret": ReferenceBattle._act_summon_turret,
     "clone_normal": ReferenceBattle._act_clone_normal,
     "focus_fire": ReferenceBattle._act_focus_fire,

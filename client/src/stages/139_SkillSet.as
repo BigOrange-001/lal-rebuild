@@ -125,7 +125,54 @@ package com.meng52.game.module.skill
          return "";
       }
 
+      public static function conciseInfo104(value:String) : String
+      {
+         if(!value) return "";
+         value = value.replace(/穿透上限\d+(?:\.\d+)?%[；;。]?/g, "");
+         value = value.replace(/与其他破甲、穿透效果只取最高值，不叠加[。；]?/g, "");
+         value = value.replace(/[，,；;]?(?:中毒|灼烧)?(?:并)?沿用原版(?:附加|结算|触发)?规则/g, "");
+         value = value.replace(/(?:强化每级|两项倍率每级)[^。；\n]*[。；]?/g, "");
+         value = value.replace(/(^|[。；\n])[^。；\n]*线性成长[^。；\n]*[。；]?/g, "$1");
+         value = value.replace(/治疗比例不随等级成长[。；]?/g, "");
+         value = value.replace(/[，,]?不随(?:技能)?等级成长/g, "");
+         value = value.replace(/按自身基础值和每级成长计算/g, "按召唤物当前等级计算");
+         value = value.replace(/随后以自身攻击加10%最大生命为基础，按(\d+(?:\.\d+)?)%原生治疗倍率自疗(?:，并受原版治疗修正)?/g,function(...parts):String
+         {
+            var rate:Number = Number(parts[1]);
+            return "恢复自身生命，恢复量为自身"+rate.toFixed(1)+"%攻击力＋"+(rate*0.1).toFixed(1)+"%最大生命";
+         });
+         value = value.replace(/以(\d+(?:\.\d+)?)%原生治疗倍率为([^。；\n]*?)恢复生命/g,function(...parts):String
+         {
+            var rate:Number = Number(parts[1]);
+            return "为"+parts[2]+"恢复生命，恢复量为施法者"+rate.toFixed(1)+"%攻击力＋"+(rate*0.1).toFixed(1)+"%最大生命";
+         });
+         value = value.replace(/原生治疗(?:并非纯攻击公式，还包含|含)自身最大生命项与治疗修正[。；]?/g, "");
+         value = value.replace(/原设计的[^。\n]*暂未实现[^。\n]*。/g, "");
+         value = value.replace(/各段可按原生规则暴击/g, "每段均可暴击");
+         value = value.replace(/恢复累计伤害(\d+(?:\.\d+)?)%/g, "恢复生命，数值为本次累计伤害的$1%");
+         value = value.replace(/作为独立乘区结算/g, "");
+         value = value.replace(/层内加算，与其他攻击增益独立乘算[。；]?/g, "");
+         value = value.replace(/该部分按技能等效收益的[^。]*。/g, "");
+         value = value.replace(/每回合最多触发(?:一|1)次[，；、。]?\s*/g, "");
+         value = value.replace(/被动不连锁触发[，；、。]?\s*/g, "");
+         value = value.replace(/准备(?:时间)?[：:]?\s*\d+\s*(?:回合)?[，,；;]\s*冷却(?:时间)?[：:]?\s*\d+\s*(?:回合)?[。；;]?/g, "");
+         value = value.replace(/(?:本分路内不受施法距离限制|可以攻击处于坚守状态的单位|可攻击全场范围内的目标)[。；]?/g, "");
+         value = value.replace(/[，；]?(?:专克多核心后排|适合多路承压后的反攻|压制密集阵容|以持续伤害压制厚血阵容|形成反突进屏障|延缓前排推进|压制多核心爆发|保护分路残血核心|用于多路消耗战后的恢复|专克同路密集增益阵容|为猎团打开火力窗口|收割分散的残血目标|配合夜巡队压制后排|为法师队打开厚甲阵线|支援后续集火|适合对抗单路强敌|集中压制敌方主核)[。；]?/g, "。");
+         value = value.replace(/伤害、护盾、治疗按下述技能基准的80%结算；属性增减益及控制不变。/g, "");
+         value = value.replace(/(\d+(?:\.\d+)?)%/g,function(...parts):String { return Number(parts[1]).toFixed(1)+"%"; });
+         value = value.replace(/(\d+\.\d+)(?![\d.%])/g,function(...parts):String { return Number(parts[1]).toFixed(1); });
+         value = value.replace(/。\s*；/g,"。");
+         value = value.replace(/[，；]\s*。/g,"。");
+         value = value.replace(/\n[ \t]*\n/g, "\n");
+         return value.replace(/^\s+|\s+$/g, "");
+      }
+
       public function getInfo() : String
+      {
+         return conciseInfo104(getRawInfo104());
+      }
+
+      private function getRawInfo104() : String
       {
          var calibratedBook:Object = GlobalData.$mConfig_skill[skillSetData.id];
          if(calibratedBook && calibratedBook.bookRule) return getLevelInfo();
@@ -193,7 +240,7 @@ package com.meng52.game.module.skill
       private function getLevelInfo() : String
       {
          var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
-         if(!row || !row.rankInfoTemplate || (isSuper && !row.modEffectSequence)) return skillSetData.info;
+         if(!row || !row.rankInfoTemplate || (isSuper && !row.modEffectSequence && !row.calibration_104)) return skillSetData.info;
          var actions:Array = skills;
          return String(row.rankInfoTemplate).replace(/\{rank:(\d+):([0-9.]+)\}|\{scale:([0-9.]+):([0-9.]+)\}|\{flat:(\d+):([0-9.]+)\}/g,function(...parts):String
          {
@@ -208,6 +255,8 @@ package com.meng52.game.module.skill
             {
                value = actions[int(parts[1])];
                for each(var index:String in String(parts[2]).split(".")) value = value[int(index)];
+               var displayKey104:String = String(parts[1])+":"+String(parts[2]);
+               if(row.rankDisplayFactors104 && row.rankDisplayFactors104[displayKey104] != null) value = Number(value)*Number(row.rankDisplayFactors104[displayKey104]);
                return (Math.round(Number(value)*10000)/100).toString()+"%";
             }
             var scaleIndex:int = row.modScaleActionIndex !== undefined ? int(row.modScaleActionIndex) : 0;
@@ -231,53 +280,7 @@ package com.meng52.game.module.skill
             _loc3_ += GlobalLanguageStr.getLanguageStr(24031,GameMapTools.toPercentage(-_loc4_.hpType)) + "\n";
          }
          _loc3_ += getInfo() + "\n";
-         if(Math.abs(_loc4_.range) > GameMapConfig.LINE_POS)
-         {
-            _loc3_ += GlobalLanguageStr.getLanguageStr(24011) + "\n";
-         }
-         else if(Math.abs(_loc4_.range) >= GameMapConfig.LINE_POS * 0.66)
-         {
-            _loc3_ += GlobalLanguageStr.getLanguageStr(24010) + "\n";
-         }
-         if(_loc1_ == GameMapConfig.MIN_SPACE_POS - 1)
-         {
-            _loc3_ += GlobalLanguageStr.getLanguageStr(24003,_loc2_) + "\n";
-         }
-         else if(_loc1_ >= 1 && _loc1_ < GameMapConfig.MIN_SPACE_POS)
-         {
-            _loc3_ += GlobalLanguageStr.getLanguageStr(24000,_loc1_ + 1) + "\n";
-         }
-         else if(_loc1_ >= GameMapConfig.MIN_SPACE_POS)
-         {
-            if(_loc1_ >= GameMapConfig.LINE_POS)
-            {
-               _loc3_ += GlobalLanguageStr.getLanguageStr(24006) + "\n";
-            }
-            else
-            {
-               _loc3_ += GlobalLanguageStr.getLanguageStr(24002,_loc1_) + "\n";
-            }
-         }
-         else if(_loc1_ < 0)
-         {
-            _loc3_ += GlobalLanguageStr.getLanguageStr(24001,Math.abs(_loc1_) + 1) + "\n";
-         }
-         else if(_loc1_ == 0)
-         {
-            if(_loc2_ == 0)
-            {
-               _loc3_ += GlobalLanguageStr.getLanguageStr(24005) + "\n";
-            }
-            else
-            {
-               _loc3_ += GlobalLanguageStr.getLanguageStr(24004) + "\n";
-            }
-         }
-         if(_loc4_.banStand == 0)
-         {
-            _loc3_ += GlobalLanguageStr.getLanguageStr(24020) + "\n";
-         }
-         return _loc3_ + getSkillActionInfo();
+         return _loc3_;
       }
 
       public function getSkillActionInfo() : String
@@ -775,6 +778,7 @@ package com.meng52.game.module.skill
          {
             if(!unit || unit.hp <= 0) continue;
             if(selector == "all_allies" || selector == "all_enemies") { result.push(unit); continue; }
+            if(selector == "lane_all") { if(unit.line == avatar.line && Math.abs(unit.pos-avatar.pos) <= Math.abs(skillSetData.range)) result.push(unit); continue; }
             if(selector == "lane_front" || selector == "lane_lowest_hp")
             {
                if(unit.line != avatar.line || Math.abs(unit.pos-avatar.pos) > Math.abs(skillSetData.range)) continue;
@@ -820,6 +824,7 @@ package com.meng52.game.module.skill
             var unitDefinition:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[String(step[11])] : null;
             if(!unitDefinition || unitDefinition.modUnitType != "summon") return false;
             unit = new Avatar(GlobalData.modDefinitionId(String(step[11]),"summoned"),{"lv":avatar.lv,"slv":1});
+            unit.statisticsOwner104 = avatar;
             unit.goFight(avatar.team,avatar.line,0,false);
             unit.ap = Math.max(1,int(avatar.getDamage()*ratio));
             unit.hpMax = Math.max(1,int(avatar.getHpMax()*ratio));
@@ -2140,6 +2145,26 @@ package com.meng52.game.module.skill
                   var pushActionTotal:Number = _loc3_.length > 0 ? damageShareTotal(_loc14_,Number(_loc20_[1]),_loc3_[0],preCastDotTargets,preCastBurnTargets) : Number(_loc20_[1]);
                   avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,_loc20_[2],pushActionTotal,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],new Buff("push",0,_loc20_[3]),damageShareWeight(Number(_loc20_[1]),pushActionTotal));
                   break;
+               case "rally_soldiers":
+                  var soldiers104:Vector.<Avatar> = avatar.manualSummonFamilies ? avatar.manualSummonFamilies["manual-1124-soldier"] as Vector.<Avatar> : null;
+                  var aliveSoldiers104:int = 0;
+                  if(soldiers104) for each(var soldier104:Avatar in soldiers104)
+                  {
+                     if(!soldier104 || soldier104.hp <= 0) continue;
+                     ++aliveSoldiers104;
+                     if(soldier104.buffs["summon"]) soldier104.buffs["summon"].round = Math.max(3,soldier104.buffs["summon"].round);
+                     soldier104.addBuff("strong",2,0.5);
+                     soldier104.injured(int(soldier104.hpMax*0.3),1,DisplayTools.getAttrs("FX60_HEAL"),4,avatar,false,avatar);
+                  }
+                  if(aliveSoldiers104 == 0)
+                  {
+                     executeManualSummon(_loc20_,_loc14_,actionTargets,targetGroups);
+                     executeManualSummon(_loc20_,_loc14_,actionTargets,targetGroups);
+                  }
+                  break;
+               case "arm_dash_response_104":
+                  avatar.abilityState.reviewDashReady104 = true;
+                  break;
                case "summon":
                   if(getNativeSetting("manualSummonPolicy"))
                   {
@@ -2736,8 +2761,7 @@ package com.meng52.game.module.skill
          var _loc4_:Vector.<Avatar> = null;
          var _loc5_:Vector.<Avatar> = new Vector.<Avatar>();
          var _loc6_:int = 0;
-         _loc1_ = selectAndCapActionTargets(_loc1_,param2);
-         if(!_loc2_ || param2 < 0 || param2 >= _loc2_.length || !(_loc2_[param2] is String) || String(_loc2_[param2]).length == 0) return _loc1_;
+         if(!_loc2_ || param2 < 0 || param2 >= _loc2_.length || !(_loc2_[param2] is String) || String(_loc2_[param2]).length == 0) return selectAndCapActionTargets(_loc1_,param2);
          _loc3_ = String(_loc2_[param2]);
          if(param4[_loc3_] is Vector.<Avatar>)
          {
@@ -2748,8 +2772,11 @@ package com.meng52.game.module.skill
                if(_loc4_[_loc6_] && _loc4_[_loc6_].hp > 0 && _loc1_.indexOf(_loc4_[_loc6_]) >= 0) _loc5_.push(_loc4_[_loc6_]);
                _loc6_++;
             }
-            return _loc5_;
+            // Reuse the living members before sorting/capping. Healing can
+            // change HP ordering between this group's cure and purify actions.
+            return selectAndCapActionTargets(_loc5_,param2);
          }
+         _loc1_ = selectAndCapActionTargets(_loc1_,param2);
          param4[_loc3_] = _loc1_.concat();
          return _loc1_;
       }
@@ -2782,6 +2809,7 @@ package com.meng52.game.module.skill
          var _loc4_:int = 0;
          if(!param1) return new Vector.<Avatar>();
          _loc1_ = hasActionCenter(param2) ? param1.concat() as Vector.<Avatar> : avatar.findAimList(param1,getActionSortFunction(param2,avatar.getSortOnFun()),getActionRange(param2,getCastRange()),skillSetData.banStand);
+         _loc1_ = avatar.skin2Focus(_loc1_);
          if(_loc2_ && param2 >= 0 && param2 < _loc2_.length && _loc2_[param2] !== null && _loc2_[param2] !== undefined)
          {
             if(typeof _loc2_[param2] != "number" || !isFinite(Number(_loc2_[param2])) || Math.floor(Number(_loc2_[param2])) != Number(_loc2_[param2]))

@@ -31,6 +31,9 @@ def apply_orange_ascension_104(document):
         if aid in avatars:
             raise ValueError('Orange ascension ID already exists: '+aid)
         row = copy.deepcopy(avatars[source])
+        # Native AvatarData.canStarUp and Avatar.getGrowthType require this
+        # marker as well as the next-quality definition to expose promotion.
+        avatars[source]['tl'][8] = ['A_']
         row.update(id=aid, res='MOD_ASC104_'+aid, hero_category_104='ordinary', orange_ascension_104=source)
         row['pl'][:8] = [round(v*2, 10) for v in row['pl'][:8]]
         row['tl'][3] = {1:45, 2:50, 3:48}[row['tl'][0]]
@@ -50,9 +53,9 @@ def apply_orange_ascension_104(document):
         if kinds:
             field = 'manualEffectMultiplier' if kinds[0] == 'yi_c' else 'manualDamageMultiplier'
             ultimate[field] = ultimate.get(field, 1)*1.1
-            note = '橙卡进阶：'+('力量与精准数值提高10%，持续时间与追击规则不变。' if kinds[0] == 'yi_c' else '伤害提高10%，原控制、位移与增益机制不变。')
-            for key in ('info','rankInfoTemplate'):
-                if key in ultimate: ultimate[key] += '\n'+note
+            from skill_description_104 import scale_manual_output_text
+            scale_manual_output_text(ultimate,kinds[0],1.1,
+                                     all_effects=kinds[0]=='yi_c',damage_only=kinds[0]!='yi_c')
         for key in ('manualClonePolicy','manualSummonPolicy'):
             if isinstance(ultimate.get(key), dict): ultimate[key]['skillId'] = sid
         skills[sid] = ultimate

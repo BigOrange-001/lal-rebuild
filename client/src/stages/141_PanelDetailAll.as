@@ -18,6 +18,7 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.element.LOL_Scale9Button;
    import com.meng52.game.ui.element.LOL_StarLevel;
    import com.meng52.game.ui.element.LOL_TextField;
+   import com.meng52.game.ui.element.LOL_DetailAvatar;
    import com.meng52.game.ui.screen.PanelCenterMainAvatar;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.sound.SoundManager;
@@ -70,6 +71,8 @@ package com.meng52.game.ui.panel
 
       public var mTxt_destiny:ScrollScreenForTxt;
 
+      private var bondEntries104:Array = [];
+
       private var _roleMain:Sprite;
 
       private var mBox_P:Sprite;
@@ -117,6 +120,38 @@ package com.meng52.game.ui.panel
          super();
          data(GlobalData.$tempTeamSelect);
          addEventListener("addedToStage",onDetailsAdded);
+      }
+
+      private function showBondNames104() : void
+      {
+         bondEntries104 = _avatar.getBondEntries104();
+         var width:Number = (_iconBg.width-25)/3;
+         var height:Number = Math.min(28,(_iconBg.height-25)/Math.max(1,Math.ceil(bondEntries104.length/3)));
+         for(var i:int=0;i<bondEntries104.length;i++)
+         {
+            var entry:Object = bondEntries104[i];
+            var label:LOL_TextField = new LOL_TextField(entry.txt,width-5,height);
+            label.fontColor = entry.isOK ? 0x55E889 : 0x888888;
+            label.fontSize = Math.min(17,height-4);
+            label.hAlign = "left";
+            label.x = mTxt_destiny.x+i%3*width;
+            label.y = mTxt_destiny.y+Math.floor(i/3)*height;
+            label.touchable = false;
+            _uiMain.addChild(label);
+            var hit:Quad = new Quad(width-5,height);
+            hit.alpha = 0.01;hit.x = label.x;hit.y = label.y;hit.name = String(i);
+            hit.addEventListener("touch",bondNameTouch104);
+            _uiMain.addChild(hit);
+         }
+      }
+
+      private function bondNameTouch104(event:TouchEvent) : void
+      {
+         var hit:Quad = event.currentTarget as Quad;
+         if(!event.getTouch(hit,"ended")) return;
+         event.stopPropagation();
+         var entry:Object = bondEntries104[int(hit.name)];
+         if(entry) LOL_DetailAvatar.showBondInfo104(entry);
       }
 
       private function onDetailsAdded(param1:Event) : void
@@ -440,7 +475,7 @@ package com.meng52.game.ui.panel
          _quadPith.alpha = 0.01;
          _uiMain.addChild(_quadPith);
          mTxt_destiny.reInit("");
-         mTxt_destiny.reInit(_avatar.getDestinyDescription());
+         showBondNames104();
          var _loc14_:Sprite = new Sprite();
          _loc14_.touchable = false;
          _loc14_.x = -5;
@@ -520,7 +555,7 @@ package com.meng52.game.ui.panel
          _quadType.y = _loc29_.y;
          _quadType.alpha = 0.01;
          _uiMain.addChild(_quadType);
-         _quadType.addEventListener("touch",onType);
+
          var _loc1_:Array = [];
          var _loc41_:Array = _avatar.getLoveList();
          _loc47_ = 0;

@@ -48,8 +48,8 @@
       "passive": {
         "id": "ascend_1002",
         "name": "霜封追猎",
-        "description": "自身生命不高于65%，命中已眩晕的敌方英雄：对该目标造成{rank:0:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身生命不高于65%，命中已眩晕的敌方英雄：对该目标造成{rank:0:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "命中已眩晕的敌方英雄：对该目标造成{rank:0:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "命中已眩晕的敌方英雄：对该目标造成{rank:0:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -60,7 +60,6 @@
           "maxPerRound": 1,
           "allowChain": false,
           "otherRequiredBuff": "stun",
-          "hpBelow": 0.65,
           "unitType": "hero",
           "relation": "enemy",
           "minAmount": 1
@@ -69,7 +68,7 @@
           {
             "type": "damage",
             "target": "event_target",
-            "attackRatio": 3.8,
+            "attackRatio": 2.85,
             "damageType": "physical",
             "effect": "builtin:effect/FX60_SLASH"
           }
@@ -83,8 +82,8 @@
       "passive": {
         "id": "ascend_1003",
         "name": "符文逆涌",
-        "description": "自身生命不高于40%，同路600范围内至少有2名敌人，施放主动技能后：对本路前排敌人造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身生命不高于40%，同路600范围内至少有2名敌人，施放主动技能后：对本路前排敌人造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "同路600范围内至少有2名敌人，施放主动技能后：对本路前排敌人造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "同路600范围内至少有2名敌人，施放主动技能后：对本路前排敌人造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -94,7 +93,6 @@
           "event": "skill_cast",
           "maxPerRound": 1,
           "allowChain": false,
-          "hpBelow": 0.4,
           "nearbyEnemies": 2,
           "nearbyRadius": 600
         },
@@ -102,15 +100,15 @@
           {
             "type": "damage",
             "target": "lane_front",
-            "attackRatio": 3.2,
+            "attackRatio": 2.4,
             "damageType": "magic",
             "effect": "builtin:effect/FX60_MAGIC"
           },
           {
             "type": "heal",
             "target": "self",
-            "attackRatio": 1.1,
-            "maxHpRatio": 0,
+            "attackRatio": 0.825,
+            "maxHpRatio": 0.0,
             "effect": "builtin:effect/FX60_HEAL"
           }
         ],
@@ -244,8 +242,8 @@
       "passive": {
         "id": "ascend_1007",
         "name": "孤军破阵",
-        "description": "自身生命不高于60%，具有力量增益且同路350范围内至少有3名敌人，施放主动技能后：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；对本路前排敌人造成{rank:1:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身生命不高于60%，具有力量增益且同路350范围内至少有3名敌人，施放主动技能后：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；对本路前排敌人造成{rank:1:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "具有力量增益且同路350范围内至少有3名敌人，施放主动技能后：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；对本路前排敌人造成{rank:1:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "具有力量增益且同路350范围内至少有3名敌人，施放主动技能后：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；对本路前排敌人造成{rank:1:5}攻击力物理伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -256,7 +254,6 @@
           "maxPerRound": 1,
           "allowChain": false,
           "requiredBuff": "strong",
-          "hpBelow": 0.6,
           "nearbyEnemies": 3,
           "nearbyRadius": 350
         },
@@ -266,14 +263,14 @@
             "target": "self",
             "buff": "shield",
             "duration": 2,
-            "attackRatio": 0,
-            "maxHpRatio": 0.2,
+            "attackRatio": 0.0,
+            "maxHpRatio": 0.15,
             "effect": "builtin:effect/FX60_SHIELD"
           },
           {
             "type": "damage",
             "target": "lane_front",
-            "attackRatio": 2.5,
+            "attackRatio": 1.875,
             "damageType": "physical",
             "effect": "builtin:effect/FX60_SLASH"
           }
@@ -287,8 +284,8 @@
       "passive": {
         "id": "ascend_1008",
         "name": "宗师反攻",
-        "description": "自身生命不高于60%，保有护盾时闪避敌人的攻击：对攻击者造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身生命不高于60%，保有护盾时闪避敌人的攻击：对攻击者造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "保有护盾时闪避敌人的攻击：对攻击者造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "保有护盾时闪避敌人的攻击：对攻击者造成{rank:0:5}攻击力魔法伤害；为自身恢复{rank:1:5}攻击力生命。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -299,22 +296,21 @@
           "maxPerRound": 1,
           "allowChain": false,
           "requiredBuff": "shield",
-          "hpBelow": 0.6,
           "relation": "enemy"
         },
         "actions": [
           {
             "type": "damage",
             "target": "event_source",
-            "attackRatio": 6.0,
+            "attackRatio": 4.5,
             "damageType": "magic",
             "effect": "builtin:effect/FX60_MAGIC"
           },
           {
             "type": "heal",
             "target": "self",
-            "attackRatio": 3.0,
-            "maxHpRatio": 0,
+            "attackRatio": 2.25,
+            "maxHpRatio": 0.0,
             "effect": "builtin:effect/FX60_HEAL"
           }
         ],
@@ -327,8 +323,8 @@
       "passive": {
         "id": "ascend_1009",
         "name": "陷阵不退",
-        "description": "自身生命不高于45%，命中已眩晕的敌方英雄：为自身恢复{rank:0:5}攻击力+{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身生命不高于45%，命中已眩晕的敌方英雄：为自身恢复{rank:0:5}攻击力+{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "命中已眩晕的敌方英雄：为自身恢复{rank:0:5}攻击力+{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "命中已眩晕的敌方英雄：为自身恢复{rank:0:5}攻击力+{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -339,7 +335,6 @@
           "maxPerRound": 1,
           "allowChain": false,
           "otherRequiredBuff": "stun",
-          "hpBelow": 0.45,
           "relation": "enemy",
           "unitType": "hero",
           "minAmount": 1
@@ -348,8 +343,8 @@
           {
             "type": "heal",
             "target": "self",
-            "attackRatio": 4.0,
-            "maxHpRatio": 0.14,
+            "attackRatio": 3.0,
+            "maxHpRatio": 0.105,
             "effect": "builtin:effect/FX60_HEAL"
           },
           {
@@ -357,8 +352,8 @@
             "target": "self",
             "buff": "shield",
             "duration": 2,
-            "attackRatio": 0,
-            "maxHpRatio": 0.12,
+            "attackRatio": 0.0,
+            "maxHpRatio": 0.09,
             "effect": "builtin:effect/FX60_SHIELD"
           }
         ],
@@ -371,8 +366,8 @@
       "passive": {
         "id": "ascend_1010",
         "name": "浴血收割",
-        "description": "自身生命不高于50%，具有双抗增益时击杀敌方英雄：为自身恢复{rank:0:5}攻击力生命；对本路前排敌人造成{rank:1:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身生命不高于50%，具有双抗增益时击杀敌方英雄：为自身恢复{rank:0:5}攻击力生命；对本路前排敌人造成{rank:1:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "具有双抗增益时击杀敌方英雄：为自身恢复{rank:0:5}攻击力生命；对本路前排敌人造成{rank:1:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "具有双抗增益时击杀敌方英雄：为自身恢复{rank:0:5}攻击力生命；对本路前排敌人造成{rank:1:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -383,7 +378,6 @@
           "maxPerRound": 1,
           "allowChain": false,
           "requiredBuff": "steel",
-          "hpBelow": 0.5,
           "unitType": "hero",
           "relation": "enemy"
         },
@@ -391,14 +385,14 @@
           {
             "type": "heal",
             "target": "self",
-            "attackRatio": 3.0,
-            "maxHpRatio": 0,
+            "attackRatio": 2.25,
+            "maxHpRatio": 0.0,
             "effect": "builtin:effect/FX60_HEAL"
           },
           {
             "type": "damage",
             "target": "lane_front",
-            "attackRatio": 4.0,
+            "attackRatio": 3.0,
             "damageType": "magic",
             "effect": "builtin:effect/FX60_MAGIC"
           }
@@ -695,8 +689,8 @@
       "passive": {
         "id": "ascend_1018",
         "name": "舍身佑护",
-        "description": "自身处于嘲讽状态，受到敌人伤害后生命不高于35%，同路350范围内有其他友军：为同路范围内友军提供{rank:0:5}攻击力+{rank:0:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身处于嘲讽状态，受到敌人伤害后生命不高于35%，同路350范围内有其他友军：为同路范围内友军提供{rank:0:5}攻击力+{rank:0:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "自身处于嘲讽状态，受到敌人伤害后，若同路350范围内有其他友军：为同路范围内友军提供{rank:0:5}攻击力+{rank:0:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "自身处于嘲讽状态，受到敌人伤害后，若同路350范围内有其他友军：为同路范围内友军提供{rank:0:5}攻击力+{rank:0:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -707,7 +701,6 @@
           "maxPerRound": 1,
           "allowChain": false,
           "requiredBuff": "taunt",
-          "hpBelow": 0.35,
           "nearbyAllies": 1,
           "nearbyRadius": 350,
           "relation": "enemy",
@@ -719,8 +712,8 @@
             "target": "ally_radius",
             "buff": "shield",
             "duration": 2,
-            "attackRatio": 2.0,
-            "maxHpRatio": 0.04,
+            "attackRatio": 1.5,
+            "maxHpRatio": 0.03,
             "effect": "builtin:effect/FX60_SHIELD",
             "radius": 350
           }
@@ -734,8 +727,8 @@
       "passive": {
         "id": "ascend_1019",
         "name": "血战不息",
-        "description": "自身生命不高于50%，具有力量增益时击杀敌方英雄：为自身恢复{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身生命不高于50%，具有力量增益时击杀敌方英雄：为自身恢复{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "具有力量增益时击杀敌方英雄：为自身恢复{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "具有力量增益时击杀敌方英雄：为自身恢复{rank:0:6}自身生命上限生命；为自身提供{rank:1:6}自身生命上限护盾，持续2回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -746,7 +739,6 @@
           "maxPerRound": 1,
           "allowChain": false,
           "requiredBuff": "strong",
-          "hpBelow": 0.5,
           "unitType": "hero",
           "relation": "enemy"
         },
@@ -754,8 +746,8 @@
           {
             "type": "heal",
             "target": "self",
-            "attackRatio": 0,
-            "maxHpRatio": 0.22,
+            "attackRatio": 0.0,
+            "maxHpRatio": 0.165,
             "effect": "builtin:effect/FX60_HEAL"
           },
           {
@@ -763,8 +755,8 @@
             "target": "self",
             "buff": "shield",
             "duration": 2,
-            "attackRatio": 0,
-            "maxHpRatio": 0.08,
+            "attackRatio": 0.0,
+            "maxHpRatio": 0.06,
             "effect": "builtin:effect/FX60_SHIELD"
           }
         ],
@@ -777,8 +769,8 @@
       "passive": {
         "id": "ascend_1020",
         "name": "日冕坚守",
-        "description": "自身具有双抗增益且生命不高于50%，在同路350范围内至少3名敌人包围下受到伤害：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；眩晕攻击者1回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "自身具有双抗增益且生命不高于50%，在同路350范围内至少3名敌人包围下受到伤害：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；眩晕攻击者1回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "自身具有双抗增益且在同路350范围内至少3名敌人包围下受到伤害：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；眩晕攻击者1回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "自身具有双抗增益且在同路350范围内至少3名敌人包围下受到伤害：为自身提供{rank:0:6}自身生命上限护盾，持续2回合；眩晕攻击者1回合。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -789,7 +781,6 @@
           "maxPerRound": 1,
           "allowChain": false,
           "requiredBuff": "steel",
-          "hpBelow": 0.5,
           "nearbyEnemies": 3,
           "nearbyRadius": 350,
           "relation": "enemy",
@@ -801,8 +792,8 @@
             "target": "self",
             "buff": "shield",
             "duration": 2,
-            "attackRatio": 0,
-            "maxHpRatio": 0.25,
+            "attackRatio": 0.0,
+            "maxHpRatio": 0.1875,
             "effect": "builtin:effect/FX60_SHIELD"
           },
           {
@@ -822,8 +813,8 @@
       "passive": {
         "id": "ascend_1021",
         "name": "秘术超频",
-        "description": "累计3次命中结算后生命不高于35%的敌方英雄：对该目标造成{rank:0:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
-        "rankInfoTemplate": "累计3次命中结算后生命不高于35%的敌方英雄：对该目标造成{rank:0:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "description": "累计3次命中敌方英雄：对该目标造成{rank:0:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
+        "rankInfoTemplate": "累计3次命中敌方英雄：对该目标造成{rank:0:5}攻击力魔法伤害。准备0，冷却1；每回合最多触发一次，被动不连锁触发。",
         "model": "effect-sequence-v1",
         "warmup": 0,
         "cooldown": 1,
@@ -833,7 +824,6 @@
           "event": "hit",
           "maxPerRound": 1,
           "allowChain": false,
-          "otherHpBelow": 0.35,
           "everyEvents": 3,
           "relation": "enemy",
           "unitType": "hero",
@@ -843,7 +833,7 @@
           {
             "type": "damage",
             "target": "event_target",
-            "attackRatio": 5.0,
+            "attackRatio": 3.75,
             "damageType": "magic",
             "effect": "builtin:effect/FX60_MAGIC"
           }

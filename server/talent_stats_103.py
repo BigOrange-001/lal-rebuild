@@ -18,7 +18,7 @@ def apply_talent_stats_103(document):
         row['growth_base_value_103'] = original
         row['growth_value'] = value
         row['pl'][1] = value
-        row['info'] = row['info_tw'] = f'自身总面板{names[effect]}提高{value:g}%，作为独立乘区结算。'
+        row['info'] = row['info_tw'] = f'自身总面板{names[effect]}提高{value:g}%。'
     cfg.setdefault('system_simple', {})['talent_total_panel_103'] = True
     return document
 

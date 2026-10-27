@@ -33,10 +33,11 @@ class ArenaPowerTest(unittest.TestCase):
         D = Decimal
         weighted = D(290957)/2 + D(ap)*2 + D(14431+13219)*D('.625')
         skills = D('1')+D('1.5')+D('.8')+(D('3') if captain else 0)
-        value = weighted * weighted.sqrt() * skills * 1927 * (1+D(7535).sqrt()/100) * D('1e-8')
+        value = weighted * weighted * skills * 1927 * (1+D(7535).sqrt()/100) * D('1e-8')
         floor = lambda v: int(v.quantize(D('.00001'), rounding=ROUND_HALF_UP).to_integral_value(rounding=ROUND_FLOOR))
         rate = D(str(sunder))
-        return floor(D(floor(value))+value*D('.25')*rate/(1-rate))
+        base = D(floor(D(floor(value))+value*D('.25')*rate/(1-rate)))
+        return int((D(1000000)*(base/D(1000000))**D('.75')+D('.000005')).to_integral_value(rounding=ROUND_FLOOR))
 
     def test_talent_and_captain_skill_match_formula(self):
         self.assertEqual(self.game._team_power([self.unit]), self.expected(sunder=.15))

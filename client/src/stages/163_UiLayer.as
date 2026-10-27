@@ -9,6 +9,10 @@ package com.meng52.game.ui.map
    import com.meng52.game.global.GlobalTextStyle;
    import com.meng52.game.module.guide.GuideMaster;
    import com.meng52.game.module.map.GameMap;
+   import com.meng52.game.module.avatar.Avatar;
+   import com.meng52.game.ui.panel.PanelInforPop;
+   import com.meng52.game.ui.element.LOL_Scale9Button;
+   import com.meng52.display.ScrollScreenForTxt;
    import com.meng52.game.module.map.GameMapConfig;
    import com.meng52.game.module.map.GameMapTools;
    import com.meng52.game.ui.effect.BaseLayer;
@@ -77,7 +81,7 @@ package com.meng52.game.ui.map
       public var lineSignList:Array;
       
       public var canReturn:Boolean;
-      
+
       public var m_sprFg:Sprite;
       
       public function UiLayer()

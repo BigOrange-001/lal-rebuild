@@ -24,6 +24,7 @@ def targets(owner,enemies,allies,action,anchors,reach):
     else:pool=[u for u in enemies if u.get('hp',0)>0]
     if selector=='self':return [owner] if owner.get('hp',0)>0 else []
     if selector in ('all_allies','all_enemies'):return pool
+    if selector=='lane_all':return [u for u in pool if u.get('line')==owner.get('line') and abs(u['pos']-owner['pos'])<=reach]
     if selector in ('lane_lowest_hp','lane_front'):
         pool=[u for u in pool if u.get('line')==owner.get('line') and abs(u['pos']-owner['pos'])<=reach]
         if not pool:return []

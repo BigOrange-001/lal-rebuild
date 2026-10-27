@@ -41,13 +41,13 @@ class ManualAbilityStateTests(unittest.TestCase):
         with b.context(b.b[1],'active'):b.hit(b.b[1],owner,.1,1)
         self.assertEqual(b.state(owner)['counter']['left'],0)
 
-    def test_channel_releases_next_turn_and_any_displacement_cancels_it(self):
+    def test_channel_releases_next_turn_and_resists_forced_displacement(self):
         b=self.battle();owner=b.a[0];self.cast(b,'nunu_c')
         self.assertTrue(b.turn_start(owner));self.assertTrue(all(u['hp']<10000 for u in b.b))
         b=self.battle();owner=b.a[0];self.cast(b,'nunu_c')
         b._check_move(owner,False,25,True)
-        self.assertNotIn('channel',b.state(owner))
-        self.assertFalse(b.turn_start(owner));self.assertTrue(all(u['hp']==10000 for u in b.b))
+        self.assertIn('channel',b.state(owner))
+        self.assertTrue(b.turn_start(owner));self.assertTrue(all(u['hp']<10000 for u in b.b))
 
     def test_malzahar_dot_moves_on_death_only_once(self):
         b=self.battle();self.cast(b,'malzahar_n');first=b.b[0]

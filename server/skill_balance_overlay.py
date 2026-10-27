@@ -43,6 +43,7 @@ _MANUAL_DAMAGE_PERCENT_INDICES = {
     "tahm_n": (0,), "tahm_c": (),
     "caitlyn_n": (0, 1), "caitlyn_c": (0, 1),
     "kaelthas_n": (0, 1), "kaelthas_c": (0, 1, 2),
+    "karthus_n": (0,), "karthus_c": (0,),
     "aoxing_n": (0, 1), "aoxing_c": (0, 1),
 }
 _MANUAL_DEFENSE_PERCENT_INDICES = {"wukong_c": (1,), "tahm_c": (2,)}

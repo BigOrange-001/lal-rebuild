@@ -27,6 +27,8 @@ STATUS_FIELDS = {
 
 
 def output_paths(action):
+    if action[0]=='manual_ability' and str(action[1]).startswith('skin2_'):
+        return {(i,) for i in range(4,len(action))}
     if action[0] == 'mod_step':
         if action[1] in ('damage','heal') or (action[1]=='buff' and action[8]=='shield'):
             return {(i,) for i in (5,6,7,18,19) if i<len(action)}
@@ -92,10 +94,16 @@ def apply_skill_output_104(document):
         # Manual/skin skills and their delayed callbacks use the dedicated
         # native helper multiplier. Never scale their mixed buff parameter.
         row['hero_output_rate_104']=RATE
-        if manual or any(a[0] in ('cat_passive','polar_basic') for a in row.get('skill',[])):
-            note='伤害、护盾、治疗按下述技能基准的80%结算；属性增减益及控制不变。\n'
-            for key in ('info','rankInfoTemplate'):
-                if isinstance(row.get(key),str):row[key]=note+row[key]
+        if manual:
+            from skill_description_104 import scale_manual_output_text
+            kind=next(a[1] for a in row['skill'] if a[0]=='manual_ability')
+            scale_manual_output_text(row,kind,RATE)
+        elif any(a[0] in ('cat_passive','polar_basic') for a in row.get('skill',[])):
+            # These native callbacks apply the same output factor in combat.
+            import re
+            for field in ('info','rankInfoTemplate'):
+                if isinstance(row.get(field),str):
+                    row[field]=re.sub(r'(\d+(?:\.\d+)?)%',lambda m:f'{float(m[1])*RATE:g}%',row[field])
         else:
             _update_text(row,changes,unchanged)
         # Equipment notes describe relative gains, not output coefficients.
@@ -103,7 +111,7 @@ def apply_skill_output_104(document):
         for note in row.get('equipment_notes_104',[]):
             for field in ('info','rankInfoTemplate'):
                 if isinstance(row.get(field),str):row[field]+='\n'+note
-        if row.get('orange_ascension_104') and row.get('modEffectSequence'):
+        if row.get('orange_ascension_104') and row.get('modEffectSequence') and not row.get('calibration_104'):
             from hero_iteration_103 import _render_base_info
             _render_base_info(row)
         cfg['skill'][sid]=row

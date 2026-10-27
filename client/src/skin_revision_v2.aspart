@@ -1,0 +1,511 @@
+      private function skin2Initialize() : void
+      {
+         if(s2Family()==1203) {skin2.initialHp=hpMax;skin2.initialAttack=ap;}
+      }
+      // Approved skin revision: state is owned by each combat incarnation.
+      private var skin2:Object = {};
+      private static var skin2Depth:int = 0;
+
+      private function s2Family() : int
+      {
+         var row:Object = GlobalData.$mConfig_avatar[avatarData.id];
+         return row ? int(row.skin_revision_v2_104 || 0) : 0;
+      }
+      private function s2Value(skill:*, key:String) : Number
+      {
+         if(!skill || !skill.skillSetData) return 0;
+         var row:Object = GlobalData.$mConfig_skill[skill.skillSetData.id];
+         if(!row || !row.skin_v2_keys) return 0;
+         var index:int = row.skin_v2_keys.indexOf(key);
+         return index < 0 ? 0 : Number(skill.skills[0][4+index]);
+      }
+      private function s2Lane(friendly:Boolean = false, order:String = "front") : Array
+      {
+         return abilityCandidates(friendly ? team : otherTeam,line,pos,GameMapConfig.LINE_POS,-1,false,order);
+      }
+      private function s2Pick(order:String = "front", friendly:Boolean = false, excludeSelf:Boolean = false) : Avatar
+      {
+         var list:Array = s2Lane(friendly,order == "attack" ? "front" : order);
+         if(order == "attack") list.sort(function(a:Avatar,b:Avatar):Number {return b.getDamage()-a.getDamage() || a.abilityIndex-b.abilityIndex;});
+         if(!friendly) for each(var focused:Avatar in list) if(s2LiveMark(focused,"charmed") && focused.skin2.charmed.owner.team==team) return focused;
+         for each(var unit:Avatar in list) if(!excludeSelf || unit !== this) return unit;
+         return null;
+      }
+      public function skin2Focus(list:Vector.<Avatar>) : Vector.<Avatar>
+      {
+         if(!list || list.length<2) return list;
+         for each(var target:Avatar in list) if(target.team!=team && s2LiveMark(target,"charmed") && target.skin2.charmed.owner.team==team)
+         {
+            var result:Vector.<Avatar> =list.concat();var index:int=result.indexOf(target);result.splice(index,1);result.unshift(target);return result;
+         }
+         return list;
+      }
+      public function skin2PoisonTick(target:Avatar) : void
+      {
+         if(s2Family()!=1209 || hp<=0 || !skin2.eggs) return;
+         for(var i:int=0;i<skin2.eggs.length;i++) if(skin2.eggs[i].ready<=manualOwnerActionSerial && skin2.eggs[i].line==target.line && Math.abs(skin2.eggs[i].pos-target.pos)<=300)
+         {s2ExplodeEgg(i);break;}
+      }
+      private function s2LiveMark(target:Avatar, name:String) : Boolean
+      {
+         var mark:Object = target ? target.skin2[name] : null;
+         return mark && mark.owner && mark.owner.hp > 0 && mark.owner.manualOwnerActionSerial <= mark.expires;
+      }
+      private function s2Mark(target:Avatar, name:String, duration:int) : void
+      {
+         if(target && target.buffs.purify) {target.removeBuff("purify",true);return;}
+         if(target && target.hp > 0) target.skin2[name] = {owner:this,expires:manualOwnerActionSerial+duration};
+      }
+      private function skin2ClearDebuffs() : void
+      {
+         for each(var key:String in ["cold","wanted","charmed","exposed","airborne","contract","windmark"]) delete skin2[key];
+      }
+      private function s2Heal(target:Avatar, coefficient:Number) : void
+      {
+         if(target && target.hp > 0 && hp > 0) target.injured(Tools.toInt(getDamage()*coefficient),1,null,4,this,false,this);
+      }
+      private function s2Shield(target:Avatar, coefficient:Number, duration:int = 2) : void
+      {
+         if(target && target.hp > 0 && hp > 0) target.addBuff("shield",duration,Tools.toInt(getDamage()*coefficient),0,-1,this);
+      }
+      private function s2Hit(target:Avatar, coefficient:Number, kind:int = 2, rings:Boolean = false) : Boolean
+      {
+         if(!target || hp <= 0 || target.hp <= 0) return false;
+         var previous:Object = skin2.ringHit; skin2.ringHit = rings;
+         var context:Object = currentAbilityAttack();
+         var created:Object = context && context.owner === this ? null : beginAbilityAttack(this,"passive");
+         try { return abilityHit(target,coefficient/Math.max(0.000001,heroSkillOutputRate104()),kind,kind==1 ? "FX60_SLASH" : "FX60_MAGIC"); }
+         finally {skin2.ringHit = previous; if(created) endAbilityAttack(created);}
+      }
+      private function s2Dispel(target:Avatar, all:Boolean = false) : int
+      {
+         if(!target || target.hp <= 0) return 0;
+         var count:int = 0; var stolen:Number = 0; var keys:Array=[];
+         for(var key:String in target.buffs) if(Buff.LIST_BUFF.indexOf(key)>=0) keys.push(key);
+         keys.sort();
+         for each(key in keys)
+         {
+            if(key == "shield") stolen = Number(target.buffs[key].value);
+            target.removeBuff(key); ++count; if(!all) break;
+         }
+         if(count && s2Family()==1214)
+         {
+            var ally:Avatar=s2Pick("ratio",true);
+            if(ally) ally.addBuff("shield",2,stolen>0 ? Math.min(stolen,s2Value(skillB,"stealCap")*getDamage()) : s2Value(skillB,"shield")*getDamage(),0,-1,this);
+         }
+         return count;
+      }
+      private function s2Pet() : Avatar
+      {
+         var units:Array=skin2.pets as Array;
+         if(units) for each(var pet:Avatar in units) if(pet && pet.hp>0) return pet;
+         return null;
+      }
+      private function s2BearStrike(skill:*) : void
+      {
+         for each(var target:Avatar in s2Lane()) s2Hit(target,s2Value(skill,"hit"));
+         abilityControl(s2Pick(),"stun",1);
+      }
+      private function s2Egg(target:Avatar, mature:Boolean = false) : void
+      {
+         if(!target) return;
+         if(!skin2.eggs) skin2.eggs=[];
+         var eggs:Array=skin2.eggs;
+         if(eggs.length>=6)
+         {
+            if(eggs[0].ready<=manualOwnerActionSerial) s2ExplodeEgg(0);
+            else eggs.shift();
+         }
+         eggs.push({line:target.line,pos:target.pos,ready:manualOwnerActionSerial+(mature ? 0 : 1)});
+         abilityFeedback(mature ? "彩蛋成熟" : "种下彩蛋");
+      }
+      private function s2ExplodeEgg(index:int) : void
+      {
+         var egg:Object=skin2.eggs.splice(index,1)[0];
+         var targets:Array=abilityCandidates(otherTeam,egg.line,egg.pos,3001,2);
+         for each(var target:Avatar in targets) s2Hit(target,s2Value(skillB,"hit"));
+         s2Shield(s2Pick("ratio",true),s2Value(skillB,"shield"));
+      }
+      public function skin2CanCast(kind:String, sourceSkill:* = null) : Boolean
+      {
+         var parts:Array=kind.split("_"); var family:int=int(parts[1]);var slot:int=int(parts[2]);
+         if(slot==2 || hp<=0 || skin2.eggUntil) return false;
+         if(family==1219 && slot==1)
+         {
+            var row:Object=sourceSkill ? GlobalData.$mConfig_skill[sourceSkill.skillSetData.id] : null;
+            if(row && row.skin_v2_bond_size>=4) for each(var marked:Avatar in s2Lane()) if(s2LiveMark(marked,"windmark")) return true;
+            for each(var target:Avatar in abilityAllEnemies()) if(s2LiveMark(target,"airborne") && target.getType()==1 && !target.isManualSummonUnit) return true;
+            return false;
+         }
+         if(family==1228 && slot==0) return s2Lane(true).length>0;
+         return s2Lane().length>0;
+      }
+      private function executeSkin2(kind:String, skill:*) : Boolean
+      {
+         var family:int=int(kind.split("_")[1]);var slot:int=int(kind.split("_")[2]);
+         if(slot==2) return false;
+         var target:Avatar=s2Pick(); var ally:Avatar;var unit:Avatar;var targets:Array=s2Lane();var allies:Array=s2Lane(true,"ratio");
+         var value:Number;var before:Number;var i:int;var stage:int;var count:int;var row:Object;
+         if(!target && !(family==1228 && slot==0)) return false;
+         var previous:Object=skin2.castSkill;skin2.castSkill=skill;
+         row=GlobalData.$mConfig_skill[skill.skillSetData.id];
+         try
+         {
+         if(family==1219 && row.skin_v2_bond_size>=4)
+         {
+            if(slot==0)
+            {
+               for each(unit in targets) {var marked:Boolean=s2LiveMark(unit,"windmark");s2Hit(unit,s2Value(skill,"hit"),1);if(marked) {abilityControl(unit,"stun",1);if(unit.buffs.stun)s2Mark(unit,"airborne",1);}s2Mark(unit,"windmark",2);}
+               s2Shield(this,s2Value(skillB,"shield"));
+            }
+            else for(i=0;i<3;i++) {for each(unit in targets) if(s2LiveMark(unit,"windmark") || s2LiveMark(unit,"airborne"))s2Hit(unit,s2Value(skill,"hit"),1);s2Heal(this,.8);}
+            return true;
+         }
+         if(slot==0)
+         {
+            switch(family)
+            {
+               case 1201:
+                  if(s2Hit(target,s2Value(skill,"hit"),1)) abilityControl(target,"silence",1);
+                  s2Shield(this,s2Value(skill,"shield"));break;
+               case 1203:
+                  var cursed:Boolean=target.buffs.curse && s2LiveMark(target,"contract") && target.skin2.contract.owner===this;
+                  abilityControl(target,"curse",2);if(target.buffs.curse) s2Mark(target,"contract",2);
+                  s2Hit(target,s2Value(skill,"hit"));if(cursed) s2Heal(this,s2Value(skill,"heal"));break;
+               case 1204:
+                  target=s2Pick("farthest");abilityPull(target,this,GameMapConfig.LINE_POS);
+                  if(s2Hit(target,s2Value(skill,"hit"),1)) {abilityControl(target,"stun",1);s2Mark(target,"exposed",2);}break;
+               case 1206:
+                  for each(unit in targets) if(unit.skin2["rings_"+abilityIndex]) {target=unit;break;}
+                  for(i=0;i<2;i++) s2Hit(target,s2Value(skill,"hit"),1,true);break;
+               case 1207:
+                  for each(unit in targets.slice(0,2)) s2Hit(unit,s2Value(skill,"hit"));
+                  for each(unit in allies.slice(0,2)) s2Heal(unit,s2Value(skill,"heal"));break;
+               case 1209:
+                  s2Hit(target,s2Value(skill,"hit"));
+                  if(target.hp>0) {target.addBuff("poison",2,getDamage()*s2Value(skill,"poison"),0,-1,this);s2Egg(target);}break;
+               case 1210:
+                  stage=int(skin2.dance || 0);skin2.dance=(stage+1)%3;
+                  if(stage==0) {abilityDash(target);s2Shield(this,s2Value(skillB,"shield"));}
+                  before=Number(currentAbilityAttack().damage);
+                  for(i=0;i<(stage==2 ? 3 : 2);i++)
+                     for each(unit in (stage==2 && skin2.awake ? targets : [target])) s2Hit(unit,s2Value(skill,stage==2 ? "third" : "hit"),1);
+                  if(stage==1) s2Heal(this,Math.max(0,Number(currentAbilityAttack().damage)-before)*s2Value(skillB,"leech")/Math.max(1,getDamage()));
+                  if(stage==2) {abilityControl(target,"stun",1);if(!skin2.awake) s2Retreat();}break;
+               case 1211:
+                  target=s2Pick("attack");s2Hit(target,s2Value(skill,"hit"),1);s2Mark(target,"wanted",1);
+                  skin2.trap=true;break;
+               case 1213:
+                  s2Shield(this,s2Value(skill,"shield"),1);s2Hit(target,s2Value(skill,"hit"));
+                  if(!skin2.ball || skin2.ball.hp<=0 || skin2.ball.line!=line) {ally=s2Pick("attack",true,true);skin2.ball=ally || this;skin2.ballTurn=manualOwnerActionSerial;}
+                  else if(skin2.ball===this && manualOwnerActionSerial>int(skin2.ballTurn)) s2ReturnBall(target,true);
+                  break;
+               case 1214:
+                  count=-1;
+                  for each(unit in targets) {var good:int=0;for(var key:String in unit.buffs) if(Buff.LIST_BUFF.indexOf(key)>=0) ++good;if(good>count) {target=unit;count=good;}}
+                  s2Hit(target,s2Value(skill,"hit"));s2Dispel(target);break;
+               case 1215:
+                  target=skin2.sonic as Avatar;
+                  if(target && target.hp>0 && target.line==line)
+                  {
+                     abilityDash(target);s2Hit(target,s2Value(skill,"second")*(1+.4*(1-target.hp/target.hpMax)),1);skin2.sonic=null;
+                     ally=skin2.ward as Avatar;if(ally && ally.hp>0 && ally.line==line) reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,ally.pos+(team==1 ? -125 : 125))));
+                     s2Shield(this,s2Value(skillB,"shield"));
+                  }
+                  else
+                  {
+                     skin2.sonic=null;skin2.ward=null;target=s2Pick();
+                     if(s2Hit(target,s2Value(skill,"first"),1))
+                     {skin2.sonic=target;ally=s2Pick("ratio",true,true) || this;skin2.ward=ally;s2Shield(ally,s2Value(skillB,"shield"));}
+                  }break;
+               case 1216:
+                  for each(unit in targets.slice(0,2)) {s2Hit(unit,s2Value(skill,s2LiveMark(unit,"cold") ? "cold" : "hit"));s2Mark(unit,"cold",2);}break;
+               case 1218:
+                  before=Number(currentAbilityAttack().damage);
+                  for each(unit in targets.slice(0,2)) s2Hit(unit,s2Value(skill,"hit"));
+                  s2Heal(this,Math.max(0,Number(currentAbilityAttack().damage)-before)*s2Value(skill,"leech")/Math.max(1,getDamage()));
+                  if(skin2.crows) skill.abilityCooldownOverride=0;break;
+               case 1219:
+                  if(int(skin2.wind || 0)>=2)
+                  {
+                     skin2.wind=0;
+                     for each(unit in targets) if(s2Hit(unit,s2Value(skill,"wind"),1)) {abilityControl(unit,"stun",1);if(unit.buffs.stun)s2Mark(unit,"airborne",1);}
+                     s2Shield(this,s2Value(skillB,"shield"));skin2.windGuard=true;
+                  }
+                  else {s2Hit(target,s2Value(skill,"hit"),1);skin2.wind=int(skin2.wind || 0)+1;}break;
+               case 1221:
+                  s2Hit(target,s2Value(skill,"hit"));if(targets.length>1) s2Hit(targets[1],s2Value(skill,"splash"));
+                  unit=s2Pet();if(unit) {unit.skin2.command=true;unit.manualFocusTarget=target;}break;
+               case 1228:
+                  if(allies.length && allies[0].hp/allies[0].hpMax<.6)
+                  {
+                     for each(unit in allies.slice(0,2)) {s2Heal(unit,s2Value(skill,"heal"));for(key in unit.buffs) if(Buff.LIST_DEBUFF.indexOf(key)>=0) {unit.removeBuff(key);break;}}
+                  }
+                  else for each(unit in allies) s2Shield(unit,s2Value(skill,"shield"));break;
+               case 1140:
+                  if(skin2.phase) {skin2.phase=false;s2Hit(target,Number(skin2.phaseValue),2,true);if(target.hp<=0)target=s2Pick();}
+                  s2Hit(target,s2Value(skill,"hit"),2,true);if(target.hp<=0) target=s2Pick();s2Hit(target,s2Value(skill,"hit"),2,true);break;
+            }
+         }
+         else
+         {
+            switch(family)
+            {
+               case 1201:
+                  target=s2Pick("ratio");s2Hit(target,s2Value(skill,"hit")*(1+.8*(1-target.hp/target.hpMax)),3);
+                  if(target.hp<=0 && target.getType()==1 && !target.isManualSummonUnit) for each(unit in allies) unit.addBuff("purify",1);break;
+               case 1203:
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));abilityControl(unit,"curse",2);if(unit.buffs.curse)s2Mark(unit,"contract",2);}
+                  addBuff("shield",2,hpMax*s2Value(skill,"hpShield"),0,-1,this);break;
+               case 1204:
+                  for each(unit in allies) {unit.addBuff("purify",1);s2Shield(unit,s2Value(skill,"shield"));}
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));if(s2LiveMark(unit,"exposed") && unit.skin2.exposed.owner===this) abilityControl(unit,"silence",1);}break;
+               case 1206:
+                  addBuff("strong",2,.3);addBuff("fleeup",2,6000);target=s2Pick("ratio");
+                  var ringKey:String="rings_"+abilityIndex;
+                  count=target.skin2[ringKey] ? int(target.skin2[ringKey].count) : 0;
+                  for each(unit in targets)
+                  {
+                     var rings:int=unit.skin2[ringKey] ? int(unit.skin2[ringKey].count) : 0;
+                     if(rings>count) {target=unit;count=rings;}
+                  }
+                  for(i=0;i<3;i++) s2Hit(target,s2Value(skill,"hit"),1,true);break;
+               case 1207:
+                  target=s2Pick("attack");abilityControl(target,"stun",1);if(target.buffs.stun)s2Mark(target,"charmed",1);
+                  s2Hit(target,s2Value(skill,"hit"));break;
+               case 1209:
+                  if(!skin2.eggs) skin2.eggs=[];
+                  for each(unit in targets.slice(0,3))
+                  {
+                     var found:Boolean=false;
+                     for each(var egg:Object in skin2.eggs) if(egg.line==unit.line && Math.abs(egg.pos-unit.pos)<125) {egg.ready=manualOwnerActionSerial;found=true;break;}
+                     if(!found) s2Egg(unit);
+                  }
+                  for(i=skin2.eggs.length-1;i>=0;i--) if(skin2.eggs[i].line==line && skin2.eggs[i].ready<=manualOwnerActionSerial) s2ExplodeEgg(i);break;
+               case 1210:
+                  addBuff("strong",2,.3);skin2.awake={end:manualOwnerActionSerial+2,skill:skill};
+                  for each(unit in targets) s2Hit(unit,s2Value(skill,"entry"),1);break;
+               case 1211:
+                  target=null;
+                  for each(unit in abilityAllEnemies()) if(s2LiveMark(unit,"wanted") && unit.skin2.wanted.owner===this && (!target || unit.hp/unit.hpMax<target.hp/target.hpMax)) target=unit;
+                  target=target || s2Pick("ratio");s2Hit(target,s2Value(skill,"hit"),1);
+                  if(target.hp<=0 && target.getType()==1 && !target.isManualSummonUnit) skill.abilityCooldownOverride=Math.max(0,skill.skillSetData.cooldown-1);break;
+               case 1213:
+                  for each(unit in targets) s2Hit(unit,s2Value(skill,"hit"));
+                  if(int(skin2.shotUntil || -1)>=manualOwnerActionSerial) {skin2.shotUntil=-1;s2Hit(s2Pick("ratio"),s2Value(skill,"shot"));}
+                  for each(unit in allies) unit.addBuff("strong",2,.3);break;
+               case 1214:
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));count=s2Dispel(unit,true);abilityControl(unit,"curse",2);if(count)s2Hit(unit,s2Value(skill,"bonus"),3);}break;
+               case 1215:
+                  target=skin2.sonic && skin2.sonic.hp>0 ? skin2.sonic : s2Pick();
+                  var collisions:Array=abilityCandidates(otherTeam,target.line,target.pos,500,2,false,"nearest",[target]);
+                  s2Hit(target,s2Value(skill,"hit"),1);if(target.hp>0) target.checkMove(false,350,this,-1,true);
+                  for each(unit in collisions) {s2Hit(unit,s2Value(skill,"collision"),1);abilityControl(unit,"stun",1);}break;
+               case 1216:
+                  skin2.frost={next:manualOwnerActionSerial+1,skill:skill,lane:line,end:manualOwnerActionSerial+2};
+                  for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));s2Mark(unit,"cold",2);}break;
+               case 1218:
+                  skin2.crows={left:2,skill:skill,start:manualOwnerActionSerial};skin2.crowGuard=false;
+                  for each(unit in targets) {abilityControl(unit,"stun",1);s2Hit(unit,skin2.lastHurt==manualOwnerActionSerial-1 ? s2Value(skill,"hit") : s2Value(skillB,"entry"));}break;
+               case 1219:
+                  target=null;for each(unit in abilityAllEnemies()) if(s2LiveMark(unit,"airborne")) {target=unit;break;}
+                  if(!target) return false;
+                  reline(target.line,Math.max(0,Math.min(GameMapConfig.LINE_POS,target.pos+(team==1 ? 125 : -125))));
+                  for each(unit in s2Lane()) if(s2LiveMark(unit,"airborne")) for(i=0;i<3;i++) s2Hit(unit,s2Value(skill,"hit"),1);
+                  skin2.windReturn=true;skin2.penetrationEnd=manualOwnerActionSerial+2;break;
+               case 1221:
+                  unit=s2Pet();
+                  if(unit) s2Heal(unit,unit.hpMax*.4/Math.max(1,getDamage()));
+                  else
+                  {
+                     abilitySummon("A_2002_5",1,.7,9999,"skin2bear");skin2.pets=abilityState.summons_skin2bear;
+                     unit=s2Pet();if(unit) {unit.skin2.bearOwner=this;unit.skin2.initialHp=unit.hpMax;unit.skin2.initialAttack=unit.getDamage();}
+                  }
+                  s2BearStrike(skill);break;
+               case 1228:
+                  for each(unit in targets) {abilityControl(unit,"stun",1);s2Hit(unit,s2Value(skill,"hit"));}
+                  for each(unit in allies) {unit.addBuff("purify",2);unit.addBuff("strong",2,.4);}break;
+               case 1227:
+                  for each(unit in targets) s2Hit(unit,s2Value(skill,"hit"));
+                  for each(unit in allies) s2Heal(unit,s2Value(skill,"heal"));
+                  var snake:Avatar=null;
+                  for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.statisticsOwner104===this && unit.isManualSummonUnit) {snake=unit;break;}
+                  if(snake) {for each(unit in targets) if(unit.buffs.curse) s2Hit(unit,s2Value(skill,"snake"));for each(unit in allies)s2Shield(unit,s2Value(skill,"shield"));s2Heal(snake,snake.hpMax*.4/Math.max(1,getDamage()));}break;
+               case 1140:
+                  var ghost:Object=skin2.previous || skin2.record;
+                  if(ghost)
+                  {
+                     removeAllDebuff();reline(ghost.line,ghost.pos);
+                     var loss:Number=Math.max(0,Number(skin2.lost || 0)-Number(ghost.lost || 0));
+                     s2Heal(this,Math.min(hpMax*.3,loss*s2Value(skill,"rewind"))/Math.max(1,getDamage()));
+                  }
+                  for each(unit in s2Lane().slice(0,2)) s2Hit(unit,s2Value(skill,"hit"),2,true);
+                  skin2.phase=true;skin2.phaseValue=s2Value(skill,"phase");break;
+            }
+         }
+         row=GlobalData.$mConfig_skill[skill.skillSetData.id];
+         if(row.skin_v2_bond)
+         {
+            if(slot==0)
+            {
+               if(family==1206) s2Hit(target,s2Value(skill,"hit"),1,true);
+               else if(family==1210 && stage==2) {addBuff("purify",1);s2Shield(this,1.2);}
+               else if(family==1211) s2Dispel(target);
+               else if(family==1213 && skin2.ball) s2Shield(skin2.ball,1.2);
+               else if(family==1221 && s2Pet()) s2Pet().skin2.commandSplash=true;
+               else if(family==1201) s2Shield(s2Pick("ratio",true,true),1.2);
+            }
+         }
+         return true;
+         }
+         finally {skin2.castSkill=previous;}
+      }
+      private function s2Retreat() : void
+      {
+         var ally:Avatar=s2Pick("front",true,true);
+         reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,(ally ? ally.pos : pos)+(team==1 ? 150 : -150))));
+      }
+      private function s2ReturnBall(target:Avatar, solo:Boolean = false) : void
+      {
+         if(skin2.ballReturn==manualOwnerActionSerial || !skin2.ball) return;
+         var holder:Avatar=skin2.ball;skin2.ball=null;skin2.ballReturn=manualOwnerActionSerial;
+         s2Hit(target,s2Value(skillB,"hit")*(solo ? .5 : 1));s2Heal(holder,s2Value(skillB,"heal")*(solo ? .5 : 1));
+         skin2.shotUntil=manualOwnerActionSerial+2;abilityFeedback("射门机会");
+      }
+      private function skin2Event(event:String, source:Avatar, target:Avatar, amount:Number, overheal:Number) : void
+      {
+         if(!GameMap.currentMap || skin2Depth>=8) return;
+         var family:int=s2Family();var unit:Avatar;var state:Object;var i:int;var key:String;var count:int;
+         if(event=="turn_start")
+         {
+            if(family==1140) {skin2.previous=skin2.record;skin2.record={line:line,pos:pos,lost:Number(skin2.lost || 0)};}
+            if(family==1203 && int(skin2.growth || 0)<10)
+            {
+               for each(unit in s2Lane()) if(unit.getType()==1 && !unit.isManualSummonUnit && unit.buffs.curse && s2LiveMark(unit,"contract") && unit.skin2.contract.owner===this)
+               {
+                  skin2.growth=int(skin2.growth || 0)+1;ap+=Number(skin2.initialAttack)*.04;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);break;
+               }
+            }
+            if(skin2.eggUntil && manualOwnerActionSerial>=int(skin2.eggUntil))
+            {
+               delete skin2.eggUntil;hp=Math.max(hp,int(hpMax*.4));
+               for each(unit in s2Lane()) if(s2LiveMark(unit,"cold")) {s2Hit(unit,s2Value(skillB,"hit"));abilityControl(unit,"stun",1);}
+            }
+            if(skin2.frost && manualOwnerActionSerial==skin2.frost.next)
+               for each(unit in abilityCandidates(otherTeam,skin2.frost.lane,pos,3001,-1)) {s2Hit(unit,s2Value(skin2.frost.skill,"hit"));s2Mark(unit,"cold",2);}
+            if(skin2.crows && manualOwnerActionSerial>skin2.crows.start)
+            {
+               if(buffs.stun || buffs.silence) delete skin2.crows;
+               else {for each(unit in s2Lane())s2Hit(unit,s2Value(skin2.crows.skill,"hit"));if(--skin2.crows.left<=0) delete skin2.crows;}
+            }
+            for each(unit in GameMap.currentMap.getAliveList(otherTeam)) if(unit.s2Family()==1211 && unit.skin2.trap && unit.line==line && Math.abs(unit.pos-pos)<=300 && getType()==1 && !isManualSummonUnit)
+            {unit.skin2.trap=false;unit.abilityControl(this,"root",1);unit.s2Hit(this,unit.s2Value(unit.skillB,"hit"),1);}
+         }
+         if(event=="turn_end")
+         {
+            if(family==1201) {skin2.guarding=s2Pick("ratio",true,true);skin2.guardUsed=false;}
+            if(skin2.windReturn) {skin2.windReturn=false;skin2.wind=2;}
+            if(skin2.awake && manualOwnerActionSerial>=skin2.awake.end)
+            {
+               state=skin2.awake;delete skin2.awake;
+               for each(unit in s2Lane())s2Hit(unit,s2Value(state.skill,"exit")*(1+.5*(1-unit.hp/unit.hpMax)),1);
+               s2Retreat();
+            }
+            if(skin2.bearOwner && skin2.bearOwner.hp>0 && int(skin2.bearGrowth || 0)<6)
+            {skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*.05;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);}
+         }
+         if(event=="damage_taken" && source && source.team!=team)
+         {
+            skin2.lost=Number(skin2.lost || 0)+Math.max(0,amount);
+            if(source.getType()==1 && !source.isManualSummonUnit) skin2.lastHurt=manualOwnerActionSerial;
+         }
+         if(event=="hit" && target && skin2Depth==0)
+         {
+            ++skin2Depth;
+            try
+            {
+               if((family==1206 || family==1140) && (skin2.ringHit || !skin2.castSkill && currentAbilityAttack() && currentAbilityAttack().kind=="basic"))
+               {
+                  key="rings_"+abilityIndex;state=target.skin2[key] || {count:0,round:-1,triggers:0};target.skin2[key]=state;
+                  if(state.round!=manualOwnerActionSerial) {state.round=manualOwnerActionSerial;state.triggers=0;}
+                  state.count=Math.min(3,int(state.count)+1);
+                  if(state.count>=3 && state.triggers<2)
+                  {state.count=0;++state.triggers;s2Hit(target,s2Value(skillB,"hit"),family==1206 ? 3 : 2);if(family==1206)s2Heal(this,s2Value(skillB,"heal"));else s2Shield(this,s2Value(skillB,"shield"),1);}
+               }
+               if(skin2.command && skin2.bearOwner && skin2.bearOwner.hp>0)
+               {skin2.command=false;unit=skin2.bearOwner;unit.s2Hit(target,unit.s2Value(unit.skillB,"command"));if(skin2.commandSplash) {skin2.commandSplash=false;for each(var other:Avatar in unit.s2Lane()) if(other!==target) {unit.s2Hit(other,unit.s2Value(unit.skillB,"command"));break;}}}
+               var context:Object=currentAbilityAttack();
+               if(context && context.kind=="active") for each(unit in GameMap.currentMap.getAliveList(team)) if(unit!==this && unit.s2Family()==1213 && unit.skin2.ball===this) unit.s2ReturnBall(target);
+            }
+            finally {--skin2Depth;}
+         }
+         if(event=="heal_done" && family==1207 && target && overheal>0 && skin2Depth==0)
+         {target.addBuff("shield",2,overheal*s2Value(skillB,"overflow"),0,-1,this);}
+         if(event=="death")
+         {
+            if(s2LiveMark(this,"exposed")) {unit=skin2.exposed.owner;delete skin2.exposed;unit.s2Heal(unit.s2Pick("ratio",true),unit.s2Value(unit.skillB,"heal"));}
+            if(s2LiveMark(this,"charmed") && skin2Depth==0)
+            {
+               ++skin2Depth;unit=skin2.charmed.owner;delete skin2.charmed;
+               try {for each(var friend:Avatar in unit.s2Lane(true))unit.s2Heal(friend,unit.s2Value(unit.skillB,"heal"));unit.s2Hit(unit.s2Pick("ratio"),unit.s2Value(unit.skillB,"hit"));}
+               finally {--skin2Depth;}
+            }
+            for each(unit in GameMap.currentMap.getAliveList(otherTeam)) if(unit.s2Family()==1206 && skin2["rings_"+unit.abilityIndex])
+            {var next:Avatar=unit.s2Pick("ratio");if(next) next.skin2["rings_"+unit.abilityIndex]=skin2["rings_"+unit.abilityIndex];}
+         }
+         if(event=="kill" && family==1218 && skin2.crows && !skin2.crowGuard && target && target.getType()==1 && !target.isManualSummonUnit)
+         {skin2.crowGuard=true;s2Shield(this,s2Value(skillB,"shield"));}
+      }
+      private function skin2Incoming(amount:Number, source:Avatar, kind:int) : Number
+      {
+         if(!GameMap.currentMap || skin2Depth>0) return amount;
+         var context:Object=currentAbilityAttack();var active:Boolean=source && context && context.kind=="active" && context.owner===source;
+         var unit:Avatar;var state:Object;var family:int=s2Family();
+         if(kind==4)
+         {
+            for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1228 && unit.line==line && hp/hpMax<.6) {amount*=1.25;break;}
+            return amount;
+         }
+         if(!source || source.team==team || kind<1 || kind>3) return amount;
+         if(active)
+         {
+            if(s2LiveMark(this,"exposed")) amount*=1.15;
+            if(s2LiveMark(source,"exposed"))
+            {unit=source.skin2.exposed.owner;delete source.skin2.exposed;unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);}
+            if(family==1221 && s2Pet() && skin2.bearShieldTurn!=manualOwnerActionSerial)
+            {skin2.bearShieldTurn=manualOwnerActionSerial;s2Shield(this,s2Value(skillB,"shield"),1);}
+            if(family==1219 && skin2.windGuard && buffs.shield && source.range>300)
+            {skin2.windGuard=false;removeBuff("shield");return 0;}
+            for each(unit in GameMap.currentMap.getAliveList(team))
+            {
+               if(unit.line!=line) continue;
+               if(unit.s2Family()==1228)
+               {var weak:Boolean=false;for each(var ally:Avatar in unit.s2Lane(true)) if(ally.hp/ally.hpMax<.6)weak=true;if(!weak) {amount*=.85;break;}}
+            }
+            for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1201 && unit.line==line && !unit.skin2.guardUsed)
+            {
+               if(unit.skin2.guarding===this && unit!==this)
+               {
+                  unit.skin2.guardUsed=true;var transfer:Number=amount*.35;amount-=transfer;
+                  ++skin2Depth;try {unit.injured(int(transfer*.5),1,null,8,source,false,source);}finally {--skin2Depth;}
+                  unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);break;
+               }
+               if(unit===this && unit.s2Lane(true).length==1) {unit.skin2.guardUsed=true;amount*=.75;break;}
+            }
+         }
+         for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1216 && unit.skin2.frost && unit.skin2.frost.lane==source.line && unit.manualOwnerActionSerial<unit.skin2.frost.end && unit.s2LiveMark(source,"cold")) {amount*=.75;break;}
+         return amount;
+      }
+      private function skin2Lethal() : void
+      {
+         if(hp>0 || s2Family()!=1216 || skin2.reborn) return;
+         skin2.reborn=true;skin2.eggUntil=manualOwnerActionSerial+2;
+         hp=Math.max(1,int(hpMax*.3));abilityFeedback("冰晶重生");
+      }
+      private function skin2Moved() : void
+      {
+         if(!GameMap.currentMap || hp<=0 || getType()!=1 || isManualSummonUnit) return;
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+            if(unit.s2Family()==1211 && unit.skin2.trap && unit.line==line && Math.abs(unit.pos-pos)<=300)
+            {unit.skin2.trap=false;unit.abilityControl(this,"root",1);unit.s2Hit(this,unit.s2Value(unit.skillB,"hit"),1);}
+      }

@@ -3947,36 +3947,36 @@
       "affinities": [
         {
           "slot": "normal",
-          "index": "bomb_burst",
+          "index": "isolated_hit",
           "path": null,
-          "part": "活体炸弹延迟爆炸伤害",
-          "strength": 0.19999999999999996,
+          "part": "孤立目标伤害",
+          "strength": 0.12,
           "equipment": "E_1002_5",
-          "benefit_share": 0.6,
+          "benefit_share": 1,
           "benefit_curve": 1,
           "skill_budget": 0.12,
-          "skill_name": "活体炸弹",
+          "skill_name": "荒芜",
           "mode": "part",
           "action": null,
-          "manual_kind": "kaelthas_n",
-          "info": "《活体炸弹》：仅活体炸弹延迟爆炸伤害提高20.00%。该部分按技能等效收益的60.00%估值，整项技能目标提升12%；其他部分不变。",
+          "manual_kind": "karthus_n",
+          "info": "《荒芜》：孤立目标伤害提高12.0%。",
           "reworks": {}
         },
         {
           "slot": "captain",
-          "index": "consume_bomb",
+          "index": "requiem_finish",
           "path": null,
-          "part": "烈焰风暴消耗已有炸弹时的伤害",
-          "strength": 0.14117647058823524,
+          "part": "对残血目标的额外伤害",
+          "strength": 0.42,
           "equipment": "E_5004_5",
-          "benefit_share": 0.85,
+          "benefit_share": 0.2857142857142857,
           "benefit_curve": 1,
           "skill_budget": 0.12,
-          "skill_name": "烈焰风暴",
+          "skill_name": "安魂曲",
           "mode": "part",
           "action": null,
-          "manual_kind": "kaelthas_c",
-          "info": "《烈焰风暴》：仅烈焰风暴消耗已有炸弹时的伤害提高14.12%。该部分按技能等效收益的85.00%估值，整项技能目标提升12%；其他部分不变。",
+          "manual_kind": "karthus_c",
+          "info": "《安魂曲》：对残血目标的额外伤害提高42.0%。",
           "reworks": {}
         }
       ]
@@ -6178,42 +6178,50 @@
           "path": [
             1
           ],
-          "part": "乱射魔法箭伤害",
-          "strength": 0.1200000000000001,
+          "part": "首击真实伤害",
+          "strength": 0.6,
           "equipment": "E_1002_5",
-          "benefit_share": 1,
+          "benefit_share": 0.2,
           "benefit_curve": 1,
           "skill_budget": 0.12,
-          "skill_name": "乱射",
+          "skill_name": "真-幻影连打",
           "mode": "part",
           "action": null,
           "operator": "damage",
           "signature": [
+            "damage",
+            "damage",
+            "damage",
+            "damage",
             "damage"
           ],
-          "info": "《乱射》：仅乱射魔法箭伤害提高12.00%。该部分按技能等效收益的100.00%估值，整项技能目标提升12%；其他部分不变。",
+          "info": "《真-幻影连打》：首击真实伤害提高60.0%。",
           "reworks": {}
         },
         {
           "slot": "captain",
-          "index": 0,
+          "index": 1,
           "path": [
             1
           ],
-          "part": "水晶魔箭伤害（眩晕不变）",
+          "part": "全场真实伤害",
           "strength": 0.17142857142857149,
           "equipment": "E_5004_5",
           "benefit_share": 0.7,
           "benefit_curve": 1,
           "skill_budget": 0.12,
-          "skill_name": "水晶魔箭",
+          "skill_name": "真-天界裁决",
           "mode": "part",
           "action": null,
-          "operator": "stun",
+          "operator": "damage",
           "signature": [
-            "stun"
+            "dispel_good",
+            "damage",
+            "purify",
+            "strong",
+            "bless"
           ],
-          "info": "《水晶魔箭》：仅水晶魔箭伤害（眩晕不变）提高17.14%。该部分按技能等效收益的70.00%估值，整项技能目标提升12%；其他部分不变。",
+          "info": "《真-天界裁决》：全场真实伤害提高17.1%。",
           "reworks": {}
         }
       ]
@@ -7584,6 +7592,61 @@
             "mod_step"
           ],
           "info": "《救赎和弦》：仅救赎和弦的生命护盾提高21.82%。该部分按技能等效收益的55.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        }
+      ]
+    },
+    "A_1140_6": {
+      "role": "法术输出",
+      "equipment": [
+        "E_1002_5",
+        "E_5004_5"
+      ],
+      "basis": "逐英雄审阅当前技能，装备强化指定结算项；皮肤按自己的实际技能独立设计。",
+      "affinities": [
+        {
+          "slot": "normal",
+          "index": 0,
+          "path": [
+            1
+          ],
+          "part": "超负荷电击伤害",
+          "strength": 0.1200000000000001,
+          "equipment": "E_1002_5",
+          "benefit_share": 1,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "超负荷",
+          "mode": "part",
+          "action": null,
+          "operator": "damage",
+          "signature": [
+            "damage"
+          ],
+          "info": "《超负荷》：仅超负荷电击伤害提高12.00%。该部分按技能等效收益的100.00%估值，整项技能目标提升12%；其他部分不变。",
+          "reworks": {}
+        },
+        {
+          "slot": "captain",
+          "index": 1,
+          "path": [
+            1
+          ],
+          "part": "符文禁锢附加电击",
+          "strength": 0.8,
+          "equipment": "E_5004_5",
+          "benefit_share": 0.15,
+          "benefit_curve": 1,
+          "skill_budget": 0.12,
+          "skill_name": "符文禁锢",
+          "mode": "part",
+          "action": null,
+          "operator": "stun",
+          "signature": [
+            "damage",
+            "stun"
+          ],
+          "info": "《符文禁锢》：仅符文禁锢附加电击提高80.00%。该部分按技能等效收益的15.00%估值，整项技能目标提升12%；其他部分不变。",
           "reworks": {}
         }
       ]

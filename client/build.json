@@ -1,8 +1,8 @@
 {
   "schema": "lal-client-build-v2",
   "version": "1.0.4",
-  "stage_count": 166,
-  "unique_class_count": 147,
+  "stage_count": 177,
+  "unique_class_count": 151,
   "stages": [
     {
       "index": 1,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "82b1a7836d1b921ef872b58c07d88bcc9019a7b1fb0b3b2a57f5c2ea432ffd02"
+      "source_sha256": "ea319bce93dd32ef7f02749aca0963d7a3a37517f6d8f296aad9c4e41dc4de14"
     },
     {
       "index": 140,
@@ -848,7 +848,7 @@
       "index": 141,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "f0174d86227315594cdd632d4f0690643497efbd96c3ab16c6d47768bca51963"
+      "source_sha256": "6aa61e600058d18ca71e2f1393a67f47c42edc6a4096a2215db8b30d6b7fa157"
     },
     {
       "index": 142,
@@ -860,7 +860,7 @@
       "index": 143,
       "class": "com.meng52.game.ui.panel.PanelDetailAll",
       "source": "client/src/stages/141_PanelDetailAll.as",
-      "source_sha256": "dea88b69fd5003576b83f35e0e7675d67f29bb32461c825e85a4d99bd29bf108"
+      "source_sha256": "6706e79530ed8f5f9e7ee807e7e42fe53146bd3087c0294343cd5ab8348db2b3"
     },
     {
       "index": 144,
@@ -872,7 +872,7 @@
       "index": 145,
       "class": "com.meng52.game.ui.element.LOL_DetailAvatar",
       "source": "client/src/stages/143_LOL_DetailAvatar.as",
-      "source_sha256": "58b4710fbaea7c0b725b3129bad8c842450ace010d7772248677d141c6197bd1"
+      "source_sha256": "cbf05eb7f191c1f98936a48a911e580f9db910af6fab3d421d1286725c863c43"
     },
     {
       "index": 146,
@@ -908,7 +908,7 @@
       "index": 151,
       "class": "com.meng52.game.ui.panel.PanelHelpSetting",
       "source": "client/src/stages/151_PanelHelpSetting.as",
-      "source_sha256": "0d6aefec22f0acf6c40f1072a8d0870088353570e465152a33ce4bfabdd33b68"
+      "source_sha256": "457570cfa140a3ac84152d8e6eb9d352a142cbf4a84ee6d2e8237a7f70a996f4"
     },
     {
       "index": 152,
@@ -986,7 +986,7 @@
       "index": 164,
       "class": "com.meng52.game.ui.map.UiLayer",
       "source": "client/src/stages/163_UiLayer.as",
-      "source_sha256": "a4b116937fdfe1fcff5d422a147bf0b058387560901537630b0eaf1df0ba94b1"
+      "source_sha256": "25fc2fa9c7dcb85b723ff3d8db1b61341a9abb54b9c87651f61578afbbed9861"
     },
     {
       "index": 165,
@@ -999,6 +999,75 @@
       "class": "com.meng52.game.ui.panel.PanelGuildReleaseInfo",
       "source": "client/src/stages/165_PanelGuildReleaseInfo.as",
       "source_sha256": "04695f4afea708c4d195411f8feef2a7c4bc1aedc21f55aaaf51255c6f64af17"
+    },
+    {
+      "index": 167,
+      "class": "com.meng52.game.ui.panel.PanelDefenseTeam",
+      "source": "client/src/stages/167_PanelDefenseTeam.as",
+      "source_sha256": "f4f0c6e1c14fc3b6469199b731ec11d1c228e5b34ca750be15beb2a06d3abfee"
+    },
+    {
+      "index": 168,
+      "class": "com.meng52.game.ui.panel.PanelActivityPVPBattleOfThePeak",
+      "source": "client/src/stages/168_PanelActivityPVPBattleOfThePeak.as",
+      "source_sha256": "8d35f835eaef722a3abc8c518e96e9c45db57acec14e65a526ccc09057f92370"
+    },
+    {
+      "index": 169,
+      "class": "com.meng52.game.ui.panel.PanelPVPEliteBet",
+      "source": "client/src/stages/169_PanelPVPEliteBet.as",
+      "source_sha256": "9ded9f0b472b2ee7e2fcbbed2b72b16b2148e030aad2a8a076b989904d053a30"
+    },
+    {
+      "index": 170,
+      "source": "client/src/stages/170_GlobalFunction.as",
+      "class": "com.meng52.game.global.GlobalFunction",
+      "source_sha256": "083ef1175ebb29a73b622252df370675165151ae436d5bfb35eb5e21cdce4920",
+      "methods": [
+        "getTeamPower"
+      ]
+    },
+    {
+      "index": 171,
+      "source": "client/src/stages/171_GameMapData.as",
+      "class": "com.meng52.game.command.map.GameMapData",
+      "source_sha256": "4e927c1972d27fadf2c4cb0402eb56d75f1ca43034bcf7a2b384cc30cb42852d"
+    },
+    {
+      "index": 172,
+      "source": "client/src/stages/172_ItemExplorationSelectTeam.as",
+      "class": "com.meng52.game.ui.element.ItemExplorationSelectTeam",
+      "source_sha256": "934949e089179c29229f1fe3defd2c2eb0d23a64f2488c9d50b639a730d34717"
+    },
+    {
+      "index": 173,
+      "source": "client/src/stages/173_PanelActivityExplorationMyTeam.as",
+      "class": "com.meng52.game.ui.panel.PanelActivityExplorationMyTeam",
+      "source_sha256": "d5651a3fbd70b27b3642dd53813b267489fa723dc5367954ff8f102d05ea0c40"
+    },
+    {
+      "index": 174,
+      "source": "client/src/stages/174_LOL_DetailEquip.as",
+      "class": "com.meng52.game.ui.element.LOL_DetailEquip",
+      "source_sha256": "23a6e8c934bdac024e5aaf5c3aceefd9ce098482e14ed531ed3b0287c5f0edfe"
+    },
+    {
+      "index": 175,
+      "class": "com.meng52.game.module.map.GameMap",
+      "source": "client/src/stages/175_GameMap.as",
+      "source_sha256": "e193a2b10f83e64a6618d4f2a8bda4398c939f25c7b1eb843057165acdae44f3"
+    },
+    {
+      "index": 176,
+      "class": "com.meng52.game.ui.panel.PanelGameEndAward",
+      "source": "client/src/stages/176_PanelGameEndAward.as",
+      "source_sha256": "bb7f8ea572cf7480951392c59cf157ef7635f802b45af8a8b114a2bbeec4a7ce"
+    },
+    {
+      "index": 177,
+      "source": "client/src/stages/177_GameMapLayer.as",
+      "class": "com.meng52.game.ui.map.GameMapLayer",
+      "source_sha256": "0e34b4ceaf0440e820b2b3e1ce3ca47dee74b60526d5a04863252dbbc8f7ca22"
     }
   ],
   "template_swf": {
@@ -1011,7 +1080,7 @@
   },
   "assets_manifest": {
     "path": "client/resources/assets-manifest.json",
-    "sha256": "67885b55b992b7cf4e0308024ed4187f9cdda8a8a217d3f71303a2552f4effb0"
+    "sha256": "a6fdef1256bf65857e4a6f8bbec9b5037b129850941730faae7310b29915c94a"
   },
   "adt_target": "apk-captive-runtime",
   "application_id": "air.com.meng52.lol.android"

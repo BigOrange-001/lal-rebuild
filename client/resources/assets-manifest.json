@@ -1738,5 +1738,17 @@
     "path": "resources/icons/icon-192.png",
     "size": 76625,
     "sha256": "4cc0110c292834f019fa0cb667f71fd62fb2a6cb66fc0a9681b8db4ce9e45dd6"
+  },
+  {
+    "apk_entry": "assets/assets/effects/custom104/energy.png",
+    "path": "resources/app/assets/effects/custom104/energy.png",
+    "size": 1270190,
+    "sha256": "0b2cc5047beb8731f777331a98f100e28c636e47c144d26e76e864c4f215de63"
+  },
+  {
+    "apk_entry": "assets/assets/effects/custom104/states.png",
+    "path": "resources/app/assets/effects/custom104/states.png",
+    "size": 1509580,
+    "sha256": "6725cc2f60abefcaf8bfa55d5a02d791702b0016aa015fac9e0038397d03280a"
   }
 ]

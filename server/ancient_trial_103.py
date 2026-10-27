@@ -47,8 +47,8 @@ def apply_ancient_trial_103(document):
                      enemy_snapshot_power=actual,enemy_unit_stats_by_diff={'0':stats})
         if tier==15:
             stage['ancient_exclusive_drop']={'schema':SCHEMA,'quality':6,'chance_bp':500,'pool':exclusive}
-            stage['reward_note']+='此外独立判定5%概率额外获得一件专属橙装，可与普通橙装同时掉落。'
-        stage['info']='10名125级、技能10级、满进阶且突破极限的橙色英雄，敌方全灭后获胜。'+stage['reward_note']
+            stage['reward_note']+='另有5%概率额外获得一件专属橙装。'
+        stage['info']='挑战10名强大的橙色英雄。'+stage['reward_note']
         stages[cid]=stage
     chapters=copy.deepcopy(cfg['battle_ploy']);chapters['P_001'].update(combat=15,info='常驻远古试炼，共15档；敌方全灭获胜，全部档位共享每日挑战次数。')
     cfg.update(combat_ploy=stages,battle_ploy=chapters,

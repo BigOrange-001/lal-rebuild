@@ -1,7 +1,7 @@
 """Exercise the real AS state descriptors; visuals must never mutate gameplay."""
 import json,re,subprocess,unittest
 from pathlib import Path
-from test_skin_revision_native_104 import balanced,translate
+from test_skin_revision_native_104 import balanced,translate,runtime_data
 from build_native_effects_104 import PROFILES,STATE_NAMES
 ROOT=Path(__file__).resolve().parents[1]
 class EffectsTests(unittest.TestCase):
@@ -14,6 +14,7 @@ class EffectsTests(unittest.TestCase):
    body=body[:a]+'for ('+left+' of '+right+')'+body[b+1:]
   fixture=(ROOT/'scripts/skin_revision_fixture.js').read_text('utf8').split('let cases=0;')[0]
   fixture=fixture.replace('/*METHODS*/',translate()+'\nmethods.fxState104=function(){with(this){'+body+'}};')
+  fixture=fixture.replace('/*RUNTIME_DATA*/',json.dumps(runtime_data(),ensure_ascii=False))
   fixture+='''
 function Avatar(){}
 function prepare(u){u.abilitySerial=1;u.manualBattleStacks={};u.manualTimedStacks=[];return u}

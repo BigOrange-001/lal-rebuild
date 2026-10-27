@@ -17,6 +17,8 @@ once('         if(kind == "cat_n" || kind == "cat_c")','         if(kind.indexOf
 s=s.replace('return skin2CanCast(kind);','return skin2CanCast(kind,sourceSkill);')
 once('         var center:Avatar;\n         switch(kind)','         if(kind.indexOf("skin2_")==0) return skin2CanCast(kind,sourceSkill);\n         var center:Avatar;\n         switch(kind)')
 once('         if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;','         skin2Event(event,source,target,amount,overheal);\n         if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;')
+once('         initializingFightAttributes = false;','         initializingFightAttributes = false;\n         skin2Initialize();')
+once('         if(abilityTurnStart())\n         {','         if(abilityTurnStart())\n         {\n            if(skin2.eggUntil && hp > 0 && checkBuff()) dead();')
 once('         manualOwnerActionSerial = 0;','         manualOwnerActionSerial = 0;\n         skin2 = {};')
 once('         return hp <= 0;\n      }\n      public static function skillAreaRadius','         return hp <= 0 || Boolean(skin2.eggUntil);\n      }\n      public static function skillAreaRadius')
 once('            _loc9_ = buffs["shield"] as Buff;\n            if(_loc9_)','            param1 = int(skin2Incoming(param1,param7 || param5,param4));\n            _loc9_ = buffs["shield"] as Buff;\n            if(_loc9_)')

@@ -40,9 +40,23 @@ def translate():
   out.append('methods.'+m[1]+'=function('+params+'){with(this){'+body+'}};')
  return '\n'.join(out)
 
+_runtime_data=None
+def runtime_data():
+ global _runtime_data
+ if _runtime_data is None:
+  from gateway import Backend
+  from native_skill_snapshot import _native_skill_snapshot
+  b=Backend(':memory:',ROOT/'config/reconstruction/full-config.json')
+  try:
+   cfg=b.config['cfg']
+   avatars={aid:dict(family=h['skin_revision_v2_104'],skills=[_native_skill_snapshot(cfg,h['pl'][slot],10 if slot==10 else 1) for slot in (10,11,13)]) for aid,h in cfg['avatar'].items() if aid.endswith('_6') and h.get('skin_revision_v2_104')}
+   _runtime_data=dict(avatar=avatars,skill=cfg['skill'])
+  finally:b.clock.close();b.db.close()
+ return _runtime_data
+
 class NativeRevisionTests(unittest.TestCase):
  def test_native_runtime_scenarios(self):
-  script=(ROOT/'scripts/skin_revision_fixture.js').read_text('utf8').replace('/*METHODS*/',translate())
+  script=(ROOT/'scripts/skin_revision_fixture.js').read_text('utf8').replace('/*METHODS*/',translate()).replace('/*RUNTIME_DATA*/',json.dumps(runtime_data(),ensure_ascii=False))
   result=subprocess.run(['node'],input=script,cwd=ROOT,capture_output=True,text=True,encoding='utf8')
   self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
   print(result.stdout)

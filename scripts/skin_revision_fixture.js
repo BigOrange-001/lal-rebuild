@@ -1,5 +1,5 @@
 const assert=require('assert'),fs=require('fs');
-const data=JSON.parse(fs.readFileSync('build/skin-v2-104/runtime.json','utf8'));
+const data=/*RUNTIME_DATA*/;
 let skin2Depth=0,serial=0,contexts=[],roster=[];
 const int=x=>Math.trunc(Number(x)||0),Tools={toInt:int},GameMapConfig={LINE_POS:3001};
 const Buff={LIST_BUFF:['shield','strong','armor','steel','purify','bless','fleeup'],LIST_DEBUFF:['stun','silence','poison','curse','root']};
@@ -36,7 +36,7 @@ function unit(family=0,team=1,pos=1500){
  u.abilityDash=target=>{u.pos=target.pos+100};u.abilityPull=(target,center)=>{target.pos=center.pos-100};
  u.abilitySummon=(aid,count,ratio,turns,key)=>{let pets=[];for(let i=0;i<count;i++){let p=unit(0,team,u.pos-125);p.ap=u.ap*ratio;p.hpMax=p.hp=u.hpMax*ratio;p.isManualSummonUnit=true;p.statisticsOwner104=u;pets.push(p)}u.abilityState['summons_'+key]=pets;};
  if(def){[u.skill0,u.skill1,u.skillB]=def.skills.map(s=>({skills:structuredClone(s.skills),skillSetData:{id:s.skid,cooldown:s.pl[1]}}));}
- roster.push(u);return u;
+ u.skin2Initialize();roster.push(u);return u;
 }
 function fresh(f){roster=[];contexts=[];skin2Depth=0;let a=unit(f),b=unit(0,2,1400),c=unit(0,2,1300),ally=unit(0,1,1600);return {a,b,c,ally}}
 function cast(a,slot){let s=slot===0?a.skill0:a.skill1;beginAbilityAttack(a,'active');try{assert(a.executeSkin2(`skin2_${a.s2Family()}_${slot}`,s));}finally{endAbilityAttack();}}
@@ -76,5 +76,34 @@ for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fres
 }
 {
  let {a,b}=fresh(1211);cast(a,0);b.pos=a.pos-100;b.skin2Moved();assert(b.buffs.root);assert(!a.skin2.trap);let hp=b.hp;b.skin2Moved();assert.equal(b.hp,hp,'trap cannot trigger twice');cases++;
+}
+{
+ let {a,b}=fresh(1203);a.getDamage=()=>2000;cast(a,0);turn(a);
+ assert.equal(a.ap,1040,'growth uses entry attack even with a temporary attack buff');
+ a.getDamage=()=>a.ap;for(let i=0;i<12;i++){cast(a,0);turn(a)}
+ assert.equal(a.ap,1400);assert.equal(a.skin2.growth,10);cases++;
+}
+{
+ let {a,b,ally}=fresh(1140);a.skin2.record={line:0,pos:1500,lost:0};
+ b.isManualSummonUnit=true;b.s2Hit(a,10);assert.equal(a.skin2.lost,10000);
+ assert.equal(a.skin2.lastHurt,undefined,'summons do not satisfy hero-hit conditions');
+ a.skin2Event('damage_taken',ally,a,1000,0);assert.equal(a.skin2.lost,10000);
+ const before=a.hp;cast(a,1);assert.equal(a.hp-before,6000);cases++;
+}
+{
+ let {a,b,c}=fresh(1206);b.skin2['rings_'+a.abilityIndex]={count:2};c.hp=20000;
+ cast(a,1);assert(b.hp<100000);assert.equal(c.hp,20000,'most own rings outrank low health');cases++;
+}
+{
+ let {a,b,c}=fresh(1206);b.skin2.rings_other={count:3};c.hp=20000;
+ cast(a,1);assert.equal(b.hp,100000);assert(c.hp<20000,'foreign rings ignored; ties use low HP');cases++;
+}
+{
+ let {a,b,ally}=fresh(1215);a.abilityHit=()=>false;cast(a,0);
+ assert(!a.skin2.sonic);assert(!a.skin2.ward);assert(!ally.buffs.shield);assert(!a.buffs.shield);assert.equal(b.hp,100000);cases++;
+}
+{
+ let {a,b,ally}=fresh(1215);ally.hp=20000;cast(a,0);
+ assert.strictEqual(a.skin2.sonic,b);assert.strictEqual(a.skin2.ward,ally);assert(ally.buffs.shield);cases++;
 }
 console.log(`${cases} native skill/state scenarios passed`);

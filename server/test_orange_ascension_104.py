@@ -43,11 +43,25 @@ class OrangeAscension104Tests(unittest.TestCase):
                 expected_purple['tl'][8]=['A_']
                 self.assertEqual(purple,expected_purple)
                 self.assertNotIn(orange['id'],self.cfg['system_simple']['skin_hero_ids'])
-                self.assertEqual(orange['pl'][8:11],purple['pl'][8:11])
+                self.assertEqual(orange['pl'][8:10],purple['pl'][8:10])
                 self.assertEqual(orange['pl'][12],purple['pl'][12])
                 for a,b in zip(orange['pl'][:8],purple['pl'][:8]):self.assertAlmostEqual(a,2*b,places=7)
                 for level in (1,10):
-                    self.assertEqual(_native_skill_snapshot(self.cfg,orange['pl'][10],level),_native_skill_snapshot(self.old,purple['pl'][10],level))
+                    actual=_native_skill_snapshot(self.cfg,orange['pl'][10],level)
+                    expected=_native_skill_snapshot(self.old,purple['pl'][10],level)
+                    # Per-quality private IDs are intentional after player calibration.
+                    actual.pop('skid');expected.pop('skid')
+                    if ident==1012:
+                        flee=expected['skills'][-1]
+                        self.assertEqual(flee[:2],['stat_flat','flee'])
+                        flee[2]*=2  # Orange flat-stat scaling versus purple.
+                    elif ident==1015:
+                        count=len(expected['skills'])
+                        expected['skills'].append(['arm_dash_response_104'])
+                        for field,default,value in [('actionTargetPolicies',None,'ally_self'),('actionTargetMaxTargets',1,1),('actionTargetPolicyArgs',None,None),('actionTargetGroups',None,None)]:
+                            expected[field].extend([default]*(count-len(expected[field])))
+                            expected[field].append(value)
+                    self.assertEqual(actual,expected)
                 captain=self.cfg['skill'][orange['pl'][11]];original=self.cfg['skill'][purple['pl'][11]]
                 self.assertEqual(captain['name'],'真-'+original['name'])
                 self.assertEqual(captain['pl'],original['pl'])
@@ -197,6 +211,7 @@ class OrangeAscension104Tests(unittest.TestCase):
         for j,u in enumerate(battle.a+battle.b):u['pos']=1500+j*10;u['_team']=battle.a if u in battle.a else battle.b
         for u in battle.b:u['hp']=u['hp_max']=10**8
         gate=owner['skillB']['modCondition'];event=gate['event']
+        if gate.get('reviewDashResponse104'):owner['_review_dash_ready104']=True
         if gate.get('requiredBuff'):battle._add_buff(owner,gate['requiredBuff'],2,.2 if gate['requiredBuff']!='shield' else 10000)
         source,target=(owner,battle.b[0])
         if event in ('dodge','damage_taken','shield_break'):source,target=battle.b[0],owner
@@ -229,10 +244,29 @@ class OrangeAscension104Tests(unittest.TestCase):
                 elif g.get('otherRequiredBuff'):b._remove_buff(t if s is u else s,g['otherRequiredBuff'])
                 elif g.get('nearbySummons'):
                     for unit in b.a[4:]:unit['hp']=0
-                else:
+                elif g.get('nearbyEnemies'):
                     for unit in b.b:unit['line']=1
+                else:
+                    # Yi and Pantheon no longer require nearby enemies. Reject
+                    # an allied event source/target instead of the removed gate.
+                    if s is u:t=b.a[1]
+                    else:s=b.a[1]
                 self.assertFalse(emit(b,u,g['event'],s,t,100))
                 self.assertEqual(u.get('_mod_event_count',0),0)
+
+    def test_reviewed_passives_use_current_conditions(self):
+        # Removed proximity gates must not silently return on Yi/Pantheon.
+        for ident in (1012,1017):
+            b,u,s,t=self.scenario(ident)
+            for enemy in b.b:enemy['line']=1
+            self.assertTrue(emit(b,u,u['skillB']['modCondition']['event'],s,t,100))
+        # Akali requires a fresh dash; a hit or dodge consumes that readiness.
+        for event in ('damage_taken','dodge'):
+            b,u,s,t=self.scenario(1015);u['_review_dash_ready104']=False
+            self.assertFalse(emit(b,u,event,s,t,100))
+            u['_review_dash_ready104']=True
+            self.assertTrue(emit(b,u,event,s,t,100))
+            self.assertFalse(u['_review_dash_ready104'])
 
     @unittest.skipUnless(shutil.which('node'),'Node is required for actual ActionScript gate comparison')
     def test_client_event_gates_match_server_for_all_21(self):
@@ -263,7 +297,7 @@ Object.defineProperty(global,'modEventBudget',{get:()=>modEventBudget,set:v=>mod
 let results=[];
 for(const c of input.cases){
  let units=c.units.map(v=>({...v,getType(){return this.type;},hasModBuff(k){return !!this.buffs[k];}}));
- let owner=units[c.owner];owner.abilityState={};owner.manualOwnerActionSerial=0;
+ let owner=units[c.owner];owner.abilityState={reviewDashReady104:!!c.gate.reviewDashResponse104};owner.manualOwnerActionSerial=0;
  owner.skillB={isModEffectSequence:()=>true,skillSetData:{id:'test',warmup:0,cooldown:1},canModEventCast:()=>true,useSkill:()=>{}};
  GlobalData.$mConfig_skill.test={modCondition:c.gate};
  GameMap.currentMap={roundNum:0,getAliveList:team=>units.filter(u=>u.team===team&&u.hp>0)};

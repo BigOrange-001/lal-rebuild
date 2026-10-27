@@ -39,6 +39,21 @@ const caster={team:2,getBookCombatBonus:()=>0};
         code+='unit.injured=function(param1,param2=1,param3={},param4=-1,param5=null,param6=false,param7=null,param8=null,dotKind=""){with(this){'+body+'return param1;}};\n'
         code+=setup+'\n'+actions+'\nconsole.log(JSON.stringify({hp:unit.hp,buffs:unit.buffs,dots:unit.manualSkillDots}));'
         return self.run_js(code)
+    def test_anivia_egg_action_still_settles_dot(self):
+        body=method_body(SOURCE.read_text('utf8'),'checkAction')
+        start=body.index('if(abilityTurnStart())')
+        end=body.index('if(checkBuff())',start)
+        # Execute the real early-exit branch together with the real DOT reducer.
+        branch=body[start:end]
+        for damage in (100,20000):
+            setup=f'unit.skin2={{eggUntil:3}};unit.buffs.poison={{type:"poison",value:{damage},round:1}};'
+            actions='const abilityTurnStart=()=>true,skin2=unit.skin2,checkBuff=()=>unit.checkBuff(),dead=()=>{},_gl={delayCall:()=>{}},_currentMap={endAction:()=>{}}; const hp=unit.hp; (function(){'+branch+'})();'
+            result=self.run_case(setup,actions)
+            normal=self.run_case(setup,'unit.checkBuff();')
+            self.assertEqual(result,normal)
+            self.assertLess(result['hp'],10000)
+            self.assertLessEqual(result['buffs'].get('poison',{}).get('round',0),0)
+
     def test_dot_popups_merge_even_when_tick_kills(self):
         source=SOURCE.read_text('utf8')
         for killed in (False,True):

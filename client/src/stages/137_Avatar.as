@@ -1099,7 +1099,21 @@ package com.meng52.game.module.avatar
 
 
 
+
+
+
+
+
+
+
+
+
+
       // BEGIN SKIN REVISION V2
+      private function skin2Initialize() : void
+      {
+         if(s2Family()==1203) {skin2.initialHp=hpMax;skin2.initialAttack=ap;}
+      }
       // Approved skin revision: state is owned by each combat incarnation.
       private var skin2:Object = {};
       private static var skin2Depth:int = 0;
@@ -1313,7 +1327,12 @@ package com.meng52.game.module.avatar
                      ally=skin2.ward as Avatar;if(ally && ally.hp>0 && ally.line==line) reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,ally.pos+(team==1 ? -125 : 125))));
                      s2Shield(this,s2Value(skillB,"shield"));
                   }
-                  else {target=s2Pick();s2Hit(target,s2Value(skill,"first"),1);skin2.sonic=target;ally=s2Pick("ratio",true,true) || this;skin2.ward=ally;s2Shield(ally,s2Value(skillB,"shield"));}break;
+                  else
+                  {
+                     skin2.sonic=null;skin2.ward=null;target=s2Pick();
+                     if(s2Hit(target,s2Value(skill,"first"),1))
+                     {skin2.sonic=target;ally=s2Pick("ratio",true,true) || this;skin2.ward=ally;s2Shield(ally,s2Value(skillB,"shield"));}
+                  }break;
                case 1216:
                   for each(unit in targets.slice(0,2)) {s2Hit(unit,s2Value(skill,s2LiveMark(unit,"cold") ? "cold" : "hit"));s2Mark(unit,"cold",2);}break;
                case 1218:
@@ -1358,6 +1377,13 @@ package com.meng52.game.module.avatar
                   for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));if(s2LiveMark(unit,"exposed") && unit.skin2.exposed.owner===this) abilityControl(unit,"silence",1);}break;
                case 1206:
                   addBuff("strong",2,.3);addBuff("fleeup",2,6000);target=s2Pick("ratio");
+                  var ringKey:String="rings_"+abilityIndex;
+                  count=target.skin2[ringKey] ? int(target.skin2[ringKey].count) : 0;
+                  for each(unit in targets)
+                  {
+                     var rings:int=unit.skin2[ringKey] ? int(unit.skin2[ringKey].count) : 0;
+                     if(rings>count) {target=unit;count=rings;}
+                  }
                   for(i=0;i<3;i++) s2Hit(target,s2Value(skill,"hit"),1,true);break;
                case 1207:
                   target=s2Pick("attack");abilityControl(target,"stun",1);if(target.buffs.stun)s2Mark(target,"charmed",1);
@@ -1472,7 +1498,6 @@ package com.meng52.game.module.avatar
             {
                for each(unit in s2Lane()) if(unit.getType()==1 && !unit.isManualSummonUnit && unit.buffs.curse && s2LiveMark(unit,"contract") && unit.skin2.contract.owner===this)
                {
-                  if(!skin2.initialHp) {skin2.initialHp=hpMax;skin2.initialAttack=getDamage();}
                   fxPulse104("growth");skin2.growth=int(skin2.growth || 0)+1;ap+=Number(skin2.initialAttack)*.04;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);break;
                }
             }
@@ -1504,8 +1529,11 @@ package com.meng52.game.module.avatar
             if(skin2.bearOwner && skin2.bearOwner.hp>0 && int(skin2.bearGrowth || 0)<6)
             {fxPulse104("bear");skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*.05;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);}
          }
-         if(event=="damage_taken" && source && source.team!=team && source.getType()==1 && !source.isManualSummonUnit)
-         {skin2.lost=Number(skin2.lost || 0)+amount;skin2.lastHurt=manualOwnerActionSerial;}
+         if(event=="damage_taken" && source && source.team!=team)
+         {
+            skin2.lost=Number(skin2.lost || 0)+Math.max(0,amount);
+            if(source.getType()==1 && !source.isManualSummonUnit) skin2.lastHurt=manualOwnerActionSerial;
+         }
          if(event=="hit" && target && skin2Depth==0)
          {
             ++skin2Depth;
@@ -1598,14 +1626,6 @@ package com.meng52.game.module.avatar
       }
 
       // END SKIN REVISION V2
-
-
-
-
-
-
-
-
 
       // BEGIN BATTLE EFFECTS 104
       private static function fxProfile104(kind:String) : Array
@@ -6357,6 +6377,7 @@ package com.meng52.game.module.avatar
          tough = getTough();
          hpMax = getHpMax(-1,-1,true);
          initializingFightAttributes = false;
+         skin2Initialize();
          if(hp <= 0)
          {
             hp = hpMax;
@@ -6456,6 +6477,7 @@ package com.meng52.game.module.avatar
          }
          if(abilityTurnStart())
          {
+            if(skin2.eggUntil && hp > 0 && checkBuff()) dead();
             _gl.delayCall(_currentMap.endAction,GameMap.actionDelay);
             return true;
          }

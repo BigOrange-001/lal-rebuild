@@ -17,6 +17,9 @@ def talent_power_factor(row):
 
 POWER_ANCHOR = 1_000_000
 POWER_SCHEMA = 'team-anchor-1m-104-v1'
+POWER_STAT_SCHEMA = 'role-balanced-panel-104-v2'
+POWER_STAT_WEIGHTS = (0.29, 1.5, 1.8, 1.8)
+LEGACY_POWER_STAT_WEIGHTS = (0.5, 2.0, 0.625, 0.625)
 
 
 def normalize_team_power(value):
@@ -30,8 +33,16 @@ def normalize_team_power(value):
 
 def apply_power_balance_104(document):
     cfg = document.get('cfg', document)
-    cfg['system_simple'].update(power_exponent=2, power_anchor=POWER_ANCHOR,
-                                power_team_exponent=.75, power_schema=POWER_SCHEMA)
+    simple = cfg.setdefault('system_simple', {})
+    power = simple.get('power', [])
+    if not isinstance(power, list) or len(power) < 13:
+        power = [1e-8, .5, 2, .625, .625, 1000, .1, .1, .5, .01, 2, .1, .1]
+    power = list(power)
+    power[1:5] = POWER_STAT_WEIGHTS
+    simple.update(power=power, power_exponent=2, power_anchor=POWER_ANCHOR,
+                  power_team_exponent=.75, power_schema=POWER_SCHEMA,
+                  power_stat_schema=POWER_STAT_SCHEMA,
+                  power_stat_weights=dict(zip(('hp', 'ap', 'de_ph', 'de_ma'), POWER_STAT_WEIGHTS)))
     for row in cfg.get('talent', {}).values():
         row['power_factor_104'] = talent_power_factor(row)
     _scale_recommendations(document, cfg)

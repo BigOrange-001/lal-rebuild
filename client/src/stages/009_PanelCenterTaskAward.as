@@ -8,6 +8,7 @@ package com.meng52.game.ui.screen
    import com.meng52.net.SendAndSelect;
    import com.meng52.events.NetEvent;
    import com.meng52.game.ui.element.LOL_Scale9Button;
+   import com.meng52.game.ui.element.LOL_Button;
    import flash.utils.Timer;
    import starling.text.TextField;
    import com.meng52.net.SendServiceAMFFun;
@@ -19,6 +20,9 @@ package com.meng52.game.ui.screen
    import starling.core.Starling;
    import starling.animation.Tween;
    import starling.display.Quad;
+   import starling.display.Sprite;
+   import starling.display.MovieClip;
+   import starling.textures.Texture;
    import starling.display.DisplayObject;
    import flash.geom.Rectangle;
    
@@ -35,6 +39,15 @@ package com.meng52.game.ui.screen
       private var adventureStatus:TextField;
       private var adventureTimer:Timer;
       private var adventureUnderline:Quad;
+      private var zhuabaoBox:Sprite;
+      private var zhuabaoRobot:MovieClip;
+      private var zhuabaoData:Object;
+      private var zhuabaoBusy:Boolean = false;
+      private var zhuabaoPage:int = 0;
+      private var zhuabaoRequest:int = 0;
+      private var zhuabaoGifts:Array = [];
+      private var zhuabaoAwards:String;
+      private var zhuabaoAnimating:Boolean = false;
       
       public function PanelCenterTaskAward()
       {
@@ -414,6 +427,8 @@ package com.meng52.game.ui.screen
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
          adventureRequest++;
+         zhuabaoRequest++;
+         clearZhuabaoMotion();
          if(adventureUnderline) Starling.juggler.removeTweens(adventureUnderline);
          if(mList) Starling.juggler.removeTweens(mList);
          if(adventureTimer)
@@ -445,8 +460,8 @@ package com.meng52.game.ui.screen
          title.hAlign = "center";
          title.touchable = false;
          addChild(title);
-         var labels:Array = ["日常任务","累计充值","循环奖励"];
-         var buttonWidth:Number = (width - 48) / 3;
+         var labels:Array = ["日常任务","累计充值","循环奖励","抓宝"];
+         var buttonWidth:Number = (width - 48) / 4;
          for(var i:int = 0; i < labels.length; i++)
          {
             var button:LOL_Scale9Button = new LOL_Scale9Button(labels[i],buttonWidth,44,"UI_btn_enterGame_0_0000");
@@ -486,6 +501,7 @@ package com.meng52.game.ui.screen
          var button:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
          if(button == null || int(button.name) == adventureTab) return;
          adventureTab = int(button.name);
+         if(adventureTab == 3) zhuabaoData = null;
          if(mList) mList.verticalScrollPosition = 0;
          addList();
          if(adventureUnderline)
@@ -514,6 +530,7 @@ package com.meng52.game.ui.screen
       {
          if(stage == null || adventureClaiming) return;
          buildAdventureUI();
+         if(adventureTab == 3) { requestZhuabao("user.zhuabao_info",{}); return; }
          var request:int = ++adventureRequest;
          SendAndSelect.sendAndSelectService("user.adventure_tasks_info",{},function(reply:Object):void
          {
@@ -547,6 +564,10 @@ package com.meng52.game.ui.screen
 
       override public function addList() : void
       {
+         if(adventureTab == 3) { renderZhuabao(); return; }
+         if(zhuabaoBox) zhuabaoBox.visible = false;
+         if(zhuabaoBox) { if(zhuabaoAnimating) zhuabaoBusy=false; clearZhuabaoMotion(); }
+         if(mList) mList.visible = true;
          if(!adventureData || !mList) return;
          var savedScroll:Number = mList.verticalScrollPosition;
          var rows:Array = [];
@@ -585,7 +606,7 @@ package com.meng52.game.ui.screen
             }
             rows.push(row);
          }
-         var labels:Array = ["日常任务","累计充值","循环奖励"];
+         var labels:Array = ["日常任务","累计充值","循环奖励","抓宝"];
          for(var i:int = 0; i < adventureButtons.length; i++)
          {
             adventureButtons[i].alpha = i == adventureTab ? 1 : 0.72;
@@ -632,6 +653,12 @@ package com.meng52.game.ui.screen
       private function onAdventureError(param1:NetEvent) : void
       {
          var reply:Object = param1.data;
+         if(reply && String(reply.method).indexOf("user.zhuabao_") == 0)
+         {
+            zhuabaoBusy = false;
+            if(stage && adventureTab == 3) { if(zhuabaoData) renderZhuabao(); adventureStatus.text = "操作未完成，请重试；背包满时请先整理。"; }
+            return;
+         }
          if(!reply || (reply.method != "user.adventure_task_claim" && reply.method != "user.adventure_tasks_info")) return;
          adventureClaiming = false;
          if(stage != null)
@@ -639,6 +666,159 @@ package com.meng52.game.ui.screen
             if(reply.method == "user.adventure_task_claim") { addList(); update(); }
             else if(adventureStatus) adventureStatus.text = "任务加载失败，请重新进入奇遇。";
          }
+      }
+
+      private function zhuabaoButton(label:String,key:String,x:Number,y:Number,w:Number,h:Number=56,enabled:Boolean=true) : void
+      {
+         var button:LOL_Scale9Button = new LOL_Scale9Button(label,w,h,"UI_btn_normalFun_0000");
+         button.name=key;button.x=x;button.y=y;button.fontSize=19;
+         button.touchable=enabled && !zhuabaoBusy;button.alpha=button.touchable ? 1 : 0.55;
+         button.addEventListener("triggered",onZhuabaoAction);zhuabaoBox.addChild(button);
+      }
+      private function zhuabaoPrice(x:Number,y:Number,w:Number,amount:String) : void
+      {
+         var free:Boolean=amount=="免费";
+         if(!free)
+         {
+            var coin:DisplayObject=GlobalFunction.createImage("UI_money_coin_0_0000");coin.name="zhuabao_coin";
+            coin.x=x+12;coin.y=y+3;coin.width=24;coin.height=20;coin.touchable=false;zhuabaoBox.addChild(coin);
+         }
+         var price:TextField=GlobalFunction.createTextField(free ? w : w-42,28,free ? "今日免费" : amount,"",17,free ? 10944384 : 16769961);
+         price.x=free ? x : x+40;price.y=y;price.autoScale=true;price.touchable=false;zhuabaoBox.addChild(price);
+      }
+      private function requestZhuabao(method:String,params:Object) : void
+      {
+         if(zhuabaoBusy || stage == null) return;
+         zhuabaoBusy=true;var request:int=++zhuabaoRequest;
+         if(zhuabaoData) renderZhuabao();
+         SendAndSelect.sendAndSelectService(method,params,function(reply:Object):void
+         {
+            if(stage == null || request != zhuabaoRequest) return;
+            zhuabaoBusy=false;
+            if(!reply || int(reply.return_code)!=0 || !reply.data) { if(zhuabaoData && adventureTab==3) renderZhuabao(); return; }
+            if(reply.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(reply.state_sync)) { zhuabaoData=null; if(adventureTab==3) renderZhuabao(); return; }
+            zhuabaoData=method=="user.zhuabao_info" ? reply.data : reply.data.activity;
+            if(adventureTab==3) renderZhuabao();
+            if(method=="user.zhuabao_draw")
+            {
+               var lines:Array=[];for each(var award:Object in reply.data.awards) lines.push(award.name);
+               if(adventureTab==3 && zhuabaoRobot)
+               {
+                  zhuabaoAwards=lines.join("\n");zhuabaoAnimating=true;zhuabaoBusy=true;
+                  zhuabaoRobot.currentFrame=0;zhuabaoRobot.play();Starling.juggler.add(zhuabaoRobot);
+                  for(var b:int=0;b<zhuabaoBox.numChildren;b++) zhuabaoBox.getChildAt(b).touchable=false;
+               }
+               else GlobalFunction.popAlert("抓宝收获",lines.join("\n"));
+            }
+            else if(method=="user.zhuabao_claim") GlobalFunction.popAlert("累计奖励","奖励已放入背包；每轮每档可领取一次。");
+         });
+      }
+      private function clearZhuabaoMotion() : void
+      {
+         if(zhuabaoRobot) { zhuabaoRobot.stop();Starling.juggler.remove(zhuabaoRobot); }
+         for each(var gift:DisplayObject in zhuabaoGifts) Starling.juggler.removeTweens(gift);
+         zhuabaoGifts=[];zhuabaoAwards=null;zhuabaoAnimating=false;
+      }
+      private function onZhuabaoComplete(event:Event) : void
+      {
+         if(!zhuabaoAnimating) return;
+         var awards:String=zhuabaoAwards;
+         zhuabaoBusy=false;clearZhuabaoMotion();
+         if(stage && adventureTab==3) { renderZhuabao();GlobalFunction.popAlert("抓宝收获",awards); }
+      }
+      private function renderZhuabao() : void
+      {
+         if(mList) mList.visible=false;
+         if(!zhuabaoBox) { zhuabaoBox=new Sprite();zhuabaoBox.y=184;addChild(zhuabaoBox); }
+         zhuabaoBox.visible=true;
+         clearZhuabaoMotion();zhuabaoRobot=null;
+         while(zhuabaoBox.numChildren) zhuabaoBox.removeChildAt(0,true);
+         if(!zhuabaoData) { adventureStatus.text="正在加载抓宝…";requestZhuabao("user.zhuabao_info",{});return; }
+         var w:Number=GlobalData.$mStageWidth;
+         var h:Number=Math.max(300,GlobalData.$center_height_curr-121-196);
+         var bg:DisplayObject=GlobalFunction.createImage("UI_roulette_bg",true);bg.width=w-24;bg.height=h;bg.x=12;bg.touchable=false;zhuabaoBox.addChild(bg);
+         var frames:Vector.<Texture> =new Vector.<Texture>();
+         for(var frame:int=1;frame<=12;frame++) frames.push(GlobalFunction.getTextureByBD("UI_box_RouletteRobot"+frame));
+         zhuabaoRobot=new MovieClip(frames,12);zhuabaoRobot.scaleX=zhuabaoRobot.scaleY=2;
+         zhuabaoRobot.x=w*0.68-400;zhuabaoRobot.y=h*0.57-180;zhuabaoRobot.touchable=false;
+         zhuabaoRobot.loop=false;zhuabaoRobot.stop();zhuabaoRobot.currentFrame=0;
+         zhuabaoRobot.addEventListener("complete",onZhuabaoComplete);zhuabaoBox.addChild(zhuabaoRobot);
+         adventureStatus.text="本轮进度："+zhuabaoData.count+" / 300次\n每日首抓免费 · 十连九折 · 满300次开启新一轮";
+         var balanceIcon:DisplayObject=GlobalFunction.createImage("UI_money_coin_0_0000");balanceIcon.name="zhuabao_coin";
+         balanceIcon.x=w-188;balanceIcon.y=-70;balanceIcon.width=25;balanceIcon.height=21;balanceIcon.touchable=false;zhuabaoBox.addChild(balanceIcon);
+         var balance:TextField=GlobalFunction.createTextField(132,30,String(zhuabaoData.coin),"",18,16769961);balance.x=w-157;balance.y=-75;balance.hAlign="left";balance.autoScale=true;balance.touchable=false;zhuabaoBox.addChild(balance);
+         zhuabaoButton("抓一次","draw1",32,-8,100,54);
+         zhuabaoButton("抓十次","draw10",140,-8,108,54);
+         zhuabaoPrice(32,50,100,zhuabaoData.free ? "免费" : "100");
+         zhuabaoPrice(140,50,108,String(zhuabaoData.ten_cost));
+         zhuabaoButton("奖池预览","pool",w-152,-8,124,54);
+         var preview:TextField=GlobalFunction.createTextField(124,28,"材料 · 英雄 · 装备","",14,15127728);preview.x=w-152;preview.y=50;preview.autoScale=true;preview.touchable=false;zhuabaoBox.addChild(preview);
+         var ribbon:Quad=new Quad(w-64,34,0x10232B);ribbon.x=32;ribbon.y=90;ribbon.alpha=0.78;ribbon.touchable=false;zhuabaoBox.addChild(ribbon);
+         var text:TextField=GlobalFunction.createTextField(w-80,32,String(zhuabaoData.summary),"",15,16769961);text.x=40;text.y=91;text.autoScale=true;text.touchable=false;zhuabaoBox.addChild(text);
+         var dock:Quad=new Quad(w-48,162,0x041521);dock.x=24;dock.y=h-166;dock.alpha=0.82;dock.touchable=false;zhuabaoBox.addChild(dock);
+         var line:Quad=new Quad(w-64,1,0xB88B37);line.x=32;line.y=h-166;line.alpha=0.7;line.touchable=false;zhuabaoBox.addChild(line);
+         var title:TextField=GlobalFunction.createTextField(180,28,"累计抓宝奖励","",18,16769961);title.x=32;title.y=h-158;title.hAlign="left";title.touchable=false;zhuabaoBox.addChild(title);
+         var cycle:TextField=GlobalFunction.createTextField(180,28,"300次一轮 · 奖励循环","",14,12433311);cycle.x=w-212;cycle.y=h-158;cycle.hAlign="right";cycle.touchable=false;zhuabaoBox.addChild(cycle);
+         var barX:Number=50;var barW:Number=w-100;var barY:Number=h-115;
+         var barBg:DisplayObject=GlobalFunction.createImage("UI_roulette_bar_bg",true);barBg.x=barX-4;barBg.y=barY;barBg.width=barW+8;barBg.height=65;barBg.touchable=false;zhuabaoBox.addChild(barBg);
+         var fill:Sprite=new Sprite();fill.x=barX;fill.y=barY+4;fill.touchable=false;
+         var bar:DisplayObject=GlobalFunction.createImage("UI_roulette_bar",true);bar.width=barW;bar.height=56;fill.addChild(bar);
+         var nativeNodes:Array=[80,245,413,575];
+         var tiers:Array=[0,10,50,100,300];var stops:Array=[0];
+         for(var j:int=0;j<nativeNodes.length;j++) stops.push((barW+8)*nativeNodes[j]/614-4);
+         var count:Number=Math.max(0,Math.min(300,int(zhuabaoData.count)));var progress:Number=0;
+         for(j=1;j<tiers.length;j++)
+         {
+            if(count<=tiers[j]) { progress=stops[j-1]+(stops[j]-stops[j-1])*(count-tiers[j-1])/(tiers[j]-tiers[j-1]);break; }
+         }
+         fill.clipRect=new Rectangle(0,0,progress,56);zhuabaoBox.addChild(fill);
+         for(var i:int=0;i<zhuabaoData.milestones.length;i++)
+         {
+            var row:Object=zhuabaoData.milestones[i];
+            var nodeX:Number=barBg.x+barBg.width*nativeNodes[i]/614;
+            var icon:LOL_Button=GlobalFunction.createButtonStarling(i<2 ? "UI_roulette_award_1_0000" : "UI_roulette_award_2_0000");
+            icon.name="claim"+row.tier;icon.pivotX=icon.width/2;icon.pivotY=icon.height;
+            icon.scaleX=icon.scaleY=50/icon.height;
+            icon.x=nodeX;icon.y=barY+58;icon.alpha=row.claimable ? 1 : 0.6;icon.touchable=!zhuabaoBusy;
+            icon.addEventListener("triggered",onZhuabaoAction);zhuabaoBox.addChild(icon);
+            if(row.claimable)
+            {
+               var pulse:Tween=new Tween(icon,0.45,"easeInOut");pulse.animate("scaleX",icon.scaleX*1.15);pulse.animate("scaleY",icon.scaleY*1.15);
+               pulse.repeatCount=0;pulse.reverse=true;Starling.juggler.add(pulse);zhuabaoGifts.push(icon);
+            }
+            var caption:TextField=GlobalFunction.createTextField(92,26,row.tier+"次","",18,16769961);
+            caption.x=Math.max(4,Math.min(w-96,nodeX-46));caption.y=barY+66;caption.touchable=false;zhuabaoBox.addChild(caption);
+            var status:TextField=GlobalFunction.createTextField(92,22,row.claimable ? "可领 ×"+row.pending : row.claimed ? "已领取" : "未达成","",13,row.claimable ? 16769961 : 12433311);
+            status.name="status"+row.tier;status.x=caption.x;status.y=barY+90;status.autoScale=true;status.touchable=false;zhuabaoBox.addChild(status);
+         }
+         for(i=0;i<adventureButtons.length;i++) adventureButtons[i].alpha=i==3 ? 1 : 0.72;
+      }
+      private function onZhuabaoAction(event:Event) : void
+      {
+         if(zhuabaoBusy || !zhuabaoData) return;
+         var key:String=String((event.currentTarget as DisplayObject).name);
+         if(key=="pool")
+         {
+            var pool:Array=zhuabaoData.pool as Array;var pages:int=Math.max(1,Math.ceil(pool.length/20));zhuabaoPage%=pages;
+            var lines:Array=[];for(var i:int=zhuabaoPage*20;i<Math.min(pool.length,(zhuabaoPage+1)*20);i++)lines.push(pool[i].group+" · "+pool[i].name);
+            GlobalFunction.popAlert("奖池 "+(zhuabaoPage+1)+"/"+pages+"（再次点击翻页）",lines.join("\n"));zhuabaoPage++;return;
+         }
+         if(key.indexOf("claim")==0)
+         {
+            var tier:int=int(key.substr(5));
+            var rewards:Array=["500金砖 + 1000培养书","四色粉尘各500 + 德诺石500","橙色盖伦 + 六色天赋材料各300","艾克橙卡 + 5000金砖"];
+            for(var n:int=0;n<zhuabaoData.milestones.length;n++)
+            {
+               var row:Object=zhuabaoData.milestones[n];
+               if(int(row.tier)==tier)
+               {
+                  if(row.claimable) requestZhuabao("user.zhuabao_claim",{tier:tier});
+                  else GlobalFunction.popAlert("累计"+tier+"次奖励",rewards[n]+"\n"+(row.claimed ? "本轮已领取" : "达到次数后可领取"));
+                  return;
+               }
+            }
+         }
+         else requestZhuabao("user.zhuabao_draw",{num:key=="draw10" ? 10 : 1});
       }
    }
 }

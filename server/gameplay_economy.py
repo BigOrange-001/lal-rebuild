@@ -18,6 +18,7 @@ MONTHLY_PACKS = {"coin98": 60, "coin99": 120, "coin100": 300}
 
 class GameplayEconomy:
     METHODS = {
+        "user.zhuabao_info", "user.zhuabao_draw", "user.zhuabao_claim",
         "user.local_pay_test", "user.pay", "user.appstore_pay", "user.spending_info", "user.set_spending_tier", "user.adventure_tasks_info", "user.adventure_task_claim", "user.get_coin", "user.comment_gift", "user.get_activity_cd", "user.get_avatar_store",
         "user.check_in", "user.task_info", "user.task_done", "user.everyday_gift",
         "user.vip_gift", "user.vip_gift_buy", "user.full_energy",
@@ -45,6 +46,9 @@ class GameplayEconomy:
         return {**copy.deepcopy(profile), **copy.deepcopy(extra)}
 
     def dispatch(self, uid, method, params):
+        if method.startswith("user.zhuabao_"):
+            from zhuabao import Zhuabao
+            return Zhuabao(self).dispatch(uid,method,params)
         handlers = {
             "user.local_pay_test": self.local_pay_test,
             "user.pay": self.local_pay_test,

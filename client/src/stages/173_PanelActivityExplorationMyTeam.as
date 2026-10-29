@@ -437,34 +437,7 @@ package com.meng52.game.ui.panel
          mOppName.x = mBg.x + 10;
          mOppName.y = mBg.y + 50;
          this.addChild(mOppName);
-         var _loc2_:Array = mirror_data.army;
-         _loc9_ = 0;
-         while(_loc9_ < 3)
-         {
-            if(_loc9_ < _loc2_.length)
-            {
-               _loc1_ = new AvatarImg(_loc2_[_loc9_][0],_loc2_[_loc9_],2,true,mirror_data.is_npc);
-               _loc1_.touchable = false;
-               _loc1_.scaleX = _loc1_.scaleY = 1;
-               _loc1_.x = (90 + 20) * _loc9_ - 20;
-               mOppAvt_arr.push(_loc1_);
-               this.mOppAvt_spr.addChild(_loc1_);
-            }
-            else
-            {
-               _loc3_ = GlobalFunction.createImage("UI_bg_card_2_0002");
-               _loc3_.scaleX = _loc3_.scaleY = 1;
-               _loc3_.x = (90 + 20) * _loc9_ - 20;
-               this.mOppAvt_spr.addChild(_loc3_);
-               _loc7_ = DisplayTools.newTextField("" + (_loc9_ + 1),"Font_numAndtag_1",40,16777215);
-               _loc7_.pivotX = _loc7_.width * 0.5;
-               _loc7_.pivotY = _loc7_.height * 0.5;
-               _loc7_.x = _loc3_.x + _loc3_.width * 0.5;
-               _loc7_.y = _loc3_.height * 0.5;
-               this.mOppAvt_spr.addChild(_loc7_);
-            }
-            _loc9_++;
-         }
+         setOpponentAvatars();
          mOppAvt_spr.x = this.mBg.x + mBg.width - mOppAvt_spr.width;
          mOppAvt_spr.y = mBg.y + 45;
          mOppPower_txt = GlobalFunction.createTextField(240,MainConfig.$isEA ? 60 : 30,"","",20,4926491);
@@ -546,6 +519,38 @@ package com.meng52.game.ui.panel
          this.addChild(mFreshInfo_txt);
          updatePower();
          updataCount();
+      }
+
+      private function setOpponentAvatars() : void
+      {
+         var army:Array=mirror_data.army as Array;
+         var units:Array=mirror_data.units as Array;
+         var count:int=army == null ? 0 : army.length;
+         var slots:int=Math.min(4,Math.max(3,count));
+         var scale:Number=slots>3 ? 0.78 : 1;
+         var gap:Number=slots>3 ? 82 : 110;
+         for(var i:int=0;i<slots;i++)
+         {
+            if(i<count)
+            {
+               var avatar:AvatarImg;
+               if(units && i<units.length)
+               {
+                  var data:Object=Tools.clone(units[i]);
+                  data.current_hp=data.hp;data.max_hp=data.hp_max;
+                  avatar=new AvatarImg(String(data.aid),data,2,false,true);
+               }
+               else avatar=new AvatarImg(army[i][0],army[i],2,true,mirror_data.is_npc);
+               avatar.touchable=false;avatar.scaleX=avatar.scaleY=scale;avatar.x=gap*i-20;
+               mOppAvt_arr.push(avatar);mOppAvt_spr.addChild(avatar);
+            }
+            else
+            {
+               var empty:Image=GlobalFunction.createImage("UI_bg_card_2_0002");empty.scaleX=empty.scaleY=scale;empty.x=gap*i-20;mOppAvt_spr.addChild(empty);
+               var label:TextField=DisplayTools.newTextField(String(i+1),"Font_numAndtag_1",40,16777215);
+               label.pivotX=label.width*0.5;label.pivotY=label.height*0.5;label.x=empty.x+empty.width*0.5;label.y=empty.height*0.5;mOppAvt_spr.addChild(label);
+            }
+         }
       }
 
       private function updataCount() : void
@@ -767,7 +772,7 @@ package com.meng52.game.ui.panel
             }
          }
          var _loc2_:Array = [];
-         var _loc3_:Object = GlobalData.$userData.exploration.army;
+         var _loc3_:Object = Tools.clone(GlobalData.$userData.exploration.army);
          var _loc6_:String = "";
          for(var _loc9_:String in _loc3_)
          {

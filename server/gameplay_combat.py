@@ -906,6 +906,38 @@ class GameplayCombat:
                 "refresh_buy": times["refresh_buy"], "relive_buy": times["relive_buy"],
                 "mode_buy": times["mode_buy"], "vip_relive": times["vip_relive"]}
 
+    def _exploration_enemy_team(self, stage_cfg):
+        enemy = serialize_stage_team(self.config, stage_cfg.get("team2", []), team=2)
+        stat_rows = stage_cfg.get("enemy_unit_stats_by_diff", {})
+        if isinstance(stat_rows, dict) and "0" in stat_rows:
+            overrides = stat_rows["0"]
+            if not isinstance(overrides, list) or len(overrides) != len(enemy):
+                raise GameplayFault("InvalidStage", "Exploration enemy snapshot has the wrong team2 length")
+            for index, override in enumerate(overrides):
+                if override is None:
+                    continue
+                unit = enemy[index]
+                if (not isinstance(override, dict) or override.get("index") != index
+                        or override.get("aid") != base_aid(self.config, unit.get("aid"))):
+                    raise GameplayFault("InvalidStage", "Exploration enemy snapshot does not match team2 order")
+                try:
+                    hp = max(0, int(override["hp"]))
+                    for key in ("ap", "de_ph", "de_ma"):
+                        unit[key] = max(0, int(override[key]))
+                    affixes = {key: max(0, int(override[key]))
+                               for key in ("hit", "flee", "crit", "tough")}
+                except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                    raise GameplayFault("InvalidStage", "Exploration enemy snapshot has invalid stats") from exc
+                unit["hp"] = hp
+                unit["hp_max"] = hp
+                unit["new_4attrs"] = affixes
+        # Exploration uses a single-lane GameMapData. Normalize
+        # generated opponents to that lane before serializing native
+        # Avatar.toDataObj snapshots.
+        for unit in enemy:
+            unit["line"] = 0
+        return enemy
+
     def _dispatch_exploration(self, uid, method, params):
         stages = exploration_stages(self.full_config)
         def mutate(profile):
@@ -916,6 +948,12 @@ class GameplayCombat:
             stage_no = max(1, min(raw_stage, len(stages) or 1))
             stage_cfg = stages[stage_no - 1] if stages else {}
             stage_cfg = exploration_encounter(self.full_config, profile, state, stage_no, stage_cfg)
+            if method in {"user.exploration_make_army", "user.exploration_buy_mode", "user.exploration_relive"}:
+                now = int(self.store.clock.now())
+                active = profile.get("pending_battles", {}).get("exploration", {})
+                if any(isinstance(battle, dict) and (int(battle.get("expires", 0)) > now
+                       or retain_frozen_intent(self.config, battle)) for battle in active.values()):
+                    raise GameplayFault("ExplorationBattlePending", "请先完成当前探险战斗，再更换名单、复活或刷新加成")
             if method == "user.exploration_start":
                 for intent in profile.get("pending_battles", {}).get("exploration", {}).values():
                     if retain_frozen_intent(self.config, intent):
@@ -965,9 +1003,14 @@ class GameplayCombat:
                     state["difficulty"] = exploration_difficulty(profile, aids, self.full_config)
                 return profile, self._exploration_response(profile)
             if method == "user.exploration_opponent":
-                from pve_display_power_58 import exploration_opponent_power
-                return profile, {"name": "迷雾守军", "power": exploration_opponent_power(self.full_config, stage_cfg),
-                    "army": copy.deepcopy(stage_cfg.get("team2", [])), "is_npc": True, "stage": stage_no}
+                enemy = self._exploration_enemy_team(stage_cfg)
+                # AvatarImg's legacy NPC preview expects HP at offsets 6/7,
+                # not the cultivation/phase columns in authored combat tuples.
+                line_pos = max(1, int(self.config.get("system_simple", {}).get("battle", [0, 3000])[1]))
+                army = [[u["aid"], u["lv"], u["slv"], u["line"], u["pos"] / line_pos,
+                         u["leader"], u["hp"], u["hp_max"]] for u in enemy]
+                return profile, {"name": "迷雾守军", "power": _native_team_power(self.full_config, enemy),
+                    "army": army, "units": copy.deepcopy(enemy), "is_npc": True, "stage": stage_no}
             if method == "user.exploration_combat":
                 if int(state.get("current_stage_finish", 0)) == 1:
                     raise GameplayFault("ExplorationRewardPending", "Claim the completed stage before fighting again")
@@ -981,10 +1024,19 @@ class GameplayCombat:
                     raise GameplayFault("ExplorationBattlePending", "Return to the exploration map before starting another battle")
                 army = state.get("army", {})
                 submitted = params.get("team", [])
-                ids = [str(row[0]) for row in submitted if isinstance(row, (list, tuple)) and row and str(row[0]) in army]
-                if not ids: ids = list(army)[:3]
-                if not ids or len(ids) > 3 or len(set(ids)) != len(ids):
-                    raise GameplayFault("InvalidTeam", "Choose up to three exploration heroes")
+                if not isinstance(submitted, list) or len(submitted) > 6:
+                    raise GameplayFault("InvalidTeam", "请选择一至三名探险英雄")
+                rows = [row for row in submitted if row not in (None, "")]
+                if (not 1 <= len(rows) <= 3 or any(not isinstance(row, (list, tuple)) or len(row) != 3
+                        or not isinstance(row[0], str) or row[0] not in army for row in rows)):
+                    raise GameplayFault("InvalidTeam", "出战英雄必须来自当前探险名单")
+                ids = [row[0] for row in rows]
+                if len(set(ids)) != len(ids):
+                    raise GameplayFault("InvalidTeam", "探险出战英雄不能重复")
+                if any(type(row[1]) not in (int, float) or not math.isfinite(row[1])
+                       or type(row[2]) not in (int, float) or not math.isfinite(row[2])
+                       or not 0 <= row[2] <= 1 for row in rows):
+                    raise GameplayFault("InvalidFormation", "探险阵型坐标无效")
                 from gameplay_roster import GameplayRosterEquipment
                 attributes = GameplayRosterEquipment(self.store, self.full_config).battle_attributes
                 own = []
@@ -994,7 +1046,11 @@ class GameplayCombat:
                     raw = attributes(profile, iid, hero_only=True)
                     exploration_hero = army.get(iid, {})
                     maximum = max(1, int(raw.get("hp_max", 1)))
-                    current_hp = max(0, min(maximum, int(exploration_hero.get("current_hp", maximum))))
+                    old_maximum = max(1, int(exploration_hero.get("max_hp", maximum)))
+                    old_hp = max(0, min(old_maximum, int(exploration_hero.get("current_hp", old_maximum))))
+                    current_hp = maximum * old_hp // old_maximum
+                    exploration_hero.update(max_hp=maximum, current_hp=current_hp)
+                    state.setdefault("health_ledger", {})[iid] = {"current_hp": current_hp, "max_hp": maximum}
                     if current_hp <= 0:
                         raise GameplayFault("ExplorationHeroDefeated", "Revive defeated exploration heroes before using them")
                     row = next((r for r in submitted if isinstance(r, (list, tuple)) and r and r[0] == iid), [])
@@ -1022,35 +1078,7 @@ class GameplayCombat:
                                 unit[stat] = max(1, int(unit[stat] * amount))
                         elif stat in ("hit", "flee", "crit", "tough") and percentage == 0:
                             unit["new_4attrs"][stat] += int(amount)
-                enemy = serialize_stage_team(self.config, stage_cfg.get("team2", []), team=2)
-                stat_rows = stage_cfg.get("enemy_unit_stats_by_diff", {})
-                if isinstance(stat_rows, dict) and "0" in stat_rows:
-                    overrides = stat_rows["0"]
-                    if not isinstance(overrides, list) or len(overrides) != len(enemy):
-                        raise GameplayFault("InvalidStage", "Exploration enemy snapshot has the wrong team2 length")
-                    for index, override in enumerate(overrides):
-                        if override is None:
-                            continue
-                        unit = enemy[index]
-                        if (not isinstance(override, dict) or override.get("index") != index
-                                or override.get("aid") != base_aid(self.config, unit.get("aid"))):
-                            raise GameplayFault("InvalidStage", "Exploration enemy snapshot does not match team2 order")
-                        try:
-                            hp = max(0, int(override["hp"]))
-                            for key in ("ap", "de_ph", "de_ma"):
-                                unit[key] = max(0, int(override[key]))
-                            affixes = {key: max(0, int(override[key]))
-                                       for key in ("hit", "flee", "crit", "tough")}
-                        except (KeyError, TypeError, ValueError, OverflowError) as exc:
-                            raise GameplayFault("InvalidStage", "Exploration enemy snapshot has invalid stats") from exc
-                        unit["hp"] = hp
-                        unit["hp_max"] = hp
-                        unit["new_4attrs"] = affixes
-                # Exploration uses a single-lane GameMapData. Normalize
-                # generated opponents to that lane before serializing native
-                # Avatar.toDataObj snapshots.
-                for unit in enemy:
-                    unit["line"] = 0
+                enemy = self._exploration_enemy_team(stage_cfg)
                 lane_count = 1  # GameMapManager.getExplorationData constructs [1, [background]].
                 try:
                     validate_team_lane_coverage(own, lane_count, "exploration player formation")
@@ -1196,14 +1224,25 @@ class GameplayCombat:
                 state["current_stage_finish"] = 0
                 state.pop("mod_pending_reward", None)
             snapshot = intent.get("snapshots", {}).get("team_a", [])
-            by_instance = {row["aid"]: row for row in snapshot if isinstance(row, dict) and isinstance(row.get("aid"), str)}
-            for index, iid in enumerate(state.get("combat_army", [])):
+            by_instance = {}
+            for row in snapshot:
+                iid = row.get("instance_id") or (row.get("aid") if row.get("aid") in state.get("army", {}) else None)
+                if iid:
+                    if iid in by_instance:
+                        raise GameplayFault("InvalidResult", "探险结算包含重复的英雄记录")
+                    by_instance[iid] = row
+            for index, original in enumerate(intent.get("team_a", [])):
+                iid = original.get("instance_id")
+                if not iid:
+                    raise GameplayFault("InvalidBattle", "探险战斗缺少英雄编号，请重新进入地图")
                 hero = state.get("army", {}).get(iid)
                 final = by_instance.get(iid)
-                if final is None and index < len(snapshot) and snapshot[index].get("aid") == iid.split("|")[0]:
+                # Older native clients only sent base aid, in original order.
+                if final is None and index < len(snapshot) and not snapshot[index].get("instance_id") and snapshot[index].get("aid") == original.get("aid"):
                     final = snapshot[index]
+                if final is None:
+                    raise GameplayFault("InvalidResult", "探险结算缺少英雄生命记录，请重试结算")
                 if isinstance(hero, dict):
-                    final = final or {"hp": 0, "hp_max": hero.get("max_hp", 1)}
                     hero["current_hp"] = max(0, int(final.get("hp", 0)))
                     hero["max_hp"] = max(1, int(final.get("hp_max", hero.get("max_hp", 1))))
                     # Store the unmodified health scale used by roster selection.

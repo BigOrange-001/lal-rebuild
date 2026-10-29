@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 avatar=ROOT/'client/src/stages/137_Avatar.as'
 s=avatar.read_text('utf8')
 begin='      // BEGIN BATTLE EFFECTS 104\n';end='      // END BATTLE EFFECTS 104\n'
-if begin in s:s=s[:s.index(begin)]+s[s.index(end)+len(end):]
+if begin in s:s=s[:s.index(begin)].rstrip('\n')+'\n\n'+s[s.index(end)+len(end):].lstrip('\n')
 code=''.join((ROOT/'client/src'/p).read_text('utf8') for p in ['native_effect_profiles_104.aspart','battle_effects_104.aspart','native_effect_runtime_104.aspart'])
 s=s.replace('      public function equipmentPart104(',begin+code+'\n'+end+'\n      public function equipmentPart104(',1)
 def once(old,new):

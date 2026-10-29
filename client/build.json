@@ -56,7 +56,7 @@
       "index": 9,
       "class": "com.meng52.game.ui.screen.PanelCenterTaskAward",
       "source": "client/src/stages/009_PanelCenterTaskAward.as",
-      "source_sha256": "9c1a8a1673e59972a1ead0b5a5bed15a34e78055e762aab576b4f1fc042860c5"
+      "source_sha256": "b4539ee969696b4a5eefea8de358e269931a748627323d2bb41ab6b323635d23"
     },
     {
       "index": 10,
@@ -458,7 +458,7 @@
       "index": 76,
       "class": "com.meng52.game.ui.panel.PanelActivityExplorationMap",
       "source": "client/src/stages/074_PanelActivityExplorationMap.as",
-      "source_sha256": "4619885d5208f3f7d8f2d772f42279a449f0fa09c68a04a7757d3a466a75d8eb"
+      "source_sha256": "36343f5558aad8ceab78a5386b4917f7d98e5d995d0421fbe3031897fa1d73ce"
     },
     {
       "index": 77,
@@ -626,13 +626,13 @@
       "index": 104,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "6b3acfa6b24316f11d97a9bab47913a117a81a898b67f40e6326dc2b3da78b92"
+      "source_sha256": "67ff29333a4a9c760ea78f960a4ec348e701e0ad8c3dbab1b8a833c1510f23e3"
     },
     {
       "index": 105,
       "class": "com.meng52.game.ui.panel.PanelActivityExplorationSure",
       "source": "client/src/stages/103_PanelActivityExplorationSure.as",
-      "source_sha256": "5cbf8f6a1ed7923dbb07f16be08f06f16f03d34bd9f98fd34939508cfd383177"
+      "source_sha256": "7410927b48cf5c65e424ad687723d070ef1b22b0c36a7c5cf3979e16e8d77a8a"
     },
     {
       "index": 106,
@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "ea319bce93dd32ef7f02749aca0963d7a3a37517f6d8f296aad9c4e41dc4de14"
+      "source_sha256": "3d52f1ca15bd57adfe15581627b21596e580fc02183bb02e7aab14f94b7e30ad"
     },
     {
       "index": 140,
@@ -1043,7 +1043,7 @@
       "index": 173,
       "source": "client/src/stages/173_PanelActivityExplorationMyTeam.as",
       "class": "com.meng52.game.ui.panel.PanelActivityExplorationMyTeam",
-      "source_sha256": "d5651a3fbd70b27b3642dd53813b267489fa723dc5367954ff8f102d05ea0c40"
+      "source_sha256": "eb691e00d7167773675f18ca5acf988c8c680fe6854d8cea045170fe2d629d9c"
     },
     {
       "index": 174,

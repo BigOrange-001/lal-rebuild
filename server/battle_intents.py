@@ -4,7 +4,7 @@ Call these functions only from PlayerStore.atomic_update mutators. They do
 not simulate a winner or grant rewards; each gameplay mode owns that policy.
 """
 from __future__ import annotations
-import copy, secrets, time
+import copy, secrets, time, math
 from player_store import GameplayFault
 
 
@@ -82,6 +82,7 @@ def validate_snapshots(snapshots, intent):
             # Avatar.injured subtracts lethal damage without clamping hp to 0,
             # so native client snapshots may contain a negative final value.
             if (type(hp) not in (int, float) or type(maximum) not in (int, float)
+                    or not math.isfinite(hp) or not math.isfinite(maximum)
                     or abs(hp) > 1_000_000_000 or maximum <= 0 or maximum > 1_000_000_000
                     or hp > maximum):
                 raise GameplayFault("InvalidResult", "Invalid combatant health")

@@ -141,6 +141,7 @@ package com.meng52.game.ui.panel
           }
          if(_re.data)
          {
+            if(GlobalFunction.isVersionedProfileReceipt(_re) && !GlobalData.isCurrentProfileSyncEnvelope(_re.state_sync)) return;
             fun = function():void
             {
                Starling.juggler.delayCall(fun1,0.1);
@@ -159,6 +160,8 @@ package com.meng52.game.ui.panel
             {
                select_avt[i]["id"] = i;
             }
+            GlobalData.$exploration_select_avatar=select_avt;
+            GlobalData.$exploration_data=_re.data;
             if(!GlobalFunction.isVersionedProfileReceipt(_re))
             {
                GlobalData.$userData.exploration.army = select_avt;

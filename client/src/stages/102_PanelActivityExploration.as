@@ -40,6 +40,7 @@ package com.meng52.game.ui.panel
       private var gamerule:LOL_Button;
       
       private var serverBack:Object;
+      private var resumeExploration:Boolean = false;
       
       private var _spRule:Sprite;
       
@@ -167,6 +168,7 @@ package com.meng52.game.ui.panel
       
       private function onTRIGGERED_btn(param1:Event) : void
       {
+         resumeExploration=param1==null && GlobalData.backFromExploration;
          SendServiceAMFFun.send_user_exploration_start(backFun);
       }
       
@@ -207,20 +209,10 @@ package com.meng52.game.ui.panel
             _loc4_ = int(GlobalData.$mConfig_simple.explore.map_max);
             _loc2_ = _loc3_ <= _loc4_ ? _loc3_ : _loc4_;
             mSchedule_spr.text = GlobalLanguageStr.getLanguageStr(90566,_loc2_);
-            _armyMax = int(GlobalData.$mConfig_simple.explore.army_max);
-            if(_armyMax < 1)
-            {
-               _armyMax = 15;
-            }
-            _armyCount = Tools.getElementNum(GlobalData.$userData.exploration.army);
-            if(_armyCount < _armyMax)
-            {
-               GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("exploration_select",false,true);
-            }
-            else
-            {
-               GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("exploration_select_game",false,true);
-            }
+            // A deliberate entry always confirms the up-to-15 hero roster.
+            // Returning from a settled battle resumes the map/reward directly.
+            _armyCount=Tools.getElementNum(GlobalData.$userData.exploration.army);
+            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel(resumeExploration && _armyCount>0 ? "exploration_select_game" : "exploration_select",false,true);
          }
       }
    }

@@ -5,7 +5,7 @@ p=root/'client/src/stages/137_Avatar.as'
 s=p.read_text('utf8')
 start='      // BEGIN SKIN REVISION V2\n';end='      // END SKIN REVISION V2\n'
 code=(root/'client/src/skin_revision_v2.aspart').read_text('utf8').replace('damage+=','ap+=')
-if start in s:s=s[:s.index(start)]+s[s.index(end)+len(end):]
+if start in s:s=s[:s.index(start)].rstrip('\n')+'\n\n'+s[s.index(end)+len(end):].lstrip('\n')
 anchor='      public function equipmentPart104('
 s=s.replace(anchor,start+code+'\n'+end+'\n'+anchor,1)
 def once(old,new):
@@ -40,11 +40,13 @@ for method,next_method in [('checkMove','resMove'),('reline','refreshReline')]:
   else:s=s[:b]+'\n         skin2Moved();'+s[b:]
 p.write_bytes(s.replace('\r\n','\n').replace('\n','\r\n').encode('utf8'))
 skill=root/'client/src/stages/139_SkillSet.as'
+skill_newline='\r\n' if b'\r\n' in skill.read_bytes() else '\n'
 t=skill.read_text('utf8')
+original_skill=t
 anchor='         if(_loc2_ && param2 >= 0 && param2 < _loc2_.length && _loc2_[param2] !== null'
 if '         _loc1_ = avatar.skin2Focus(_loc1_);' not in t:
  t=t.replace(anchor,'         _loc1_ = avatar.skin2Focus(_loc1_);\n'+anchor,1)
-skill.write_bytes(t.replace('\r\n','\n').replace('\n','\r\n').encode('utf8'))
+if t!=original_skill:skill.write_text(t,encoding='utf8',newline=skill_newline)
 
 # Reapplying the maintained combat part must preserve its presentation hooks.
 effects=root/'scripts/sync_battle_effects_104.py'

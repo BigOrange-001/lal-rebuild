@@ -100,6 +100,64 @@ GAMEPLAY_ERROR_MESSAGES_ZH.update({
 def gameplay_fault_message(error):
  return GAMEPLAY_ERROR_MESSAGES_ZH.get(error.code,error.message)
 
+def load_game_config(path, now=None):
+ """Load the shared post-overlay baseline for runtime and Mod authoring."""
+ if now is None: now=int(time.time())
+ document=json.loads(pathlib.Path(path).read_text(encoding='utf-8-sig'))
+ if not isinstance(document,dict) or not isinstance(document.get('cfg'),dict):
+  raise ValueError('Config file must contain {cfg_version, cfg: {...}, ...}')
+ document=native_dates(document)
+ apply_recruit_exchange_config(document)
+ apply_equipment_capacity(document)
+ apply_equipment_upgrade_config(document)
+ apply_captain_timing(document)
+ apply_upstream_skill_priority(document)
+ apply_battle_status_effects(document)
+ apply_summon_panel_config(document)
+ document=apply_halo_progression(document)
+ from skill_books import apply_equipment_calibration
+ apply_equipment_calibration(document)
+ apply_hero_skills_103(document)
+ apply_talent_stats_103(document)
+ apply_hero_balance_103(document)
+ finalize_hero_skills_103(document)
+ apply_dot_rules_103(document)
+ apply_cat_katarina_103(document)
+ apply_polar_ashe_103(document)
+ apply_santa_veigar_103(document)
+ apply_nurse_akali_103(document)
+ apply_hero_accuracy_103(document)
+ apply_hero_iteration_103(document)
+ apply_energy_purchase_103(document)
+ from hero_packs_104 import apply_hero_packs_104
+ apply_hero_packs_104(document)
+ from orange_ascension_104 import apply_orange_ascension_104
+ apply_orange_ascension_104(document)
+ from hero_revision_104 import apply_hero_revision_104
+ apply_hero_revision_104(document)
+ from hero_calibration_104 import apply_hero_calibration_104
+ apply_hero_calibration_104(document)
+ from skin_revision_104 import apply_skin_revision_104
+ apply_skin_revision_104(document)
+ apply_tower_rewards_103(document)
+ apply_ancient_trial_103(document)
+ apply_material_attempts_103(document)
+ from power_balance_104 import apply_power_balance_104
+ apply_power_balance_104(document)
+ from resource_drops_104 import apply_resource_drops_104
+ apply_resource_drops_104(document)
+ from bonds_104 import apply_bonds_104
+ apply_bonds_104(document)
+ from equipment_bonds_104 import apply_equipment_bonds_104
+ apply_equipment_bonds_104(document)
+ from skill_output_104 import apply_skill_output_104
+ apply_skill_output_104(document)
+ from player_copy_104 import apply_player_copy_104
+ apply_player_copy_104(document)
+ apply_check_in_rewards(document,int(game_day(now)[:4]))
+ document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
+ return document
+
 class Backend:
  def __init__(self,database,config=None,mods_root=None):
   database_path=str(database)
@@ -113,61 +171,7 @@ class Backend:
   if 'spending_tier' not in {row[1] for row in self.db.execute('PRAGMA table_info(accounts)')}:
    self.db.execute("ALTER TABLE accounts ADD COLUMN spending_tier TEXT NOT NULL DEFAULT 'small'")
   self.db.commit()
-  self.config=None
-  if config:
-   self.config=json.loads(pathlib.Path(config).read_text(encoding='utf-8-sig'))
-   if not isinstance(self.config,dict) or not isinstance(self.config.get('cfg'),dict):
-    raise ValueError('Config file must contain {cfg_version, cfg: {...}, ...}')
-   self.config=native_dates(self.config)
-   apply_recruit_exchange_config(self.config)
-   apply_equipment_capacity(self.config)
-   apply_equipment_upgrade_config(self.config)
-   apply_captain_timing(self.config)
-   apply_upstream_skill_priority(self.config)
-   apply_battle_status_effects(self.config)
-   apply_summon_panel_config(self.config)
-   self.config=apply_halo_progression(self.config)
-   from skill_books import apply_equipment_calibration
-   apply_equipment_calibration(self.config)
-   apply_hero_skills_103(self.config)
-   apply_talent_stats_103(self.config)
-   apply_hero_balance_103(self.config)
-   finalize_hero_skills_103(self.config)
-   apply_dot_rules_103(self.config)
-   apply_cat_katarina_103(self.config)
-   apply_polar_ashe_103(self.config)
-   apply_santa_veigar_103(self.config)
-   apply_nurse_akali_103(self.config)
-   apply_hero_accuracy_103(self.config)
-   apply_hero_iteration_103(self.config)
-   apply_energy_purchase_103(self.config)
-   from hero_packs_104 import apply_hero_packs_104
-   apply_hero_packs_104(self.config)
-   from orange_ascension_104 import apply_orange_ascension_104
-   apply_orange_ascension_104(self.config)
-   from hero_revision_104 import apply_hero_revision_104
-   apply_hero_revision_104(self.config)
-   from hero_calibration_104 import apply_hero_calibration_104
-   apply_hero_calibration_104(self.config)
-   from skin_revision_104 import apply_skin_revision_104
-   apply_skin_revision_104(self.config)
-   apply_tower_rewards_103(self.config)
-   apply_ancient_trial_103(self.config)
-   apply_material_attempts_103(self.config)
-   from power_balance_104 import apply_power_balance_104
-   apply_power_balance_104(self.config)
-   from resource_drops_104 import apply_resource_drops_104
-   apply_resource_drops_104(self.config)
-   from bonds_104 import apply_bonds_104
-   apply_bonds_104(self.config)
-   from equipment_bonds_104 import apply_equipment_bonds_104
-   apply_equipment_bonds_104(self.config)
-   from skill_output_104 import apply_skill_output_104
-   apply_skill_output_104(self.config)
-   from player_copy_104 import apply_player_copy_104
-   apply_player_copy_104(self.config)
-   apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
-   self.config['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
+  self.config=load_game_config(config,self.clock.now()) if config else None
   self.players=PlayerStore(self.db,self.config,self.clock)
   self.players.lock=self.lock
   from mod_service import ModService

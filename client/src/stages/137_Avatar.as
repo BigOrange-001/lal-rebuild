@@ -1093,22 +1093,6 @@ package com.meng52.game.module.avatar
          return abilityEnemies(distance).length > 0;
       }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       // BEGIN SKIN REVISION V2
       private function skin2Initialize() : void
       {
@@ -1248,7 +1232,11 @@ package com.meng52.game.module.avatar
          if(family==1219 && slot==1)
          {
             var row:Object=sourceSkill ? GlobalData.$mConfig_skill[sourceSkill.skillSetData.id] : null;
-            if(row && row.skin_v2_bond_size>=4) for each(var marked:Avatar in s2Lane()) if(s2LiveMark(marked,"windmark")) return true;
+            if(row && row.skin_v2_bond_size>=4)
+            {
+               for each(var marked:Avatar in s2Lane()) if(s2LiveMark(marked,"windmark") || s2LiveMark(marked,"airborne")) return true;
+               return false;
+            }
             for each(var target:Avatar in abilityAllEnemies()) if(s2LiveMark(target,"airborne") && target.getType()==1 && !target.isManualSummonUnit) return true;
             return false;
          }
@@ -1261,9 +1249,9 @@ package com.meng52.game.module.avatar
          if(slot==2) return false;
          var target:Avatar=s2Pick(); var ally:Avatar;var unit:Avatar;var targets:Array=s2Lane();var allies:Array=s2Lane(true,"ratio");
          var value:Number;var before:Number;var i:int;var stage:int;var count:int;var row:Object;
-         if(!target && !(family==1228 && slot==0)) return false;
-         var previous:Object=skin2.castSkill;skin2.castSkill=skill;
          row=GlobalData.$mConfig_skill[skill.skillSetData.id];
+         if(!target && !(family==1228 && slot==0) && !(family==1219 && slot==1 && !(row.skin_v2_bond_size>=4))) return false;
+         var previous:Object=skin2.castSkill;skin2.castSkill=skill;
          try
          {
          if(family==1219 && row.skin_v2_bond_size>=4)
@@ -1376,7 +1364,7 @@ package com.meng52.game.module.avatar
                   for each(unit in allies) {unit.addBuff("purify",1);s2Shield(unit,s2Value(skill,"shield"));}
                   for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));if(s2LiveMark(unit,"exposed") && unit.skin2.exposed.owner===this) abilityControl(unit,"silence",1);}break;
                case 1206:
-                  addBuff("strong",2,.3);addBuff("fleeup",2,6000);target=s2Pick("ratio");
+                  removeAllDebuff();addBuff("strong",2,.4);addBuff("fleeup",2,8000);target=s2Pick("ratio");
                   var ringKey:String="rings_"+abilityIndex;
                   count=target.skin2[ringKey] ? int(target.skin2[ringKey].count) : 0;
                   for each(unit in targets)
@@ -1423,7 +1411,7 @@ package com.meng52.game.module.avatar
                   skin2.crows={left:2,skill:skill,start:manualOwnerActionSerial};skin2.crowGuard=false;
                   for each(unit in targets) {abilityControl(unit,"stun",1);s2Hit(unit,skin2.lastHurt==manualOwnerActionSerial-1 ? s2Value(skill,"hit") : s2Value(skillB,"entry"));}break;
                case 1219:
-                  target=null;for each(unit in abilityAllEnemies()) if(s2LiveMark(unit,"airborne")) {target=unit;break;}
+                  target=null;for each(unit in abilityAllEnemies()) if(s2LiveMark(unit,"airborne") && unit.getType()==1 && !unit.isManualSummonUnit) {target=unit;break;}
                   if(!target) return false;
                   reline(target.line,Math.max(0,Math.min(GameMapConfig.LINE_POS,target.pos+(team==1 ? 125 : -125))));
                   for each(unit in s2Lane()) if(s2LiveMark(unit,"airborne")) for(i=0;i<3;i++) s2Hit(unit,s2Value(skill,"hit"),1);
@@ -1573,7 +1561,7 @@ package com.meng52.game.module.avatar
       }
       private function skin2Incoming(amount:Number, source:Avatar, kind:int) : Number
       {
-         if(!GameMap.currentMap || skin2Depth>0) return amount;
+         if(!GameMap.currentMap) return amount;
          var context:Object=currentAbilityAttack();var active:Boolean=source && context && context.kind=="active" && context.owner===source;
          var unit:Avatar;var state:Object;var family:int=s2Family();
          if(kind==4)
@@ -1581,6 +1569,7 @@ package com.meng52.game.module.avatar
             for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1228 && unit.line==line && hp/hpMax<.6) {amount*=1.25;break;}
             return amount;
          }
+         if(skin2Depth>0) return amount;
          if(!source || source.team==team || kind<1 || kind>3) return amount;
          if(active)
          {
@@ -2681,13 +2670,13 @@ package com.meng52.game.module.avatar
 
       public static var POWER_RATE:Number = 1e-8;
 
-      public static var POWER_HP:Number = 0.5;
+      public static var POWER_HP:Number = 0.29;
 
-      public static var POWER_DAMAGE:Number = 2;
+      public static var POWER_DAMAGE:Number = 1.5;
 
-      public static var POWER_DE_PH:Number = 0.625;
+      public static var POWER_DE_PH:Number = 1.8;
 
-      public static var POWER_DE_MA:Number = 0.625;
+      public static var POWER_DE_MA:Number = 1.8;
 
       public static var POWER_SPEED_RANGE:int = 1000;
 
@@ -4119,6 +4108,7 @@ package com.meng52.game.module.avatar
          _loc1_.bonds_104 = [];
          for each(var bond104:Object in getBondRows104()) _loc1_.bonds_104.push(String(bond104.id));
          _loc1_.aid = avatarData.id;
+         if(mData && mData.instance_id) _loc1_.instance_id = String(mData.instance_id);
          _loc1_.ap = ap;
          _loc1_.morph = morph;
          _loc1_.phase = phase;
@@ -6162,7 +6152,7 @@ package com.meng52.game.module.avatar
          {
             param2 = lv;
          }
-         var _loc5_:Number = Math.pow(Math.max(0,getHpMax(param2,-1,param3) * POWER_HP + getDamage(param2,-1,param3) * POWER_DAMAGE + getDePh(param2,-1,param3) * POWER_DE_PH + getDeMa(param2,-1,param3) * POWER_DE_MA),2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(Math.max(0,getHit() + getFlee() + getCrit() + getTough()),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
+         var _loc5_:Number = Math.pow(Math.max(0,getHpMax(param2,-1,param3) * Number(_loc6_[1]) + getDamage(param2,-1,param3) * Number(_loc6_[2]) + getDePh(param2,-1,param3) * Number(_loc6_[3]) + getDeMa(param2,-1,param3) * Number(_loc6_[4])),2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(Math.max(0,getHit() + getFlee() + getCrit() + getTough()),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
       }

@@ -10,6 +10,8 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.global.ConfigManager;
    import com.meng52.net.SendServiceAMFFun;
+   import com.meng52.net.SendAndSelect;
+   import com.meng52.events.NetEvent;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
@@ -56,6 +58,8 @@ package com.meng52.game.ui.panel
       private const GIFT_NAME:String = "giftname_";
       
       private var freshNum:int;
+      private var explorationRequest:String = "";
+      private var explorationGeneration:int = 0;
       
       private var _tween:Tween;
       
@@ -93,6 +97,7 @@ package com.meng52.game.ui.panel
          var _mapMax:int = int(GlobalData.$mConfig_simple.explore.map_max);
          var _titleId:int = int(_explorationState.stage) > _mapMax ? 98221 : 98222;
          this.setPopPanelBg(GlobalLanguageStr.getStr(_titleId),GlobalData.$center_height + 100);
+         SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",onExplorationError);
          setUI();
       }
       
@@ -242,6 +247,7 @@ package com.meng52.game.ui.panel
             _sp.addChild(mWarFog);
          }
          updateMapPos();
+         freshBtnStatus();
       }
       
       private function scrollFun(param1:Event) : void
@@ -388,90 +394,54 @@ package com.meng52.game.ui.panel
       
       private function onTRIGGERED(param1:Event) : void
       {
-         var _loc3_:Object = null;
-         var _loc7_:Object = null;
-         var _loc2_:Object = null;
-         var _loc6_:Object = null;
-         var _loc4_:Object = null;
-         var _loc5_:int = 0;
-         var _loc8_:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
-         var _loc9_:String = _loc8_.name;
-         if("fresh_btn_name" === _loc9_)
+         if(explorationRequest != "" || stage == null) return;
+         var counts:Object=GlobalData.$userData.records.exploration_times;
+         var cfg:Object=GlobalData.$mConfig_simple.explore;
+         if(int(GlobalData.$userData.exploration.current_stage_finish)==1)
          {
-            _loc3_ = GlobalData.$userData.records.exploration_times;
-            _loc7_ = GlobalData.$mConfig_simple.explore;
-            _loc2_ = GlobalData.$userData.exploration;
-            if(freshNum > 0)
-            {
-               if(_loc2_.stage == 1 && _loc2_.current_stage_finish == 0)
-               {
-                  _loc6_ = {
-                     "ok":gotofreefresh,
-                     "no":GlobalFunction.functionNull
-                  };
-                  GlobalFunction.popAlert(GlobalLanguageStr.getStr(90589),Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90669),[16777215,16764006,16764006,16764006]),_loc6_);
-               }
-               else
-               {
-                  _loc4_ = {
-                     "ok":freeFresh,
-                     "no":GlobalFunction.functionNull
-                  };
-                  if(_loc3_.refresh_buy < _loc7_.refresh_num)
-                  {
-                     GlobalFunction.popAlert(GlobalLanguageStr.getStr(90589),Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90616),[16777215,16764006,16764006,16764006]),_loc4_);
-                  }
-                  else
-                  {
-                     _loc5_ = int(GlobalData.$mConfig_simple.explore.refresh_price);
-                     if(GlobalData.$userData.coin >= _loc5_)
-                     {
-                        GlobalFunction.popAlert(GlobalLanguageStr.getStr(90619),Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90618,_loc5_),[16777215,16764006,16764006,16764006]),_loc4_);
-                     }
-                     else
-                     {
-                        GlobalFunction.popErrorCoin(_loc5_);
-                     }
-                  }
-               }
-            }
-            else
-            {
-               LayoutUIAnimation.getOnlyExample().popWords(GlobalLanguageStr.getStr(90561));
-            }
+            LayoutUIAnimation.getOnlyExample().popWords("请先领取当前关卡奖励，再刷新地图。");return;
          }
+         var free:Boolean=int(counts.refresh_count)>0;
+         if(!free && int(counts.refresh_buy)>=int(cfg.refresh_num))
+         {
+            LayoutUIAnimation.getOnlyExample().popWords("今日刷新次数已用完。");return;
+         }
+         var cost:int=free ? 0 : int(cfg.refresh_price);
+         if(GlobalData.$userData.coin<cost) { GlobalFunction.popErrorCoin(cost);return; }
+         GlobalFunction.popAlert("刷新探险",free ? "使用1次免费刷新，重新生成地图并恢复英雄生命？" : "消耗"+cost+"金砖刷新地图并恢复英雄生命？",{"ok":freeFresh,"no":GlobalFunction.functionNull});
       }
-      
+
       private function freeFresh() : void
       {
-         SendServiceAMFFun.send_user_exploration_refresh(_refun);
+         requestExploration("user.exploration_refresh");
       }
-      
-      private function gotofreefresh() : void
+
+      private function requestExploration(method:String,params:Object=null) : void
       {
-         var delayFun:* = function():void
+         if(stage == null || explorationRequest != "") return;
+         explorationRequest=method;
+         var generation:int=++explorationGeneration;
+         freshBtnStatus();
+         SendAndSelect.sendAndSelectService(method,params == null ? {} : params,function(reply:Object):void
          {
-            var _loc1_:String = null;
-            if(userdata.refresh_buy < cfg.refresh_num)
-            {
-               GlobalFunction.popAlert(GlobalLanguageStr.getStr(90589),Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90616),[16777215,16764006,16764006,16764006]),_fun1);
-            }
-            else
-            {
-               _loc1_ = Tools.formatLineX(GlobalLanguageStr.getLanguageStr(90618,_coin),[16777215,16764006,16764006,16764006]);
-               GlobalFunction.popAlert(GlobalLanguageStr.getStr(90619),_loc1_,_fun1);
-            }
-         };
-         var _coin:int = int(GlobalData.$mConfig_simple.explore.refresh_price);
-         var userdata:Object = GlobalData.$userData.records.exploration_times;
-         var cfg:Object = GlobalData.$mConfig_simple.explore;
-         var _fun1:Object = {
-            "ok":freeFresh,
-            "no":GlobalFunction.functionNull
-         };
-         Starling.juggler.delayCall(delayFun,0.1);
+            if(stage == null || generation!=explorationGeneration || explorationRequest!=method) return;
+            explorationRequest="";freshBtnStatus();
+            if(!reply || int(reply.return_code)!=0 || !reply.data) return;
+            if(GlobalFunction.isVersionedProfileReceipt(reply) && !GlobalData.isCurrentProfileSyncEnvelope(reply.state_sync)) return;
+            if(method=="user.exploration_refresh") _refun(reply);
+            else if(method!="user.exploration_opponent" || int(reply.data.stage)==int(GlobalData.$userData.exploration.stage)) reback(reply);
+         });
       }
-      
+
+      private function onExplorationError(event:NetEvent) : void
+      {
+         if(event.data && String(event.data.method=="profile_state_sync" ? event.data.receipt_method : event.data.method)==explorationRequest && explorationRequest!="")
+         {
+            explorationGeneration++;explorationRequest="";
+            if(stage) freshBtnStatus();
+         }
+      }
+
       private function _refun(param1:Object) : void
       {
          if(this.stage == null) return;
@@ -540,11 +510,17 @@ package com.meng52.game.ui.panel
       
       private function freshBtnStatus() : void
       {
-         mFresh_btn.enabled = freshNum > 0;
+         var counts:Object=GlobalData.$userData.records.exploration_times;
+         var cfg:Object=GlobalData.$mConfig_simple.explore;
+         freshNum=Math.max(0,int(counts.refresh_count));
+         var paid:int=Math.max(0,int(cfg.refresh_num)-int(counts.refresh_buy));
+         if(mFresh_txt) mFresh_txt.text=freshNum>0 ? "免费刷新："+freshNum+"次" : "付费刷新："+paid+"次 · 每次"+cfg.refresh_price+"金砖";
+         if(mFresh_btn) mFresh_btn.enabled=explorationRequest=="" && (freshNum>0 || paid>0) && int(GlobalData.$userData.exploration.current_stage_finish)==0;
       }
-      
+
       private function onTRIGGERED_btn(param1:Event) : void
       {
+         if(explorationRequest != "" || stage == null) return;
          var _loc4_:String = (param1.currentTarget as LOL_Button).name;
          var _loc3_:Array = _loc4_.split("_");
          var _loc2_:int = 0;
@@ -556,7 +532,7 @@ package com.meng52.game.ui.panel
             {
                if(_loc5_.stage == _loc2_)
                {
-                  SendServiceAMFFun.send_user_exploration_get_reward(reback);
+                  requestExploration("user.exploration_get_reward");
                }
                else if(_loc5_.stage <= _loc2_)
                {
@@ -580,7 +556,7 @@ package com.meng52.game.ui.panel
             }
             else if(_loc5_.stage == _loc2_)
             {
-               SendServiceAMFFun.send_user_exploration_opponent(reback,{"stage":_loc2_});
+               requestExploration("user.exploration_opponent",{"stage":_loc2_});
             }
             else if(_loc5_.stage <= _loc2_)
             {
@@ -652,7 +628,7 @@ package com.meng52.game.ui.panel
                   mPart_arr[_loc4_] = null;
                   mPart_arr[_loc4_] = _loc9_;
                   _loc5_.removeFromParent(true);
-                  updateGuidePos();
+                  updateGuidePos();freshBtnStatus();
                   _loc8_ = new Sign(true);
                   _loc8_.x = (mPart_arr[(param1.data.stage - 1) * 2 - 1] as Image).x;
                   _loc8_.y = (mPart_arr[(param1.data.stage - 1) * 2 - 1] as Image).y;
@@ -669,6 +645,8 @@ package com.meng52.game.ui.panel
       {
          var _loc2_:Image = null;
          var _loc3_:LOL_Button = null;
+         explorationGeneration++;explorationRequest="";
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onExplorationError);
          super.onREMOVED_FROM_STAGE(param1);
          if(mFresh_spr)
          {

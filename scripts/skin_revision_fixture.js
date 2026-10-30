@@ -106,4 +106,33 @@ for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fres
  let {a,b,ally}=fresh(1215);ally.hp=20000;cast(a,0);
  assert.strictEqual(a.skin2.sonic,b);assert.strictEqual(a.skin2.ward,ally);assert(ally.buffs.shield);cases++;
 }
+{
+ let {a,b}=fresh(1206);a.addBuff('curse',2);a.s2Mark(a,'cold',2);cast(a,1);
+ assert(!a.buffs.curse,'captain cleanses debuffs before applying buffs');
+ assert(!a.skin2.cold,'captain also cleanses authored debuff marks');
+ assert.equal(a.buffs.strong.value,.4);assert.equal(a.buffs.fleeup.value,8000);cases++;
+}
+{
+ let {a,b,c}=fresh(1219);b.line=1;b.isManualSummonUnit=true;c.line=2;
+ unit(0,2,1450);
+ a.s2Mark(b,'airborne',1);a.s2Mark(c,'airborne',1);
+ assert(a.skin2CanCast('skin2_1219_1',a.skill1));cast(a,1);
+ assert.equal(a.line,2,'captain anchors on an airborne hero, ignoring airborne summons');
+ assert(c.hp<100000);assert.equal(b.hp,100000);cases++;
+}
+{
+ let {a,b,c}=fresh(1219);b.line=1;c.line=2;
+ a.s2Mark(b,'airborne',1);
+ let row=data.skill[a.skill1.skillSetData.id],old=row.skin_v2_bond_size;
+ row.skin_v2_bond_size=4;
+ assert(!a.skin2CanCast('skin2_1219_1',a.skill1),'lane-bound bond cannot consume a cast on another lane');
+ b.line=0;assert(a.skin2CanCast('skin2_1219_1',a.skill1));
+ a.s2Mark(b,'windmark',2);assert(a.skin2CanCast('skin2_1219_1',a.skill1));
+ if(old===undefined)delete row.skin_v2_bond_size;else row.skin_v2_bond_size=old;cases++;
+}
+{
+ let {a,b}=fresh(1206);unit(1228,1,a.pos);a.hp=50000;
+ a.s2Hit(b,1,1,true);a.s2Hit(b,1,1,true);let before=a.hp;a.s2Hit(b,1,1,true);
+ assert.equal(a.hp-before,Math.trunc(a.ap*a.s2Value(a.skillB,'heal')*1.25),'healing aura also amplifies ring-triggered healing');cases++;
+}
 console.log(`${cases} native skill/state scenarios passed`);

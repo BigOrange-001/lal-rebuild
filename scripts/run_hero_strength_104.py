@@ -183,12 +183,18 @@ def main():
     parser.add_argument('--seed-epoch',type=int,default=0)
     parser.add_argument('--output',type=Path,default=ROOT/'outputs/hero-strength-20261030-1000')
     args=parser.parse_args();output=args.output.resolve();(output/'battles').mkdir(parents=True,exist_ok=True)
-    cfg,heroes,pools=study_config();payload=dict(cfg=cfg,heroes=heroes,pools=pools,seed_epoch=args.seed_epoch,study_policy=load_study_policy())
+    if args.cycles <= 0 or args.block_cycles <= 0:
+        parser.error('cycles and block-cycles must be positive')
+    cfg,heroes,pools=study_config()
+    plan=[dict(mode=mode,start=start,stop=min(args.cycles,start+args.block_cycles))
+          for mode in pools for start in range(0,args.cycles,args.block_cycles)]
+    payload=dict(cfg=cfg,heroes=heroes,pools=pools,seed_epoch=args.seed_epoch,
+                 study_policy=load_study_policy(),task_plan=plan)
     config=output/'frozen-config.json'
     encoded=json.dumps(payload,ensure_ascii=False,separators=(',',':'),default=str).encode('utf8')
     from hero_strength_freeze_104 import freeze_study
     config=freeze_study(output,encoded)
-    jobs=[(m,start,min(args.cycles,start+args.block_cycles),str(output)) for m in pools for start in range(0,args.cycles,args.block_cycles)]
+    jobs=[(job['mode'],job['start'],job['stop'],str(output)) for job in plan]
     print(json.dumps(dict(status='starting',heroes={k:len(v) for k,v in pools.items()},cycles=args.cycles,workers=args.workers,battles=sum(map(len,pools.values()))*args.cycles),ensure_ascii=False),flush=True)
     started=time.monotonic();completed=0;battles=0
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers,initializer=initialize,initargs=(str(config),)) as executor:

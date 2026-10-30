@@ -90,6 +90,8 @@ def magnitude_paths(action):
         return {(i,) for i in (5, 6, 7, 18, 19) if i < len(action)} | ({(12,)} if action[1] == 'summon' else set())
     groups = _action_paths(action)
     paths = set(sum(groups, [])) | set(_EXTRA_PATHS.get(kind, ())) | set(EXTRA.get(kind, ()))
+    if kind == 'shield_followup' and len(action) == 9:
+        paths.add((6,))
     if not paths and kind not in STRUCTURAL:
         raise ValueError('Unreviewed hero action: ' + kind)
     return {p for p in paths if p[0] < len(action)}

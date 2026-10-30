@@ -385,7 +385,7 @@ class GameplayCompetition:
         # Only yesterday can be settled, but retain a bounded audit trail.
         records["local_pvp_rank_settled_days"]=marker[-90:]
     def settle_daily_rank(self,uid,today_shanghai):
-        """Mail yesterday's local NPC arena rank reward once on first login.
+        """Mail the previous gameplay day's rank reward on its first request.
 
         The participation record is written only by a consumed local PvP
         battle. A mail request key closes the crash window between durable

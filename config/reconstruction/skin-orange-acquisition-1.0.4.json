@@ -1,0 +1,232 @@
+{
+  "schema": "skin-orange-acquisition-v1",
+  "ranking_source": "hero-tier-poster-20261030/mixed",
+  "ranking_sha256": "632083b057cedde058f9e1d1cba9ccffd5dd68dc61294f05b211c0c66f905df2",
+  "t2_point_price": 300,
+  "weights": {
+    "T1": 0.1,
+    "T2": 0.2,
+    "other": 1
+  },
+  "heroes": [
+    {
+      "id": "A_1226_6",
+      "name": "二郎真君赵信",
+      "tier": "T1",
+      "win_rate": 0.684
+    },
+    {
+      "id": "A_1202_6",
+      "name": "极地射手艾希",
+      "tier": "T1",
+      "win_rate": 0.66
+    },
+    {
+      "id": "A_1227_6",
+      "name": "白娘子",
+      "tier": "T1",
+      "win_rate": 0.6455
+    },
+    {
+      "id": "A_1211_6",
+      "name": "沙漠治安官凯瑟琳",
+      "tier": "T1",
+      "win_rate": 0.6445
+    },
+    {
+      "id": "A_1134_6",
+      "name": "卡萨丁",
+      "tier": "T1",
+      "win_rate": 0.639
+    },
+    {
+      "id": "A_1209_6",
+      "name": "兔宝宝提莫",
+      "tier": "T1",
+      "win_rate": 0.6315
+    },
+    {
+      "id": "A_1103_6",
+      "name": "马尔扎哈",
+      "tier": "T1",
+      "win_rate": 0.6275
+    },
+    {
+      "id": "A_1137_6",
+      "name": "莫德凯撒",
+      "tier": "T1",
+      "win_rate": 0.625
+    },
+    {
+      "id": "A_1201_6",
+      "name": "黄金骑士盖伦",
+      "tier": "T1",
+      "win_rate": 0.6215
+    },
+    {
+      "id": "A_1207_6",
+      "name": "偶像歌手阿狸",
+      "tier": "T1",
+      "win_rate": 0.6205
+    },
+    {
+      "id": "A_1222_6",
+      "name": "超级伊泽瑞尔",
+      "tier": "T1",
+      "win_rate": 0.614
+    },
+    {
+      "id": "A_1219_6",
+      "name": "源计划亚索",
+      "tier": "T1",
+      "win_rate": 0.614
+    },
+    {
+      "id": "A_1217_6",
+      "name": "邪恶圣诞老人维嘉",
+      "tier": "T1",
+      "win_rate": 0.6115
+    },
+    {
+      "id": "A_1223_6",
+      "name": "猎手薇恩",
+      "tier": "T1",
+      "win_rate": 0.607
+    },
+    {
+      "id": "A_1129_6",
+      "name": "猫女卡特琳娜",
+      "tier": "T1",
+      "win_rate": 0.606
+    },
+    {
+      "id": "A_1132_6",
+      "name": "劫",
+      "tier": "T1",
+      "win_rate": 0.606
+    },
+    {
+      "id": "A_1216_6",
+      "name": "联盟之喙艾维尼亚",
+      "tier": "T1",
+      "win_rate": 0.604
+    },
+    {
+      "id": "A_1203_6",
+      "name": "恶魔男爵瑞兹",
+      "tier": "T1",
+      "win_rate": 0.602
+    },
+    {
+      "id": "A_1215_6",
+      "name": "龙的传人李青",
+      "tier": "T1",
+      "win_rate": 0.6005
+    },
+    {
+      "id": "A_1210_6",
+      "name": "兔女郎瑞雯",
+      "tier": "T2",
+      "win_rate": 0.5965
+    },
+    {
+      "id": "A_1218_6",
+      "name": "幽魂费德提克",
+      "tier": "T2",
+      "win_rate": 0.596
+    },
+    {
+      "id": "A_1206_6",
+      "name": "觅心猎手薇恩",
+      "tier": "T2",
+      "win_rate": 0.594
+    },
+    {
+      "id": "A_1208_6",
+      "name": "护士阿卡丽",
+      "tier": "T2",
+      "win_rate": 0.59
+    },
+    {
+      "id": "A_1309_6",
+      "name": "超人提莫",
+      "tier": "T2",
+      "win_rate": 0.588
+    },
+    {
+      "id": "A_1138_6",
+      "name": "塔姆肯奇",
+      "tier": "T2",
+      "win_rate": 0.586
+    },
+    {
+      "id": "A_1213_6",
+      "name": "足球先生伊泽瑞尔",
+      "tier": "T2",
+      "win_rate": 0.58
+    },
+    {
+      "id": "A_1212_6",
+      "name": "粽子少女",
+      "tier": "T2",
+      "win_rate": 0.577
+    },
+    {
+      "id": "A_1140_6",
+      "name": "艾克",
+      "tier": "T2",
+      "win_rate": 0.5745
+    },
+    {
+      "id": "A_1214_6",
+      "name": "逆转裁判崔斯特",
+      "tier": "T2",
+      "win_rate": 0.573
+    },
+    {
+      "id": "A_1311_6",
+      "name": "超级赛亚人孙悟空",
+      "tier": "T2",
+      "win_rate": 0.57
+    },
+    {
+      "id": "A_1139_6",
+      "name": "卡尔玛",
+      "tier": "T2",
+      "win_rate": 0.5685
+    },
+    {
+      "id": "A_1204_6",
+      "name": "苹果机器人布里茨",
+      "tier": "T2",
+      "win_rate": 0.5665
+    },
+    {
+      "id": "A_1310_6",
+      "name": "钢铁侠提莫",
+      "tier": "T2",
+      "win_rate": 0.563
+    },
+    {
+      "id": "A_1228_6",
+      "name": "DJ娑娜",
+      "tier": "T2",
+      "win_rate": 0.5505
+    },
+    {
+      "id": "A_1221_6",
+      "name": "新年安妮",
+      "tier": "T2",
+      "win_rate": 0.5345
+    }
+  ],
+  "vip_min_level": 8,
+  "normal_excluded_skin_qualities": [
+    "blue",
+    "purple"
+  ],
+  "advanced_excluded_skin_qualities": [
+    "blue"
+  ],
+  "advanced_purple_skin_weight": 0.1
+}

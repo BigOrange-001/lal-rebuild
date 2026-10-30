@@ -14,6 +14,7 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.screen.PanelBase;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendServiceAMFFun;
+   import com.meng52.net.SendAndSelect;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
@@ -104,7 +105,7 @@ package com.meng52.game.ui.panel
          if(_loc5_ < _loc2_[_loc6_].num)
          {
             _loc8_ = GlobalData.$userData.attrs.sign_in.t == null ? 0 : (GlobalData.$userData.attrs.sign_in.t as Date).time;
-            _loc1_ = (GlobalData.$userData.login_time as Date).time;
+            _loc1_ = SendAndSelect.$systemTimer_nowSecond * 1000;
             _loc7_ = Tools.checkIsSameDay(_loc8_,_loc1_);
             _loc3_ = Tools.checkIsPrevDay(_loc1_,_loc8_);
             if(_loc7_)

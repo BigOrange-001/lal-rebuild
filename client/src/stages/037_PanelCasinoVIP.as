@@ -309,6 +309,12 @@ package com.meng52.game.ui.panel
          var _loc5_:int = 0;
          if(_loc7_)
          {
+            var minimumVip:int = int(GlobalData.$mConfig_ploy_system_simple.extract_avatar.min_vip_level || 8);
+            if(int(GlobalData.$userData.vip_lv) < minimumVip)
+            {
+               GlobalFunction.popAlert("", "VIP召唤需要VIP" + minimumVip + "及以上");
+               return;
+            }
             if(_loc8_.name == BTN_NAME_CASINO_ONE)
             {
                payType = 0;

@@ -194,9 +194,9 @@ package com.meng52.game.module.equip
          {
             return -1;
          }
-         var itemLevel:int = Math.max(1,lv);
-         var attempts:int = Math.ceil(Number(GlobalData.$mConfig_simple.equip_config[3]) * itemLevel / Math.max(5,int(itemLevel / 10)));
          var curve:Object = GlobalData.$mConfig_simple.wash_halo_curve;
+         var itemLevel:int = curve ? Math.max(1,int(curve.reference_item_level || 100)) : Math.max(1,lv);
+         var attempts:int = Math.ceil(Number(GlobalData.$mConfig_simple.equip_config[3]) * itemLevel / Math.max(5,int(itemLevel / 10)));
          if(curve && curve.schema == "weighted-five-rank-v1")
          {
             var totalExp:Number = attempts * Number(curve.wash_multiplier) * Number(curve.exp_per_wash);

@@ -7,6 +7,7 @@ import copy
 
 HALO_CURVE = {
     "schema": "weighted-five-rank-v1",
+    "reference_item_level": 100,
     "wash_multiplier": 5,
     "exp_per_wash": 20,
     # Each successive rank needs more of the full progression budget.
@@ -28,7 +29,7 @@ def apply_halo_progression(document: dict) -> dict:
 
 
 def halo_rank_threshold(simple: dict, item_level: int, rank: int) -> int:
-    """Experience for rank -> rank+1, scaled to five times wash saturation."""
+    """Fixed rank budget using the level-100 equipment wash baseline."""
     curve = simple["wash_halo_curve"]
     weights = curve["rank_weights"]
     cap = int(simple["equipwash"][5])
@@ -36,7 +37,8 @@ def halo_rank_threshold(simple: dict, item_level: int, rank: int) -> int:
         raise ValueError("invalid halo rank curve")
     if int(simple["equipwash"][2]) != int(curve["exp_per_wash"]) or int(simple["equipwash"][3]) != int(curve["exp_per_wash"]):
         raise ValueError("halo experience gains must match both wash currencies")
-    item_level = max(1, int(item_level))
+    # Actual equipment level never changes halo upgrade requirements.
+    item_level = max(1, int(curve.get("reference_item_level", 100)))
     equip_config = simple["equip_config"]
     potential = int(equip_config[3]) * item_level
     points_per_wash = max(5, item_level // 10)

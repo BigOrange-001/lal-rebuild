@@ -138,7 +138,7 @@ class GameplayCombat:
                 limit = int(limit_value[diff] if isinstance(limit_value, list) and len(limit_value) > diff
                             else limit_value if type(limit_value) is int else 99)
                 attempt_bucket = "combat_ploy" if is_activity else "combat_main_hard" if diff else "combat_main"
-                attempts = int(profile.get("records", {}).get(attempt_bucket, {}).get(cid, 0))
+                attempts = int(profile.get("records", {}).get('daily_stage_attempts',{}).get(attempt_bucket, {}).get(cid, 0))
                 if attempts >= limit and activity_kind != 'material' and not stage.get("unlimited_attempts"):
                     raise GameplayFault("ActivityAttemptsExhausted" if is_activity else "StageAttemptsExhausted",
                                         "This stage has no attempts remaining")
@@ -496,6 +496,8 @@ class GameplayCombat:
                 record_bucket = profile.setdefault("records", {}).setdefault(counter_key, {})
                 previous_wins = int(record_bucket.get(cid, 0))
                 record_bucket[cid] = previous_wins + 1
+                daily_bucket=profile['records'].setdefault('daily_stage_attempts',{}).setdefault(counter_key,{})
+                daily_bucket[cid]=int(daily_bucket.get(cid,0))+1
                 # Stars and win records are settlement authority. Return the
                 # decision with the actual rewards so a stale client frontier
                 # cannot apply a second first-clear multiplier locally.

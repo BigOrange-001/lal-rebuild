@@ -88,6 +88,18 @@ class EquipmentFlowTest(unittest.TestCase):
         self.call('user.equip_wash', 'mark-ten', eqid='eq0', num=10, ttype='mark')
         self.assertEqual(self.store.profile_raw(self.uid)['mark'], before - 11000)
 
+    def test_level_one_wash_keeps_fixed_halo_budget_and_replay(self):
+        for kind, eqid in (('coin', 'eq0'), ('mark', 'eq1')):
+            params = dict(eqid=eqid, num=10, ttype=kind)
+            result = self.call('user.equip_wash', kind + '-low-level', **params)
+            before = self.store.profile_raw(self.uid)
+            self.assertEqual(before['my_equips'][eqid]['halo'], {'lv': 0, 'exp': 200})
+            self.assertEqual(self.call('user.equip_wash', kind + '-low-level', **params), result)
+            self.assertEqual(self.store.profile_raw(self.uid), before)
+            self.call('user.equip_wash_cancel', kind + '-cancel')
+            self.assertEqual(self.store.profile_raw(self.uid)['my_equips'][eqid]['halo'],
+                             {'lv': 0, 'exp': 200})
+
     def test_full_wash_stats_can_finish_halo_without_changing_stats(self):
         simple = self.config['cfg']['system_simple']
         cap = int(simple['equip_config'][3]) * 3 * 125
@@ -96,7 +108,7 @@ class EquipmentFlowTest(unittest.TestCase):
             item = profile['my_equips']['eq0']
             item.update({'lv': 125, 'wash_schema_version': 1,
                          'new_4attrs': {'hit': cap, 'crit': 0, 'flee': 0, 'tough': 0},
-                         'halo': {'lv': 4, 'exp': 4490}})
+                         'halo': {'lv': 4, 'exp': 4310}})
             return profile, {}
 
         self.store.atomic_update(self.uid, seed)

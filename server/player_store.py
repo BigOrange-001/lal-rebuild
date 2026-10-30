@@ -4,6 +4,7 @@ from vip_campaign import normalize_vip_profile,legacy_first_bonus_from_receipts
 from gameplay_energy import normalize_energy_purchase_day
 from cultivation_rules import normalize_profile as normalize_culture_profile
 from game_clock import GameClock
+from game_calendar import game_day, normalize_daily_counters
 from spending_budget import initial_spending,normalize_spending
 
 class GameplayFault(Exception):
@@ -155,8 +156,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   roster=[a for a in available if a.startswith('A_1') and a.endswith('_3') and a not in blocked_skin][:5]
   if not roster:roster=[a for a in available if a not in blocked_skin][:5]
   avatars={a+'|'+str(i):{'id':a+'|'+str(i),'aid':a+'|'+str(i),'lv':1,'slv':1,'exp':0,'hp':0,'ap':0,'de_ph':0,'de_ma':0,'phase':0,'morph':0,'love_exp':0,'equips':[]} for i,a in enumerate(roster)}
-  attrs={'avatar_len':self._default_avatar_capacity(len(avatars)),'friend_len':30,'login_total':0,'pay_money':0,'pay_total':0,'pay_count':0,'pay_first':0,'pay_first_gift':0,'spend_total':0,'spend_rank':{'fixed_gift':[]},'check_in':{'m':time.gmtime(now+8*3600).tm_mon,'n':0,'had_check':[0,0],'day':0,'count':0,'month_key':time.strftime('%Y-%m',time.gmtime(now+8*3600))},'sign_in':{'k':1,'n':0,'t':None},'team_num':0,'gamble_index':0,'roulette':self._default_roulette_state(),'fund':{'key':'1','money':10,'last_time':None},'fund_add_time':{'$date':now},'energy_extra':0,'fragment_energy_extra':0,'fragment_energy':{'$date':now-12*1800},'guild_contribute':0,'association_id':'','dust':[0,0,0,0],'dn_stone':0,'box_key':0,'culture_book':starter_culture_book,'sp':[0]*self._talent_color_count(),'pvp_rank':99999,'pvp_count':0,'rank_lv':[],'dn':{},'morph':{'chance':0},'lottery_activity':self._default_lottery_state(),'vip_time':{'$date':0},'expedition':{},'culture':{},'guild_id':'','gift':{},'wager':{},'wager_coin_1_count':0,'love':{}}
-  records={'guide':{},'current_rank':99999,'energy_times':0,'check_in':{},'pvp':{},'login':{},'combat':{},'battle':{},'gift':{},'task':{},'expedition':{},'pay':{},'ploy':{},'help_suids':{},'help_fuids':{},'exploration_times':{'day':time.strftime('%Y-%m-%d',time.gmtime(now+8*3600)),'refresh_count':3,'refresh_buy':0,'relive_buy':0,'mode_buy':0,'vip_relive':1}}
+  attrs={'avatar_len':self._default_avatar_capacity(len(avatars)),'friend_len':30,'login_total':0,'pay_money':0,'pay_total':0,'pay_count':0,'pay_first':0,'pay_first_gift':0,'spend_total':0,'spend_rank':{'fixed_gift':[]},'check_in':{'m':int(game_day(now)[5:7]),'n':0,'had_check':[0,0],'day':0,'count':0,'month_key':game_day(now)[:7]},'sign_in':{'k':1,'n':0,'t':None},'team_num':0,'gamble_index':0,'roulette':self._default_roulette_state(),'fund':{'key':'1','money':10,'last_time':None},'fund_add_time':{'$date':now},'energy_extra':0,'fragment_energy_extra':0,'fragment_energy':{'$date':now-12*1800},'guild_contribute':0,'association_id':'','dust':[0,0,0,0],'dn_stone':0,'box_key':0,'culture_book':starter_culture_book,'sp':[0]*self._talent_color_count(),'pvp_rank':99999,'pvp_count':0,'rank_lv':[],'dn':{},'morph':{'chance':0},'lottery_activity':self._default_lottery_state(),'vip_time':{'$date':0},'expedition':{},'culture':{},'guild_id':'','gift':{},'wager':{},'wager_coin_1_count':0,'love':{}}
+  records={'guide':{},'current_rank':99999,'energy_times':0,'check_in':{},'pvp':{},'login':{},'combat':{},'battle':{},'gift':{},'task':{},'expedition':{},'pay':{},'ploy':{},'help_suids':{},'help_fuids':{},'exploration_times':{'day':game_day(now),'refresh_count':3,'refresh_buy':0,'relive_buy':0,'mode_buy':0,'vip_relive':1}}
   exploration={'stage':1,'stage_mode':['ap','all',1.05,1],'current_stage_finish':0,'army':{},'combat_army':[]}
   attrs['time_pay']={'money':0,'time_key':None}
   attrs['time_pay_loop']={'money':0,'lifetime_money':0,'claimed':0}
@@ -193,17 +194,17 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   # Claim active monthly-card accrual on login through the same atomic
   # per-local-day markers used by the native user.get_coin callback.
   self.economy.get_coin(uid,{})
-  # Settle the previous day's local NPC arena result once on login. The
-  # competition handler owns participation/rank capture and the durable
-  # idempotent mail marker; this explicit hook avoids profile-read side effects.
-  from gameplay_common import game_day
+  self._settle_daily_rank(uid)
+  profile=self.profile(uid);profile['sessionid']=token
+  return profile
+ def _settle_daily_rank(self,uid):
+  # Settle at the first authenticated request of the new midnight-based day;
+  # durable participation/mail markers make reconnects and retries idempotent.
   for handler in self.gameplay_handlers:
    settle=getattr(handler,'settle_daily_rank',None)
    if callable(settle):
     settle(uid,game_day(self.clock.now()))
     break
-  profile=self.profile(uid);profile['sessionid']=token
-  return profile
  def authenticate(self,request):
   row=self.db.execute('SELECT uid FROM sessions WHERE token=? AND expires>?',(request.get('sessionid',''),int(time.time()))).fetchone()
   if not row or str(request.get('uid',''))!=row[0]:raise GameplayFault('InvalidSession','Login required')
@@ -264,6 +265,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   # Preserve valid legacy values; do not infer it from login_total.
   if type(p.get('catena')) is not int or p['catena'] < 0:p['catena']=0
   if not isinstance(p.get('records'),dict):p['records']={}
+  normalize_daily_counters(p,self.clock.now())
   p['records'].setdefault('help_suids',{})
   p['records'].setdefault('help_fuids',{})
   attrs=p.setdefault('attrs',{})
@@ -353,7 +355,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    p['exploration'].setdefault(key,value)
   times=p['records'].get('exploration_times')
   if not isinstance(times,dict):times={}
-  today=time.strftime('%Y-%m-%d',time.gmtime(self.clock.now()+8*3600))
+  today=game_day(self.clock.now())
   if times.get('day')!=today:
    times.update({'day':today,'refresh_count':3,'refresh_buy':0,'relive_buy':0,'mode_buy':0,'vip_relive':1})
   else:
@@ -521,8 +523,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   if month_key:state['month_key']=month_key
   return state
  def _check_in_today(self):
-  tz=datetime.timezone(datetime.timedelta(hours=8))
-  return datetime.datetime.fromtimestamp(self.clock.now(),tz).date().isoformat()
+  return game_day(self.clock.now())
  @staticmethod
  def _check_in_date(value):
   if isinstance(value,str):
@@ -534,7 +535,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    except (OverflowError,OSError,ValueError):return None
   if isinstance(value,datetime.datetime):
    if value.tzinfo is None:value=value.replace(tzinfo=datetime.timezone.utc)
-   return value.astimezone(datetime.timezone(datetime.timedelta(hours=8))).date()
+   return datetime.date.fromisoformat(game_day(value))
   return None
  def _refresh_check_in_for_login(self,state,today):
   """Advance client-visible sign-in state across date/month boundaries once."""
@@ -595,7 +596,9 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
       self.db.commit();return native_dates(json.loads(previous[1])),True
     row=self.db.execute('SELECT profile FROM players WHERE uid=?',(uid,)).fetchone()
     if not row:raise GameplayFault('UnknownPlayer','Player does not exist')
-    profile=json.loads(row[0]);updated,response=mutator(profile)
+    profile=json.loads(row[0])
+    normalize_daily_counters(profile,self.clock.now())
+    updated,response=mutator(profile)
     if not isinstance(updated,dict) or not isinstance(response,(dict,list,int,float,str,bool,type(None))):raise GameplayFault('InvalidMutation','Mutator must return a profile object and JSON response value')
     updated_json=json.dumps(self._profile_json(updated),ensure_ascii=False,separators=(',',':'))
     response_json=json.dumps(self._profile_json(response),ensure_ascii=False,separators=(',',':'))
@@ -765,6 +768,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    context=self.context_for(uid)
    if self._mod_uid is None:self.mod_service.check_request(uid,request,context)
    if context is not self:return context.dispatch(request)
+  self._settle_daily_rank(uid)
   if method=='user.init_user':return self.profile(uid)
   if method=='user.do_guide':
    group=params.get('gid');code=params.get('code')

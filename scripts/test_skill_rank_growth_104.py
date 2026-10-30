@@ -40,6 +40,14 @@ class RankGrowthTests(unittest.TestCase):
         cls.factors = {sid: factor for family, factor in cls.cfg.get('hero_balance_iteration_104', {}).get('final_skill_multipliers', {}).items()
                        for sid in hero_skill_references(cls.cfg, {family})}
 
+    def test_fiora_followup_weakness_grows_from_thirty_to_sixty_percent(self):
+        sid = 'S_621130_6'
+        for level in (1, 5, 10):
+            actions = _native_skill_snapshot(self.cfg, sid, level)['skills']
+            followup = next(a for a in actions if a[0] == 'shield_followup' and len(a) == 9)
+            self.assertAlmostEqual(followup[6], .3 * (1 + (level - 1) / 9))
+            self.assertIn((6,), magnitude_paths(followup))
+
     def test_every_magnitude_at_every_rank_and_endpoint_preservation(self):
         checked = 0
         for sid, slot in self.refs.items():

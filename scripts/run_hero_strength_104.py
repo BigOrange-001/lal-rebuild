@@ -186,18 +186,8 @@ def main():
     cfg,heroes,pools=study_config();payload=dict(cfg=cfg,heroes=heroes,pools=pools,seed_epoch=args.seed_epoch,study_policy=load_study_policy())
     config=output/'frozen-config.json'
     encoded=json.dumps(payload,ensure_ascii=False,separators=(',',':'),default=str).encode('utf8')
-    if config.exists() and config.read_bytes()!=encoded:raise RuntimeError('Frozen config changed; choose a new output directory')
-    config.write_bytes(encoded)
-    frozen=output/'sources';frozen.mkdir(exist_ok=True)
-    manifest={}
-    for folder in ('server','scripts'):
-        for p in (ROOT/folder).glob('*.py'):
-            target=frozen/folder/p.name;target.parent.mkdir(exist_ok=True);target.write_bytes(p.read_bytes())
-            manifest[str(p.relative_to(ROOT))]=hashlib.sha256(p.read_bytes()).hexdigest()
-    for relative in ['client/src/skin_revision_v2.aspart','client/src/stages/137_Avatar.as']:
-        p=ROOT/relative;target=frozen/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(p.read_bytes());manifest[relative]=hashlib.sha256(p.read_bytes()).hexdigest()
-    manifest['frozen-config.json']=hashlib.sha256(encoded).hexdigest()
-    (output/'manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf8')
+    from hero_strength_freeze_104 import freeze_study
+    config=freeze_study(output,encoded)
     jobs=[(m,start,min(args.cycles,start+args.block_cycles),str(output)) for m in pools for start in range(0,args.cycles,args.block_cycles)]
     print(json.dumps(dict(status='starting',heroes={k:len(v) for k,v in pools.items()},cycles=args.cycles,workers=args.workers,battles=sum(map(len,pools.values()))*args.cycles),ensure_ascii=False),flush=True)
     started=time.monotonic();completed=0;battles=0

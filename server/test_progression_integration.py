@@ -100,9 +100,9 @@ class ProgressionIntegrationTest(unittest.TestCase):
 
     def test_level_125_six_star_halo_and_hp_talent_bounds(self):
         item = {"eid": "E_1001_6", "lv": 125, "halo": {"lv": 0, "exp": 0}}
-        # Five increasingly expensive ranks now take five times the old
-        # capped-item wash estimate, with 20 experience per paid attempt.
-        self.assertEqual(self.roster._equip_wash_halo(item, 625, "coin"),
+        # All equipment levels use the 100-level baseline: 600 paid washes
+        # at 20 experience per attempt to complete the five halo ranks.
+        self.assertEqual(self.roster._equip_wash_halo(item, 600, "coin"),
                          {"lv": 5, "exp": 0})
 
         iid, hero = self.hero("A_1101_6", "talent", level=125, phase=3)
@@ -123,15 +123,25 @@ class ProgressionIntegrationTest(unittest.TestCase):
         for kind in ("coin", "mark"):
             with self.subTest(currency=kind):
                 item = {"eid": "E_1001_6", "lv": 125, "halo": {"lv": 0, "exp": 0}}
-                for _ in range(62):
+                for _ in range(59):
                     item["halo"] = self.roster._equip_wash_halo(item, 10, kind)
-                self.assertEqual(item["halo"], {"lv": 4, "exp": 4400})
-                item["halo"] = self.roster._equip_wash_halo(item, 4, kind)
-                self.assertEqual(item["halo"], {"lv": 4, "exp": 4480})
+                self.assertEqual(item["halo"], {"lv": 4, "exp": 4120})
+                item["halo"] = self.roster._equip_wash_halo(item, 9, kind)
+                self.assertEqual(item["halo"], {"lv": 4, "exp": 4300})
                 item["halo"] = self.roster._equip_wash_halo(item, 1, kind)
                 self.assertEqual(item["halo"], {"lv": 5, "exp": 0})
                 self.assertEqual(self.roster._equip_wash_halo(item, 10, kind),
                                  {"lv": 5, "exp": 0})
+
+    def test_halo_boundaries_are_identical_for_all_equipment_levels(self):
+        for equipment_level in (1, 10, 50, 99, 100, 125):
+            for kind in ('coin', 'mark'):
+                with self.subTest(level=equipment_level, currency=kind):
+                    item = {'eid': 'E_1001_6', 'lv': equipment_level, 'halo': {'lv': 0, 'exp': 0}}
+                    self.assertEqual(self.roster._equip_wash_halo(item, 47, kind), {'lv': 0, 'exp': 940})
+                    self.assertEqual(self.roster._equip_wash_halo(item, 48, kind), {'lv': 1, 'exp': 0})
+                    self.assertEqual(self.roster._equip_wash_halo(item, 599, kind), {'lv': 4, 'exp': 4300})
+                    self.assertEqual(self.roster._equip_wash_halo(item, 600, kind), {'lv': 5, 'exp': 0})
 
     def test_dn_maximum_rates_and_final_level_boundary(self):
         simple = self.config["cfg"]["system_simple"]

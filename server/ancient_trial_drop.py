@@ -31,6 +31,9 @@ def roll_ancient_trial_drop(config: dict, stage: dict, stage_id: str,
         raise GameplayFault("InvalidStage", "Ancient trial equipment policy is missing")
     quality=QUALITIES[tier-1] if tier<=10 else 6
     chance_bp=CHANCES_BP[tier-1] if tier<=10 else EXTENDED_CHANCES_BP[tier]
+    from loot_rates_104 import SCHEMA as RATE_SCHEMA
+    if stage.get('loot_rate_revision_104') == RATE_SCHEMA:
+        chance_bp //= 2
     pool = policy.get("pool")
     if (type(policy.get("quality")) is not int or policy["quality"] != quality
             or type(policy.get("chance_bp")) is not int or policy["chance_bp"] != chance_bp
@@ -55,11 +58,13 @@ def roll_ancient_trial_drop(config: dict, stage: dict, stage_id: str,
 
 
 def roll_ancient_exclusive_drop(config,stage,stage_id,victory,rng):
-    """Tier 15 adds its own independent 5% roll, on top of ordinary loot."""
+    """Tier 15 adds an independent exclusive roll, including current rate tuning."""
     if not victory or stage_id!='P_001_15':return None
     policy=stage.get('ancient_exclusive_drop')
+    from loot_rates_104 import SCHEMA as RATE_SCHEMA
+    chance_bp = 250 if stage.get('loot_rate_revision_104') == RATE_SCHEMA else 500
     if (stage.get('id')!=stage_id or not isinstance(policy,dict) or policy.get('schema')!=EXTENDED_SCHEMA
-            or type(policy.get('chance_bp')) is not int or policy['chance_bp']!=500
+            or type(policy.get('chance_bp')) is not int or policy['chance_bp']!=chance_bp
             or type(policy.get('quality')) is not int or policy['quality']!=6):
         raise GameplayFault('InvalidStage','Ancient exclusive equipment policy is missing')
     cfg=config.get('cfg',config);pool=policy.get('pool');exclusive=set(equipment_exclusive_ids(cfg))
@@ -71,4 +76,4 @@ def roll_ancient_exclusive_drop(config,stage,stage_id,victory,rng):
         if (eid not in exclusive or not isinstance(row,dict) or row.get('quality')!=6
                 or row.get('type') not in EQUIPMENT_TYPES):
             raise GameplayFault('InvalidStage','Ancient exclusive equipment pool contains a non-exclusive item')
-    return rng.choice(pool) if rng.randrange(10000)<500 else None
+    return rng.choice(pool) if rng.randrange(10000)<chance_bp else None

@@ -210,7 +210,7 @@ package com.meng52.game.ui.panel
          this.addChild(_txt_coin);
          _txt_coin.y = this.mPageNum.y + _txt_coin.height / 4;
          _txt_coin.x = this.mPageNum.x + 100;
-         txt_Hint = GlobalTextStyle.getTextField("100积分兑换40个橙色碎片",18,16764006,"right",380,35);
+         txt_Hint = GlobalTextStyle.getTextField("300积分兑换1张T2皮肤橙卡",18,16764006,"right",380,35);
          txt_Hint.x = _txt_coin.x + 90;
          txt_Hint.y = _txt_coin.y - 15;
          addChild(txt_Hint);

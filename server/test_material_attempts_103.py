@@ -4,6 +4,7 @@ from pathlib import Path
 from gameplay_combat import GameplayCombat
 from player_store import PlayerStore,GameplayFault
 from material_attempts_103 import apply_material_attempts_103,remaining
+from game_calendar import next_daily_reset
 
 class MaterialAttempts103Tests(unittest.TestCase):
     @classmethod
@@ -75,7 +76,7 @@ class MaterialAttempts103Tests(unittest.TestCase):
         with self.assertRaises(GameplayFault):self.buy('P_102','poor')
         self.assertEqual(self.store.profile_raw(self.uid),before)
     def test_new_game_day_resets_both_counts_and_midnight_fight_uses_new_day(self):
-        self.clock.value+=86340-(self.clock.value+8*3600)%86400
+        self.clock.value=next_daily_reset(self.clock.value)-60
         self.buy('P_102','yesterday');self.finish(self.start('P_102_1'))
         pending=self.start('P_102_3');self.clock.value+=120
         self.finish(pending);self.assertEqual(self.left('P_102'),11)

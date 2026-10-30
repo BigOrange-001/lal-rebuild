@@ -50,7 +50,7 @@
       "index": 8,
       "class": "com.meng52.game.ui.panel.PanelShopCoin",
       "source": "client/src/stages/008_PanelShopCoin.as",
-      "source_sha256": "f968e975387543804709829ada37d529d3beb3a4c37ef5554d31a10413e4ec1b"
+      "source_sha256": "2ed08adc31d1d517deb4ebc67fbf9eb3804f3cd575269ee16dae561567ed11a3"
     },
     {
       "index": 9,
@@ -236,7 +236,7 @@
       "index": 39,
       "class": "com.meng52.game.ui.panel.PanelCasinoVIP",
       "source": "client/src/stages/037_PanelCasinoVIP.as",
-      "source_sha256": "9792596167cae86c3c78a2fa34c830427071f1c2db759f99a5014fea9d8f96fe"
+      "source_sha256": "be7096006a7e899857badcfb4511aaac6ed39bcda9aa38a1b4b487b5f72bf5e7"
     },
     {
       "index": 40,
@@ -518,13 +518,13 @@
       "index": 86,
       "class": "com.meng52.game.module.equip.Equip",
       "source": "client/src/stages/084_Equip.as",
-      "source_sha256": "ba1468c0bdbd680c6ded8b610ba06c664ef8453366d9a26d272a55e682b3e08e"
+      "source_sha256": "0537cb07630c76586e398b98efa0bd9658ba762265325f42a664644d3d4a599c"
     },
     {
       "index": 87,
       "class": "com.meng52.utils.Tools",
       "source": "client/src/stages/085_Tools.as",
-      "source_sha256": "e9f6848ac87a2508623eaede263e93e5d3a6c4769910d87c57bf7094888c7b08"
+      "source_sha256": "69a71b07f824c6bc9774594a20c25226bee74c48cb179d9d0fc59760d3bc3546"
     },
     {
       "index": 88,
@@ -596,7 +596,7 @@
       "index": 99,
       "class": "com.meng52.game.ui.element.ItemInteGralExchange",
       "source": "client/src/stages/097_ItemInteGralExchange.as",
-      "source_sha256": "fc1bffeb92f4f24d2fd1f402b5dcdccefbe46d340b772e31177ccbc09ed96b11"
+      "source_sha256": "b914c2b7eff2484699cef9bc86740fc7b4dfad808b628a4119ed7b6c5b1c1f68"
     },
     {
       "index": 100,
@@ -656,7 +656,7 @@
       "index": 109,
       "class": "com.meng52.game.ui.panel.PanelActivitySign",
       "source": "client/src/stages/107_PanelActivitySign.as",
-      "source_sha256": "57a9cf075e802ce0d3c79b3c5d18c61e1d1482b7edcd7f591df04c1e9c14b8c3"
+      "source_sha256": "dc24015b8c0b61d2fa0f0bdd16746149b366aac097c2e30cf97a69c6457a3822"
     },
     {
       "index": 110,
@@ -800,7 +800,7 @@
       "index": 133,
       "class": "com.meng52.game.ui.panel.PanelInteGralExchange",
       "source": "client/src/stages/131_PanelInteGralExchange.as",
-      "source_sha256": "6239e0016b030802a60a722c6cf688bbb622d36cb6ea5d87ea01880e47ca0349"
+      "source_sha256": "413b5de453f7bee779093e030a1ff6e173b80884c82d48dc3043db524078e670"
     },
     {
       "index": 134,
@@ -1022,10 +1022,12 @@
       "index": 170,
       "source": "client/src/stages/170_GlobalFunction.as",
       "class": "com.meng52.game.global.GlobalFunction",
-      "source_sha256": "083ef1175ebb29a73b622252df370675165151ae436d5bfb35eb5e21cdce4920",
+      "source_sha256": "533d2848fc0f1f5c18f2cc50fcf984550e5908c9f7cbaaf678cf1b1ef3dd6bc2",
       "methods": [
-        "getTeamPower"
-      ]
+        "getTeamPower",
+        "getUserCombat"
+      ],
+      "allow_constant_pool_append": true
     },
     {
       "index": 171,

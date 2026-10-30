@@ -2,6 +2,7 @@
 from __future__ import annotations
 import copy, json, time
 from pathlib import Path
+from game_calendar import game_day_number
 from bot_names import bot_name_for_uid
 from player_store import GameplayFault, native_dates
 from gameplay_roster import GameplayRosterEquipment
@@ -221,7 +222,7 @@ class GameplaySocial:
             companions=[bot for bot in profile.get("guild_companions",{}).get("bots",[])
                         if bot["uid"] in guild_ids]
             # Keep responses bounded; rotate additional hero candidates daily.
-            offset = int(self.store.clock.now()) // 86400 % max(1, len(self.mod_bots))
+            offset = game_day_number(self.store.clock.now()) % max(1, len(self.mod_bots))
             extra = (self.mod_bots[offset:] + self.mod_bots[:offset])[:6]
             cards=[self._friend_card(bot["uid"], profile) for bot in self.bots+extra+companions
                    if self.is_bot_uid(bot["uid"], profile)]

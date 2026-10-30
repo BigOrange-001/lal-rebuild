@@ -69,16 +69,16 @@ package com.meng52.game.ui.element
             _ui.y = 25;
             addChild(_ui);
          }
-         var awardTitle:String = isApprovedSkinSoul() ? GlobalData.$mConfig_avatar[param1.aid].name + "碎片" : _award.baseName;
+         var awardTitle:String = _award.baseName;
          txt_HeroName = GlobalTextStyle.getTextField(awardTitle,20,16777215,"center",160,46);
          txt_HeroName.x = 110;
          txt_HeroName.y = _ui.y;
          addChild(txt_HeroName);
          var costLabel:String = GlobalLanguageStr.getLanguageStr(97997) + param1.needNum;
-         if(isApprovedSkinSoul())
+         if(isPermanentSkinExchange())
          {
-            costLabel = String(param1.needNum) + "积分·已有" +
-               int(GlobalData.$userData.avatar_soul[param1.aid]) + "片";
+            costLabel = String(param1.needNum) + "积分·" +
+               "1张整卡";
          }
          txt_Integral = GlobalTextStyle.getTextField(costLabel,15,16777215,"center",160,24);
          txt_Integral.x = txt_HeroName.x + (txt_HeroName.width - txt_Integral.width) * 0.5;
@@ -88,7 +88,7 @@ package com.meng52.game.ui.element
          btn_Exchange.x = txt_HeroName.x + (txt_HeroName.width - btn_Exchange.width) * 0.5;
          btn_Exchange.y = txt_Integral.y + txt_Integral.height;
          addChild(btn_Exchange);
-         if(!getVipTime().can && !isApprovedSkinSoul())
+         if(!getVipTime().can && !isPermanentSkinExchange())
          {
             btn_Exchange.enabled = false;
             btn_Exchange.touchable = true;
@@ -118,11 +118,11 @@ package com.meng52.game.ui.element
          return _loc4_;
       }
 
-      private function isApprovedSkinSoul() : Boolean
+      private function isPermanentSkinExchange() : Boolean
       {
-         return data != null && data.gift_type == "avatar_soul" &&
-            (data.aid == "A_1226_6" || data.aid == "A_1310_6") &&
-            int(data.data.avatar_soul[data.aid]) == 40 && int(data.needNum) == 100;
+         var offers:Array = GlobalData.$mConfig_ploy_system_simple.extract_avatar.permanent_exchange_hero_ids as Array;
+         return data != null && offers != null && offers.indexOf(data.aid) >= 0 &&
+            data.gift_type == "avatar" && int(data.data.avatar[data.aid]) == 1 && int(data.needNum) == 300;
       }
       
       private function onTOUCH_ui(param1:TouchEvent) : void
@@ -147,7 +147,7 @@ package com.meng52.game.ui.element
       private function onTRIGGERED_Fight(param1:Event) : void
       {
          var _loc3_:LOL_Button = param1.currentTarget as LOL_Button;
-         if(!getVipTime().can && !isApprovedSkinSoul())
+         if(!getVipTime().can && !isPermanentSkinExchange())
          {
             GlobalFunction.popAlert("",GlobalLanguageStr.getLanguageStr(97998));
             return;

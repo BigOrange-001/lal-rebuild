@@ -7339,6 +7339,11 @@ package com.meng52.game.global
       public static function getUserCombat(param1:String, param2:String) : int
       {
          var _records:Object = GlobalData.$userData == null ? null : GlobalData.$userData.records;
+         if(_records && _records.daily_stage_attempts)
+         {
+            if(String(_records.daily_stage_attempts.day)!=Tools.getGameDayKey(SendAndSelect.$systemTimer_nowSecond*1000)) return 0;
+            _records=_records.daily_stage_attempts;
+         }
          var _bucket:Object = null;
          var _value:* = null;
          if(_records == null)

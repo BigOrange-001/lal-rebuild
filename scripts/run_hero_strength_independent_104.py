@@ -17,8 +17,13 @@ DESIGN='independent-focal-hero'
 MODE_INDEX={'mixed':0,'ordinary':1,'skin':2}
 
 
+def validate_games(games):
+    if type(games) is not int or not 10 <= games <= 10000 or games % 10:
+        raise ValueError('games must be a multiple of ten between 10 and 10000')
+
+
 def focal_schedule(pool,aid,mode,games=1000):
-    if games%10:raise ValueError('games must be a multiple of ten')
+    validate_games(games)
     hero_index=pool.index(aid)
     rng=random.Random(481000000+MODE_INDEX[mode]*1000000+hero_index*10000)
     seats=list(range(10))*(games//10);rng.shuffle(seats)
@@ -72,20 +77,13 @@ def run_focal(task):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--games',type=int,default=1000);p.add_argument('--workers',type=int,default=16)
     p.add_argument('--output',type=Path,default=ROOT/'outputs/hero-strength-independent-20261030-1000');args=p.parse_args()
-    if args.games%10:raise ValueError('games must be a multiple of 10')
+    validate_games(args.games)
     out=args.output.resolve();(out/'battles').mkdir(parents=True,exist_ok=True)
     cfg,heroes,pools=shared.study_config()
     payload=dict(cfg=cfg,heroes=heroes,pools=pools,sampling_design=DESIGN,games_per_hero=args.games,study_policy=shared.load_study_policy())
     encoded=json.dumps(payload,ensure_ascii=False,separators=(',',':'),default=str).encode('utf8');config=out/'frozen-config.json'
-    if config.exists() and config.read_bytes()!=encoded:raise RuntimeError('Existing frozen config differs')
-    config.write_bytes(encoded)
-    manifest={};sources=out/'sources'
-    for folder in ('server','scripts'):
-        for f in (ROOT/folder).glob('*.py'):
-            target=sources/f.relative_to(ROOT);target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(f.read_bytes());manifest[str(f.relative_to(ROOT))]=hashlib.sha256(f.read_bytes()).hexdigest()
-    for name in ('client/src/skin_revision_v2.aspart','client/src/stages/137_Avatar.as'):
-        f=ROOT/name;target=sources/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(f.read_bytes());manifest[name]=hashlib.sha256(f.read_bytes()).hexdigest()
-    manifest['frozen-config.json']=hashlib.sha256(encoded).hexdigest();(out/'manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf8')
+    from hero_strength_freeze_104 import freeze_study
+    config=freeze_study(out,encoded)
     plan=ROOT/'config/reconstruction/hero-balance-iteration-1.0.4.json';(out/'balance-plan.json').write_bytes(plan.read_bytes())
     jobs=[(mode,aid,str(out),args.games) for mode,pool in pools.items() for aid in pool]
     print(json.dumps(dict(status='starting',design=DESIGN,heroes={m:len(v) for m,v in pools.items()},games_per_hero=args.games,total_battles=len(jobs)*args.games)),flush=True)

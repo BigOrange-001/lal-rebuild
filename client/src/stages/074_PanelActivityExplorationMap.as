@@ -435,7 +435,7 @@ package com.meng52.game.ui.panel
 
       private function onExplorationError(event:NetEvent) : void
       {
-         if(event.data && String(event.data.method)==explorationRequest)
+         if(event.data && String(event.data.method=="profile_state_sync" ? event.data.receipt_method : event.data.method)==explorationRequest && explorationRequest!="")
          {
             explorationGeneration++;explorationRequest="";
             if(stage) freshBtnStatus();

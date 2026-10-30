@@ -63,6 +63,16 @@ console.log(JSON.stringify({painted:painted.length,waiting:unit.explorationReque
 """
         self.assertEqual(self.run_js(code),dict(painted=0,waiting=''))
 
+    def test_profile_sync_error_releases_only_the_matching_request(self):
+        code=self.script()+r"""
+unit.requestExploration('user.exploration_refresh');
+unit.onExplorationError({data:{method:'profile_state_sync',receipt_method:'user.exploration_opponent'}});
+const pending=unit.explorationRequest;
+unit.onExplorationError({data:{method:'profile_state_sync',receipt_method:'user.exploration_refresh'}});
+console.log(JSON.stringify({pending,waiting:unit.explorationRequest,enabled:unit.mFresh_btn.enabled}));
+"""
+        self.assertEqual(self.run_js(code),dict(pending='user.exploration_refresh',waiting='',enabled=True))
+
     def test_four_enemy_preview_uses_actual_snapshot_health(self):
         code=BASE+function('173_PanelActivityExplorationMyTeam.as','setOpponentAvatars').replace('mirror_data.army as Array','mirror_data.army').replace('mirror_data.units as Array','mirror_data.units')+r"""
 unit.mirror_data={is_npc:true,army:Array.from({length:4},(_,i)=>['A_'+i,99,1,0,.2,1,500,1000]),units:Array.from({length:4},(_,i)=>({aid:'A_'+i,hp:500+i,hp_max:1000+i,ap:10+i}))};

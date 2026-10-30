@@ -39,6 +39,17 @@ const unit={zhuabaoBox:null,zhuabaoRobot:null,stage:{},adventureData:null,advent
 @unittest.skipUnless(NODE, 'Node is required for ActionScript control-flow checks')
 class AdventureClientTests(unittest.TestCase):
     run_js = client_helpers.PlaytestClientTests.run_js
+
+    def test_profile_sync_error_unlocks_treasure_controls(self):
+        script = BASE + function('009_PanelCenterTaskAward.as', 'onAdventureError', 'param1') + r'''
+unit.adventureTab=3;unit.zhuabaoData={};unit.zhuabaoBusy=true;unit.renderZhuabao=()=>drawn.push('render');
+unit.onAdventureError({data:{method:'profile_state_sync',receipt_method:'user.zhuabao_draw',profile_sync_error:true}});
+console.log(JSON.stringify({busy:unit.zhuabaoBusy,drawn,status:unit.adventureStatus.text}));
+'''
+        result = self.run_js(script)
+        self.assertFalse(result['busy'])
+        self.assertEqual(result['drawn'], ['render'])
+        self.assertIn('重新登录', result['status'])
     def test_task_rows_progress_and_repeat_quantity(self):
         script = BASE + function('009_PanelCenterTaskAward.as', 'addList')
         script += r'''

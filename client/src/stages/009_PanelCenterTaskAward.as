@@ -653,17 +653,18 @@ package com.meng52.game.ui.screen
       private function onAdventureError(param1:NetEvent) : void
       {
          var reply:Object = param1.data;
-         if(reply && String(reply.method).indexOf("user.zhuabao_") == 0)
+         var failedMethod:String = reply && reply.method == "profile_state_sync" ? String(reply.receipt_method) : (reply ? String(reply.method) : "");
+         if(reply && failedMethod.indexOf("user.zhuabao_") == 0)
          {
             zhuabaoBusy = false;
-            if(stage && adventureTab == 3) { if(zhuabaoData) renderZhuabao(); adventureStatus.text = "操作未完成，请重试；背包满时请先整理。"; }
+            if(stage && adventureTab == 3) { if(zhuabaoData) renderZhuabao(); adventureStatus.text = reply.profile_sync_error ? "账号数据同步失败，请重新登录后确认操作结果。" : "操作未完成，请重试；背包满时请先整理。"; }
             return;
          }
-         if(!reply || (reply.method != "user.adventure_task_claim" && reply.method != "user.adventure_tasks_info")) return;
+         if(!reply || (failedMethod != "user.adventure_task_claim" && failedMethod != "user.adventure_tasks_info")) return;
          adventureClaiming = false;
          if(stage != null)
          {
-            if(reply.method == "user.adventure_task_claim") { addList(); update(); }
+            if(failedMethod == "user.adventure_task_claim") { addList(); update(); }
             else if(adventureStatus) adventureStatus.text = "任务加载失败，请重新进入奇遇。";
          }
       }

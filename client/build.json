@@ -56,7 +56,7 @@
       "index": 9,
       "class": "com.meng52.game.ui.screen.PanelCenterTaskAward",
       "source": "client/src/stages/009_PanelCenterTaskAward.as",
-      "source_sha256": "b4539ee969696b4a5eefea8de358e269931a748627323d2bb41ab6b323635d23"
+      "source_sha256": "c650df8bdf2928ab5e2deda859dad8a94d1b3c09f5884c9a7a6755f6fd0d9b48"
     },
     {
       "index": 10,
@@ -458,7 +458,7 @@
       "index": 76,
       "class": "com.meng52.game.ui.panel.PanelActivityExplorationMap",
       "source": "client/src/stages/074_PanelActivityExplorationMap.as",
-      "source_sha256": "36343f5558aad8ceab78a5386b4917f7d98e5d995d0421fbe3031897fa1d73ce"
+      "source_sha256": "9fc4cf8a4a5b0f2a7ae63c7015ab02271f73b900fe83c70966cf49fad1124bcc"
     },
     {
       "index": 77,

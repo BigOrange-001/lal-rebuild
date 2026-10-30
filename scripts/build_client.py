@@ -362,7 +362,7 @@ def main() -> int:
                 output += checked_run([
                     java, "-cp", str(ffdec), str(ROOT / "scripts/CopyAs3Methods.java"),
                     str(current_swf), str(compiled_swf), str(output_swf),
-                    stage["class"], *stage["methods"],
+                    stage["class"], *(["--allow-constant-pool-append"] if stage.get("allow_constant_pool_append") is True else []), *stage["methods"],
                 ], label=f"Scoped methods in stage {stage['index']}")
             stage_results.append({
                 "index": stage["index"],

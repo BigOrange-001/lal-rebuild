@@ -1,12 +1,10 @@
 """Shared, transaction-local gameplay helpers."""
 from __future__ import annotations
-import datetime
 import random
 import re
-from zoneinfo import ZoneInfo
+from game_calendar import LOCAL_TZ, game_day
 from player_store import GameplayFault
 
-LOCAL_TZ = ZoneInfo("Asia/Shanghai")
 CURRENCIES = {"gold", "coin", "score", "medal", "mark"}
 
 MOD_HERO_SEQUENCE = "mod_avatar_next_seq"
@@ -59,16 +57,6 @@ def next_hero_instance_id(profile, aid, config):
     else:
         profile[MOD_HERO_SEQUENCE] = sequence + 1
     return f"{aid}|{sequence}"
-
-def game_day(now=None):
-    """Return the authoritative local calendar day as YYYY-MM-DD."""
-    if now is None:
-        now = datetime.datetime.now(datetime.timezone.utc)
-    if isinstance(now, (int, float)):
-        now = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
-    if now.tzinfo is None:
-        now = now.replace(tzinfo=datetime.timezone.utc)
-    return now.astimezone(LOCAL_TZ).date().isoformat()
 
 def skin_acquisition_blocked_ids(config=None):
     """Return the exact configured hero IDs blocked from new player grants."""

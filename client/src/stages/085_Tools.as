@@ -1535,66 +1535,32 @@ package com.meng52.utils
          }
       }
       
+      public static function getGameDayNumber(milliseconds:Number) : Number
+      {
+         var settings:Object = GlobalData.$mConfig_simple;
+         var resetHour:Number = settings && settings.daily_reset_hour !== undefined ? Number(settings.daily_reset_hour) : 0;
+         var timezoneHours:Number = settings && settings.daily_timezone_offset_hours !== undefined ? Number(settings.daily_timezone_offset_hours) : 8;
+         return Math.floor((milliseconds+(timezoneHours-resetHour)*3600000)/86400000);
+      }
+
+      public static function getGameDayKey(milliseconds:Number) : String
+      {
+         var day:Date = new Date(getGameDayNumber(milliseconds)*86400000);
+         var month:String = day.monthUTC+1<10 ? "0"+(day.monthUTC+1) : String(day.monthUTC+1);
+         var date:String = day.dateUTC<10 ? "0"+day.dateUTC : String(day.dateUTC);
+         return day.fullYearUTC+"-"+month+"-"+date;
+      }
+
       public static function checkIsSameDay(param1:Number, param2:Number) : Boolean
       {
-         var _loc5_:Date = null;
-         var _loc4_:Date = null;
-         var _loc3_:Boolean = false;
-         if(param1 > 0 && param2 > 0)
-         {
-            _loc5_ = new Date();
-            _loc5_.setTime(param1);
-            _loc4_ = new Date();
-            _loc4_.setTime(param2);
-            if(_loc5_.getUTCFullYear() == _loc4_.getUTCFullYear() && _loc5_.getUTCMonth() == _loc4_.getUTCMonth() && _loc5_.getUTCDate() == _loc4_.getUTCDate())
-            {
-               _loc3_ = true;
-            }
-         }
-         return _loc3_;
+         return param1>0 && param2>0 && getGameDayNumber(param1)==getGameDayNumber(param2);
       }
-      
+
       public static function checkIsPrevDay(param1:Number, param2:Number) : Boolean
       {
-         var _loc4_:Number = NaN;
-         var _loc8_:Number = NaN;
-         var _loc10_:Date = null;
-         var _loc9_:Date = null;
-         var _loc5_:Date = null;
-         var _loc3_:Date = null;
-         var _loc12_:Number = NaN;
-         var _loc11_:Number = NaN;
-         var _loc7_:Boolean = false;
-         var _loc6_:Boolean = false;
-         if(param1 > 0 && param2 > 0)
-         {
-            _loc4_ = Math.max(param1,param2);
-            _loc8_ = Math.min(param1,param2);
-            _loc10_ = new Date();
-            _loc10_.setTime(_loc4_);
-            _loc9_ = new Date();
-            _loc9_.setTime(_loc8_);
-            if(_loc10_.getUTCFullYear() == _loc9_.getUTCFullYear() && _loc10_.getUTCMonth() == _loc9_.getUTCMonth() && _loc10_.getUTCDate() == _loc9_.getUTCDate())
-            {
-               _loc7_ = true;
-            }
-            if(!_loc7_)
-            {
-               _loc5_ = new Date(_loc10_.fullYearUTC,_loc10_.monthUTC,_loc10_.dateUTC,12);
-               _loc3_ = new Date(_loc9_.fullYearUTC,_loc9_.monthUTC,_loc9_.dateUTC,12);
-               _loc12_ = 86400000;
-               _loc11_ = Math.abs(_loc3_.time - _loc5_.time);
-               if(_loc11_ <= _loc12_)
-               {
-                  _loc6_ = true;
-               }
-            }
-            _loc10_ = null;
-            _loc9_ = null;
-         }
-         return _loc6_;
+         return param1>0 && param2>0 && Math.abs(getGameDayNumber(param1)-getGameDayNumber(param2))==1;
       }
-      
+
       public static function getBlendMode(param1:String = null, param2:Number = 1, param3:Number = 1, param4:Number = 1) : String
       {
          if(!param1)

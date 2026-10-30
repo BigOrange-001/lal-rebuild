@@ -19,7 +19,7 @@ import test_curse_combat
 class SkillOutput104Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        with patch('skill_output_104.apply_skill_output_104',side_effect=lambda d:d):
+        with patch('skill_output_104.apply_skill_output_104',side_effect=lambda d:d), patch('skill_rank_growth_104.apply_skill_rank_growth_104',side_effect=lambda d:d):
             backend=Backend(':memory:',ROOT/'config/reconstruction/full-config.json')
         cls.before=copy.deepcopy(backend.config);backend.db.close()
         cls.after=apply_skill_output_104(copy.deepcopy(cls.before))
@@ -40,10 +40,14 @@ class SkillOutput104Tests(unittest.TestCase):
                         target=action
                         for index in path[:-1]:target=target[index]
                         target[path[-1]]*=.8
-                def rounded(value):
-                    if isinstance(value,list):return [rounded(v) for v in value]
-                    return round(value,7) if isinstance(value,float) else value
-                self.assertEqual(rounded(after),rounded(expected),(sid,level))
+                def compare(actual,wanted):
+                    if isinstance(wanted,list):
+                        self.assertEqual(len(actual),len(wanted),(sid,level))
+                        for a,b in zip(actual,wanted):compare(a,b)
+                    elif type(wanted) in (int,float):
+                        self.assertAlmostEqual(actual,wanted,places=8,msg=(sid,level))
+                    else:self.assertEqual(actual,wanted,(sid,level))
+                compare(after,expected)
             for key in ('pl','actionTargetPolicies','actionTargetPolicyArgs','actionTargetMaxTargets',
                         'manualEffectMultiplier','manualDefenseBuffMultiplier','manualSummonPolicy'):
                 self.assertEqual(row.get(key),base.get(key),(sid,key))
@@ -83,7 +87,7 @@ const context={owner:unit,manualDamageMultiplier:1.5,hitSerial:0};
 unit.currentAbilityAttack=()=>context;
 unit.attackAimList=(targets,type,coef)=>out.push(['output',type,coef]);
 for(const [n,[p,b]] of Object.entries(input))unit[n]=eval('(function('+p+'){with(this){'+b+'}})');
-const target={hp:10000,buffs:{},addBuff:(...args)=>out.push(args)};
+const target={hp:10000,buffs:{},abilityState:{},addBuff:(...args)=>out.push(args)};
 unit.abilityHit(target,2,1,'fx');unit.abilityHeal(target,2);unit.abilityShield(target,.5);
 unit.abilityControl(target,'weak',3,.25);
 unit.getType=()=>2;unit.abilityHit(target,2,1,'fx');

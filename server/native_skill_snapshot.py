@@ -2,6 +2,22 @@
 import copy
 import math
 
+def rank_native_setting(row, key, level=1, fallback=None):
+    value = copy.deepcopy(row.get(key, fallback))
+    growth = row.get('rankSettingGrowth104', {}).get(key)
+    rank = max(1, min(10, int(level))) - 1
+    if not growth:
+        return value
+    if isinstance(growth[0], (int, float)):
+        return growth[0] + growth[1] * rank
+    for path, base, step in growth:
+        target = value
+        for index in path[:-1]:
+            target = target[index]
+        target[path[-1]] = base + step * rank
+    return value
+
+
 def _native_skill_snapshot(config, skill_id, level=1):
     """Serialize a configured SkillSet the way Avatar.toDataObj() exposes it."""
     if not skill_id:
@@ -9,6 +25,7 @@ def _native_skill_snapshot(config, skill_id, level=1):
     row = config.get("skill", {}).get(str(skill_id))
     if not isinstance(row, dict):
         return None
+    level = max(1, min(10, int(level)))
     pl = row.get("pl", [])
     actions = copy.deepcopy(row.get("skill", []))
     skill_up = row.get("skillUp")
@@ -57,7 +74,7 @@ def _native_skill_snapshot(config, skill_id, level=1):
         leaf = path[-1]
         if valid and isinstance(target, list) and type(leaf) is int and 0 <= leaf < len(target) and isinstance(target[leaf], (int, float)):
             target[leaf] += step * (max(1, min(10, int(level))) - 1)
-    return {
+    result = {
         "modCondition": copy.deepcopy(row.get("modCondition")),
         "modEffectSequence": row.get("modEffectSequence",0),
         "cd": int(pl[0]) if isinstance(pl, list) and pl and pl[0] is not None else 0,
@@ -74,3 +91,11 @@ def _native_skill_snapshot(config, skill_id, level=1):
         "equipment_source_skill_104": row.get("equipment_source_skill_104"),
         "chainDot": copy.deepcopy(row.get("chainDot")),
     }
+    settings = {key: rank_native_setting(row, key, level)
+                for key in row.get('rankSettingGrowth104', {})}
+    if settings:
+        result['nativeSettings104'] = settings
+        for key in settings:
+            if key in result:
+                result[key] = settings[key]
+    return result

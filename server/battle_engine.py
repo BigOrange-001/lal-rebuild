@@ -6,6 +6,7 @@ offline tuning. It does not claim bit-for-bit ActionScript parity.
 """
 import copy
 import math
+from contextlib import nullcontext
 from combat_math import level_stats
 from combat_rng import CombatRandom
 from mod_policy import (runtime as mod_runtime, definition_id, base_aid,
@@ -634,6 +635,9 @@ class ReferenceBattle:
             missing = max(0, int(target.get("hp_max", 0)) - int(target.get("hp", 0)))
             healed = max(0, min(missing, amount))
             target["hp"] = int(target.get("hp", 0)) + healed
+            observer = getattr(self, '_study_statistics_event', None)
+            if observer is not None and healed:
+                observer(source or target, target, 0, healed)
             if was_alive and amount > 0:
                 self._emit_mod_event(target,'healed',source or target,target,healed,max(0,amount-healed))
                 self._emit_mod_event(source,'heal_done',source,target,healed,max(0,amount-healed))
@@ -651,6 +655,7 @@ class ReferenceBattle:
             amount = _to_int(amount * (1 + self._talent(target, 16)))
         if self._has_manual_dot_kind(target, 'poison'):
             amount = _to_int(amount * 1.2)
+        absorbed = 0
         shield = self._buff(target, "shield")
         if shield is not None:
             factor = 1 + self._book_bonus(source, 'shield_damage') if source is not None else 1
@@ -662,6 +667,9 @@ class ReferenceBattle:
             if shield.value <= 0:
                 self._remove_buff(target, "shield")
             amount -= absorbed
+        observer = getattr(self, '_study_statistics_event', None)
+        if observer is not None and int(target.get('hp', 0)) > 0:
+            observer(source, target, max(0, absorbed) + min(max(0, amount), int(target['hp'])), 0)
         if amount <= 0:
             return 0
         target["hp"] = max(0, int(target.get("hp", 0)) - amount)
@@ -745,6 +753,18 @@ class ReferenceBattle:
             policies = skill.get("actionTargetPolicies")
             if isinstance(policies, list) and 0 <= index < len(policies):
                 policy = policies[index]
+        if policy == 'ally_self':
+            return [attacker] if any(u is attacker for u in alive) else []
+        if policy == 'ally_all_lowest_hp_ratio':
+            args=self._policy_args(skill,index) or {}
+            if args.get('heroOnly'):alive=[u for u in alive if self._get_type(u)==1 and not u.get('summon_owner_token')]
+            if args.get('excludeSelf') or args.get('includeSelf') is False:alive=[u for u in alive if u is not attacker]
+            if args.get('laneFilter') in ('same_as_caster','same_as_center'):alive=[u for u in alive if u['line']==attacker['line']]
+            for key in ('maxRange','radius'):
+                if isinstance(args.get(key),(int,float)):alive=[u for u in alive if abs(u['pos']-attacker['pos'])<=args[key]]
+            alive.sort(key=lambda u:(u['hp']/max(1,u['hp_max']),u['hp'],u['line'],u['pos'],u.get('aid','')))
+            limit=self._policy_max_targets(skill,index,1)
+            return alive if limit<0 else alive[:limit]
         if policy == "enemy_global_lowest_current_hp":
             # 139_SkillSet.as:2731-2875. Only heroes are eligible
             # (_avatar.getType() != 1 is skipped), then the survivors are
@@ -1642,7 +1662,7 @@ class ReferenceBattle:
                                               skill=skill, index=index):
             self._add_buff(target, key + "up", rounds, value)
 
-    def _hp_shield_targets(self, attacker, skill, *, per_target_base):
+    def _hp_shield_targets(self, attacker, skill, *, per_target_base, index=None):
         """139_SkillSet.as:830 — hp_shield / caster_hp_shield / target_hp_shield.
 
         All three cases share one body: recipients come from
@@ -1650,6 +1670,9 @@ class ReferenceBattle:
         and only the shield base differs — ``target_hp_shield`` scales off each
         recipient's own ``getHpMax()``, the other two off the caster's.
         """
+        policies=skill.get('actionTargetPolicies') or []
+        if index is not None and index<len(policies) and policies[index]:
+            return self._skill_targets(attacker,list(attacker.get('_team',[])),skill.get('pl') or [],skill=skill,index=index),per_target_base
         recipients = self._custom_targets(attacker, skill, ally=True,
                                           candidates=list(attacker.get("_team", [])),
                                           ban_stand=False)
@@ -1665,7 +1688,7 @@ class ReferenceBattle:
         rounds = int(action[2])
         if not ratio > 0 or not rounds > 0:
             return
-        recipients, _ = self._hp_shield_targets(attacker, skill, per_target_base=False)
+        recipients, _ = self._hp_shield_targets(attacker, skill, per_target_base=False,index=index)
         for ally in recipients:
             self._add_buff(ally, "shield", rounds, _to_int(int(attacker.get("hp_max", 0)) * ratio))
 
@@ -1680,7 +1703,7 @@ class ReferenceBattle:
         rounds = int(action[2])
         if not ratio > 0 or not rounds > 0:
             return
-        recipients, _ = self._hp_shield_targets(attacker, skill, per_target_base=True)
+        recipients, _ = self._hp_shield_targets(attacker, skill, per_target_base=True,index=index)
         for ally in recipients:
             self._add_buff(ally, "shield", rounds, _to_int(int(ally.get("hp_max", 0)) * ratio))
 
@@ -2406,14 +2429,14 @@ class ReferenceBattle:
                   and u.get('summon_owner_token')==attacker.get('_owner_token') and u.get('summon_owner')==attacker.get('aid')]
         if not soldiers:
             for _ in range(2):
-                unit=self._spawn_summon(attacker,'A_3002_2',.45,3,bounded=True)
+                unit=self._spawn_summon(attacker,'A_3002_2',.45*float(action[1]),3,bounded=True)
                 if unit:unit['skill']=unit['leader_skill']=unit['skillB']=None
             return
         for unit in soldiers:
             ttl=self._buff(unit,'summon')
             if ttl:ttl.round=max(3,ttl.round)
-            self._add_buff(unit,'strong',2,.5,source=attacker)
-            self._injured(unit,int(unit['hp_max']*.3),4,source=attacker)
+            self._add_buff(unit,'strong',2,float(action[6]) if len(action)>6 else .5,source=attacker)
+            self._injured(unit,int(unit['hp_max']*(float(action[5]) if len(action)>5 else .3)),4,source=attacker)
 
     def _act_summon(self, attacker, enemies, allies, skill, action, index, context):
         """Summon from the owner's live panel, preserving authored ratios."""
@@ -3001,7 +3024,9 @@ class ReferenceBattle:
             # New composites read local raw parameters; preserve this node even
             # when it follows a shield, a heal or a different composite.
             node=dict(skill,skills=[copy.deepcopy(action)])
-            return execute(attacker,str(action[1]),float(action[2]),node)
+            factory=getattr(self,'manual_skill_context',None)
+            with factory(attacker,skill) if factory else nullcontext():
+                return execute(attacker,str(action[1]),float(action[2]),node)
 
 
     def run(self):

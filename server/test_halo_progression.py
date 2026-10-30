@@ -27,20 +27,20 @@ class HaloProgressionTests(unittest.TestCase):
         self.assertIsNot(self.original, self.config)
         self.assertIsNot(self.original["cfg"]["system_simple"]["equipwash"], self.simple["equipwash"])
 
-    def test_five_ranks_total_625_washes_at_item_level_125(self):
+    def test_five_ranks_use_fixed_level_100_budget(self):
         thresholds = [halo_rank_threshold(self.simple, 125, rank) for rank in range(5)]
-        self.assertEqual(thresholds, [1000, 1500, 2250, 3250, 4500])
-        self.assertEqual(sum(thresholds), 625 * 20)
+        self.assertEqual(thresholds, [960, 1440, 2160, 3120, 4320])
+        self.assertEqual(sum(thresholds), 600 * 20)
         self.assertEqual([(-(-sum(thresholds[:rank]) // 20)) for rank in range(1, 6)],
-                         [50, 125, 238, 400, 625])
+                         [48, 120, 228, 384, 600])
         self.assertEqual(sorted(thresholds), thresholds)
 
     def test_lower_level_curve_remains_positive_and_full_budget_exact(self):
-        for item_level in (1, 10, 99, 125):
+        for item_level in (1, 10, 50, 99, 100, 125):
             with self.subTest(level=item_level):
                 thresholds = [halo_rank_threshold(self.simple, item_level, rank) for rank in range(5)]
-                wash_points = max(5, item_level // 10)
-                baseline = (int(self.simple["equip_config"][3]) * item_level + wash_points - 1) // wash_points
+                baseline = int(self.simple["equip_config"][3]) * 100 // 10
+                self.assertEqual(thresholds, [960, 1440, 2160, 3120, 4320])
                 self.assertTrue(all(value > 0 for value in thresholds))
                 self.assertEqual(sum(thresholds), baseline * 5 * 20)
 

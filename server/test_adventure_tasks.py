@@ -28,6 +28,8 @@ class AdventureTaskTests(unittest.TestCase):
         login = self.store.login("adventure-test", "gm")
         self.uid, self.session = login["uid"], login["sessionid"]
         def seed(profile):
+            profile["attrs"]["vip_gift_total_coin"] = 15000
+            profile["vip_lv"] = 8
             profile["attrs"]["avatar_len"] = 1000
             profile["coin"] = 100000
             profile["gold"] = 100000

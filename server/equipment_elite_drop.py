@@ -54,8 +54,9 @@ def roll_elite_drop(config: dict, stage_id: str, difficulty: int, victory: bool,
         raise GameplayFault("InvalidEquipmentDropPolicy", "Each campaign chapter must map to exactly one equipment tier")
     tier = selected[0]
     quality = tier.get("quality")
-    chance_bp = tier.get("chance_bp")
-    if type(quality) is not int or not 2 <= quality <= 6 or type(chance_bp) is not int or not 0 <= chance_bp <= 10000:
+    from loot_rates_104 import elite_chance
+    chance = elite_chance(tier)
+    if type(quality) is not int or not 2 <= quality <= 6:
         raise GameplayFault("InvalidEquipmentDropPolicy", "Elite equipment drop tier values are invalid")
     pool = policy["pools_by_quality"].get(str(quality))
     if not isinstance(pool, list) or not pool:
@@ -78,6 +79,7 @@ def roll_elite_drop(config: dict, stage_id: str, difficulty: int, victory: bool,
                 or eid in blocked):
             raise GameplayFault("InvalidEquipmentDropPolicy", "Elite equipment pool contains an invalid or blocked item")
     source = rng if rng is not None else random.SystemRandom()
-    if source.randrange(10000) >= chance_bp:
+    scale = tier.get("chance_bp_fraction", [0, 1])[1]
+    if source.randrange(10000 * scale) >= int(chance * 10000 * scale):
         return None
     return source.choice(pool)

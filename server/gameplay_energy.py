@@ -22,7 +22,7 @@ def apply_energy_purchase_103(document):
 
 
 def normalize_energy_purchase_day(profile, now=None):
-    """Reset only the daily energy-purchase counter, using Shanghai dates."""
+    """Reset only the daily energy-purchase counter at the shared UTC+8 midnight."""
     from gameplay_common import game_day
     today = game_day(now)
     records = profile.setdefault("records", {})

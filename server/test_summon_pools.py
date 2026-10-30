@@ -116,7 +116,8 @@ class SummonPoolsTests(unittest.TestCase):
         store = PlayerStore(db, copy.deepcopy(self.document))
         uid = store.login('calibration-test')['uid']
         def seed(p):
-            p.update(coin=100000, score=100000)
+            p.update(coin=100000, score=100000, vip_lv=8)
+            p["attrs"]["vip_gift_total_coin"] = 15000
             return p, {}
         store.atomic_update(uid, seed)
         roster = next(h for h in store.gameplay_handlers if isinstance(h, GameplayRosterEquipment))

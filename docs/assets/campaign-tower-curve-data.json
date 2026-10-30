@@ -1,0 +1,1113 @@
+{
+  "schema": "campaign-tower-difficulty-104-v2",
+  "curves": [
+    {
+      "chapter": 1,
+      "stage": "M_001_6",
+      "normal": 6925,
+      "elite": 47701,
+      "mapping": {
+        "1": {
+          "tower_floor": 10.0,
+          "chapter_boss_target_power": 17300,
+          "within_chapter_ratio": 1.0,
+          "target_power": 17300,
+          "actual_power": 17300
+        }
+      }
+    },
+    {
+      "chapter": 2,
+      "stage": "M_002_6",
+      "normal": 10192,
+      "elite": 54210,
+      "mapping": {
+        "0": {
+          "tower_floor": null,
+          "chapter_boss_target_power": 2210,
+          "within_chapter_ratio": 1.0,
+          "target_power": 2210,
+          "actual_power": 2210
+        },
+        "1": {
+          "tower_floor": 13.96551724137931,
+          "chapter_boss_target_power": 20517,
+          "within_chapter_ratio": 1.0,
+          "target_power": 20517,
+          "actual_power": 20517
+        }
+      }
+    },
+    {
+      "chapter": 3,
+      "stage": "M_003_6",
+      "normal": 13463,
+      "elite": 79281,
+      "mapping": {
+        "0": {
+          "tower_floor": null,
+          "chapter_boss_target_power": 3203,
+          "within_chapter_ratio": 1.0,
+          "target_power": 3203,
+          "actual_power": 3203
+        },
+        "1": {
+          "tower_floor": 17.93103448275862,
+          "chapter_boss_target_power": 34060,
+          "within_chapter_ratio": 1.0,
+          "target_power": 34060,
+          "actual_power": 34059
+        }
+      }
+    },
+    {
+      "chapter": 4,
+      "stage": "M_004_6",
+      "normal": 16733,
+      "elite": 105678,
+      "mapping": {
+        "0": {
+          "tower_floor": null,
+          "chapter_boss_target_power": 4279,
+          "within_chapter_ratio": 1.0,
+          "target_power": 4279,
+          "actual_power": 4280
+        },
+        "1": {
+          "tower_floor": 21.89655172413793,
+          "chapter_boss_target_power": 49964,
+          "within_chapter_ratio": 1.0,
+          "target_power": 49964,
+          "actual_power": 49963
+        }
+      }
+    },
+    {
+      "chapter": 5,
+      "stage": "M_005_6",
+      "normal": 20000,
+      "elite": 128257,
+      "mapping": {
+        "0": {
+          "tower_floor": null,
+          "chapter_boss_target_power": 5429,
+          "within_chapter_ratio": 1.0,
+          "target_power": 5429,
+          "actual_power": 5429
+        },
+        "1": {
+          "tower_floor": 25.862068965517242,
+          "chapter_boss_target_power": 64681,
+          "within_chapter_ratio": 1.0,
+          "target_power": 64681,
+          "actual_power": 64681
+        }
+      }
+    },
+    {
+      "chapter": 6,
+      "stage": "M_006_6",
+      "normal": 47701,
+      "elite": 165126,
+      "mapping": {
+        "0": {
+          "tower_floor": 10.0,
+          "chapter_boss_target_power": 17300,
+          "within_chapter_ratio": 1.0,
+          "target_power": 17300,
+          "actual_power": 17300
+        },
+        "1": {
+          "tower_floor": 29.82758620689655,
+          "chapter_boss_target_power": 90592,
+          "within_chapter_ratio": 1.0,
+          "target_power": 90592,
+          "actual_power": 90592
+        }
+      }
+    },
+    {
+      "chapter": 7,
+      "stage": "M_007_6",
+      "normal": 56423,
+      "elite": 241424,
+      "mapping": {
+        "0": {
+          "tower_floor": 12.916666666666666,
+          "chapter_boss_target_power": 21641,
+          "within_chapter_ratio": 1.0,
+          "target_power": 21641,
+          "actual_power": 21641
+        },
+        "1": {
+          "tower_floor": 33.79310344827586,
+          "chapter_boss_target_power": 150329,
+          "within_chapter_ratio": 1.0,
+          "target_power": 150329,
+          "actual_power": 150329
+        }
+      }
+    },
+    {
+      "chapter": 8,
+      "stage": "M_008_6",
+      "normal": 64398,
+      "elite": 299345,
+      "mapping": {
+        "0": {
+          "tower_floor": 15.833333333333332,
+          "chapter_boss_target_power": 25813,
+          "within_chapter_ratio": 1.0,
+          "target_power": 25813,
+          "actual_power": 25813
+        },
+        "1": {
+          "tower_floor": 37.758620689655174,
+          "chapter_boss_target_power": 200249,
+          "within_chapter_ratio": 1.0,
+          "target_power": 200249,
+          "actual_power": 200246
+        }
+      }
+    },
+    {
+      "chapter": 9,
+      "stage": "M_009_6",
+      "normal": 77847,
+      "elite": 394084,
+      "mapping": {
+        "0": {
+          "tower_floor": 18.75,
+          "chapter_boss_target_power": 33240,
+          "within_chapter_ratio": 1.0,
+          "target_power": 33240,
+          "actual_power": 33240
+        },
+        "1": {
+          "tower_floor": 41.724137931034484,
+          "chapter_boss_target_power": 288923,
+          "within_chapter_ratio": 1.0,
+          "target_power": 288923,
+          "actual_power": 288925
+        }
+      }
+    },
+    {
+      "chapter": 10,
+      "stage": "M_010_6",
+      "normal": 102329,
+      "elite": 589074,
+      "mapping": {
+        "0": {
+          "tower_floor": 21.666666666666664,
+          "chapter_boss_target_power": 47863,
+          "within_chapter_ratio": 1.0,
+          "target_power": 47863,
+          "actual_power": 47863
+        },
+        "1": {
+          "tower_floor": 45.689655172413794,
+          "chapter_boss_target_power": 493810,
+          "within_chapter_ratio": 1.0,
+          "target_power": 493810,
+          "actual_power": 493810
+        }
+      }
+    },
+    {
+      "chapter": 11,
+      "stage": "M_011_6",
+      "normal": 126809,
+      "elite": 702324,
+      "mapping": {
+        "0": {
+          "tower_floor": 24.583333333333336,
+          "chapter_boss_target_power": 63709,
+          "within_chapter_ratio": 1.0,
+          "target_power": 63709,
+          "actual_power": 63709
+        },
+        "1": {
+          "tower_floor": 49.6551724137931,
+          "chapter_boss_target_power": 624288,
+          "within_chapter_ratio": 1.0,
+          "target_power": 624288,
+          "actual_power": 624286
+        }
+      }
+    },
+    {
+      "chapter": 12,
+      "stage": "M_012_6",
+      "normal": 148438,
+      "elite": 986941,
+      "mapping": {
+        "0": {
+          "tower_floor": 27.5,
+          "chapter_boss_target_power": 78596,
+          "within_chapter_ratio": 1.0,
+          "target_power": 78596,
+          "actual_power": 78595
+        },
+        "1": {
+          "tower_floor": 53.62068965517241,
+          "chapter_boss_target_power": 982625,
+          "within_chapter_ratio": 1.0,
+          "target_power": 982625,
+          "actual_power": 982627
+        }
+      }
+    },
+    {
+      "chapter": 13,
+      "stage": "M_013_6",
+      "normal": 172717,
+      "elite": 1266157,
+      "mapping": {
+        "0": {
+          "tower_floor": 30.416666666666668,
+          "chapter_boss_target_power": 96189,
+          "within_chapter_ratio": 1.0,
+          "target_power": 96189,
+          "actual_power": 96187
+        },
+        "1": {
+          "tower_floor": 57.58620689655172,
+          "chapter_boss_target_power": 1369773,
+          "within_chapter_ratio": 1.0,
+          "target_power": 1369773,
+          "actual_power": 1369778
+        }
+      }
+    },
+    {
+      "chapter": 14,
+      "stage": "M_014_6",
+      "normal": 219746,
+      "elite": 1628333,
+      "mapping": {
+        "0": {
+          "tower_floor": 33.33333333333333,
+          "chapter_boss_target_power": 132604,
+          "within_chapter_ratio": 1.0,
+          "target_power": 132604,
+          "actual_power": 132606
+        },
+        "1": {
+          "tower_floor": 61.55172413793103,
+          "chapter_boss_target_power": 1915681,
+          "within_chapter_ratio": 1.0,
+          "target_power": 1915681,
+          "actual_power": 1915686
+        }
+      }
+    },
+    {
+      "chapter": 15,
+      "stage": "M_015_6",
+      "normal": 271819,
+      "elite": 2132955,
+      "mapping": {
+        "0": {
+          "tower_floor": 36.25,
+          "chapter_boss_target_power": 176079,
+          "within_chapter_ratio": 1.0,
+          "target_power": 176079,
+          "actual_power": 176079
+        },
+        "1": {
+          "tower_floor": 65.51724137931035,
+          "chapter_boss_target_power": 2745640,
+          "within_chapter_ratio": 1.0,
+          "target_power": 2745640,
+          "actual_power": 2745632
+        }
+      }
+    },
+    {
+      "chapter": 16,
+      "stage": "M_016_3",
+      "normal": 349988,
+      "elite": 2902785,
+      "mapping": {
+        "0": {
+          "tower_floor": 39.16666666666667,
+          "chapter_boss_target_power": 246641,
+          "within_chapter_ratio": 1.0,
+          "target_power": 246641,
+          "actual_power": 246645
+        },
+        "1": {
+          "tower_floor": 69.48275862068965,
+          "chapter_boss_target_power": 4140822,
+          "within_chapter_ratio": 1.0,
+          "target_power": 4140822,
+          "actual_power": 4140822
+        }
+      }
+    },
+    {
+      "chapter": 17,
+      "stage": "M_017_3",
+      "normal": 392981,
+      "elite": 3756217,
+      "mapping": {
+        "0": {
+          "tower_floor": 42.083333333333336,
+          "chapter_boss_target_power": 287848,
+          "within_chapter_ratio": 1.0,
+          "target_power": 287848,
+          "actual_power": 287848
+        },
+        "1": {
+          "tower_floor": 73.44827586206897,
+          "chapter_boss_target_power": 5838935,
+          "within_chapter_ratio": 1.0,
+          "target_power": 5838935,
+          "actual_power": 5838943
+        }
+      }
+    },
+    {
+      "chapter": 18,
+      "stage": "M_018_3",
+      "normal": 605930,
+      "elite": 4893315,
+      "mapping": {
+        "0": {
+          "tower_floor": 45.0,
+          "chapter_boss_target_power": 512741,
+          "within_chapter_ratio": 1.0,
+          "target_power": 512741,
+          "actual_power": 512740
+        },
+        "1": {
+          "tower_floor": 77.41379310344827,
+          "chapter_boss_target_power": 8307496,
+          "within_chapter_ratio": 1.0,
+          "target_power": 8307496,
+          "actual_power": 8307511
+        }
+      }
+    },
+    {
+      "chapter": 19,
+      "stage": "M_019_3",
+      "normal": 648865,
+      "elite": 6569131,
+      "mapping": {
+        "0": {
+          "tower_floor": 47.916666666666664,
+          "chapter_boss_target_power": 561746,
+          "within_chapter_ratio": 1.0,
+          "target_power": 561746,
+          "actual_power": 561745
+        },
+        "1": {
+          "tower_floor": 81.37931034482759,
+          "chapter_boss_target_power": 12302987,
+          "within_chapter_ratio": 1.0,
+          "target_power": 12302987,
+          "actual_power": 12302989
+        }
+      }
+    },
+    {
+      "chapter": 20,
+      "stage": "M_020_3",
+      "normal": 748197,
+      "elite": 8352563,
+      "mapping": {
+        "0": {
+          "tower_floor": 50.833333333333336,
+          "chapter_boss_target_power": 679242,
+          "within_chapter_ratio": 1.0,
+          "target_power": 679242,
+          "actual_power": 679238
+        },
+        "1": {
+          "tower_floor": 85.34482758620689,
+          "chapter_boss_target_power": 16947015,
+          "within_chapter_ratio": 1.0,
+          "target_power": 16947015,
+          "actual_power": 16947008
+        }
+      }
+    },
+    {
+      "chapter": 21,
+      "stage": "M_021_3",
+      "normal": 987889,
+      "elite": 11348221,
+      "mapping": {
+        "0": {
+          "tower_floor": 53.75,
+          "chapter_boss_target_power": 983882,
+          "within_chapter_ratio": 1.0,
+          "target_power": 983882,
+          "actual_power": 983886
+        },
+        "1": {
+          "tower_floor": 89.3103448275862,
+          "chapter_boss_target_power": 25501783,
+          "within_chapter_ratio": 1.0,
+          "target_power": 25501783,
+          "actual_power": 25501774
+        }
+      }
+    },
+    {
+      "chapter": 22,
+      "stage": "M_022_3",
+      "normal": 1152714,
+      "elite": 15595108,
+      "mapping": {
+        "0": {
+          "tower_floor": 56.666666666666664,
+          "chapter_boss_target_power": 1208638,
+          "within_chapter_ratio": 1.0,
+          "target_power": 1208638,
+          "actual_power": 1208637
+        },
+        "1": {
+          "tower_floor": 93.27586206896552,
+          "chapter_boss_target_power": 38962896,
+          "within_chapter_ratio": 1.0,
+          "target_power": 38962896,
+          "actual_power": 38962894
+        }
+      }
+    },
+    {
+      "chapter": 23,
+      "stage": "M_023_3",
+      "normal": 1408039,
+      "elite": 20766064,
+      "mapping": {
+        "0": {
+          "tower_floor": 59.583333333333336,
+          "chapter_boss_target_power": 1578167,
+          "within_chapter_ratio": 1.0,
+          "target_power": 1578167,
+          "actual_power": 1578168
+        },
+        "1": {
+          "tower_floor": 97.24137931034483,
+          "chapter_boss_target_power": 57078462,
+          "within_chapter_ratio": 1.0,
+          "target_power": 57078462,
+          "actual_power": 57078464
+        }
+      }
+    },
+    {
+      "chapter": 24,
+      "stage": "M_024_3",
+      "normal": 1672907,
+      "elite": 27074784,
+      "mapping": {
+        "0": {
+          "tower_floor": 62.5,
+          "chapter_boss_target_power": 1985924,
+          "within_chapter_ratio": 1.0,
+          "target_power": 1985924,
+          "actual_power": 1985923
+        },
+        "1": {
+          "tower_floor": 101.20689655172414,
+          "chapter_boss_target_power": 81299359,
+          "within_chapter_ratio": 1.0,
+          "target_power": 81299359,
+          "actual_power": 81299276
+        }
+      }
+    },
+    {
+      "chapter": 25,
+      "stage": "M_025_3",
+      "normal": 2109098,
+      "elite": 35858196,
+      "mapping": {
+        "0": {
+          "tower_floor": 65.41666666666666,
+          "chapter_boss_target_power": 2704765,
+          "within_chapter_ratio": 1.0,
+          "target_power": 2704765,
+          "actual_power": 2704762
+        },
+        "1": {
+          "tower_floor": 105.17241379310344,
+          "chapter_boss_target_power": 118245499,
+          "within_chapter_ratio": 1.0,
+          "target_power": 118245499,
+          "actual_power": 118245493
+        }
+      }
+    },
+    {
+      "chapter": 26,
+      "stage": "M_026_3",
+      "normal": 2658154,
+      "elite": 46521141,
+      "mapping": {
+        "0": {
+          "tower_floor": 68.33333333333334,
+          "chapter_boss_target_power": 3682198,
+          "within_chapter_ratio": 1.0,
+          "target_power": 3682198,
+          "actual_power": 3682197
+        },
+        "1": {
+          "tower_floor": 109.13793103448276,
+          "chapter_boss_target_power": 167314613,
+          "within_chapter_ratio": 1.0,
+          "target_power": 167314613,
+          "actual_power": 167314590
+        }
+      }
+    },
+    {
+      "chapter": 27,
+      "stage": "M_027_3",
+      "normal": 3277258,
+      "elite": 58101646,
+      "mapping": {
+        "0": {
+          "tower_floor": 71.25,
+          "chapter_boss_target_power": 4867963,
+          "within_chapter_ratio": 1.0,
+          "target_power": 4867963,
+          "actual_power": 4867966
+        },
+        "1": {
+          "tower_floor": 113.10344827586206,
+          "chapter_boss_target_power": 225035616,
+          "within_chapter_ratio": 1.0,
+          "target_power": 225035616,
+          "actual_power": 225035612
+        }
+      }
+    },
+    {
+      "chapter": 28,
+      "stage": "M_028_3",
+      "normal": 3904254,
+      "elite": 78908574,
+      "mapping": {
+        "0": {
+          "tower_floor": 74.16666666666667,
+          "chapter_boss_target_power": 6147789,
+          "within_chapter_ratio": 1.0,
+          "target_power": 6147789,
+          "actual_power": 6147768
+        },
+        "1": {
+          "tower_floor": 117.06896551724138,
+          "chapter_boss_target_power": 338453555,
+          "within_chapter_ratio": 1.0,
+          "target_power": 338453555,
+          "actual_power": 338453438
+        }
+      }
+    },
+    {
+      "chapter": 29,
+      "stage": "M_029_3",
+      "normal": 4832226,
+      "elite": 100926989,
+      "mapping": {
+        "0": {
+          "tower_floor": 77.08333333333333,
+          "chapter_boss_target_power": 8169518,
+          "within_chapter_ratio": 1.0,
+          "target_power": 8169518,
+          "actual_power": 8169516
+        },
+        "1": {
+          "tower_floor": 121.03448275862068,
+          "chapter_boss_target_power": 469904660,
+          "within_chapter_ratio": 1.0,
+          "target_power": 469904660,
+          "actual_power": 469904665
+        }
+      }
+    },
+    {
+      "chapter": 30,
+      "stage": "M_030_3",
+      "normal": 5692382,
+      "elite": 142006734,
+      "mapping": {
+        "0": {
+          "tower_floor": 80.0,
+          "chapter_boss_target_power": 10163866,
+          "within_chapter_ratio": 1.0,
+          "target_power": 10163866,
+          "actual_power": 10163861
+        },
+        "1": {
+          "tower_floor": 125.0,
+          "chapter_boss_target_power": 740875502,
+          "within_chapter_ratio": 1.0,
+          "target_power": 740875502,
+          "actual_power": 740875539
+        }
+      }
+    }
+  ],
+  "mapping_policy": {
+    "schema": "campaign-tower-difficulty-104-v2",
+    "power_stat_schema": "role-balanced-panel-104-v2",
+    "normal": {
+      "unchanged_chapters": [
+        1,
+        1
+      ],
+      "early_chapters": [
+        1,
+        5
+      ],
+      "early_boss_recommendation": [
+        6925,
+        20000
+      ],
+      "chapters": [
+        6,
+        30
+      ],
+      "floors": [
+        10,
+        80
+      ]
+    },
+    "elite": {
+      "chapters": [
+        1,
+        30
+      ],
+      "floors": [
+        10,
+        125
+      ]
+    },
+    "anchor": "chapter finale",
+    "interpolation": "linear floor; geometric between adjacent floor powers",
+    "chapters": [
+      {
+        "chapter": 1,
+        "diff": 1,
+        "tower_floor": 10.0,
+        "boss_target_power": 17300,
+        "boss_recommended_power": 47701
+      },
+      {
+        "chapter": 2,
+        "diff": 0,
+        "tower_floor": null,
+        "boss_target_power": 2210,
+        "boss_recommended_power": 10192
+      },
+      {
+        "chapter": 2,
+        "diff": 1,
+        "tower_floor": 13.96551724137931,
+        "boss_target_power": 20517,
+        "boss_recommended_power": 54210
+      },
+      {
+        "chapter": 3,
+        "diff": 0,
+        "tower_floor": null,
+        "boss_target_power": 3203,
+        "boss_recommended_power": 13463
+      },
+      {
+        "chapter": 3,
+        "diff": 1,
+        "tower_floor": 17.93103448275862,
+        "boss_target_power": 34060,
+        "boss_recommended_power": 79281
+      },
+      {
+        "chapter": 4,
+        "diff": 0,
+        "tower_floor": null,
+        "boss_target_power": 4279,
+        "boss_recommended_power": 16733
+      },
+      {
+        "chapter": 4,
+        "diff": 1,
+        "tower_floor": 21.89655172413793,
+        "boss_target_power": 49964,
+        "boss_recommended_power": 105678
+      },
+      {
+        "chapter": 5,
+        "diff": 0,
+        "tower_floor": null,
+        "boss_target_power": 5429,
+        "boss_recommended_power": 20000
+      },
+      {
+        "chapter": 5,
+        "diff": 1,
+        "tower_floor": 25.862068965517242,
+        "boss_target_power": 64681,
+        "boss_recommended_power": 128257
+      },
+      {
+        "chapter": 6,
+        "diff": 0,
+        "tower_floor": 10.0,
+        "boss_target_power": 17300,
+        "boss_recommended_power": 47701
+      },
+      {
+        "chapter": 6,
+        "diff": 1,
+        "tower_floor": 29.82758620689655,
+        "boss_target_power": 90592,
+        "boss_recommended_power": 165126
+      },
+      {
+        "chapter": 7,
+        "diff": 0,
+        "tower_floor": 12.916666666666666,
+        "boss_target_power": 21641,
+        "boss_recommended_power": 56423
+      },
+      {
+        "chapter": 7,
+        "diff": 1,
+        "tower_floor": 33.79310344827586,
+        "boss_target_power": 150329,
+        "boss_recommended_power": 241424
+      },
+      {
+        "chapter": 8,
+        "diff": 0,
+        "tower_floor": 15.833333333333332,
+        "boss_target_power": 25813,
+        "boss_recommended_power": 64398
+      },
+      {
+        "chapter": 8,
+        "diff": 1,
+        "tower_floor": 37.758620689655174,
+        "boss_target_power": 200249,
+        "boss_recommended_power": 299345
+      },
+      {
+        "chapter": 9,
+        "diff": 0,
+        "tower_floor": 18.75,
+        "boss_target_power": 33240,
+        "boss_recommended_power": 77847
+      },
+      {
+        "chapter": 9,
+        "diff": 1,
+        "tower_floor": 41.724137931034484,
+        "boss_target_power": 288923,
+        "boss_recommended_power": 394084
+      },
+      {
+        "chapter": 10,
+        "diff": 0,
+        "tower_floor": 21.666666666666664,
+        "boss_target_power": 47863,
+        "boss_recommended_power": 102329
+      },
+      {
+        "chapter": 10,
+        "diff": 1,
+        "tower_floor": 45.689655172413794,
+        "boss_target_power": 493810,
+        "boss_recommended_power": 589074
+      },
+      {
+        "chapter": 11,
+        "diff": 0,
+        "tower_floor": 24.583333333333336,
+        "boss_target_power": 63709,
+        "boss_recommended_power": 126809
+      },
+      {
+        "chapter": 11,
+        "diff": 1,
+        "tower_floor": 49.6551724137931,
+        "boss_target_power": 624288,
+        "boss_recommended_power": 702324
+      },
+      {
+        "chapter": 12,
+        "diff": 0,
+        "tower_floor": 27.5,
+        "boss_target_power": 78596,
+        "boss_recommended_power": 148438
+      },
+      {
+        "chapter": 12,
+        "diff": 1,
+        "tower_floor": 53.62068965517241,
+        "boss_target_power": 982625,
+        "boss_recommended_power": 986941
+      },
+      {
+        "chapter": 13,
+        "diff": 0,
+        "tower_floor": 30.416666666666668,
+        "boss_target_power": 96189,
+        "boss_recommended_power": 172717
+      },
+      {
+        "chapter": 13,
+        "diff": 1,
+        "tower_floor": 57.58620689655172,
+        "boss_target_power": 1369773,
+        "boss_recommended_power": 1266157
+      },
+      {
+        "chapter": 14,
+        "diff": 0,
+        "tower_floor": 33.33333333333333,
+        "boss_target_power": 132604,
+        "boss_recommended_power": 219746
+      },
+      {
+        "chapter": 14,
+        "diff": 1,
+        "tower_floor": 61.55172413793103,
+        "boss_target_power": 1915681,
+        "boss_recommended_power": 1628333
+      },
+      {
+        "chapter": 15,
+        "diff": 0,
+        "tower_floor": 36.25,
+        "boss_target_power": 176079,
+        "boss_recommended_power": 271819
+      },
+      {
+        "chapter": 15,
+        "diff": 1,
+        "tower_floor": 65.51724137931035,
+        "boss_target_power": 2745640,
+        "boss_recommended_power": 2132955
+      },
+      {
+        "chapter": 16,
+        "diff": 0,
+        "tower_floor": 39.16666666666667,
+        "boss_target_power": 246641,
+        "boss_recommended_power": 349988
+      },
+      {
+        "chapter": 16,
+        "diff": 1,
+        "tower_floor": 69.48275862068965,
+        "boss_target_power": 4140822,
+        "boss_recommended_power": 2902785
+      },
+      {
+        "chapter": 17,
+        "diff": 0,
+        "tower_floor": 42.083333333333336,
+        "boss_target_power": 287848,
+        "boss_recommended_power": 392981
+      },
+      {
+        "chapter": 17,
+        "diff": 1,
+        "tower_floor": 73.44827586206897,
+        "boss_target_power": 5838935,
+        "boss_recommended_power": 3756217
+      },
+      {
+        "chapter": 18,
+        "diff": 0,
+        "tower_floor": 45.0,
+        "boss_target_power": 512741,
+        "boss_recommended_power": 605930
+      },
+      {
+        "chapter": 18,
+        "diff": 1,
+        "tower_floor": 77.41379310344827,
+        "boss_target_power": 8307496,
+        "boss_recommended_power": 4893315
+      },
+      {
+        "chapter": 19,
+        "diff": 0,
+        "tower_floor": 47.916666666666664,
+        "boss_target_power": 561746,
+        "boss_recommended_power": 648865
+      },
+      {
+        "chapter": 19,
+        "diff": 1,
+        "tower_floor": 81.37931034482759,
+        "boss_target_power": 12302987,
+        "boss_recommended_power": 6569131
+      },
+      {
+        "chapter": 20,
+        "diff": 0,
+        "tower_floor": 50.833333333333336,
+        "boss_target_power": 679242,
+        "boss_recommended_power": 748197
+      },
+      {
+        "chapter": 20,
+        "diff": 1,
+        "tower_floor": 85.34482758620689,
+        "boss_target_power": 16947015,
+        "boss_recommended_power": 8352563
+      },
+      {
+        "chapter": 21,
+        "diff": 0,
+        "tower_floor": 53.75,
+        "boss_target_power": 983882,
+        "boss_recommended_power": 987889
+      },
+      {
+        "chapter": 21,
+        "diff": 1,
+        "tower_floor": 89.3103448275862,
+        "boss_target_power": 25501783,
+        "boss_recommended_power": 11348221
+      },
+      {
+        "chapter": 22,
+        "diff": 0,
+        "tower_floor": 56.666666666666664,
+        "boss_target_power": 1208638,
+        "boss_recommended_power": 1152714
+      },
+      {
+        "chapter": 22,
+        "diff": 1,
+        "tower_floor": 93.27586206896552,
+        "boss_target_power": 38962896,
+        "boss_recommended_power": 15595108
+      },
+      {
+        "chapter": 23,
+        "diff": 0,
+        "tower_floor": 59.583333333333336,
+        "boss_target_power": 1578167,
+        "boss_recommended_power": 1408039
+      },
+      {
+        "chapter": 23,
+        "diff": 1,
+        "tower_floor": 97.24137931034483,
+        "boss_target_power": 57078462,
+        "boss_recommended_power": 20766064
+      },
+      {
+        "chapter": 24,
+        "diff": 0,
+        "tower_floor": 62.5,
+        "boss_target_power": 1985924,
+        "boss_recommended_power": 1672907
+      },
+      {
+        "chapter": 24,
+        "diff": 1,
+        "tower_floor": 101.20689655172414,
+        "boss_target_power": 81299359,
+        "boss_recommended_power": 27074784
+      },
+      {
+        "chapter": 25,
+        "diff": 0,
+        "tower_floor": 65.41666666666666,
+        "boss_target_power": 2704765,
+        "boss_recommended_power": 2109098
+      },
+      {
+        "chapter": 25,
+        "diff": 1,
+        "tower_floor": 105.17241379310344,
+        "boss_target_power": 118245499,
+        "boss_recommended_power": 35858196
+      },
+      {
+        "chapter": 26,
+        "diff": 0,
+        "tower_floor": 68.33333333333334,
+        "boss_target_power": 3682198,
+        "boss_recommended_power": 2658154
+      },
+      {
+        "chapter": 26,
+        "diff": 1,
+        "tower_floor": 109.13793103448276,
+        "boss_target_power": 167314613,
+        "boss_recommended_power": 46521141
+      },
+      {
+        "chapter": 27,
+        "diff": 0,
+        "tower_floor": 71.25,
+        "boss_target_power": 4867963,
+        "boss_recommended_power": 3277258
+      },
+      {
+        "chapter": 27,
+        "diff": 1,
+        "tower_floor": 113.10344827586206,
+        "boss_target_power": 225035616,
+        "boss_recommended_power": 58101646
+      },
+      {
+        "chapter": 28,
+        "diff": 0,
+        "tower_floor": 74.16666666666667,
+        "boss_target_power": 6147789,
+        "boss_recommended_power": 3904254
+      },
+      {
+        "chapter": 28,
+        "diff": 1,
+        "tower_floor": 117.06896551724138,
+        "boss_target_power": 338453555,
+        "boss_recommended_power": 78908574
+      },
+      {
+        "chapter": 29,
+        "diff": 0,
+        "tower_floor": 77.08333333333333,
+        "boss_target_power": 8169518,
+        "boss_recommended_power": 4832226
+      },
+      {
+        "chapter": 29,
+        "diff": 1,
+        "tower_floor": 121.03448275862068,
+        "boss_target_power": 469904660,
+        "boss_recommended_power": 100926989
+      },
+      {
+        "chapter": 30,
+        "diff": 0,
+        "tower_floor": 80.0,
+        "boss_target_power": 10163866,
+        "boss_recommended_power": 5692382
+      },
+      {
+        "chapter": 30,
+        "diff": 1,
+        "tower_floor": 125.0,
+        "boss_target_power": 740875502,
+        "boss_recommended_power": 142006734
+      }
+    ]
+  },
+  "recommendation": "actual serialized enemy power, chapter finale anchor",
+  "note": "normal chapter 1 retained; chapters 2-5 rise linearly to 20000; within-chapter ratios retained"
+}

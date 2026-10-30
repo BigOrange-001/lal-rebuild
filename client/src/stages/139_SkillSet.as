@@ -91,6 +91,21 @@ package com.meng52.game.module.skill
       {
          if(activeNativeSettings && activeNativeSettings.hasOwnProperty(key)) return activeNativeSettings[key];
          var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         var growth:* = row && row.rankSettingGrowth104 ? row.rankSettingGrowth104[key] : null;
+         if(growth && growth.length)
+         {
+            var rank:Number = Math.max(1,Math.min(10,lv))-1;
+            if(typeof growth[0] == "number") return Number(growth[0])+Number(growth[1])*rank;
+            var value:* = Tools.clone(row[key]);
+            for each(var entry:Array in growth)
+            {
+               var target:* = value;
+               var path:Array = entry[0];
+               for(var i:int=0;i<path.length-1;i++) target=target[path[i]];
+               target[path[path.length-1]]=Number(entry[1])+Number(entry[2])*rank;
+            }
+            return value;
+         }
          return row && row.hasOwnProperty(key) ? row[key] : fallback;
       }
 
@@ -240,9 +255,12 @@ package com.meng52.game.module.skill
       private function getLevelInfo() : String
       {
          var row:Object = GlobalData.$mConfig_skill[skillSetData.id];
-         if(!row || !row.rankInfoTemplate || (isSuper && !row.modEffectSequence && !row.calibration_104)) return skillSetData.info;
+         if(!row || !row.rankInfoTemplate || (isSuper && !row.modEffectSequence && !row.calibration_104 && !row.rankGrowth104)) return skillSetData.info;
          var actions:Array = skills;
-         return String(row.rankInfoTemplate).replace(/\{rank:(\d+):([0-9.]+)\}|\{scale:([0-9.]+):([0-9.]+)\}|\{flat:(\d+):([0-9.]+)\}/g,function(...parts):String
+         var manualRankDisplay:Number = row.rankManualDisplay104 ? (1+(Math.max(1,Math.min(10,lv))-1)/9)/(row.rankGrowth104.slot==10 ? 2 : 1) : 1;
+         var textRank:Number = 1+(Math.max(1,Math.min(10,lv))-1)/9;
+         var rankText:String = String(row.rankInfoTemplate).replace(/\{linear:([0-9.]+)\}/g,function(...matches):String {return (Math.round(Number(matches[1])*textRank*100)/100).toString()+"%";});
+         return rankText.replace(/\{rank:(\d+):([0-9.]+)\}|\{scale:([0-9.]+):([0-9.]+)\}|\{flat:(\d+):([0-9.]+)\}/g,function(...parts):String
          {
             var value:*;
             if(parts[5] !== undefined && parts[5] !== null && parts[5] != "")
@@ -260,7 +278,7 @@ package com.meng52.game.module.skill
                return (Math.round(Number(value)*10000)/100).toString()+"%";
             }
             var scaleIndex:int = row.modScaleActionIndex !== undefined ? int(row.modScaleActionIndex) : 0;
-            return (Math.round((Number(parts[3])+Number(parts[4])*Number(actions[scaleIndex][2]))*100)/100).toString()+"%";
+            return (Math.round((Number(parts[3])+Number(parts[4])*Number(actions[scaleIndex][2]))*manualRankDisplay*100)/100).toString()+"%";
          });
       }
 
@@ -490,7 +508,7 @@ package com.meng52.game.module.skill
                   {
                      if(int(_loc4_[0]) == _loc4_[0] && int(_loc4_[1]) == _loc4_[1] && _loc4_[0] >= 0 && _loc4_[0] < skills.length && skills[_loc4_[0]] is Array && _loc4_[1] >= 0 && _loc4_[1] < skills[_loc4_[0]].length && (skills[_loc4_[0]][_loc4_[1]] is int || skills[_loc4_[0]][_loc4_[1]] is Number))
                      {
-                        skills[_loc4_[0]][_loc4_[1]] += _loc4_[2] * (lv - 1);
+                        skills[_loc4_[0]][_loc4_[1]] += _loc4_[2] * (rankUpgradeLevel - 1);
                      }
                   }
                   _loc3_++;
@@ -498,7 +516,7 @@ package com.meng52.game.module.skill
             }
             else if(_loc1_ && _loc1_.length >= 2 && (_loc1_[0] is int || _loc1_[0] is Number) && int(_loc1_[0]) == Number(_loc1_[0]) && int(_loc1_[0]) >= 0 && int(_loc1_[0]) < skills.length && skills[int(_loc1_[0])] is Array && skills[int(_loc1_[0])].length > 1 && (skills[int(_loc1_[0])][1] is int || skills[int(_loc1_[0])][1] is Number) && (_loc1_[1] is int || _loc1_[1] is Number) && isFinite(Number(_loc1_[1])))
             {
-               skills[int(_loc1_[0])][1] += _loc1_[1] * (lv - 1);
+               skills[int(_loc1_[0])][1] += _loc1_[1] * (rankUpgradeLevel - 1);
             }
             var rankPathIndex:int = 0;
             var rankPathRecord:Array = null;
@@ -1413,9 +1431,9 @@ package com.meng52.game.module.skill
                             var chainHitPreviously:Boolean = killContext ? Boolean(killContext.hit) : false;
                             if(killContext) killContext.hit = false;
                             avatar.attackAimList(chainOne,chainDamageType,chainShareTotal,0,String(_loc20_[11]),_loc2_,null,getActionRange(_loc14_,_loc24_),damageShareWeight(chainCoeff,chainShareTotal),chainHit == 0 ? avatar : chainPrevious);
-                            if(skillSetData.chainDot && skillSetData.chainDot.length == 5 && chainTarget.hp > 0 && killContext && killContext.hit)
+                            if(getNativeSetting("chainDot") && getNativeSetting("chainDot").length == 5 && chainTarget.hp > 0 && killContext && killContext.hit)
                             {
-                               var chainDotRow:Array = skillSetData.chainDot;
+                               var chainDotRow:Array = getNativeSetting("chainDot");
                                chainTarget.addManualSkillDot(String(avatar.id)+":"+String(chainDotRow[4]),String(chainDotRow[0]),Number(chainDotRow[1])*avatar.getDamage(),0,int(chainDotRow[2]),avatar,int(chainDotRow[3]));
                             }
                             if(killContext) killContext.hit = Boolean(killContext.hit) || chainHitPreviously;
@@ -2153,8 +2171,8 @@ package com.meng52.game.module.skill
                      if(!soldier104 || soldier104.hp <= 0) continue;
                      ++aliveSoldiers104;
                      if(soldier104.buffs["summon"]) soldier104.buffs["summon"].round = Math.max(3,soldier104.buffs["summon"].round);
-                     soldier104.addBuff("strong",2,0.5);
-                     soldier104.injured(int(soldier104.hpMax*0.3),1,DisplayTools.getAttrs("FX60_HEAL"),4,avatar,false,avatar);
+                     soldier104.addBuff("strong",2,_loc20_.length>6 ? Number(_loc20_[6]) : 0.5);
+                     soldier104.injured(int(soldier104.hpMax*(_loc20_.length>5 ? Number(_loc20_[5]) : 0.3)),1,DisplayTools.getAttrs("FX60_HEAL"),4,avatar,false,avatar);
                   }
                   if(aliveSoldiers104 == 0)
                   {

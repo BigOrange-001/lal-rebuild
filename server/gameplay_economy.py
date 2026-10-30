@@ -1077,7 +1077,7 @@ class GameplayEconomy:
         p = self.store.profile(uid); records = p.setdefault("records", {})
         state = records.get("welfare", {}); count = len(config.get("reward", []))
         # The native screen requests this snapshot on entry. Treat the daily
-        # claim flags as empty after midnight without mutating the profile on
+        # claim flags as empty after the daily midnight reset without mutating the profile on
         # this read RPC; the claim RPC performs the reset.
         if state.get("day") != game_day(self._now()):
             state = {"had_reward": [0] * count, "coin_times": 0}
@@ -1289,6 +1289,8 @@ class GameplayEconomy:
                 raise GameplayFault("LotteryUnavailable", "VIP activity pool has no valid hero records")
         key=self._op_key("user.get_lottery_activity",params)
         def mutate(p):
+            if int(p.get('vip_lv', 0)) < int(extract.get('min_vip_level', 8)):
+                raise GameplayFault('VipLevelLow', 'VIP召唤需要VIP8及以上')
             if int(p.get("coin",0))<cost: raise GameplayFault("InsufficientCoin", "Not enough coin")
             draws=10 if flag else 1
             attrs=p.setdefault("attrs",{}); state=attrs.get("lottery_activity")
@@ -1373,7 +1375,7 @@ class GameplayEconomy:
             attrs=p.setdefault("attrs",{}); state=attrs.setdefault("lottery_activity",{"score":0})
             if not isinstance(state,dict): state={"score":0};attrs["lottery_activity"]=state
             if int(state.get("score",0))<need: raise GameplayFault("ActivityScoreLow", "Not enough activity points")
-            if "heroes" in reward and len(p.get("avatars",{}))>=int(attrs.get("avatar_len",0)):
+            if ("heroes" in reward or "avatar" in reward) and len(p.get("avatars",{}))>=int(attrs.get("avatar_len",0)):
                 raise GameplayFault("AvatarCapacity", "Hero inventory is full")
             before=set(p.get("avatars",{}));grant_reward(p,reward,{"cfg":self.config})
             avatar={k:v for k,v in p.get("avatars",{}).items() if k not in before}

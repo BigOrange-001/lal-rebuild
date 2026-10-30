@@ -1,8 +1,7 @@
 """Daily nominal-yuan payment limits for local accounts."""
 from __future__ import annotations
 
-import datetime
-from zoneinfo import ZoneInfo
+from game_calendar import game_day
 
 
 TIERS = {
@@ -21,9 +20,7 @@ def valid_registration_tier(value):
 
 
 def local_day(now):
-    return datetime.datetime.fromtimestamp(now, datetime.timezone.utc).astimezone(
-        ZoneInfo("Asia/Shanghai")
-    ).date().isoformat()
+    return game_day(now)
 
 
 def initial_spending(tier, now):

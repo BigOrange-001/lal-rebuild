@@ -206,7 +206,9 @@ class SkillCompleteBattle(ReferenceBattle):
         value=_to_int(super()._get_damage(unit)*(1+self._get_manual_battle_stack(unit,'attack')+self._get_manual_timed_stack(unit,'attack')))
         state=self.state(unit)
         value=max(0,value+_to_int(state['entry_ap']*state.get('evil_bonus',0)))
-        return _to_int(value*(1+.05*state.get('santa_stacks',0)))
+        passive=(unit.get('skillB') or {}).get('skills',[])
+        stack_rate=float(passive[0][3]) if passive and passive[0][0]=='santa_kill' else .05
+        return _to_int(value*(1+stack_rate*state.get('santa_stacks',0)))
 
     def _get_de_ph(self, unit, ignore_sunder=False):
         base=dict(unit,de_ph=unit.get('de_ph',0)*(1+self._get_manual_battle_stack(unit,'defense')))
@@ -236,7 +238,7 @@ class SkillCompleteBattle(ReferenceBattle):
         state=self.state(owner);serial=state['serial']
         ctx=self._context(owner);damage=ctx['damage_factor'];effect=ctx['effect_factor']
         row=self._config['skill'].get(skill.get('skid'),{})
-        defense=self._factor(row.get('manualDefenseBuffMultiplier'))
+        defense=self._factor(skill.get('nativeSettings104',{}).get('manualDefenseBuffMultiplier',row.get('manualDefenseBuffMultiplier')))
         orange=5 if str(owner['aid']).endswith('_6') else 1
         en=lambda distance,center=None,maximum=1,hero=False,order='nearest',excluded=(),forward=False:self.enemies(owner,distance,center,maximum,hero,order,excluded,forward)
         hit=lambda target,coef,typ,shared=0:self.hit(owner,target,coef,typ,shared)
@@ -346,7 +348,7 @@ class SkillCompleteBattle(ReferenceBattle):
             case 'veigar_c':
                 enemies=en(700,hero=True,order='ratio') or en(700)
                 if not enemies:return False
-                target=enemies[0];old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+30000
+                target=enemies[0];old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+30000*float(skill.get('nativeSettings104',{}).get('manualFixedScale104',1))
                 try:hit(target,2+self.equipment_part(skill,'execution',3)*(1-target['hp']/target['hp_max']),2)
                 finally:state['veigar_cast_hit']=old
             case 'elise_n':
@@ -403,7 +405,7 @@ class SkillCompleteBattle(ReferenceBattle):
                 buff('taunt',2)
             case 'alistar_c':
                 self._remove_all_debuff(owner);self.heal(owner,owner,self.equipment_part(skill,'will_heal',.5))
-                state['alistar_guard104']=dict(until=serial,debuff=False)
+                state['alistar_guard104']=dict(until=serial,reduction=.8*float(skill.get('nativeSettings104',{}).get('manualFixedScale104',1)),debuff=False)
             case 'diana_n':
                 enemies=en(650)
                 if not enemies:return False
@@ -553,7 +555,7 @@ class SkillCompleteBattle(ReferenceBattle):
                 self.hit(owner,target,float(skill['skills'][0][4]),2)
                 state['santa_stacks']=state.get('santa_stacks',0)+1
         else:
-            state=self.state(owner);old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+10000
+            state=self.state(owner);old=state.get('veigar_cast_hit',0);state['veigar_cast_hit']=old+10000*float(skill.get('nativeSettings104',{}).get('manualFixedScale104',1))
             try:
                 for target in targets:
                     if self.hit(owner,target,.3,3) and target['hp']>0:self.control(owner,target,'stun',1)
@@ -565,7 +567,8 @@ class SkillCompleteBattle(ReferenceBattle):
         if owner.get('hp',0)<=0:return False
         allies=[u for u in (self.a if self._team_number(owner)==1 else self.b) if u.get('hp',0)>0]
         if not allies:return False
-        rate=self._factor(self._config.get('skill',{}).get(skill.get('skid'),{}).get('manualEffectMultiplier'))
+        row=self._config.get('skill',{}).get(skill.get('skid'),{})
+        rate=self._factor(skill.get('nativeSettings104',{}).get('manualEffectMultiplier',row.get('manualEffectMultiplier')))
         if kind=='nurse_n':
             for target in allies:self._add_buff(target,'purify',1)
             amount=_to_int(self._ap_with_talent(owner)*float(skill['skills'][0][4])*rate*self.hero_output_rate_104(owner))
@@ -637,7 +640,7 @@ class SkillCompleteBattle(ReferenceBattle):
             if not targets:return False
             primary=max(targets,key=self._get_damage)
             targets=self.candidates(owner,3-self._team_number(owner),primary['line'],primary['pos'],300,-1)
-            state=self.state(owner);old=state.get('polar_cast_hit',0);state['polar_cast_hit']=old+50000
+            state=self.state(owner);old=state.get('polar_cast_hit',0);state['polar_cast_hit']=old+50000*float(skill.get('nativeSettings104',{}).get('manualFixedScale104',1))
             try:
                 for target in targets:
                     if self.hit(owner,target,3,2) and target['hp']>0:
@@ -728,7 +731,7 @@ class SkillCompleteBattle(ReferenceBattle):
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
-        if state.get('alistar_guard104') and damage_type!=4:amount=_to_int(amount*.2)
+        if state.get('alistar_guard104') and damage_type!=4:amount=_to_int(amount*round(max(0,1-state['alistar_guard104'].get('reduction',.8)),10))
         if ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
@@ -801,13 +804,23 @@ class SkillCompleteBattle(ReferenceBattle):
         value=super()._get_speed(unit)
         return _to_int(value*(1+self._buff_value(unit,'strong'))/(1+self._buff_value(unit,'weak')))
 
+    @contextmanager
+    def manual_skill_context(self, attacker, skill):
+        row=self._config.get('skill',{}).get(skill.get('skid'),{})
+        settings=skill.get('nativeSettings104',{})
+        ctx=self._context(attacker)
+        previous=(ctx['damage_factor'],ctx['effect_factor'])
+        ctx['damage_factor']=self._factor(settings.get('manualDamageMultiplier',row.get('manualDamageMultiplier')))
+        ctx['effect_factor']=self._factor(settings.get('manualEffectMultiplier',row.get('manualEffectMultiplier')))
+        try:
+            yield ctx
+        finally:
+            ctx['damage_factor'],ctx['effect_factor']=previous
+
     def _apply_native_skill(self, attacker, enemies, slot='skill'):
         skill=attacker.get(slot)
         if not isinstance(skill,dict) or not skill.get('skills'):return False
-        actions=skill['skills'];manual=[a for a in actions if a and a[0]=='manual_ability']
-        row=self._config.get('skill',{}).get(skill.get('skid'),{})
-        with self.context(attacker,'active',skill,self._factor(row.get('manualDamageMultiplier')) if manual else 1,
-                          self._factor(row.get('manualEffectMultiplier')) if manual else 1):
+        with self.context(attacker,'active',skill):
             result=super()._apply_native_skill(attacker,enemies,slot)
         if result and slot=='skill':attacker['_ability_normal_cast']=True
         return result

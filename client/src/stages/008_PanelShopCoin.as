@@ -180,7 +180,10 @@ package com.meng52.game.ui.panel
       {
          var seconds:Number = SendAndSelect.$systemTimer_nowSecond;
          if(!isFinite(seconds) || seconds <= 0) seconds = new Date().time * 0.001;
-         var day:Date = new Date(seconds * 1000 + 8 * 3600000);
+         var settings:Object = GlobalData.$mConfig_simple;
+         var resetHour:Number = settings && settings.daily_reset_hour !== undefined ? Number(settings.daily_reset_hour) : 0;
+         var timezoneHours:Number = settings && settings.daily_timezone_offset_hours !== undefined ? Number(settings.daily_timezone_offset_hours) : 8;
+         var day:Date = new Date(seconds*1000+(timezoneHours-resetHour)*3600000);
          var month:String = day.monthUTC + 1 < 10 ? "0" + (day.monthUTC + 1) : String(day.monthUTC + 1);
          var date:String = day.dateUTC < 10 ? "0" + day.dateUTC : String(day.dateUTC);
          return day.fullYearUTC + "-" + month + "-" + date;

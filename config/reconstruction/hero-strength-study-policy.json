@@ -1,0 +1,6 @@
+{
+  "schema": "hero-strength-study-policy-v1",
+  "excluded_families": ["A_1903", "A_1904", "A_1905", "A_1909"],
+  "excluded_names": ["JY大魔王", "伊芙蕾雅", "Miss大小姐", "小智"],
+  "reason": "用户要求后续强度测试和结果图排除解说卡"
+}

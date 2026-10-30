@@ -43,6 +43,8 @@ def roll_campaign_hero_drop(config: dict, stage: dict, stage_id: str,
     if not isinstance(blocked_raw, list) or any(not isinstance(x, str) for x in blocked_raw):
         raise GameplayFault("InvalidHeroDropPolicy", "Campaign hero exclusion list is malformed")
     blocked = set(blocked_raw)
+    policy = cfg.get('skin_acquisition_104', {})
+    tiers = {row['id']: row['tier'] for row in policy.get('heroes', [])}
     stage_hero_ids = set()
     for entry in stage.get("team2", []):
         if isinstance(entry, (list, tuple)) and entry:
@@ -95,10 +97,13 @@ def roll_campaign_hero_drop(config: dict, stage: dict, stage_id: str,
         if any(not pool for pool in pools.values()):
             raise GameplayFault("ModPoolEmpty", "主线英雄掉落的某个品阶池为空")
         selected = source.choice(candidates)
-        if source.randrange(10000) < int(selected["chance_bp"]):
-            return source.choice(pools[selected["star"]])
+        aid = source.choice(pools[selected["star"]])
+        weight = policy.get('weights', {}).get(tiers.get(aid), 1)
+        if source.randrange(10000) < int(selected["chance_bp"] * weight):
+            return aid
         return None
     selected = source.choice(candidates)
-    if source.randrange(10000) < int(selected["chance_bp"]):
+    weight = policy.get('weights', {}).get(tiers.get(selected['aid']), 1)
+    if source.randrange(10000) < int(selected["chance_bp"] * weight):
         return str(selected["aid"])
     return None

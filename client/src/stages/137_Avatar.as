@@ -622,7 +622,7 @@ package com.meng52.game.module.avatar
 
       private function abilityDirectMultiplier(source:Avatar, damageType:int) : Number
       {
-         if(abilityState.alistarGuard104 && damageType != 4) return 0.2;
+         if(abilityState.alistarGuard104 && damageType != 4) return Math.max(0,Math.round((1-Number(abilityState.alistarGuard104.reduction))*10000000000)/10000000000);
          var context:Object = currentAbilityAttack();
          if(!context || !source || context.owner !== source || damageType < 1 || damageType > 3 || (context.kind != "basic" && context.kind != "active")) return 1;
          var guard:Object = abilityState.guard;
@@ -1150,7 +1150,13 @@ package com.meng52.game.module.avatar
       private function s2Mark(target:Avatar, name:String, duration:int) : void
       {
          if(target && target.buffs.purify) {target.removeBuff("purify",true);return;}
-         if(target && target.hp > 0) {target.skin2[name] = {owner:this,expires:manualOwnerActionSerial+duration};fxPulse104(name,target);}
+         if(target && target.hp > 0) {target.skin2[name] = {owner:this,skill:skin2.castSkill || skillB,expires:manualOwnerActionSerial+duration};fxPulse104(name,target);}
+      }
+      private function s2ColdMoveFactor() : Number
+      {
+         if(!s2LiveMark(this,"cold")) return 1;
+         var mark:Object=skin2.cold;
+         return Math.max(0,1-mark.owner.s2Value(mark.skill,"slow"));
       }
       private function skin2ClearDebuffs() : void
       {
@@ -1261,7 +1267,7 @@ package com.meng52.game.module.avatar
                for each(unit in targets) {var marked:Boolean=s2LiveMark(unit,"windmark");s2Hit(unit,s2Value(skill,"hit"),1);if(marked) {abilityControl(unit,"stun",1);if(unit.buffs.stun)s2Mark(unit,"airborne",1);}s2Mark(unit,"windmark",2);}
                s2Shield(this,s2Value(skillB,"shield"));
             }
-            else for(i=0;i<3;i++) {for each(unit in targets) if(s2LiveMark(unit,"windmark") || s2LiveMark(unit,"airborne"))s2Hit(unit,s2Value(skill,"hit"),1);s2Heal(this,.8);}
+            else for(i=0;i<3;i++) {for each(unit in targets) if(s2LiveMark(unit,"windmark") || s2LiveMark(unit,"airborne"))s2Hit(unit,s2Value(skill,"hit"),1);s2Heal(this,s2Value(skill,"bondHeal"));}
             return true;
          }
          if(slot==0)
@@ -1311,7 +1317,7 @@ package com.meng52.game.module.avatar
                   target=skin2.sonic as Avatar;
                   if(target && target.hp>0 && target.line==line)
                   {
-                     abilityDash(target);s2Hit(target,s2Value(skill,"second")*(1+.4*(1-target.hp/target.hpMax)),1);skin2.sonic=null;
+                     abilityDash(target);s2Hit(target,s2Value(skill,"second")*(1+s2Value(skill,"executeBonus")*(1-target.hp/target.hpMax)),1);skin2.sonic=null;
                      ally=skin2.ward as Avatar;if(ally && ally.hp>0 && ally.line==line) reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,ally.pos+(team==1 ? -125 : 125))));
                      s2Shield(this,s2Value(skillB,"shield"));
                   }
@@ -1346,8 +1352,8 @@ package com.meng52.game.module.avatar
                   }
                   else for each(unit in allies) s2Shield(unit,s2Value(skill,"shield"));break;
                case 1140:
-                  if(skin2.phase) {skin2.phase=false;s2Hit(target,Number(skin2.phaseValue),2,true);if(target.hp<=0)target=s2Pick();}
-                  s2Hit(target,s2Value(skill,"hit"),2,true);if(target.hp<=0) target=s2Pick();s2Hit(target,s2Value(skill,"hit"),2,true);break;
+                  if(skin2.phase) {skin2.phase=false;s2Hit(target,Number(skin2.phaseValue),2,true);if(target && target.hp<=0)target=s2Pick();}
+                  s2Hit(target,s2Value(skill,"hit"),2,true);if(target && target.hp<=0) target=s2Pick();s2Hit(target,s2Value(skill,"hit"),2,true);break;
             }
          }
          else
@@ -1355,7 +1361,7 @@ package com.meng52.game.module.avatar
             switch(family)
             {
                case 1201:
-                  target=s2Pick("ratio");s2Hit(target,s2Value(skill,"hit")*(1+.8*(1-target.hp/target.hpMax)),3);
+                  target=s2Pick("ratio");s2Hit(target,s2Value(skill,"hit")*(1+s2Value(skill,"executeBonus")*(1-target.hp/target.hpMax)),3);
                   if(target.hp<=0 && target.getType()==1 && !target.isManualSummonUnit) for each(unit in allies) unit.addBuff("purify",1);break;
                case 1203:
                   for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));abilityControl(unit,"curse",2);if(unit.buffs.curse)s2Mark(unit,"contract",2);}
@@ -1364,7 +1370,7 @@ package com.meng52.game.module.avatar
                   for each(unit in allies) {unit.addBuff("purify",1);s2Shield(unit,s2Value(skill,"shield"));}
                   for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));if(s2LiveMark(unit,"exposed") && unit.skin2.exposed.owner===this) abilityControl(unit,"silence",1);}break;
                case 1206:
-                  removeAllDebuff();addBuff("strong",2,.4);addBuff("fleeup",2,8000);target=s2Pick("ratio");
+                  removeAllDebuff();addBuff("strong",2,s2Value(skill,"attackBuff"));addBuff("fleeup",2,s2Value(skill,"dodgeBuff"));target=s2Pick("ratio");
                   var ringKey:String="rings_"+abilityIndex;
                   count=target.skin2[ringKey] ? int(target.skin2[ringKey].count) : 0;
                   for each(unit in targets)
@@ -1386,7 +1392,7 @@ package com.meng52.game.module.avatar
                   }
                   for(i=skin2.eggs.length-1;i>=0;i--) if(skin2.eggs[i].line==line && skin2.eggs[i].ready<=manualOwnerActionSerial) s2ExplodeEgg(i);break;
                case 1210:
-                  addBuff("strong",2,.3);skin2.awake={end:manualOwnerActionSerial+2,skill:skill};
+                  addBuff("strong",2,s2Value(skill,"attackBuff"));skin2.awake={end:manualOwnerActionSerial+2,skill:skill};
                   for each(unit in targets) s2Hit(unit,s2Value(skill,"entry"),1);break;
                case 1211:
                   target=null;
@@ -1396,7 +1402,7 @@ package com.meng52.game.module.avatar
                case 1213:
                   for each(unit in targets) s2Hit(unit,s2Value(skill,"hit"));
                   if(int(skin2.shotUntil || -1)>=manualOwnerActionSerial) {skin2.shotUntil=-1;s2Hit(s2Pick("ratio"),s2Value(skill,"shot"));}
-                  for each(unit in allies) unit.addBuff("strong",2,.3);break;
+                  for each(unit in allies) unit.addBuff("strong",2,s2Value(skill,"attackBuff"));break;
                case 1214:
                   for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));count=s2Dispel(unit,true);abilityControl(unit,"curse",2);if(count)s2Hit(unit,s2Value(skill,"bonus"),3);}break;
                case 1215:
@@ -1418,29 +1424,29 @@ package com.meng52.game.module.avatar
                   skin2.windReturn=true;skin2.penetrationEnd=manualOwnerActionSerial+2;break;
                case 1221:
                   unit=s2Pet();
-                  if(unit) s2Heal(unit,unit.hpMax*.4/Math.max(1,getDamage()));
+                  if(unit) s2Heal(unit,unit.hpMax*s2Value(skill,"petHeal")/Math.max(1,getDamage()));
                   else
                   {
-                     abilitySummon("A_2002_5",1,.7,9999,"skin2bear");skin2.pets=abilityState.summons_skin2bear;
+                     abilitySummon(String(row.skin_v2_summon_id),1,s2Value(skill,"petPanel"),9999,"skin2bear");skin2.pets=abilityState.summons_skin2bear;
                      unit=s2Pet();if(unit) {unit.skin2.bearOwner=this;unit.skin2.initialHp=unit.hpMax;unit.skin2.initialAttack=unit.getDamage();}
                   }
                   s2BearStrike(skill);break;
                case 1228:
                   for each(unit in targets) {abilityControl(unit,"stun",1);s2Hit(unit,s2Value(skill,"hit"));}
-                  for each(unit in allies) {unit.addBuff("purify",2);unit.addBuff("strong",2,.4);}break;
+                  for each(unit in allies) {unit.addBuff("purify",2);unit.addBuff("strong",2,s2Value(skill,"attackBuff"));}break;
                case 1227:
                   for each(unit in targets) s2Hit(unit,s2Value(skill,"hit"));
                   for each(unit in allies) s2Heal(unit,s2Value(skill,"heal"));
                   var snake:Avatar=null;
                   for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.statisticsOwner104===this && unit.isManualSummonUnit) {snake=unit;break;}
-                  if(snake) {for each(unit in targets) if(unit.buffs.curse) s2Hit(unit,s2Value(skill,"snake"));for each(unit in allies)s2Shield(unit,s2Value(skill,"shield"));s2Heal(snake,snake.hpMax*.4/Math.max(1,getDamage()));}break;
+                  if(snake) {for each(unit in targets) if(unit.buffs.curse) s2Hit(unit,s2Value(skill,"snake"));for each(unit in allies)s2Shield(unit,s2Value(skill,"shield"));s2Heal(snake,snake.hpMax*s2Value(skill,"petHeal")/Math.max(1,getDamage()));}break;
                case 1140:
                   var ghost:Object=skin2.previous || skin2.record;
                   if(ghost)
                   {
                      fxPulse104("time",null,line,pos);fxPulse104("time",null,ghost.line,ghost.pos);removeAllDebuff();reline(ghost.line,ghost.pos);
                      var loss:Number=Math.max(0,Number(skin2.lost || 0)-Number(ghost.lost || 0));
-                     s2Heal(this,Math.min(hpMax*.3,loss*s2Value(skill,"rewind"))/Math.max(1,getDamage()));
+                     s2Heal(this,Math.min(hpMax*s2Value(skill,"rewindCap"),loss*s2Value(skill,"rewind"))/Math.max(1,getDamage()));
                   }
                   for each(unit in s2Lane().slice(0,2)) s2Hit(unit,s2Value(skill,"hit"),2,true);
                   skin2.phase=true;skin2.phaseValue=s2Value(skill,"phase");break;
@@ -1452,11 +1458,11 @@ package com.meng52.game.module.avatar
             if(slot==0)
             {
                if(family==1206) s2Hit(target,s2Value(skill,"hit"),1,true);
-               else if(family==1210 && stage==2) {addBuff("purify",1);s2Shield(this,1.2);}
+               else if(family==1210 && stage==2) {addBuff("purify",1);s2Shield(this,s2Value(skill,"bondShield"));}
                else if(family==1211) s2Dispel(target);
-               else if(family==1213 && skin2.ball) s2Shield(skin2.ball,1.2);
+               else if(family==1213 && skin2.ball) s2Shield(skin2.ball,s2Value(skill,"bondShield"));
                else if(family==1221 && s2Pet()) s2Pet().skin2.commandSplash=true;
-               else if(family==1201) s2Shield(s2Pick("ratio",true,true),1.2);
+               else if(family==1201) s2Shield(s2Pick("ratio",true,true),s2Value(skill,"bondShield"));
             }
          }
          return true;
@@ -1486,12 +1492,12 @@ package com.meng52.game.module.avatar
             {
                for each(unit in s2Lane()) if(unit.getType()==1 && !unit.isManualSummonUnit && unit.buffs.curse && s2LiveMark(unit,"contract") && unit.skin2.contract.owner===this)
                {
-                  fxPulse104("growth");skin2.growth=int(skin2.growth || 0)+1;ap+=Number(skin2.initialAttack)*.04;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);break;
+                  fxPulse104("growth");skin2.growth=int(skin2.growth || 0)+1;ap+=Number(skin2.initialAttack)*s2Value(skillB,"attackGrowth");hpMax+=int(Number(skin2.initialHp)*s2Value(skillB,"hpGrowth"));hp+=int(Number(skin2.initialHp)*s2Value(skillB,"hpGrowth"));break;
                }
             }
             if(skin2.eggUntil && manualOwnerActionSerial>=int(skin2.eggUntil))
             {
-               fxPulse104("rebirth");delete skin2.eggUntil;hp=Math.max(hp,int(hpMax*.4));
+               fxPulse104("rebirth");delete skin2.eggUntil;hp=Math.max(hp,int(hpMax*s2Value(skillB,"rebornHp")));
                for each(unit in s2Lane()) if(s2LiveMark(unit,"cold")) {s2Hit(unit,s2Value(skillB,"hit"));abilityControl(unit,"stun",1);}
             }
             if(skin2.frost && manualOwnerActionSerial==skin2.frost.next)
@@ -1511,11 +1517,11 @@ package com.meng52.game.module.avatar
             if(skin2.awake && manualOwnerActionSerial>=skin2.awake.end)
             {
                state=skin2.awake;delete skin2.awake;
-               for each(unit in s2Lane())s2Hit(unit,s2Value(state.skill,"exit")*(1+.5*(1-unit.hp/unit.hpMax)),1);
+               for each(unit in s2Lane())s2Hit(unit,s2Value(state.skill,"exit")*(1+s2Value(state.skill,"executeBonus")*(1-unit.hp/unit.hpMax)),1);
                s2Retreat();
             }
             if(skin2.bearOwner && skin2.bearOwner.hp>0 && int(skin2.bearGrowth || 0)<6)
-            {fxPulse104("bear");skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*.05;hpMax+=int(Number(skin2.initialHp)*.05);hp+=int(Number(skin2.initialHp)*.05);}
+            {fxPulse104("bear");skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth");hpMax+=int(Number(skin2.initialHp)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth"));hp+=int(Number(skin2.initialHp)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth"));}
          }
          if(event=="damage_taken" && source && source.team!=team)
          {
@@ -1566,14 +1572,14 @@ package com.meng52.game.module.avatar
          var unit:Avatar;var state:Object;var family:int=s2Family();
          if(kind==4)
          {
-            for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1228 && unit.line==line && hp/hpMax<.6) {amount*=1.25;break;}
+            for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1228 && unit.line==line && hp/hpMax<.6) {amount*=1+unit.s2Value(unit.skillB,"healAmp");break;}
             return amount;
          }
          if(skin2Depth>0) return amount;
          if(!source || source.team==team || kind<1 || kind>3) return amount;
          if(active)
          {
-            if(s2LiveMark(this,"exposed")) amount*=1.15;
+            if(s2LiveMark(this,"exposed")) {unit=skin2.exposed.owner;amount*=1+unit.s2Value(skin2.exposed.skill,"exposedAmp");}
             if(s2LiveMark(source,"exposed"))
             {unit=source.skin2.exposed.owner;delete source.skin2.exposed;unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);}
             if(family==1221 && s2Pet() && skin2.bearShieldTurn!=manualOwnerActionSerial)
@@ -1584,27 +1590,27 @@ package com.meng52.game.module.avatar
             {
                if(unit.line!=line) continue;
                if(unit.s2Family()==1228)
-               {var weak:Boolean=false;for each(var ally:Avatar in unit.s2Lane(true)) if(ally.hp/ally.hpMax<.6)weak=true;if(!weak) {amount*=.85;break;}}
+               {var weak:Boolean=false;for each(var ally:Avatar in unit.s2Lane(true)) if(ally.hp/ally.hpMax<.6)weak=true;if(!weak) {amount*=1-unit.s2Value(unit.skillB,"damageReduction");break;}}
             }
             for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1201 && unit.line==line && !unit.skin2.guardUsed)
             {
                if(unit.skin2.guarding===this && unit!==this)
                {
-                  unit.fxPulse104("guard",this);unit.skin2.guardUsed=true;var transfer:Number=amount*.35;amount-=transfer;
-                  ++skin2Depth;try {unit.injured(int(transfer*.5),1,null,8,source,false,source);}finally {--skin2Depth;}
+                  unit.fxPulse104("guard",this);unit.skin2.guardUsed=true;var transfer:Number=amount*unit.s2Value(unit.skillB,"transfer");amount-=transfer;
+                  ++skin2Depth;try {unit.injured(int(transfer*(1-unit.s2Value(unit.skillB,"transferReduction"))),1,null,8,source,false,source);}finally {--skin2Depth;}
                   unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);break;
                }
-               if(unit===this && unit.s2Lane(true).length==1) {unit.skin2.guardUsed=true;amount*=.75;break;}
+               if(unit===this && unit.s2Lane(true).length==1) {unit.skin2.guardUsed=true;amount*=1-unit.s2Value(unit.skillB,"soloReduction");break;}
             }
          }
-         for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1216 && unit.skin2.frost && unit.skin2.frost.lane==source.line && unit.manualOwnerActionSerial<unit.skin2.frost.end && unit.s2LiveMark(source,"cold")) {amount*=.75;break;}
+         for each(unit in GameMap.currentMap.getAliveList(team)) if(unit.s2Family()==1216 && unit.skin2.frost && unit.skin2.frost.lane==source.line && unit.manualOwnerActionSerial<unit.skin2.frost.end && unit.s2LiveMark(source,"cold")) {amount*=1-unit.s2Value(unit.skin2.frost.skill,"frostReduction");break;}
          return amount;
       }
       private function skin2Lethal() : void
       {
          if(hp>0 || s2Family()!=1216 || skin2.reborn) return;
          skin2.reborn=true;skin2.eggUntil=manualOwnerActionSerial+2;
-         hp=Math.max(1,int(hpMax*.3));fxPulse104("rebirth");abilityFeedback("冰晶重生");
+         hp=Math.max(1,int(hpMax*s2Value(skillB,"eggHp")));fxPulse104("rebirth");abilityFeedback("冰晶重生");
       }
       private function skin2Moved() : void
       {
@@ -2170,7 +2176,7 @@ package com.meng52.game.module.avatar
                if(!enemies.length) return false;
                target=enemies[0];
                var previousVeigarHit:Number = Number(abilityState.veigarCastHit || 0);
-               abilityState.veigarCastHit = previousVeigarHit+30000;
+               abilityState.veigarCastHit = previousVeigarHit+30000*Number(sourceSkill.getNativeSetting("manualFixedScale104",1));
                try { abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_5",2)+equipmentPart104(sourceSkill,"execution",nativeAbilityNumber(sourceSkill,kind,"cast_6",3))*(nativeAbilityNumber(sourceSkill,kind,"cast_7",1)-target.hp/target.hpMax),nativeAbilityNumber(sourceSkill,kind,"cast_8",2),effect); }
                finally { abilityState.veigarCastHit = previousVeigarHit; }
                break;
@@ -2223,7 +2229,7 @@ package com.meng52.game.module.avatar
                break;
             case "alistar_c":
                removeAllDebuff(); abilityHeal(this,equipmentPart104(sourceSkill,"will_heal",nativeAbilityNumber(sourceSkill,kind,"cast_0",0.5)));
-               abilityState.alistarGuard104={until:abilitySerial,debuff:false};
+               abilityState.alistarGuard104={until:abilitySerial,reduction:.8*Number(sourceSkill.getNativeSetting("manualFixedScale104",1)),debuff:false};
                break;
             case "diana_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650)); if(!enemies.length) return false; primary=enemies[0];
@@ -2377,7 +2383,7 @@ package com.meng52.game.module.avatar
          else
          {
             var oldHit104:Number = Number(abilityState.veigarCastHit || 0);
-            abilityState.veigarCastHit = oldHit104+10000;
+            abilityState.veigarCastHit = oldHit104+10000*Number(sourceSkill.getNativeSetting("manualFixedScale104",1));
             try {
                for each(var target:Avatar in targets)
                   if(abilityHit(target,0.3,3,effect) && target.hp > 0) abilityControl(target,"stun",1);
@@ -2489,7 +2495,7 @@ package com.meng52.game.module.avatar
          for each(target in targets) if(target.getDamage() > primary.getDamage()) primary = target;
          targets = abilityCandidates(otherTeam,primary.line,primary.pos,300,-1);
          var oldHit:Number = abilityState.polarCastHit != null ? Number(abilityState.polarCastHit) : 0;
-         abilityState.polarCastHit = oldHit+50000;
+         abilityState.polarCastHit = oldHit+50000*Number(sourceSkill.getNativeSetting("manualFixedScale104",1));
          try
          {
             for each(target in targets)
@@ -5372,7 +5378,7 @@ package com.meng52.game.module.avatar
          }
          _loc6_ = Tools.toInt(_loc6_ * (1 + getManualBattleStack("attack") + getManualTimedStack("attack")) * _loc4_);
          if(hpMax && abilityEntryAttack > 0) _loc6_ += int(abilityEntryAttack * (abilityState.evilStackBonus != null ? Number(abilityState.evilStackBonus) : 0.03 * int(abilityState.evilStacks)));
-         if(hpMax && this.abilityState && int(this.abilityState.santaStacks) > 0) _loc6_ = Tools.toInt(_loc6_ * (1+0.05*int(this.abilityState.santaStacks)));
+         if(hpMax && this.abilityState && int(this.abilityState.santaStacks) > 0) _loc6_ = Tools.toInt(_loc6_ * (1+(skillB && skillB.skills && skillB.skills.length && skillB.skills[0][0]=="santa_kill" ? Number(skillB.skills[0][3]) : 0.05)*int(this.abilityState.santaStacks)));
          return Math.max(_loc6_,0);
       }
 
@@ -5380,8 +5386,8 @@ package com.meng52.game.module.avatar
       {
          var penetration:Number = source ? source.getBookCombatBonus("penetration") : 0;
          if(source && damageType==1) {
-            if(s2LiveMark(this,"wanted") && skin2.wanted.owner===source) penetration=Math.max(penetration,.25);
-            if(source.skin2.penetrationEnd && source.manualOwnerActionSerial<=source.skin2.penetrationEnd) penetration=Math.max(penetration,.3);
+            if(s2LiveMark(this,"wanted") && skin2.wanted.owner===source) penetration=Math.max(penetration,source.s2Value(source.skill0,"penetration"));
+            if(source.skin2.penetrationEnd && source.manualOwnerActionSerial<=source.skin2.penetrationEnd) penetration=Math.max(penetration,source.s2Value(source.skill1,"penetration"));
          }
          var talent:Number = checkTalent(damageType == 1 ? 2 : 3);
          var defense:Number;
@@ -6729,7 +6735,7 @@ package com.meng52.game.module.avatar
       public function checkMove(param1:Boolean, param2:int = 0, param3:Avatar = null, param4:Number = -1, param5:Boolean = false, param6:String = null) : Number
       {
          if(param5 && abilityState.channel) return 0;
-         if(!param5 && s2LiveMark(this,"cold") && param2>0) param2=Math.round(param2*.5);
+         if(!param5 && s2LiveMark(this,"cold") && param2>0) param2=Math.round(param2*s2ColdMoveFactor());
          if(abilityState.root && !param5) return 0;
          var _loc18_:int = 0;
          var _loc13_:int = 0;
@@ -6936,7 +6942,7 @@ package com.meng52.game.module.avatar
       public function reline(param1:int, param2:int = -2147483648, param3:int = -2147483648, param4:Number = 0, param5:Number = 0, forced:Boolean = false) : void
       {
          if(forced && abilityState.channel) return;
-         if(!forced && s2LiveMark(this,"cold") && param2!=-2147483648) param2=pos+Math.round((param2-pos)*.5);
+         if(!forced && s2LiveMark(this,"cold") && param2!=-2147483648) param2=pos+Math.round((param2-pos)*s2ColdMoveFactor());
          if(abilityState.root && !forced) return;
          if(param1 != line) delete abilityState.channel;
          var _loc10_:* = undefined;

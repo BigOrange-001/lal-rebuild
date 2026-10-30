@@ -139,6 +139,8 @@ def load_game_config(path, now=None):
  apply_hero_calibration_104(document)
  from skin_revision_104 import apply_skin_revision_104
  apply_skin_revision_104(document)
+ from hero_balance_iteration_104 import apply_hero_balance_iteration_104
+ apply_hero_balance_iteration_104(document)
  apply_tower_rewards_103(document)
  apply_ancient_trial_103(document)
  apply_material_attempts_103(document)
@@ -152,9 +154,19 @@ def load_game_config(path, now=None):
  apply_equipment_bonds_104(document)
  from skill_output_104 import apply_skill_output_104
  apply_skill_output_104(document)
+ from skill_rank_growth_104 import apply_skill_rank_growth_104
+ apply_skill_rank_growth_104(document)
+ from skin_acquisition_104 import apply_skin_acquisition_104
+ apply_skin_acquisition_104(document)
+ from loot_rates_104 import apply_loot_rates_104
+ apply_loot_rates_104(document)
+ from campaign_tower_difficulty_104 import apply_campaign_tower_difficulty_104
+ apply_campaign_tower_difficulty_104(document)
  from player_copy_104 import apply_player_copy_104
  apply_player_copy_104(document)
  apply_check_in_rewards(document,int(game_day(now)[:4]))
+ from game_calendar import apply_daily_reset_config
+ apply_daily_reset_config(document)
  document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
  return document
 

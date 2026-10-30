@@ -24,7 +24,7 @@ function unit(family=0,team=1,pos=1500){
  u.abilityAllEnemies=()=>roster.filter(v=>v.team!==team&&v.hp>0);
  u.abilityHit=(target,coefficient,kind)=>{if(!target||target.hp<=0)return false;let c=currentAbilityAttack();if(c)c.hitSerial++;target.injured(int(u.ap*coefficient*.8),1,null,kind,u,false,u);return true;};
  u.injured=(amount,crit,effect,kind,source,flag,owner)=>{
-  let before=u.hp,over=0;amount=u.skin2Incoming(amount,owner||source,kind);
+  let before=u.hp,over=0;amount=Math.trunc(u.skin2Incoming(amount,owner||source,kind));
   if(kind===4){u.hp=Math.min(u.hpMax,u.hp+amount);over=Math.max(0,amount-(u.hp-before));if(source)source.skin2Event('heal_done',source,u,u.hp-before,over);return u.hp-before;}
   if(u.buffs.shield){let n=Math.min(amount,u.buffs.shield.value);amount-=n;u.buffs.shield.value-=n;if(!u.buffs.shield.value)delete u.buffs.shield;}
   u.hp=Math.max(0,u.hp-amount);let loss=before-u.hp;u.skin2Lethal();let c=currentAbilityAttack();if(c)c.damage+=loss;
@@ -45,7 +45,7 @@ let cases=0;
 for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fresh(f);if(f!==1227)cast(a,0);if(f===1219){a.s2Mark(b,'airborne',2);b.addBuff('stun',1)}cast(a,1);assert(Number.isFinite(a.hp));cases++;}
 {
  let {a,b}=fresh(1140);a.hp=70000;a.skin2.record={line:0,pos:1500,lost:0};cast(a,0);assert.equal(b.skin2['rings_'+a.abilityIndex].count,2);turn(a);cast(a,0);assert(a.buffs.shield);assert(b.hp<94400,'three-ring bonus executes');
- a.removeBuff('shield');a.skin2.lost=20000;a.hp=50000;cast(a,1);assert.equal(a.hp,62000,'rewind heals actual recorded loss');assert(a.skin2.phase);cases++;
+ a.removeBuff('shield');a.skin2.lost=20000;a.hp=50000;cast(a,1);assert.equal(a.hp,50000+Math.trunc(20000*a.s2Value(a.skill1,'rewind')),'rewind heals actual recorded loss');assert(a.skin2.phase);cases++;
 }
 {
  let {a,b}=fresh(1206);cast(a,0);assert.equal(b.skin2['rings_'+a.abilityIndex].count,2);turn(a);cast(a,0);assert.equal(b.skin2['rings_'+a.abilityIndex].count,1);cases++;
@@ -54,7 +54,7 @@ for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fres
  let {a}=fresh(1210);cast(a,0);assert(a.buffs.shield);cast(a,0);cast(a,0);assert.equal(a.skin2.dance,0);cases++;
 }
 {
- let {a}=fresh(1221);cast(a,1);let pet=a.s2Pet();for(let i=0;i<10;i++)pet.skin2Event('turn_end',pet,pet,0,0);assert.equal(pet.skin2.bearGrowth,6);assert.equal(pet.ap,910);cast(a,1);assert.strictEqual(a.s2Pet(),pet,'captain preserves raised summon');cases++;
+ let {a}=fresh(1221);cast(a,1);let pet=a.s2Pet();for(let i=0;i<10;i++)pet.skin2Event('turn_end',pet,pet,0,0);assert.equal(pet.skin2.bearGrowth,6);assert(Math.abs(pet.ap-a.ap*a.s2Value(a.skill1,'petPanel')*(1+6*a.s2Value(a.skillB,'petGrowth')))<1e-8,'bear panel and six growth stacks use configured values');cast(a,1);assert.strictEqual(a.s2Pet(),pet,'captain preserves raised summon');cases++;
 }
 {
  let {a,b}=fresh(1216);a.hp=10;b.s2Hit(a,1);assert(a.skin2.eggUntil);assert.equal(a.hp,30000);assert(!a.skin2CanCast('skin2_1216_0'));turn(a);assert(a.skin2.eggUntil);turn(a);assert(!a.skin2.eggUntil);assert.equal(a.hp,40000);a.hp=1;b.s2Hit(a,1);assert.equal(a.hp,0,'rebirth only once');cases++;
@@ -88,7 +88,7 @@ for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fres
  b.isManualSummonUnit=true;b.s2Hit(a,10);assert.equal(a.skin2.lost,10000);
  assert.equal(a.skin2.lastHurt,undefined,'summons do not satisfy hero-hit conditions');
  a.skin2Event('damage_taken',ally,a,1000,0);assert.equal(a.skin2.lost,10000);
- const before=a.hp;cast(a,1);assert.equal(a.hp-before,6000);cases++;
+ const before=a.hp;cast(a,1);assert.equal(a.hp-before,Math.trunc(10000*a.s2Value(a.skill1,'rewind')));cases++;
 }
 {
  let {a,b,c}=fresh(1206);b.skin2['rings_'+a.abilityIndex]={count:2};c.hp=20000;
@@ -133,6 +133,6 @@ for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fres
 {
  let {a,b}=fresh(1206);unit(1228,1,a.pos);a.hp=50000;
  a.s2Hit(b,1,1,true);a.s2Hit(b,1,1,true);let before=a.hp;a.s2Hit(b,1,1,true);
- assert.equal(a.hp-before,Math.trunc(a.ap*a.s2Value(a.skillB,'heal')*1.25),'healing aura also amplifies ring-triggered healing');cases++;
+ assert.equal(a.hp-before,Math.trunc(Math.trunc(a.ap*a.s2Value(a.skillB,'heal'))*1.25),'healing aura also amplifies ring-triggered healing');cases++;
 }
 console.log(`${cases} native skill/state scenarios passed`);

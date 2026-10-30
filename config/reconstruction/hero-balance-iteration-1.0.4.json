@@ -1,0 +1,1335 @@
+{
+  "schema": "hero-balance-iteration-104-v1",
+  "enabled": true,
+  "round": 6,
+  "skin_panel_factor": 0.95866375,
+  "target": {
+    "ordinary": [
+      0.45,
+      0.55
+    ],
+    "skin": [
+      0.4,
+      0.6
+    ],
+    "mixed_skin_advantage": [
+      0.1,
+      0.15
+    ]
+  },
+  "heroes": {
+    "A_1123": {
+      "panel_factor": 0.77917553,
+      "skill_factor": 0.50417814,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "纳尔",
+      "initial_score": 0.8155,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1021": {
+      "panel_factor": 0.76145902,
+      "skill_factor": 0.48151128,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "伊泽瑞尔",
+      "initial_score": 0.808,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1052": {
+      "panel_factor": 0.73145548,
+      "skill_factor": 0.44431317,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "菲兹",
+      "initial_score": 0.788,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1029": {
+      "panel_factor": 0.70771138,
+      "skill_factor": 0.41593527,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "安妮",
+      "initial_score": 0.755,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1005": {
+      "panel_factor": 0.91379409,
+      "skill_factor": 0.79231202,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "悟空",
+      "initial_score": 0.575,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1054": {
+      "panel_factor": 0.94738472,
+      "skill_factor": 0.86001969,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "希瓦娜",
+      "initial_score": 0.561,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1056": {
+      "panel_factor": 0.94854599,
+      "skill_factor": 0.86606095,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "锐雯",
+      "initial_score": 0.5545,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1018": {
+      "panel_factor": 0.95540017,
+      "skill_factor": 0.87862245,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "慎",
+      "initial_score": 0.5545,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1099": {
+      "panel_factor": 0.91066971,
+      "skill_factor": 0.79883568,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "图奇",
+      "initial_score": 0.5535,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1045": {
+      "panel_factor": 0.93032155,
+      "skill_factor": 0.83777978,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "璐璐",
+      "initial_score": 0.5465,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1903": {
+      "panel_factor": 0.96415809,
+      "skill_factor": 0.90014448,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "JY大魔王",
+      "initial_score": 0.546,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1125": {
+      "panel_factor": 0.94679281,
+      "skill_factor": 0.86953213,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "吉格斯",
+      "initial_score": 0.5435,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1012": {
+      "panel_factor": 0.94030593,
+      "skill_factor": 0.85795811,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "易大师",
+      "initial_score": 0.543,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1117": {
+      "panel_factor": 0.96562955,
+      "skill_factor": 0.90701162,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "丽桑卓",
+      "initial_score": 0.5395,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1085": {
+      "panel_factor": 0.98995084,
+      "skill_factor": 0.95695396,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "阿里斯塔",
+      "initial_score": 0.534,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1040": {
+      "panel_factor": 0.9719023,
+      "skill_factor": 0.92496442,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "婕拉",
+      "initial_score": 0.53,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1068": {
+      "panel_factor": 0.93793464,
+      "skill_factor": 0.86294873,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "布兰德",
+      "initial_score": 0.5275,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1142": {
+      "panel_factor": 0.92734928,
+      "skill_factor": 0.84417117,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "千珏",
+      "initial_score": 0.5265,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1905": {
+      "panel_factor": 0.98356161,
+      "skill_factor": 0.95027867,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "Miss大小姐",
+      "initial_score": 0.5255,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1008": {
+      "panel_factor": 0.95537629,
+      "skill_factor": 0.89690978,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "贾克斯",
+      "initial_score": 0.525,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1001": {
+      "panel_factor": 1.00398019,
+      "skill_factor": 0.99042415,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "盖伦",
+      "initial_score": 0.5245,
+      "action": "medium-numeric",
+      "mechanism_description": "净化援助：小技能后净化并治疗全队生命比例最低的友军。"
+    },
+    "A_1094": {
+      "panel_factor": 0.94835631,
+      "skill_factor": 0.88532541,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "迦娜",
+      "initial_score": 0.5225,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1909": {
+      "panel_factor": 0.94875945,
+      "skill_factor": 0.88763026,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "小智",
+      "initial_score": 0.52,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1119": {
+      "panel_factor": 1.05448237,
+      "skill_factor": 1.09724226,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "亚索",
+      "initial_score": 0.519,
+      "action": "medium-numeric",
+      "mechanism_description": "护援先锋：小技能后为最低生命友军提供生命护盾，并弱化前排敌人。"
+    },
+    "A_1071": {
+      "panel_factor": 0.96579857,
+      "skill_factor": 0.92108772,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "奥利安娜",
+      "initial_score": 0.518,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1112": {
+      "panel_factor": 0.99827649,
+      "skill_factor": 0.98511194,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "扎克",
+      "initial_score": 0.5165,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1007": {
+      "panel_factor": 0.95523299,
+      "skill_factor": 0.90230741,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "嘉文四世",
+      "initial_score": 0.516,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1082": {
+      "panel_factor": 0.98275051,
+      "skill_factor": 0.96579856,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "提莫",
+      "initial_score": 0.5125,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1096": {
+      "panel_factor": 1.0,
+      "skill_factor": 1.0,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "崔斯特",
+      "initial_score": 0.5125,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1105": {
+      "panel_factor": 1.00120072,
+      "skill_factor": 1.00240288,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "奈德丽",
+      "initial_score": 0.5105,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1133": {
+      "panel_factor": 0.97687166,
+      "skill_factor": 0.95427823,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "莫甘娜",
+      "initial_score": 0.5095,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1013": {
+      "panel_factor": 0.95370584,
+      "skill_factor": 0.90955483,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "布里茨",
+      "initial_score": 0.509,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1128": {
+      "panel_factor": 1.03169182,
+      "skill_factor": 1.06438801,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "萨科",
+      "initial_score": 0.5085,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1003": {
+      "panel_factor": 0.95427823,
+      "skill_factor": 0.91064695,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "雷兹",
+      "initial_score": 0.508,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1106": {
+      "panel_factor": 0.98570319,
+      "skill_factor": 0.97161077,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "古拉加斯",
+      "initial_score": 0.5075,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1108": {
+      "panel_factor": 1.1524614,
+      "skill_factor": 1.32816727,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "波比",
+      "initial_score": 0.506,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1060": {
+      "panel_factor": 0.9183286,
+      "skill_factor": 0.84332742,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "拉克丝",
+      "initial_score": 0.5045,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1032": {
+      "panel_factor": 1.01999732,
+      "skill_factor": 1.04039453,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "锤石",
+      "initial_score": 0.5045,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1023": {
+      "panel_factor": 0.96088552,
+      "skill_factor": 0.92330098,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "泰隆",
+      "initial_score": 0.504,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1014": {
+      "panel_factor": 0.98629478,
+      "skill_factor": 0.9727774,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "黑默丁格",
+      "initial_score": 0.504,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1002": {
+      "panel_factor": 0.9979022,
+      "skill_factor": 0.99580881,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "艾希",
+      "initial_score": 0.499,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1093": {
+      "panel_factor": 1.00090041,
+      "skill_factor": 1.00180161,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "塔里克",
+      "initial_score": 0.496,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1004": {
+      "panel_factor": 0.96348342,
+      "skill_factor": 0.9283003,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "索拉卡",
+      "initial_score": 0.493,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1114": {
+      "panel_factor": 1.02183497,
+      "skill_factor": 1.0441467,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "敖兴",
+      "initial_score": 0.4925,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1078": {
+      "panel_factor": 0.97921896,
+      "skill_factor": 0.95886978,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "希维尔",
+      "initial_score": 0.4925,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1011": {
+      "panel_factor": 1.04477338,
+      "skill_factor": 1.09155142,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "普朗克船长",
+      "initial_score": 0.4895,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1017": {
+      "panel_factor": 1.00722598,
+      "skill_factor": 1.01450418,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "潘森",
+      "initial_score": 0.489,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1006": {
+      "panel_factor": 0.96232794,
+      "skill_factor": 0.92607505,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "娑娜",
+      "initial_score": 0.4885,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1016": {
+      "panel_factor": 1.02490508,
+      "skill_factor": 1.05043042,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "凯南",
+      "initial_score": 0.486,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1081": {
+      "panel_factor": 1.00979769,
+      "skill_factor": 1.03045453,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "艾尼维亚",
+      "initial_score": 0.485,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1090": {
+      "panel_factor": 1.02785592,
+      "skill_factor": 1.0680131,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "拉莫斯",
+      "initial_score": 0.4845,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1026": {
+      "panel_factor": 1.1122667,
+      "skill_factor": 1.25107103,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "李青",
+      "initial_score": 0.484,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1015": {
+      "panel_factor": 1.01656064,
+      "skill_factor": 1.14994047,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "阿卡丽",
+      "initial_score": 0.4835,
+      "action": "skill-buff-after-independent-retest",
+      "mechanism_description": ""
+    },
+    "A_1083": {
+      "panel_factor": 1.03821199,
+      "skill_factor": 1.09155142,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "崔丝塔娜",
+      "initial_score": 0.482,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1063": {
+      "panel_factor": 1.02739349,
+      "skill_factor": 1.06929548,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "卡西奥佩娅",
+      "initial_score": 0.4815,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1022": {
+      "panel_factor": 1.05019409,
+      "skill_factor": 1.11806554,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "阿狸",
+      "initial_score": 0.4805,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1009": {
+      "panel_factor": 1.00312988,
+      "skill_factor": 1.02081365,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "赵信",
+      "initial_score": 0.4795,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1077": {
+      "panel_factor": 1.16337469,
+      "skill_factor": 1.37300258,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "墨菲特",
+      "initial_score": 0.4795,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1127": {
+      "panel_factor": 1.02536639,
+      "skill_factor": 1.06694562,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "乐芙兰",
+      "initial_score": 0.479,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1113": {
+      "panel_factor": 1.06335074,
+      "skill_factor": 1.14866455,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "亚托克斯",
+      "initial_score": 0.4775,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1019": {
+      "panel_factor": 0.99608269,
+      "skill_factor": 1.00863709,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "德莱厄斯",
+      "initial_score": 0.4765,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1998": {
+      "panel_factor": 1.07382281,
+      "skill_factor": 1.17468498,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "加百列",
+      "initial_score": 0.4735,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1143": {
+      "panel_factor": 0.98821994,
+      "skill_factor": 0.9952115,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "俄洛伊",
+      "initial_score": 0.473,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1030": {
+      "panel_factor": 1.03595634,
+      "skill_factor": 1.09483098,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "厄运小姐",
+      "initial_score": 0.4715,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1109": {
+      "panel_factor": 1.03761519,
+      "skill_factor": 1.09987879,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "弗拉基米尔",
+      "initial_score": 0.4695,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1010": {
+      "panel_factor": 0.99885066,
+      "skill_factor": 1.0195894,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "卡特琳娜",
+      "initial_score": 0.469,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1136": {
+      "panel_factor": 1.0010005,
+      "skill_factor": 1.02470012,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "卢锡安",
+      "initial_score": 0.468,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1904": {
+      "panel_factor": 1.01676396,
+      "skill_factor": 1.05759768,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "伊芙蕾雅",
+      "initial_score": 0.4675,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1131": {
+      "panel_factor": 1.01750139,
+      "skill_factor": 1.06098742,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "娜美",
+      "initial_score": 0.465,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1027": {
+      "panel_factor": 0.98363538,
+      "skill_factor": 0.99223034,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "维嘉",
+      "initial_score": 0.464,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1120": {
+      "panel_factor": 1.02983645,
+      "skill_factor": 1.08762889,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "凯尔",
+      "initial_score": 0.464,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1097": {
+      "panel_factor": 1.05471965,
+      "skill_factor": 1.14362152,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "卡兹克",
+      "initial_score": 0.4605,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1036": {
+      "panel_factor": 1.05324409,
+      "skill_factor": 1.14682815,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "伊丽丝",
+      "initial_score": 0.4525,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1098": {
+      "panel_factor": 1.03269821,
+      "skill_factor": 1.1040663,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "卡尔萨斯",
+      "initial_score": 0.4505,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1053": {
+      "panel_factor": 1.06803979,
+      "skill_factor": 1.18175426,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "格雷福斯",
+      "initial_score": 0.4495,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1115": {
+      "panel_factor": 1.05918528,
+      "skill_factor": 1.16346194,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "金克斯",
+      "initial_score": 0.448,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1025": {
+      "panel_factor": 1.0816904,
+      "skill_factor": 1.21385349,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "凯瑟琳",
+      "initial_score": 0.4475,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1079": {
+      "panel_factor": 1.0386014,
+      "skill_factor": 1.12142478,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "费德提克",
+      "initial_score": 0.4445,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1101": {
+      "panel_factor": 1.08515735,
+      "skill_factor": 1.22507247,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "雷克顿",
+      "initial_score": 0.4435,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1073": {
+      "panel_factor": 1.0680665,
+      "skill_factor": 1.18720285,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "努努",
+      "initial_score": 0.443,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1205": {
+      "panel_factor": 1.05313876,
+      "skill_factor": 1.15465316,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "茂凯",
+      "initial_score": 0.4425,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1041": {
+      "panel_factor": 1.07495091,
+      "skill_factor": 1.20466317,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "杰斯",
+      "initial_score": 0.4405,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1095": {
+      "panel_factor": 1.02705964,
+      "skill_factor": 1.1000988,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "基兰",
+      "initial_score": 0.44,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1086": {
+      "panel_factor": 1.0867863,
+      "skill_factor": 1.23392481,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "黛安娜",
+      "initial_score": 0.4375,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1135": {
+      "panel_factor": 1.07033853,
+      "skill_factor": 1.19769635,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "雷恩加尔",
+      "initial_score": 0.4365,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1126": {
+      "panel_factor": 1.06446785,
+      "skill_factor": 1.18791539,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "辛德拉",
+      "initial_score": 0.4325,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1020": {
+      "panel_factor": 1.15577949,
+      "skill_factor": 1.40242096,
+      "mechanism": false,
+      "category": "ordinary",
+      "name": "蕾欧娜",
+      "initial_score": 0.4305,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1033": {
+      "panel_factor": 1.09375935,
+      "skill_factor": 1.19453985,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "伊芙琳",
+      "initial_score": 0.4295,
+      "action": "hold-near-center",
+      "mechanism_description": "暗影收割：小技能击杀后最多再释放一次，队长技扩大近身追猎范围。"
+    },
+    "A_1028": {
+      "panel_factor": 1.08591257,
+      "skill_factor": 1.17746172,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "泰达米尔",
+      "initial_score": 0.4265,
+      "action": "hold-near-center",
+      "mechanism_description": "怒气积累：小技能命中后永久叠加攻击，最多六层，降低对队长技的依赖。"
+    },
+    "A_1024": {
+      "panel_factor": 1.07424782,
+      "skill_factor": 1.15230126,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "艾瑞莉娅",
+      "initial_score": 0.4215,
+      "action": "hold-near-center",
+      "mechanism_description": "利刃续战：突刺获得护盾，队长技击杀后追放一次小技能。"
+    },
+    "A_1124": {
+      "panel_factor": 1.29333055,
+      "skill_factor": 1.67022949,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "阿兹尔",
+      "initial_score": 0.419,
+      "action": "hold-near-center",
+      "mechanism_description": "沙兵整备：小技能召唤后整备自己的沙兵，延续存活时间、恢复生命并强化攻击。"
+    },
+    "A_1049": {
+      "panel_factor": 1.16628176,
+      "skill_factor": 1.35820102,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "瑟庄妮",
+      "initial_score": 0.4135,
+      "action": "hold-near-center",
+      "mechanism_description": "寒冰护援：冲锋后为全队生命比例最低的英雄提供生命护盾。"
+    },
+    "A_1074": {
+      "panel_factor": 1.05571759,
+      "skill_factor": 1.1128909,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "阿木木",
+      "initial_score": 0.4115,
+      "action": "hold-near-center",
+      "mechanism_description": "万魂领域：队长技改为覆盖本路全体敌人，小技能缩短空窗。"
+    },
+    "A_1130": {
+      "panel_factor": 1.06398439,
+      "skill_factor": 1.13038812,
+      "mechanism": true,
+      "category": "ordinary",
+      "name": "菲奥娜",
+      "initial_score": 0.4055,
+      "action": "medium-numeric",
+      "mechanism_description": "决斗突破：突刺施加破甲，队长技击杀后可再释放一次。"
+    },
+    "A_1222": {
+      "panel_factor": 0.78929201,
+      "skill_factor": 0.38801639,
+      "mechanism": false,
+      "category": "skin",
+      "name": "超级伊泽瑞尔",
+      "initial_score": 0.8445,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1226": {
+      "panel_factor": 0.8498461,
+      "skill_factor": 0.7003669,
+      "mechanism": false,
+      "category": "skin",
+      "name": "二郎真君赵信",
+      "initial_score": 0.629,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1310": {
+      "panel_factor": 0.92639923,
+      "skill_factor": 0.81460658,
+      "mechanism": false,
+      "category": "skin",
+      "name": "钢铁侠提莫",
+      "initial_score": 0.5745,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1211": {
+      "panel_factor": 0.9143197,
+      "skill_factor": 0.79405703,
+      "mechanism": false,
+      "category": "skin",
+      "name": "沙漠治安官凯瑟琳",
+      "initial_score": 0.5735,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1207": {
+      "panel_factor": 0.93040296,
+      "skill_factor": 0.82569898,
+      "mechanism": false,
+      "category": "skin",
+      "name": "偶像歌手阿狸",
+      "initial_score": 0.5675,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1218": {
+      "panel_factor": 0.88439631,
+      "skill_factor": 0.75208946,
+      "mechanism": false,
+      "category": "skin",
+      "name": "幽魂费德提克",
+      "initial_score": 0.556,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1213": {
+      "panel_factor": 0.8791278,
+      "skill_factor": 0.74445714,
+      "mechanism": false,
+      "category": "skin",
+      "name": "足球先生伊泽瑞尔",
+      "initial_score": 0.5535,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1216": {
+      "panel_factor": 0.92799866,
+      "skill_factor": 0.83330963,
+      "mechanism": false,
+      "category": "skin",
+      "name": "联盟之喙艾维尼亚",
+      "initial_score": 0.547,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1223": {
+      "panel_factor": 0.94584649,
+      "skill_factor": 0.86749113,
+      "mechanism": false,
+      "category": "skin",
+      "name": "猎手薇恩",
+      "initial_score": 0.544,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1309": {
+      "panel_factor": 0.81539102,
+      "skill_factor": 0.64537417,
+      "mechanism": false,
+      "category": "skin",
+      "name": "超人提莫",
+      "initial_score": 0.5425,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1214": {
+      "panel_factor": 0.9059352,
+      "skill_factor": 0.80225802,
+      "mechanism": false,
+      "category": "skin",
+      "name": "逆转裁判崔斯特",
+      "initial_score": 0.5325,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1221": {
+      "panel_factor": 0.96661984,
+      "skill_factor": 0.91943125,
+      "mechanism": false,
+      "category": "skin",
+      "name": "新年安妮",
+      "initial_score": 0.523,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1202": {
+      "panel_factor": 0.94980365,
+      "skill_factor": 0.88865162,
+      "mechanism": false,
+      "category": "skin",
+      "name": "极地射手艾希",
+      "initial_score": 0.5215,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1311": {
+      "panel_factor": 0.7897017,
+      "skill_factor": 0.6147436,
+      "mechanism": false,
+      "category": "skin",
+      "name": "超级赛亚人孙悟空",
+      "initial_score": 0.5205,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1209": {
+      "panel_factor": 0.92089201,
+      "skill_factor": 0.8480421,
+      "mechanism": false,
+      "category": "skin",
+      "name": "兔宝宝提莫",
+      "initial_score": 0.507,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1228": {
+      "panel_factor": 0.96867609,
+      "skill_factor": 0.93833336,
+      "mechanism": false,
+      "category": "skin",
+      "name": "DJ娑娜",
+      "initial_score": 0.507,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1204": {
+      "panel_factor": 0.96248432,
+      "skill_factor": 0.92637608,
+      "mechanism": false,
+      "category": "skin",
+      "name": "苹果机器人布里茨",
+      "initial_score": 0.501,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1227": {
+      "panel_factor": 0.92198622,
+      "skill_factor": 0.8500586,
+      "mechanism": false,
+      "category": "skin",
+      "name": "白娘子",
+      "initial_score": 0.4965,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1129": {
+      "panel_factor": 1.00047511,
+      "skill_factor": 1.00095045,
+      "mechanism": false,
+      "category": "skin",
+      "name": "猫女卡特琳娜",
+      "initial_score": 0.4925,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1140": {
+      "panel_factor": 0.98585105,
+      "skill_factor": 0.97190229,
+      "mechanism": false,
+      "category": "skin",
+      "name": "艾克",
+      "initial_score": 0.4905,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1203": {
+      "panel_factor": 1.01981883,
+      "skill_factor": 1.06061613,
+      "mechanism": false,
+      "category": "skin",
+      "name": "恶魔男爵瑞兹",
+      "initial_score": 0.472,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1139": {
+      "panel_factor": 1.08743857,
+      "skill_factor": 1.20973339,
+      "mechanism": false,
+      "category": "skin",
+      "name": "卡尔玛",
+      "initial_score": 0.4675,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1219": {
+      "panel_factor": 1.00462315,
+      "skill_factor": 1.0339382,
+      "mechanism": false,
+      "category": "skin",
+      "name": "源计划亚索",
+      "initial_score": 0.4655,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1215": {
+      "panel_factor": 1.05617089,
+      "skill_factor": 1.14677081,
+      "mechanism": false,
+      "category": "skin",
+      "name": "龙的传人李青",
+      "initial_score": 0.4605,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1201": {
+      "panel_factor": 1.06159766,
+      "skill_factor": 1.16142767,
+      "mechanism": false,
+      "category": "skin",
+      "name": "黄金骑士盖伦",
+      "initial_score": 0.457,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1138": {
+      "panel_factor": 1.13862911,
+      "skill_factor": 1.33983973,
+      "mechanism": false,
+      "category": "skin",
+      "name": "塔姆肯奇",
+      "initial_score": 0.453,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1206": {
+      "panel_factor": 1.00240288,
+      "skill_factor": 1.03987447,
+      "mechanism": false,
+      "category": "skin",
+      "name": "觅心猎手薇恩",
+      "initial_score": 0.451,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1137": {
+      "panel_factor": 1.27478177,
+      "skill_factor": 1.68354214,
+      "mechanism": false,
+      "category": "skin",
+      "name": "莫德凯撒",
+      "initial_score": 0.4495,
+      "action": "medium-numeric",
+      "mechanism_description": ""
+    },
+    "A_1208": {
+      "panel_factor": 1.08700368,
+      "skill_factor": 1.22881464,
+      "mechanism": false,
+      "category": "skin",
+      "name": "护士阿卡丽",
+      "initial_score": 0.444,
+      "action": "hold-near-center",
+      "mechanism_description": ""
+    },
+    "A_1132": {
+      "panel_factor": 1.14039046,
+      "skill_factor": 1.2985666,
+      "mechanism": true,
+      "category": "skin",
+      "name": "劫",
+      "initial_score": 0.427,
+      "action": "hold-near-center",
+      "mechanism_description": "手里剑直击：小技能在原持续伤害外追加即时物理伤害。"
+    },
+    "A_1210": {
+      "panel_factor": 1.13579542,
+      "skill_factor": 1.28812291,
+      "mechanism": true,
+      "category": "skin",
+      "name": "兔女郎瑞雯",
+      "initial_score": 0.4105,
+      "action": "medium-numeric",
+      "mechanism_description": "舞步防护：每次小技能获得短暂生命护盾，觉醒同时净化自身。"
+    },
+    "A_1217": {
+      "panel_factor": 1.27385242,
+      "skill_factor": 1.62029954,
+      "mechanism": true,
+      "category": "skin",
+      "name": "邪恶圣诞老人维嘉",
+      "initial_score": 0.401,
+      "action": "hold-near-center",
+      "mechanism_description": "圣诞预热：每次小技能积累攻击，最多五层，不再只靠击杀获得成长。"
+    },
+    "A_1212": {
+      "panel_factor": 1.36478337,
+      "skill_factor": 1.85987828,
+      "mechanism": true,
+      "category": "skin",
+      "name": "粽子少女",
+      "initial_score": 0.377,
+      "action": "hold-near-center",
+      "mechanism_description": "粽香援护：队长技强化本路全体友军，同时优先治疗、净化并保护最低生命友军。"
+    },
+    "A_1103": {
+      "panel_factor": 1.20785457,
+      "skill_factor": 1.45675453,
+      "mechanism": true,
+      "category": "skin",
+      "name": "马尔扎哈",
+      "initial_score": 0.3715,
+      "action": "hold-near-center",
+      "mechanism_description": "虚空压制：小技能追加即时魔法伤害和沉默，召唤时获得生命护盾。"
+    },
+    "A_1134": {
+      "panel_factor": 1.12478928,
+      "skill_factor": 1.2632794,
+      "mechanism": true,
+      "category": "skin",
+      "name": "卡萨丁",
+      "initial_score": 0.369,
+      "action": "hold-near-center",
+      "mechanism_description": "虚空追击：小技能后突进至本路低生命目标，追加一次魔法攻击。"
+    }
+  },
+  "feedback": "Equal-weight mean of round-05 and its independent confirmation; 2000 appearances per hero inform adjustments.",
+  "post_retest_adjustments": [
+    {
+      "family": "A_1015",
+      "name": "阿卡丽",
+      "skill_numeric_multiplier": 1.1,
+      "previous_skill_factor": 1.04540043,
+      "new_skill_factor": 1.14994047,
+      "panel_changed": false
+    },
+    {
+      "family": "A_1221",
+      "name": "新年安妮",
+      "skill_numeric_multiplier": 1.1,
+      "applies_after_all_variants": true,
+      "panel_changed": false,
+      "summon_id": "A_2020_6",
+      "previous_summon_id": "A_2002_5"
+    }
+  ],
+  "final_skill_multipliers": {
+    "A_1221": 1.1
+  }
+}

@@ -836,7 +836,7 @@
       "index": 139,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "3d52f1ca15bd57adfe15581627b21596e580fc02183bb02e7aab14f94b7e30ad"
+      "source_sha256": "ce1522f9d65928f714fe258beb4f7038c452db61915f7df6b09db90c0993af9f"
     },
     {
       "index": 140,
@@ -848,7 +848,7 @@
       "index": 141,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "6aa61e600058d18ca71e2f1393a67f47c42edc6a4096a2215db8b30d6b7fa157"
+      "source_sha256": "402b74e6f6eacbfcc2ec3a1a1f30c56a5895d53d0664760a44301b3093eee284"
     },
     {
       "index": 142,

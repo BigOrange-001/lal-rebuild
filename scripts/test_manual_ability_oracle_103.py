@@ -74,7 +74,7 @@ class ManualOracleTests(unittest.TestCase):
           abilityAlly='distance=3001,order="ratio",excludeSelf=false',abilityMarkedTarget='mark,distance,order="nearest"',
           abilityHasMark='owner,kind',abilityMark='target,kind,duration,scale=1',abilityDash='target,enemySide=false',
           abilityPull='target,center,amount',abilityControl='target,kind,duration,value=0',
-          abilityIsolated='target',skillAreaRadius='value')
+          abilityIsolated='target',abilityAllEnemies='',skillAreaRadius='value')
         cls.methods={}
         for name,params in definitions.items():
             body=method_body(source,name)

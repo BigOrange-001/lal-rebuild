@@ -62,6 +62,8 @@ def apply_skin_revision_104(document):
     skillUp=[[0,4+i,v/.8*.5/9] for i,v in enumerate(values.values())] if n==0 else None,
     info=text,rankInfoTemplate=text,calibration_104=True,skin_revision_v2_104=family,skin_v2_keys=keys,
     actionTargetPolicies=['ally_self'],actionTargetMaxTargets=[1])
+   if family==1221 and slot==11:
+    row['skin_v2_summon_id']='A_2020_6'
    cfg['skill'][sid]=row;h['pl'][slot]=sid
   if family!=1227:h['skill_diff']=20
   changed.append(aid)
@@ -80,6 +82,8 @@ def apply_skin_revision_104(document):
      if name=='vip' and card['id'] in advanced:card['weight']=advanced[card['id']]*calibration['normalization']['vip_orange_skin_weight_multiplier']
  if calibration:
   cfg['ploy_system_simple']['extract_avatar']['activity_pool']=[{'kind':'avatar','aid':c['id'],'weight':c['weight']} for q in calibration['pools']['vip']['qualities'].values() if q['probability_percent']>0 for c in q['cards']]
+ cfg['avatar']['A_2020_6']['name']='新年提伯斯'
+ cfg['avatar']['A_2020_6']['modUnitType']='summon'
  cfg['skin_revision_v2_104']={'heroes':changed}
 
 def update_bond_mechanism(row,bond,slot):

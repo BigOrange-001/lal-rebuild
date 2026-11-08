@@ -96,7 +96,7 @@ class GameplayGuildBoss:
         applications = (p or {}).get("records", {}).get("guild_applications", {})
         if not isinstance(applications, dict): applications = {}
         guild_levels = self.simple.get("guild_level", {})
-        for i, name in enumerate(("晨星盟·本地NPC", "远征者·本地NPC", "青铜守卫·本地NPC")):
+        for i, name in enumerate(("晨星盟（NPC）", "远征者（NPC）", "青铜守卫（NPC）")):
             guild_id = str(10001 + i)
             level = i + 1
             level_row = guild_levels.get(f"level_{level}", {}) if isinstance(guild_levels, dict) else {}

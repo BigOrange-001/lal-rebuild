@@ -782,7 +782,10 @@ package com.meng52.game.ui.screen
 
       private function presetButton(parent:Sprite, label:String, command:String, x:int, y:int, enabled:Boolean) : void
       {
-         var button:LOL_Scale9Button = new LOL_Scale9Button(label,72,30,"UI_btn_enterGame_0_0000");
+         // Destructive "clear" uses the native red button when it can act.
+         var danger:Boolean = command.indexOf("delete:") == 0 && enabled;
+         var button:LOL_Scale9Button = new LOL_Scale9Button(label,80,31,danger ? "UI_btn_smallFun_1_0000" : "UI_btn_enterGame_0_0000");
+         button.fontSize = 18;
          button.name = command;
          button.x = x;
          button.y = y;
@@ -802,13 +805,11 @@ package com.meng52.game.ui.screen
             var row:Sprite = new Sprite();
             row.x = 14;
             row.y = 76 + i * 138;
-            var bg:* = GlobalFunction.createScale9Image("UI_bg_9slice_4_0000",572,132,new Rectangle(110,60,30,15));
+            var bg:* = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",572,132,new Rectangle(110,55,70,20));
             bg.touchable = false;
             row.addChild(bg);
-            var inset:Quad = new Quad(554,114,0x292C32);
-            inset.x = inset.y = 9;inset.touchable = false;row.addChild(inset);
             mPresetRows.addChild(row);
-            presetText(row,"阵容 "+(i+1),12,3,84,28,20,0xFFD684);
+            presetText(row,"阵容 "+(i+1),16,6,84,30,21,0x7A3A12);
             var equipmentCount:int = 0;
             var dnCount:int = 0;
             if(preset)
@@ -817,18 +818,19 @@ package com.meng52.game.ui.screen
                   for each(var eqid:* in group) if(eqid) equipmentCount++;
                for each(var binding:* in preset.dn_bindings) if(binding) dnCount++;
             }
-            presetText(row,preset ? "装备 "+equipmentCount+"  ·  德诺阵 "+dnCount : "尚未保存",94,3,240,26,15,11978439);
-            presetButton(row,preset ? "覆盖保存" : "保存当前","save:"+(i+1),336,2,!mPresetBusy);
-            presetButton(row,"载入","load:"+(i+1),414,2,preset != null && !mPresetBusy);
-            presetButton(row,"清空","delete:"+(i+1),492,2,preset != null && !mPresetBusy);
-            for(var j:int = 0; j < 5; j++)
+            if(preset) presetText(row,"装备 "+equipmentCount+"　德诺阵 "+dnCount,100,9,200,26,16,0x6B4A2B);
+            else presetText(row,"尚未保存，点击「保存当前」记录现在的阵容",20,58,532,30,18,0x6B4A2B).hAlign = "center";
+            presetButton(row,preset ? "覆盖保存" : "保存当前","save:"+(i+1),306,3,!mPresetBusy);
+            presetButton(row,"载入","load:"+(i+1),392,3,preset != null && !mPresetBusy);
+            presetButton(row,"清空","delete:"+(i+1),478,3,preset != null && !mPresetBusy);
+            for(var j:int = 0; preset && j < 5; j++)
             {
                var hero:Object = preset && preset.preview && j < preset.preview.length ? preset.preview[j] : null;
                var x:int = 12 + j * 112;
                var frame:Image = GlobalFunction.createImage("UI_bg_card_2_0003");
                frame.width = 72;frame.height = 70;
                frame.x = x+10;frame.y = 34;
-               frame.alpha = hero ? 0.85 : 0.35;
+               frame.alpha = hero ? 0.9 : 0.6;
                frame.touchable = false;row.addChild(frame);
                var name:String = "空位";
                if(hero)
@@ -845,16 +847,16 @@ package com.meng52.game.ui.screen
                   name = owned && cfg ? String(cfg.name) : String(hero.name)+"（缺失）";
                   if(j == 0)
                   {
-                     var captain:Image = GlobalFunction.createImage("UI_btn_enterGame_0_0000");
-                     captain.width = 44;captain.height = 20;
-                     captain.x = x+10;
-                     captain.y = 36;
+                     // Native captain tag (crown) used on the in-battle roster.
+                     var captain:Image = GlobalFunction.createImage("UI_tag_leader_0_0000");
+                     captain.width = 27;captain.height = 30;
+                     captain.x = x+6;
+                     captain.y = 28;
                      captain.touchable = false;
                      row.addChild(captain);
-                     presetText(row,"队长",x+13,36,38,20,14,1449514);
                   }
                }
-               presetText(row,name,x,103,108,20,14,hero ? 0xEEE3D2 : 0x999FA6).hAlign = "center";
+               presetText(row,name,x,103,108,20,14,hero ? 0x4B2C1B : 0x8A6A43).hAlign = "center";
             }
          }
          presetText(mPresetRows,mPresetBusy ? "正在保存或载入，请稍候…" : mPresetNotice,22,635,456,40,15,11978439);

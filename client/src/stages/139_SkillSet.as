@@ -140,6 +140,65 @@ package com.meng52.game.module.skill
          return "";
       }
 
+      // Copy polish (planner style): runs after placeholders are resolved and the cleanup
+      // above, so it only sees final display numbers. Unifies terms ("本分路"→"本路",
+      // "攻击魔伤"→"魔法伤害"), drops engine wording, tidies equipment lines and spacing.
+      private static function polishHeal104(...parts) : String
+      {
+         var rate:Number = Number(parts[1]);
+         return "恢复自身生命，恢复量为自身" + parts[1] + "%攻击力＋" + Number((rate * 0.1).toFixed(1)) + "%最大生命";
+      }
+
+      public static function polishInfo104(value:String) : String
+      {
+         if(!value) return "";
+         var rules:Array = [
+            [/[^。；\n]*一次释放内完成[^。；\n]*[。；]?/g, ""],
+            [/已?经?阵亡的?目标跳过[，,]?(?:不补选)?[。；，]?/g, ""],
+            [/没有合法(?:敌人|目标)时结束[。；]?/g, ""],
+            [/[^。；\n]*不触发[^。；\n]*击杀追加[。；]?/g, ""],
+            [/释放距离[：:]\s*\d+[。；]?/g, ""],
+            [/(^|\n)(?:普通技能|队长技能|队长技)[：:]/g, "$1"],
+            [/随后以自身攻击加10(?:\.0)?%最大生命为基础，/g, "随后"],
+            [/按(\d+(?:\.\d+)?)%原生治疗倍率自疗[^。；\n]*/g, polishHeal104],
+            [/(?:本|当前)分路/g, "本路"], [/分路/g, "路"],
+            [/合法/g, ""], [/真正阵亡/g, "阵亡"],
+            [/总面板攻击力?/g, "攻击力"], [/攻击面板/g, "攻击力"], [/面板((?:物理|魔法|真实)?伤害)/g, "$1"], [/面板/g, "属性"],
+            [/攻击魔伤/g, "魔法伤害"], [/攻击物伤/g, "物理伤害"],
+            [/攻击力?((?:魔法|物理|真实)伤害)/g, "$1"], [/%攻击伤害/g, "%伤害"],
+            [/(\d+(?:\.\d+)?%)攻击力?(护盾|生命)/g, "相当于$1攻击力的$2"],
+            [/(\d+(?:\.\d+)?%)最大生命护盾/g, "相当于$1最大生命的护盾"],
+            [/每次结算(\S+?)施加时攻击力?/g, "每次造成$1攻击力的伤害"],
+            [/实时总攻击力/g, "攻击力"],
+            [/独立持续伤害/g, "持续伤害"],
+            [/倍率的AOE/g, "的范围"], [/AOE/g, "范围"], [/%倍率/g, "%"],
+            [/(\d+)码/g, "$1距离"],
+            [/本路内的/g, "本路"], [/距离(?:自己|自身)最近的/g, "最近的"],
+            [/装备·([^·：\n]+)·([^：\n]+)：《[^》\n]+》：仅/g, "【装备】"],
+            [/装备·([^·：\n]+)·([^：\n]+)：\1的/g, "【装备】"],
+            [/装备·([^·：\n]+)·([^：\n]+)：/g, "【装备】"],
+            [/(^|[^【])装备·([^：\n]+)：/g, "$1【装备·$2】"],
+            [/【装备】《[^》\n]+》：/g, "【装备】"],
+            [/(\d+)\.0%/g, "$1%"], [/(\d+)\.0(?![\d%])/g, "$1"],
+            [/[ \t]+(?=\n|$)/g, ""], [/(^|\n)[ \t]+/g, "$1"],
+            [/([。；，：、】」])[ \t]+/g, "$1"],
+            [/([^\x00-\x7f])[ \t]+(?=[^\x00-\x7f])/g, "$1，"],
+            [/([^\x00-\x7f%]|\d%?)[ \t]+(?=\d)/g, "$1，"],
+            [/；\s*。/g, "。"], [/，\s*。/g, "。"], [/。{2,}/g, "。"], [/；(?=\n|$)/g, "。"],
+            [/([^。！？；\n])(?=\n|$)/g, "$1。"],
+            [/[，；、]+。/g, "。"]
+         ];
+         for(var r:int = 0; r < rules.length; r++) value = value.replace(rules[r][0], rules[r][1]);
+         var out:Array = [];
+         var lines:Array = value.split("\n");
+         for(var l:int = 0; l < lines.length; l++)
+         {
+            var line:String = String(lines[l]).replace(/^\s+|\s+$/g, "");
+            if(line.length > 0 && out.indexOf(line) < 0) out.push(line);
+         }
+         return out.join("\n");
+      }
+
       public static function conciseInfo104(value:String) : String
       {
          if(!value) return "";
@@ -179,7 +238,7 @@ package com.meng52.game.module.skill
          value = value.replace(/。\s*；/g,"。");
          value = value.replace(/[，；]\s*。/g,"。");
          value = value.replace(/\n[ \t]*\n/g, "\n");
-         return value.replace(/^\s+|\s+$/g, "");
+         return polishInfo104(value.replace(/^\s+|\s+$/g, ""));
       }
 
       public function getInfo() : String

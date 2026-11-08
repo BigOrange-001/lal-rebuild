@@ -7,7 +7,7 @@ from summon_pools import SummonPools
 PRICE=100
 TEN_PRICE=PRICE*10*9//10
 GROUP_WEIGHTS = [10, 30, 20, 38, 2]
-SUMMARY = '英雄10% · 英雄魂魄30%（60片） · 装备20%（蓝14%/紫5%/橙1%） · 养成38% · 金砖2%'
+SUMMARY = '英雄10%，英雄魂魄30%（60片），装备20%（蓝14%/紫5%/橙1%），养成38%，金砖2%'
 
 
 def material_pool(cfg):

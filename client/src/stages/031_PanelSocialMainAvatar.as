@@ -135,8 +135,9 @@ package com.meng52.game.ui.screen
          mImg3_info.y = mTabBar.y + 55;
          mImg3_info.height = 80;
          addChild(mImg3_info);
-         mRosterFilters = PanelAvatarSell.createRosterFilters(mRosterState,update,GlobalData.$mStageWidth);
-         mRosterFilters.y = GlobalData.$center_height - 33;
+         // Sort/filter controls live in the strip that used to hold the card-type sub-tabs.
+         mRosterFilters = PanelAvatarSell.createRosterFilters(mRosterState,update,GlobalData.$mStageWidth,true);
+         mRosterFilters.y = mImg3_info.y + 12;
          mRosterFilters.visible = mTabBar == null || mTabBar.selectedIndex != 4;
          addChild(mRosterFilters);
       }
@@ -293,6 +294,9 @@ package com.meng52.game.ui.screen
       
       override public function tabBar_CREATION_COMPLETE(param1:*) : void
       {
+         // The card-type sub-tabs (英雄/属性/技能/天赋/羁绊) are hidden; every tab lists all card
+         // types. Reset any remembered sub-tab so the list cannot get stuck on one type.
+         for(var radioKey:String in _radioBarObj) _radioBarObj[radioKey] = 0;
          var _loc2_:Array = [{"label":GlobalLanguageStr.getLanguageStr(20236)},{"label":GlobalLanguageStr.getLanguageStr(20165)},{"label":GlobalLanguageStr.getLanguageStr(20255)}];
          if(MainConfig.$isHasBuilding)
          {
@@ -303,6 +307,8 @@ package com.meng52.game.ui.screen
          mRadioBar.x = 25;
          mRadioBar.pivotY = mRadioBar.height / 2;
          mRadioBar.y = mImg3_info.y + 10;
+         mRadioBar.visible = false;
+         mRadioBar.touchable = false;
          var _loc3_:Boolean = false;
          if(GlobalData.$mConfig_simple.culture != null)
          {
@@ -361,11 +367,8 @@ package com.meng52.game.ui.screen
          var _loc1_:Avatar = null;
          setList();
          addList();
-         if(mRosterFilters && mRosterFilters.visible && mList)
+         if(mRosterFilters && mRosterFilters.visible)
          {
-            // The hero grid ends 36px above the content edge. Keep sorting
-            // in that bottom control strip, away from radio tabs and cards.
-            mRosterFilters.y = mList.y + mList.height + 3;
             setChildIndex(mRosterFilters,numChildren - 1);
          }
          LayoutUIAnimation.getOnlyExample().clearIfNoGuide();

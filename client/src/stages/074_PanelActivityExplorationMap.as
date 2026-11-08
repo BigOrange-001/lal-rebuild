@@ -514,7 +514,7 @@ package com.meng52.game.ui.panel
          var cfg:Object=GlobalData.$mConfig_simple.explore;
          freshNum=Math.max(0,int(counts.refresh_count));
          var paid:int=Math.max(0,int(cfg.refresh_num)-int(counts.refresh_buy));
-         if(mFresh_txt) mFresh_txt.text=freshNum>0 ? "免费刷新："+freshNum+"次" : "付费刷新："+paid+"次 · 每次"+cfg.refresh_price+"金砖";
+         if(mFresh_txt) mFresh_txt.text=freshNum>0 ? "免费刷新："+freshNum+"次" : "付费刷新："+paid+"次（每次"+cfg.refresh_price+"金砖）";
          if(mFresh_btn) mFresh_btn.enabled=explorationRequest=="" && (freshNum>0 || paid>0) && int(GlobalData.$userData.exploration.current_stage_finish)==0;
       }
 

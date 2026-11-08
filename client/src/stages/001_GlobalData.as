@@ -489,6 +489,9 @@ package com.meng52.game.global
 
       public static function missingModTexture() : Texture
       {
+         // Prefer the native empty-slot card art so missing Mod heroes match the game's own placeholders.
+         var nativeSlot:Texture = $assetManager.getTexture("UI_bg_card_2_0003");
+         if(nativeSlot != null) return nativeSlot;
          var texture:Texture = $assetManager.getTexture("__modMissingHero");
          if(texture == null)
          {

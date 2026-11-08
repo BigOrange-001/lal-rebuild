@@ -39,6 +39,31 @@ package com.meng52.game.ui.screen
       private var adventureStatus:TextField;
       private var adventureTimer:Timer;
       private var adventureUnderline:Quad;
+      private var adventureTabCounts:Array = [];
+      private var adventureTabBadges:Array = [];
+
+      // Native tab look: red skin for the selected tab, beige for the rest, and the
+      // game's own numbered red badge (getTagPopTip) for claimable rewards.
+      private function styleAdventureTabs() : void
+      {
+         for each(var old:DisplayObject in adventureTabBadges) old.removeFromParent(true);
+         adventureTabBadges = [];
+         for(var i:int = 0; i < adventureButtons.length; i++)
+         {
+            var button:LOL_Scale9Button = adventureButtons[i];
+            var selected:Boolean = i == adventureTab;
+            button.textures = selected ? "UI_btn_smallFun_1_0000" : "UI_btn_enterGame_0_0000";
+            button.textColor = selected ? 16777215 : 1513239;
+            button.alpha = 1;
+            var count:int = adventureTabCounts && i < adventureTabCounts.length ? int(adventureTabCounts[i]) : 0;
+            if(count <= 0) continue;
+            var badge:DisplayObject = GlobalFunction.getTagPopTip(count);
+            badge.x = button.x + button.width - badge.width + 4;
+            badge.y = button.y - 6;
+            addChild(badge);
+            adventureTabBadges.push(badge);
+         }
+      }
       private var zhuabaoBox:Sprite;
       private var zhuabaoRobot:MovieClip;
       private var zhuabaoData:Object;
@@ -473,11 +498,6 @@ package com.meng52.game.ui.screen
             addChild(button);
             adventureButtons.push(button);
          }
-         adventureUnderline = new Quad(buttonWidth - 12,3,16764006);
-         adventureUnderline.x = 26;
-         adventureUnderline.y = 100;
-         adventureUnderline.touchable = false;
-         addChild(adventureUnderline);
          adventureStatus = GlobalFunction.createTextField(width - 52,56,"正在加载任务…","",18,0xBFC4CA);
          adventureStatus.x = 26;
          adventureStatus.y = 108;
@@ -501,6 +521,7 @@ package com.meng52.game.ui.screen
          var button:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
          if(button == null || int(button.name) == adventureTab) return;
          adventureTab = int(button.name);
+         styleAdventureTabs();
          if(adventureTab == 3) zhuabaoData = null;
          if(mList) mList.verticalScrollPosition = 0;
          addList();
@@ -606,12 +627,8 @@ package com.meng52.game.ui.screen
             }
             rows.push(row);
          }
-         var labels:Array = ["日常任务","累计充值","循环奖励","抓宝"];
-         for(var i:int = 0; i < adventureButtons.length; i++)
-         {
-            adventureButtons[i].alpha = i == adventureTab ? 1 : 0.72;
-            adventureButtons[i].text = labels[i] + (counts[i] > 0 ? " · " + counts[i] : "");
-         }
+         adventureTabCounts = counts;
+         styleAdventureTabs();
          adventureStatus.text = adventureTab == 0 ? "每日零点刷新；完成后分别领取奖励。" :
             "累计充值：" + adventureData.paid_yuan + "元\n累计与循环奖励可同时领取，首充翻倍不计入累计金额。";
          mList.dataProvider = new ListCollection();
@@ -744,22 +761,23 @@ package com.meng52.game.ui.screen
          zhuabaoRobot.x=w*0.68-400;zhuabaoRobot.y=h*0.57-180;zhuabaoRobot.touchable=false;
          zhuabaoRobot.loop=false;zhuabaoRobot.stop();zhuabaoRobot.currentFrame=0;
          zhuabaoRobot.addEventListener("complete",onZhuabaoComplete);zhuabaoBox.addChild(zhuabaoRobot);
-         adventureStatus.text="本轮进度："+zhuabaoData.count+" / 300次\n每日首抓免费 · 十连九折 · 满300次开启新一轮";
-         var balanceIcon:DisplayObject=GlobalFunction.createImage("UI_money_coin_0_0000");balanceIcon.name="zhuabao_coin";
-         balanceIcon.x=w-188;balanceIcon.y=-70;balanceIcon.width=25;balanceIcon.height=21;balanceIcon.touchable=false;zhuabaoBox.addChild(balanceIcon);
-         var balance:TextField=GlobalFunction.createTextField(132,30,String(zhuabaoData.coin),"",18,16769961);balance.x=w-157;balance.y=-75;balance.hAlign="left";balance.autoScale=true;balance.touchable=false;zhuabaoBox.addChild(balance);
+         adventureStatus.text="本轮进度："+zhuabaoData.count+" / 300次\n每日首抓免费，十连九折，满300次开启新一轮";
+         // Gold balance already shows in the top resource bar; no duplicate here.
          zhuabaoButton("抓一次","draw1",32,-8,100,54);
          zhuabaoButton("抓十次","draw10",140,-8,108,54);
          zhuabaoPrice(32,50,100,zhuabaoData.free ? "免费" : "100");
          zhuabaoPrice(140,50,108,String(zhuabaoData.ten_cost));
          zhuabaoButton("奖池预览","pool",w-152,-8,124,54);
-         var preview:TextField=GlobalFunction.createTextField(124,28,"材料 · 英雄 · 装备","",14,15127728);preview.x=w-152;preview.y=50;preview.autoScale=true;preview.touchable=false;zhuabaoBox.addChild(preview);
-         var ribbon:Quad=new Quad(w-64,34,0x10232B);ribbon.x=32;ribbon.y=90;ribbon.alpha=0.78;ribbon.touchable=false;zhuabaoBox.addChild(ribbon);
+         var preview:TextField=GlobalFunction.createTextField(124,28,"材料、英雄、装备","",14,15127728);preview.x=w-152;preview.y=50;preview.autoScale=true;preview.touchable=false;zhuabaoBox.addChild(preview);
+         var ribbon:DisplayObject=GlobalFunction.createImage("UI_roulette_t_bg_0000");
+         ribbon.width=w-64;ribbon.height=34;ribbon.x=32;ribbon.y=90;ribbon.touchable=false;
+         zhuabaoBox.addChild(ribbon);
          var text:TextField=GlobalFunction.createTextField(w-80,32,String(zhuabaoData.summary),"",15,16769961);text.x=40;text.y=91;text.autoScale=true;text.touchable=false;zhuabaoBox.addChild(text);
-         var dock:Quad=new Quad(w-48,162,0x041521);dock.x=24;dock.y=h-166;dock.alpha=0.82;dock.touchable=false;zhuabaoBox.addChild(dock);
-         var line:Quad=new Quad(w-64,1,0xB88B37);line.x=32;line.y=h-166;line.alpha=0.7;line.touchable=false;zhuabaoBox.addChild(line);
+         var dock:DisplayObject=GlobalFunction.createScale9Image("UI_bg_9slice_1_0000",w-40,172,new Rectangle(83,94,88,100));
+         dock.x=20;dock.y=h-172;dock.touchable=false;
+         zhuabaoBox.addChild(dock);
          var title:TextField=GlobalFunction.createTextField(180,28,"累计抓宝奖励","",18,16769961);title.x=32;title.y=h-158;title.hAlign="left";title.touchable=false;zhuabaoBox.addChild(title);
-         var cycle:TextField=GlobalFunction.createTextField(180,28,"300次一轮 · 奖励循环","",14,12433311);cycle.x=w-212;cycle.y=h-158;cycle.hAlign="right";cycle.touchable=false;zhuabaoBox.addChild(cycle);
+         var cycle:TextField=GlobalFunction.createTextField(180,28,"每300次一轮，奖励循环","",14,12433311);cycle.x=w-212;cycle.y=h-158;cycle.hAlign="right";cycle.touchable=false;zhuabaoBox.addChild(cycle);
          var barX:Number=50;var barW:Number=w-100;var barY:Number=h-115;
          var barBg:DisplayObject=GlobalFunction.createImage("UI_roulette_bar_bg",true);barBg.x=barX-4;barBg.y=barY;barBg.width=barW+8;barBg.height=65;barBg.touchable=false;zhuabaoBox.addChild(barBg);
          var fill:Sprite=new Sprite();fill.x=barX;fill.y=barY+4;fill.touchable=false;
@@ -792,7 +810,7 @@ package com.meng52.game.ui.screen
             var status:TextField=GlobalFunction.createTextField(92,22,row.claimable ? "可领 ×"+row.pending : row.claimed ? "已领取" : "未达成","",13,row.claimable ? 16769961 : 12433311);
             status.name="status"+row.tier;status.x=caption.x;status.y=barY+90;status.autoScale=true;status.touchable=false;zhuabaoBox.addChild(status);
          }
-         for(i=0;i<adventureButtons.length;i++) adventureButtons[i].alpha=i==3 ? 1 : 0.72;
+         styleAdventureTabs();
       }
       private function onZhuabaoAction(event:Event) : void
       {
@@ -801,7 +819,7 @@ package com.meng52.game.ui.screen
          if(key=="pool")
          {
             var pool:Array=zhuabaoData.pool as Array;var pages:int=Math.max(1,Math.ceil(pool.length/20));zhuabaoPage%=pages;
-            var lines:Array=[];for(var i:int=zhuabaoPage*20;i<Math.min(pool.length,(zhuabaoPage+1)*20);i++)lines.push(pool[i].group+" · "+pool[i].name);
+            var lines:Array=[];for(var i:int=zhuabaoPage*20;i<Math.min(pool.length,(zhuabaoPage+1)*20);i++)lines.push(pool[i].group+"："+pool[i].name);
             GlobalFunction.popAlert("奖池 "+(zhuabaoPage+1)+"/"+pages+"（再次点击翻页）",lines.join("\n"));zhuabaoPage++;return;
          }
          if(key.indexOf("claim")==0)

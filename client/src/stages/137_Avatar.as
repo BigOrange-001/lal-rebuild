@@ -164,7 +164,7 @@ package com.meng52.game.module.avatar
             var info:String = label+"（"+(active.indexOf(row)>=0 ? "已激活" : "未激活")+"）<br/>"+row.info;
             if(row.kind=="ordinary" && row.reworks) for(var rewriteName:String in row.reworks) info += "<br/>羁绊重做后："+row.reworks[rewriteName].info;
             if(row.kind=="exclusive") info += "<br/>新增伤害、护盾、治疗系数另按全局80%结算。";
-            text += "<br/>"+Tools.formatHtmlText(info,active.indexOf(row)>=0 ? 0x55E889 : 0xFFD45C,false,15,"",0);
+            text += "<br/>"+Tools.formatHtmlText(info,active.indexOf(row)>=0 ? 0x00CCFF : 0x888888,false,15,"",0);
          }
          return text;
       }
@@ -276,7 +276,7 @@ package com.meng52.game.module.avatar
             if(benefit.skill_rate) description += "\n技能数值 +"+Math.round(Number(benefit.skill_rate)*100)+"%";
             if(bond.focus==family) description += "\n"+bond.mechanism.normal.name+"："+bond.mechanism.normal.info+(bond.mechanism.captain ? "\n"+bond.mechanism.captain.name+"："+bond.mechanism.captain.info : "");
             if(bond.focus==family && GlobalData.$mConfig_simple.hero_skill_output_rate_104 != null) description += "\n伤害、护盾、治疗按上述技能基准的80%结算；增减益不变。";
-            text += "<br/>"+Tools.formatHtmlText(description.replace(/\n/g,"<br/>"),active.indexOf(bond)>=0 ? 0x55E889 : 0xFFD45C,false,15,"",0);
+            text += "<br/>"+Tools.formatHtmlText(description.replace(/\n/g,"<br/>"),active.indexOf(bond)>=0 ? 0x00CCFF : 0x888888,false,15,"",0);
          }
          return text;
       }
@@ -356,7 +356,7 @@ package com.meng52.game.module.avatar
          for each(var bond:Object in definitions)
          {
             if(bond.families.indexOf(family)<0) continue;
-            var color:uint = getPurpleBondIsActive() ? 0x55E889 : 0xFFD45C;
+            var color:uint = getPurpleBondIsActive() ? 0x00CCFF : 0x888888;
             var concise:String = bond.short_info != null ? String(bond.short_info) : String(bond.name) + "\n" + String(bond.info);
             var lines:Array = concise.split(/\r?\n/);
             var html:String = "<br/>";

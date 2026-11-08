@@ -34,7 +34,7 @@ for(let slot=0;slot<4;slot++){let preview=[];for(let n=0;n<5;n++){let id=`s${slo
 GlobalData.$userData.avatars[id]={aid:'A_1001_3'};preview.push({id,aid:'A_1001_3',name:'英雄',leader:n===0});}
 GlobalData.$userData.attrs.team_presets.push({preview,as_equips:[['eq',null]],dn_bindings:{1:'dnHero'}});}
 delete GlobalData.$userData.avatars.s1h3;
-const GlobalFunction={createScale9Image:(id,width,height)=>({id,width,height}),createImage:()=>({}),getAvatarCfg:()=>({res:'A_1001_3',name:'英雄'}),getAvatarIcon:aid=>({icon:aid})};
+const GlobalFunction={createScale9Image:(id,width,height)=>({id,width,height}),createImage:id=>({id}),getAvatarCfg:()=>({res:'A_1001_3',name:'英雄'}),getAvatarIcon:aid=>({icon:aid})};
 const unit={mPresetRows:new Sprite(),mPresetBusy:false,mPresetNotice:'ready',onPresetCommand(){}};
 '''
         script += method('presetText', 'parent,text,x,y,w,h,size=18,color=16777215')
@@ -42,7 +42,7 @@ const unit={mPresetRows:new Sprite(),mPresetBusy:false,mPresetNotice:'ready',onP
         script += method('renderTeamPresets')
         script += '''unit.renderTeamPresets();let all=[];function walk(n){all.push(n);for(let c of n.children||[])walk(c);}walk(unit.mPresetRows);
 console.log(JSON.stringify({rows:unit.mPresetRows.children.filter(c=>c instanceof Sprite&&!(c instanceof LOL_TextField)).length,
-icons:all.filter(c=>c.icon).length,captains:all.filter(c=>c.text==='队长').length,
+icons:all.filter(c=>c.icon).length,captains:all.filter(c=>c.id==='UI_tag_leader_0_0000').length,
 missing:all.filter(c=>c.text==='英雄（缺失）').length,buttons:all.filter(c=>c instanceof LOL_Scale9Button).map(c=>c.name)}));'''
         actual = self.run_js(script)
         self.assertEqual(actual['rows'], 4)

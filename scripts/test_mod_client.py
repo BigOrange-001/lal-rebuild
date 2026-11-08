@@ -271,7 +271,7 @@ mModInfo:{packages:[{packageId:'',version:'0.0.0',contentDigest:'',kind:'error',
 {packageId:'good',version:'1.0.0',contentDigest:'abc',kind:'new',status:'installed',name:'Good',author:'A'}],errors:[],missing:[]}};
 '''
         for name, params in [('selectedMod', 'row,create=false'), ('modStatusName', 'status,enabled'),
-                             ('renderModList', '')]:
+                             ('modReasonText', 'row'), ('renderModList', '')]:
             script += install('151_PanelHelpSetting.as', name, params)
         script += '''unit.renderModList();console.log(JSON.stringify({actions,texts,labels,selected:unit.mModSelections}));'''
         result = self.run_js(script)
@@ -309,6 +309,8 @@ console.log(JSON.stringify({previewCalls,textRows:texts.length,methods:sent.map(
 class Sprite{constructor(){this.children=[];}addChild(child){this.children.push(child);}}
 class Quad{constructor(width,height,color){Object.assign(this,{width,height,color});}}
 class ScrollContainer{}
+class Rectangle{}
+const GlobalFunction={createScale9Image:(id,width,height)=>({id,width,height})};
 const GlobalData={$mStageWidth:640,$mStageHeight:960,$userData:{name:'Test'}};
 const GlobalTextStyle={getTextField:()=>({})};
 const SendAndSelect={$uid:'A',$SendServiceAMFDispatcher:{addEventListener(){}}};
@@ -320,10 +322,10 @@ modFooter:(label,x,y)=>footers.push({label,x,y}),closeModManager(){},importMod()
         script += install('151_PanelHelpSetting.as', 'openModManager', 'event')
         script += '''const results=[];for(offset of [0,140,280]){unit.mModView=null;footers=[];unit.openModManager(null);
 const modal=unit.mModView;results.push({top:modal.y+offset,bottom:modal.y+offset+modal.children[0].height,
-footerBottom:modal.y+offset+footers.at(-1).y+48,shieldTop:unit.mModShield.y+offset,color:modal.children[1].color});}
+footerBottom:modal.y+offset+footers.at(-1).y+50,shieldTop:unit.mModShield.y+offset,frame:modal.children[0].id});}
 console.log(JSON.stringify(results));'''
-        self.assertEqual(self.run_js(script), [{'top': 90, 'bottom': 870, 'footerBottom': 853,
-                                               'shieldTop': 0, 'color': 0x2B2018}] * 3)
+        self.assertEqual(self.run_js(script), [{'top': 90, 'bottom': 870, 'footerBottom': 858,
+                                               'shieldTop': 0, 'frame': 'UI_bg_9slice_1_0000'}] * 3)
 
 
     def test_patch_preview_expands_nested_values_scope_and_source_without_clipping(self):

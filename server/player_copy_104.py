@@ -116,4 +116,81 @@ def apply_player_copy_104(document):
     if cfg.get('skin_revision_v2_104'):
         from skin_revision_104 import refresh_bond_copy
         refresh_bond_copy(cfg)
+    apply_display_names_104(document)
+    from copy_polish_104 import polish_sections
+    polish_sections(cfg)
+    return document
+
+
+# Campaign stage titles (after "第N章·"). Short, place-like names instead of narration.
+STAGE_TITLES_104 = {
+    'M_001_2': '车辙伏兵', 'M_001_3': '夺回观察哨', 'M_001_4': '遗落的补给', 'M_001_5': '先遣集结', 'M_001_6': '封锁营口',
+    'M_002_1': '驿路交锋', 'M_002_2': '护桥救援', 'M_002_3': '窄口争先', 'M_002_4': '车队受阻', 'M_002_6': '截击运兵车',
+    'M_003_2': '尾随护卫', 'M_003_3': '霜雾火线', 'M_003_4': '林间箭雨', 'M_003_5': '琴声护送',
+    'M_004_1': '错层石阶', 'M_004_3': '偏门救护所', 'M_004_4': '巡逻回防', 'M_004_5': '缺口车队',
+    'M_005_2': '两军争渡', 'M_005_3': '未成之阵', 'M_005_5': '岸边火力',
+    'M_006_2': '且退且战', 'M_006_3': '封锁桥口', 'M_006_4': '桥洞伏兵', 'M_006_5': '断桥压制', 'M_006_6': '关隘疑阵',
+    'M_007_1': '藤蔓暗哨', 'M_007_2': '绕行铁甲', 'M_007_3': '旧道路障', 'M_007_4': '风口营地', 'M_007_5': '迂回补给线', 'M_007_6': '猎队封路',
+    'M_008_1': '未收的营帐', 'M_008_4': '篝火两侧', 'M_008_5': '截断车尾',
+    'M_009_1': '箭鸣街口', 'M_009_2': '伪装维修队', 'M_009_3': '空街刺影', 'M_009_4': '巷口集结', 'M_009_5': '死守哨兵', 'M_009_6': '熄灯封门',
+    'M_010_1': '墙根护车', 'M_010_3': '绕墙尖兵', 'M_010_5': '仓促火线',
+    'M_011_1': '裂谷探路者', 'M_011_2': '独守双隘', 'M_011_3': '护送法师', 'M_011_4': '崖边射击线', 'M_011_5': '夜袭五人组',
+    'M_012_1': '散乱护送队', 'M_012_2': '腹背卸货', 'M_012_3': '烟尘蛇影', 'M_012_5': '双重路障', 'M_012_6': '灰烬出口',
+    'M_013_1': '淤泥路标', 'M_013_2': '交错巡游', 'M_013_3': '三渠守门人', 'M_013_4': '殿后的钟表匠',
+    'M_014_1': '石阶守队', 'M_014_2': '守门人与访客', 'M_014_3': '前院暗沟', 'M_014_4': '冰封会合点', 'M_014_5': '阶上余火', 'M_014_6': '封锁地基',
+    'M_015_1': '未爆引线', 'M_015_2': '空寂御道', 'M_015_3': '双刀岔口', 'M_015_4': '最后的潮声',
+    'M_016_1': '半开城门', 'M_016_2': '穿越内门', 'M_016_3': '黎明封街',
+    'M_017_1': '二次靠岸', 'M_017_2': '仓门火光', 'M_017_3': '缆绳截击',
+    'M_018_1': '矿道守夜人', 'M_018_2': '矿车让道',
+    'M_019_1': '钟楼后队', 'M_019_2': '死守台阶', 'M_019_3': '钟声骤停',
+    'M_020_1': '上下桥之争', 'M_020_2': '两端刀锋', 'M_020_3': '高架尽头',
+    'M_021_1': '半掩之门', 'M_021_2': '水声掩步', 'M_021_3': '暗门合拢',
+    'M_022_1': '猎场外围', 'M_022_2': '无声火力',
+    'M_023_1': '迟到三人组', 'M_023_2': '庭院残兵',
+    'M_024_1': '冰面间隙', 'M_024_2': '沿镜墙而行', 'M_024_3': '碎镜出口',
+    'M_025_1': '截断游行', 'M_025_2': '仪仗让路', 'M_025_3': '舞台外近卫',
+    'M_026_1': '长廊残组', 'M_026_2': '迎面巡检', 'M_026_3': '三道机关门',
+    'M_027_1': '脱队演员', 'M_027_2': '最后的看守', 'M_027_3': '封锁花车道',
+    'M_028_1': '开场近卫', 'M_028_2': '看台观察队', 'M_028_3': '广场清场',
+    'M_029_1': '台阶分兵', 'M_029_2': '横穿广场', 'M_029_3': '议事厅闭门',
+    'M_030_1': '中庭三点', 'M_030_2': '最后一班岗', 'M_030_3': '终幕五人',
+}
+
+# Enemy units whose original names were never recovered (shown as "X阶英雄·序号N").
+# Named from their kits so players see a readable name in battle and statistics.
+UNIT_NAMES_104 = {
+    'A_1140': '冰晶射手', 'A_1224': '霜羽游侠', 'A_1908': '寒星猎手',
+    'A_1225': '奥能行者', 'A_1906': '逆流法剑', 'A_1996': '法能学徒', 'A_1999': '反转剑士',
+    'A_1907': '正义执剑者', 'A_1910': '审判骑士', 'A_1997': '裁决卫士',
+    'A_2305': '节肢助手', 'A_2326': '荆棘植物',
+}
+
+RESOURCE_TIERS_104 = ('初级', '中级', '高级', '精英', '传说')
+
+
+def display_stage_name_104(stage_id, name):
+    if not isinstance(name, str):
+        return name
+    title = STAGE_TITLES_104.get(stage_id)
+    if title and '·' in name:
+        return name.split('·', 1)[0] + '·' + title
+    match = re.fullmatch(r'(.+?)·难度(\d+)', name)
+    if match and 1 <= int(match.group(2)) <= len(RESOURCE_TIERS_104):
+        return f'{match.group(1)}副本·{RESOURCE_TIERS_104[int(match.group(2)) - 1]}'
+    return re.sub(r'^远古试炼·第(\d+)档$', r'远古试炼·第\1关', name)
+
+
+def apply_display_names_104(document):
+    cfg = document.get('cfg', document)
+    for holder in (cfg, document.get('pve', {}), document):
+        if not isinstance(holder, dict):
+            continue
+        for section in ('combat_main', 'combat_ploy'):
+            for stage_id, stage in (holder.get(section) or {}).items():
+                if isinstance(stage, dict) and 'name' in stage:
+                    stage['name'] = display_stage_name_104(stage_id, stage['name'])
+    for aid, hero in cfg.get('avatar', {}).items():
+        family = '_'.join(aid.split('_')[:2])
+        if family in UNIT_NAMES_104 and re.search(r'序号|待识别', str(hero.get('name', ''))):
+            hero['name'] = UNIT_NAMES_104[family]
     return document

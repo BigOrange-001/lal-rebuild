@@ -23,31 +23,45 @@ package com.meng52.game.ui.screen
 
       public static const SELL_BATCH_MAX:int = 100;
 
-      public static function createRosterFilters(state:Object, refresh:Function, width:Number) : Sprite
+      // toolbar=true: large left-aligned buttons for the barracks top strip;
+      // otherwise a compact right-aligned bar (team selection).
+      public static function createRosterFilters(state:Object, refresh:Function, width:Number, toolbar:Boolean = false) : Sprite
       {
          var bar:Sprite = new Sprite();
-         var quality:LOL_Scale9Button = new LOL_Scale9Button("",140,30,"UI_btn_enterGame_0_0000");
-         var order:LOL_Scale9Button = new LOL_Scale9Button("",150,30,"UI_btn_enterGame_0_0000");
-         var direction:LOL_Scale9Button = new LOL_Scale9Button("",110,30,"UI_btn_enterGame_0_0000");
-         var labels:Array = ["全部","灰","白","绿","蓝","紫","橙","红"];
+         var h:int = toolbar ? 46 : 32;
+         var quality:LOL_Scale9Button = new LOL_Scale9Button("",toolbar ? 170 : 92,h,"UI_btn_enterGame_0_0000");
+         var order:LOL_Scale9Button = new LOL_Scale9Button("",toolbar ? 170 : 92,h,"UI_btn_enterGame_0_0000");
+         var direction:LOL_Scale9Button = new LOL_Scale9Button("",toolbar ? 110 : 56,h,"UI_btn_enterGame_0_0000");
+         // Card quality runs 1..6 in the config (灰..橙); there is no 7th tier.
+         var labels:Array = ["全部","灰","白","绿","蓝","紫","橙"];
          var orders:Array = ["默认排序","按等级","按上阵情况"];
          var repaint:Function = function():void
          {
             quality.text = "品质："+labels[int(state.quality)];
             order.text = orders[int(state.order)];
-            direction.text = state.descending ? "降序 ↓" : "升序 ↑";
+            direction.text = state.descending ? "降序" : "升序";
          };
-         quality.x = (width-412)*0.5;
-         order.x = quality.x+146;
-         direction.x = order.x+156;
+         if(toolbar)
+         {
+            quality.x = 25;
+            order.x = quality.x+quality.width+12;
+            direction.x = order.x+order.width+12;
+         }
+         else
+         {
+            // Right-aligned so the native roster count on the left of the strip stays visible.
+            direction.x = width-direction.width-10;
+            order.x = direction.x-order.width-6;
+            quality.x = order.x-quality.width-6;
+         }
          for each(var button:LOL_Scale9Button in [quality,order,direction])
          {
-            button.fontSize = 17;
+            button.fontSize = toolbar ? 20 : 15;
             bar.addChild(button);
          }
          quality.addEventListener("triggered",function(event:Event):void
          {
-            state.quality = (int(state.quality)+1)%8;
+            state.quality = (int(state.quality)+1)%labels.length;
             repaint();refresh();
          });
          order.addEventListener("triggered",function(event:Event):void
@@ -83,9 +97,12 @@ package com.meng52.game.ui.screen
          {
             for each(member in main) if(member != null) ranks[String(member)] = 3;
          }
+         var order:Object = {};
+         var index:int = 0;
          for each(var row:Object in rows)
          {
             if(!row || row.id == null) continue;
+            order[String(row.id)] = index++;
             var id:String = String(row.id);
             var base:String = row.aid ? String(row.aid).split("|")[0] : id.split("|")[0];
             var parts:Array = base.split("_");
@@ -99,9 +116,8 @@ package com.meng52.game.ui.screen
                var av:Number = int(state.order) == 1 ? Number(a.lv || 1) : (ranks[String(a.id)] || 1);
                var bv:Number = int(state.order) == 1 ? Number(b.lv || 1) : (ranks[String(b.id)] || 1);
                if(av != bv) return (av > bv ? 1 : -1)*(state.descending ? -1 : 1);
-               var aid:String = String(a.id);
-               var bid:String = String(b.id);
-               return aid < bid ? -1 : (aid > bid ? 1 : 0);
+               // Ties keep the incoming (default) order instead of falling back to id order.
+               return int(order[String(a.id)]) - int(order[String(b.id)]);
             });
          }
          else if(!state.descending) result.reverse();

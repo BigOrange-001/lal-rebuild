@@ -32,7 +32,7 @@ function ItemTaskAward(){}
 const GuideMaster={getOnlyExample:()=>({nextGuideStep:noop})};
 const unit={zhuabaoBox:null,zhuabaoRobot:null,stage:{},adventureData:null,adventureRequest:0,adventureClaiming:false,adventureTab:0,
  adventureButtons:[{},{},{}],adventureStatus:{},mList:{validate:noop,verticalScrollPosition:0},adventureReady:0,
- buildAdventureUI:noop,setListTimer:(list,rows)=>drawn=rows};
+ buildAdventureUI:noop,setListTimer:(list,rows)=>drawn=rows,styleAdventureTabs:noop};
 '''
 
 
@@ -101,6 +101,7 @@ console.log(JSON.stringify({claiming:unit.adventureClaiming,tasks:unit.adventure
         script = BASE + r'''
 const Rectangle=function(){};
 GlobalFunction.createScale9Image=(id,width,height)=>({id,width,height,x:0,y:0});
+GlobalFunction.createScale3Image=(id,left,right,width)=>({id,width,height:22,x:0,y:0});
 GlobalFunction.createTextField=(width,height,text,font,size)=>({width,height,text,size,x:0,y:0});
 function LOL_Scale9Button(text,width,height){Object.assign(this,{text,width,height,x:0,y:0,addEventListener:noop});}
 unit.addChild=v=>drawn.push(v);unit.layoutWH=noop;unit.onAdventureButton=noop;unit.addAdventureRewardIcon=noop;
@@ -195,6 +196,7 @@ function Sprite(){this.children=[];this.numChildren=0;this.addChild=v=>{this.chi
 function MovieClip(){Object.assign(this,{width:256,height:306,playing:true,playCount:0,stop:function(){this.playing=false;},play:function(){this.playing=true;this.playCount++;},addEventListener:noop});}
 function LOL_Scale9Button(text,w,h,texture){Object.assign(this,{text,width:w,height:h,texture,addEventListener:noop});}
 GlobalFunction.createImage=id=>({id,width:640,height:805});GlobalFunction.getTextureByBD=noop;
+GlobalFunction.createScale9Image=(id,width,height)=>({id,width,height,x:0,y:0});
 GlobalFunction.createButtonStarling=id=>({id,width:60,height:60,addEventListener:noop});
 GlobalFunction.createTextField=(w,h,text)=>({width:w,height:h,text});
 unit.addChild=noop;unit.zhuabaoBox=null;unit.zhuabaoRobot=null;unit.zhuabaoBusy=false;unit.zhuabaoPage=0;unit.zhuabaoRequest=0;unit.zhuabaoGifts=[];
@@ -216,7 +218,7 @@ console.log(JSON.stringify({count:nodes.length,positions:nodes.map(v=>v.x),pulse
 """
         result=self.run_js(code)
         self.assertEqual(result['count'],4);self.assertEqual(result['pulse'],2)
-        self.assertEqual(result['coinIcons'],2);self.assertFalse(result['currencyWords'])
+        self.assertEqual(result['coinIcons'],1);self.assertFalse(result['currencyWords'])
         self.assertEqual(result['positions'],[46+548*v/614 for v in [80,245,413,575]])
         self.assertAlmostEqual(result['fill'],548*245/614-4)
         self.assertLessEqual(result['bottom'],363)

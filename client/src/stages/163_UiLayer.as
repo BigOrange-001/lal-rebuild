@@ -666,7 +666,8 @@ package com.meng52.game.ui.map
             {
                _loc7_ = GameMapConfig.SCREEN_WIDTH / 2;
                _loc8_ = GameMapConfig.SCREEN_HEIGHT / 2;
-               _loc12_ = GlobalFunction.getNextTextField();
+               // Language id 20212 (the default) reads "技能说明" in this table; show the real prompt.
+               _loc12_ = GlobalFunction.getNextTextField(MainConfig.$isEnglish ? "Tap to continue" : "点击屏幕继续");
                _loc12_.x = _loc7_;
                _loc12_.y = _loc8_ + 50;
                _loc4_.delayCall(m_sprFg.addChild,_loc13_,_loc12_);

@@ -55,8 +55,15 @@ def _render(title: str, intro: str, sections: list[tuple[str, str, str | None]],
     body = [
         "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\">",
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">",
-        f"<title>{safe_title}</title><style>body{{font-family:system-ui,'Microsoft YaHei',sans-serif;background:#171311;color:#f3e8dc;margin:0;padding:16px;line-height:1.65}}",
-        "main{max-width:760px;margin:auto}h1{font-size:22px;margin:0 0 10px;color:#ffd17a}h2{font-size:17px;color:#f0bb68;margin:18px 0 4px}p{margin:5px 0 12px}a{color:#8fc8ff;text-decoration:none}.card{background:#28201c;border:1px solid #59473b;border-radius:8px;padding:12px 14px;margin:10px 0}.muted{color:#c3b2a5;font-size:13px}</style></head><body><main>",
+        f"<title>{safe_title}</title><style>body{{font-family:'Microsoft YaHei','PingFang SC',system-ui,sans-serif;background:#ecd3a4;color:#4b2c1b;margin:0;padding:14px 16px 20px;line-height:1.7}}",
+        "main{max-width:760px;margin:auto}"
+        "h1{font-size:23px;margin:0 0 8px;padding-bottom:8px;color:#7a3a12;text-align:center;letter-spacing:2px;border-bottom:2px solid #b4874f}"
+        "h1:before,h1:after{content:'◆';font-size:12px;color:#b4874f;vertical-align:middle;margin:0 10px}"
+        "main>p{color:#5e3b22}"
+        "h2{font-size:17px;color:#8c4513;margin:0 0 4px}h2:before{content:'';display:inline-block;width:4px;height:15px;background:#b4632a;margin-right:8px;vertical-align:-2px}"
+        "p{margin:4px 0 6px}a{display:inline-block;margin-top:2px;color:#9c3028;font-weight:bold;text-decoration:none}"
+        ".card{background:rgba(255,248,232,.45);border:1px solid #c9a36b;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);padding:10px 14px;margin:10px 0}"
+        ".muted{color:#7a5a3c;font-size:13px}</style></head><body><main>",
         f"<h1>{safe_title}</h1><p>{safe_intro}</p>",
     ]
     if notice:

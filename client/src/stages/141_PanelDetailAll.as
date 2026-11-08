@@ -131,7 +131,7 @@ package com.meng52.game.ui.panel
          {
             var entry:Object = bondEntries104[i];
             var label:LOL_TextField = new LOL_TextField(entry.txt,width-5,height);
-            label.fontColor = entry.isOK ? 0x55E889 : 0x888888;
+            label.fontColor = entry.isOK ? 0x00CCFF : 0x888888;
             label.fontSize = Math.min(17,height-4);
             label.hAlign = "left";
             label.x = mTxt_destiny.x+i%3*width;
@@ -379,6 +379,14 @@ package com.meng52.game.ui.panel
          return _name;
       }
 
+      // "准备回合：0　冷却回合：3" -> "准备0　冷却3" so it fits one line under each skill.
+      private static function compactSkillTiming104(text:String) : String
+      {
+         if(text == null) return "";
+         var match:Array = text.match(/准备回合[：:]\s*(\d+)\s*冷却回合[：:]\s*(\d+)/);
+         return match ? "准备" + match[1] + "　冷却" + match[2] : text;
+      }
+
       private function formatSkillTiming(param1:String) : String
       {
          if(param1 == null || param1.length == 0)
@@ -387,7 +395,7 @@ package com.meng52.game.ui.panel
          }
          // Match the compact native detail row visible in retained screenshots
          // and keep long skill descriptions from colliding with the timing row.
-         return param1.replace("准备回合：","准备").replace("冷却回合：","冷却").replace("　","回合  ·  ").replace("\r","").replace("\n"," ") + "回合";
+         return compactSkillTiming104(param1.replace("\r","").replace("\n"," "));
       }
 
       private function getActionTypeLanguageId(param1:int) : int

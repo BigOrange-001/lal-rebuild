@@ -97,6 +97,21 @@ console.log(JSON.stringify(out));'''
                                               ['A_1003_5|c', 'A_1002_5|b'], ['A_1002_5|b', 'A_1003_5|c'], [],
                                               ['A_1003_5|c', 'A_1002_5|b', 'A_1001_6|a']])
 
+    def test_sort_ties_keep_default_order_and_quality_cycle_has_no_empty_tier(self):
+        script = '''const GlobalData={$userData:{team:[[]],attrs:{}}};
+const int=Math.trunc,unit={};
+'''
+        script += method('030_PanelAvatarSell.as', 'filterRosterRows', 'rows,state')
+        script += '''let rows=[{id:'A_1009_6|z',lv:50},{id:'A_1001_5|a',lv:50},{id:'A_1005_5|m',lv:80}];
+const ids=x=>x.map(r=>r.id);
+console.log(JSON.stringify([ids(unit.filterRosterRows(rows,{quality:0,order:1,descending:true})),
+ ids(unit.filterRosterRows(rows,{quality:0,order:2,descending:true}))]));'''
+        self.assertEqual(self.run_js(script), [['A_1005_5|m', 'A_1009_6|z', 'A_1001_5|a'],
+                                              ['A_1009_6|z', 'A_1001_5|a', 'A_1005_5|m']])
+        source = (Path(__file__).resolve().parents[1] / 'client/src/stages/030_PanelAvatarSell.as').read_text('utf-8')
+        self.assertIn('var labels:Array = ["全部","灰","白","绿","蓝","紫","橙"];', source)
+        self.assertIn('state.quality = (int(state.quality)+1)%labels.length;', source)
+
     def test_magic_quote_accounts_for_price_growth_partial_cap_and_partial_funds(self):
         script = '''const int=Math.trunc;
 const GlobalData={$tempEquipCurrSelected:'eq', $userData:{my_equips:{eq:{magic:[9,1,0,0]}},attrs:{dust:[1000,1000,1000,1000]}},

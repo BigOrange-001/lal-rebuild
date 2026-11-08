@@ -126,9 +126,20 @@ package com.meng52.game.ui.panel
          this.setList();
          this.addList();
          this.createSpendingRow();
-         var mods:LOL_Scale9Button = new LOL_Scale9Button("Mod 管理",320,56,"UI_btn_normalFun_0000");
-         mods.x = mImg9_baseBg.x + (mImg9_baseBg.width - mods.width) * 0.5;
-         mods.y = mImg9_baseBg.y + 430;
+         // Same row layout as the native music/sound rows (ItemHelpSetting).
+         var modX:Number = mImg9_baseBg.x + (mImg9_baseBg.width - 520) * 0.5;
+         var modY:Number = mImg9_baseBg.y + 412;
+         var modBg:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",520,100,new Rectangle(110,55,70,20));
+         modBg.x = modX;
+         modBg.y = modY;
+         addChild(modBg);
+         var modTitle:TextField = GlobalTextStyle.getTextField("Mod 管理",30,4926491,"left",270,35);
+         modTitle.x = modX + 44;
+         modTitle.y = modY + 30;
+         addChild(modTitle);
+         var mods:LOL_Scale9Button = new LOL_Scale9Button("打开",126,47,"UI_btn_enterGame_0_0000");
+         mods.x = modX + 361;
+         mods.y = modY + 27;
          mods.addEventListener("triggered",openModManager);
          addChild(mods);
          SendAndSelect.sendAndSelectService("user.spending_info",{},onSpendingInfo);
@@ -174,30 +185,36 @@ package com.meng52.game.ui.panel
          background.x = rowX;
          background.y = rowY;
          addChild(background);
-         var title:TextField = GlobalTextStyle.getTextField("切换有钱程度",30,4926491,"left",270,35);
-         title.x = rowX + 30;
-         title.y = rowY + 13;
+         var title:TextField = GlobalTextStyle.getTextField("有钱程度",30,4926491,"left",270,35);
+         title.x = rowX + 44;
+         title.y = rowY + 16;
          addChild(title);
-         mTierStatus = GlobalTextStyle.getTextField("读取中...",16,4926491,"left",310,35);
-         mTierStatus.x = rowX + 30;
+         mTierStatus = GlobalTextStyle.getTextField("读取中...",16,0x6B4A2B,"left",300,26);
+         mTierStatus.x = rowX + 44;
          mTierStatus.y = rowY + 54;
          addChild(mTierStatus);
-         mTierButton = new LOL_Scale9Button("读取中...",174,50,"UI_btn_enterGame_0_0000");
-         mTierButton.x = rowX + 330;
-         mTierButton.y = rowY + 24;
+         mTierButton = new LOL_Scale9Button("读取中...",126,47,"UI_btn_enterGame_0_0000");
+         mTierButton.x = rowX + 361;
+         mTierButton.y = rowY + 27;
          mTierButton.addEventListener("triggered",openTierMenu);
          addChild(mTierButton);
          mTierMenu = new Sprite();
-         var menuBg:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_6_0000",500,285,new Rectangle(20,20,10,10));
+         var menuBg:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_1_0000",500,285,new Rectangle(83,94,88,100));
          menuBg.x = rowX + 10;
-         menuBg.y = mImg9_baseBg.y + 60;
+         menuBg.y = mImg9_baseBg.y + 40;
+         menuBg.height = 360;
          mTierMenu.addChild(menuBg);
+         var menuTitle:TextField = GlobalTextStyle.getTextField("选择有钱程度",22,16764006,"center",500,34);
+         menuTitle.x = rowX + 10;
+         menuTitle.y = mImg9_baseBg.y + 52;
+         menuTitle.touchable = false;
+         mTierMenu.addChild(menuTitle);
          for(var i:int = 0; i < TIER_KEYS.length; i++)
          {
             var option:LOL_Scale9Button = new LOL_Scale9Button(String(TIER_NAMES[i]),450,53,"UI_btn_normalFun_0000");
             option.name = "spending_tier_" + i;
             option.x = rowX + 35;
-            option.y = mImg9_baseBg.y + 68 + i * 66;
+            option.y = mImg9_baseBg.y + 116 + i * 66;
             option.addEventListener("triggered",chooseTier);
             mTierMenu.addChild(option);
          }
@@ -224,8 +241,8 @@ package com.meng52.game.ui.panel
          }
          else
          {
-            mTierButton.text = String(data.label) + " ▼";
-            mTierStatus.text = "今日 ¥" + data.spent_yuan + "/" + data.daily_limit_yuan + " 余 ¥" + data.remaining_yuan;
+            mTierButton.text = String(data.label);
+            mTierStatus.text = "今日已充 " + data.spent_yuan + " / " + data.daily_limit_yuan + " 元";
          }
       }
 
@@ -332,36 +349,53 @@ package com.meng52.game.ui.panel
          addChild(mModShield);
          mModView = new Sprite();
          var panelHeight:Number = Math.min(780,GlobalData.$mStageHeight - 40);
-         var background:Quad = new Quad(590,panelHeight,0x9B733D);
+         var background:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_1_0000",590,panelHeight,new Rectangle(83,94,88,100));
+         background.touchable = false;
          mModView.addChild(background);
-         var surface:Quad = new Quad(586,panelHeight - 4,0x2B2018);
-         surface.x = surface.y = 2;
-         mModView.addChild(surface);
          mModView.x = origin.x + (GlobalData.$mStageWidth - 590) * 0.5;
          mModView.y = origin.y + (GlobalData.$mStageHeight - panelHeight) * 0.5;
          addChild(mModView);
-         var title:TextField = GlobalTextStyle.getTextField("Mod 管理 · 只影响当前存档",25,16764006,"center",570,40);
+         var plate:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_3_0000",440,40,new Rectangle(90,8,82,30));
+         plate.x = 75;
+         plate.y = 12;
+         plate.touchable = false;
+         mModView.addChild(plate);
+         var title:TextField = GlobalTextStyle.getTextField("Mod 管理",26,16764006,"center",570,40);
          title.x = 10;
-         title.y = 10;
+         title.y = 12;
+         title.touchable = false;
          mModView.addChild(title);
-         var save:TextField = GlobalTextStyle.getTextField("当前存档：" + String(GlobalData.$userData.name),18,16777215,"center",570,30);
-         save.x = 10;
-         save.y = 48;
+         var save:TextField = GlobalTextStyle.getTextField("当前存档：" + String(GlobalData.$userData.name) + "　（设置只影响此存档）",17,0xD9CBB0,"center",550,28);
+         save.x = 20;
+         save.y = 58;
+         save.touchable = false;
          mModView.addChild(save);
+         var listBg:Quad = new Quad(560,panelHeight - 226,0x000000);
+         listBg.x = 15;
+         listBg.y = 90;
+         listBg.alpha = 0.28;
+         listBg.touchable = false;
+         mModView.addChild(listBg);
          mModScroll = new ScrollContainer();
-         mModScroll.x = 15;
-         mModScroll.y = 85;
-         mModScroll.width = 560;
-         mModScroll.height = background.height - 230;
+         mModScroll.x = 22;
+         mModScroll.y = 98;
+         mModScroll.width = 548;
+         mModScroll.height = panelHeight - 242;
          mModView.addChild(mModScroll);
-         mModStatus = GlobalTextStyle.getTextField("读取中…",17,16764006,"left",550,68);
-         mModStatus.x = 20;
-         mModStatus.y = background.height - 140;
+         var statusBg:Quad = new Quad(560,62,0x000000);
+         statusBg.x = 15;
+         statusBg.y = panelHeight - 130;
+         statusBg.alpha = 0.28;
+         statusBg.touchable = false;
+         mModView.addChild(statusBg);
+         mModStatus = GlobalTextStyle.getTextField("读取中…",17,16764006,"left",540,60);
+         mModStatus.x = 25;
+         mModStatus.y = panelHeight - 129;
          mModView.addChild(mModStatus);
-         modFooter("返回",15,background.height - 65,closeModManager);
-         modFooter("导入包",155,background.height - 65,importMod);
-         modFooter("检查目录",295,background.height - 65,scanMods);
-         modFooter("预览保存",435,background.height - 65,previewMods);
+         modFooter("返回",22,panelHeight - 62,closeModManager);
+         modFooter("导入包",160,panelHeight - 62,importMod);
+         modFooter("检查目录",298,panelHeight - 62,scanMods);
+         modFooter("预览保存",436,panelHeight - 62,previewMods);
          SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",onModError);
          SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_service",onModError);
          SendAndSelect.$SendServiceAMFDispatcher.addEventListener("net_timeout",onModError);
@@ -370,7 +404,7 @@ package com.meng52.game.ui.panel
 
       private function modFooter(label:String, px:Number, py:Number, callback:Function) : void
       {
-         var button:LOL_Scale9Button = new LOL_Scale9Button(label,130,48,"UI_btn_normalFun_0000");
+         var button:LOL_Scale9Button = new LOL_Scale9Button(label,132,50,"UI_btn_normalFun_0000");
          button.x = px;
          button.y = py;
          button.addEventListener("triggered",callback);
@@ -525,12 +559,12 @@ package com.meng52.game.ui.panel
             var row:Object = packages[i];
             var selection:Object = selectedMod(row);
             var active:Boolean = selection != null && selection.enabled !== false;
-            modText(String(row.name) + " · " + row.kind + " · " + row.version + "\n作者：" + row.author + " · " + modStatusName(row.status == null ? "installed" : String(row.status),active),16764006,58);
-            if(row.reason) modText(String(row.reason),16736512,64);
+            modText(String(row.name) + "　v" + row.version + "（" + row.kind + "）" + "\n作者：" + row.author + "　状态：" + modStatusName(row.status == null ? "installed" : String(row.status),active),16764006,58);
+            if(row.reason) modText(modReasonText(row),16736512,32);
             if(row.kind == "error" || row.packageId == null || String(row.packageId).length == 0) continue;
             modRow(active ? "当前存档：已启用此包（点击关闭）" : "当前存档：已关闭此包（点击启用）",{"action":"enable","package":i},row.status != "corrupt" && row.status != "incompatible" && row.status != "invalid");
             modRow("展开英雄、玩法及补丁范围",{"action":"details","package":i});
-            if(row.status != "missing") modRow("删除已安装包 · 此版本（先查看影响）",{"action":"uninstall","package":i});
+            if(row.status != "missing") modRow("删除此版本（先查看影响）",{"action":"uninstall","package":i});
          }
          var errors:Array = mModInfo.errors is Array ? mModInfo.errors : [];
          for each(var error:Object in errors) modText(formatModIssue(error),16736512,85);
@@ -549,6 +583,11 @@ package com.meng52.game.ui.panel
       private function renderModPackage(row:Object) : void
       {
          modText(String(row.name) + " / " + row.version + "\n包 ID：" + row.packageId,16764006,65);
+         if(row.reason)
+         {
+            modText(modReasonText(row),16736512,32);
+            modWrappedText("详细信息：" + String(row.reason),11184810);
+         }
          if(selectedMod(row) == null)
          {
             for each(var locked:Object in mModSelections)
@@ -601,7 +640,7 @@ package com.meng52.game.ui.panel
          {
             if(row.description) modText(String(row.description),16777215,85);
             if(row.sourceNotes) modText("来源说明：" + JSON.stringify(row.sourceNotes),16777215,90);
-            modRow("删除已安装包 · 此版本（先查看影响）",{"action":"uninstall"});
+            modRow("删除此版本（先查看影响）",{"action":"uninstall"});
          }
       }
 
@@ -694,6 +733,16 @@ package com.meng52.game.ui.panel
          renderModList();
       }
 
+      // One short Chinese line for the list; the raw server text (with file paths) stays in the package details.
+      private function modReasonText(row:Object) : String
+      {
+         var error:Object = row.error;
+         if(error == null) return String(row.reason);
+         if(error.code == "ModMissingPackage") return "包文件已被移除，请重新导入此版本。";
+         if(error.code == "ModRegistryLimit") return "已安装的包数量达到上限。";
+         return "包校验未通过：" + String(error.message == null ? row.reason : error.message);
+      }
+
       private function formatModIssue(issue:Object) : String
       {
          if(issue == null) return "未知问题";
@@ -731,7 +780,7 @@ package com.meng52.game.ui.panel
          var pages:int = Math.max(1,Math.ceil(mPreviewLineCount / 60));
          mPreviewPage = Math.max(0,Math.min(pages - 1,mPreviewPage));
          beginModRows();
-         modText("预览第 " + (mPreviewPage + 1) + " / " + pages + " 页 · 共 " + mPreviewLineCount + " 行",16764006,40);
+         modText("预览第 " + (mPreviewPage + 1) + " / " + pages + " 页，共 " + mPreviewLineCount + " 行",16764006,40);
          var first:int = mPreviewPage * 60;
          var last:int = Math.min(first + 60,mPreviewLineCount);
          var cursor:int = 0;

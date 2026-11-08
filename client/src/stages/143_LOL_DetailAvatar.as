@@ -124,6 +124,14 @@ package com.meng52.game.ui.element
 
       private var _glowMc:MovieClip;
 
+      // "准备回合：0　冷却回合：3" -> "准备0　冷却3" so it fits one line under each skill.
+      private static function compactSkillTiming104(text:String) : String
+      {
+         if(text == null) return "";
+         var match:Array = text.match(/准备回合[：:]\s*(\d+)\s*冷却回合[：:]\s*(\d+)/);
+         return match ? "准备" + match[1] + "　冷却" + match[2] : text;
+      }
+
       public function LOL_DetailAvatar(param1:*, param2:int = 640, param3:int = 640, param4:* = "show_type_main", param5:Boolean = false, param6:Boolean = true)
       {
          super();
@@ -346,8 +354,8 @@ package com.meng52.game.ui.element
       {
          if(param4 && mDestinyBox)
          {
-            mDestinyBox.x = param2;
-            mDestinyBox.y = param3;
+            mDestinyBox.x = _iconBg.x;
+            mDestinyBox.y = _iconBg.y;
             return;
          }
          if(mDestinyBox == null)
@@ -365,70 +373,123 @@ package com.meng52.game.ui.element
             return;
          }
          mBondEntries104 = param1;
-         var _loc7_:int = 0;
-         var _loc5_:int = int(param1.length);
-         var cellWidth:Number = (_iconBg.width-20)/3;
-         var cellHeight:Number = Math.min(28,(_iconBg.height-20)/Math.max(1,Math.ceil(_loc5_/3)));
-         var _loc6_:LOL_TextField = null;
-         _loc7_ = 0;
-         while(_loc7_ < _loc5_)
+         // Bond chips centred inside the framed box: two columns for up to four bonds,
+         // three otherwise. Each chip is the tap target; a left bar marks active bonds.
+         var count:int = int(param1.length);
+         var cols:int = count <= 4 ? 2 : 3;
+         var rows:int = Math.max(1,Math.ceil(count / cols));
+         var padX:Number = 14;
+         var padY:Number = 10;
+         var gapX:Number = 8;
+         var gapY:Number = 6;
+         var cellWidth:Number = (_iconBg.width - padX * 2 - gapX * (cols - 1)) / cols;
+         var cellHeight:Number = Math.min(32,(_iconBg.height - padY * 2 - gapY * (rows - 1)) / rows);
+         var top:Number = (_iconBg.height - rows * cellHeight - gapY * (rows - 1)) * 0.5;
+         for(var i:int = 0; i < count; i++)
          {
-            _loc6_ = new LOL_TextField(param1[_loc7_].txt,cellWidth-5,cellHeight);
-            _loc6_.fontColor = param1[_loc7_].isOK ? 0x55E889 : 0x888888;
-            _loc6_.fontSize = Math.min(17,cellHeight-4);
-            _loc6_.hAlign = "left";
-            _loc6_.vAlign = "center";
-            _loc6_.x = _loc7_ % 3 * cellWidth;
-            _loc6_.y = Math.floor(_loc7_ / 3) * cellHeight;
-            _loc6_.touchable = false;
-            mDestinyBox.addChild(_loc6_);
-            var hit:Quad = new Quad(cellWidth-5,cellHeight);
-            hit.alpha = 0.01;
-            hit.x = _loc6_.x;
-            hit.y = _loc6_.y;
-            hit.name = String(_loc7_);
-            hit.addEventListener("touch",bondNameTouch104);
-            mDestinyBox.addChild(hit);
-            _loc7_++;
+            var active:Boolean = param1[i].isOK;
+            var cellX:Number = padX + i % cols * (cellWidth + gapX);
+            var cellY:Number = top + Math.floor(i / cols) * (cellHeight + gapY);
+            var chip:Quad = new Quad(cellWidth,cellHeight,0x000000);
+            chip.alpha = active ? 0.45 : 0.3;
+            chip.x = cellX;
+            chip.y = cellY;
+            chip.name = String(i);
+            chip.addEventListener("touch",bondNameTouch104);
+            mDestinyBox.addChild(chip);
+            var bar:Quad = new Quad(4,Math.max(4,cellHeight - 8),active ? 0x00CCFF : 0x666666);
+            bar.x = cellX + 6;
+            bar.y = cellY + 4;
+            bar.touchable = false;
+            mDestinyBox.addChild(bar);
+            var label:LOL_TextField = new LOL_TextField(param1[i].txt,cellWidth - 22,cellHeight);
+            label.fontColor = active ? 0x00CCFF : 0x888888;
+            label.fontSize = Math.min(18,cellHeight - 6);
+            label.hAlign = "left";
+            label.vAlign = "center";
+            label.x = cellX + 16;
+            label.y = cellY;
+            label.touchable = false;
+            mDestinyBox.addChild(label);
          }
-         mDestinyBox.x = param2 - 15;
-         mDestinyBox.y = param3;
+         mDestinyBox.x = _iconBg.x;
+         mDestinyBox.y = _iconBg.y;
       }
 
+      // Bond detail page: status line, then 【组合】 and 【效果】 sections with breathing room.
       public static function bondInfoHtml104(entry:Object) : String
       {
-         var status:String = entry.isOK ? "已激活" : "未激活";
-         var color:String = entry.isOK ? "#167431" : "#777777";
-         var html:String = "<font face='" + GlobalConfig.FONT_0 + "' size='21' color='#2D241A'><font color='" + color + "'>" + status + "</font><br>";
+         var active:Boolean = entry.isOK;
+         var html:String = "<font face='" + GlobalConfig.FONT_0 + "' size='20' color='#2D241A'>";
+         html += "<font size='18' color='" + (active ? "#167431" : "#6F5E4B") + "'>" + (active ? "已激活" : "未激活（组合未凑齐）") + "</font><br><br>";
+         var effectHeader:Boolean = false;
          var lines:Array = String(entry.info).split("\n");
          for each(var line:String in lines)
          {
             if(line == "已激活" || line == "未激活") continue;
             line = line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-            if(line.indexOf("组合：") == 0 || line.indexOf("本人装备") == 0)
-               line = "<font color='#63350D'>" + line + "</font>";
-            else
+            if(line.length == 0) continue;
+            if(line.indexOf("组合：") == 0)
             {
-               line = line.replace(/^([^：]{1,18}：)/,"<font color='#55306B'>$1</font>");
-               line = line.replace(/(\d+(?:\.\d+)?%|[+＋]\d+(?:\.\d+)?)/g,"<font color='#9C3028'>$1</font>");
+               html += "<font color='#8C4513'>【组合】</font><br>" + line.substr(3) + "<br><br>";
+               continue;
             }
+            if(line.indexOf("本人装备") == 0)
+            {
+               html += "<font color='#8C4513'>【装备】</font><br>" + line + "<br><br>";
+               continue;
+            }
+            if(!effectHeader)
+            {
+               html += "<font color='#8C4513'>【效果】</font><br>";
+               effectHeader = true;
+            }
+            // Same copy rules as skill text; "《技能》：仅" is redundant under 【效果】.
+            line = SkillSet.polishInfo104(line).replace(/^《[^》]+》：仅?/,"");
+            line = line.replace(/^([^：]{1,18}：)/,"<font color='#55306B'>$1</font>");
+            line = line.replace(/(\d+(?:\.\d+)?%|[+＋]\d+(?:\.\d+)?)/g,"<font color='#9C3028'>$1</font>");
             html += line + "<br>";
          }
          return html + "</font>";
       }
 
+      // Rough line count (about 22 full-width characters per line at this width) so short
+      // bonds get a compact popup instead of a mostly empty 630px panel.
+      private static function bondInfoLines104(entry:Object) : int
+      {
+         var count:int = 4;
+         for each(var line:String in String(entry.info).split("\n"))
+            count += line.length == 0 ? 1 : Math.ceil(line.length / 22);
+         return count;
+      }
+
       public static function showBondInfo104(entry:Object) : void
       {
          GlobalData.$mGameClassObject.closePopUp();
-         var panel:PanelInforPop = new PanelInforPop(String(entry.txt),bondInfoHtml104(entry),600,630);
+         var height:int = Math.max(380,Math.min(630,164 + bondInfoLines104(entry) * 30));
+         var title:String = String(entry.txt);
+         var panel:PanelInforPop = new PanelInforPop(title,bondInfoHtml104(entry),600,height);
          GlobalData.$mGameClassObject.openPopUp(panel);
+         // Long titles run into the title ornaments: shrink the font and push the
+         // two ornament images (the title's next two siblings) outward.
+         for(var c:int=0;title.length > 4 && c + 2 < panel.numChildren;c++)
+         {
+            var label:LOL_TextField = panel.getChildAt(c) as LOL_TextField;
+            if(label && label.text == title)
+            {
+               label.fontSize = title.length >= 7 ? 22 : 26;
+               panel.getChildAt(c + 1).x -= 36;
+               panel.getChildAt(c + 2).x += 36;
+               break;
+            }
+         }
          for(var i:int=0;i<panel.numChildren;i++)
          {
             var text:ScrollScreenForTxt = panel.getChildAt(i) as ScrollScreenForTxt;
             if(text)
             {
                text.y = 84;
-               text.setRecWH(-1,466);
+               text.setRecWH(-1,height - 164);
                text.clipContent = true;
             }
          }
@@ -859,8 +920,8 @@ package com.meng52.game.ui.element
             _loc9_ = _avatar.skill1 ? _avatar.skill1.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
             _loc25_ = "";
             _loc22_ = "";
-            _loc18_ = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(25021,_avatar.skill0.skillSetData.warmup,_avatar.skill0.skillSetData.cooldown) : GlobalLanguageStr.getLanguageStr(90022);
-            _loc20_ = _avatar.skill1 ? GlobalLanguageStr.getLanguageStr(25021,_avatar.skill1.skillSetData.warmup,_avatar.skill1.skillSetData.cooldown) : GlobalLanguageStr.getLanguageStr(90022);
+            _loc18_ = _avatar.skill0 ? compactSkillTiming104(GlobalLanguageStr.getLanguageStr(25021,_avatar.skill0.skillSetData.warmup,_avatar.skill0.skillSetData.cooldown)) : GlobalLanguageStr.getLanguageStr(90022);
+            _loc20_ = _avatar.skill1 ? compactSkillTiming104(GlobalLanguageStr.getLanguageStr(25021,_avatar.skill1.skillSetData.warmup,_avatar.skill1.skillSetData.cooldown)) : GlobalLanguageStr.getLanguageStr(90022);
             _loc40_.text = _loc6_;
             _loc39_.text = _loc9_;
             _loc11_.text = _loc5_;
@@ -1495,8 +1556,8 @@ package com.meng52.game.ui.element
             _loc6_ = _avatar.skill1 ? _avatar.skill1.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
             _loc54_ = "";
             _loc50_ = "";
-            _loc47_ = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(25021,_avatar.skill0.skillSetData.warmup,_avatar.skill0.skillSetData.cooldown) : "";
-            _loc49_ = _avatar.skill1 ? GlobalLanguageStr.getLanguageStr(25021,_avatar.skill1.skillSetData.warmup,_avatar.skill1.skillSetData.cooldown) : "";
+            _loc47_ = _avatar.skill0 ? compactSkillTiming104(GlobalLanguageStr.getLanguageStr(25021,_avatar.skill0.skillSetData.warmup,_avatar.skill0.skillSetData.cooldown)) : "";
+            _loc49_ = _avatar.skill1 ? compactSkillTiming104(GlobalLanguageStr.getLanguageStr(25021,_avatar.skill1.skillSetData.warmup,_avatar.skill1.skillSetData.cooldown)) : "";
             if(_avatar.skill0 == null && _avatar.skill1 == null && _avatar.avatarData.info != null)
             {
                _loc15_.visible = false;
@@ -1629,7 +1690,7 @@ package com.meng52.game.ui.element
             _quadSkillPassive.name = _avatar && _avatar.skillB ? _avatar.skillB.skillSetData.id : "";
             _uiMain.addChild(_quadSkillPassive);
             _quadSkillPassive.addEventListener("touch",quadSkill_Touch);
-            _loc21_ = GlobalLanguageStr.getLanguageStr(25021,_avatar.skillB.skillSetData.warmup,_avatar.skillB.skillSetData.cooldown);
+            _loc21_ = compactSkillTiming104(GlobalLanguageStr.getLanguageStr(25021,_avatar.skillB.skillSetData.warmup,_avatar.skillB.skillSetData.cooldown));
             txtSkillDescPassive = new LOL_TextField(_loc21_,150,50);
             txtSkillDescPassive.style(GlobalConfig.FONT_0,15,1118481,"left");
             txtSkillDescPassive.x = skillPassiveBtn.x;

@@ -17,7 +17,7 @@ class UILayers103Tests(unittest.TestCase):
         previous=(stages/'016_UiLayer.as').read_text('utf-8')
         current=(stages/'163_UiLayer.as').read_text('utf-8')
         names=re.findall(r'function\s+(\w+)\(',previous)
-        for name in set(names)-{'UiLayer','addRound','refreashRound','clear'}:
+        for name in set(names)-{'UiLayer','addRound','refreashRound','clear','addWinSign'}:
             with self.subTest(method=name):
                 self.assertEqual(method_body(previous,name),method_body(current,name))
 

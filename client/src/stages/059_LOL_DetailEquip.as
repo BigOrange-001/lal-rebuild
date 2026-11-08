@@ -29,7 +29,7 @@ package com.meng52.game.ui.element
       {
          if(!stage || !mLockButton || !_data || !(_data is Object)) return;
          var row:Object = GlobalData.$userData.my_equips[_data.id];
-         mLockButton.text = row && (row.lock || row.locked) ? "已上锁 · 解锁" : "上锁保护";
+         mLockButton.text = row && (row.lock || row.locked) ? "解除上锁" : "上锁保护";
          mLockButton.touchable = true;
       }
 

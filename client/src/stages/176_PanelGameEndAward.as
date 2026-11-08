@@ -34,6 +34,7 @@ package com.meng52.game.ui.panel
    import com.meng52.utils.HtmlTextFormat;
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
+   import feathers.display.Scale3Image;
    import flash.geom.Rectangle;
    import flash.utils.setTimeout;
    import starling.display.DisplayObject;
@@ -122,11 +123,13 @@ package com.meng52.game.ui.panel
       {
          statisticsSnapshot104 = [];
          for each(var row:Object in Avatar.statisticsRows104)
-            statisticsSnapshot104.push({name:row.name,team:row.team,damage:row.damage,healing:row.healing,taken:row.taken});
+            statisticsSnapshot104.push({name:row.name,team:row.team,res:statisticsRes104(row.unit),damage:row.damage,healing:row.healing,taken:row.taken});
          if(statisticsButton104) statisticsButton104.removeFromParent(true);
-         statisticsButton104 = new LOL_Scale9Button("战斗数据",150,70,"UI_btn_normalFun_0000");
+         statisticsButton104 = new LOL_Scale9Button("战斗数据",170,56,"UI_btn_enterGame_0_0000");
+         statisticsButton104.fontSize = 22;
          statisticsButton104.x = (GlobalData.$mStageWidth-statisticsButton104.width)/2;
-         statisticsButton104.y = 600;
+         // Sit just above the replay/continue row so reward cards stay uncovered.
+         statisticsButton104.y = int(GameMapConfig.SCREEN_HEIGHT * 0.66 + 8);
          statisticsButton104.addEventListener("triggered",openStatistics104);
          mBox_btn.addChild(statisticsButton104);
       }
@@ -136,6 +139,13 @@ package com.meng52.game.ui.panel
          event.stopPropagation();
          statisticsPage104 = 0;
          showStatistics104();
+      }
+
+      private static function statisticsRes104(unit:Avatar) : String
+      {
+         try { return unit && unit.avatarData && unit.avatarData.res ? String(unit.avatarData.res) : ""; }
+         catch(resError:Error) {}
+         return "";
       }
 
       private static function statisticsNumber104(value:Number) : String
@@ -161,12 +171,43 @@ package com.meng52.game.ui.panel
          showStatistics104();
       }
 
-      private function statisticsNav104(panel:Sprite, label:String, key:String, x:Number, y:Number, width:Number) : void
+      private function statisticsNav104(panel:Sprite, label:String, key:String, x:Number, y:Number, width:Number, selected:Boolean) : void
       {
-         var button:LOL_Scale9Button = new LOL_Scale9Button(label,width,38,"UI_btn_3_0000",false);
+         var tab:Boolean = key == "team1" || key == "team2";
+         var button:LOL_Scale9Button = tab ? new LOL_Scale9Button(label,width,48,selected ? "UI_btn_smallFun_1_0000" : "UI_btn_enterGame_0_0000") : new LOL_Scale9Button(label,width,42,"UI_btn_enterGame_0_0000");
          button.name = key; button.x = x; button.y = y;
+         if(tab) button.fontSize = 21;
          button.addEventListener("triggered",statisticsNavigate104);
          panel.addChild(button);
+      }
+
+      private function statisticsIcon104(panel:Sprite, res:String, x:Number, y:Number) : void
+      {
+         var frame:DisplayObject = GlobalFunction.createImage("UI_bg_card_2_0003");
+         frame.width = 60; frame.height = 68; frame.x = x; frame.y = y; frame.touchable = false;
+         panel.addChild(frame);
+         if(!res) return;
+         try
+         {
+            if(GlobalFunction.getTexture(res + "_icon0000") == null) return;
+            var icon:DisplayObject = GlobalFunction.getAvatarIcon(res);
+            var scale:Number = Math.min(52/icon.width,60/icon.height);
+            icon.scaleX = icon.scaleY = scale;
+            icon.x = x + (60 - icon.width)/2; icon.y = y + (68 - icon.height)/2; icon.touchable = false;
+            panel.addChild(icon);
+         }
+         catch(iconError:Error) {}
+      }
+
+      private function statisticsBar104(panel:Sprite, x:Number, y:Number, width:Number, fraction:Number, color:uint) : void
+      {
+         var track:Scale3Image = GlobalFunction.createScale3Image("UI_bar_exp_8_0000",10,10,width);
+         track.height = 14; track.x = x; track.y = y; track.touchable = false;
+         panel.addChild(track);
+         if(fraction <= 0) return;
+         var bar:Quad = new Quad(Math.max(2,(width-6)*fraction),8,color);
+         bar.x = x+3; bar.y = y+3; bar.touchable = false;
+         panel.addChild(bar);
       }
 
       private function showStatistics104() : void
@@ -175,7 +216,8 @@ package com.meng52.game.ui.panel
          var totals:Array = [0,0,0];
          var keys:Array = ["damage","healing","taken"];
          var labels:Array = ["伤害","治疗","承伤"];
-         var colors:Array = [0xA74228,0x287340,0x375A8C];
+         var colors:Array = [0xB2412A,0x2E7D43,0x3A5F94];
+         var rankColors:Array = [0xC58A16,0x7D8691,0xA0592B];
          for each(var row:Object in statisticsSnapshot104)
          {
             if(row.team != statisticsTeam104) continue;
@@ -185,40 +227,55 @@ package com.meng52.game.ui.panel
          var pages:int = Math.max(1,Math.ceil(rows.length/5));
          statisticsPage104 = Math.max(0,Math.min(pages-1,statisticsPage104));
          GlobalData.$mGameClassObject.closePopUp();
-         var panel:PanelInforPop = new PanelInforPop("战斗数据","",600,680);
+         var panel:PanelInforPop = new PanelInforPop("战斗数据","",600,740);
          GlobalData.$mGameClassObject.openPopUp(panel);
          for(var child:int=panel.numChildren-1;child>=0;child--)
             if(panel.getChildAt(child) is ScrollScreenForTxt) panel.removeChildAt(child,true);
-         statisticsNav104(panel,statisticsTeam104 == 1 ? "【我方阵容】" : "我方阵容","team1",50,82,235);
-         statisticsNav104(panel,statisticsTeam104 == 2 ? "【敌方阵容】" : "敌方阵容","team2",310,82,235);
-         for(k=0;k<3;k++) statisticsText104(panel,labels[k]+" "+statisticsNumber104(totals[k]),50+k*168,128,165,18,colors[k]);
+         statisticsNav104(panel,"我方阵容","team1",50,76,245,statisticsTeam104 == 1);
+         statisticsNav104(panel,"敌方阵容","team2",305,76,245,statisticsTeam104 == 2);
+         for(k=0;k<3;k++)
+         {
+            var total:TextField = GlobalTextStyle.getTextField(labels[k]+"总计  "+statisticsNumber104(totals[k]),18,colors[k],"center",166,26);
+            total.x = 50+k*167; total.y = 134; total.touchable = false;
+            panel.addChild(total);
+         }
+         var rule:Quad = new Quad(500,1,0x8A6A43);
+         rule.x = 50; rule.y = 164; rule.alpha = 0.5; rule.touchable = false;
+         panel.addChild(rule);
          for(var i:int=0;i<5 && statisticsPage104*5+i<rows.length;i++)
          {
-            row = rows[statisticsPage104*5+i];
-            var y:Number = 166+i*82;
-            var background:Quad = new Quad(500,76,i%2 == 0 ? 0xE4BF83 : 0xD4AA6F);
-            background.x=50; background.y=y; background.alpha=0.55; background.touchable=false; panel.addChild(background);
-            statisticsText104(panel,String(statisticsPage104*5+i+1)+". "+row.name,60,y+2,480,21,0x44301B);
+            var rank:int = statisticsPage104*5+i;
+            row = rows[rank];
+            var y:Number = 170+i*80;
+            if(i%2 == 0)
+            {
+               var stripe:Quad = new Quad(500,78,0x6B4A25);
+               stripe.x = 50; stripe.y = y; stripe.alpha = 0.08; stripe.touchable = false;
+               panel.addChild(stripe);
+            }
+            statisticsIcon104(panel,row.res,56,y+5);
+            var rankText:TextField = GlobalTextStyle.getTextField(String(rank+1),22,rank < 3 ? rankColors[rank] : 0x6B5236,"center",30,28);
+            rankText.bold = true; rankText.x = 122; rankText.y = y+4; rankText.touchable = false;
+            panel.addChild(rankText);
+            statisticsText104(panel,row.name,154,y+5,390,20,0x3E2A16);
             for(k=0;k<3;k++)
             {
                var value:Number = Number(row[keys[k]]);
                var fraction:Number = totals[k]>0 ? Math.min(1,value/totals[k]) : 0;
-               var x:Number = 60+k*164;
-               statisticsText104(panel,statisticsNumber104(value)+" · "+(fraction*100).toFixed(1)+"%",x,y+29,160,17,colors[k]);
-               var track:Quad = new Quad(144,7,0x70583B);
-               track.x=x; track.y=y+61; track.alpha=0.25; track.touchable=false; panel.addChild(track);
-               if(fraction>0)
-               {
-                  var bar:Quad = new Quad(Math.max(1,144*fraction),7,colors[k]);
-                  bar.x=x; bar.y=y+61; bar.touchable=false; panel.addChild(bar);
-               }
+               var x:Number = 126+k*142;
+               statisticsText104(panel,statisticsNumber104(value)+"  "+(fraction*100).toFixed(1)+"%",x,y+32,136,16,colors[k]);
+               statisticsBar104(panel,x,y+57,132,fraction,colors[k]);
             }
          }
-         if(rows.length==0) statisticsText104(panel,"暂无参战单位",180,260,260,22,0x70583B);
-         statisticsText104(panel,"召唤物计入本体 · 治疗不含溢出 · 承伤含护盾吸收",50,580,510,17,0x614C32);
-         if(statisticsPage104>0) statisticsNav104(panel,"上一页","prev",60,618,125);
-         statisticsText104(panel,String(statisticsPage104+1)+" / "+pages,270,620,100,20,0x44301B);
-         if(statisticsPage104+1<pages) statisticsNav104(panel,"下一页","next",415,618,125);
+         if(rows.length==0) statisticsText104(panel,"暂无参战单位",240,300,200,22,0x70583B);
+         var note:TextField = GlobalTextStyle.getTextField("召唤物计入本体，治疗不含溢出，承伤含护盾吸收",16,0x5E3B22,"center",500,24);
+         note.x = 50; note.y = 578; note.touchable = false;
+         panel.addChild(note);
+         if(statisticsPage104>0) statisticsNav104(panel,"上一页","prev",60,616,125,false);
+         var pager:TextField = GlobalTextStyle.getTextField(String(statisticsPage104+1)+" / "+pages,20,0x44301B,"center",120,30);
+         pager.x = 240; pager.y = 620; pager.touchable = false;
+         panel.addChild(pager);
+         if(statisticsPage104+1<pages) statisticsNav104(panel,"下一页","next",415,616,125,false);
       }
 
       public function PanelGameEndAward()
@@ -2350,16 +2407,28 @@ package com.meng52.game.ui.panel
          var shade:Quad = new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0x000000);
          shade.alpha = 0.72;
          mLimitBreakPanel.addChild(shade);
-         var width:Number = Math.min(500,GlobalData.$mStageWidth - 30);
-         var height:Number = 132 + candidates.length * 55;
-         var box:Quad = new Quad(width,height,0x282239);
+         var width:Number = Math.min(520,GlobalData.$mStageWidth - 30);
+         var height:Number = 176 + candidates.length * 82;
+         var box:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_1_0000",width,height,new Rectangle(83,94,88,100));
          box.x = (GlobalData.$mStageWidth - width) * 0.5;
          box.y = (GlobalData.$mStageHeight - height) * 0.5;
+         box.touchable = false;
          mLimitBreakPanel.addChild(box);
-         var heading:TextField = GlobalTextStyle.getTextField("基兰：选择一张卡突破极限",24,0xFFD46D,"center",width - 20,42);
+         var plate:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_3_0000",width - 90,40,new Rectangle(90,8,82,30));
+         plate.x = box.x + 45;
+         plate.y = box.y + 12;
+         plate.touchable = false;
+         mLimitBreakPanel.addChild(plate);
+         var heading:TextField = GlobalTextStyle.getTextField("突破极限",26,16764006,"center",width - 20,40);
          heading.x = box.x + 10;
-         heading.y = box.y + 10;
+         heading.y = box.y + 12;
+         heading.touchable = false;
          mLimitBreakPanel.addChild(heading);
+         var hint:TextField = GlobalTextStyle.getTextField("基兰的馈赠：选择一张卡，等级上限提升至 125",17,0xD9CBB0,"center",width - 40,28);
+         hint.x = box.x + 20;
+         hint.y = box.y + 62;
+         hint.touchable = false;
+         mLimitBreakPanel.addChild(hint);
          for(var i:int = 0;i < candidates.length;i++)
          {
             var iid:String = String(candidates[i]);
@@ -2368,16 +2437,19 @@ package com.meng52.game.ui.panel
             var aid:String = iid.split("|")[0];
             var definition:Object = GlobalData.$mConfig_avatar[aid];
             var heroName:String = definition && definition.name ? String(definition.name) : aid;
-            var choice:LOL_Scale9Button = new LOL_Scale9Button(heroName + "  Lv." + hero.lv + "（上限→125）",width - 40,49,"UI_btn_normalFun_0000");
+            var rowY:Number = box.y + 98 + i * 82;
+            statisticsIcon104(mLimitBreakPanel,definition && definition.res ? String(definition.res) : aid,box.x + 26,rowY);
+            var choice:LOL_Scale9Button = new LOL_Scale9Button(heroName + "   Lv." + hero.lv,width - 126,60,"UI_btn_normalFun_0000");
             choice.name = iid;
-            choice.x = box.x + 20;
-            choice.y = box.y + 54 + i * 55;
+            choice.x = box.x + 100;
+            choice.y = rowY + 4;
+            choice.fontSize = 21;
             choice.addEventListener("triggered",onLimitBreakChoice);
             mLimitBreakPanel.addChild(choice);
          }
-         var later:LOL_Scale9Button = new LOL_Scale9Button("稍后",150,46,"UI_btn_normalFun_0000");
+         var later:LOL_Scale9Button = new LOL_Scale9Button("稍后再选",160,50,"UI_btn_3_0000",false);
          later.x = box.x + (width - later.width) * 0.5;
-         later.y = box.y + height - 54;
+         later.y = box.y + height - 66;
          later.addEventListener("triggered",closeLimitBreakPanel);
          mLimitBreakPanel.addChild(later);
          addChild(mLimitBreakPanel);

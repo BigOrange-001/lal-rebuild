@@ -252,10 +252,10 @@ package com.meng52.game.ui.panel
 
       public static function spendingBannerTitle(param1:Object) : String
       {
-         if(param1 && param1.is_gm === true) return "GM · 今日可充值：无限制";
+         if(param1 && param1.is_gm === true) return "GM：今日可充值无限制";
          if(param1 && param1.remaining_yuan != null)
          {
-            return String(param1.label || "消费档位") + " · 今日剩余：" + int(param1.remaining_yuan) + "元";
+            return String(param1.label || "消费档位") + "（今日剩余 " + int(param1.remaining_yuan) + " 元）";
          }
          return "正在查询今日剩余额度…";
       }

@@ -1186,11 +1186,9 @@ package com.meng52.game.ui.element
       private function renderAdventureTask(row:Object) : void
       {
          var cardWidth:Number = GlobalData.$mStageWidth - 24;
-         _bg = GlobalFunction.createScale9Image("UI_bg_9slice_4_0000",cardWidth,208,new Rectangle(110,60,30,15));
+         _bg = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",cardWidth,208,new Rectangle(110,55,70,20));
          addChild(_bg);
-         var surface:Quad = new Quad(cardWidth - 18,190,0x282B30);
-         surface.x = surface.y = 9;surface.touchable = false;addChild(surface);
-         var title:TextField = GlobalFunction.createTextField(cardWidth - 32,32,String(row.title),"",22,0xFFD684,true);
+         var title:TextField = GlobalFunction.createTextField(cardWidth - 32,32,String(row.title),"",22,0x7A3A12,true);
          title.x = 16;
          title.y = 12;
          title.autoScale = true;
@@ -1198,29 +1196,29 @@ package com.meng52.game.ui.element
          title.touchable = false;
          addChild(title);
          addAdventureRewardIcon(row);
-         var progress:TextField = GlobalFunction.createTextField(cardWidth - 116,28,String(row.progress_text),"",18,row.claimable ? 0xA9DEA1 : 0xBAC2CC);
+         var progress:TextField = GlobalFunction.createTextField(cardWidth - 116,28,String(row.progress_text),"",18,row.claimable ? 13056 : 0x5E3B22);
          progress.x = 100;
          progress.y = 54;
          progress.autoScale = true;
          progress.hAlign = "left";
          progress.touchable = false;
          addChild(progress);
-         var track:Quad = new Quad(cardWidth - 116,8,0x11161C);
+         var track:DisplayObject = GlobalFunction.createScale3Image("UI_bar_exp_8_0000",10,10,cardWidth - 116);
+         track.height = 14;
          track.x = 100;
-         track.y = 87;
-         track.alpha = 0.8;
+         track.y = 84;
          track.touchable = false;
          addChild(track);
          var ratio:Number = Number(row.progress_ratio);
          if(isNaN(ratio)) ratio = row.claimed || row.claimable ? 1 : 0;
          ratio = Math.max(0,Math.min(1,ratio));
-         adventureProgress = new Quad(cardWidth - 116,8,row.claimable ? 0x8CB968 : 0xBB9952);
-         adventureProgress.x = 100;
+         adventureProgress = new Quad(cardWidth - 122,8,row.claimable ? 0x4E9A2E : 0xD39A36);
+         adventureProgress.x = 103;
          adventureProgress.y = 87;
          adventureProgress.scaleX = ratio;
          adventureProgress.touchable = false;
          addChild(adventureProgress);
-         var reward:TextField = GlobalFunction.createTextField(cardWidth - 116,48,"奖励：" + String(row.reward_text),"",17,0xE5D9C1);
+         var reward:TextField = GlobalFunction.createTextField(cardWidth - 116,48,"奖励：" + String(row.reward_text),"",17,0x4B2C1B);
          reward.x = 100;
          reward.y = 102;
          reward.autoScale = true;
@@ -1228,7 +1226,7 @@ package com.meng52.game.ui.element
          reward.vAlign = "top";
          reward.touchable = false;
          addChild(reward);
-         var state:TextField = GlobalFunction.createTextField(cardWidth - 180,28,row.claimed ? "奖励已领取" : row.claimable ? "奖励已备好，点击领取" : row.kind == "daily" ? "完成任务即可领取" : "达成条件后解锁","",16,row.claimable ? 0xA9DEA1 : 0xBAC2CC);
+         var state:TextField = GlobalFunction.createTextField(cardWidth - 180,28,row.claimed ? "奖励已领取" : row.claimable ? "奖励已备好，点击领取" : row.kind == "daily" ? "完成任务即可领取" : "达成条件后解锁","",16,row.claimable ? 13056 : 0x6B4A2B);
          state.x = 16;
          state.y = 163;
          state.autoScale = true;
@@ -1292,7 +1290,7 @@ package com.meng52.game.ui.element
          icon.y = 57 + (76 - icon.height) / 2;
          addChild(icon);
          var caption:String = reward && reward.random_non_skin_orange_hero ? "随机橙卡" : reward && reward.random_normal_orange_equipment ? "随机橙装" : "任务奖励";
-         var label:TextField = GlobalFunction.createTextField(80,24,caption,"",14,0xBFC1C4);
+         var label:TextField = GlobalFunction.createTextField(80,24,caption,"",14,0x5E3B22);
          label.x = 14;
          label.y = 133;
          label.autoScale = true;

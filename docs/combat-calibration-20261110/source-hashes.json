@@ -1,0 +1,11 @@
+{
+  "server/combat_rules.py": "0aa3b8e5537b36300d6803c23a7f300113e8ae4c50d04ce6091778bde9eea8fe",
+  "server/combat_math.py": "edaebbe4e94e8b60dc56ce98aa8b524e000c42b2f423905e3f5c3a3e71c9196e",
+  "server/battle_engine.py": "6d77242af0b9f7a283db82dacc9f3feb981102c3b20cabcfa662a09fd51e2074",
+  "server/manual_ability_sim.py": "f30615d9988737c721fbe47e61bb5b3391352a22aa6a32e0e23e95d9ab94b5e3",
+  "server/gateway.py": "0b242ff5475374fd5dcb5ffe22b14db157dec9c529b656eb1c63d52360b7ba52",
+  "scripts/calibrate_combat_duels_104.py": "e6215fb62a5ec593244c8287e34cbfb789bd6848e9445e73a760cc639dad481b",
+  "scripts/calibrate_combat_rankings_104.py": "d36df13aebc32c00c693f766deb325d9735dd552079155249054a8abba551fcc",
+  "scripts/verify_combat_legacy_104.py": "8939e47e1da18df84c90307161288b5681b571184e439301424140c538f99734",
+  "config/reconstruction/combat-rules-1.0.4.json": "210063a549238f7cd83235e2938667a52ff7991b2f0a649ee92bc5466551a601"
+}

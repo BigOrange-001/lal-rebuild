@@ -1,0 +1,918 @@
+[
+  {
+    "aid": "A_1140_6",
+    "ap": 180575,
+    "morph": 0,
+    "buffs": {},
+    "de_ma": 153481,
+    "de_ph": 153631,
+    "hp": 3890775,
+    "hp_max": 3890775,
+    "isme": true,
+    "leader": 1,
+    "line": 0,
+    "lv": 125,
+    "new_4attrs": {
+      "hit": 16660,
+      "flee": 16660,
+      "crit": 33320,
+      "tough": 16660
+    },
+    "pos": 1500,
+    "slv": 10,
+    "tpl": [
+      0,
+      2,
+      1,
+      250,
+      600
+    ],
+    "talent": "T_01_07",
+    "skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985114010_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1140_0",
+          1,
+          "FX60_MAGIC",
+          1.3606632056999999
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "leader_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 2,
+      "pl": [
+        2,
+        3,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985114011_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1140_1",
+          1,
+          "FX60_MAGIC",
+          3.693228702,
+          1.166282748,
+          0.583141374,
+          0.3
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "book_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": null,
+      "skid": "S_96008_7",
+      "skills": [
+        [
+          "book_passive",
+          0.45,
+          "penetration"
+        ]
+      ],
+      "actionTargetPolicies": [],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null,
+      "slv": 10
+    },
+    "skillB": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985114013_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1140_2",
+          1,
+          "FX60_MAGIC",
+          1.749424122,
+          0.97190229
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "skill_diff": 20,
+    "modUnitType": "hero",
+    "instance_id": "A_1140_6|93",
+    "phase": 3,
+    "culture_schema": "weighted-v2",
+    "bonds_104": [],
+    "equipment_bonds_104": [],
+    "limit_break": 1,
+    "growth_stats_applied": true
+  },
+  {
+    "aid": "A_1210_6",
+    "ap": 345264,
+    "morph": 0,
+    "buffs": {},
+    "de_ma": 115066,
+    "de_ph": 113974,
+    "hp": 3378010,
+    "hp_max": 3378010,
+    "isme": true,
+    "leader": 1,
+    "line": 0,
+    "lv": 125,
+    "new_4attrs": {
+      "hit": 16660,
+      "flee": 16660,
+      "crit": 33320,
+      "tough": 16660
+    },
+    "pos": 1500,
+    "slv": 10,
+    "tpl": [
+      0,
+      4,
+      1,
+      350,
+      300
+    ],
+    "talent": "T_01_07",
+    "skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121010_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1210_0",
+          1,
+          "FX60_MAGIC",
+          1.2881229101,
+          1.5457474914000002,
+          1.2
+        ],
+        [
+          "caster_hp_shield",
+          0.0515249164,
+          1,
+          "FX60_SHIELD"
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self",
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1
+      ],
+      "actionTargetGroups": [
+        null,
+        null
+      ],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "leader_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 1,
+      "pl": [
+        1,
+        3,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121011_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1210_1",
+          1,
+          "FX60_MAGIC",
+          3.091494984,
+          4.637242476,
+          0.3,
+          0.5
+        ],
+        [
+          "purify",
+          1,
+          "FX60_PURIFY"
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self",
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1
+      ],
+      "actionTargetGroups": [
+        null,
+        null
+      ],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "book_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": null,
+      "skid": "S_96008_7",
+      "skills": [
+        [
+          "book_passive",
+          0.45,
+          "penetration"
+        ]
+      ],
+      "actionTargetPolicies": [],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null,
+      "slv": 10
+    },
+    "skillB": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121013_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1210_2",
+          1,
+          "FX60_MAGIC",
+          2.57624582,
+          0.4508430185
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "skill_diff": 20,
+    "modUnitType": "hero",
+    "instance_id": "A_1210_6|105",
+    "phase": 3,
+    "culture_schema": "weighted-v2",
+    "bonds_104": [
+      "b081"
+    ],
+    "equipment_bonds_104": [],
+    "limit_break": 1,
+    "growth_stats_applied": true
+  },
+  {
+    "aid": "A_1216_6",
+    "ap": 280572,
+    "morph": 0,
+    "buffs": {},
+    "de_ma": 108882,
+    "de_ph": 109467,
+    "hp": 3271147,
+    "hp_max": 3271147,
+    "isme": true,
+    "leader": 1,
+    "line": 0,
+    "lv": 125,
+    "new_4attrs": {
+      "hit": 8330,
+      "flee": 24990,
+      "crit": 33320,
+      "tough": 16660
+    },
+    "pos": 1500,
+    "slv": 10,
+    "tpl": [
+      0,
+      2,
+      2,
+      350,
+      300
+    ],
+    "talent": "T_01_07",
+    "skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121610_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1216_0",
+          1,
+          "FX60_MAGIC",
+          1.4999573339999999,
+          1.9999431114,
+          0.5
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "leader_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 1,
+      "pl": [
+        1,
+        3,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121611_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1216_1",
+          1,
+          "FX60_MAGIC",
+          1.66661926,
+          0.25,
+          0.5
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "book_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 1,
+      "pl": [
+        1,
+        4,
+        3000,
+        0,
+        -1,
+        1
+      ],
+      "skid": "S_96506_5",
+      "skills": [
+        [
+          "caster_ap_shield",
+          5.0,
+          3,
+          "FX_S9002_SHIELD"
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_lane_all"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null,
+      "slv": 10
+    },
+    "skillB": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121613_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1216_2",
+          1,
+          "FX60_MAGIC",
+          1.66661926,
+          0.3,
+          0.4,
+          0.5
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "skill_diff": 20,
+    "modUnitType": "hero",
+    "instance_id": "A_1216_6|111",
+    "phase": 3,
+    "culture_schema": "weighted-v2",
+    "bonds_104": [],
+    "equipment_bonds_104": [],
+    "limit_break": 1,
+    "growth_stats_applied": true
+  },
+  {
+    "aid": "A_1218_6",
+    "ap": 180287,
+    "morph": 0,
+    "buffs": {},
+    "de_ma": 195792,
+    "de_ph": 197874,
+    "hp": 4152976,
+    "hp_max": 4152976,
+    "isme": true,
+    "leader": 1,
+    "line": 0,
+    "lv": 125,
+    "new_4attrs": {
+      "hit": 8330,
+      "flee": 8330,
+      "crit": 41650,
+      "tough": 24990
+    },
+    "pos": 1500,
+    "slv": 10,
+    "tpl": [
+      0,
+      2,
+      2,
+      250,
+      600
+    ],
+    "talent": "T_01_07",
+    "skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        1,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121810_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1218_0",
+          1,
+          "FX60_MAGIC",
+          2.2562683806,
+          0.2632313117
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "leader_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 2,
+      "pl": [
+        2,
+        4,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121811_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1218_1",
+          1,
+          "FX60_MAGIC",
+          1.805014704
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "book_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": null,
+      "skid": "S_96008_7",
+      "skills": [
+        [
+          "book_passive",
+          0.45,
+          "penetration"
+        ]
+      ],
+      "actionTargetPolicies": [],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null,
+      "slv": 10
+    },
+    "skillB": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985121813_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1218_2",
+          1,
+          "FX60_MAGIC",
+          2.707522056,
+          1.805014704
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "skill_diff": 20,
+    "modUnitType": "hero",
+    "instance_id": "A_1218_6|113",
+    "phase": 3,
+    "culture_schema": "weighted-v2",
+    "bonds_104": [],
+    "equipment_bonds_104": [],
+    "limit_break": 1,
+    "growth_stats_applied": true
+  },
+  {
+    "aid": "A_1209_6",
+    "ap": 89755,
+    "morph": 0,
+    "buffs": {},
+    "de_ma": 198390,
+    "de_ph": 196207,
+    "hp": 5041674,
+    "hp_max": 5041674,
+    "isme": true,
+    "leader": 1,
+    "line": 0,
+    "lv": 125,
+    "new_4attrs": {
+      "hit": 11330,
+      "flee": 16660,
+      "crit": 44650,
+      "tough": 16660
+    },
+    "pos": 1500,
+    "slv": 10,
+    "tpl": [
+      0,
+      4,
+      2,
+      250,
+      600
+    ],
+    "talent": "T_01_07",
+    "skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985120910_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1209_0",
+          1,
+          "FX60_MAGIC",
+          1.6960842,
+          0.42402105
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "leader_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 1,
+      "pl": [
+        1,
+        3,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985120911_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1209_1",
+          1,
+          "FX60_MAGIC"
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "book_skill": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": null,
+      "skid": "S_96008_7",
+      "skills": [
+        [
+          "book_passive",
+          0.45,
+          "penetration"
+        ]
+      ],
+      "actionTargetPolicies": [],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null,
+      "slv": 10
+    },
+    "skillB": {
+      "modCondition": null,
+      "modEffectSequence": 0,
+      "cd": 0,
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skid": "S_985120913_6",
+      "skills": [
+        [
+          "manual_ability",
+          "skin2_1209_2",
+          1,
+          "FX60_MAGIC",
+          1.52647578,
+          0.8480421
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetPolicyArgs": [],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [],
+      "manualSummonPolicy": null,
+      "manualClonePolicy": null,
+      "captainSummonMultiplier": 1,
+      "equipment_source_skill_104": null,
+      "chainDot": null
+    },
+    "skill_diff": 20,
+    "modUnitType": "hero",
+    "instance_id": "A_1209_6|104",
+    "phase": 3,
+    "culture_schema": "weighted-v2",
+    "bonds_104": [
+      "b081"
+    ],
+    "equipment_bonds_104": [],
+    "limit_break": 1,
+    "growth_stats_applied": true
+  }
+]

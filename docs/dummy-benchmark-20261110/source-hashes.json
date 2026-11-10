@@ -1,0 +1,6 @@
+{
+  "scripts\\benchmark_training_dummy_104.py": "a6ea875204217b31334cd6dbf91b06a9349a266066e36083b77f2c2e9ec30714",
+  "scripts\\report_training_dummy_104.py": "3e72c75b0bbe1a26523d00af63c7e34a0dab6ac59234a98662ca72daa8145602",
+  "scripts\\test_training_dummy_104.py": "5675cfcd37c02f1b8d005d2d19c2c4629eee38c218450f20ce17e4ada58736da",
+  "server\\battle_engine.py": "d4c06b78db8ee7c787df90e59de0a0c1561ff8348f9e78bee9d1ac9119738ba1"
+}

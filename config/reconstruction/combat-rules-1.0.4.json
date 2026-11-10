@@ -1,0 +1,18 @@
+{
+  "model": "legacy",
+  "reduction_exponent": 1.5,
+  "defense_attack_midpoint": 0.7,
+  "miss_slope": 40,
+  "crit_slope": 60,
+  "true_skill_rate": 0.8,
+  "attack_overrides": {
+    "1": 0.5,
+    "4": 8,
+    "5": 15,
+    "6": 35,
+    "7": 60,
+    "15": 0,
+    "16": 0,
+    "21": 0.66
+  }
+}

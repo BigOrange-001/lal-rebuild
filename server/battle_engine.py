@@ -7,7 +7,8 @@ offline tuning. It does not claim bit-for-bit ActionScript parity.
 import copy
 import math
 from contextlib import nullcontext
-from combat_math import level_stats
+from combat_math import level_stats, defense_damage, damage_before_final, to_int
+from combat_rules import attack_parameters, ratio_enabled
 from combat_rng import CombatRandom
 from mod_policy import (runtime as mod_runtime, definition_id, base_aid,
                         ensure_available, effective_digest)
@@ -197,10 +198,6 @@ def serialize_player_team(config, profile, team_num, submitted_team, attributes_
     return result
 
 
-# Original Avatar constants (137_Avatar.as:832/834/836).
-_MIN_DAMAGE_RATE = 0.1
-_REAL_DAMAGE_RATE = 0.3
-
 # Buff.LIST_BUFF / Buff.LIST_DEBUFF (140_Buff.as:57/59).
 _GOOD_BUFFS = frozenset(["shield", "strong", "taunt", "bless", "steel", "armor",
                          "hitup", "fleeup", "critup", "toughup", "purify", "book_penetration"])
@@ -300,6 +297,8 @@ class ReferenceBattle:
         self._config = config if isinstance(config, dict) else {}
         simple = self._config.get("system_simple", {}) if isinstance(self._config, dict) else {}
         attack = simple.get("attack", []) if isinstance(simple, dict) else []
+        if self._real_damage_rate <= 0:
+            raise ValueError('true damage rate must be positive')
         battle = simple.get("battle", []) if isinstance(simple, dict) else []
         # attack[18] is the poison hpMax-fraction term; attack[20] the bless
         # revival fraction (137_Avatar.as:2908 / 5707).
@@ -329,6 +328,28 @@ class ReferenceBattle:
         # Serial stamped onto stacked manual-DOT layers so a re-application with
         # stack=true becomes its own layer instead of merging (137:2392).
         self._manual_dot_serial = 0
+
+    @property
+    def _combat_rules(self):
+        return self._config.get('combat_rules') or {}
+
+    @property
+    def _attack(self):
+        # Legacy callers can install/replace attack[] after construction. Keep
+        # those live reads; candidate overrides must still leave it untouched.
+        if ratio_enabled(self._combat_rules):
+            return attack_parameters(self._config)
+        return self._config.get('system_simple', {}).get('attack') or []
+
+    @property
+    def _min_damage_rate(self):
+        attack = self._attack
+        return float(attack[0]) if attack else 0.1
+
+    @property
+    def _real_damage_rate(self):
+        attack = self._attack
+        return float(attack[1]) if len(attack)>1 else 0.3
 
     # ---------------------------------------------------------------- buffs
 
@@ -647,7 +668,7 @@ class ReferenceBattle:
             return 0
         if dot_kind:
             # DOTs bypass countDamage/armor and the legacy real-damage coefficient.
-            attack = self._config.get('system_simple', {}).get('attack') or []
+            attack = self._attack
             if len(attack) > 21:
                 amount = _to_int(amount * float(attack[21]))
                 tough = max(0, self._get_tough(target))
@@ -707,26 +728,50 @@ class ReferenceBattle:
         else:
             defense = 0
         if damage_type == 3:
-            dealt = _to_int(amount * _REAL_DAMAGE_RATE)
+            dealt = _to_int(amount * self._real_damage_rate)
         elif damage_type in (1, 2):
-            dealt = max(_to_int(amount * _MIN_DAMAGE_RATE), amount - defense)
+            dealt = defense_damage(amount, defense, (source or {}).get('ap', 0), self._min_damage_rate, self._combat_rules)
         else:
             dealt = amount
+        if ratio_enabled(self._combat_rules):
+            dealt = self._final_direct_damage(dealt, target)
         return self._injured(target, dealt, damage_type, source=source)
+
+    def _final_direct_damage(self, amount, target, critical=1):
+        attack = self._attack
+        if len(attack) <= 21:
+            return amount
+        amount = to_int(to_int(amount * critical) * attack[21])
+        tough = max(0, self._get_tough(target))
+        return to_int(amount / (1 + tough * attack[15] / (tough + attack[13])))
+
+    def _true_skill_coefficient(self, coefficient):
+        rate = self._combat_rules.get('true_skill_rate', 0.8) if ratio_enabled(self._combat_rules) else 1
+        return coefficient * rate / self._real_damage_rate
 
     def _native_damage(self, attacker, target, multiplier, damage_type):
         """countDamage (137_Avatar.as:1283) plus the getters' buff multipliers."""
         damage_type = _to_int(damage_type)
+        if ratio_enabled(self._combat_rules):
+            row_a = self._config.get('avatar', {}).get(attacker.get('aid'), {})
+            row_b = self._config.get('avatar', {}).get(target.get('aid'), {})
+            sign_a = (row_a.get('tl') or [0])[0]
+            sign_b = (row_b.get('tl') or [0])[0]
+            raw = _to_int(self._get_damage(attacker) * float(multiplier))
+            dealt = damage_before_final(raw, sign_a, sign_b, damage_type,
+                self._defense_against(attacker, target, 1), self._defense_against(attacker, target, 2),
+                self._attack, base_attack=attacker.get('ap', 0), rules=self._combat_rules)
+            return self._injured(target, self._final_direct_damage(dealt, target), damage_type, source=attacker)
         if damage_type == 1:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
             defense = self._defense_against(attacker,target,1)
-            dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - defense)
+            dealt = defense_damage(base, defense, attacker.get('ap', 0), self._min_damage_rate)
         elif damage_type == 3:
-            dealt = _to_int(max(1, _to_int(self._get_damage(attacker) * float(multiplier))) * _REAL_DAMAGE_RATE)
+            dealt = _to_int(max(1, _to_int(self._get_damage(attacker) * float(multiplier))) * self._real_damage_rate)
         else:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
             defense = self._defense_against(attacker,target,2)
-            dealt = max(_to_int(base * _MIN_DAMAGE_RATE), base - defense)
+            dealt = defense_damage(base, defense, attacker.get('ap', 0), self._min_damage_rate)
         return self._injured(target, dealt, damage_type, source=attacker)
 
     # -------------------------------------------------------------- targeting
@@ -1334,7 +1379,7 @@ class ReferenceBattle:
     def _act_true_damage(self, attacker, enemies, allies, skill, action, index, context):
         """true_damage (139_SkillSet.as:1406): damage with type forced to 3."""
         pl = skill.get("pl") or []
-        coefficient = float(action[1]) / _REAL_DAMAGE_RATE
+        coefficient = self._true_skill_coefficient(float(action[1]))
         targets = self._skill_targets(attacker, enemies, pl)
         total = 0
         first = None
@@ -1377,7 +1422,7 @@ class ReferenceBattle:
             if self._condition_matches(condition, target, context, skill, index):
                 coefficient += bonus
             if damage_type == 3:
-                coefficient /= _REAL_DAMAGE_RATE
+                coefficient = self._true_skill_coefficient(coefficient)
             total += self._native_damage(attacker, target, coefficient, damage_type)
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(
@@ -2024,7 +2069,7 @@ class ReferenceBattle:
         damage_type = int(action[2])
         coefficient = float(action[1])
         if damage_type == 3:
-            coefficient /= _REAL_DAMAGE_RATE
+            coefficient = self._true_skill_coefficient(coefficient)
         hits = max(1, int(action[3]))
         total = 0
         for target in targets:
@@ -2916,7 +2961,7 @@ class ReferenceBattle:
         coefficient = float(strike.get("coeff", 0.0))
         damage_type = _to_int(strike.get("type", 0))
         if damage_type == 3:
-            coefficient /= _REAL_DAMAGE_RATE
+            coefficient = self._true_skill_coefficient(coefficient)
         for target in pool:
             self._native_damage(owner, target, coefficient, damage_type)
 
@@ -2991,7 +3036,7 @@ class ReferenceBattle:
             elif dot_condition == "prehit_bleed" and self._has_manual_dot_kind(target, "bleed"):
                 coefficient += dot_bonus
             before_hp = int(target.get("hp", 0))
-            effective = coefficient / _REAL_DAMAGE_RATE if damage_type == 3 else coefficient
+            effective = self._true_skill_coefficient(coefficient) if damage_type == 3 else coefficient
             self._native_damage(attacker, target, effective, damage_type)
             dot = skill.get('chainDot')
             if dot and int(target.get('hp', 0)) > 0 and getattr(self, '_ability_last_hit', True):
@@ -3128,6 +3173,10 @@ class ReferenceBattle:
         """
         skill = attacker.get(slot)
         if not isinstance(skill, dict) or not skill.get("skills"):
+            return False
+        # Passive books are projected into the panel/_book_bonus. They have
+        # no active timing parameters and must not consume an attack action.
+        if slot == 'book_skill' and not skill.get('pl'):
             return False
         from battle_mod_effects import condition_ready
         if not condition_ready(self,attacker,skill):return False

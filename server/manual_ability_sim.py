@@ -146,8 +146,8 @@ class SkillCompleteBattle(ReferenceBattle):
         factor*=self.hero_output_rate_104(owner)
         coefficient*=factor
         self._event('hit',owner,target,coefficient=coefficient,damage_type=damage_type)
-        # True-damage manual actions cancel countDamage's native 0.3 factor.
-        if damage_type==3:coefficient/=0.3
+        # Manual true skills cancel the native rate and apply the opt-in correction.
+        if damage_type==3:coefficient=self._true_skill_coefficient(coefficient)
         total=shared_total*factor if shared_total>0 else coefficient
         self._native_damage(owner,target,total,damage_type,coefficient/total if total else 1)
         return self._ability_last_hit
@@ -607,7 +607,7 @@ class SkillCompleteBattle(ReferenceBattle):
                         if target.get('hp',0)<=0:break
                         # A fixed true amount: no AP coefficient, miss or crit.
                         amount=raw
-                        attack=self._config.get('system_simple',{}).get('attack') or []
+                        attack=self._attack
                         if len(attack)>21:
                             amount=_to_int(amount*float(attack[21]))
                             tough=max(0,self._get_tough(victim))
@@ -752,28 +752,27 @@ class SkillCompleteBattle(ReferenceBattle):
         return dealt
 
     def _native_damage(self, attacker, target, multiplier, damage_type, share=1):
-        attack=self._config.get('system_simple',{}).get('attack')
+        attack=self._attack
         if not attack:
             self._ability_last_hit=True
             return super()._native_damage(attacker,target,multiplier*share,damage_type)
         hit=max(0,self._get_hit(attacker));flee=max(0,self._get_flee(target))
         action_type=(target.get('tpl') or [0,0])[1]
-        if action_type!=3 and self.rng.get_random(100)<miss_chance(hit,flee,attack):
+        if action_type!=3 and self.rng.get_random(100)<miss_chance(hit,flee,attack,self._combat_rules):
             self._ability_last_hit=False
             self._emit_mod_event(attacker,'miss',attacker,target)
             self._emit_mod_event(target,'dodge',attacker,target)
             return 0
         self._ability_last_hit=True
         critical=max(0,self._get_crit(attacker));tough=max(0,self._get_tough(target))
-        crit=critical_multiplier(critical,attack) if self.rng.get_random(100)<crit_chance(critical,tough,attack) else 1
+        crit=critical_multiplier(critical,attack) if self.rng.get_random(100)<crit_chance(critical,tough,attack,self._combat_rules) else 1
         ctx=self._context(attacker)
         if ctx and ctx.get('cat_capture') and crit>1:ctx['cat_crits']+=1
         row_a=self._config.get('avatar',{}).get(attacker.get('aid'),{});row_b=self._config.get('avatar',{}).get(target.get('aid'),{})
         sign_a=(row_a.get('tl') or [0,0,0])[0];sign_b=(row_b.get('tl') or [0,0,0])[0]
         raw=to_int(self._get_damage(attacker)*float(multiplier))
-        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share)
-        amount=to_int(to_int(amount*crit)*attack[21])
-        amount=to_int(amount/(1+tough*attack[15]/(tough+attack[13])))
+        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share,base_attack=attacker.get('ap',0),rules=self._combat_rules)
+        amount=self._final_direct_damage(amount,target,crit)
         receipt={}
         result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt)
         self._ability_last_hit=True

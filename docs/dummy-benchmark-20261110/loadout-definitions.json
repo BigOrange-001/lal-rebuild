@@ -1,0 +1,398 @@
+{
+  "offense": [
+    "E_1011_6",
+    "E_1019_6",
+    null,
+    null,
+    "E_5009_6",
+    "E_6001_7"
+  ],
+  "defense": [
+    "E_1504_6",
+    "E_1505_6",
+    "E_3004_6",
+    "E_4016_6",
+    "E_5010_6",
+    "E_6002_7"
+  ],
+  "example_offense": {
+    "avatars": {
+      "A_1210_6|bench": {
+        "aid": "A_1210_6",
+        "lv": 125,
+        "slv": 10,
+        "phase": 3,
+        "limit_break": 1,
+        "morph": 0,
+        "culture_schema": "weighted-v2",
+        "talent": "T_01_07",
+        "hp": 22500,
+        "ap": 1875,
+        "de_ph": 2250,
+        "de_ma": 2250
+      }
+    },
+    "team": [
+      [
+        "A_1210_6|bench",
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
+    "as_equips": [
+      [
+        "eq0",
+        "eq1",
+        null,
+        null,
+        "eq4",
+        "eq5"
+      ]
+    ],
+    "my_equips": {
+      "eq0": {
+        "eid": "E_1011_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "hit": 7140,
+          "crit": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 1,
+        "stat_roll_ppm": 1200000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq1": {
+        "eid": "E_1019_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "hit": 7140,
+          "crit": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 1,
+        "stat_roll_ppm": 1200000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq4": {
+        "eid": "E_5009_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "crit": 7140,
+          "tough": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 1,
+        "stat_roll_ppm": 1150000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq5": {
+        "eid": "E_6001_7",
+        "lv": 1,
+        "slv": 10,
+        "new_4attrs": {},
+        "halo": {
+          "lv": 0,
+          "exp": 0
+        },
+        "alchemy": [
+          0,
+          0
+        ],
+        "magic": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "rune_lv": 0,
+        "stat_roll_ppm": 1000000,
+        "wash_schema_version": 1
+      }
+    },
+    "attrs": {
+      "team_num": 0,
+      "dn": {},
+      "guild_graduate_skill": {}
+    },
+    "lv": 125,
+    "vip_lv": 15
+  },
+  "target_profile": {
+    "avatars": {
+      "A_1001_6|bench": {
+        "aid": "A_1001_6",
+        "lv": 125,
+        "slv": 10,
+        "phase": 3,
+        "limit_break": 1,
+        "morph": 0,
+        "culture_schema": "weighted-v2",
+        "talent": "T_02_07",
+        "hp": 22500,
+        "ap": 1875,
+        "de_ph": 2250,
+        "de_ma": 2250
+      }
+    },
+    "team": [
+      [
+        "A_1001_6|bench",
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
+    "as_equips": [
+      [
+        "eq0",
+        "eq1",
+        "eq2",
+        "eq3",
+        "eq4",
+        "eq5"
+      ]
+    ],
+    "my_equips": {
+      "eq0": {
+        "eid": "E_1504_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "crit": 7140,
+          "tough": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 2,
+        "stat_roll_ppm": 1150000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq1": {
+        "eid": "E_1505_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "hit": 7140,
+          "tough": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 3,
+        "stat_roll_ppm": 1150000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq2": {
+        "eid": "E_3004_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "hit": 7140,
+          "flee": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 2,
+        "stat_roll_ppm": 1150000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq3": {
+        "eid": "E_4016_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "crit": 7140,
+          "flee": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 3,
+        "stat_roll_ppm": 1200000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq4": {
+        "eid": "E_5010_6",
+        "lv": 170,
+        "slv": 0,
+        "new_4attrs": {
+          "hit": 7140,
+          "tough": 7140
+        },
+        "halo": {
+          "lv": 5,
+          "exp": 0
+        },
+        "haloLv": 5,
+        "alchemy": [
+          0,
+          1
+        ],
+        "magic": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "magic_stage5": 1,
+        "rune_lv": 10,
+        "symp": 2,
+        "stat_roll_ppm": 1150000,
+        "equipment_v2_version": 1,
+        "wash_schema_version": 1
+      },
+      "eq5": {
+        "eid": "E_6002_7",
+        "lv": 1,
+        "slv": 10,
+        "new_4attrs": {},
+        "halo": {
+          "lv": 0,
+          "exp": 0
+        },
+        "alchemy": [
+          0,
+          0
+        ],
+        "magic": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "rune_lv": 0,
+        "stat_roll_ppm": 1000000,
+        "wash_schema_version": 1
+      }
+    },
+    "attrs": {
+      "team_num": 0,
+      "dn": {},
+      "guild_graduate_skill": {}
+    },
+    "lv": 125,
+    "vip_lv": 15
+  }
+}

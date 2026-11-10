@@ -1,0 +1,143 @@
+{
+  "formula": {
+    "tests": 13,
+    "passed": true,
+    "failures": []
+  },
+  "reference": {
+    "tests": 41,
+    "passed": true,
+    "failures": []
+  },
+  "cat": {
+    "tests": 8,
+    "passed": true,
+    "failures": []
+  },
+  "dot": {
+    "tests": 10,
+    "passed": true,
+    "failures": []
+  },
+  "growth": {
+    "tests": 8,
+    "passed": true,
+    "failures": []
+  },
+  "oracle": {
+    "tests": 2,
+    "passed": true,
+    "failures": []
+  },
+  "nurse": {
+    "tests": 10,
+    "passed": false,
+    "failures": [
+      "test_captain_chooses_ratio_across_lanes_and_uses_caster_maximum",
+      "test_captain_self_target_is_applied_twice_even_when_first_heal_fills_hp",
+      "test_effective_and_overheal_have_separate_fixed_conversion_rates",
+      "test_effective_and_overheal_have_separate_fixed_conversion_rates",
+      "test_effective_and_overheal_have_separate_fixed_conversion_rates",
+      "test_existing_cure_and_damage_based_group_heals_preserve_overhealing",
+      "test_external_healing_counts_overheal_after_efficiency_and_burn_once",
+      "test_normal_cleanses_all_lanes_and_uses_total_ap_without_hp_term",
+      "test_passive_is_fixed_true_damage_and_common_defenses_still_apply"
+    ]
+  },
+  "nurse_original": {
+    "tests": 10,
+    "passed": false,
+    "failures": [
+      "test_captain_chooses_ratio_across_lanes_and_uses_caster_maximum",
+      "test_captain_self_target_is_applied_twice_even_when_first_heal_fills_hp",
+      "test_effective_and_overheal_have_separate_fixed_conversion_rates",
+      "test_effective_and_overheal_have_separate_fixed_conversion_rates",
+      "test_effective_and_overheal_have_separate_fixed_conversion_rates",
+      "test_existing_cure_and_damage_based_group_heals_preserve_overhealing",
+      "test_external_healing_counts_overheal_after_efficiency_and_burn_once",
+      "test_normal_cleanses_all_lanes_and_uses_total_ap_without_hp_term",
+      "test_passive_is_fixed_true_damage_and_common_defenses_still_apply"
+    ]
+  },
+  "full": {
+    "baseline": {
+      "status": "stopped_early_after_failures",
+      "completed": 499,
+      "failures": [
+        "test_anchor_104.Anchor104Tests.test_popup_status_and_escaped_colored_content",
+        "test_stat_power_103.StatPower103Tests.test_scaling_overlay_is_idempotent_and_does_not_change_other_branches",
+        "test_balance_104.Balance104Tests.test_added_large_bonds_are_buildable_and_preserve_skill_growth",
+        "test_balance_104.Balance104Tests.test_catalogue_covers_named_heroes_only_and_mechanism_contract",
+        "test_balance_104.Balance104Tests.test_no_bond_is_contained_in_another_and_all_have_matching_quality",
+        "test_balance_104.Balance104Tests.test_scaling_overlay_is_idempotent_and_does_not_change_other_branches",
+        "test_stat_power_103.StatPower103Tests.test_scaling_overlay_is_idempotent_and_does_not_change_other_branches",
+        "test_equipment_bonds_104.EquipmentNativePower104Tests.test_scaling_overlay_is_idempotent_and_does_not_change_other_branches",
+        "test_hero_calibration_104.CalibrationTests.test_exact_review_values",
+        "test_hero_revision_104.HeroRevisionTests.test_gabriel_and_zed_final_values",
+        "test_hero_skills_103.HeroSkills103Tests.test_gateway_exports_effective_config_and_combat_snapshot",
+        "test_hero_skills_103.HeroSkills103Tests.test_latest_numbers_include_rank_growth_and_existing_balance_once",
+        "test_nurse_akali_103.NurseAkali103Tests.test_captain_chooses_ratio_across_lanes_and_uses_caster_maximum",
+        "test_nurse_akali_103.NurseAkali103Tests.test_captain_self_target_is_applied_twice_even_when_first_heal_fills_hp",
+        "test_nurse_akali_103.NurseAkali103Tests.test_existing_cure_and_damage_based_group_heals_preserve_overhealing",
+        "test_nurse_akali_103.NurseAkali103Tests.test_external_healing_counts_overheal_after_efficiency_and_burn_once",
+        "test_nurse_akali_103.NurseAkali103Tests.test_normal_cleanses_all_lanes_and_uses_total_ap_without_hp_term",
+        "test_nurse_akali_103.NurseAkali103Tests.test_passive_is_fixed_true_damage_and_common_defenses_still_apply"
+      ]
+    },
+    "regression": {
+      "status": "stopped_early_after_failures",
+      "completed": 194,
+      "failures": [
+        "test_anchor_104.Anchor104Tests.test_popup_status_and_escaped_colored_content",
+        "test_stat_power_103.StatPower103Tests.test_scaling_overlay_is_idempotent_and_does_not_change_other_branches",
+        "test_balance_104.Balance104Tests.test_added_large_bonds_are_buildable_and_preserve_skill_growth",
+        "test_balance_104.Balance104Tests.test_catalogue_covers_named_heroes_only_and_mechanism_contract",
+        "test_balance_104.Balance104Tests.test_no_bond_is_contained_in_another_and_all_have_matching_quality",
+        "test_balance_104.Balance104Tests.test_scaling_overlay_is_idempotent_and_does_not_change_other_branches",
+        "test_stat_power_103.StatPower103Tests.test_scaling_overlay_is_idempotent_and_does_not_change_other_branches",
+        "test_cat_katarina_103.CatKatarina103Tests.test_captain_rewards_each_crit_only_after_all_damage"
+      ]
+    },
+    "fixed_new_failure": "test_cat_katarina_103.CatKatarina103Tests.test_captain_rewards_each_crit_only_after_all_damage",
+    "nurse_same_as_original": true
+  },
+  "legacy-differential": {
+    "revision": "6cab382",
+    "battles": 136,
+    "mismatches": [],
+    "hashes": {
+      "original-battles.json": "89d04eaa7f529191ae556e30beebbce89225b4f0cc95a25f1ada6a987d66dcba",
+      "disabled-battles.json": "89d04eaa7f529191ae556e30beebbce89225b4f0cc95a25f1ada6a987d66dcba"
+    }
+  },
+  "default-config-verification": {
+    "equal_except_added_controls": true,
+    "model": "legacy",
+    "added_fields": [
+      "model",
+      "reduction_exponent",
+      "defense_attack_midpoint",
+      "miss_slope",
+      "crit_slope",
+      "true_skill_rate",
+      "attack_overrides"
+    ],
+    "now": 1794287067,
+    "baseline_hash": "126685be990253125d61865503196c4e8ea20744df8888f9c4852dca17336baa",
+    "current_hash": "126685be990253125d61865503196c4e8ea20744df8888f9c4852dca17336baa"
+  },
+  "legacy-cache-replay": {
+    "battles": 264,
+    "mismatches": [],
+    "config": "build\\combat-calibration-20261110\\legacy\\frozen-config.json"
+  },
+  "ratio-cache-replay": {
+    "battles": 264,
+    "mismatches": [],
+    "config": "build\\combat-calibration-20261110\\ratio\\frozen-config.json"
+  },
+  "calibration_isolation": {
+    "tests": 1,
+    "passed": true
+  }
+}

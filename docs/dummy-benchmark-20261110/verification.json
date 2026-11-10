@@ -1,0 +1,12 @@
+{
+  "legacy_core_matches_frozen": true,
+  "ratio_core_matches_frozen": true,
+  "heroes": 132,
+  "verified_battles": 31680,
+  "conditions": 1056,
+  "early_endings": [],
+  "exactly_100_rounds": true,
+  "raw_damage_channels_and_round_totals_equal": true,
+  "no_passive_book_casts": true,
+  "samples_per_condition": 30
+}

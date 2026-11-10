@@ -107,6 +107,8 @@ def load_game_config(path, now=None):
  if not isinstance(document,dict) or not isinstance(document.get('cfg'),dict):
   raise ValueError('Config file must contain {cfg_version, cfg: {...}, ...}')
  document=native_dates(document)
+ from combat_rules import apply_combat_rules
+ apply_combat_rules(document)
  apply_recruit_exchange_config(document)
  apply_equipment_capacity(document)
  apply_equipment_upgrade_config(document)

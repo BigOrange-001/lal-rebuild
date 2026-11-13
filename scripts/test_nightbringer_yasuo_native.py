@@ -21,6 +21,8 @@ def translate():
     source+=avatar[start:avatar.index('      private function executeCatSkin(',start)]
     start=avatar.index('      public function checkSkill()')
     source+=avatar[start:avatar.index('      public function findAimList(',start)]
+    start=avatar.index('      public function getDamage(')
+    source+=avatar[start:avatar.index('      public function getDefenseAgainst(',start)]
     source=strip_as_comments(source)
     result=[]
     for match in re.finditer(r'(?:private|public) function (\w+)\((.*?)\)\s*:\s*[\w.<>]+\s*\{',source,re.S):

@@ -23,10 +23,10 @@ class YasuoBattleMixin:
     def _get_crit(self, unit):
         return super()._get_crit(unit) + unit.get('_yasuo_crit_bonus', 0)
 
+    def yasuo_attack(self, unit, amount):
+        return _to_int(amount * 1.75) if self.yasuo_night(unit) else amount
+
     def _damage_modifiers_104(self, target, amount, damage_type, source):
-        ctx = self._context(source) if source else None
-        if self.yasuo_night(source) and not (ctx and ctx.get('derived_yasuo')):
-            amount = _to_int(amount * 1.5)
         if self.yasuo_night(target):
             amount = _to_int(amount * .2)
         return amount
@@ -60,7 +60,7 @@ class YasuoBattleMixin:
         target = targets[0]
         if kind == 'night_yasuo_c':
             self.yasuo_cleanse(owner)
-            owner.update(_yasuo_night_rounds=1, _yasuo_vamp_rounds=2)
+            owner.update(_yasuo_night_rounds=2, _yasuo_vamp_rounds=2)
             self._add_buff(owner, 'bless', 1, source=owner)
             position = target['pos'] + (200 if self._team_number(owner) == 1 else -200)
             self._reline(owner, owner['line'], max(0, min(self._LINE_POS, position)))

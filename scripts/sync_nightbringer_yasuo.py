@@ -133,6 +133,18 @@ s = s[:a] + '''      private function absorbShieldDamage(amount:int, factor:Numb
       }
 
 ''' + s[b:]
+# The night multiplier belongs after every ordinary attack modifier, including
+# flat evil stacks and Santa stacks. Keep it out of outgoing damage settlement.
+a = s.index('      public function getDamage(')
+b = s.index('      public function getDefenseAgainst(', a)
+attack = s[a:b]
+night_attack = 'if(this.yasuoNightRounds104>=0) _loc6_ = Tools.toInt(_loc6_*1.75);'
+if night_attack not in attack:
+    old = 'return Math.max(_loc6_,0);'
+    if old not in attack:
+        raise ValueError('Missing final attack return for Yasuo multiplier')
+    attack = attack.replace(old, night_attack + '\n         ' + old, 1)
+s = s[:a] + attack + s[b:]
 p.write_bytes(s.encode('utf-8'))
 manifest = ROOT / 'client/build.json'
 cfg = json.loads(manifest.read_text('utf-8'))

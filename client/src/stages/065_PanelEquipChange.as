@@ -41,10 +41,8 @@ package com.meng52.game.ui.panel
       override protected function initializeHandler(param1:Event) : void
       {
          _equip = new Equip(_data.id,_data);
-         var _loc4_:Array = [12075775,16764006,13777209];
-         var _loc3_:int = int(GlobalData.$mConfig_simple.equip_alchemy.equip_al);
          var _loc2_:String = _equip.getStep() > -1 ? GlobalLanguageStr.getLanguageStr(90703,_equip.getStep().toString()) : "";
-         setPopPanelBg(_equip.equipData.name,570,640,false,true,_loc2_,_loc4_[_equip.getStar() - _loc3_]);
+         setPopPanelBg(_equip.equipData.name,570,640,false,true,_loc2_,_equip.getAlchemyColor104());
          _detailEquip = new LOL_DetailEquip(_data,width,height);
          _detailEquip.x = 40;
          _detailEquip.y = 100;

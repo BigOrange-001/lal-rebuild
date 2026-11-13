@@ -66,7 +66,7 @@ function Avatar(id,data=null){
  hp:0,hpMax:0,ap:0,dePh:0,deMa:0,hit:0,flee:0,crit:0,tough:0,speed:0,range:0,
  hpP:row.hp||0,apP:row.ap||0,dePhP:row.de_ph||0,deMaP:row.de_ma||0,cultureSchema:row.culture_schema||'',
  equips:[],bondLineup104:profile.team[0],mDestiny:null,mDNdata:null,buffs:{},skin2:{},abilityState:{},abilityEntryAttack:0,manualAttackRangeOverride:NaN,
- initializingFightAttributes:false,previewTeamTalentBonuses:null,getManualBattleStack:()=>0,getManualTimedStack:()=>0,clear:()=>{},
+ initializingFightAttributes:false,previewTeamTalentBonuses:null,yasuoCritBonus104:0,getManualBattleStack:()=>0,getManualTimedStack:()=>0,clear:()=>{},
  avatarData:{id:aid,hp0:p[0],hp1:p[1],ap0:p[2],ap1:p[3],d10:p[4],d11:p[5],d20:p[6],d21:p[7],speed:p[8],range:p[9],skill0:p[10],skill1:p[11]},
  skill0:Skill(p[10],row.slv||1),skill1:Skill(p[11],1,true),skillB:Skill(p[13]),skill2:null,
  talent:t?{my_HaloData:{dataObj:t,plType:t.pl[0],plNum:t.pl[1],plUse:t.pl[2],getStar:()=>int(tid.split('_').at(-1))}}:null},input.avatarMethods);

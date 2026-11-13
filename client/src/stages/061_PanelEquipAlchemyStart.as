@@ -246,6 +246,7 @@ package com.meng52.game.ui.panel
          m_return_gift_mark.hAlign = "left";
          m_return_spr.addChild(m_return_gift_mark);
          m_start_btn = new LOL_Scale9Button(GlobalLanguageStr.getStr(98200),150,70);
+         m_start_btn.enabled = checkContinueAlchemy(m_data);
          m_start_btn.name = "const_alchemy";
          m_start_btn.x = m_bg.x + m_bg.width - m_start_btn.width - 20;
          m_start_btn.y = m_equip_add_img.y + m_equip_add_img.height + 10;
@@ -306,6 +307,7 @@ package com.meng52.game.ui.panel
       
       private function send_msg() : void
       {
+         if(!checkContinueAlchemy(m_data)) return;
          var _loc1_:Object = {"eqids":[m_data.id,m_select_stuff.id]};
          SendServiceAMFFun.send_user_equip_alchemy(refun,_loc1_);
       }
@@ -375,9 +377,10 @@ package com.meng52.game.ui.panel
       {
          var _loc5_:Boolean = false;
          var _loc2_:Array = param1["eid"].split("_");
-         var _loc3_:int = int(_loc2_[_loc2_.length - 1]) + int(param1["alchemy"][1]);
+         var alchemy:Array = param1["alchemy"] as Array;
+         var _loc3_:int = int(_loc2_[_loc2_.length - 1]) + (alchemy && alchemy.length>1 ? int(alchemy[1]) : 0);
          var _loc4_:Object = GlobalData.$mConfig_simple.equip_alchemy;
-         if(_loc3_ < int(_loc4_.star_lv))
+         if(_loc3_ < Math.min(8,int(_loc4_.star_lv)))
          {
             _loc5_ = true;
          }
@@ -386,6 +389,7 @@ package com.meng52.game.ui.panel
       
       private function onTouch(param1:TouchEvent) : void
       {
+         if(!checkContinueAlchemy(m_data)) return;
          var _loc2_:Touch = param1.getTouch(this);
          if(_loc2_.phase == "ended")
          {
@@ -532,6 +536,16 @@ class infoBox extends Sprite
    private function nextEquip(param1:Object) : Object
    {
       var _loc2_:Object = Tools.clone(param1);
+      var parts:Array = String(_loc2_.eid).split("_");
+      var star:int = int(parts[parts.length-1]);
+      if(_loc2_.hasOwnProperty("alchemy")) star += int(_loc2_.alchemy[1]);
+      if(star>=Math.min(8,int(GlobalData.$mConfig_simple.equip_alchemy.star_lv)))
+      {
+         // A terminal item has no next-stage preview. Normalize only the
+         // preview copy of an old eight-star +1/+2 record to the base frame.
+         if(star>=8 && _loc2_.hasOwnProperty("alchemy")) _loc2_.alchemy[0] = 0;
+         return _loc2_;
+      }
       if(_loc2_.hasOwnProperty("alchemy"))
       {
          if(_loc2_.alchemy[0] < 2)
@@ -577,7 +591,7 @@ class infoBox extends Sprite
       {
          _loc5_ = (int(_loc4_[_loc4_.length - 1]) + m_data.alchemy[1]).toString() + "_" + int(m_data.alchemy[0]).toString();
          _loc2_ = _loc8_.phase[_loc5_];
-         if(this.m_next)
+         if(this.m_next && _loc2_)
          {
             _loc9_ = Number(_loc2_[1]);
             _loc1_ = Number(_loc2_[0]);
@@ -623,7 +637,6 @@ class infoBox extends Sprite
       var cfg_phase_id:String;
       var cfg_now:Array;
       var _mColorArr:Array;
-      var alchemy_star_cfg:int;
       var _info:String;
       var falseNum:int;
       var i:int;
@@ -654,20 +667,8 @@ class infoBox extends Sprite
          _name_add = "";
          _star = int(eid_arr[eid_arr.length - 1]);
       }
-      _mColorArr = [];
-      alchemy_star_cfg = int(GlobalData.$mConfig_simple.equip_alchemy.equip_al);
-      switch(_star - alchemy_star_cfg)
-      {
-         case 0:
-            _mColorArr = [16777215,12075775,16764006,16764006];
-            break;
-         case 1:
-            _mColorArr = [16777215,16764006,16764006,16764006];
-            break;
-         default:
-            _mColorArr = [16777215,16777215,16777215,16777215];
-      }
-      name = _equip.equipData.name + (_star == int(_alchemy_cfg.star_lv) ? "" : "(" + _name_add + ")");
+      _mColorArr = [16777215,_equip.getAlchemyColor104(),_equip.getAlchemyColor104(),_equip.getAlchemyColor104()];
+      name = _equip.equipData.name + (_star >= Math.min(8,int(_alchemy_cfg.star_lv)) ? "" : "(" + _name_add + ")");
       _info = Tools.formatLineX(name,_mColorArr,9,MainConfig.$isEnglish ? 14 : 16,false,"center");
       lv = GlobalLanguageStr.getLanguageStr(20017,_equip.lv);
       m_equipName_txt = GlobalTextStyle.getHtmlTextRenderer();

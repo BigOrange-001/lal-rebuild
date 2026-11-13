@@ -4,7 +4,8 @@ let skin2Depth=0,serial=0,contexts=[],roster=[];
 const int=x=>Math.trunc(Number(x)||0),Tools={toInt:int},GameMapConfig={LINE_POS:3001};
 const Buff={LIST_BUFF:['shield','strong','armor','steel','purify','bless','fleeup'],LIST_DEBUFF:['stun','silence','poison','curse','root']};
 const GlobalData={$mConfig_skill:data.skill,$mConfig_avatar:{}};
-const GameMap={currentMap:{getAliveList:team=>roster.filter(u=>u.team===team&&u.hp>0),roundNum:1}};
+const GameMap={currentMap:{getAliveList:team=>roster.filter(u=>u.team===team&&u.hp>0),roundNum:1,winner:0,winnerList:[0,0,0],
+ isEnd:(lane=-1)=>GameMap.currentMap.winner!==0||(lane>=0&&GameMap.currentMap.winnerList[lane]!==0)}};
 const currentAbilityAttack=()=>contexts.at(-1),beginAbilityAttack=(owner,kind)=>{let c={owner,kind,damage:0,hitSerial:0};contexts.push(c);return c},endAbilityAttack=()=>contexts.pop();
 const methods={};
 /*METHODS*/
@@ -38,10 +39,37 @@ function unit(family=0,team=1,pos=1500){
  if(def){[u.skill0,u.skill1,u.skillB]=def.skills.map(s=>({skills:structuredClone(s.skills),skillSetData:{id:s.skid,cooldown:s.pl[1]}}));}
  u.skin2Initialize();roster.push(u);return u;
 }
-function fresh(f){roster=[];contexts=[];skin2Depth=0;let a=unit(f),b=unit(0,2,1400),c=unit(0,2,1300),ally=unit(0,1,1600);return {a,b,c,ally}}
+function fresh(f){roster=[];contexts=[];skin2Depth=0;GameMap.currentMap.winner=0;GameMap.currentMap.winnerList=[0,0,0];let a=unit(f),b=unit(0,2,1400),c=unit(0,2,1300),ally=unit(0,1,1600);return {a,b,c,ally}}
 function cast(a,slot){let s=slot===0?a.skill0:a.skill1;beginAbilityAttack(a,'active');try{assert(a.executeSkin2(`skin2_${a.s2Family()}_${slot}`,s));}finally{endAbilityAttack();}}
 function turn(a){a.manualOwnerActionSerial++;a.skin2Event('turn_start',a,a,0,0)}
 let cases=0;
+// A recorded lane may finish after Ekko transfers to a remaining fight.
+for(const finished of [0,1,2]){
+ let {a,b,c}=fresh(1140);a.line=b.line=c.line=1;
+ a.skin2.record={line:1,pos:1600,lost:10000};
+ a.skin2.previous={line:0,pos:777,lost:0};a.skin2.lost=20000;a.hp=50000;
+ a.addBuff('curse',2);a.s2Mark(a,'cold',2);
+ GameMap.currentMap.winnerList[0]=finished;
+ let oldHp=b.hp;cast(a,1);
+ assert.equal(a.line,finished?1:0,'rewind must not enter a completed lane');
+ assert.equal(a.pos,finished?1500:777,'completed recording keeps current position');
+ assert.equal(a.hp,50000+Math.trunc(20000*a.s2Value(a.skill1,'rewind')),'recorded loss still heals');
+ assert(!a.buffs.curse&&!a.skin2.cold,'rewind still cleanses');
+ assert(a.skin2.phase,'rewind still grants phase');
+ if(finished)assert(b.hp<oldHp&&c.hp<100000,'captain damage resolves in the current lane');
+ cases++;
+}
+for(const recordLane of [0,-1,3]){
+ let {a}=fresh(1140);a.skin2.record={line:recordLane,pos:777,lost:0};
+ cast(a,1);assert.equal(a.line,0);assert.equal(a.pos,recordLane===0?777:1500);cases++;
+}
+{
+ let {a}=fresh(1140);a.skin2.record={line:1,pos:777,lost:0};GameMap.currentMap.winner=1;
+ cast(a,1);assert.equal(a.line,0,'finished battle cannot schedule a rewind');assert.equal(a.pos,1500);cases++;
+}
+{
+ let {a,b}=fresh(1140);cast(a,1);assert.equal(a.line,0);assert.equal(a.pos,1500);assert(b.hp<100000);assert(a.skin2.phase);cases++;
+}
 for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fresh(f);if(f!==1227)cast(a,0);if(f===1219){a.s2Mark(b,'airborne',2);b.addBuff('stun',1)}cast(a,1);assert(Number.isFinite(a.hp));cases++;}
 {
  let {a,b}=fresh(1140);a.hp=70000;a.skin2.record={line:0,pos:1500,lost:0};cast(a,0);assert.equal(b.skin2['rings_'+a.abilityIndex].count,2);turn(a);cast(a,0);assert(a.buffs.shield);assert(b.hp<94400,'three-ring bonus executes');

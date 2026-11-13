@@ -213,6 +213,7 @@ package com.meng52.game.module.map
             team1Offset = [];
          }
          currentMap = this;
+         Avatar.beginDamageRules104();
          Avatar.resetStatistics104();
          isFight = false;
          actionDelay = 0;

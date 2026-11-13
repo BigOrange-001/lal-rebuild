@@ -54,6 +54,20 @@ class NativeBridgeTests(unittest.TestCase):
         self.assertFalse(b.turn_start(bird))
         self.assertEqual(bird['hp'],int(bird['hp_max']*.4))
 
+    def test_ekko_rewind_stays_in_current_fight_after_recorded_lane_ends(self):
+        b=self.battle(1140);owner=b.a[0]
+        b.invoke(owner,'skin2Event','turn_start',b.ref(owner),b.ref(owner),0,0)
+        b.b[0]['hp']=0
+        owner['line']=b.a[1]['line']=b.b[1]['line']=1
+        owner['hp']=5000
+        b.js.eval(f'unit({b.uid(owner)}).skin2.lost=1000')
+        with b.context(owner,'active'):
+            self.assertTrue(b.execute(owner,'skin2_1140_1',1,owner['leader_skill']))
+        self.assertEqual(owner['line'],1)
+        self.assertEqual(owner['pos'],1800)
+        self.assertGreater(owner['hp'],5000)
+        self.assertLess(b.b[1]['hp'],b.b[1]['hp_max'])
+
     def test_effective_healing_aura_shield_and_attribution(self):
         b=self.battle(1228);owner,ally=b.a;enemy=b.b[0]
         ally['hp']=4000
@@ -77,14 +91,20 @@ class NativeBridgeTests(unittest.TestCase):
 
     def test_current_named_heroes_are_included_beyond_historical_roster(self):
         cfg,heroes,pools=study_config()
-        for aid in ('A_1140_6','A_1139_6','A_1227_6','A_1311_6'):
+        for aid in ('A_1140_6','A_1139_6','A_1227_6','A_1311_6','A_1801_6','A_1802_6'):
             self.assertIn(aid,pools['skin'])
         self.assertFalse(set(pools['skin']) & set(pools['ordinary']))
         self.assertEqual(set(pools['mixed']),set(pools['skin'])|set(pools['ordinary']))
         self.assertNotIn('A_190001_5',pools['mixed'])
         self.assertTrue(all('序号' not in x['name'] for x in heroes))
-        self.assertEqual({k:len(v) for k,v in pools.items()},{'mixed':125,'ordinary':90,'skin':35})
+        self.assertEqual({k:len(v) for k,v in pools.items()},{'mixed':134,'ordinary':97,'skin':37})
         self.assertFalse({'A_1903','A_1904','A_1905','A_1909'} & {aid.rsplit('_',1)[0] for aid in pools['mixed']})
+
+    def test_damage_receipt_keeps_settled_and_actual_damage_through_native_bridge(self):
+        b=self.battle(1140);receipt={};before=b.b[0]['hp']
+        b._injured(b.b[0],100,1,source=b.a[0],receipt=receipt)
+        self.assertEqual(receipt['actual'],before-b.b[0]['hp'])
+        self.assertEqual(receipt['settled'],100)
 
 
 if __name__=='__main__':unittest.main()

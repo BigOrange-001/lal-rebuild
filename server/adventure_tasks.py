@@ -31,6 +31,8 @@ MILESTONES = (
     (5000, "钢铁侠提莫", "hero", "A_1310_6"),
     (8000, "培养材料", "fixed", {"coin": 30000, "dn_stone": 3000}),
     (10000, "二郎真君赵信", "hero", "A_1226_6"),
+    (30000, "神龙尊者卡莎", "hero", "A_1801_6"),
+    (50000, "黑夜使者亚索", "hero", "A_1802_6"),
 )
 
 
@@ -112,9 +114,9 @@ class AdventureTasks:
     @staticmethod
     def _reward_text(kind, reward):
         if kind == "hero":
-            return ("钢铁侠提莫橙卡×1" if reward == "A_1310_6" else
-                    "二郎真君赵信橙卡×1" if reward == "A_1226_6" else
-                    "随机非皮肤橙英雄×1")
+            names = {"A_1310_6":"钢铁侠提莫", "A_1226_6":"二郎真君赵信",
+                     "A_1801_6":"神龙尊者卡莎", "A_1802_6":"黑夜使者亚索"}
+            return names[reward]+"橙卡×1" if reward in names else "随机非皮肤橙英雄×1"
         if kind == "equipment":
             return "随机非专属橙装备×1"
         parts = []
@@ -172,7 +174,7 @@ class AdventureTasks:
                 return self._award_random_heroes(profile, 1)
             aid = reward
             grant_reward(profile, {"avatar": {aid: 1}}, self.config,
-                         allow_skin=aid in {"A_1310_6", "A_1226_6"})
+                         allow_skin=aid in {"A_1310_6", "A_1226_6", "A_1801_6", "A_1802_6"})
             return {"avatar": {aid: 1}}
         if kind == "equipment":
             if not self.equipment:

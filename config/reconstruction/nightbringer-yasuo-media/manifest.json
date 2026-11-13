@@ -1,0 +1,618 @@
+{
+  "digest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1",
+  "assets": [
+    {
+      "alias": "MOD_NIGHT_YASUO104",
+      "kind": "image",
+      "path": "portraits/nightbringer_yasuo.png",
+      "sha256": "8d6c7e4e58d351811f2de3377a2406e018c8b63a88c20e86a395eff8d89adfc5",
+      "bytes": 229275,
+      "width": 600,
+      "height": 300,
+      "role": "portrait",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO104_icon0000",
+      "kind": "image",
+      "path": "cards/nightbringer_yasuo.png",
+      "sha256": "63c13584799b5659a013149bea737597c7898db99296e6ac734f8811fd8101da",
+      "bytes": 34863,
+      "width": 160,
+      "height": 160,
+      "role": "icon",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "cardFrame": [
+        24,
+        16,
+        112,
+        128
+      ],
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_VORTEX104_0",
+      "kind": "image",
+      "path": "effects/night_vortex_0.png",
+      "sha256": "ab50624ef5af830485ae5ffa7c9b2d4a6238561c3680afe2b8955957e29028d2",
+      "bytes": 70738,
+      "width": 256,
+      "height": 256,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_VORTEX104_1",
+      "kind": "image",
+      "path": "effects/night_vortex_1.png",
+      "sha256": "c41bbfa53037bc92674f716532d851b8f486f91be37b72ba85cfc2796885c347",
+      "bytes": 69849,
+      "width": 256,
+      "height": 256,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_VORTEX104_2",
+      "kind": "image",
+      "path": "effects/night_vortex_2.png",
+      "sha256": "f58cbbd3deb254a7c6e43e1295f78c345ee2708a53ab5efa6e9d8c9f4e15cd99",
+      "bytes": 68303,
+      "width": 256,
+      "height": 256,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_VORTEX104_3",
+      "kind": "image",
+      "path": "effects/night_vortex_3.png",
+      "sha256": "1be08df4e4f5011373ec36231a50b41161a0a805c29cc27684135339b26d939d",
+      "bytes": 70463,
+      "width": 256,
+      "height": 256,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_BUFF104_0",
+      "kind": "image",
+      "path": "effects/night_buff_0.png",
+      "sha256": "f5f38228acfb46ff7024dc3b32886070647f2d17234259786e99d7d92b2bc3ec",
+      "bytes": 3489,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_BUFF104_1",
+      "kind": "image",
+      "path": "effects/night_buff_1.png",
+      "sha256": "a994b41285a0d755b3c335185853e5ada41ae0fbbdd050b6270806c434c42736",
+      "bytes": 3658,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_BUFF104_2",
+      "kind": "image",
+      "path": "effects/night_buff_2.png",
+      "sha256": "a6a35e354b011b3a50f2b236dfb55e5b63f902da8550c7fed20acf4148d3d7c7",
+      "bytes": 3821,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    },
+    {
+      "alias": "MOD_NIGHT_YASUO_BUFF104_3",
+      "kind": "image",
+      "path": "effects/night_buff_3.png",
+      "sha256": "50c6b711ba224bee4e14ba0926b0bafa0310cec6f6630dae91c826adb18b8ac8",
+      "bytes": 3697,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.nightbringer-yasuo-104",
+      "version": "1.0.4",
+      "contentDigest": "5975c769a474c89a7d2e51c842f812cbebf03c8d55c3a7ba98be5628f1cb82c1"
+    }
+  ],
+  "buffLayout": {
+    "source": "native effect/e703 (strong)",
+    "width": 57,
+    "height": 79,
+    "anchor": "native m_buff",
+    "runtimeScale": 1,
+    "slots": [
+      {
+        "x": -29.5,
+        "y": 48.9,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 1,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -26.5,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 4,
+            "visible": true,
+            "y": -67.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 5,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": -8.35,
+        "y": 61.95,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 0.69,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -26.5,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 4,
+            "visible": true,
+            "y": -67.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 5,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": 29.5,
+        "y": 48.9,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 1,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -26.5,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 4,
+            "visible": true,
+            "y": -67.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 5,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": 15.5,
+        "y": 58.85,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 0.69,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -26.5,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 4,
+            "visible": true,
+            "y": -67.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 5,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": -33.0,
+        "y": 25.9,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 1,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -40.4,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 3,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 26.5,
+            "stretch": 1.0,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": -10.85,
+        "y": 39.25,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 0.69,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -40.4,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 3,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 26.5,
+            "stretch": 1.0,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": 34.5,
+        "y": 22.5,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 1,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -40.4,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 3,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 26.5,
+            "stretch": 1.0,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": 14.5,
+        "y": 32.75,
+        "scaleX": 1.0,
+        "scaleY": 0.69,
+        "alpha": 0.69,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 1.53,
+            "alpha": 1
+          },
+          {
+            "at": 2,
+            "visible": true,
+            "y": -40.4,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 3,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 26.5,
+            "stretch": 1.0,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": 31.4,
+        "y": -12.1,
+        "scaleX": -1.0,
+        "scaleY": 0.69,
+        "alpha": 1,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 1,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 3,
+            "visible": true,
+            "y": 66.9,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 36.6,
+            "stretch": 1.53,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": 10.25,
+        "y": 10.95,
+        "scaleX": -1.0,
+        "scaleY": 0.69,
+        "alpha": 0.69,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 1,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 3,
+            "visible": true,
+            "y": 66.9,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 36.6,
+            "stretch": 1.53,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": -27.6,
+        "y": -12.1,
+        "scaleX": -1.0,
+        "scaleY": 0.69,
+        "alpha": 1,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 1,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 3,
+            "visible": true,
+            "y": 66.9,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 36.6,
+            "stretch": 1.53,
+            "alpha": 1
+          }
+        ]
+      },
+      {
+        "x": -13.6,
+        "y": 7.85,
+        "scaleX": -1.0,
+        "scaleY": 0.69,
+        "alpha": 0.69,
+        "frames": 7,
+        "cycle": 0.4083333333333333,
+        "keys": [
+          {
+            "at": 0,
+            "visible": true,
+            "y": 0.0,
+            "stretch": 2.49,
+            "alpha": 0.0
+          },
+          {
+            "at": 1,
+            "visible": false,
+            "y": 0,
+            "stretch": 1,
+            "alpha": 1
+          },
+          {
+            "at": 3,
+            "visible": true,
+            "y": 66.9,
+            "stretch": 1.0,
+            "alpha": 1
+          },
+          {
+            "at": 5,
+            "visible": true,
+            "y": 36.6,
+            "stretch": 1.53,
+            "alpha": 1
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -300,7 +300,7 @@ package com.meng52.game.module.skill
                }
                else if(_loc2_ == "avenge")
                {
-                  _loc3_ = GlobalLanguageStr.getLanguageStr(30101,GameMapTools.toPercentage(_loc5_[1] * GlobalData.$mConfig_simple.attack[1]));
+                  _loc3_ = GlobalLanguageStr.getLanguageStr(30101,GameMapTools.toPercentage(_loc5_[1] * Avatar.damageAttack104()[1]));
                }
                if(_loc3_)
                {
@@ -434,7 +434,7 @@ package com.meng52.game.module.skill
                   _loc1_["taunt"] = GlobalLanguageStr.getLanguageStr(25009);
                   break;
                case "bless":
-                  _loc1_["bless"] = GlobalLanguageStr.getLanguageStr(25010,GameMapTools.toPercentage(GlobalData.$mConfig_simple.attack[20]));
+                  _loc1_["bless"] = GlobalLanguageStr.getLanguageStr(25010,GameMapTools.toPercentage(Avatar.damageAttack104()[20]));
                   break;
                case "steel":
                   _loc1_["steel"] = GlobalLanguageStr.getLanguageStr(25019);
@@ -948,7 +948,7 @@ package com.meng52.game.module.skill
             {
                if(modEventContext && Number(step[5]) <= 0 && eventValue <= 0) continue;
                singleton = new Vector.<Avatar>(); singleton.push(unit);
-               avatar.checkAttack(singleton,null,100000,false,int(step[16]),int(step[16]) == 3 ? (Number(step[5])+eventValue/Math.max(1,avatar.getDamage()))/Avatar.REAL_DAMAGE_RATE : Number(step[5])+eventValue/Math.max(1,avatar.getDamage()),0,effect);
+               avatar.checkAttack(singleton,null,100000,false,int(step[16]),int(step[16]) == 3 ? Avatar.trueSkillCoefficient104(Number(step[5])+eventValue/Math.max(1,avatar.getDamage())) : Number(step[5])+eventValue/Math.max(1,avatar.getDamage()),0,effect);
             }
             else if(kind == "buff")
             {
@@ -1019,7 +1019,7 @@ package com.meng52.game.module.skill
                if(conditionMatches(String(action[3]),target,preDots,preBurns)) coefficient += Number(action[4]);
                var one:Vector.<Avatar> = new Vector.<Avatar>();
                one.push(target);
-               if(int(action[2]) == 3) coefficient /= Avatar.REAL_DAMAGE_RATE;
+               if(int(action[2]) == 3) coefficient = Avatar.trueSkillCoefficient104(coefficient);
                var shared:Number = damageShareTotal(actionIndex,coefficient,target,preDots,preBurns);
                if(avatar.checkAttack(one,getActionSortFunction(actionIndex,avatar.getSortOnFun()),getActionRange(actionIndex,castRange),banStand,int(action[2]),shared,0,String(action[5]),null,damageShareWeight(coefficient,shared))) actionTargets[actionIndex] = target;
             }
@@ -1073,7 +1073,7 @@ package com.meng52.game.module.skill
          var _loc17_:Number = 16777215;
          var _loc10_:int = 40;
          var _loc2_:Boolean = _loc19_.banStand;
-         var _loc25_:* = GlobalData.$mConfig_simple.attack;
+         var _loc25_:* = Avatar.damageAttack104();
          var _loc4_:Boolean = false;
          var _loc27_:String = avatar.team == 1 ? "skill0Bg" : "skill1Bg";
          var actionTargets:Array = [];
@@ -1439,7 +1439,7 @@ package com.meng52.game.module.skill
                             var chainOne:Vector.<Avatar> = new Vector.<Avatar>();
                            chainOne.push(chainTarget);
                            var chainHpBefore:int = chainTarget.hp;
-                           if(chainDamageType == 3) chainCoeff /= Avatar.REAL_DAMAGE_RATE;
+                           if(chainDamageType == 3) chainCoeff = Avatar.trueSkillCoefficient104(chainCoeff);
                             var chainShareTotal:Number = chainCoeff;
                             var chainTargetPlanIndex:int = chainVictimTargets.indexOf(chainTarget);
                             if((chainDamageType == 1 || chainDamageType == 2) && chainTarget === chainDamageGroupTarget)
@@ -1795,7 +1795,7 @@ package com.meng52.game.module.skill
                case "true_damage":
                   _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                   _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
-                  _loc1_ = avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,3,Number(_loc20_[1]) / Avatar.REAL_DAMAGE_RATE,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1]);
+                  _loc1_ = avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,3,Avatar.trueSkillCoefficient104(Number(_loc20_[1])),getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1]);
                   if(_loc1_) actionTargets[_loc14_] = _loc1_;
                   break;
                case "locked_sequence":
@@ -3440,7 +3440,7 @@ package com.meng52.game.module.skill
          if(_loc2_.length > 0)
          {
             _loc7_ = Math.max(0,_loc2_.length - 1);
-            _loc7_ = int(_loc8_.type) == 3 ? Number(_loc8_.coeff) / Avatar.REAL_DAMAGE_RATE : Number(_loc8_.coeff);
+            _loc7_ = int(_loc8_.type) == 3 ? Avatar.trueSkillCoefficient104(Number(_loc8_.coeff)) : Number(_loc8_.coeff);
             avatar.attackAimList(_loc2_,int(_loc8_.type),_loc7_,Math.max(0,_loc2_.length - 1),String(_loc8_.effect),false,null,GameMapConfig.LINE_POS + 1);
          }
       }

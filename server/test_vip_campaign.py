@@ -1,4 +1,5 @@
 """Boundary checks for gift-based VIP progression and equipment upgrades."""
+import copy
 import sqlite3
 import json
 import sys
@@ -129,6 +130,34 @@ class VipCampaignTest(unittest.TestCase):
         capped_receipt = roster._mutate(capped, "user.equip_alchemy", {"eqids": ["target", "mat"]})
         self.assertEqual(capped["my_equips"]["target"]["alchemy"], [0, 1])
         self.assertEqual(capped_receipt["alchemy_bonus_step"], 0)
+
+    def test_eight_star_alchemy_is_terminal_and_never_consumes_material(self):
+        roster = GameplayRosterEquipment.__new__(GameplayRosterEquipment)
+        roster.rng = FixedRandom(0)
+        roster._equip = lambda p, key: (key, p["my_equips"][key])
+        roster._equip_sell_rewards = lambda mat: (0, 0, [0, 0, 0, 0])
+
+        def profile(phase, extra):
+            item = {"eid": "E_1001_6", "alchemy": [phase, extra]}
+            return {"vip_lv": 15, "my_equips": {"target": item, "mat": copy.deepcopy(item)},
+                    "gold": 10, "mark": 20, "attrs": {"dust": [1, 2, 3, 4]}}
+
+        for cap in (8, 9):
+            roster.simple = {"equip_alchemy": {"star_lv": cap}}
+            for phase in (0, 1, 2):
+                with self.subTest(cap=cap, phase=phase):
+                    terminal = profile(phase, 2)
+                    before = copy.deepcopy(terminal)
+                    with self.assertRaises(GameplayFault) as caught:
+                        roster._mutate(terminal, "user.equip_alchemy", {"eqids": ["target", "mat"]})
+                    self.assertEqual(caught.exception.code, "MaxGrowth")
+                    self.assertEqual(terminal, before)
+            for phase in (1, 2):
+                with self.subTest(cap=cap, source_phase=phase):
+                    approaching = profile(phase, 1)
+                    roster._mutate(approaching, "user.equip_alchemy", {"eqids": ["target", "mat"]})
+                    self.assertEqual(approaching["my_equips"]["target"]["alchemy"], [0, 2])
+                    self.assertNotIn("mat", approaching["my_equips"])
 
     def test_overlay_projects_thresholds_without_version_change(self):
         doc = {"cfg_version": "1.0.0", "cfg": {"vip": {str(i): {} for i in range(16)}}}

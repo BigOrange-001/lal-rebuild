@@ -10,8 +10,12 @@ package com.meng52.game.module.equip
    import com.meng52.game.module.skill.SkillSet;
    import com.meng52.game.ui.screen.PanelCenterDNTeam;
    import com.meng52.utils.Tools;
+   import flash.display.BitmapData;
+   import flash.geom.Rectangle;
    import starling.display.Image;
+   import starling.display.Quad;
    import starling.display.Sprite;
+   import starling.textures.Texture;
    
    public class Equip extends BaseDisplayModule
    {
@@ -141,9 +145,19 @@ package com.meng52.game.module.equip
       public function getRes(param1:Sprite = null, param2:Number = 1) : Sprite
       {
          var result:Sprite = param1 == null ? new Sprite() : param1;
+         var previous:Sprite = result.getChildByName("alchemyFrame104") as Sprite;
+         if(previous) previous.removeFromParent(true);
          var icon:Image = GlobalFunction.getEquipUI(equipData.res);
          icon.scaleX = icon.scaleY = param2;
          result.addChild(icon);
+         var frame:Sprite = getAdvancedFrame104();
+         if(frame)
+         {
+            frame.name = "alchemyFrame104";
+            frame.touchable = false;
+            frame.scaleX = frame.scaleY = param2;
+            result.addChild(frame);
+         }
          if(symp >= 0)
          {
             var badge:Image = GlobalFunction.getSympUI(symp,false);
@@ -155,6 +169,190 @@ package com.meng52.game.module.equip
             badge.y = halfHeight;
          }
          return result;
+      }
+
+      private function getAdvancedFrame104() : Sprite
+      {
+         var star:int = getStar();
+         if(star<2 || star<7 && star<=getProStar()) return null;
+         var frame:Sprite = new Sprite();
+         if(star>=7)
+         {
+            if(star==7)
+            {
+               frame.addChild(GlobalFunction.createImage("UI_equip_box_0005"));
+            }
+            else
+            {
+               addRainbowFrame104(frame);
+            }
+            var alchemy:Array = my_data ? my_data.alchemy as Array : null;
+            var phase:int = alchemy && alchemy.length>0 ? Math.max(0,Math.min(2,int(alchemy[0]))) : 0;
+            if(star==7 && phase>0) addAlchemyCorners104(frame,phase,92);
+            return frame;
+         }
+         // The native quality icons also change the weapon artwork. Copy only
+         // their border, keeping this equipment's original illustration intact.
+         var texture:Texture = GlobalFunction.getTexture("EQ_1001_"+star+"0000");
+         var w:Number = texture.width;
+         var h:Number = texture.height;
+         var areas:Array = [new Rectangle(0,0,8,8),new Rectangle(w-8,0,8,8),
+            new Rectangle(0,h-8,8,8),new Rectangle(w-8,h-8,8,8),
+            new Rectangle(8,0,w-16,3),new Rectangle(8,h-3,w-16,3),
+            new Rectangle(0,8,3,h-16),new Rectangle(w-3,8,3,h-16)];
+         for each(var area:Rectangle in areas)
+         {
+            var edge:Image = new Image(Texture.fromTexture(texture,area));
+            edge.x = area.x;
+            edge.y = area.y;
+            frame.addChild(edge);
+         }
+         return frame;
+      }
+
+      private function addRainbowFrame104(frame:Sprite) : void
+      {
+         // Tint only the neutral native border. Its bevel, footprint and alpha
+         // stay native, with no extra bitmap, glow or change to the illustration.
+         var texture:Texture = GlobalFunction.getTexture("EQ_1001_20000");
+         var w:Number = texture.width;
+         var h:Number = texture.height;
+         var midX:Number = Math.floor(w/2);
+         var midY:Number = Math.floor(h/2);
+         var red:uint = 0xFF586B;
+         var orange:uint = 0xFFC267;
+         var yellow:uint = 0xE8F16C;
+         var green:uint = 0x66E08D;
+         var cyan:uint = 0x67DEFF;
+         var blue:uint = 0x7598FF;
+         var purple:uint = 0xC17BFF;
+         var pink:uint = 0xFF78C6;
+         // Each piece stores its rectangle and TL/TR/BL/BR vertex colors.
+         var pieces:Array = [
+            [14,0,midX-14,3,red,orange,red,orange],
+            [midX,0,w-midX-14,3,orange,yellow,orange,yellow],
+            [14,h-3,midX-14,3,purple,blue,purple,blue],
+            [midX,h-3,w-midX-14,3,blue,cyan,blue,cyan],
+            [0,14,3,midY-14,red,red,pink,pink],
+            [0,midY,3,h-midY-14,pink,pink,purple,purple],
+            [w-3,14,3,midY-14,yellow,yellow,green,green],
+            [w-3,midY,3,h-midY-14,green,green,cyan,cyan]];
+         for each(var piece:Array in pieces)
+         {
+            var edge:Image = new Image(Texture.fromTexture(texture,new Rectangle(piece[0],piece[1],piece[2],piece[3])));
+            edge.x = piece[0];
+            edge.y = piece[1];
+            for(var vertex:int=0;vertex<4;vertex++) edge.setVertexColor(vertex,uint(piece[4+vertex]));
+            frame.addChild(edge);
+            if(piece[2]>8 || piece[3]>8)
+            {
+               // A restrained one-pixel keyline lifts the native metal edge
+               // without widening the frame or adding an external glow.
+               var horizontal:Boolean = piece[2]>8;
+               var keyline:Quad = new Quad(horizontal ? piece[2] : 1,horizontal ? 1 : piece[3]);
+               keyline.x = piece[0]+(horizontal ? 0 : 1);
+               keyline.y = piece[1]+(horizontal ? 1 : 0);
+               keyline.alpha = 0.28;
+               for(vertex=0;vertex<4;vertex++) keyline.setVertexColor(vertex,uint(piece[4+vertex]));
+               frame.addChild(keyline);
+            }
+         }
+         // Use the complete native corner relief: connected rim, metal socket,
+         // faceted stone and inset shadow, rather than floating flat diamonds.
+         var cornerTexture:Texture = getRainbowCornerTexture104();
+         var positions:Array = [[0,0,0,0],[w-14,0,14,0],[w-14,h-14,14,14],[0,h-14,0,14]];
+         var colors:Array = [red,yellow,cyan,purple];
+         for(var i:int=0;i<positions.length;i++)
+         {
+            var position:Array = positions[i];
+            var mount:Image = new Image(Texture.fromTexture(cornerTexture,new Rectangle(position[2],position[3],14,14)));
+            mount.name = "rainbowCornerMount104";
+            mount.x = position[0];
+            mount.y = position[1];
+            for(vertex=0;vertex<4;vertex++) mount.setVertexColor(vertex,uint(colors[i]));
+            frame.addChild(mount);
+            var gem:Image = new Image(Texture.fromTexture(cornerTexture,new Rectangle(position[2]+3,position[3]+3,8,8)));
+            gem.name = "rainbowCornerGem104";
+            gem.x = mount.x+3;
+            gem.y = mount.y+3;
+            for(vertex=0;vertex<4;vertex++) gem.setVertexColor(vertex,uint(colors[(vertex+i)%4]));
+            frame.addChild(gem);
+         }
+      }
+
+      private function getRainbowCornerTexture104() : Texture
+      {
+         var texture:Texture = GlobalData.$assetManager.getTexture("__equipRainbowCorners104");
+         if(texture) return texture;
+         // Exact native UI_equip_box_0003 14px corners, with color removed.
+         // Each AALL pair preserves native alpha and relief brightness; the
+         // four stones receive rainbow vertex colors separately from the rim.
+         var rows:Array = [
+            "2615cd27ff27ff27ff27ff16ff16ff16ff16ff0dff0dff0dff0dff0dff0dff0dff0dff23ff23ff23ff23ff23ff23ff23ff23bc05733d0000",
+            "ff0bffc7ffc7ffc7ffc7ffb6ffb6ffb6ffb6ffe1ffe1ffe1ffe1ffe1ffe1ffe1ffe1ffc3ffc3ffc3ffc3ffc3ffc3ffc3ffc3ffa5fe3d732e",
+            "ff15ffd5ff87ff5dff5dff4cff4cff4cff4cff3cff3cff73ff73ff4bff51ff51ff6eff50ff50ff50ff50ff1aff1aff1aff63ffa5ff3dfb1a",
+            "ff21ffd5ff5dffd5ffd5ffc4ffc4ffc4ff9aff90ff73ff90ff3cff00ff1aff37ff6effc8ffc8ffc8ffc8ffa5ffa5ffa5ffa5ff6dff3dfb08",
+            "ff19ffb3ff3bffffffffffe7ffe7ffe7ffe7ffffff9aff72ff38e502e502ff2eff44fff5ffffffe7ffe7ffcdffcdfffffffeff44ff38ff08",
+            "ff19ffb3ff3bffffffffffffffffffffffffffdcff9aff72ff38e502e502ff2eff44ffc5fffffffffffffffffffffffffffeff44ff22ff02",
+            "ff19ffb3ff3bffcdffffffffffffffffffceff9aff9aff72ff38e502e502ff2eff44ffc5fff5ffffffffffffffffffbcffbcff44ff2eff02",
+            "ff19ffb3ff3bff84ffcdffceffffffffff85ff9aff9aff5eff38e502e502ff22ff44ff8dff8dffafffffffffff84ffbcffbcff44ff2eff02",
+            "ff19ffb3ff3bffa3ffd3ffffffdcffffffffffabff87ff87ff45e40bd50cff3dff3dffb2ffdcfffffffffff5ffffffc5ffc5ff34ff34ff02",
+            "ff19ff89ff3bffd3ffffffdcffb2ffb2ffffffd5ff87ff87ff45e40bd516ff3dff6dffb2ffffffdcffb2ffc5fff5fff5ffc5ff76ff34ff02",
+            "ff19ffb3ff65ffa3ffa3ff90ff90ff90ff90ff87ff5dff87ff45cb15d516ff3dff6dff77ff99ff8dff8dff91ff91ff91ff6bff76ff34ff02",
+            "ff19ff3bffb3ffa3ffa3ff8aff8aff8aff80ff87ffabffd0fd459321ab22fd3dffa5ff99ff83ff83ff8dff91ff91ff91ff91ffbfff34ff02",
+            "ff10ff15ff15ff15ff15ff12ff08ff08ff0efa13fa13fa13c21d63055905b719ff0dff16ff16ff10ff10ff00ff0dff11ff27ffd8ff38ff02",
+            "ff0afffbfffbff15c815ae0eae12ae12ae12921d921d921d5a0757005900590059199a209a1a9a1a9a1ab30db30dd01dff33ffd8ff38ff02",
+            "ff25ff83ff83ff08c808ab0eab12ab12ab12921d92135a075a075a005a00560056006b16a31aa31aa31ab310b310d01dff1dff90ff3cff02",
+            "ff25ff8dff77ff02ff02ff12ff08ff08ff0efa13fa13fa13921d5a005a009819e10dff16ff16ff10ff10ff06ff10ff13ff1dff73ff3cff02",
+            "ff21ff72ff72ff9aff9aff88ff88ff88ff7cffa3ffa3ffa5fd3d87198722fd45ffd0ffa1ff84ff84ff84ff88ff88ff88ff88ff5dff26ff02",
+            "ff21ff72ff4cff9aff9aff72ff72ff66ff66ff6bff6bff6dff3dd519d516ff45ff87ff6aff84ff84ff6aff66ff66ff66ff66ff40ff26ff00",
+            "ff21ff72ff38ffdcffffffdeffdeffdeffdeffd3ffd3ff6dff3dd50dd516ff45ff87ffb2ffffffdcffdcffdeffdeffdeffdeff26ff26ff02",
+            "ff0bff4cff38ffdcffffffffffffffffffffffffffd3ff3dff3dd50dd50cff45ff87ffb2ffffffffffffffffffffffffffdeff26ff26ff02",
+            "ff15ff23ff23fff6fff6fffffffffffffffffff6ffd9ff44ff22e606de02ff37ff6effbcffe6fffffffffffffffffff6ffd9ff2bff27ff0a",
+            "ff15ff23ff23ffa2ffd9ffdeffffffffff95ffa2ffbfff44ff2ee600de02ff37ff6eff6effbcffcdffffffffffdeffa2ffa2ff2bff21ff0a",
+            "ff21ffaeff65ffa2ffa2ffdcffffffffffffffbfffbfff44ff2eef06de02ff37ff6eff6eff98ff84ffffffdeffffffa2ffa2ff2bff21ff06",
+            "ff21ff65ff23ffbffff6ffffffb2ffb2fffffff6ffbfff44ff2eff0aff02ff37ff6eff98ffe6ffffffcdff95ffdefff6ffbfff2bff27ff0a",
+            "ea25ff98ff56ff98ffe1ffa9ffa9ffa9ffa9ffa1ff84ff84ff4dff00ff00ff45ff87ff67fff2ffa9ffa9ffb2ffb2ffb2ff95ff2eff2eff14",
+            "ea0bff56ff56ff56ff56ff67ff67ff67ff67ff4dff4dffa1ffa1ffa6ff87ff87ff87ff67ff67ff67ff67ff5eff5eff5eff5eff2eff2eea2e",
+            "c80bff26ff40ff40ff40ff2bff2bff2bff2bff29ff29ff29ff29ff29ff29ff29ff29ff29ff29ff29ff29ff33ff27ff33ff27ff32ff0c4846",
+            "00428540ff09ff09ff09ff05ff05ff05ff05ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff11ff11ff11ff11ff3248460032"];
+         var bitmap:BitmapData = new BitmapData(28,28,true,0);
+         for(var y:int=0;y<28;y++)
+         {
+            for(var x:int=0;x<28;x++)
+            {
+               var value:uint = uint(parseInt(String(rows[y]).substr(x*4,4),16));
+               var light:uint = value & 255;
+               bitmap.setPixel32(x,y,uint(((value>>>8)<<24)|(light*0x010101)));
+            }
+         }
+         texture = Texture.fromBitmapData(bitmap,false,false);
+         texture.root.onRestore = function():void { texture.root.uploadBitmapData(bitmap); };
+         GlobalData.$assetManager.addTexture("__equipRainbowCorners104",texture);
+         return texture;
+      }
+
+      private function addAlchemyCorners104(frame:Sprite,phase:int,height:Number) : void
+      {
+         // Keep the original +1 gold / +2 ruby corner ornaments, independently
+         // of the seven-star red border and of the eligibility threshold.
+         // Eight stars is terminal and always keeps the plain rainbow frame.
+         var texture:Texture = GlobalFunction.getTexture(phase==1 ? "UI_equip_box_0003" : "UI_equip_box_0004");
+         var areas:Array = [new Rectangle(0,0,8,8),new Rectangle(84,0,8,8),
+            new Rectangle(0,84,8,8),new Rectangle(84,84,8,8)];
+         for each(var area:Rectangle in areas)
+         {
+            var corner:Image = new Image(Texture.fromTexture(texture,area));
+            corner.x = area.x;
+            corner.y = area.y==0 ? 0 : height-8;
+            frame.addChild(corner);
+         }
+      }
+
+      public function getAlchemyColor104() : uint
+      {
+         var colors:Array = [0xAAAAAA,0xFFFFFF,0x6BFF87,0x65BFFF,0xDA79FF,0xFFCC66,0xFF586B,0xE6BDFF];
+         return uint(colors[Math.max(0,Math.min(7,getStar()-1))]);
       }
       
       public function getBookSkill(param1:Avatar = null) : SkillSet
@@ -271,12 +469,11 @@ package com.meng52.game.module.equip
       
       public function getAddStar() : int
       {
-         var _loc1_:Array = null;
+         var _loc1_:Array = my_data ? my_data.alchemy as Array : null;
          var _loc2_:int = 0;
-         if(my_data && my_data.hasOwnProperty("alchemy"))
+         if(_loc1_ && _loc1_.length>1)
          {
-            _loc1_ = my_data["alchemy"];
-            _loc2_ = int(_loc1_[_loc1_.length - 1]);
+            _loc2_ = int(_loc1_[1]);
          }
          return _loc2_;
       }
@@ -294,8 +491,8 @@ package com.meng52.game.module.equip
          if(my_data && my_data.hasOwnProperty("alchemy"))
          {
             _loc3_ = my_data["alchemy"];
-            _loc1_ = int(GlobalData.$mConfig_simple.equip_alchemy.star_lv);
-            if(int(_loc3_[1]) + getProStar() != _loc1_)
+            _loc1_ = Math.min(8,int(GlobalData.$mConfig_simple.equip_alchemy.star_lv));
+            if(int(_loc3_[1]) + getProStar() < _loc1_)
             {
                _loc2_ = int(_loc3_[0]);
             }

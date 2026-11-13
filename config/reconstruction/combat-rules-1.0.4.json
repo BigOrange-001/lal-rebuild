@@ -1,5 +1,5 @@
 {
-  "model": "legacy",
+  "model": "ratio",
   "reduction_exponent": 1.5,
   "defense_attack_midpoint": 0.7,
   "miss_slope": 40,

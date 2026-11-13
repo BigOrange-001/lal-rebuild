@@ -10,7 +10,7 @@ import time
 import run_hero_strength_104 as shared
 from run_hero_strength_independent_104 import run_focal, validate_games
 from hero_strength_freeze_104 import freeze_study
-from combat_rules import candidate_config
+from combat_rules import candidate_config, legacy_config
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -46,7 +46,7 @@ def main():
     cfg,heroes,pools=shared.study_config();out=args.output.resolve();started=time.monotonic()
     for model in ('legacy','ratio'):
         folder=out/model;(folder/'battles').mkdir(parents=True,exist_ok=True)
-        c=cfg if model=='legacy' else candidate_config(cfg)
+        c=legacy_config(cfg) if model=='legacy' else candidate_config(cfg)
         payload=dict(cfg=c,heroes=heroes,pools=pools,sampling_design='independent-focal-hero',games_per_hero=args.games)
         frozen=freeze_study(folder,json.dumps(payload,ensure_ascii=False,separators=(',',':'),default=str).encode('utf8'))
         jobs=[(mode,aid,str(folder),args.games) for mode,pool in pools.items() for aid in pool]

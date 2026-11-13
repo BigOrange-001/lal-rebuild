@@ -1,0 +1,102 @@
+{
+  "digest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015",
+  "assets": [
+    {
+      "alias": "MOD_DRAGON_KAISA104",
+      "kind": "image",
+      "path": "portraits/dragonmancer_kaisa.png",
+      "sha256": "01f41eab0f81aaac3573cb1bf4afbcb8031a8d3f3b93b85fbb380a03b5d08f48",
+      "bytes": 216902,
+      "width": 600,
+      "height": 300,
+      "role": "portrait",
+      "packageId": "builtin.dragonmancer-kaisa-104",
+      "version": "1.0.4",
+      "contentDigest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015"
+    },
+    {
+      "alias": "MOD_DRAGON_KAISA104_icon0000",
+      "kind": "image",
+      "path": "cards/dragonmancer_kaisa.png",
+      "sha256": "52ea1151ee62e82808ab2c1bf0678ad0201f1e56d844f6c5298f0aeaa1949001",
+      "bytes": 31519,
+      "width": 160,
+      "height": 160,
+      "role": "icon",
+      "packageId": "builtin.dragonmancer-kaisa-104",
+      "version": "1.0.4",
+      "cardFrame": [
+        24,
+        16,
+        112,
+        128
+      ],
+      "contentDigest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015"
+    },
+    {
+      "alias": "MOD_KAISA_MISSILE104",
+      "kind": "image",
+      "path": "effects/icathian_missile.png",
+      "sha256": "02a16a5647fc99f62e211c4c29c99ffa8562f40b56e75879458d3d1fd9b127e2",
+      "bytes": 9656,
+      "width": 256,
+      "height": 31,
+      "role": "effect",
+      "packageId": "builtin.dragonmancer-kaisa-104",
+      "version": "1.0.4",
+      "contentDigest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015"
+    },
+    {
+      "alias": "MOD_KAISA_PLASMA104_1",
+      "kind": "image",
+      "path": "effects/plasma_1.png",
+      "sha256": "461882840f9e5f5f83bd2981ce6fbd1c020e2c0c6482a9e6713779d483d7666f",
+      "bytes": 9701,
+      "width": 160,
+      "height": 80,
+      "role": "effect",
+      "packageId": "builtin.dragonmancer-kaisa-104",
+      "version": "1.0.4",
+      "contentDigest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015"
+    },
+    {
+      "alias": "MOD_KAISA_PLASMA104_2",
+      "kind": "image",
+      "path": "effects/plasma_2.png",
+      "sha256": "fc9098a8b915e334b5749d5a6195fab292edd17d0856770c68b49995092d53ba",
+      "bytes": 10958,
+      "width": 160,
+      "height": 80,
+      "role": "effect",
+      "packageId": "builtin.dragonmancer-kaisa-104",
+      "version": "1.0.4",
+      "contentDigest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015"
+    },
+    {
+      "alias": "MOD_KAISA_PLASMA104_3",
+      "kind": "image",
+      "path": "effects/plasma_3.png",
+      "sha256": "23b2f2ee46d4387e39279f2553b5da60cfa0f38afdc6ede56ffca044609edda1",
+      "bytes": 11583,
+      "width": 160,
+      "height": 80,
+      "role": "effect",
+      "packageId": "builtin.dragonmancer-kaisa-104",
+      "version": "1.0.4",
+      "contentDigest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015"
+    },
+    {
+      "alias": "MOD_KAISA_PLASMA104_4",
+      "kind": "image",
+      "path": "effects/plasma_4.png",
+      "sha256": "8f7b5e05c38cb117b71bdf3787d2386b744e8e79b6c0c21a9287dd0a26dd62f3",
+      "bytes": 13108,
+      "width": 160,
+      "height": 80,
+      "role": "effect",
+      "packageId": "builtin.dragonmancer-kaisa-104",
+      "version": "1.0.4",
+      "contentDigest": "317e4ddc8f3181a6df4a7a85909164f3612833ef5013e00e694494873ebd5015"
+    }
+  ]
+}

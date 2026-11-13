@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The manager half of the merged manifest.
+
+  This module ships NO resources: the merged APK keeps the AIR client's single
+  resources.arsc, so anything declared here with an @ reference would have to
+  resolve against the client's table. All labels are therefore literals and all
+  themes come from the framework.
+
+  Note that the assembled package does NOT use this file as-is. Gradle needs a
+  manifest it can link on its own to produce the manager's dex and native libs,
+  and this is it; the file that actually ships is build/merged/AndroidManifest.xml,
+  which is authored separately and merged with the client's block. The two must
+  stay in step — if you add a component here, add it there too.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Loopback only: the server listens on 127.0.0.1 and never leaves the device. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:name="androidx.multidex.MultiDexApplication"
+        android:allowBackup="true"
+        android:label="撸啊撸 管理器"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.NoActionBar"
+        android:extractNativeLibs="false">
+
+        <activity
+            android:name=".HomeActivity"
+            android:exported="true"
+            android:label="撸啊撸 管理器">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:label="本地服务与存档" />
+
+        <service
+            android:name=".ServerService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Runs the locally bundled offline game server on the device loopback interface so the companion client can play without a PC." />
+        </service>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+        <activity android:name=".ModImportActivity" android:exported="true"
+            android:label="导入英雄包" android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Material.NoActionBar"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="lalmod-import" android:host="pick" />
+            </intent-filter>
+        </activity>
+
+    </application>
+</manifest>

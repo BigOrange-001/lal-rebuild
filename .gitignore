@@ -18,3 +18,7 @@ __pycache__/
 
 /client/build/
 /mods/
+/android-manager/.gradle/
+/android-manager/build/
+/android-manager/app/build/
+/android-manager/local.properties

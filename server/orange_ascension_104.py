@@ -89,6 +89,14 @@ def apply_orange_ascension_104(document):
 
 
 def builtin_asset(cfg, content_digest, path):
+    from nightbringer_yasuo_104 import builtin_asset as yasuo_asset
+    custom = yasuo_asset(cfg, content_digest, path)
+    if custom is not None:
+        return custom
+    from dragonmancer_kaisa_104 import builtin_asset as kaisa_asset
+    custom = kaisa_asset(cfg, content_digest, path)
+    if custom is not None:
+        return custom
     manifest = cfg.get('builtin_assets_104', {})
     if content_digest != manifest.get('digest'):
         return None

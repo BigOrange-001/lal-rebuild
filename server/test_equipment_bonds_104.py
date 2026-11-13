@@ -25,10 +25,15 @@ class EquipmentBonds104Tests(unittest.TestCase):
     def test_complete_catalogue_two_ordinary_distinct_slots_and_exclusive_coverage(self):
         definitions=self.cfg['system_simple']['equipment_bonds_104']
         eligible={a for a in self.cfg['avatar'] if a.endswith('_6') and a.rsplit('_',1)[0] in {f for b in self.cfg['system_simple']['bonds_104'] for f in b['families']}}
-        self.assertEqual(set(definitions),eligible);self.assertEqual(len(eligible),125);self.assertIn("A_1140_6",eligible)
+        self.assertEqual(set(definitions),eligible);self.assertEqual(len(eligible),127);self.assertIn("A_1140_6",eligible)
         exclusive=set(self.cfg['system_simple']['equipment_roll_policy']['exclusive_ids'])
         found=set();counts=Counter()
         for aid,rows in definitions.items():
+            if aid in ('A_1801_6','A_1802_6'):
+                self.assertEqual(len(rows),2)
+                self.assertTrue(all(r['kind']=='stats' and r['stats'] for r in rows))
+                self.assertEqual(len({self.cfg['equip'][r['equipment']]['slot'] for r in rows}),2)
+                continue
             ordinary=[r for r in rows if r['kind']=='ordinary']
             self.assertEqual(len(ordinary),2)
             self.assertEqual(len({(r['slot'],str(r['index']),str(r['path'])) for r in ordinary}),2)

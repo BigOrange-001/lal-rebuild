@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE MANIFEST THAT SHIPS.
+
+  This is the merged package's manifest: the AIR client's block carried over
+  verbatim, plus the manager's components. It is linked by
+  scripts/build_merged.py with the client APK as an include —
+  `aapt2 link -I build/lal-rebuild-1.0.0.apk` — so every @-reference below
+  resolves to the ID that already exists in the client's resource table, and
+  the resulting resources.arsc is discarded in favour of the client's own.
+
+  The client's table cannot be regenerated. Its classes.dex bakes nine
+  Lair/com/meng52/lol/android/R$* constant sets into bytecode, so resources.arsc
+  must pass through byte-identical and nothing here may add, rename or reorder
+  an entry. Only references that already exist are allowed, which is why the
+  manager contributes literals and framework themes instead of its own.
+
+  References used, all present in the client table:
+    @string/app_name      -> 0x7f07000c
+    @mipmap/icon          -> 0x7f050000
+    @style/Theme.NoShadow -> 0x7f080000
+    @xml/provider_paths   -> 0x7f090000
+
+  Deliberate deltas from the client's original manifest:
+    - minSdk 21 -> 24 (Chaquopy 16.1.0, which runs the bundled Python server)
+    - MAIN/LAUNCHER moved from AIRAppEntry to HomeActivity, which offers both
+      destinations; AIRAppEntry keeps every other attribute and becomes
+      exported="false" since only HomeActivity now launches it
+    - added MainActivity, ServerService, BootReceiver and the manager's
+      permissions, plus the ACCESS_NETWORK_STATE and VIBRATE the client wanted
+    - dropped androidx.startup.InitializationProvider, ProfileInstallReceiver,
+      appComponentFactory and DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: all of
+      those came from AndroidX, which this module no longer depends on
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="air.com.meng52.lol.android"
+    android:versionCode="1000000"
+    android:versionName="1.0.0"
+    android:installLocation="auto"
+    android:compileSdkVersion="35"
+    android:compileSdkVersionCodename="15">
+
+    <uses-sdk
+        android:minSdkVersion="24"
+        android:targetSdkVersion="36" />
+
+    <queries>
+        <package android:name="com.harman.air.scout.companion" />
+    </queries>
+
+    <!-- Client permissions (unchanged) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Manager permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@mipmap/icon"
+        android:name="androidx.multidex.MultiDexApplication"
+        android:enabled="true"
+        android:hardwareAccelerated="true"
+        android:extractNativeLibs="false"
+        android:usesCleartextTraffic="true"
+        android:allowBackup="true"
+        android:supportsRtl="true">
+
+        <!--
+          The launcher icon. Sole MAIN/LAUNCHER filter in the package; it is the
+          only thing the player sees in the drawer.
+        -->
+        <activity
+            android:name="com.lal.rebuild.manager.HomeActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Material.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          The game's entry point. Attributes are identical to the client's
+          original activity apart from the removed intent-filter and the
+          exported=false that follows from it. screenOrientation=2 is "user" —
+          the AIR descriptor's own choice, not the "portrait" it is sometimes
+          mistaken for; configChanges is the bitmask AIR asks for (keyboard,
+          keyboardHidden, orientation, screenLayout, screenSize,
+          smallestScreenSize).
+        -->
+        <activity
+            android:name="air.com.meng52.lol.android.AIRAppEntry"
+            android:theme="@style/Theme.NoShadow"
+            android:label="@string/app_name"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="user"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:windowSoftInputMode="adjustResize|stateUnspecified">
+            <meta-data android:name="embeddedFonts" android:value="false" />
+            <meta-data android:name="namespaceVersion" android:value="51.4" />
+            <meta-data android:name="aspectRatio" android:value="portrait" />
+            <meta-data android:name="autoOrients" android:value="false" />
+            <meta-data android:name="orientationAnimation" android:value="standard" />
+            <meta-data android:name="fullScreen" android:value="true" />
+            <meta-data
+                android:name="uniqueappversionid"
+                android:value="7e7e34e2-99dd-42c8-98e9-b01d58829cf5" />
+            <meta-data android:name="initialcontent" android:value="MainLLOL.swf" />
+            <meta-data android:name="containsVideo" android:value="false" />
+            <meta-data android:name="webContentsDebuggingEnabled" android:value="false" />
+            <meta-data android:name="webViewAllowFileAccess" android:value="false" />
+            <meta-data android:name="disableMediaCodec" android:value="false" />
+            <meta-data android:name="useAndroidCamera2" android:value="false" />
+        </activity>
+
+        <!-- The manager's own screen: server switch, saves, GM grants. -->
+        <activity
+            android:name="com.lal.rebuild.manager.MainActivity"
+            android:exported="false"
+            android:label="本地服务与存档"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+
+        <service
+            android:name="com.lal.rebuild.manager.ServerService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Runs the locally bundled offline game server on the device loopback interface so the companion client can play without a PC." />
+        </service>
+
+        <receiver
+            android:name="com.lal.rebuild.manager.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- AIR's providers, carried over unchanged. -->
+        <provider
+            android:name="com.adobe.air.CameraUIProvider"
+            android:exported="false"
+            android:authorities="air.com.meng52.lol.android.provider"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+        <provider
+            android:name="com.adobe.air.AIRFileProvider"
+            android:exported="false"
+            android:authorities="air.com.meng52.lol.android.air_file_provider"
+            android:grantUriPermissions="true" />
+
+        <meta-data android:name="android.max_aspect" android:value="3.4" />
+        <activity android:name="com.lal.rebuild.manager.ModImportActivity" android:exported="true"
+            android:label="导入英雄包" android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Material.NoActionBar"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="lalmod-import" android:host="pick" />
+            </intent-filter>
+        </activity>
+
+    </application>
+</manifest>

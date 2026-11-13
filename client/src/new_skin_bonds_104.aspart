@@ -1,0 +1,12 @@
+      public function skinBondNumber104(key:String, fallback:Number = 0) : Number
+      {
+         var family:String = String(avatarData.id).split("_").slice(0,2).join("_");
+         var value:Number = fallback;
+         for each(var bond:Object in getBondRows104())
+         {
+            var benefit:Object = bond.benefits[family];
+            if(benefit && benefit.mechanics && benefit.mechanics[key]!=null)
+               value = Math.max(value,Number(benefit.mechanics[key]));
+         }
+         return value;
+      }

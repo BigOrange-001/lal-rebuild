@@ -1,0 +1,280 @@
+      // Dragonmancer Kai'Sa keeps per-caster volley growth and per-root target marks.
+      public var kaisaRoot104:Avatar;
+      public var kaisaCast104:Number = 0;
+      private var kaisaMarks104:Object = {};
+      private var kaisaHunting104:Boolean = false;
+      private var kaisaBurst104:Boolean = false;
+      private var kaisaPlasmaIcons104:Object = {};
+
+      private function kaisaIs104() : Boolean
+      {
+         var row:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[avatarData.id] : null;
+         return row && row.dragonmancerKaisa104 === true;
+      }
+      private function kaisaLane104(lane:int) : Array
+      {
+         return abilityCandidates(otherTeam,lane,GameMapConfig.LINE_POS/2,GameMapConfig.LINE_POS,-1,false,"front");
+      }
+      private function kaisaTarget104() : Avatar
+      {
+         if(!kaisaIs104() || kaisaRoot104 || !isLeader || hp<=0 || !GameMap.currentMap) return null;
+         var single:Boolean=kaisaSingleLane104();
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+            if(unit.hp>0 && !GameMap.currentMap.isEnd(unit.line) && (unit.line!=line || single) && unit.getType()==1 && !unit.isManualSummonUnit && unit.buffs.stun) return unit;
+         return null;
+      }
+      private function kaisaSingleLane104() : Boolean
+      {
+         var map:GameMap=GameMap.currentMap;
+         if(!map || map.isEnd() || !map.winnerList || map.isEnd(line)) return false;
+         var remaining:int=0;
+         for(var lane:int=0;lane<map.winnerList.length;lane++) if(!map.isEnd(lane)) ++remaining;
+         return remaining==1;
+      }
+      private function kaisaCanCast104(kind:String) : Boolean
+      {
+         if(!kaisaIs104() || hp<=0) return false;
+         if(kind=="dragon_kaisa_n") return kaisaLane104(line).length>0;
+         if(kind=="dragon_kaisa_c") return skill0 && !kaisaHunting104 && kaisaTarget104()!=null;
+         return false;
+      }
+      private function kaisaTryCaptain104() : Boolean
+      {
+         if(!skill1 || skill1.m_cooldownNum>=0 || !kaisaCanCast104("dragon_kaisa_c")) return false;
+         var enabled:Boolean=false;
+         for each(var action:Array in skill1.skills) if(action[0]=="manual_ability" && action[1]=="dragon_kaisa_c") enabled=true;
+         if(!enabled) return false;
+         return skill1.checkUse();
+      }
+      private static function kaisaNotifyStun104(stunned:Avatar) : void
+      {
+         if(!GameMap.currentMap || !stunned || stunned.hp<=0 || !stunned.buffs.stun || stunned.getType()!=1 || stunned.isManualSummonUnit) return;
+         var watchers:Vector.<Avatar> = (GameMap.currentMap.getAliveList(stunned.otherTeam) as Vector.<Avatar>).concat();
+         for each(var watcher:Avatar in watchers) if(watcher) watcher.kaisaTryCaptain104();
+      }
+      private function kaisaExecute104(kind:String, sourceSkill:*) : Boolean
+      {
+         if(!kaisaCanCast104(kind)) return false;
+         if(kind=="dragon_kaisa_c") return kaisaHunt104();
+         return kaisaVolley104(sourceSkill || skill0);
+      }
+      private function kaisaVolley104(sourceSkill:*) : Boolean
+      {
+         var castLane:int=line;
+         if(!sourceSkill || !sourceSkill.skills || !kaisaLane104(castLane).length) return false;
+         var count:Number=3+2*kaisaCast104;
+         ++kaisaCast104;
+         var coefficient:Number=Number(sourceSkill.skills[0][4]);
+         var globalRate:Number=Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104);
+         if(!isFinite(globalRate) || globalRate<=0) globalRate=1;
+         var seen:Array=[];
+         for(var shot:Number=0;shot<count && hp>0;shot++)
+         {
+            var live:Array=kaisaLane104(castLane);
+            if(!live.length) break;
+            var target:Avatar=null;
+            for each(var candidate:Avatar in live) if(seen.indexOf(candidate)<0) {target=candidate;break;}
+            if(!target) {seen=[];target=live[0];}
+            seen.push(target);
+            kaisaProjectile104(target,shot);
+            // Each missile owns a full settlement boundary. In particular,
+            // endAbilityAttack handles retaliation before reacquiring the next.
+            var context:Object=beginAbilityAttack(this,"active");
+            context.skill=sourceSkill;
+            context.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+            try
+            {
+               var hit:Boolean=abilityHit(target,coefficient/globalRate,2,"FX_KAISA_MISSILE104");
+               var sunder:Number=(kaisaRoot104 || this).skinBondNumber104("kaisa_q_sunder");
+               if(hit && hp>0 && target.hp>0 && sunder>0 && sunder<1)
+                  abilityControl(target,"sunder",1,sunder/(1-sunder));
+            }
+            finally {endAbilityAttack(context);}
+            GameMap.actionDelay+=0.08;
+         }
+         return true;
+      }
+      private function kaisaHunt104() : Boolean
+      {
+         var target:Avatar=kaisaTarget104();
+         if(!target || kaisaHunting104) return false;
+         var front:Array=kaisaLane104(target.line);
+         if(!front.length) return false;
+         var oldLine:int=line;
+         var oldPos:int=pos;
+         kaisaHunting104=true;
+         try
+         {
+            var clone:Avatar=new Avatar(GlobalData.modDefinitionId(avatarData.id,"summoned"),{lv:lv,slv:skill0.lv});
+            clone.goFight(team,oldLine,0,false);
+            if(!clone.inheritSummonPanel(this,1)) return false;
+            clone.kaisaRoot104=kaisaRoot104 || this;
+            clone.kaisaCast104=0;
+            clone.skill0=new SkillSet(skill0.skillSetData.id,clone,skill0.lv);
+            clone.skillB=skillB ? new SkillSet(skillB.skillSetData.id,clone,skillB.lv) : null;
+            clone.skill1=null;
+            clone.skill2=null;
+            clone.speed=speed;
+            clone.range=getRange();
+            clone.addBuff("summon",7);
+            kaisaProtect104(clone);
+            var destination:int=int(front[0].pos)+(team==1 ? 500 : -500);
+            var landingDelay:Number=GameMap.actionDelay+2;
+            reline(target.line,Math.max(0,Math.min(GameMapConfig.LINE_POS,destination)));
+            // Add after moving the caster, so native spacing doesn't push the
+            // clone away from the position just vacated by its own body.
+            GameMap.currentMap.addAvatar(clone,team,oldLine,oldPos,false);
+            if(clone.m_icon) clone.m_icon.color=0x83EADA;
+            // reline refreshes its visual at +1.4s, then scales back in.
+            // Read the launch position only after that landing has completed.
+            GameMap.actionDelay=Math.max(GameMap.actionDelay,landingDelay);
+            // Run the real normal-skill path (including its cast events),
+            // bypassing only readiness and preserving its pre-existing timer.
+            var savedCooldown:int=skill0.m_cooldownNum;
+            try {skill0.useSkill();}
+            finally {skill0.m_cooldownNum=savedCooldown;}
+            return true;
+         }
+         finally {kaisaHunting104=false;}
+      }
+      private function kaisaProtect104(newClone:Avatar) : void
+      {
+         var recipients:Array=[this,newClone];
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(team))
+            if(unit.hp>0 && unit.kaisaRoot104===this && recipients.indexOf(unit)<0) recipients.push(unit);
+         for each(var recipient:Avatar in recipients)
+         {
+            if(!recipient || recipient.hp<=0) continue;
+            // Cleanse first so an existing curse cannot reject the shield.
+            recipient.addBuff("purify",3,0,0,-1,this);
+            recipient.addBuff("shield",3,Tools.toInt(recipient.getHpMax()*.6),0,-1,this);
+         }
+      }
+      private function kaisaEvent104(event:String,source:Avatar,target:Avatar) : void
+      {
+         if(event!="hit" || source!==this || !kaisaIs104() || kaisaBurst104 || !target || target.hp<=0 || target.team==team || !skillB) return;
+         var enabled:Boolean=false;
+         for each(var action:Array in skillB.skills) if(action[0]=="manual_ability" && action[1]=="dragon_kaisa_p") enabled=true;
+         if(!enabled) return;
+         var context:Object=currentAbilityAttack();
+         if(!context || context.owner!==this || (context.kind!="basic" && context.kind!="active")) return;
+         var root:Avatar=kaisaRoot104 || this;
+         var key:String=String(root.abilityIndex);
+         target.kaisaMarks104[key]=int(target.kaisaMarks104[key])+1;
+         if(int(target.kaisaMarks104[key])<5)
+         {
+            target.kaisaQueuePlasma104(key,int(target.kaisaMarks104[key]));
+            return;
+         }
+         target.kaisaMarks104[key]=int(target.kaisaMarks104[key])-5;
+         target.kaisaQueuePlasma104(key,int(target.kaisaMarks104[key]));
+         kaisaBurst104=true;
+         var burst:Object=beginAbilityAttack(this,"passive");
+         try
+         {
+            target.addBuff("curse",1,0,0,-1,this);
+            var raw:int=Tools.toInt(target.getHpMax()*.2);
+            // Fixed maximum-health true damage bypasses the AP/armor/RPS
+            // calculation and its historical true-AP coefficient.
+            target.injured(raw,1,null,3,this,false,this);
+            if(hp>0) injured(Tools.toInt(getHpMax()*.05),1,null,4,this,false,this);
+         }
+         finally {endAbilityAttack(burst);kaisaBurst104=false;}
+      }
+      private function kaisaQueuePlasma104(key:String, stacks:int) : void
+      {
+         GameMapLayer.gl.delayCall(kaisaShowPlasma104,GameMap.actionDelay,key,stacks,GameMap.currentMap);
+      }
+      private function kaisaShowPlasma104(key:String, stacks:int, battle:GameMap) : void
+      {
+         if(GameMap.currentMap!==battle || !m_fightRes) return;
+         var old:Image=kaisaPlasmaIcons104[key] as Image;
+         if(old && old.parent) old.removeFromParent(true);
+         delete kaisaPlasmaIcons104[key];
+         if(stacks>=1 && stacks<=4)
+         {
+            var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_KAISA_PLASMA104_"+stacks);
+            if(texture)
+            {
+               var mark:Image=new Image(texture);
+               mark.touchable=false;
+               mark.pivotX=texture.width*.5;mark.pivotY=texture.height*.5;
+               kaisaPlasmaIcons104[key]=mark;
+               m_fightRes.addChild(mark);
+            }
+         }
+         var active:Array=[];
+         for each(var image:Image in kaisaPlasmaIcons104) if(image.parent===m_fightRes) active.push(image);
+         // The native battle card is 94 units wide. Keep one mark readable
+         // across its lower edge, with the V below the card's sign badge.
+         var width:Number=Math.min(82,86/Math.max(1,active.length));
+         for(var index:int=0;index<active.length;index++)
+         {
+            var icon:Image=active[index] as Image;
+            icon.scaleX=icon.scaleY=width/icon.texture.width;
+            icon.x=(index-(active.length-1)*.5)*width;
+            icon.y=40;
+         }
+      }
+      private function kaisaClearPlasma104() : void
+      {
+         for each(var image:Image in kaisaPlasmaIcons104) if(image.parent) image.removeFromParent(true);
+         kaisaPlasmaIcons104={};
+      }
+      private function kaisaProjectile104(target:Avatar, shot:Number) : void
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(GameMapLayer.isFastest || !layer || !m_fightRes || !target.m_fightRes) return;
+         var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_KAISA_MISSILE104");
+         if(!texture) return;
+         var owner:Avatar=this;
+         var battle:GameMap=GameMap.currentMap;
+         layer.delayCall(function():void
+         {
+         if(GameMap.currentMap!==battle || !owner.m_fightRes || !target.m_fightRes) return;
+         var parent:Sprite=layer.effectLayer;
+         var start:Point=parent.globalToLocal(owner.m_fightRes.localToGlobal(new Point(0,-24)));
+         var finish:Point=parent.globalToLocal(target.m_fightRes.localToGlobal(new Point(0,-12)));
+         var fan:Number=(shot%3-1)*115+(int(shot/3)%2 ? 35 : -35);
+         var control:Point=new Point((start.x+finish.x)*.5+fan,Math.min(start.y,finish.y)-90-Math.abs(fan)*.4);
+         var sprite:Sprite=new Sprite();
+         sprite.touchable=false;
+         var trails:Array=[];
+         for(var i:int=0;i<12;i++)
+         {
+            var trail:Quad=new Quad(1,3,0x33E5D5);
+            trail.touchable=false;sprite.addChild(trail);trails.push(trail);
+         }
+         var missile:Image=new Image(texture);
+         missile.pivotX=texture.width*.88;missile.pivotY=texture.height*.5;
+         missile.scaleX=missile.scaleY=100/texture.width;missile.touchable=false;sprite.addChild(missile);
+         var state:Object={progress:0};
+         var time:Number=.35;
+         var tween:Tween=new Tween(state,time,"linear");
+         tween.animate("progress",1);
+         tween.onUpdate=function():void
+         {
+            if(GameMap.currentMap!==battle) {sprite.removeFromParent(true);return;}
+            var t:Number=state.progress;
+            var inv:Number=1-t;
+            missile.x=inv*inv*start.x+2*inv*t*control.x+t*t*finish.x;
+            missile.y=inv*inv*start.y+2*inv*t*control.y+t*t*finish.y;
+            missile.rotation=Math.atan2(2*inv*(control.y-start.y)+2*t*(finish.y-control.y),2*inv*(control.x-start.x)+2*t*(finish.x-control.x));
+            for(var j:int=0;j<trails.length;j++)
+            {
+               var a:Number=Math.max(0,t-(j+1)*.014);
+               var b:Number=Math.max(0,t-j*.014);
+               var x0:Number=(1-a)*(1-a)*start.x+2*(1-a)*a*control.x+a*a*finish.x;
+               var y0:Number=(1-a)*(1-a)*start.y+2*(1-a)*a*control.y+a*a*finish.y;
+               var x1:Number=(1-b)*(1-b)*start.x+2*(1-b)*b*control.x+b*b*finish.x;
+               var y1:Number=(1-b)*(1-b)*start.y+2*(1-b)*b*control.y+b*b*finish.y;
+               var q:Quad=trails[j] as Quad;
+               q.x=x0;q.y=y0;q.width=Math.max(.1,Point.distance(new Point(x0,y0),new Point(x1,y1)));
+               q.height=Math.max(.3,3*(1-j/12));q.rotation=Math.atan2(y1-y0,x1-x0);q.alpha=.45*(1-j/12);
+            }
+         };
+         tween.onComplete=function():void {sprite.removeFromParent(true);};
+         parent.addChild(sprite);
+         layer.addTween(tween);
+         },GameMap.actionDelay);
+      }

@@ -1,0 +1,46 @@
+{
+  "schema": "new-skin-bonds-20261113",
+  "bonds": [
+    {
+      "id": "dragon_night_104",
+      "name": "龙影夜刃",
+      "relation": "skin",
+      "families": ["A_1801", "A_1802"],
+      "benefits": {
+        "A_1801": {"mechanics": {"kaisa_q_sunder": 0.33}, "info": "艾卡西亚暴雨每发命中后，额外施加33%破甲，持续1回合。"},
+        "A_1802": {"mechanics": {"yasuo_crit_true": 0.5}, "info": "黑夜剑心的暴击追加真实伤害由35%提高至50%。"}
+      }
+    },
+    {
+      "id": "otherworld_swords_104",
+      "name": "异界剑盟",
+      "relation": "skin",
+      "families": ["A_1802", "A_1219", "A_1210"],
+      "benefits": {
+        "A_1802": {"mechanics": {"yasuo_c_silenced": 1, "yasuo_c_damage": 1.12}, "info": "狂风绝息斩伤害提升12%，并且可以在被沉默时释放；仍需队长身份、技能就绪及有效目标，不能绕过眩晕。"},
+        "A_1219": {"stats": {"ap": 0.2, "hp": 0.2}},
+        "A_1210": {"stats": {"ap": 0.2, "hp": 0.2}}
+      }
+    },
+    {
+      "id": "dragon_heart_hunters_104",
+      "name": "猎心龙舞",
+      "relation": "skin",
+      "families": ["A_1801", "A_1206"],
+      "benefits": {
+        "A_1801": {"stats": {"ap": 0.14, "hp": 0.14}},
+        "A_1206": {"stats": {"ap": 0.14, "hp": 0.14}}
+      }
+    }
+  ],
+  "equipment": {
+    "A_1802_6": [
+      {"equipment": "E_1019_6", "kind": "stats", "name": "破夜战刃", "stats": {"ap": 0.2}, "info": "本人穿戴源计划战刃，攻击力提高20%。"},
+      {"equipment": "E_3007_6", "kind": "stats", "name": "夜翼护身", "stats": {"hp": 0.2}, "info": "本人穿戴暗影羽翼，生命值提高20%。"}
+    ],
+    "A_1801_6": [
+      {"equipment": "E_1020_6", "kind": "stats", "name": "圣光龙枪", "stats": {"ap": 0.2}, "info": "本人穿戴圣光双枪，攻击力提高20%。"},
+      {"equipment": "E_5006_6", "kind": "stats", "name": "影刃龙步", "stats": {"hp": 0.2}, "info": "本人穿戴影刃战靴，生命值提高20%。"}
+    ]
+  }
+}

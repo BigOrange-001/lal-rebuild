@@ -6,7 +6,9 @@ from manual_ability_sim import KINDS
 def unsupported_manual_skills(cfg, hero_ids):
     """Fail closed before a study rather than silently skip unsupported skills."""
     implemented = KINDS | {'cat_n', 'cat_c', 'polar_n', 'polar_c',
-                           'santa_n', 'santa_c', 'nurse_n', 'nurse_c'}
+                           'santa_n', 'santa_c', 'nurse_n', 'nurse_c',
+                           'dragon_kaisa_n', 'dragon_kaisa_c', 'dragon_kaisa_p',
+                           'night_yasuo_n', 'night_yasuo_c', 'night_yasuo_p'}
     missing = {}
     for aid in hero_ids:
         hero = cfg['avatar'][aid]

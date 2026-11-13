@@ -1978,7 +1978,9 @@ class GameplayRosterEquipment:
             pending_wash = p.get("attrs", {}).get("equip_wash")
             if isinstance(pending_wash, dict) and pending_wash.get("eqid") in (target_id, mat_id):
                 self._fail("PendingOperation", "Save or cancel the equipment wash before alchemy")
-            max_star = int(self.simple.get("equip_alchemy", {}).get("star_lv", 7))
+            # Eight stars is terminal: even a higher configured ceiling must
+            # never create eight-star +1/+2 states or consume their materials.
+            max_star = min(8, int(self.simple.get("equip_alchemy", {}).get("star_lv", 7)))
             if self._equip_star(target) >= max_star:
                 self._fail("MaxGrowth", "Equipment has reached its alchemy limit")
             if any(mat_id in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip material first")
@@ -2506,8 +2508,9 @@ class GameplayRosterEquipment:
         if bond_skills.get('leader_skill'):
             skill1 = self._skill(bond_skills['leader_skill'])
         stats['bonds_104'] = [bond['id'] for bond in bonds]
-        from equipment_bonds_104 import profile_equipment_bonds, skill_id as equipment_skill_id
+        from equipment_bonds_104 import profile_equipment_bonds, skill_id as equipment_skill_id, apply_equipment_stats
         equipment_bonds=profile_equipment_bonds(bond_config,profile,key,hero_only)
+        apply_equipment_stats(stats,equipment_bonds)
         stats['equipment_bonds_104']=[r['equipment'] for r in equipment_bonds]
         def equipment_skill(snapshot,level=1):
             if not snapshot:return snapshot

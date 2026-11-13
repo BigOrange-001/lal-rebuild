@@ -123,6 +123,7 @@
       }
       public static function advanceEffects104(elapsed:Number) : void
       {
+         yasuoAdvanceEffects104(elapsed);
          if(GameMapLayer.isFastest) {if(fxLayer104)clearEffects104();return;}
          if(!fxEnsure104()) {clearEffects104();return;}
          fxTime104+=elapsed;fxPoll104+=elapsed;if(fxPoll104<.04)return;fxPoll104=0;

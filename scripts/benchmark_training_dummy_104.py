@@ -20,7 +20,7 @@ from gateway import load_game_config
 from gameplay_roster import GameplayRosterEquipment
 from battle_engine import serialize_player_team
 from cultivation_rules import allocate_budget, cap as culture_cap, WEIGHTS, used as culture_used
-from combat_rules import candidate_config
+from combat_rules import candidate_config, legacy_config
 from hero_strength_native_bridge import NativeSkinBattle
 from hero_strength_freeze_104 import freeze_study
 
@@ -216,7 +216,7 @@ def main():
     print(json.dumps(dict(heroes=len(payload['aids']),targets=payload['targets'],equipment_level=args.equipment_level),ensure_ascii=False),flush=True)
     for model in (('legacy','ratio') if args.model=='both' else (args.model,)):
         folder=out/model;(folder/'battles').mkdir(parents=True,exist_ok=True)
-        payload['cfg']=legacy if model=='legacy' else candidate_config(legacy)
+        payload['cfg']=legacy_config(legacy) if model=='legacy' else candidate_config(legacy)
         config=freeze_study(folder,json.dumps(payload,ensure_ascii=False,separators=(',',':'),default=str).encode('utf8'))
         jobs=[(aid,loadout,target,args.trials,str(folder)) for aid in payload['aids']
               for loadout in ('naked','offense') for target in ('zero','armored')]

@@ -4,8 +4,11 @@ package com.meng52.game.ui.panel
    import com.meng52.game.global.GlobalFunction;
    import com.meng52.game.global.GlobalLanguageStr;
    import com.meng52.game.global.GlobalTextStyle;
+   import com.meng52.game.module.avatar.Avatar;
    import com.meng52.game.ui.element.ItemHelpSetting;
+   import com.meng52.game.ui.element.LOL_Button;
    import com.meng52.game.ui.element.LOL_Scale9Button;
+   import com.meng52.game.ui.element.ProgressBar;
    import com.meng52.game.ui.screen.PanelCenterHelp;
    import com.meng52.net.SendAndSelect;
    import feathers.display.Scale9Image;
@@ -28,6 +31,7 @@ package com.meng52.game.ui.panel
    import flash.utils.clearTimeout;
    import starling.display.Sprite;
    import starling.display.Quad;
+   import starling.display.Image;
    import starling.events.Event;
    import starling.text.TextField;
 
@@ -44,6 +48,10 @@ package com.meng52.game.ui.panel
       private var mTierStatus:TextField;
 
       private var mTierMenu:Sprite;
+
+      private var mHealthCheckbox104:LOL_Button;
+      private var mHealthCheckmark104:Image;
+      private var mLegacyDamageCheckmark104:Image;
 
       private var mDisposed:Boolean = false;
 
@@ -122,13 +130,15 @@ package com.meng52.game.ui.panel
       {
          mDisposed = false;
          this.removeEventListener("addedToStage",initializeHandler);
-         this.setPopPanelBg(GlobalLanguageStr.getLanguageStr(20119),550,595);
+         this.setPopPanelBg(GlobalLanguageStr.getLanguageStr(20119),795,595);
          this.setList();
          this.addList();
+         this.createHealthValuesRow104();
+         this.createDamageFormulaRow104();
          this.createSpendingRow();
          // Same row layout as the native music/sound rows (ItemHelpSetting).
          var modX:Number = mImg9_baseBg.x + (mImg9_baseBg.width - 520) * 0.5;
-         var modY:Number = mImg9_baseBg.y + 412;
+         var modY:Number = mImg9_baseBg.y + 612;
          var modBg:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",520,100,new Rectangle(110,55,70,20));
          modBg.x = modX;
          modBg.y = modY;
@@ -158,6 +168,9 @@ package com.meng52.game.ui.panel
          mTierMenu = null;
          mTierButton = null;
          mTierStatus = null;
+         mHealthCheckbox104 = null;
+         mHealthCheckmark104 = null;
+         mLegacyDamageCheckmark104 = null;
          super.onREMOVED_FROM_STAGE(param1);
       }
 
@@ -177,10 +190,74 @@ package com.meng52.game.ui.panel
          this.setListTimer(mList,_loc1_,ItemHelpSetting,false);
       }
 
+      private function createHealthValuesRow104() : void
+      {
+         var rowX:Number = mImg9_baseBg.x+(mImg9_baseBg.width-520)*0.5;
+         var rowY:Number = mImg9_baseBg.y+310;
+         var background:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",520,100,new Rectangle(110,55,70,20));
+         background.x = rowX;
+         background.y = rowY;
+         addChild(background);
+         var title:TextField = GlobalTextStyle.getTextField("显示战斗生命值",30,4926491,"left",320,35);
+         title.x = rowX+44;
+         title.y = rowY+30;
+         addChild(title);
+         mHealthCheckbox104 = new LOL_Button("","UI_tag_sell_to_book_0000",false,false);
+         mHealthCheckbox104.x = rowX+396;
+         mHealthCheckbox104.y = rowY+24;
+         mHealthCheckmark104 = GlobalFunction.createImage("UI_tag_sell_to_book_0001");
+         mHealthCheckmark104.touchable = false;
+         mHealthCheckmark104.visible = ProgressBar.showHealthValues104();
+         mHealthCheckbox104.addChild(mHealthCheckmark104);
+         mHealthCheckbox104.addEventListener("triggered",toggleHealthValues104);
+         addChild(mHealthCheckbox104);
+      }
+
+      private function toggleHealthValues104(event:Event) : void
+      {
+         if(mDisposed || !mHealthCheckmark104) return;
+         ProgressBar.setHealthValuesVisible104(!ProgressBar.showHealthValues104());
+         mHealthCheckmark104.visible = ProgressBar.showHealthValues104();
+      }
+
+      private function createDamageFormulaRow104() : void
+      {
+         var rowX:Number = mImg9_baseBg.x+(mImg9_baseBg.width-520)*0.5;
+         var rowY:Number = mImg9_baseBg.y+410;
+         var background:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",520,100,new Rectangle(110,55,70,20));
+         background.x = rowX;
+         background.y = rowY;
+         addChild(background);
+         var title:TextField = GlobalTextStyle.getTextField("使用旧版伤害公式",28,4926491,"left",340,35);
+         title.x = rowX+44;
+         title.y = rowY+15;
+         addChild(title);
+         var hint:TextField = GlobalTextStyle.getTextField("默认新版，下场战斗生效",17,0x6B4A2B,"left",340,26);
+         hint.x = rowX+44;
+         hint.y = rowY+55;
+         addChild(hint);
+         var checkbox:LOL_Button = new LOL_Button("","UI_tag_sell_to_book_0000",false,false);
+         checkbox.x = rowX+396;
+         checkbox.y = rowY+24;
+         mLegacyDamageCheckmark104 = GlobalFunction.createImage("UI_tag_sell_to_book_0001");
+         mLegacyDamageCheckmark104.touchable = false;
+         mLegacyDamageCheckmark104.visible = Avatar.useLegacyDamage104();
+         checkbox.addChild(mLegacyDamageCheckmark104);
+         checkbox.addEventListener("triggered",toggleDamageFormula104);
+         addChild(checkbox);
+      }
+
+      private function toggleDamageFormula104(event:Event) : void
+      {
+         if(mDisposed || !mLegacyDamageCheckmark104) return;
+         Avatar.setLegacyDamage104(!Avatar.useLegacyDamage104());
+         mLegacyDamageCheckmark104.visible = Avatar.useLegacyDamage104();
+      }
+
       private function createSpendingRow() : void
       {
          var rowX:Number = mImg9_baseBg.x + (mImg9_baseBg.width - 520) * 0.5;
-         var rowY:Number = mImg9_baseBg.y + 310;
+         var rowY:Number = mImg9_baseBg.y + 510;
          var background:Scale9Image = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",520,100,new Rectangle(110,55,70,20));
          background.x = rowX;
          background.y = rowY;

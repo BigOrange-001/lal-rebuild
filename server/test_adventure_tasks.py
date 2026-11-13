@@ -12,13 +12,14 @@ from equipment_capacity import apply_equipment_capacity
 from gameplay_common import equipment_exclusive_ids, skin_acquisition_blocked_ids
 from adventure_tasks import AdventureTasks
 from player_store import GameplayFault, PlayerStore
+from gateway import load_game_config
 
 
 class AdventureTaskTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.source = json.loads((Path(__file__).resolve().parents[1] /
-                                 "config/reconstruction/full-config.json").read_text(encoding="utf-8"))
+        cls.source = load_game_config(Path(__file__).resolve().parents[1] /
+                                      "config/reconstruction/full-config.json")
 
     def setUp(self):
         self.config = apply_equipment_capacity(copy.deepcopy(self.source))
@@ -174,6 +175,62 @@ class AdventureTaskTests(unittest.TestCase):
         self.config["cfg"]["system_simple"]["equip_config"][0] = 2
         self.assertEqual(sum(self.rpc("user.adventure_task_claim", "gear-full",
                                       kind="milestone", key="30")["award"]["equip"].values()), 1)
+
+    def test_new_skin_milestone_thresholds_and_reward_labels(self):
+        def paid(amount):
+            def change(profile):
+                profile['attrs']['pay_total']=amount
+                return profile,{}
+            self.store.atomic_update(self.uid,change)
+        for amount in (29999,30000,49999,50000):
+            paid(amount)
+            info=self.rpc('user.adventure_tasks_info','new-tiers-'+str(amount))
+            for threshold,aid,name in ((30000,'A_1801_6','神龙尊者卡莎'),(50000,'A_1802_6','黑夜使者亚索')):
+                row=self.row(info,'milestones',str(threshold))
+                self.assertEqual(row['required_yuan'],threshold)
+                self.assertEqual(row['claimable'],amount>=threshold)
+                self.assertEqual(row['reward'],{'avatar':{aid:1}})
+                self.assertEqual(row['reward_text'],name+'橙卡×1')
+
+    def test_new_skin_milestones_grant_once_and_replay_without_spending(self):
+        def eligible(profile):
+            profile['attrs']['pay_total']=50000
+            return profile,{}
+        self.store.atomic_update(self.uid,eligible)
+        before=self.store.profile_raw(self.uid)
+        for key,aid in (('30000','A_1801_6'),('50000','A_1802_6')):
+            reward=self.rpc('user.adventure_task_claim','skin-'+key,kind='milestone',key=key)
+            self.assertEqual(reward['award'],{'avatar':{aid:1}})
+            count=len(self.store.profile_raw(self.uid)['avatars'])
+            replay=self.rpc('user.adventure_task_claim','skin-'+key,kind='milestone',key=key)
+            self.assertTrue(replay['replayed'])
+            self.assertEqual(len(self.store.profile_raw(self.uid)['avatars']),count)
+            with self.assertRaises(GameplayFault) as caught:
+                self.rpc('user.adventure_task_claim','skin-again-'+key,kind='milestone',key=key)
+            self.assertEqual(caught.exception.code,'AdventureTaskClaimed')
+        after=self.store.profile_raw(self.uid)
+        self.assertEqual(len(after['avatars']),len(before['avatars'])+2)
+        for field in ('coin','gold'):
+            self.assertEqual(after[field],before[field])
+        self.assertEqual(after['attrs']['pay_total'],50000)
+
+    def test_new_skin_capacity_failure_can_be_retried_without_losing_reward(self):
+        def full(profile):
+            profile['attrs']['pay_total']=50000
+            profile['attrs']['avatar_len']=len(profile['avatars'])
+            return profile,{}
+        self.store.atomic_update(self.uid,full)
+        before=self.store.profile_raw(self.uid)
+        with self.assertRaises(GameplayFault) as caught:
+            self.rpc('user.adventure_task_claim','skin-full',kind='milestone',key='30000')
+        self.assertEqual(caught.exception.code,'AvatarCapacity')
+        self.assertEqual(self.store.profile_raw(self.uid),before)
+        def expand(profile):
+            profile['attrs']['avatar_len']+=1
+            return profile,{}
+        self.store.atomic_update(self.uid,expand)
+        self.assertEqual(self.rpc('user.adventure_task_claim','skin-full',kind='milestone',key='30000')['award'],
+                         {'avatar':{'A_1801_6':1}})
 
 
 if __name__ == "__main__":

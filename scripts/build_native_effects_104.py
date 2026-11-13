@@ -70,6 +70,11 @@ PROFILES['ball']['parts'][0]['id']='c19'
 PROFILES['rebirth']['parts'][0]['id']='c21'
 PROFILES['1210']['parts'][0]['id']='c2'
 PROFILES['egg_ready']['parts'].insert(0,part('c17',scale=.65,life=.4,rise=-12))
+PROFILES.update({
+ 'night_wave':dict(name='黑夜剑气',parts=[part('c1','flight',scale=1.1,life=.32),part('c0',delay=.28,scale=.9,life=.4)]),
+ 'night_slash':dict(name='狂风绝息斩 · 连斩',parts=[part('c0',scale=.9,life=.3,rotation=-.6),part('c1',delay=.06,scale=.7,life=.3,rotation=.6)]),
+ 'night_finish':dict(name='狂风绝息斩 · 终斩',parts=[part('c1',scale=1.4,life=.45,rotation=1.5),part('c8',delay=.1,scale=1.2,life=.5)]),
+})
 
 STATE_NAMES={'wanted':'狙击锁定','exposed':'破绽','charmed':'魅惑','cold':'寒冷','airborne':'浮空','contract':'契约','windmark':'疾风印记','rings':'银弩三环','time_rings':'时间共振','sonic':'音波锁定','ball':'持球','guard':'守护','shot':'射门机会','phase':'相位强化','awake':'锐雯觉醒','rebirth':'冰晶重生','crows':'群鸦引导','growth':'永久成长','bear':'提伯斯成长','command':'协同待命','dance':'剑舞阶段','trap':'夹子','egg':'彩蛋','egg_ready':'成熟彩蛋','time':'回溯残影','aura_heal':'治疗和弦','aura_guard':'守护和弦','hunt':'狩猎','moon':'月光','bomb':'延迟炸弹','infection':'侵染','counter':'反击准备','sap':'汲取','root':'禁锢','grey':'灰色生命','charge':'电荷','hammer':'锤形态','summon':'召唤归属','zone':'持续区域','channel':'蓄力'}
 STATE_IDS={'wanted':[7,7],'exposed':[23],'charmed':[24],'cold':[9],'airborne':[1],'contract':[10],'windmark':[1],'rings':[12,12],'time_rings':[26,26],'sonic':[30],'ball':[19],'guard':[28,13],'shot':[19,15],'phase':[26,1],'awake':[22,2],'rebirth':[21],'crows':[20,20,20],'growth':[14],'bear':[29],'command':[29,28],'dance':[2,2,2],'trap':[18],'egg':[16],'egg_ready':[17],'time':[26],'aura_heal':[14],'aura_guard':[13],'hunt':[23],'moon':[1],'bomb':[5],'infection':[10],'counter':[0,13],'sap':[14],'root':[27],'grey':[25],'charge':[15],'hammer':[0],'summon':[12],'zone':[8,5],'channel':[30,12]}

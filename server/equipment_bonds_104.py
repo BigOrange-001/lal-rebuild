@@ -44,6 +44,12 @@ def output_rate(cfg,aid,keys):
     return 1.0
 
 
+def apply_equipment_stats(stats, rows):
+    for row in rows:
+        for key, rate in row.get('stats', {}).items():
+            stats[key] = int(round(float(stats[key]) * (1 + rate), 5))
+
+
 
 def part_for_skill(row,effect):
     return dict(effect,**effect.get('reworks',{}).get(row.get('name'),{}))

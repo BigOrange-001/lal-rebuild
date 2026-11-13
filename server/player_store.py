@@ -1,5 +1,6 @@
 """Persistent local players and original-client resource gift mail RPCs."""
 import datetime,hashlib,hmac,json,secrets,time,sqlite3,threading
+from ledger_codec import pack_json,unpack_json_text,compact_ledger
 from vip_campaign import normalize_vip_profile,legacy_first_bonus_from_receipts
 from gameplay_energy import normalize_energy_purchase_day
 from cultivation_rules import normalize_profile as normalize_culture_profile
@@ -40,6 +41,8 @@ CREATE TABLE IF NOT EXISTS gift_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,uid TE
 CREATE TABLE IF NOT EXISTS player_state_revision(uid TEXT PRIMARY KEY,revision INTEGER NOT NULL CHECK(revision>=0));
 INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM players;''')
   self.lock=threading.RLock()
+  compact_ledger(db)
+  self._ledger_writes=0
   self.mod_service=None
   self._mod_uid=None
   self.configure_handlers(config)
@@ -175,7 +178,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
  def _login_profile(self,uid,token):
   def track_login(p):
    normalize_energy_purchase_day(p,self.clock.now())
-   receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
+   receipts=[unpack_json_text(r[0],self.db) for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
    normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
    attrs=p.setdefault('attrs',{});attrs['login_total']=int(attrs.get('login_total',0))+1
    self.adventure.record_login(p)
@@ -406,7 +409,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   p['attrs'].setdefault('pay_count',0)
   p['attrs'].setdefault('pay_first',0)
   p['attrs'].setdefault('pay_first_gift',0)
-  receipts=[r[0] for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
+  receipts=[unpack_json_text(r[0],self.db) for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
   normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
   p['attrs'].setdefault('rank_lv',[])
   p['attrs'].setdefault('mon_card',{})
@@ -593,7 +596,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
      previous=self.db.execute('SELECT payload_hash,result FROM operation_ledger WHERE uid=? AND operation_key=?',(uid,idempotency_key)).fetchone()
      if previous:
       if previous[0]!=payload_hash:raise GameplayFault('RequestKeyConflict','Operation key was reused with a different payload')
-      self.db.commit();return native_dates(json.loads(previous[1])),True
+      self.db.commit();return native_dates(json.loads(unpack_json_text(previous[1],self.db))),True
     row=self.db.execute('SELECT profile FROM players WHERE uid=?',(uid,)).fetchone()
     if not row:raise GameplayFault('UnknownPlayer','Player does not exist')
     profile=json.loads(row[0])
@@ -606,8 +609,17 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
      self.db.execute('UPDATE players SET profile=? WHERE uid=?',(updated_json,uid))
      self._bump_revision(uid)
     if idempotency_key is not None:
-     self.db.execute('INSERT INTO operation_ledger(uid,operation_key,payload_hash,result,created) VALUES(?,?,?,?,?)',(uid,idempotency_key,payload_hash,response_json,self.clock.now()))
-    self.db.commit();return native_dates(json.loads(response_json)),False
+     self.db.execute('INSERT INTO operation_ledger(uid,operation_key,payload_hash,result,created) VALUES(?,?,?,?,?)',(uid,idempotency_key,payload_hash,pack_json(response_json),self.clock.now()))
+    self.db.commit()
+    if idempotency_key is not None:
+     self._ledger_writes+=1
+     if self._ledger_writes>=64:
+      self._ledger_writes=0
+      try:compact_ledger(self.db)
+      except sqlite3.Error:
+       import logging
+       logging.getLogger(__name__).warning('Receipt compaction deferred; committed progress is retained',exc_info=True)
+    return native_dates(json.loads(response_json)),False
    except Exception:self.db.rollback();raise
  @staticmethod
  def _normalize_box_key_state(value):

@@ -363,6 +363,9 @@ class ReferenceBattle:
 
     @staticmethod
     def _buff_value(unit, kind, default=0):
+        if kind == 'shield':
+            values = [entry.value for entry in unit.get('_buffs', {}).values() if entry.type == 'shield']
+            return sum(max(0, value) for value in values) if values else default
         entry = ReferenceBattle._buff(unit, kind)
         return entry.value if entry is not None else default
 
@@ -432,9 +435,12 @@ class ReferenceBattle:
             return
         # back / summon and every other kind: the new buff is discarded.
 
-    def _remove_buff(self, unit, kind, consume=False):
+    def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
         container = unit.get("_buffs")
         if isinstance(container, dict):
+            if kind == 'shield' and clear_shields:
+                for key in [k for k,v in container.items() if v.type == 'shield' and k != 'shield']:
+                    del container[key]
             current=container.get(str(kind))
             if consume and kind=='purify' and current and current.value>1:
                 current.value-=1
@@ -445,7 +451,7 @@ class ReferenceBattle:
         container = unit.get("_buffs")
         if not isinstance(container, dict):
             return
-        for kind in [k for k in container if k in _GOOD_BUFFS]:
+        for kind in [k for k,v in container.items() if v.type in _GOOD_BUFFS]:
             del container[kind]
 
     def _remove_all_debuff(self, unit):
@@ -619,13 +625,12 @@ class ReferenceBattle:
         return emit(self,owner,event,source,target,amount,overheal)
 
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
-        before=int(target.get('hp',0));shield=self._buff(target,'shield')
-        had_shield=shield is not None and shield.value>0
-        result=self._injured_base(target,amount,damage_type,source,dot_kind)
+        before=int(target.get('hp',0));had_shield=self._buff_value(target,'shield')>0
+        result=self._injured_base(target,amount,damage_type,source,dot_kind,receipt=receipt)
         actual=max(0,before-max(0,int(target.get('hp',0)))) if damage_type!=4 else 0
         if receipt is not None:receipt.update(actual=actual,before=before,after=int(target.get('hp',0)))
         killed=before>0 and target.get('hp',0)<=0
-        shield_broke=had_shield and (self._buff(target,'shield') is None or self._buff(target,'shield').value<=0)
+        shield_broke=had_shield and self._buff_value(target,'shield')<=0
         if before>0 and damage_type not in (0,4,5):
             if actual:
                 self._emit_mod_event(target,'damage_taken',source,target,actual)
@@ -639,7 +644,10 @@ class ReferenceBattle:
                 self._emit_mod_event(target,'death',source,target,actual)
         return result
 
-    def _injured_base(self, target, amount, damage_type=0, source=None, dot_kind=None):
+    def _damage_modifiers_104(self, target, amount, damage_type, source):
+        return amount
+
+    def _injured_base(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         """injured (137_Avatar.as:5545): the shield pool absorbs before HP.
 
         Returns the HP actually lost. ``damage_type`` 4 heals and 5/0 applies
@@ -676,17 +684,23 @@ class ReferenceBattle:
             amount = _to_int(amount * (1 + self._talent(target, 16)))
         if self._has_manual_dot_kind(target, 'poison'):
             amount = _to_int(amount * 1.2)
+        amount = self._damage_modifiers_104(target, amount, damage_type, source)
+        if receipt is not None:receipt['settled']=amount
         absorbed = 0
-        shield = self._buff(target, "shield")
-        if shield is not None:
+        shields = [(k,v) for k,v in target.get('_buffs',{}).items() if v.type == 'shield']
+        if shields:
             factor = 1 + self._book_bonus(source, 'shield_damage') if source is not None else 1
             if dot_kind in ('bleed', 'phantasm'):
                 factor *= 3
-            spent = min(max(0, _to_int(shield.value)), _to_int(amount * factor))
+            budget = _to_int(amount * factor)
+            spent = 0
+            for key, shield in sorted(shields,key=lambda pair:(pair[1].round,pair[0])):
+                take = min(max(0, shield.value), max(0,budget-spent))
+                shield.value -= take
+                spent += take
+                if shield.value <= 0:self._remove_buff(target,key,clear_shields=False)
+                if spent >= budget:break
             absorbed = min(amount, math.ceil(spent / factor))
-            shield.value = _to_int(shield.value) - spent
-            if shield.value <= 0:
-                self._remove_buff(target, "shield")
             amount -= absorbed
         observer = getattr(self, '_study_statistics_event', None)
         if observer is not None and int(target.get('hp', 0)) > 0:
@@ -1865,7 +1879,7 @@ class ReferenceBattle:
         else:
             candidates = [u for u in candidates if u.get("line") == attacker.get("line")]
         for target in candidates:
-            if self._buff(target, "shield") is not None:
+            if self._buff_value(target, "shield") > 0:
                 self._remove_buff(target, "shield")
 
     def _act_dispel_good(self, attacker, enemies, allies, skill, action, index, context):

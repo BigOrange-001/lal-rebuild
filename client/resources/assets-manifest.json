@@ -1750,5 +1750,11 @@
     "path": "resources/app/assets/effects/custom104/states.png",
     "size": 1509580,
     "sha256": "6725cc2f60abefcaf8bfa55d5a02d791702b0016aa015fac9e0038397d03280a"
+  },
+  {
+    "apk_entry": "assets/assets/textures/1x/play/aShield1040000.png",
+    "path": "resources/app/assets/textures/1x/play/aShield1040000.png",
+    "size": 727,
+    "sha256": "ba5c96b2022fc5c55b94bd36b873005f3edfaa8fd83e41af4c06830a18ebbe07"
   }
 ]

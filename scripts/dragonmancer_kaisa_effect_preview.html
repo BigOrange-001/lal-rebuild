@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>神龙尊者卡莎 · 艾卡西亚暴雨特效</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111c25;color:#eef5f4;font:16px "Microsoft YaHei",sans-serif}
+main{max-width:1120px;margin:32px auto;padding:0 24px}h1{font-size:27px;letter-spacing:1px;margin:0 0 10px}
+p{color:#a7bdbd;line-height:1.7}.top{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.badge{color:#75e8d7;border:1px solid #316862;padding:9px 15px;border-radius:20px;white-space:nowrap}
+.controls{display:flex;gap:12px;align-items:center;margin:24px 0 18px;flex-wrap:wrap}
+button,select{font:inherit;border:1px solid #39756d;background:#173e3c;color:#d9fff7;padding:10px 18px;border-radius:8px;cursor:pointer}
+button:hover{background:#235752}select{background:#152e35}canvas{display:block;width:100%;background:#172832;border:1px solid #2e5359;border-radius:16px}
+.note{font-size:13px;color:#8ba7af}.sprite{display:flex;gap:20px;align-items:center;padding:20px;border:1px solid #29464d;border-radius:12px;margin-top:20px}.sprite img{width:340px;max-width:48%}.sprite span{color:#b2cccc;font-size:14px}
+</style>
+<main><div class="top"><div><h1>神龙尊者卡莎 · 艾卡西亚暴雨</h1><p>飞散发射，沿弧线追踪目标；弹体采用简化龙首与逐渐收细的青绿色拖尾。</p></div><span class="badge">剪刀 · 橙卡</span></div>
+<div class="controls"><label>施放次数 <select id="count"><option value="3">首次 · 3发</option><option value="5">第二次 · 5发</option><option value="7">第三次 · 7发</option><option value="11">第五次 · 11发</option></select></label><button id="play">播放弹体</button><label><input id="loop" type="checkbox" checked> 循环预览</label></div>
+<canvas id="stage" width="1040" height="520"></canvas><p class="note">此页用于检查弹体外观与飞行弧线，未模拟伤害、死亡或分身结算。</p>
+<div class="sprite"><img src="preview-assets/missile.png"><span>青白能量核心 · 金色龙角 · 细长渐隐尾迹</span></div></main>
+<script>
+const NativeImage=window.Image;
+let sprites=[],tweens=[],timers=[],loaded=false,lastStart=0;
+const int=x=>Math.trunc(Number(x)||0);
+class Point{constructor(x=0,y=0){this.x=x;this.y=y}static distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}}
+class Sprite{
+ constructor(){this.children=[];this.addChild=(x)=>{x.parent=this;this.children.push(x);return x}}
+ globalToLocal(p){return p}
+ removeFromParent(){if(this.parent)this.parent.children=this.parent.children.filter(x=>x!==this)}
+}
+class Quad{constructor(w,h,color){this.width=w;this.height=h;this.color=color;this.alpha=1;this.x=this.y=this.rotation=0}}
+class Image{constructor(texture){this.texture=texture;this.pivotX=this.pivotY=this.x=this.y=this.rotation=0;this.scaleX=this.scaleY=1}}
+class Tween{
+ constructor(target,time){this.target=target;this.time=time}
+ animate(k,v){this.key=k;this.end=v}
+}
+const scene=new Sprite();
+const layer={effectLayer:scene,addTween:t=>{t.start=performance.now();tweens.push(t)},
+ delayCall:(fn,delay,...args)=>timers.push({at:performance.now()+delay*1000,fn,args})};
+const GameMapLayer={isFastest:false,gl:layer},GameMap={actionDelay:0,currentMap:{}};
+const png=new NativeImage();png.src='preview-assets/missile.png';
+const portrait=new NativeImage();portrait.src='preview-assets/kaisa.png';
+const targets=Array.from({length:3},(_,n)=>{let i=new NativeImage();i.src='preview-assets/target'+n+'.png';return i});
+const GlobalData={$assetManager:{getTexture:()=>png.complete?{width:png.naturalWidth,height:png.naturalHeight,image:png}:null}};
+function nativeProjectile(target,shot){with(this){/*NATIVE_PROJECTILE_METHOD*/}}
+const caster={m_fightRes:{localToGlobal:p=>new Point(175+p.x,340+p.y)}};
+const foes=[590,750,905].map((x,n)=>({m_fightRes:{localToGlobal:p=>new Point(x+p.x,340+p.y)}}));
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');
+function play(){
+ if(!png.complete||!portrait.complete)return;
+ scene.children=[];tweens=[];timers=[];lastStart=performance.now();
+ document.documentElement.dataset.previewReady='true';
+ let n=+document.querySelector('#count').value;
+ for(let i=0;i<n;i++){GameMap.actionDelay=i*.16;nativeProjectile.call(caster,foes[i%3],i)}
+}
+document.querySelector('#play').onclick=play;
+function draw(){
+ const now=performance.now();
+ let ready=timers.filter(j=>j.at<=now);timers=timers.filter(j=>j.at>now);ready.forEach(j=>j.fn(...j.args));
+ for(const t of tweens){t.target[t.key]=Math.min(1,(now-t.start)/(t.time*1000));t.onUpdate?.();if(t.target[t.key]>=1)t.onComplete?.()}
+ tweens=tweens.filter(t=>t.target[t.key]<1);
+ ctx.clearRect(0,0,1040,520);
+ const g=ctx.createLinearGradient(0,0,1040,520);g.addColorStop(0,'#1b3441');g.addColorStop(1,'#10232c');ctx.fillStyle=g;ctx.fillRect(0,0,1040,520);
+ ctx.strokeStyle='#2c4752';ctx.lineWidth=1;for(let y of [145,290,430]){ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(1010,y);ctx.stroke()}
+ if(portrait.complete)ctx.drawImage(portrait,95,250,160,160);
+ for(let n=0;n<targets.length;n++)if(targets[n].complete)ctx.drawImage(targets[n],foes[n].m_fightRes.localToGlobal(new Point()).x-80,250,160,160);
+ ctx.fillStyle='#b8d2d7';ctx.font='15px Microsoft YaHei';ctx.textAlign='center';ctx.fillText('神龙尊者卡莎',175,438);
+ foes.forEach((f,n)=>ctx.fillText(['前排目标','中排目标','后排目标'][n],f.m_fightRes.localToGlobal(new Point()).x,438));
+ for(const s of scene.children)for(const p of s.children){
+  ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rotation||0);
+  if(p instanceof Quad){ctx.globalAlpha=p.alpha;ctx.fillStyle='#'+p.color.toString(16).padStart(6,'0');ctx.fillRect(0,0,p.width,p.height)}
+  else{ctx.scale(p.scaleX,p.scaleY);ctx.drawImage(p.texture.image,-p.pivotX,-p.pivotY)}ctx.restore();
+ }
+ if(document.querySelector('#loop').checked&&now-lastStart>2700)play();
+ requestAnimationFrame(draw);
+}
+Promise.all([png,portrait,...targets].map(i=>i.complete?Promise.resolve():new Promise(r=>i.onload=r))).then(()=>{loaded=true;play();draw()});
+window.addEventListener('error',e=>document.documentElement.dataset.previewError=e.message);
+window.addEventListener('unhandledrejection',e=>document.documentElement.dataset.previewError=String(e.reason));
+</script></html>

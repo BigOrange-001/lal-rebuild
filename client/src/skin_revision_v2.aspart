@@ -345,7 +345,10 @@
                   var ghost:Object=skin2.previous || skin2.record;
                   if(ghost)
                   {
-                     removeAllDebuff();reline(ghost.line,ghost.pos);
+                     removeAllDebuff();
+                     // A recorded lane may finish after a transfer; keep the current
+                     // fight position then, while preserving the recorded-loss heal.
+                     if(ghost.line>=0 && !GameMap.currentMap.isEnd(ghost.line)) reline(ghost.line,ghost.pos);
                      var loss:Number=Math.max(0,Number(skin2.lost || 0)-Number(ghost.lost || 0));
                      s2Heal(this,Math.min(hpMax*s2Value(skill,"rewindCap"),loss*s2Value(skill,"rewind"))/Math.max(1,getDamage()));
                   }

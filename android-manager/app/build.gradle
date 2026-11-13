@@ -1,0 +1,123 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'
+}
+
+// Version numbers come from the repository's single VERSION file, so an update
+// is "edit one file, run one command".
+//
+// This matters more than it looks: RuntimeInstaller writes
+// BuildConfig.VERSION_CODE + "/" + BuildConfig.VERSION_NAME and the bundled
+// runtime manifest digest into .runtime-stamp. Reinstalling identical content
+// keeps the existing tree; changed server content is refreshed even when the
+// displayed app version stays the same.
+//
+// scripts/build_merged.py stamps the shipping manifest's version attributes to
+// match this one, and does so by default, so VERSION is the only place a human
+// edits.
+def lalVersionFile = rootProject.file('../VERSION')
+if (!lalVersionFile.isFile()) {
+    throw new GradleException("VERSION not found at ${lalVersionFile}; it is the single source of the release version.")
+}
+def lalVersion = lalVersionFile.text.trim()
+def lalParts = lalVersion.tokenize('.')
+if (lalParts.size() != 3 || !lalParts.every { it ==~ /\d+/ }) {
+    throw new GradleException("VERSION must be MAJOR.MINOR.PATCH, found '${lalVersion}'.")
+}
+def (lalMajor, lalMinor, lalPatch) = lalParts.collect { it as int }
+// 1.0.0 -> 1000000, which is the client APK's own versionCode: the merged
+// package has to install over it in place rather than read as a downgrade.
+def lalVersionCode = lalMajor * 1000000 + lalMinor * 1000 + lalPatch
+
+android {
+    namespace 'com.lal.rebuild.manager'
+    compileSdk 35
+
+    defaultConfig {
+        // The merged APK is one package: the manager's Java namespace stays
+        // com.lal.rebuild.manager but the installed applicationId must be the
+        // AIR client's, or a player's existing progress would land in a second
+        // app instead of upgrading in place.
+        applicationId "air.com.meng52.lol.android"
+        minSdk 24
+        targetSdk 36
+        versionCode lalVersionCode
+        versionName lalVersion
+
+        // Python 3.11 keeps both 32-bit and 64-bit ARM runtimes available;
+        // Python 3.12+ ships arm64 only. The bundled server is pure Python.
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+        }
+
+        python {
+            version "3.11"
+            buildPython project.findProperty("lalBuildPython") ?: "python"
+            pip {
+                install "Py3AMF==0.9.1"
+                install "defusedxml==0.7.1"
+                install "tzdata==2026.4"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Release is left unsigned here so the debug key can be reused;
+            // sign with --keystore when distributing.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        // AGP 8 turns this off by default. RuntimeInstaller stamps the unpacked
+        // tree with the package's own version so an app update re-unpacks the
+        // server, and BuildConfig is the only place that version is visible.
+        buildConfig true
+    }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging false
+        }
+    }
+
+    // Chaquopy expects the Python sources in src/main/python, which is where
+    // they live; the source set is restated so AGP does not also treat them as
+    // resources. The server tree itself is NOT in this directory: it is
+    // assembled into the runtime assets directory by
+    // scripts/prepare_android_runtime.py and unpacked to disk at first launch,
+    // because the server reads its own files with ordinary path I/O.
+    sourceSets {
+        main {
+            // Overridable so the PowerShell build script can point at an
+            // ASCII path; ADT-derived tooling mishandles non-ASCII ones.
+            //
+            // This directory is an assets *root*: Gradle merges its contents
+            // into assets/. The bundle therefore lives in a "runtime"
+            // subdirectory, which is what makes it land at assets/runtime/...
+            // — the path RuntimeInstaller reads.
+            def runtimeAssets = project.findProperty("lalRuntimeAssets")
+                    ?: "$buildDir/generated/runtime-assets"
+            assets.srcDirs += [runtimeAssets]
+        }
+    }
+}
+
+dependencies {
+    // Deliberately empty.
+    //
+    // The merged APK keeps the AIR client's resources.arsc byte-for-byte, which
+    // means this module must contribute no Android resources at all — an APK
+    // has exactly one resource table and both apps use package id 0x7f. Any
+    // library that ships res/ would collide with the client's table, so the
+    // manager was converted to framework widgets only. See build/merged/ for
+    // the assembly.
+}

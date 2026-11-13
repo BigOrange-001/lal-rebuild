@@ -1,0 +1,120 @@
+      private var yasuoNightShown104:Boolean=false;
+      private var yasuoNightVisual104:Sprite;
+      private var yasuoNightParts104:Array=[];
+      private var yasuoNightAge104:Number=0;
+
+      private function yasuoResetVisuals104() : void
+      {
+         if(yasuoNightVisual104) yasuoNightVisual104.removeFromParent(true);
+         yasuoNightVisual104=null;yasuoNightParts104=[];yasuoNightAge104=0;yasuoNightShown104=false;
+      }
+      private function yasuoQueueNight104(show:Boolean) : void
+      {
+         if(!GameMapLayer.gl || !GameMap.currentMap) return;
+         GameMapLayer.gl.delayCall(yasuoShowNight104,GameMap.actionDelay,show,GameMap.currentMap);
+      }
+      private function yasuoShowNight104(show:Boolean, battle:GameMap) : void
+      {
+         if(GameMap.currentMap!==battle) return;
+         if(!show) {yasuoResetVisuals104();return;}
+         yasuoNightShown104=true;yasuoNightAge104=0;
+      }
+      private static function yasuoAdvanceEffects104(elapsed:Number) : void
+      {
+         if(!GameMap.currentMap) return;
+         for each(var side:int in [1,2])
+            for each(var unit:Avatar in GameMap.currentMap.getAliveList(side))
+               if(unit.yasuoNightShown104 || unit.yasuoNightVisual104) unit.yasuoUpdateNight104(elapsed);
+      }
+      private function yasuoUpdateNight104(elapsed:Number) : void
+      {
+         if(!yasuoNightShown104 || hp<=0 || GameMapLayer.isFastest || !m_buff)
+         {
+            if(yasuoNightVisual104) yasuoNightVisual104.removeFromParent(true);
+            yasuoNightVisual104=null;yasuoNightParts104=[];
+            return;
+         }
+         var row:Object=GlobalData.$mConfig_avatar[avatarData.id];
+         var layout:Object=row ? row.nightBuffLayout104 : null;
+         if(!layout || !layout.slots) return;
+         var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_BUFF104_0");
+         if(!texture) return;
+         if(!yasuoNightVisual104)
+         {
+            yasuoNightVisual104=new Sprite();yasuoNightVisual104.touchable=false;
+            // Same m_buff layer, original e703 coordinates and authored scales.
+            // Imported PNGs have the native rotated Symbol 39 canvas dimensions.
+            m_buff.addChild(yasuoNightVisual104);
+            for each(var slot:Object in layout.slots)
+            {
+               var particle:Image=new Image(texture);
+               particle.touchable=false;particle.pivotX=texture.width*.5;particle.pivotY=texture.height*.5;
+               yasuoNightVisual104.addChild(particle);yasuoNightParts104.push(particle);
+            }
+         }
+         yasuoNightAge104+=Math.max(0,elapsed);
+         for(var i:int=0;i<yasuoNightParts104.length;i++)
+         {
+            var config:Object=layout.slots[i];
+            var frame:Number=(yasuoNightAge104%Number(config.cycle))/Number(config.cycle)*int(config.frames);
+            var keys:Array=config.keys;
+            var current:Object=keys[0];var next:Object=keys[0];
+            for(var k:int=0;k<keys.length;k++)
+               if(frame>=Number(keys[k].at)) {current=keys[k];next=keys[(k+1)%keys.length];}
+            particle=yasuoNightParts104[i] as Image;
+            particle.visible=current.visible===true;
+            if(!particle.visible) continue;
+            var stop:Number=Number(next.at)>Number(current.at) ? Number(next.at) : Number(config.frames);
+            var t:Number=Math.max(0,Math.min(1,(frame-Number(current.at))/Math.max(.001,stop-Number(current.at))));
+            if(next.visible!==true) t=0;
+            var rise:Number=Number(current.y)+(Number(next.y)-Number(current.y))*t;
+            var stretch:Number=Number(current.stretch)+(Number(next.stretch)-Number(current.stretch))*t;
+            var alpha:Number=Number(current.alpha)+(Number(next.alpha)-Number(current.alpha))*t;
+            texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_BUFF104_"+(int(frame/int(config.frames)*4)%4));
+            if(texture) particle.texture=texture;
+            particle.x=Number(config.x);particle.y=Number(config.y)+rise*Number(config.scaleY);
+            particle.scaleX=Number(config.scaleX);particle.scaleY=Number(config.scaleY)*stretch;
+            particle.alpha=Number(config.alpha)*alpha;
+         }
+      }
+      private function yasuoWhirlwind104(castLane:int, castOffset:Number, points:Array) : void
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(GameMapLayer.isFastest || !layer || !points || points.length<2) return;
+         var battle:GameMap=GameMap.currentMap;
+         layer.delayCall(function():void
+         {
+            if(GameMap.currentMap!==battle) return;
+            var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_VORTEX104_0");
+            if(!texture) return;
+            var image:Image=new Image(texture);image.touchable=false;
+            image.pivotX=texture.width*.5;image.pivotY=texture.height*.5;
+            // Same 96-unit effect footprint as the project's native VFX atlas.
+            image.scaleX=image.scaleY=96/texture.width;
+            var parent:Sprite=layer.effectLayer;parent.addChild(image);
+            var start:Number=Number(points[0].at);
+            var duration:Number=Math.max(.01,Number(points[points.length-1].at)-start);
+            var state:Object={elapsed:0,cancelled:false};
+            var animation:Tween=new Tween(state,duration,"linear");
+            animation.animate("elapsed",duration);
+            animation.onUpdate=function():void
+            {
+               if(state.cancelled) return;
+               if(GameMap.currentMap!==battle)
+               {state.cancelled=true;image.removeFromParent(true);return;}
+               var clock:Number=start+Number(state.elapsed);
+               var index:int=0;
+               while(index<points.length-2 && clock>=Number(points[index+1].at)) ++index;
+               var a:Object=points[index];var b:Object=points[index+1];
+               var t:Number=Math.max(0,Math.min(1,(clock-Number(a.at))/Math.max(.001,Number(b.at)-Number(a.at))));
+               var position:Number=Number(a.pos)+(Number(b.pos)-Number(a.pos))*t;
+               var origin:Point=parent.globalToLocal(layer.getLineSpr(castLane).localToGlobal(
+                  new Point(GameMapConfig.offsetToPixel(castOffset),GameMapConfig.posToPixel(position))));
+               image.x=origin.x;image.y=origin.y;
+               texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_VORTEX104_"+(int(Number(state.elapsed)*12)%4));
+               if(texture) image.texture=texture;
+            };
+            animation.onComplete=function():void {if(!state.cancelled) image.removeFromParent(true);};
+            animation.onUpdate();layer.addTween(animation);
+         },Number(points[0].at));
+      }

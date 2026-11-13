@@ -368,7 +368,8 @@ class ModService:
         minimum_next = 0
         pattern = re.compile(r'"A_[0-9]+_[0-9]+\|([0-9]+)"')
         for (receipt,) in self.store.db.execute("SELECT result FROM operation_ledger WHERE uid=?", (str(uid),)):
-            for match in pattern.finditer(receipt):
+            from ledger_codec import unpack_json_text
+            for match in pattern.finditer(unpack_json_text(receipt,self.store.db)):
                 minimum_next = max(minimum_next, int(match.group(1)) + 1)
         preserve_mod_hero_sequence(profile, document, minimum_next=minimum_next)
 

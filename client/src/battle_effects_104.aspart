@@ -2,6 +2,7 @@
       {
          var result:Array=[];var key:String;var state:Object;var unit:Avatar;var kind:String;var count:int;
          if(hp<=0) return result;
+         if(yasuoIs104() && shieldValue104()>0) result.push({key:"nightShield104",kind:"guard",target:this});
          for each(key in ["wanted","exposed","charmed","cold","airborne","contract","windmark"])
             if(s2LiveMark(this,key)) result.push({key:key,kind:key,target:this});
          for(key in skin2)

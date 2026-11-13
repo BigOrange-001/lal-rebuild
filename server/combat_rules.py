@@ -1,4 +1,4 @@
-"""Opt-in offline combat model; candidate values never overwrite live attack[]."""
+"""Shared combat models; ratio is the default and legacy remains selectable."""
 import copy
 import json
 from pathlib import Path
@@ -32,7 +32,7 @@ def attack_parameters(config):
 
 
 def candidate_config(config, **parameters):
-    """Explicit research-only copy; never changes the loaded default config."""
+    """Explicit ratio copy with optional study overrides; leave input unchanged."""
     result = copy.deepcopy(config)
     rules = json.loads(PATH.read_text('utf8'))
     rules.update(result.get('combat_rules') or {})
@@ -42,4 +42,11 @@ def candidate_config(config, **parameters):
     rules.update(parameters)
     rules['attack_overrides'] = attack
     result['combat_rules'] = rules
+    return result
+
+
+def legacy_config(config):
+    """Explicit legacy copy for comparisons after the runtime default changes."""
+    result = copy.deepcopy(config)
+    result.setdefault('combat_rules', {})['model'] = 'legacy'
     return result

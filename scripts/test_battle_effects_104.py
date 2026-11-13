@@ -17,7 +17,7 @@ class EffectsTests(unittest.TestCase):
   fixture=fixture.replace('/*RUNTIME_DATA*/',json.dumps(runtime_data(),ensure_ascii=False))
   fixture+='''
 function Avatar(){}
-function prepare(u){u.abilitySerial=1;u.manualBattleStacks={};u.manualTimedStacks=[];return u}
+function prepare(u){u.abilitySerial=1;u.manualBattleStacks={};u.manualTimedStacks=[];u.yasuoNight104=()=>false;u.yasuoIs104=()=>false;return u}
 let {a,b,c,ally}=fresh(1140);roster.forEach(prepare);
 a.s2Mark(b,'wanted',1);assert(b.fxState104().some(x=>x.kind==='wanted'));
 a.manualOwnerActionSerial+=2;assert(!b.fxState104().some(x=>x.kind==='wanted'));
@@ -44,7 +44,7 @@ console.log('18 visual lifetime, owner, ground-position and read-only checks pas
   self.assertEqual(p.returncode,0,p.stdout+p.stderr);print(p.stdout)
  def test_art_and_runtime_wiring(self):
   names={'c'+str(i) for i in range(32)}
-  self.assertEqual(len(PROFILES),50)
+  self.assertEqual(len(PROFILES),53)
   for p in PROFILES.values():
    for part in p['parts']:
     self.assertIn(part['id'],names)

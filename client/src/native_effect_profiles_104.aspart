@@ -2,6 +2,9 @@
       {
          switch(kind)
          {
+            case "night_wave": return [{id:"c1",at:"flight",delay:0,scale:1.1,life:.32},{id:"c0",at:"target",delay:.28,scale:.9,life:.4}];
+            case "night_slash": return [{id:"c0",at:"target",delay:0,scale:.9,life:.3,rotation:-.6},{id:"c1",at:"target",delay:.06,scale:.7,life:.3,rotation:.6}];
+            case "night_finish": return [{id:"c1",at:"target",delay:0,scale:1.4,life:.45,rotation:1.5},{id:"c8",at:"target",delay:.1,scale:1.2,life:.5}];
             case "1201": return [{"id":"c0","at":"target","delay":0,"scale":0.9,"life":0.65},{"id":"c8","at":"target","delay":0.12,"scale":0.65,"life":0.65}];
             case "1203": return [{"id":"c4","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c10","at":"target","delay":0.24,"scale":0.75,"life":0.65},{"id":"c10","at":"target","delay":0.32,"scale":0.55,"life":0.65}];
             case "1204": return [{"id":"c15","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c15","at":"target","delay":0.24,"scale":0.75,"life":0.65}];

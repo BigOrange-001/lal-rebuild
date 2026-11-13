@@ -9,6 +9,8 @@ import math
 from contextlib import contextmanager
 
 from battle_engine import ReferenceBattle, _to_int
+from dragonmancer_kaisa_sim import KaisaBattleMixin
+from nightbringer_yasuo_sim import YasuoBattleMixin
 from combat_math import (miss_chance, crit_chance, critical_multiplier,
                          damage_before_final, to_int)
 
@@ -19,19 +21,28 @@ KINDS = frozenset(f'{hero}_{slot}' for hero in (
     'tahm','caitlyn','kaelthas','karthus','aoxing') for slot in ('n','c'))
 
 
-class SkillCompleteBattle(ReferenceBattle):
+class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
     def __init__(self, *args, trace_abilities=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.ability_contexts=[]
         self.ability_events=[] if trace_abilities else None
         self.manual_casts={}
         self._ability_next=0
+        self._kaisa_lane_sides={lane:{self._team_number(u) for u in self.a+self.b if u.get('line')==lane}
+                               for lane in {u.get('line') for u in self.a+self.b}}
+        self._kaisa_closed_lanes=set()
         for roster in (self.a,self.b):
             for unit in roster:
+                # Combat-only Kai'Sa counters never survive a fresh battle.
+                for key in tuple(unit):
+                    if key.startswith(('_kaisa_', '_yasuo_')):unit.pop(key,None)
+                for key in tuple(unit.get('_buffs',{})):
+                    if key.startswith('yasuoShield104_'):unit['_buffs'].pop(key,None)
                 unit['_team']=roster
                 tpl=unit.get('tpl') or []
                 if len(tpl)>3:unit.setdefault('speed',tpl[3])
                 self.state(unit)
+                if self.yasuo_passive(unit):unit['_yasuo_crit_bonus']=self._get_crit(unit)
 
     def state(self, unit):
         if '_ability' not in unit:
@@ -230,6 +241,8 @@ class SkillCompleteBattle(ReferenceBattle):
         return value*float(row.get('equipment_parts_104',{}).get(part,1))
 
     def execute(self, owner, kind, scale, skill):
+        if kind.startswith('dragon_kaisa_'):return self.execute_kaisa(owner,kind,skill)
+        if kind.startswith('night_yasuo_'):return self.execute_yasuo(owner,kind,skill)
         if kind in ('cat_n','cat_c'):return self.execute_cat_skin(owner,kind,skill)
         if kind in ('polar_n','polar_c'):return self.execute_polar_skin(owner,kind,skill)
         if kind in ('santa_n','santa_c'):return self.execute_santa_skin(owner,kind,skill)
@@ -711,10 +724,22 @@ class SkillCompleteBattle(ReferenceBattle):
         finally:state.update(cat_busy=False,cat_pending=0)
 
     def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
+        if self.yasuo_immune(unit,kind):return
         if self.state(unit).get("channel") and kind in ("stun","silence","root","pull","push"):return
         ctx=self._context()
         if ctx and value and kind!='summon':value*=ctx['effect_factor']
-        return super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
+        result=super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
+        if kind=='stun' and self._buff(unit,'stun'):self.kaisa_stun(unit)
+        return result
+
+    def _emit_mod_event(self, owner, event, source=None, target=None, amount=0, overheal=0):
+        self.yasuo_event(owner,event,source,target,amount)
+        self.kaisa_event(owner,event,source,target)
+        return super()._emit_mod_event(owner,event,source,target,amount,overheal)
+
+    def _tick_slot_cd(self, owner, key):
+        super()._tick_slot_cd(owner,key)
+        if key=='_skill_cd_leader':self.kaisa_try_hunt(owner)
 
     def _remove_all_debuff(self, unit):
         super()._remove_all_debuff(unit)
@@ -776,7 +801,9 @@ class SkillCompleteBattle(ReferenceBattle):
         receipt={}
         result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt)
         self._ability_last_hit=True
-        if crit>1:self._emit_mod_event(attacker,'crit',attacker,target,receipt.get('actual',0))
+        if crit>1:
+            self._emit_mod_event(attacker,'crit',attacker,target,receipt.get('actual',0))
+            self.yasuo_critical(attacker,target,receipt.get('settled',0))
         return result
 
     def _basic_attack(self, attacker, target):
@@ -825,6 +852,9 @@ class SkillCompleteBattle(ReferenceBattle):
         return result
 
     def _use_skill_slot(self, attacker, enemies, slot, cd_key):
+        if (slot=='leader_skill' and self.yasuo_is(attacker) and self._buff(attacker,'silence')
+                and not self.yasuo_cast_silenced(attacker)):
+            return False
         attacker.pop('_ability_cd_override',None)
         result=super()._use_skill_slot(attacker,enemies,slot,cd_key)
         override=attacker.pop('_ability_cd_override',None)
@@ -898,6 +928,8 @@ class SkillCompleteBattle(ReferenceBattle):
         enemies=self.opponents(attacker)
         if not enemies:return False
         focus=attacker.get('_ability_focus')
+        if self.kaisa_is(attacker) and not self.kaisa_lane(attacker,attacker['line']):return True
+        if self.yasuo_is(attacker) and not self.yasuo_lane(attacker):return True
         target=focus if focus and focus.get('hp',0)>0 else min(enemies,key=lambda u:(u['line']!=attacker['line'],abs(u['pos']-attacker['pos']),self.state(u)['index']))
         # Close into the actual native attack/cast range before trying melee
         # abilities. The old study attacked across the map without moving.

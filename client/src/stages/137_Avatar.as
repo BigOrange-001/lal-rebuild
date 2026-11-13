@@ -25,6 +25,7 @@ package com.meng52.game.module.avatar
    import com.meng52.game.ui.screen.PanelCenterDNTeam;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.StarlingTools;
+   import com.meng52.utils.LocalStore;
    import com.meng52.utils.Tools;
    import flash.geom.Point;
    import flash.geom.Rectangle;
@@ -44,6 +45,23 @@ package com.meng52.game.module.avatar
       public static var iconStyle:int = 1;
 
       public var bondLineup104:Array = null;
+
+
+
+      // BEGIN NEW SKIN BONDS 104
+      public function skinBondNumber104(key:String, fallback:Number = 0) : Number
+      {
+         var family:String = String(avatarData.id).split("_").slice(0,2).join("_");
+         var value:Number = fallback;
+         for each(var bond:Object in getBondRows104())
+         {
+            var benefit:Object = bond.benefits[family];
+            if(benefit && benefit.mechanics && benefit.mechanics[key]!=null)
+               value = Math.max(value,Number(benefit.mechanics[key]));
+         }
+         return value;
+      }
+      // END NEW SKIN BONDS 104
 
       public function getBondRows104() : Array
       {
@@ -117,6 +135,9 @@ package com.meng52.game.module.avatar
             if(benefit.stats && benefit.stats[stat] != null) value = Tools.toInt(value*(1+Number(benefit.stats[stat])));
             if(benefit.flat_by_quality && benefit.flat_by_quality[quality] && benefit.flat_by_quality[quality][stat] != null) value += Number(benefit.flat_by_quality[quality][stat]);
          }
+         for each(var equipmentBond:Object in getEquipmentBondRows104())
+            if(equipmentBond.stats && equipmentBond.stats[stat]!=null)
+               value = Tools.toInt(value*(1+Number(equipmentBond.stats[stat])));
          return value;
       }
 
@@ -156,7 +177,7 @@ package com.meng52.game.module.avatar
          var definitions:Array = all && avatarData ? all[avatarData.id] as Array : null;
          if(!definitions) return "";
          var active:Array = getEquipmentBondRows104();
-         var text:String = "<br/>装备羁绊（本人穿戴，分别强化指定技能部分）";
+         var text:String = definitions.length && definitions[0].kind=="stats" ? "<br/>装备羁绊（本人穿戴，提升属性）" : "<br/>装备羁绊（本人穿戴，分别强化指定技能部分）";
          for each(var row:Object in definitions)
          {
             var equipment:Object = GlobalData.$mConfig_equip[row.equipment];
@@ -219,6 +240,7 @@ package com.meng52.game.module.avatar
                var flats:Object = benefit.flat_by_quality ? benefit.flat_by_quality[String(quality)] : null;
                if(flats) for(stat in flats) effects.push(labels[stat]+"增加"+flats[stat]);
                if(benefit.skill_rate) effects.push("技能数值提高"+Math.round(Number(benefit.skill_rate)*100)+"%");
+               if(benefit.info) effects.push(String(benefit.info));
                if(bond.focus==member)
                {
                   var variantTable:Object = GlobalData.$mConfig_simple.bond_skill_variants_104;
@@ -274,6 +296,7 @@ package com.meng52.game.module.avatar
             var flats:Object = benefit.flat_by_quality ? benefit.flat_by_quality[String(getStar())] : null;
             if(flats) for(stat in flats) description += "\n"+labels[stat]+" +"+flats[stat];
             if(benefit.skill_rate) description += "\n技能数值 +"+Math.round(Number(benefit.skill_rate)*100)+"%";
+            if(benefit.info) description += "\n"+String(benefit.info);
             if(bond.focus==family) description += "\n"+bond.mechanism.normal.name+"："+bond.mechanism.normal.info+(bond.mechanism.captain ? "\n"+bond.mechanism.captain.name+"："+bond.mechanism.captain.info : "");
             if(bond.focus==family && GlobalData.$mConfig_simple.hero_skill_output_rate_104 != null) description += "\n伤害、护盾、治疗按上述技能基准的80%结算；增减益不变。";
             text += "<br/>"+Tools.formatHtmlText(description.replace(/\n/g,"<br/>"),active.indexOf(bond)>=0 ? 0x00CCFF : 0x888888,false,15,"",0);
@@ -776,7 +799,7 @@ package com.meng52.game.module.avatar
          manualFactor *= heroSkillOutputRate104();
          coefficient *= manualFactor;
          if(sharedTotal > 0) sharedTotal *= manualFactor;
-         if(kind == 3) coefficient /= REAL_DAMAGE_RATE;
+         if(kind == 3) coefficient = trueSkillCoefficient104(coefficient);
          var total:Number = sharedTotal > 0 ? sharedTotal : coefficient;
          var q:Number = sharedTotal > 0 ? coefficient/sharedTotal : 1;
          attackAimList(one,kind,total,0,effect,false,null,-1,q,visualSource);
@@ -1054,9 +1077,659 @@ package com.meng52.game.module.avatar
          return Number(values[key]);
       }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      // BEGIN DRAGONMANCER KAISA 104
+      // Dragonmancer Kai'Sa keeps per-caster volley growth and per-root target marks.
+      public var kaisaRoot104:Avatar;
+      public var kaisaCast104:Number = 0;
+      private var kaisaMarks104:Object = {};
+      private var kaisaHunting104:Boolean = false;
+      private var kaisaBurst104:Boolean = false;
+      private var kaisaPlasmaIcons104:Object = {};
+
+      private function kaisaIs104() : Boolean
+      {
+         var row:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[avatarData.id] : null;
+         return row && row.dragonmancerKaisa104 === true;
+      }
+      private function kaisaLane104(lane:int) : Array
+      {
+         return abilityCandidates(otherTeam,lane,GameMapConfig.LINE_POS/2,GameMapConfig.LINE_POS,-1,false,"front");
+      }
+      private function kaisaTarget104() : Avatar
+      {
+         if(!kaisaIs104() || kaisaRoot104 || !isLeader || hp<=0 || !GameMap.currentMap) return null;
+         var single:Boolean=kaisaSingleLane104();
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+            if(unit.hp>0 && !GameMap.currentMap.isEnd(unit.line) && (unit.line!=line || single) && unit.getType()==1 && !unit.isManualSummonUnit && unit.buffs.stun) return unit;
+         return null;
+      }
+      private function kaisaSingleLane104() : Boolean
+      {
+         var map:GameMap=GameMap.currentMap;
+         if(!map || map.isEnd() || !map.winnerList || map.isEnd(line)) return false;
+         var remaining:int=0;
+         for(var lane:int=0;lane<map.winnerList.length;lane++) if(!map.isEnd(lane)) ++remaining;
+         return remaining==1;
+      }
+      private function kaisaCanCast104(kind:String) : Boolean
+      {
+         if(!kaisaIs104() || hp<=0) return false;
+         if(kind=="dragon_kaisa_n") return kaisaLane104(line).length>0;
+         if(kind=="dragon_kaisa_c") return skill0 && !kaisaHunting104 && kaisaTarget104()!=null;
+         return false;
+      }
+      private function kaisaTryCaptain104() : Boolean
+      {
+         if(!skill1 || skill1.m_cooldownNum>=0 || !kaisaCanCast104("dragon_kaisa_c")) return false;
+         var enabled:Boolean=false;
+         for each(var action:Array in skill1.skills) if(action[0]=="manual_ability" && action[1]=="dragon_kaisa_c") enabled=true;
+         if(!enabled) return false;
+         return skill1.checkUse();
+      }
+      private static function kaisaNotifyStun104(stunned:Avatar) : void
+      {
+         if(!GameMap.currentMap || !stunned || stunned.hp<=0 || !stunned.buffs.stun || stunned.getType()!=1 || stunned.isManualSummonUnit) return;
+         var watchers:Vector.<Avatar> = (GameMap.currentMap.getAliveList(stunned.otherTeam) as Vector.<Avatar>).concat();
+         for each(var watcher:Avatar in watchers) if(watcher) watcher.kaisaTryCaptain104();
+      }
+      private function kaisaExecute104(kind:String, sourceSkill:*) : Boolean
+      {
+         if(!kaisaCanCast104(kind)) return false;
+         if(kind=="dragon_kaisa_c") return kaisaHunt104();
+         return kaisaVolley104(sourceSkill || skill0);
+      }
+      private function kaisaVolley104(sourceSkill:*) : Boolean
+      {
+         var castLane:int=line;
+         if(!sourceSkill || !sourceSkill.skills || !kaisaLane104(castLane).length) return false;
+         var count:Number=3+2*kaisaCast104;
+         ++kaisaCast104;
+         var coefficient:Number=Number(sourceSkill.skills[0][4]);
+         var globalRate:Number=Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104);
+         if(!isFinite(globalRate) || globalRate<=0) globalRate=1;
+         var seen:Array=[];
+         for(var shot:Number=0;shot<count && hp>0;shot++)
+         {
+            var live:Array=kaisaLane104(castLane);
+            if(!live.length) break;
+            var target:Avatar=null;
+            for each(var candidate:Avatar in live) if(seen.indexOf(candidate)<0) {target=candidate;break;}
+            if(!target) {seen=[];target=live[0];}
+            seen.push(target);
+            kaisaProjectile104(target,shot);
+            // Each missile owns a full settlement boundary. In particular,
+            // endAbilityAttack handles retaliation before reacquiring the next.
+            var context:Object=beginAbilityAttack(this,"active");
+            context.skill=sourceSkill;
+            context.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+            try
+            {
+               var hit:Boolean=abilityHit(target,coefficient/globalRate,2,"FX_KAISA_MISSILE104");
+               var sunder:Number=(kaisaRoot104 || this).skinBondNumber104("kaisa_q_sunder");
+               if(hit && hp>0 && target.hp>0 && sunder>0 && sunder<1)
+                  abilityControl(target,"sunder",1,sunder/(1-sunder));
+            }
+            finally {endAbilityAttack(context);}
+            GameMap.actionDelay+=0.08;
+         }
+         return true;
+      }
+      private function kaisaHunt104() : Boolean
+      {
+         var target:Avatar=kaisaTarget104();
+         if(!target || kaisaHunting104) return false;
+         var front:Array=kaisaLane104(target.line);
+         if(!front.length) return false;
+         var oldLine:int=line;
+         var oldPos:int=pos;
+         kaisaHunting104=true;
+         try
+         {
+            var clone:Avatar=new Avatar(GlobalData.modDefinitionId(avatarData.id,"summoned"),{lv:lv,slv:skill0.lv});
+            clone.goFight(team,oldLine,0,false);
+            if(!clone.inheritSummonPanel(this,1)) return false;
+            clone.kaisaRoot104=kaisaRoot104 || this;
+            clone.kaisaCast104=0;
+            clone.skill0=new SkillSet(skill0.skillSetData.id,clone,skill0.lv);
+            clone.skillB=skillB ? new SkillSet(skillB.skillSetData.id,clone,skillB.lv) : null;
+            clone.skill1=null;
+            clone.skill2=null;
+            clone.speed=speed;
+            clone.range=getRange();
+            clone.addBuff("summon",7);
+            kaisaProtect104(clone);
+            var destination:int=int(front[0].pos)+(team==1 ? 500 : -500);
+            var landingDelay:Number=GameMap.actionDelay+2;
+            reline(target.line,Math.max(0,Math.min(GameMapConfig.LINE_POS,destination)));
+            // Add after moving the caster, so native spacing doesn't push the
+            // clone away from the position just vacated by its own body.
+            GameMap.currentMap.addAvatar(clone,team,oldLine,oldPos,false);
+            if(clone.m_icon) clone.m_icon.color=0x83EADA;
+            // reline refreshes its visual at +1.4s, then scales back in.
+            // Read the launch position only after that landing has completed.
+            GameMap.actionDelay=Math.max(GameMap.actionDelay,landingDelay);
+            // Run the real normal-skill path (including its cast events),
+            // bypassing only readiness and preserving its pre-existing timer.
+            var savedCooldown:int=skill0.m_cooldownNum;
+            try {skill0.useSkill();}
+            finally {skill0.m_cooldownNum=savedCooldown;}
+            return true;
+         }
+         finally {kaisaHunting104=false;}
+      }
+      private function kaisaProtect104(newClone:Avatar) : void
+      {
+         var recipients:Array=[this,newClone];
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(team))
+            if(unit.hp>0 && unit.kaisaRoot104===this && recipients.indexOf(unit)<0) recipients.push(unit);
+         for each(var recipient:Avatar in recipients)
+         {
+            if(!recipient || recipient.hp<=0) continue;
+            // Cleanse first so an existing curse cannot reject the shield.
+            recipient.addBuff("purify",3,0,0,-1,this);
+            recipient.addBuff("shield",3,Tools.toInt(recipient.getHpMax()*.6),0,-1,this);
+         }
+      }
+      private function kaisaEvent104(event:String,source:Avatar,target:Avatar) : void
+      {
+         if(event!="hit" || source!==this || !kaisaIs104() || kaisaBurst104 || !target || target.hp<=0 || target.team==team || !skillB) return;
+         var enabled:Boolean=false;
+         for each(var action:Array in skillB.skills) if(action[0]=="manual_ability" && action[1]=="dragon_kaisa_p") enabled=true;
+         if(!enabled) return;
+         var context:Object=currentAbilityAttack();
+         if(!context || context.owner!==this || (context.kind!="basic" && context.kind!="active")) return;
+         var root:Avatar=kaisaRoot104 || this;
+         var key:String=String(root.abilityIndex);
+         target.kaisaMarks104[key]=int(target.kaisaMarks104[key])+1;
+         if(int(target.kaisaMarks104[key])<5)
+         {
+            target.kaisaQueuePlasma104(key,int(target.kaisaMarks104[key]));
+            return;
+         }
+         target.kaisaMarks104[key]=int(target.kaisaMarks104[key])-5;
+         target.kaisaQueuePlasma104(key,int(target.kaisaMarks104[key]));
+         kaisaBurst104=true;
+         var burst:Object=beginAbilityAttack(this,"passive");
+         try
+         {
+            target.addBuff("curse",1,0,0,-1,this);
+            var raw:int=Tools.toInt(target.getHpMax()*.2);
+            // Fixed maximum-health true damage bypasses the AP/armor/RPS
+            // calculation and its historical true-AP coefficient.
+            target.injured(raw,1,null,3,this,false,this);
+            if(hp>0) injured(Tools.toInt(getHpMax()*.05),1,null,4,this,false,this);
+         }
+         finally {endAbilityAttack(burst);kaisaBurst104=false;}
+      }
+      private function kaisaQueuePlasma104(key:String, stacks:int) : void
+      {
+         GameMapLayer.gl.delayCall(kaisaShowPlasma104,GameMap.actionDelay,key,stacks,GameMap.currentMap);
+      }
+      private function kaisaShowPlasma104(key:String, stacks:int, battle:GameMap) : void
+      {
+         if(GameMap.currentMap!==battle || !m_fightRes) return;
+         var old:Image=kaisaPlasmaIcons104[key] as Image;
+         if(old && old.parent) old.removeFromParent(true);
+         delete kaisaPlasmaIcons104[key];
+         if(stacks>=1 && stacks<=4)
+         {
+            var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_KAISA_PLASMA104_"+stacks);
+            if(texture)
+            {
+               var mark:Image=new Image(texture);
+               mark.touchable=false;
+               mark.pivotX=texture.width*.5;mark.pivotY=texture.height*.5;
+               kaisaPlasmaIcons104[key]=mark;
+               m_fightRes.addChild(mark);
+            }
+         }
+         var active:Array=[];
+         for each(var image:Image in kaisaPlasmaIcons104) if(image.parent===m_fightRes) active.push(image);
+         // The native battle card is 94 units wide. Keep one mark readable
+         // across its lower edge, with the V below the card's sign badge.
+         var width:Number=Math.min(82,86/Math.max(1,active.length));
+         for(var index:int=0;index<active.length;index++)
+         {
+            var icon:Image=active[index] as Image;
+            icon.scaleX=icon.scaleY=width/icon.texture.width;
+            icon.x=(index-(active.length-1)*.5)*width;
+            icon.y=40;
+         }
+      }
+      private function kaisaClearPlasma104() : void
+      {
+         for each(var image:Image in kaisaPlasmaIcons104) if(image.parent) image.removeFromParent(true);
+         kaisaPlasmaIcons104={};
+      }
+      private function kaisaProjectile104(target:Avatar, shot:Number) : void
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(GameMapLayer.isFastest || !layer || !m_fightRes || !target.m_fightRes) return;
+         var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_KAISA_MISSILE104");
+         if(!texture) return;
+         var owner:Avatar=this;
+         var battle:GameMap=GameMap.currentMap;
+         layer.delayCall(function():void
+         {
+         if(GameMap.currentMap!==battle || !owner.m_fightRes || !target.m_fightRes) return;
+         var parent:Sprite=layer.effectLayer;
+         var start:Point=parent.globalToLocal(owner.m_fightRes.localToGlobal(new Point(0,-24)));
+         var finish:Point=parent.globalToLocal(target.m_fightRes.localToGlobal(new Point(0,-12)));
+         var fan:Number=(shot%3-1)*115+(int(shot/3)%2 ? 35 : -35);
+         var control:Point=new Point((start.x+finish.x)*.5+fan,Math.min(start.y,finish.y)-90-Math.abs(fan)*.4);
+         var sprite:Sprite=new Sprite();
+         sprite.touchable=false;
+         var trails:Array=[];
+         for(var i:int=0;i<12;i++)
+         {
+            var trail:Quad=new Quad(1,3,0x33E5D5);
+            trail.touchable=false;sprite.addChild(trail);trails.push(trail);
+         }
+         var missile:Image=new Image(texture);
+         missile.pivotX=texture.width*.88;missile.pivotY=texture.height*.5;
+         missile.scaleX=missile.scaleY=100/texture.width;missile.touchable=false;sprite.addChild(missile);
+         var state:Object={progress:0};
+         var time:Number=.35;
+         var tween:Tween=new Tween(state,time,"linear");
+         tween.animate("progress",1);
+         tween.onUpdate=function():void
+         {
+            if(GameMap.currentMap!==battle) {sprite.removeFromParent(true);return;}
+            var t:Number=state.progress;
+            var inv:Number=1-t;
+            missile.x=inv*inv*start.x+2*inv*t*control.x+t*t*finish.x;
+            missile.y=inv*inv*start.y+2*inv*t*control.y+t*t*finish.y;
+            missile.rotation=Math.atan2(2*inv*(control.y-start.y)+2*t*(finish.y-control.y),2*inv*(control.x-start.x)+2*t*(finish.x-control.x));
+            for(var j:int=0;j<trails.length;j++)
+            {
+               var a:Number=Math.max(0,t-(j+1)*.014);
+               var b:Number=Math.max(0,t-j*.014);
+               var x0:Number=(1-a)*(1-a)*start.x+2*(1-a)*a*control.x+a*a*finish.x;
+               var y0:Number=(1-a)*(1-a)*start.y+2*(1-a)*a*control.y+a*a*finish.y;
+               var x1:Number=(1-b)*(1-b)*start.x+2*(1-b)*b*control.x+b*b*finish.x;
+               var y1:Number=(1-b)*(1-b)*start.y+2*(1-b)*b*control.y+b*b*finish.y;
+               var q:Quad=trails[j] as Quad;
+               q.x=x0;q.y=y0;q.width=Math.max(.1,Point.distance(new Point(x0,y0),new Point(x1,y1)));
+               q.height=Math.max(.3,3*(1-j/12));q.rotation=Math.atan2(y1-y0,x1-x0);q.alpha=.45*(1-j/12);
+            }
+         };
+         tween.onComplete=function():void {sprite.removeFromParent(true);};
+         parent.addChild(sprite);
+         layer.addTween(tween);
+         },GameMap.actionDelay);
+      }
+
+
+      // END DRAGONMANCER KAISA 104
+
+
+      // BEGIN NIGHTBRINGER YASUO 104
+      // Nightbringer's protection is not a removable generic buff.
+      private var yasuoNightRounds104:int = -1;
+      private var yasuoVampRounds104:int = -1;
+      private var yasuoCritBonus104:int = 0;
+      private var yasuoShieldSerial104:int = 0;
+      private var yasuoCritBurst104:Boolean = false;
+
+      private function yasuoIs104() : Boolean
+      {
+         var row:Object=GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[avatarData.id] : null;
+         return row && row.nightbringerYasuo104===true;
+      }
+      private function yasuoPassive104() : Boolean
+      {
+         if(!yasuoIs104() || !skillB) return false;
+         for each(var action:Array in skillB.skills)
+            if(action[0]=="manual_ability" && action[1]=="night_yasuo_p") return true;
+         return false;
+      }
+      private function yasuoStart104() : void
+      {
+         yasuoResetVisuals104();
+         // Snapshot the attribute, not the probability calculated against toughness.
+         yasuoCritBonus104=0;
+         if(yasuoPassive104()) yasuoCritBonus104=getCrit();
+      }
+      private function yasuoNight104() : Boolean
+      {
+         return yasuoNightRounds104>=0;
+      }
+      private function yasuoCastSilenced104() : Boolean
+      {
+         return yasuoIs104() && hp>0 && !buffs.stun && skinBondNumber104("yasuo_c_silenced")>0;
+      }
+      private function yasuoImmune104(kind:String) : Boolean
+      {
+         return yasuoNight104() && ["stun","silence","curse","poison","burn"].indexOf(kind)>=0;
+      }
+      private function yasuoCleanse104() : void
+      {
+         for each(var kind:String in ["stun","silence","curse","poison","burn"]) removeBuff(kind);
+         var keys:Array=[];
+         for(var key:String in manualSkillDots)
+            if(manualSkillDots[key] && ["poison","burn"].indexOf(manualSkillDots[key].kind)>=0) keys.push(key);
+         for each(key in keys)
+         {
+            var visual:Buff=manualSkillDots[key].visual as Buff;
+            if(visual && visual.displayObject && m_buff && visual.displayObject.parent==m_buff)
+               m_buff.removeChild(visual.displayObject);
+            delete manualSkillDots[key];
+         }
+      }
+      private function yasuoLane104() : Array
+      {
+         return abilityCandidates(otherTeam,line,GameMapConfig.LINE_POS/2,GameMapConfig.LINE_POS,-1,false,"front");
+      }
+      private function yasuoCanCast104(kind:String) : Boolean
+      {
+         return yasuoIs104() && hp>0 && kind!="night_yasuo_p" && yasuoLane104().length>0;
+      }
+      private function yasuoExecute104(kind:String, sourceSkill:*) : Boolean
+      {
+         if(!sourceSkill || !yasuoCanCast104(kind)) return false;
+         var targets:Array=yasuoLane104();
+         var target:Avatar=targets[0];
+         if(kind=="night_yasuo_c")
+         {
+            // Remove only the five named effects; unrelated debuffs remain.
+            yasuoCleanse104();
+            yasuoNightRounds104=1;
+            yasuoVampRounds104=2;
+            addBuff("bless",1,0,0,-1,this);
+            abilityFeedback("融入黑夜","",0xFF6944);
+            yasuoQueueNight104(true);
+            var destination:int=target.pos+(team==1 ? 200 : -200);
+            var landing:Number=GameMap.actionDelay+2;
+            reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,destination)));
+            GameMap.actionDelay=Math.max(GameMap.actionDelay,landing);
+            for(var strike:int=0;strike<3 && hp>0 && target.hp>0;strike++)
+            {
+               yasuoHit104(target,Number(sourceSkill.skills[0][4+strike])*skinBondNumber104("yasuo_c_damage",1),sourceSkill,strike==2 ? "night_finish" : "night_slash");
+               GameMap.actionDelay+=strike==2 ? .22 : .12;
+            }
+            return true;
+         }
+         addPurifyCharges(1);
+         if(!abilityState.root && !buffs.root) GameMap.actionDelay+=checkMove(true,400,null,-1,true);
+         var coefficient:Number=Number(sourceSkill.skills[0][4]);
+         var weakPercent:Number=Number(sourceSkill.skills[0][5]);
+         var launch:int=pos;
+         var castLane:int=line;
+         var direction:int=team==1 ? -1 : 1;
+         var speed:Number=2400;
+         var points:Array=[{pos:launch,at:GameMap.actionDelay}];
+         var previous:int=launch;
+         var timeline:Number=GameMap.actionDelay;
+         var knockEnd:Number=timeline;
+         // One travelling wave, one hit per original target. Distances and front
+         // designation are sampled before displacement so it cannot hit twice.
+         var plan:Array=[];
+         for(var index:int=0;index<targets.length;index++)
+         {
+            target=targets[index];
+            if((target.pos-launch)*direction>=0) plan.push({unit:target,pos:target.pos,front:index==0});
+         }
+         var wave:Object=beginAbilityAttack(this,"active");
+         wave.skill=sourceSkill;
+         wave.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+         try
+         {
+         for each(var contact:Object in plan)
+         {
+            if(hp<=0) break;
+            target=contact.unit;
+            if(target.hp<=0 || target.line!=castLane || target.team!=otherTeam) continue;
+            timeline+=Math.abs(int(contact.pos)-previous)/speed;
+            GameMap.actionDelay=timeline;
+            points.push({pos:int(contact.pos),at:timeline});
+            var hit:Boolean=yasuoHit104(target,coefficient*(contact.front ? 1 : .6),sourceSkill,"night_contact",true);
+            if(hit && contact.front && target.hp>0 && hp>0) abilityControl(target,"stun",1);
+            if(hit && !contact.front && target.hp>0 && hp>0 && weakPercent>0 && weakPercent<1)
+               abilityControl(target,"weak",1,weakPercent/(1-weakPercent));
+            if(target.hp>0 && hp>0)
+               knockEnd=Math.max(knockEnd,GameMap.actionDelay+target.checkMove(false,300,this,-1,true));
+            // A revival/counter presentation may pause the battle clock. Record
+            // the pause in the flight path rather than desynchronizing impacts.
+            timeline=Math.max(timeline,GameMap.actionDelay);
+            points.push({pos:int(contact.pos),at:timeline});
+            previous=int(contact.pos);
+         }
+         var finish:int=team==1 ? 0 : GameMapConfig.LINE_POS;
+         timeline+=Math.abs(finish-previous)/speed;
+         points.push({pos:finish,at:timeline});
+         yasuoWhirlwind104(castLane,offset,points);
+         GameMap.actionDelay=Math.max(timeline,knockEnd);
+         }
+         finally {endAbilityAttack(wave);}
+         return true;
+      }
+      private function yasuoHit104(target:Avatar, coefficient:Number, sourceSkill:*, effect:String, shared:Boolean = false) : Boolean
+      {
+         var rate:Number=Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104);
+         if(!isFinite(rate) || rate<=0) rate=1;
+         var context:Object=shared ? null : beginAbilityAttack(this,"active");
+         if(context)
+         {
+            context.skill=sourceSkill;
+            context.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+         }
+         var hit:Boolean=false;
+         try
+         {
+            if(effect!="night_contact") yasuoEffect104(effect,target);
+            hit=abilityHit(target,coefficient/rate,1,effect=="night_contact" ? "FX_NIGHT_YASUO_CONTACT104" : "FX_NIGHT_YASUO104");
+         }
+         finally {if(context) endAbilityAttack(context);}
+         return hit;
+      }
+      private function yasuoEvent104(event:String, source:Avatar, target:Avatar, amount:Number) : void
+      {
+         if(source!==this || hp<=0 || !target || target.team==team) return;
+         if(event=="hit" && yasuoVampRounds104>=0 && amount>0)
+            // Use actual HP damage directly, bypassing AP/precision heal scaling.
+            injured(Tools.toInt(amount),1,null,4,this,false,this);
+         if(event!="crit" || !yasuoPassive104()) return;
+         // Each entry is an ordinary shield Buff with its own native timer.
+         // It never replaces or refreshes another entry, including allied shields.
+         if(buffs.curse) return;
+         if(buffs.evil) {removeBuff("evil",true);return;}
+         var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier());
+         if(amountShield<=0) return;
+         var shield:Buff=new Buff("shield",2,amountShield);
+         shield.source=this;
+         buffs["yasuoShield104_"+(++yasuoShieldSerial104)]=shield;
+         queueVitalBar104();
+         // Use one persistent guard indicator rather than overlapping N copies.
+         abilityFeedback("黑夜剑心：护盾+"+amountShield,"",0xFFB064);
+      }
+      private function shieldValue104() : Number
+      {
+         var result:Number=0;
+         for each(var shield:Buff in buffs) if(shield && shield.type=="shield") result+=Math.max(0,shield.value);
+         return result;
+      }
+      private function removeIndependentShields104() : void
+      {
+         var keys:Array=[];
+         for(var key:String in buffs) if(key.indexOf("yasuoShield104_")==0) keys.push(key);
+         for each(key in keys) removeBuff(key);
+      }
+      private function yasuoDamage104(amount:Number, source:Avatar, derived:Boolean = false) : Number
+      {
+         if(!derived && source && source.yasuoNight104()) amount=Tools.toInt(amount*1.5);
+         if(yasuoNight104()) amount=Tools.toInt(amount*.2);
+         return amount;
+      }
+      private function yasuoCritical104(target:Avatar, settledDamage:Number) : void
+      {
+         if(!yasuoPassive104() || yasuoCritBurst104 || hp<=0 || !target || target.hp<=0 || target.team==team) return;
+         var amount:int=Tools.toInt(settledDamage*skinBondNumber104("yasuo_crit_true",.35));
+         if(amount<=0) return;
+         yasuoCritBurst104=true;
+         var context:Object=beginAbilityAttack(this,"passive");
+         try
+         {
+            // The base already contains crit, armor, outgoing amplification and
+            // the global final multiplier. Only the new true hit's target-side
+            // mitigation and shields apply; neither crit nor global scaling repeats.
+            target.injured(amount,1,null,3,this,false,this,null,"",true);
+         }
+         finally {endAbilityAttack(context);yasuoCritBurst104=false;}
+      }
+      private function yasuoEffect104(kind:String, target:Avatar) : void
+      {
+         fxPulse104(kind,target);
+      }
+
+      private var yasuoNightShown104:Boolean=false;
+      private var yasuoNightVisual104:Sprite;
+      private var yasuoNightParts104:Array=[];
+      private var yasuoNightAge104:Number=0;
+
+      private function yasuoResetVisuals104() : void
+      {
+         if(yasuoNightVisual104) yasuoNightVisual104.removeFromParent(true);
+         yasuoNightVisual104=null;yasuoNightParts104=[];yasuoNightAge104=0;yasuoNightShown104=false;
+      }
+      private function yasuoQueueNight104(show:Boolean) : void
+      {
+         if(!GameMapLayer.gl || !GameMap.currentMap) return;
+         GameMapLayer.gl.delayCall(yasuoShowNight104,GameMap.actionDelay,show,GameMap.currentMap);
+      }
+      private function yasuoShowNight104(show:Boolean, battle:GameMap) : void
+      {
+         if(GameMap.currentMap!==battle) return;
+         if(!show) {yasuoResetVisuals104();return;}
+         yasuoNightShown104=true;yasuoNightAge104=0;
+      }
+      private static function yasuoAdvanceEffects104(elapsed:Number) : void
+      {
+         if(!GameMap.currentMap) return;
+         for each(var side:int in [1,2])
+            for each(var unit:Avatar in GameMap.currentMap.getAliveList(side))
+               if(unit.yasuoNightShown104 || unit.yasuoNightVisual104) unit.yasuoUpdateNight104(elapsed);
+      }
+      private function yasuoUpdateNight104(elapsed:Number) : void
+      {
+         if(!yasuoNightShown104 || hp<=0 || GameMapLayer.isFastest || !m_buff)
+         {
+            if(yasuoNightVisual104) yasuoNightVisual104.removeFromParent(true);
+            yasuoNightVisual104=null;yasuoNightParts104=[];
+            return;
+         }
+         var row:Object=GlobalData.$mConfig_avatar[avatarData.id];
+         var layout:Object=row ? row.nightBuffLayout104 : null;
+         if(!layout || !layout.slots) return;
+         var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_BUFF104_0");
+         if(!texture) return;
+         if(!yasuoNightVisual104)
+         {
+            yasuoNightVisual104=new Sprite();yasuoNightVisual104.touchable=false;
+            // Same m_buff layer, original e703 coordinates and authored scales.
+            // Imported PNGs have the native rotated Symbol 39 canvas dimensions.
+            m_buff.addChild(yasuoNightVisual104);
+            for each(var slot:Object in layout.slots)
+            {
+               var particle:Image=new Image(texture);
+               particle.touchable=false;particle.pivotX=texture.width*.5;particle.pivotY=texture.height*.5;
+               yasuoNightVisual104.addChild(particle);yasuoNightParts104.push(particle);
+            }
+         }
+         yasuoNightAge104+=Math.max(0,elapsed);
+         for(var i:int=0;i<yasuoNightParts104.length;i++)
+         {
+            var config:Object=layout.slots[i];
+            var frame:Number=(yasuoNightAge104%Number(config.cycle))/Number(config.cycle)*int(config.frames);
+            var keys:Array=config.keys;
+            var current:Object=keys[0];var next:Object=keys[0];
+            for(var k:int=0;k<keys.length;k++)
+               if(frame>=Number(keys[k].at)) {current=keys[k];next=keys[(k+1)%keys.length];}
+            particle=yasuoNightParts104[i] as Image;
+            particle.visible=current.visible===true;
+            if(!particle.visible) continue;
+            var stop:Number=Number(next.at)>Number(current.at) ? Number(next.at) : Number(config.frames);
+            var t:Number=Math.max(0,Math.min(1,(frame-Number(current.at))/Math.max(.001,stop-Number(current.at))));
+            if(next.visible!==true) t=0;
+            var rise:Number=Number(current.y)+(Number(next.y)-Number(current.y))*t;
+            var stretch:Number=Number(current.stretch)+(Number(next.stretch)-Number(current.stretch))*t;
+            var alpha:Number=Number(current.alpha)+(Number(next.alpha)-Number(current.alpha))*t;
+            texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_BUFF104_"+(int(frame/int(config.frames)*4)%4));
+            if(texture) particle.texture=texture;
+            particle.x=Number(config.x);particle.y=Number(config.y)+rise*Number(config.scaleY);
+            particle.scaleX=Number(config.scaleX);particle.scaleY=Number(config.scaleY)*stretch;
+            particle.alpha=Number(config.alpha)*alpha;
+         }
+      }
+      private function yasuoWhirlwind104(castLane:int, castOffset:Number, points:Array) : void
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(GameMapLayer.isFastest || !layer || !points || points.length<2) return;
+         var battle:GameMap=GameMap.currentMap;
+         layer.delayCall(function():void
+         {
+            if(GameMap.currentMap!==battle) return;
+            var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_VORTEX104_0");
+            if(!texture) return;
+            var image:Image=new Image(texture);image.touchable=false;
+            image.pivotX=texture.width*.5;image.pivotY=texture.height*.5;
+            // Same 96-unit effect footprint as the project's native VFX atlas.
+            image.scaleX=image.scaleY=96/texture.width;
+            var parent:Sprite=layer.effectLayer;parent.addChild(image);
+            var start:Number=Number(points[0].at);
+            var duration:Number=Math.max(.01,Number(points[points.length-1].at)-start);
+            var state:Object={elapsed:0,cancelled:false};
+            var animation:Tween=new Tween(state,duration,"linear");
+            animation.animate("elapsed",duration);
+            animation.onUpdate=function():void
+            {
+               if(state.cancelled) return;
+               if(GameMap.currentMap!==battle)
+               {state.cancelled=true;image.removeFromParent(true);return;}
+               var clock:Number=start+Number(state.elapsed);
+               var index:int=0;
+               while(index<points.length-2 && clock>=Number(points[index+1].at)) ++index;
+               var a:Object=points[index];var b:Object=points[index+1];
+               var t:Number=Math.max(0,Math.min(1,(clock-Number(a.at))/Math.max(.001,Number(b.at)-Number(a.at))));
+               var position:Number=Number(a.pos)+(Number(b.pos)-Number(a.pos))*t;
+               var origin:Point=parent.globalToLocal(layer.getLineSpr(castLane).localToGlobal(
+                  new Point(GameMapConfig.offsetToPixel(castOffset),GameMapConfig.posToPixel(position))));
+               image.x=origin.x;image.y=origin.y;
+               texture=GlobalData.$assetManager.getTexture("MOD_NIGHT_YASUO_VORTEX104_"+(int(Number(state.elapsed)*12)%4));
+               if(texture) image.texture=texture;
+            };
+            animation.onComplete=function():void {if(!state.cancelled) image.removeFromParent(true);};
+            animation.onUpdate();layer.addTween(animation);
+         },Number(points[0].at));
+      }
+
+      // END NIGHTBRINGER YASUO 104
+
       public function abilityCanCast(kind:String, distance:int, sourceSkill:* = null) : Boolean
       {
          if(hp <= 0 || !GameMap.currentMap) return false;
+         if(kind.indexOf("night_yasuo_")==0) return yasuoCanCast104(kind);
+         if(kind.indexOf("dragon_kaisa_")==0) return kaisaCanCast104(kind);
          if(kind.indexOf("skin2_")==0) return skin2CanCast(kind,sourceSkill);
          var center:Avatar;
          switch(kind)
@@ -1185,10 +1858,11 @@ package com.meng52.game.module.avatar
          if(!target || target.hp <= 0) return 0;
          var count:int = 0; var stolen:Number = 0; var keys:Array=[];
          for(var key:String in target.buffs) if(Buff.LIST_BUFF.indexOf(key)>=0) keys.push(key);
+         if(target.shieldValue104()>0 && keys.indexOf("shield")<0) keys.push("shield");
          keys.sort();
          for each(key in keys)
          {
-            if(key == "shield") stolen = Number(target.buffs[key].value);
+            if(key == "shield") stolen = target.shieldValue104();
             target.removeBuff(key); ++count; if(!all) break;
          }
          if(count)fxPulse104("cleanse",target);
@@ -1444,7 +2118,10 @@ package com.meng52.game.module.avatar
                   var ghost:Object=skin2.previous || skin2.record;
                   if(ghost)
                   {
-                     fxPulse104("time",null,line,pos);fxPulse104("time",null,ghost.line,ghost.pos);removeAllDebuff();reline(ghost.line,ghost.pos);
+                     fxPulse104("time",null,line,pos);removeAllDebuff();
+                     // A recorded lane may finish after a transfer; keep the current
+                     // fight position then, while preserving the recorded-loss heal.
+                     if(ghost.line>=0 && !GameMap.currentMap.isEnd(ghost.line)) {fxPulse104("time",null,ghost.line,ghost.pos);reline(ghost.line,ghost.pos);}
                      var loss:Number=Math.max(0,Number(skin2.lost || 0)-Number(ghost.lost || 0));
                      s2Heal(this,Math.min(hpMax*s2Value(skill,"rewindCap"),loss*s2Value(skill,"rewind"))/Math.max(1,getDamage()));
                   }
@@ -1627,6 +2304,9 @@ package com.meng52.game.module.avatar
       {
          switch(kind)
          {
+            case "night_wave": return [{id:"c1",at:"flight",delay:0,scale:1.1,life:.32},{id:"c0",at:"target",delay:.28,scale:.9,life:.4}];
+            case "night_slash": return [{id:"c0",at:"target",delay:0,scale:.9,life:.3,rotation:-.6},{id:"c1",at:"target",delay:.06,scale:.7,life:.3,rotation:.6}];
+            case "night_finish": return [{id:"c1",at:"target",delay:0,scale:1.4,life:.45,rotation:1.5},{id:"c8",at:"target",delay:.1,scale:1.2,life:.5}];
             case "1201": return [{"id":"c0","at":"target","delay":0,"scale":0.9,"life":0.65},{"id":"c8","at":"target","delay":0.12,"scale":0.65,"life":0.65}];
             case "1203": return [{"id":"c4","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c10","at":"target","delay":0.24,"scale":0.75,"life":0.65},{"id":"c10","at":"target","delay":0.32,"scale":0.55,"life":0.65}];
             case "1204": return [{"id":"c15","at":"flight","delay":0,"scale":0.55,"life":0.24},{"id":"c15","at":"target","delay":0.24,"scale":0.75,"life":0.65}];
@@ -1684,6 +2364,7 @@ package com.meng52.game.module.avatar
       {
          var result:Array=[];var key:String;var state:Object;var unit:Avatar;var kind:String;var count:int;
          if(hp<=0) return result;
+         if(yasuoIs104() && shieldValue104()>0) result.push({key:"nightShield104",kind:"guard",target:this});
          for each(key in ["wanted","exposed","charmed","cold","airborne","contract","windmark"])
             if(s2LiveMark(this,key)) result.push({key:key,kind:key,target:this});
          for(key in skin2)
@@ -1881,6 +2562,7 @@ package com.meng52.game.module.avatar
       }
       public static function advanceEffects104(elapsed:Number) : void
       {
+         yasuoAdvanceEffects104(elapsed);
          if(GameMapLayer.isFastest) {if(fxLayer104)clearEffects104();return;}
          if(!fxEnsure104()) {clearEffects104();return;}
          fxTime104+=elapsed;fxPoll104+=elapsed;if(fxPoll104<.04)return;fxPoll104=0;
@@ -2022,6 +2704,8 @@ package com.meng52.game.module.avatar
 
       private function executeAbilityBody(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
+         if(kind.indexOf("night_yasuo_")==0) return yasuoExecute104(kind,sourceSkill);
+         if(kind.indexOf("dragon_kaisa_")==0) return kaisaExecute104(kind,sourceSkill);
          if(kind.indexOf("skin2_")==0) return executeSkin2(kind,sourceSkill);
          if(kind == "cat_n" || kind == "cat_c") return executeCatSkin(kind,scale,effect,sourceSkill);
          if(kind == "polar_n" || kind == "polar_c") return executePolarSkin(kind,effect,sourceSkill);
@@ -2658,7 +3342,8 @@ package com.meng52.game.module.avatar
 
       public static var MIN_DAMAGE_RATE:Number = 0.1;
 
-      public static var REAL_DAMAGE_RATE:Number = 0.3;
+      public static function get REAL_DAMAGE_RATE() : Number { return Number(damageAttack104()[1]); }
+      public static function set REAL_DAMAGE_RATE(value:Number) : void { configuredTrueDamageRate104 = value; }
 
       public static var SIGN_DAMAGE_RATE:Number = 1.5;
 
@@ -2903,6 +3588,8 @@ package com.meng52.game.module.avatar
 
       public function emitModEvent(event:String,source:Avatar = null,target:Avatar = null,amount:Number = 0,overheal:Number = 0) : Boolean
       {
+         yasuoEvent104(event,source,target,amount);
+         kaisaEvent104(event,source,target);
          skin2Event(event,source,target,amount,overheal);
          if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;
          var row:Object = GlobalData.$mConfig_skill[skillB.skillSetData.id];
@@ -3183,6 +3870,80 @@ package com.meng52.game.module.avatar
          return 0;
       }
 
+      // BEGIN DAMAGE FORMULA 104
+      private static var damageChoiceLoaded104:Boolean = false;
+      private static var legacyDamageChoice104:Boolean = false;
+      private static var damageBattleStarted104:Boolean = false;
+      private static var legacyBattleDamage104:Boolean = false;
+      private static var configuredTrueDamageRate104:Number = NaN;
+      private static const DAMAGE_CHOICE_KEY104:String = "lal_legacy_damage_formula_104";
+      private static const DEFAULT_DAMAGE_RULES104:Object = {
+         reduction_exponent:1.5,defense_attack_midpoint:0.7,miss_slope:40,crit_slope:60,true_skill_rate:0.8,
+         attack_overrides:{"1":0.5,"4":8,"5":15,"6":35,"7":60,"15":0,"16":0,"21":0.66}
+      };
+
+      public static function useLegacyDamage104() : Boolean
+      {
+         if(!damageChoiceLoaded104)
+         {
+            legacyDamageChoice104 = LocalStore.getItemObj(DAMAGE_CHOICE_KEY104) === true;
+            damageChoiceLoaded104 = true;
+         }
+         return legacyDamageChoice104;
+      }
+
+      public static function setLegacyDamage104(enabled:Boolean) : void
+      {
+         LocalStore.setItemObj(DAMAGE_CHOICE_KEY104,enabled);
+         legacyDamageChoice104 = enabled;
+         damageChoiceLoaded104 = true;
+      }
+
+      public static function beginDamageRules104() : void
+      {
+         // One battle keeps one model even if a preference changes mid-replay.
+         legacyBattleDamage104 = useLegacyDamage104();
+         damageBattleStarted104 = true;
+      }
+
+      public static function ratioDamage104() : Boolean
+      {
+         return !(damageBattleStarted104 ? legacyBattleDamage104 : useLegacyDamage104());
+      }
+
+      private static function damageRuleNumber104(key:String) : Number
+      {
+         var rules:Object = GlobalData.$mConfig ? GlobalData.$mConfig.combat_rules : null;
+         var value:Number = rules && rules[key]!=null ? Number(rules[key]) : Number(DEFAULT_DAMAGE_RULES104[key]);
+         return isFinite(value) && value>0 ? value : Number(DEFAULT_DAMAGE_RULES104[key]);
+      }
+
+      public static function damageAttack104() : Array
+      {
+         var attack:Array = GlobalData.$mConfig_simple.attack.concat();
+         if(isFinite(configuredTrueDamageRate104)) attack[1] = configuredTrueDamageRate104;
+         if(!ratioDamage104()) return attack;
+         var rules:Object = GlobalData.$mConfig ? GlobalData.$mConfig.combat_rules : null;
+         var overrides:Object = rules && rules.attack_overrides ? rules.attack_overrides : DEFAULT_DAMAGE_RULES104.attack_overrides;
+         for(var key:String in overrides) attack[int(key)] = Number(overrides[key]);
+         return attack;
+      }
+
+      private static function defenseDamage104(amount:Number, defense:Number, baseAttack:Number) : Number
+      {
+         if(!ratioDamage104()) return Math.max(amount*MIN_DAMAGE_RATE,amount-defense);
+         var ratio:Number = Math.max(0,defense)/Math.max(1,baseAttack);
+         var reduction:Number = ratio>0 ? 1/(1+Math.pow(damageRuleNumber104("defense_attack_midpoint")/ratio,damageRuleNumber104("reduction_exponent"))) : 0;
+         return amount*(1-Math.min(1-MIN_DAMAGE_RATE,reduction));
+      }
+
+      public static function trueSkillCoefficient104(coefficient:Number = 1) : Number
+      {
+         return coefficient*(ratioDamage104() ? damageRuleNumber104("true_skill_rate") : 1)/REAL_DAMAGE_RATE;
+      }
+
+      // END DAMAGE FORMULA 104
+
       public static function countDamage(param1:Avatar, param2:Avatar, param3:int, param4:int = -1, param5:Number = 1) : Array
       {
          var _loc7_:Number = Number(NaN);
@@ -3197,11 +3958,11 @@ package com.meng52.game.module.avatar
          }
          if(param4 == 1)
          {
-            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - param2.getDefenseAgainst(param1,1));
+            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,1),param1.ap);
          }
          else if(param4 == 2)
          {
-            _loc7_ = Math.max(_loc7_ * MIN_DAMAGE_RATE,_loc7_ - param2.getDefenseAgainst(param1,2));
+            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,2),param1.ap);
          }
          else if(param4 == 3)
          {
@@ -3230,12 +3991,12 @@ package com.meng52.game.module.avatar
       public static function checkCrit(param1:Avatar, param2:Avatar) : Number
       {
          var _loc7_:Number = Number(NaN);
-         var _loc6_:* = GlobalData.$mConfig_simple.attack;
+         var _loc6_:* = damageAttack104();
          var _loc5_:int = Tools.toInt(param1.getCrit() + param1.getCrit() * param1.checkTalent(6));
          var _loc8_:int = Tools.toInt(param2.getTough() + param2.getTough() * param2.checkTalent(7));
          trace("oldCrit" + param1.getCrit() + "|||||||||||||||newCrit" + _loc5_);
          trace("oldTough" + param2.getTough() + "|||||||||||||||newTough" + param2.getTough());
-         var _loc4_:int = Tools.toInt(Math.min(_loc6_[7],Math.max(0,_loc6_[5] + 100 * (_loc5_ - _loc8_) / (_loc5_ + _loc8_ + _loc6_[11]))));
+         var _loc4_:int = Tools.toInt(Math.min(_loc6_[7],Math.max(0,_loc6_[5] + (ratioDamage104() ? damageRuleNumber104("crit_slope") : 100) * (_loc5_ - _loc8_) / (_loc5_ + _loc8_ + _loc6_[11]))));
          GameMapTools.gameTrace("暴击判定",param1.id,param2.id);
          var _loc3_:Boolean = Random.getRandom() < _loc4_;
          if(_loc3_)
@@ -3750,6 +4511,7 @@ package com.meng52.game.module.avatar
             _loc3_.pivotY = 94 / 2;
             param1.addChild(_loc3_);
             mBloodSpr = new ProgressBar(team,hp / hpMax,hpMax);
+            refreshVitalBar104(hp,hpMax,shieldValue104());
             mBloodSpr.y = -_loc3_.pivotY - 5;
             param1.addChild(mBloodSpr);
             if(isLeader)
@@ -4349,6 +5111,7 @@ package com.meng52.game.module.avatar
       {
          var _loc1_:Object = null;
          var _loc2_:Buff = null;
+         if(yasuoImmune104(param2)) return;
          if(!param1 || (param2 != "poison" && param2 != "burn" && param2 != "bleed") || !isFinite(param3) || param3 < 0 || !isFinite(param4) || param4 < 0 || param5 < 1) return;
          if(buffs && buffs["purify"])
          {
@@ -4454,6 +5217,7 @@ package com.meng52.game.module.avatar
 
       public function addBuff(param1:String, param2:int, param3:Number = 0, param4:Number = 0, param5:int = -1, param6:Avatar = null) : void
       {
+         if(yasuoImmune104(param1)) return;
          if(abilityState.channel && ["stun","silence","root","pull","push"].indexOf(param1)>=0) return;
          var _loc8_:* = 0;
          var _loc13_:String = null;
@@ -4611,7 +5375,7 @@ package com.meng52.game.module.avatar
                case "bless":
                   if(_loc11_.round >= _loc12_.round)
                   {
-                     removeBuff(param1);
+                     removeBuff(param1,false,false);
                      buffs[param1] = _loc11_;
                      _loc7_.delayCall(showBuff,param4,_loc11_);
                      _loc9_ = true;
@@ -4637,7 +5401,7 @@ package com.meng52.game.module.avatar
                case "book_penetration":
                   if(_loc11_.value >= _loc12_.value)
                   {
-                     removeBuff(param1);
+                     removeBuff(param1,false,false);
                      buffs[param1] = _loc11_;
                      _loc7_.delayCall(showBuff,param4,_loc11_);
                      _loc9_ = true;
@@ -4750,6 +5514,9 @@ package com.meng52.game.module.avatar
                }
             }
          }
+         if(_loc9_ && _loc11_.type=="shield") queueVitalBar104(param4);
+         if(param1=="stun" && hp>0 && buffs.stun) kaisaNotifyStun104(this);
+
       }
 
       public function resetBuff() : void
@@ -4805,6 +5572,7 @@ package com.meng52.game.module.avatar
 
       protected function removeAllGoodBuff() : void
       {
+         removeIndependentShields104();
          abilityClearStates(false);
          var _loc1_:String = null;
          for(_loc1_ in buffs)
@@ -4831,8 +5599,9 @@ package com.meng52.game.module.avatar
          clearManualSkillDots();
       }
 
-      protected function removeBuff(param1:String, consume:Boolean = false) : void
+      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
       {
+         if(param1=="shield" && clearShields) removeIndependentShields104();
          if(param1 == "root") delete abilityState.root;
          var _loc2_:Buff = buffs[param1];
          if(!_loc2_)
@@ -4851,6 +5620,7 @@ package com.meng52.game.module.avatar
             _loc3_.delayCall(m_buff.removeChild,GameMap.actionDelay,_loc2_.displayObject);
          }
          delete buffs[param1];
+         if(_loc2_.type=="shield") queueVitalBar104();
       }
 
       private var dotPopup104:Object = null;
@@ -4893,6 +5663,8 @@ package com.meng52.game.module.avatar
          var manualDotAmount:int = 0;
          var manualDotRaw:Number = Number(NaN);
          var manualDotEffect:Object = null;
+         if(yasuoNightRounds104>=0 && --yasuoNightRounds104<0) yasuoQueueNight104(false);
+         if(yasuoVampRounds104>=0) --yasuoVampRounds104;
          tickManualLethalFloors();
          if(tryndUndyingActive)
          {
@@ -4930,14 +5702,14 @@ package com.meng52.game.module.avatar
             }
             if(_loc1_.round < 0)
             {
-               removeBuff(_loc3_);
+               removeBuff(_loc3_,false,false);
             }
          }
          _loc1_ = buffs["poison"];
          if(_loc1_)
          {
             _loc5_ = DisplayTools.getAttrs("POISON_EFF");
-            injured(Tools.toInt(_loc1_.value + GlobalData.$mConfig_simple.attack[18] * hpMax * (_loc1_.poisonHpRate104 > 0 ? _loc1_.poisonHpRate104 : 1)),1,_loc5_,6,_loc1_.source,false,_loc1_.source,null,"poison");
+            injured(Tools.toInt(_loc1_.value + damageAttack104()[18] * hpMax * (_loc1_.poisonHpRate104 > 0 ? _loc1_.poisonHpRate104 : 1)),1,_loc5_,6,_loc1_.source,false,_loc1_.source,null,"poison");
             if(hp <= 0)
             {
                hp = 0;
@@ -5003,7 +5775,7 @@ package com.meng52.game.module.avatar
             {
                _loc4_ = 2 + _loc2_.roundNum - GlobalData.$mConfig_simple.battle[5];
                _loc5_ = DisplayTools.getAttrs("DEAD_MODE_EFF");
-               injured(Tools.toInt(_loc4_ * GlobalData.$mConfig_simple.attack[19] * hp),1,_loc5_,8);
+               injured(Tools.toInt(_loc4_ * damageAttack104()[19] * hp),1,_loc5_,8);
                if(hp <= 0)
                {
                   hp = 0;
@@ -5756,7 +6528,7 @@ package com.meng52.game.module.avatar
                _loc2_ += _loc1_.value;
             }
          }
-         return _loc2_ + (initializingFightAttributes ? 0 : teamTalentFlat("team_crit"));
+         return _loc2_ + yasuoCritBonus104 + (initializingFightAttributes ? 0 : teamTalentFlat("team_crit"));
       }
 
       public function getTough() : int
@@ -6326,6 +7098,8 @@ package com.meng52.game.module.avatar
       public function goFight(param1:int, param2:int, param3:Number, param4:Boolean = true) : void
       {
          summonStatSnapshot = false;
+         yasuoNightRounds104=-1;yasuoVampRounds104=-1;yasuoCritBonus104=0;yasuoShieldSerial104=0;yasuoCritBurst104=false;
+         kaisaClearPlasma104();kaisaRoot104=null;kaisaCast104=0;kaisaMarks104={};kaisaHunting104=false;kaisaBurst104=false;
          formationOwner = null;
          abilityState = {}; abilitySerial = 0; abilityIndex = ++abilityNextIndex;
          abilityEntryAttack = 0;
@@ -6351,6 +7125,7 @@ package com.meng52.game.module.avatar
          initbuffs();
          initFightAttr();
          abilityEntryAttack = ap;
+         yasuoStart104();
          ready();
       }
 
@@ -6451,6 +7226,7 @@ package com.meng52.game.module.avatar
          {
             skillB.cooldown();
          }
+         kaisaTryCaptain104();
          getTeamHp();
          emitModEvent("turn_start",this,this);
          if(checkBuffOfSkillB())
@@ -7036,10 +7812,10 @@ package com.meng52.game.module.avatar
          {
             return false;
          }
-         var _loc9_:* = GlobalData.$mConfig_simple.attack;
+         var _loc9_:* = damageAttack104();
          var _loc7_:int = Tools.toInt(param1.getHit() + param1.getHit() * param1.checkTalent(4));
          var _loc6_:int = Tools.toInt(param2.getFlee() + param2.getFlee() * param2.checkTalent(5));
-         var _loc5_:int = Tools.toInt(Math.min(_loc9_[6],Math.max(0,_loc9_[4] + 100 * (_loc6_ - _loc7_) / (_loc6_ + _loc7_ + _loc9_[9]))));
+         var _loc5_:int = Tools.toInt(Math.min(_loc9_[6],Math.max(0,_loc9_[4] + (ratioDamage104() ? damageRuleNumber104("miss_slope") : 100) * (_loc6_ - _loc7_) / (_loc6_ + _loc7_ + _loc9_[9]))));
          GameMapTools.gameTrace("闪避判定",param1.id,param2.id);
          var _loc4_:Boolean = Random.getRandom() < _loc5_;
          var _loc8_:GameMapLayer = GameMapLayer.gl;
@@ -7290,6 +8066,18 @@ package com.meng52.game.module.avatar
             _loc25_ = {};
          }
          _loc25_.par = _loc30_.effectLayer;
+         if(_loc41_.nativeContact104===true)
+         {
+            for each(var contactTarget104:Avatar in param1)
+            {
+               if(!contactTarget104 || contactTarget104.hp<=0) continue;
+               if(_loc42_ && checkMiss(this,contactTarget104,_loc25_)) continue;
+               _loc46_=_loc42_ ? countDamage(this,contactTarget104,_loc14_,param2,param9) : [_loc14_,false];
+               _loc20_=_loc42_ ? checkCrit(this,contactTarget104) : 1;
+               _loc21_+=contactTarget104.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+            }
+            return _loc21_;
+         }
          GameMap.actionDelay += 0.3;
          if(playBatchAttack && (!effectSource || effectSource === this) && fightRes.parent)
          {
@@ -7735,19 +8523,32 @@ package com.meng52.game.module.avatar
 
       private function absorbShieldDamage(amount:int, factor:Number) : int
       {
-         var shield:Buff = buffs["shield"] as Buff;
-         if(!shield || amount <= 0) return amount;
-         if(!isFinite(factor) || factor < 1) factor = 1;
-         var spent:int = Math.min(Math.max(0,shield.value),Tools.toInt(amount * factor));
-         shield.value -= spent;
-         if(shield.value <= 0) removeBuff("shield");
-         return Tools.toInt(Math.max(0,Number(amount) - Number(spent) / factor));
+         if(amount<=0) return amount;
+         if(!isFinite(factor) || factor<1) factor=1;
+         var keys:Array=[];
+         for(var key:String in buffs) if(buffs[key] && buffs[key].type=="shield") keys.push(key);
+         // Consume the soonest-expiring pool first. Round only once after all
+         // pools so splitting shields cannot lose damage to repeated rounding.
+         var pools:Object=buffs;
+         keys.sort(function(a:String,b:String):Number {return pools[a].round-pools[b].round || (a<b ? -1 : a>b ? 1 : 0);});
+         var budget:Number=Tools.toInt(amount*factor);
+         var spent:Number=0;
+         for each(key in keys)
+         {
+            var shield:Buff=buffs[key] as Buff;
+            var take:Number=Math.min(Math.max(0,shield.value),budget-spent);
+            shield.value-=take;spent+=take;
+            if(shield.value<=0) removeBuff(key,false,false);
+            if(spent>=budget) break;
+         }
+         return Tools.toInt(Math.max(0,Number(amount)-spent/factor));
       }
 
-      public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "") : int
+      public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "", derivedDamage104:Boolean = false) : int
       {
+         var settledCriticalDamage104:Number=0;
          var abilityHpBefore:int = hp;
-         var modShieldBefore:Number = buffs && buffs["shield"] ? Number(buffs["shield"].value) : 0;
+         var modShieldBefore:Number = shieldValue104();
          var nurseHealAmount:int = 0;
          var abilityDamageTaken:Number = 0;
          var statisticsShield104:Number = 0;
@@ -7837,7 +8638,7 @@ package com.meng52.game.module.avatar
             _loc21_ = 0;
          }
          param1 *= 1;
-         var _loc24_:* = GlobalData.$mConfig_simple.attack;
+         var _loc24_:* = damageAttack104();
          if(param4 == 4)
          {
             param1 = int(skin2Incoming(param1,param7 || param5,param4));
@@ -7857,11 +8658,11 @@ package com.meng52.game.module.avatar
          }
          else
          {
-            param1 = Tools.toInt(Tools.toInt(param1 * param2) * _loc24_[21]);
+            if(!derivedDamage104) param1 = Tools.toInt(Tools.toInt(param1 * param2) * _loc24_[21]);
             _loc13_ = Tools.toInt(getTough() * (1 + checkTalent(7)));
             _loc18_ = 1 + _loc13_ * _loc24_[15] / (_loc13_ + _loc24_[13]);
             GameMapTools.gameTrace("減傷" + _loc18_,"原傷害" + param1,"新傷害" + Tools.toInt(param1 / _loc18_));
-            param1 = Tools.toInt(param1 / _loc18_);
+            if(!derivedDamage104) param1 = Tools.toInt(param1 / _loc18_);
             trace("最终伤害算减伤之前" + param1);
             switch(param4 - 1)
             {
@@ -7883,8 +8684,10 @@ package com.meng52.game.module.avatar
             trace("最终伤害算减伤之后" + param1);
             if(hasManualDotKind("poison")) param1 = Tools.toInt(param1 * 1.2);
             param1 = int(skin2Incoming(param1,param7 || param5,param4));
+            param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));
+            settledCriticalDamage104=Math.max(0,param1);
             _loc9_ = buffs["shield"] as Buff;
-            if(_loc9_)
+            if(shieldValue104()>0)
             {
                var bookShieldFactor:Number = 1 + (param7 ? param7.getBookCombatBonus("shield_damage") : 0);
                if(dotKind == "bleed" || dotKind == "phantasm") bookShieldFactor *= 3;
@@ -7971,7 +8774,7 @@ package com.meng52.game.module.avatar
          {
             _loc12_ = GlobalLanguageStr.getLanguageStr(30004) + _loc12_;
          }
-         _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp);
+         _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
          if(param3)
          {
             param3.a1 = this;
@@ -8033,7 +8836,7 @@ package com.meng52.game.module.avatar
             {
                if(manualLethalCleanse) removeAllDebuff();
                hp = Math.max(1,Math.min(hpMax,lethalMinHp));
-               if(_loc19_) _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp);
+               if(_loc19_) _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
                GameMapTools.gameTrace(id + "触发限时保命，保留" + hp + "生命");
             }
          }
@@ -8042,7 +8845,7 @@ package com.meng52.game.module.avatar
          {
             removeAllDebuff();
             removeBuff("bless");
-            hp = Math.max(1,Tools.toInt(hpMax * GlobalData.$mConfig_simple.attack[20]));
+            hp = Math.max(1,Tools.toInt(hpMax * damageAttack104()[20]));
             GameMapTools.gameTrace(id + "之后神佑+" + hp);
             _loc19_.delayCall(blessFade,GameMap.actionDelay);
             _loc19_.delayCall(blessCure,GameMap.actionDelay + 1,hp);
@@ -8054,7 +8857,7 @@ package com.meng52.game.module.avatar
             tryndUndyingRounds = 0;
             hp = 1;
             GameMapTools.gameTrace(id + "触发限时一次免死，保留1生命");
-            _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp);
+            _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
          }
          var modActualDamage:Number = param4 == 4 ? 0 : Math.max(0,abilityHpBefore-Math.max(0,hp));
          if(param4 >= 1 && param4 != 4 && param4 != 5)
@@ -8063,7 +8866,7 @@ package com.meng52.game.module.avatar
          var modOverheal:Number = Math.max(0,nurseHealAmount-modActualHeal);
          if(param4==6 && param7 && param7.s2Family()==1209 && modActualDamage>0) param7.skin2PoisonTick(this);
          var modKilled:Boolean = abilityHpBefore > 0 && hp <= 0;
-         var modShieldBroke:Boolean = modShieldBefore > 0 && (!buffs["shield"] || Number(buffs["shield"].value) <= 0);
+         var modShieldBroke:Boolean = modShieldBefore > 0 && shieldValue104()<=0;
          if(param4 == 4 && nurseHealAmount > 0)
          {
             emitModEvent("healed",param7 || param5 || this,this,modActualHeal,modOverheal);
@@ -8079,7 +8882,11 @@ package com.meng52.game.module.avatar
             if(param4 <= 3 && param7)
             {
                param7.emitModEvent("hit",param7,this,modActualDamage);
-               if(param2 > 1) param7.emitModEvent("crit",param7,this,modActualDamage);
+               if(param2 > 1)
+               {
+                  param7.emitModEvent("crit",param7,this,modActualDamage);
+                  param7.yasuoCritical104(this,settledCriticalDamage104);
+               }
             }
             if(modShieldBroke)
                emitModEvent("shield_break",param7,this,modActualDamage);
@@ -8194,14 +9001,34 @@ package com.meng52.game.module.avatar
          resetBuff();
       }
 
-      public function refreshHp(param1:int, param2:Boolean = false) : void
+      private function queueVitalBar104(delay:Number = -1) : void
       {
+         var layer:GameMapLayer = GameMapLayer.gl;
+         if(!mBloodSpr || !layer) return;
+         // Capture all three values now: later hits/buffs may settle before
+         // this visual frame is played by the battle animation queue.
+         layer.delayCall(refreshVitalBar104,delay<0 ? GameMap.actionDelay : delay,hp,hpMax,shieldValue104());
+      }
+
+      private function refreshVitalBar104(health:Number, maximum:Number, shield:Number) : void
+      {
+         if(!mBloodSpr) return;
+         mBloodSpr.setHealthValues104(health,maximum);
+         maximum = Math.max(1,maximum);
+         mBloodSpr.refresh(health/maximum,false,shield/maximum);
+      }
+
+      public function refreshHp(param1:int, param2:Boolean = false, shield:Number = -1, maximum:Number = 0) : void
+      {
+         if(!mBloodSpr) return;
+         if(maximum<=0) maximum=hpMax;
+         if(shield<0) shield=shieldValue104();
          var _loc5_:int = 0;
          var _loc4_:int = 0;
          var _loc3_:int = 0;
          var _loc6_:Tween = null;
          var _loc7_:GameMapLayer = GameMapLayer.gl;
-         var _loc8_:Boolean = param1 / hpMax < mBloodSpr.perRate;
+         var _loc8_:Boolean = param1 / Math.max(1,maximum) < mBloodSpr.perRate;
          if(GameMap.currentAvatar != this)
          {
             if(!param2 && _loc8_)
@@ -8235,7 +9062,7 @@ package com.meng52.game.module.avatar
             _loc6_.scaleTo(getScale() * 1.2);
             _loc7_.addTween(_loc6_);
          }
-         mBloodSpr.refresh(param1 / hpMax);
+         refreshVitalBar104(param1,maximum,shield);
       }
 
       public function dead(param1:Avatar = null) : void
@@ -8484,6 +9311,10 @@ package com.meng52.game.module.avatar
          var _loc1_:Boolean = false;
          if(buffs["silence"])
          {
+            // This bond permits only Yasuo's ready captain skill, not his Q
+            // or book. checkUse still owns cooldown and target validation.
+            if(yasuoCastSilenced104() && isLeader && skill1 && GameMap.currentMap && !GameMap.currentMap.isEnd(line))
+               return skill1.checkUse();
             return _loc1_;
          }
          if(GameMap.currentMap.isEnd(line))

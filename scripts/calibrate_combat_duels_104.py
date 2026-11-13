@@ -16,7 +16,7 @@ import statistics
 from gateway import load_game_config
 from gameplay_roster import GameplayRosterEquipment
 from battle_engine import base_unit, serialize_player_team
-from combat_rules import candidate_config
+from combat_rules import candidate_config, legacy_config
 from hero_strength_native_bridge import NativeSkinBattle
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -136,7 +136,7 @@ def main():
             if profile in (1,2):jobs.append(('maxhero',f"{'output' if profile==1 else 'tank'}:{target['aid']}",source,dummy(target),2400000+k*10000+j*100,a.trials))
     (out/'snapshots.json').write_text(json.dumps(dict(maxhero=team,jobs=jobs),ensure_ascii=False),encoding='utf8')
     for model in (('legacy','ratio') if a.model=='both' else (a.model,)):
-        c=cfg if model=='legacy' else candidate_config(cfg,attack_overrides={'21':a.global_rate})
+        c=legacy_config(cfg) if model=='legacy' else candidate_config(cfg,attack_overrides={'21':a.global_rate})
         path=out/(model+'-config.json');path.write_text(json.dumps(c,ensure_ascii=False,default=str),encoding='utf8')
         rows=[]
         with concurrent.futures.ProcessPoolExecutor(max_workers=a.workers,initializer=initialize,initargs=(str(path),)) as executor:

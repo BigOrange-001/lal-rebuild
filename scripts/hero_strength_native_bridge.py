@@ -49,7 +49,7 @@ function unit(id){
    else t[k]=v;return true;}
  });units.set(id,proxy);return proxy;
 }
-const GameMap={currentMap:{getAliveList:team=>call(-1,'alive',[team])}};
+const GameMap={currentMap:{getAliveList:team=>call(-1,'alive',[team]),isEnd:lane=>call(-1,'isEnd',[lane])}};
 const currentAbilityAttack=()=>call(-1,'context');
 const beginAbilityAttack=(owner,kind)=>call(owner.__uid,'begin',[kind]);
 const endAbilityAttack=()=>call(-1,'end');
@@ -136,6 +136,9 @@ class NativeSkinBattle(MeasuredBattle):
         if name == 'serial': return self.state(u)['serial']
         if name == 'summoned': return bool(u.get('summon_owner') or u.get('summon_owner_token') or self._get_type(u)!=1)
         if name == 'alive': return [self.ref(x) for x in (self.a if a[0]==1 else self.b) if x['hp']>0]
+        if name == 'isEnd':
+            if not any(x['hp']>0 for x in self.a) or not any(x['hp']>0 for x in self.b):return True
+            return a[0] not in self.kaisa_open_lanes()
         if name == 'context':
             ctx=self._context()
             return dict(owner=self.ref(ctx['owner']),kind=ctx['kind'],damage=ctx.get('hp_damage',0)) if ctx else None
@@ -177,10 +180,10 @@ class NativeSkinBattle(MeasuredBattle):
             self.invoke(owner,'skin2Event',event,self.ref(source),self.ref(target),amount,overheal)
         return super()._emit_mod_event(owner,event,source,target,amount,overheal)
 
-    def _injured_base(self,target,amount,damage_type=0,source=None,dot_kind=None):
+    def _injured_base(self,target,amount,damage_type=0,source=None,dot_kind=None,receipt=None):
         if getattr(self,'_bridge_ready',False):
             amount=self.invoke(target,'skin2Incoming',amount,self.ref(source),damage_type)
-        result=super()._injured_base(target,amount,damage_type,source,dot_kind)
+        result=super()._injured_base(target,amount,damage_type,source,dot_kind,receipt=receipt)
         if damage_type==6 and source is not None and result>0:
             self.invoke(source,'skin2PoisonTick',self.ref(target))
         return result

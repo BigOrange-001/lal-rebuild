@@ -404,8 +404,6 @@ package com.meng52.game.ui.element
          var _loc7_:int = 0;
          var _loc6_:String = null;
          var _loc10_:TextField = null;
-         var _loc11_:Array = null;
-         var _loc8_:int = 0;
          var _loc3_:String = null;
          var _loc5_:TextField = null;
          var _loc4_:TextField = null;
@@ -416,10 +414,8 @@ package com.meng52.game.ui.element
             _loc7_ = GlobalData.$mStageWidth * 0.4;
             _loc6_ = Tools.formatLineX(mEquip.equipData.name,GlobalTextStyle.COLOR_B_P_B_R);
             _loc10_ = GlobalTextStyle.getTextField(mEquip.equipData.name,20,1118481,"left",_loc7_,35);
-            _loc11_ = [7015559,15329540,13777209];
-            _loc8_ = int(GlobalData.$mConfig_simple.equip_alchemy.equip_al);
             _loc3_ = mEquip.getStep() > -1 ? GlobalLanguageStr.getLanguageStr(90703,mEquip.getStep()) : "";
-            _loc5_ = GlobalFunction.createTextField(200,30,_loc3_,"",20,_loc11_[mEquip.getStar() - _loc8_]);
+            _loc5_ = GlobalFunction.createTextField(200,30,_loc3_,"",20,mEquip.getAlchemyColor104());
             _loc5_.hAlign = "left";
             this.addChild(_loc5_);
             _loc4_ = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20079,param1 ? mEquip.slv : mEquip.lv),20,4926491,"left",_loc7_,46);

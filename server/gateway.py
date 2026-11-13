@@ -158,6 +158,12 @@ def load_game_config(path, now=None):
  apply_skill_output_104(document)
  from skill_rank_growth_104 import apply_skill_rank_growth_104
  apply_skill_rank_growth_104(document)
+ from dragonmancer_kaisa_104 import apply_dragonmancer_kaisa
+ apply_dragonmancer_kaisa(document)
+ from nightbringer_yasuo_104 import apply_nightbringer_yasuo
+ apply_nightbringer_yasuo(document)
+ from new_skin_bonds_104 import apply_new_skin_bonds_104
+ apply_new_skin_bonds_104(document)
  from skin_acquisition_104 import apply_skin_acquisition_104
  apply_skin_acquisition_104(document)
  from loot_rates_104 import apply_loot_rates_104

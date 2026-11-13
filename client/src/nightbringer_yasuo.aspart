@@ -1,0 +1,216 @@
+      // Nightbringer's protection is not a removable generic buff.
+      private var yasuoNightRounds104:int = -1;
+      private var yasuoVampRounds104:int = -1;
+      private var yasuoCritBonus104:int = 0;
+      private var yasuoShieldSerial104:int = 0;
+      private var yasuoCritBurst104:Boolean = false;
+
+      private function yasuoIs104() : Boolean
+      {
+         var row:Object=GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[avatarData.id] : null;
+         return row && row.nightbringerYasuo104===true;
+      }
+      private function yasuoPassive104() : Boolean
+      {
+         if(!yasuoIs104() || !skillB) return false;
+         for each(var action:Array in skillB.skills)
+            if(action[0]=="manual_ability" && action[1]=="night_yasuo_p") return true;
+         return false;
+      }
+      private function yasuoStart104() : void
+      {
+         yasuoResetVisuals104();
+         // Snapshot the attribute, not the probability calculated against toughness.
+         yasuoCritBonus104=0;
+         if(yasuoPassive104()) yasuoCritBonus104=getCrit();
+      }
+      private function yasuoNight104() : Boolean
+      {
+         return yasuoNightRounds104>=0;
+      }
+      private function yasuoCastSilenced104() : Boolean
+      {
+         return yasuoIs104() && hp>0 && !buffs.stun && skinBondNumber104("yasuo_c_silenced")>0;
+      }
+      private function yasuoImmune104(kind:String) : Boolean
+      {
+         return yasuoNight104() && ["stun","silence","curse","poison","burn"].indexOf(kind)>=0;
+      }
+      private function yasuoCleanse104() : void
+      {
+         for each(var kind:String in ["stun","silence","curse","poison","burn"]) removeBuff(kind);
+         var keys:Array=[];
+         for(var key:String in manualSkillDots)
+            if(manualSkillDots[key] && ["poison","burn"].indexOf(manualSkillDots[key].kind)>=0) keys.push(key);
+         for each(key in keys)
+         {
+            var visual:Buff=manualSkillDots[key].visual as Buff;
+            if(visual && visual.displayObject && m_buff && visual.displayObject.parent==m_buff)
+               m_buff.removeChild(visual.displayObject);
+            delete manualSkillDots[key];
+         }
+      }
+      private function yasuoLane104() : Array
+      {
+         return abilityCandidates(otherTeam,line,GameMapConfig.LINE_POS/2,GameMapConfig.LINE_POS,-1,false,"front");
+      }
+      private function yasuoCanCast104(kind:String) : Boolean
+      {
+         return yasuoIs104() && hp>0 && kind!="night_yasuo_p" && yasuoLane104().length>0;
+      }
+      private function yasuoExecute104(kind:String, sourceSkill:*) : Boolean
+      {
+         if(!sourceSkill || !yasuoCanCast104(kind)) return false;
+         var targets:Array=yasuoLane104();
+         var target:Avatar=targets[0];
+         if(kind=="night_yasuo_c")
+         {
+            // Remove only the five named effects; unrelated debuffs remain.
+            yasuoCleanse104();
+            yasuoNightRounds104=1;
+            yasuoVampRounds104=2;
+            addBuff("bless",1,0,0,-1,this);
+            abilityFeedback("融入黑夜","",0xFF6944);
+            yasuoQueueNight104(true);
+            var destination:int=target.pos+(team==1 ? 200 : -200);
+            var landing:Number=GameMap.actionDelay+2;
+            reline(line,Math.max(0,Math.min(GameMapConfig.LINE_POS,destination)));
+            GameMap.actionDelay=Math.max(GameMap.actionDelay,landing);
+            for(var strike:int=0;strike<3 && hp>0 && target.hp>0;strike++)
+            {
+               yasuoHit104(target,Number(sourceSkill.skills[0][4+strike])*skinBondNumber104("yasuo_c_damage",1),sourceSkill,strike==2 ? "night_finish" : "night_slash");
+               GameMap.actionDelay+=strike==2 ? .22 : .12;
+            }
+            return true;
+         }
+         addPurifyCharges(1);
+         if(!abilityState.root && !buffs.root) GameMap.actionDelay+=checkMove(true,400,null,-1,true);
+         var coefficient:Number=Number(sourceSkill.skills[0][4]);
+         var weakPercent:Number=Number(sourceSkill.skills[0][5]);
+         var launch:int=pos;
+         var castLane:int=line;
+         var direction:int=team==1 ? -1 : 1;
+         var speed:Number=2400;
+         var points:Array=[{pos:launch,at:GameMap.actionDelay}];
+         var previous:int=launch;
+         var timeline:Number=GameMap.actionDelay;
+         var knockEnd:Number=timeline;
+         // One travelling wave, one hit per original target. Distances and front
+         // designation are sampled before displacement so it cannot hit twice.
+         var plan:Array=[];
+         for(var index:int=0;index<targets.length;index++)
+         {
+            target=targets[index];
+            if((target.pos-launch)*direction>=0) plan.push({unit:target,pos:target.pos,front:index==0});
+         }
+         var wave:Object=beginAbilityAttack(this,"active");
+         wave.skill=sourceSkill;
+         wave.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+         try
+         {
+         for each(var contact:Object in plan)
+         {
+            if(hp<=0) break;
+            target=contact.unit;
+            if(target.hp<=0 || target.line!=castLane || target.team!=otherTeam) continue;
+            timeline+=Math.abs(int(contact.pos)-previous)/speed;
+            GameMap.actionDelay=timeline;
+            points.push({pos:int(contact.pos),at:timeline});
+            var hit:Boolean=yasuoHit104(target,coefficient*(contact.front ? 1 : .6),sourceSkill,"night_contact",true);
+            if(hit && contact.front && target.hp>0 && hp>0) abilityControl(target,"stun",1);
+            if(hit && !contact.front && target.hp>0 && hp>0 && weakPercent>0 && weakPercent<1)
+               abilityControl(target,"weak",1,weakPercent/(1-weakPercent));
+            if(target.hp>0 && hp>0)
+               knockEnd=Math.max(knockEnd,GameMap.actionDelay+target.checkMove(false,300,this,-1,true));
+            // A revival/counter presentation may pause the battle clock. Record
+            // the pause in the flight path rather than desynchronizing impacts.
+            timeline=Math.max(timeline,GameMap.actionDelay);
+            points.push({pos:int(contact.pos),at:timeline});
+            previous=int(contact.pos);
+         }
+         var finish:int=team==1 ? 0 : GameMapConfig.LINE_POS;
+         timeline+=Math.abs(finish-previous)/speed;
+         points.push({pos:finish,at:timeline});
+         yasuoWhirlwind104(castLane,offset,points);
+         GameMap.actionDelay=Math.max(timeline,knockEnd);
+         }
+         finally {endAbilityAttack(wave);}
+         return true;
+      }
+      private function yasuoHit104(target:Avatar, coefficient:Number, sourceSkill:*, effect:String, shared:Boolean = false) : Boolean
+      {
+         var rate:Number=Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104);
+         if(!isFinite(rate) || rate<=0) rate=1;
+         var context:Object=shared ? null : beginAbilityAttack(this,"active");
+         if(context)
+         {
+            context.skill=sourceSkill;
+            context.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+         }
+         var hit:Boolean=false;
+         try
+         {
+            if(effect!="night_contact") yasuoEffect104(effect,target);
+            hit=abilityHit(target,coefficient/rate,1,effect=="night_contact" ? "FX_NIGHT_YASUO_CONTACT104" : "FX_NIGHT_YASUO104");
+         }
+         finally {if(context) endAbilityAttack(context);}
+         return hit;
+      }
+      private function yasuoEvent104(event:String, source:Avatar, target:Avatar, amount:Number) : void
+      {
+         if(source!==this || hp<=0 || !target || target.team==team) return;
+         if(event=="hit" && yasuoVampRounds104>=0 && amount>0)
+            // Use actual HP damage directly, bypassing AP/precision heal scaling.
+            injured(Tools.toInt(amount),1,null,4,this,false,this);
+         if(event!="crit" || !yasuoPassive104()) return;
+         // Each entry is an ordinary shield Buff with its own native timer.
+         // It never replaces or refreshes another entry, including allied shields.
+         if(buffs.curse) return;
+         if(buffs.evil) {removeBuff("evil",true);return;}
+         var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier());
+         if(amountShield<=0) return;
+         var shield:Buff=new Buff("shield",2,amountShield);
+         shield.source=this;
+         buffs["yasuoShield104_"+(++yasuoShieldSerial104)]=shield;
+         queueVitalBar104();
+         // Use one persistent guard indicator rather than overlapping N copies.
+         abilityFeedback("黑夜剑心：护盾+"+amountShield,"",0xFFB064);
+      }
+      private function shieldValue104() : Number
+      {
+         var result:Number=0;
+         for each(var shield:Buff in buffs) if(shield && shield.type=="shield") result+=Math.max(0,shield.value);
+         return result;
+      }
+      private function removeIndependentShields104() : void
+      {
+         var keys:Array=[];
+         for(var key:String in buffs) if(key.indexOf("yasuoShield104_")==0) keys.push(key);
+         for each(key in keys) removeBuff(key);
+      }
+      private function yasuoDamage104(amount:Number, source:Avatar, derived:Boolean = false) : Number
+      {
+         if(!derived && source && source.yasuoNight104()) amount=Tools.toInt(amount*1.5);
+         if(yasuoNight104()) amount=Tools.toInt(amount*.2);
+         return amount;
+      }
+      private function yasuoCritical104(target:Avatar, settledDamage:Number) : void
+      {
+         if(!yasuoPassive104() || yasuoCritBurst104 || hp<=0 || !target || target.hp<=0 || target.team==team) return;
+         var amount:int=Tools.toInt(settledDamage*skinBondNumber104("yasuo_crit_true",.35));
+         if(amount<=0) return;
+         yasuoCritBurst104=true;
+         var context:Object=beginAbilityAttack(this,"passive");
+         try
+         {
+            // The base already contains crit, armor, outgoing amplification and
+            // the global final multiplier. Only the new true hit's target-side
+            // mitigation and shields apply; neither crit nor global scaling repeats.
+            target.injured(amount,1,null,3,this,false,this,null,"",true);
+         }
+         finally {endAbilityAttack(context);yasuoCritBurst104=false;}
+      }
+      private function yasuoEffect104(kind:String, target:Avatar) : void
+      {
+         fxPulse104(kind,target);
+      }

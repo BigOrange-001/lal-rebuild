@@ -1,0 +1,70 @@
+      private static var damageChoiceLoaded104:Boolean = false;
+      private static var legacyDamageChoice104:Boolean = false;
+      private static var damageBattleStarted104:Boolean = false;
+      private static var legacyBattleDamage104:Boolean = false;
+      private static var configuredTrueDamageRate104:Number = NaN;
+      private static const DAMAGE_CHOICE_KEY104:String = "lal_legacy_damage_formula_104";
+      private static const DEFAULT_DAMAGE_RULES104:Object = {
+         reduction_exponent:1.5,defense_attack_midpoint:0.7,miss_slope:40,crit_slope:60,true_skill_rate:0.8,
+         attack_overrides:{"1":0.5,"4":8,"5":15,"6":35,"7":60,"15":0,"16":0,"21":0.66}
+      };
+
+      public static function useLegacyDamage104() : Boolean
+      {
+         if(!damageChoiceLoaded104)
+         {
+            legacyDamageChoice104 = LocalStore.getItemObj(DAMAGE_CHOICE_KEY104) === true;
+            damageChoiceLoaded104 = true;
+         }
+         return legacyDamageChoice104;
+      }
+
+      public static function setLegacyDamage104(enabled:Boolean) : void
+      {
+         LocalStore.setItemObj(DAMAGE_CHOICE_KEY104,enabled);
+         legacyDamageChoice104 = enabled;
+         damageChoiceLoaded104 = true;
+      }
+
+      public static function beginDamageRules104() : void
+      {
+         // One battle keeps one model even if a preference changes mid-replay.
+         legacyBattleDamage104 = useLegacyDamage104();
+         damageBattleStarted104 = true;
+      }
+
+      public static function ratioDamage104() : Boolean
+      {
+         return !(damageBattleStarted104 ? legacyBattleDamage104 : useLegacyDamage104());
+      }
+
+      private static function damageRuleNumber104(key:String) : Number
+      {
+         var rules:Object = GlobalData.$mConfig ? GlobalData.$mConfig.combat_rules : null;
+         var value:Number = rules && rules[key]!=null ? Number(rules[key]) : Number(DEFAULT_DAMAGE_RULES104[key]);
+         return isFinite(value) && value>0 ? value : Number(DEFAULT_DAMAGE_RULES104[key]);
+      }
+
+      public static function damageAttack104() : Array
+      {
+         var attack:Array = GlobalData.$mConfig_simple.attack.concat();
+         if(isFinite(configuredTrueDamageRate104)) attack[1] = configuredTrueDamageRate104;
+         if(!ratioDamage104()) return attack;
+         var rules:Object = GlobalData.$mConfig ? GlobalData.$mConfig.combat_rules : null;
+         var overrides:Object = rules && rules.attack_overrides ? rules.attack_overrides : DEFAULT_DAMAGE_RULES104.attack_overrides;
+         for(var key:String in overrides) attack[int(key)] = Number(overrides[key]);
+         return attack;
+      }
+
+      private static function defenseDamage104(amount:Number, defense:Number, baseAttack:Number) : Number
+      {
+         if(!ratioDamage104()) return Math.max(amount*MIN_DAMAGE_RATE,amount-defense);
+         var ratio:Number = Math.max(0,defense)/Math.max(1,baseAttack);
+         var reduction:Number = ratio>0 ? 1/(1+Math.pow(damageRuleNumber104("defense_attack_midpoint")/ratio,damageRuleNumber104("reduction_exponent"))) : 0;
+         return amount*(1-Math.min(1-MIN_DAMAGE_RATE,reduction));
+      }
+
+      public static function trueSkillCoefficient104(coefficient:Number = 1) : Number
+      {
+         return coefficient*(ratioDamage104() ? damageRuleNumber104("true_skill_rate") : 1)/REAL_DAMAGE_RATE;
+      }

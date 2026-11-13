@@ -113,7 +113,7 @@ class CombatRedesignTests(unittest.TestCase):
         apply_combat_rules(doc);first=copy.deepcopy(doc);apply_combat_rules(doc)
         self.assertEqual(doc,first)
         self.assertEqual(doc['cfg']['combat_rules']['direct_recovery'],{'hit_denominator':3000})
-        self.assertEqual(doc['cfg']['combat_rules']['model'],'legacy')
+        self.assertEqual(doc['cfg']['combat_rules']['model'],'ratio')
         self.assertEqual(doc['cfg']['system_simple']['attack'],ATTACK)
 
     def test_live_config_replacement_and_switch_still_take_effect(self):

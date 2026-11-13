@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.File;
 import java.util.List;
 
 /** Two controls and a raw terminal. No graphical GM operations are exposed. */
@@ -71,12 +72,33 @@ public class MainActivity extends Activity implements SaveAdapter.Actions, Servi
         super.onCreate(state);
         setContentView(buildContent());
         adapter = new SaveAdapter(this);
-        if (state != null) commandInput.setText(state.getString("console-command", ""));
+        if (state != null) {
+            commandInput.setText(state.getString("console-command", ""));
+            Bundle selected = state.getBundle("pending-export-save");
+            if (selected != null && selected.getString("path") != null) {
+                pendingExportSave = new SaveStore.Save(new File(selected.getString("path")),
+                        selected.getString("kind"), selected.getLong("created"), selected.getLong("bytes"));
+            }
+            exportTarget = state.getParcelable("export-target");
+            importSource = state.getParcelable("import-source");
+        }
         requestNotificationPermission();
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
         state.putString("console-command", commandInput.getText().toString());
+        // The system document picker can outlive this activity/process. Keep
+        // the exact selected file, including while waiting for service rebind.
+        if (pendingExportSave != null) {
+            Bundle selected = new Bundle();
+            selected.putString("path", pendingExportSave.file.getAbsolutePath());
+            selected.putString("kind", pendingExportSave.kind);
+            selected.putLong("created", pendingExportSave.createdAt);
+            selected.putLong("bytes", pendingExportSave.bytes);
+            state.putBundle("pending-export-save", selected);
+        }
+        state.putParcelable("export-target", exportTarget);
+        state.putParcelable("import-source", importSource);
         super.onSaveInstanceState(state);
     }
 

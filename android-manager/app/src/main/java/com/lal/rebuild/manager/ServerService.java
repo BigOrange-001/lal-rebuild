@@ -145,13 +145,8 @@ public class ServerService extends Service implements PythonBridge.Events {
     public void onCreate() {
         super.onCreate();
         createChannel();
-        // The merged APK's application class is the AIR client's
-        // MultiDexApplication, which knows nothing about Python, so the runtime
-        // is started here instead. Every path that can reach the server — the
-        // activity, the boot receiver, a notification action — starts this
-        // service, so this one call covers all of them. It blocks while Chaquopy
-        // unpacks, which is exactly why it is off the main thread.
-        Py.ensure(this);
+        // Constructing the bridge does not touch Python. Cold initialization
+        // belongs to the worker, after onStartCommand posts the notification.
         bridge = new PythonBridge(this, this);
         saves = new SaveStore(this, RuntimeInstaller.databaseFile(this));
         autosaveEnabled = getSharedPreferences(MainActivity.PREFS, MODE_PRIVATE)
@@ -223,11 +218,14 @@ public class ServerService extends Service implements PythonBridge.Events {
 
         worker.execute(() -> {
             try {
+                // This single worker also serializes save/import operations;
+                // PythonBridge.facade guards their stopped-server path too.
+                Py.ensure(ServerService.this);
                 RuntimeInstaller.ensureInstalled(ServerService.this);
             } catch (Exception error) {
-                Log.e(TAG, "Could not unpack the server tree", error);
+                Log.e(TAG, "Could not initialize the server runtime", error);
                 releaseWakeLock();
-                publish(PHASE_FAILED, "运行时解压失败：" + message(error));
+                publish(PHASE_FAILED, "运行时初始化失败：" + message(error));
                 return;
             }
             File runtime = RuntimeInstaller.runtimeDir(ServerService.this);

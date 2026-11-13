@@ -218,6 +218,14 @@ class StatPower103Tests(unittest.TestCase):
     def test_scaling_overlay_is_idempotent_and_does_not_change_other_branches(self):
         original = copy.deepcopy(self.document)
         apply_talent_stats_103(original)
+        # The runtime polishes player-facing descriptions after numeric overlays.
+        # Check this overlay's own idempotence before that presentation step,
+        # then compare the final result with the actual loaded configuration.
+        once = copy.deepcopy(original)
+        apply_talent_stats_103(original)
+        self.assertEqual(original, once)
+        from copy_polish_104 import polish_sections
+        polish_sections(original['cfg'])
         self.assertEqual(original,self.document)
         self.assertEqual(original['cfg']['talent']['T_01_06']['growth_value'],18)
         self.assertEqual(original['cfg']['talent']['T_04_06']['growth_value'],36)

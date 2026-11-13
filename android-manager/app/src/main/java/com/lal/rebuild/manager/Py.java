@@ -18,9 +18,9 @@ import com.chaquo.python.android.AndroidPlatform;
  *
  * <p>So the init became lazy and explicit. Call {@link #ensure} before touching
  * any {@code PyObject}; it blocks until the runtime is up, so it must only run
- * on worker threads. {@link ServerService#onCreate} is the load-bearing call —
- * it covers the boot receiver path, the activity path and the notification
- * action path, since all three start the service.
+ * on worker threads. The service startup worker covers the boot receiver,
+ * activity and notification action paths; stopped-server save operations
+ * initialize through {@code PythonBridge.facade} on that same worker.
  */
 final class Py {
 

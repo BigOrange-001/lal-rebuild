@@ -67,7 +67,7 @@
          {
             // Remove only the five named effects; unrelated debuffs remain.
             yasuoCleanse104();
-            yasuoNightRounds104=1;
+            yasuoNightRounds104=2;
             yasuoVampRounds104=2;
             addBuff("bless",1,0,0,-1,this);
             abilityFeedback("融入黑夜","",0xFF6944);
@@ -190,7 +190,6 @@
       }
       private function yasuoDamage104(amount:Number, source:Avatar, derived:Boolean = false) : Number
       {
-         if(!derived && source && source.yasuoNight104()) amount=Tools.toInt(amount*1.5);
          if(yasuoNight104()) amount=Tools.toInt(amount*.2);
          return amount;
       }

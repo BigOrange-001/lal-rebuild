@@ -21,7 +21,9 @@ function make(team=1,pos=2400,yasuo=true){
  Object.assign(u,methods);
  u.skill0=skill(data.normal);u.skill1=skill(data.captain);u.skillB=yasuo?skill(data.passive):null;
  u.getCrit=()=>u.baseCrit+u.yasuoCritBonus104;
- u.getDamage=()=>u.ap;u.getHpMax=()=>u.hpMax;u.getRecoveryTalentMultiplier=()=>1;
+ u.getHpMax=()=>u.hpMax;u.getRecoveryTalentMultiplier=()=>1;
+ u.abilityEntryAttack=0;u.manualAttackStack=0;u.timedAttackStack=0;
+ u.getManualBattleStack=()=>u.manualAttackStack;u.getManualTimedStack=()=>u.timedAttackStack;
  u.yasuoEffect104=()=>{};u.fxPulse104=()=>{};u.abilityFeedback=()=>{};u.queueVitalBar104=()=>{};
  u.yasuoResetVisuals104=()=>{};u.yasuoQueueNight104=()=>{};
  u.yasuoWhirlwind104=(lane,offset,points)=>u.flights.push({lane,offset,points:structuredClone(points)});
@@ -54,7 +56,7 @@ function make(team=1,pos=2400,yasuo=true){
   if(crit>1){source.yasuoEvent104('crit',source,u,actual);source.yasuoCritical104(u,settled)}
   return actual;
  };
- u.abilityHit=(target,coefficient,kind,effect)=>{u.hitTimes.push({target,at:GameMap.actionDelay,effect});if(missTargets.has(target))return false;target.injured(int(coefficient*.8*u.ap),critical,null,kind,u,false,u);return true};
+ u.abilityHit=(target,coefficient,kind,effect)=>{u.hitTimes.push({target,at:GameMap.actionDelay,effect});if(missTargets.has(target))return false;target.injured(int(coefficient*.8*u.getDamage()),critical,null,kind,u,false,u);return true};
  u.tick=()=>{
   if(u.yasuoNightRounds104>=0)--u.yasuoNightRounds104;
   if(u.yasuoVampRounds104>=0)--u.yasuoVampRounds104;
@@ -117,9 +119,9 @@ for(const team of [1,2]){
  a.yasuoExecute104('night_yasuo_c',a.skill1);
  for(const key of ['stun','silence','curse','poison','burn']){assert(!a.buffs[key]);a.addBuff(key,3,9);a.addBuff(key,3,9);assert(!a.buffs[key])}
  assert(a.buffs.weak);assert.deepEqual(Object.keys(a.manualSkillDots),['bleed']);
- assert.equal(a.pos,1600);assert.equal(100000-en[0].hp,1190);assert(a.buffs.bless);
- a.tick();a.tick();assert(!a.yasuoNight104());assert.equal(a.yasuoVampRounds104,0);
- a.hp=90000;a.abilityHit(en[0],1/.8,1);assert.equal(a.hp,90100);a.tick();assert.equal(a.yasuoVampRounds104,-1);cases++;
+ assert.equal(a.pos,1600);assert.equal(a.getDamage(),87,'preserved weakness applies before the independent night multiplier');assert.equal(100000-en[0].hp,690);assert(a.buffs.bless);
+ assert.equal(a.yasuoNightRounds104,2);a.tick();a.tick();assert(a.yasuoNight104());assert(a.yasuoImmune104('stun'));assert.equal(a.yasuoVampRounds104,0);
+ a.hp=90000;a.abilityHit(en[0],1/.8,1);assert.equal(a.hp,90087);a.tick();assert(!a.yasuoNight104());assert(!a.yasuoImmune104('stun'));assert.equal(a.yasuoVampRounds104,-1);cases++;
 }
 {
  const {a,en}=fresh(2);en[0].hp=1;a.yasuoExecute104('night_yasuo_c',a.skill1);
@@ -131,7 +133,7 @@ for(const team of [1,2]){
 }
 {
  const {a,en}=fresh();a.yasuoNightRounds104=1;critical=2;a.abilityHit(en[0],1/.8,1);
- assert.equal(100000-en[0].hp,405);assert.deepEqual(en[0].receipts.map(r=>r.settled),[300,105]);cases++;
+ assert.equal(100000-en[0].hp,472);assert.deepEqual(en[0].receipts.map(r=>r.settled),[350,122]);cases++;
 }
 {
  const {a,en}=fresh(2);for(const key of ['weak','root','curse'])a.addBuff(key,3,1);
@@ -153,10 +155,12 @@ for(const team of [1,2]){
 }
 {
  const {a,en}=fresh();a.hp=90000;a.yasuoVampRounds104=2;
+ const getDamage=a.getDamage;
  a.getHit=()=>{throw Error('lifesteal must not use precision')};
  a.getDamage=()=>{throw Error('lifesteal must not use AP healing')};
  a.yasuoEvent104('hit',a,en[0],100);assert.equal(a.hp,90100);
  a.hp=99990;a.yasuoEvent104('hit',a,en[0],100);assert.equal(a.hp,100000);
+ a.getDamage=getDamage;
  a.hp=90000;en[0].addBuff('shield',3,1000);a.abilityHit(en[0],1/.8,1);assert.equal(a.hp,90000,'fully absorbed damage heals nothing');
  en[0].removeBuff('shield');en[0].hp=30;a.abilityHit(en[0],1/.8,1);assert.equal(a.hp,90030,'overkill heals only actual HP lost');cases++;
 }
@@ -185,6 +189,14 @@ for(const team of [1,2]){
  seen=[];a.yasuoExecute104('night_yasuo_n',a.skill0);
  [2.25,1.35].forEach((c,i)=>assert(Math.abs(seen[i].coefficient-c)<1e-10,'Q must not receive captain damage bonus'));
  cases++;
+}
+{
+ const {a,en}=fresh();a.addBuff('strong',3,.5);a.manualAttackStack=.2;a.timedAttackStack=.3;
+ a.abilityEntryAttack=100;a.abilityState.evilStackBonus=.1;a.abilityState.santaStacks=2;
+ assert.equal(a.getDamage(),258);a.yasuoNightRounds104=2;
+ assert.equal(a.getDamage(),451,'night multiplies after all ordinary attack modifiers');
+ assert.equal(en[0].yasuoDamage104(100,a),100,'fixed damage has no second outgoing amplification');
+ a.tick();a.tick();assert.equal(a.getDamage(),451);a.tick();assert.equal(a.getDamage(),258);cases++;
 }
 assert.equal(contexts.length,0);
 console.log(JSON.stringify({nativeMethodScenarios:cases,passed:true}));

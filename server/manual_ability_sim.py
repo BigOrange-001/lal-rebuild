@@ -219,7 +219,7 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         value=max(0,value+_to_int(state['entry_ap']*state.get('evil_bonus',0)))
         passive=(unit.get('skillB') or {}).get('skills',[])
         stack_rate=float(passive[0][3]) if passive and passive[0][0]=='santa_kill' else .05
-        return _to_int(value*(1+stack_rate*state.get('santa_stacks',0)))
+        return self.yasuo_attack(unit, _to_int(value*(1+stack_rate*state.get('santa_stacks',0))))
 
     def _get_de_ph(self, unit, ignore_sunder=False):
         base=dict(unit,de_ph=unit.get('de_ph',0)*(1+self._get_manual_battle_stack(unit,'defense')))

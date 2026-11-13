@@ -1454,7 +1454,7 @@ package com.meng52.game.module.avatar
          {
             // Remove only the five named effects; unrelated debuffs remain.
             yasuoCleanse104();
-            yasuoNightRounds104=1;
+            yasuoNightRounds104=2;
             yasuoVampRounds104=2;
             addBuff("bless",1,0,0,-1,this);
             abilityFeedback("融入黑夜","",0xFF6944);
@@ -1577,7 +1577,6 @@ package com.meng52.game.module.avatar
       }
       private function yasuoDamage104(amount:Number, source:Avatar, derived:Boolean = false) : Number
       {
-         if(!derived && source && source.yasuoNight104()) amount=Tools.toInt(amount*1.5);
          if(yasuoNight104()) amount=Tools.toInt(amount*.2);
          return amount;
       }
@@ -6151,6 +6150,7 @@ package com.meng52.game.module.avatar
          _loc6_ = Tools.toInt(_loc6_ * (1 + getManualBattleStack("attack") + getManualTimedStack("attack")) * _loc4_);
          if(hpMax && abilityEntryAttack > 0) _loc6_ += int(abilityEntryAttack * (abilityState.evilStackBonus != null ? Number(abilityState.evilStackBonus) : 0.03 * int(abilityState.evilStacks)));
          if(hpMax && this.abilityState && int(this.abilityState.santaStacks) > 0) _loc6_ = Tools.toInt(_loc6_ * (1+(skillB && skillB.skills && skillB.skills.length && skillB.skills[0][0]=="santa_kill" ? Number(skillB.skills[0][3]) : 0.05)*int(this.abilityState.santaStacks)));
+         if(this.yasuoNightRounds104>=0) _loc6_ = Tools.toInt(_loc6_*1.75);
          return Math.max(_loc6_,0);
       }
 

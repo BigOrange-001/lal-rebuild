@@ -49,15 +49,17 @@ class NightbringerYasuoTests(unittest.TestCase):
         self.assertTrue(h['voiceDisabled104'])
         self.assertEqual(h['pl'][9],550)
         self.assertEqual(c['avatar']['A_1801_6']['pl'][9],850)
-        self.assertEqual(c['skill'][NORMAL]['pl'][:2], [0,2])
-        self.assertEqual(c['skill'][CAPTAIN]['pl'][:2], [1,4])
+        self.assertEqual(c['skill'][NORMAL]['pl'][:2], [0,1])
+        self.assertEqual(c['skill'][CAPTAIN]['pl'][:2], [1,3])
         for rank, value in ((1,2.25),(10,4.5)):
             self.assertEqual(_native_skill_snapshot(c,NORMAL,rank)['skills'][0][4], value)
         for rank, value in ((1,.33),(10,.66)):
             self.assertAlmostEqual(_native_skill_snapshot(c,NORMAL,rank)['skills'][0][5], value)
         self.assertEqual(c['skill'][CAPTAIN]['skill'][0][4:7],[1.75,1.75,4.44])
         self.assertNotIn('净化',c['skill'][CAPTAIN]['info'])
-        self.assertIn('免疫上述效果1回合',c['skill'][CAPTAIN]['info'])
+        self.assertIn('免疫上述效果2回合',c['skill'][CAPTAIN]['info'])
+        self.assertIn('攻击力提高75%',c['skill'][CAPTAIN]['info'])
+        self.assertIn('独立乘算',c['skill'][CAPTAIN]['info'])
         for pool in ('advanced','vip'):
             self.assertEqual(sum(x['id']==AID for x in c['summon_calibration']['pools'][pool]['qualities']['orange']['cards']),1)
         fresh = copy.deepcopy(c)
@@ -198,20 +200,24 @@ class NightbringerYasuoTests(unittest.TestCase):
         b._remove_buff(o,'shield')
         self.assertEqual(b._buff_value(o,'shield'),0)
 
-    def test_captain_damage_position_and_two_distinct_durations(self):
+    def test_captain_damage_position_and_two_round_night_expiry(self):
         b,o,en=self.battle()
         self.cast(b,o,True)
-        self.assertEqual((o['pos'],100000-en[0]['hp']),(1600,1190))
-        self.assertEqual((o['_yasuo_night_rounds'],o['_yasuo_vamp_rounds']),(1,2))
+        self.assertEqual((o['pos'],100000-en[0]['hp']),(1600,1389))
+        self.assertEqual((o['_yasuo_night_rounds'],o['_yasuo_vamp_rounds']),(2,2))
         self.assertIsNotNone(b._buff(o,'bless'))
         b._tick_buffs(o)
         b._tick_buffs(o)
-        self.assertFalse(b.yasuo_night(o))
+        self.assertTrue(b.yasuo_night(o))
+        self.assertTrue(b.yasuo_immune(o,'stun'))
+        self.assertEqual(o['_yasuo_night_rounds'],0)
         self.assertEqual(o['_yasuo_vamp_rounds'],0)
         before=o['hp']=90000
         with b.context(o,'basic'):b._native_damage(o,en[0],1,1)
-        self.assertEqual(o['hp']-before,100)
+        self.assertEqual(o['hp']-before,175)
         b._tick_buffs(o)
+        self.assertFalse(b.yasuo_night(o))
+        self.assertFalse(b.yasuo_immune(o,'stun'))
         self.assertEqual(o['_yasuo_vamp_rounds'],-1)
 
     def test_cleanses_and_repeated_immunity_only_for_five_named_effects(self):
@@ -241,13 +247,32 @@ class NightbringerYasuoTests(unittest.TestCase):
             b._injured(o,100,kind,source=en[0])
             self.assertEqual(before-o['hp'],20)
 
-    def test_bonus_not_recrit_or_double_scaled_by_outgoing_amp_or_global_rate(self):
+    def test_night_attack_is_separate_from_other_attack_modifiers_and_expires(self):
+        b,o,en=self.battle()
+        b._add_buff(o,'strong',3,.5)
+        o['_manual_battle_stacks']={'attack':.2}
+        o['_timed_stacks']=[dict(stat='attack',value=.3,expiresAt=99)]
+        b.state(o).update(evil_bonus=.1,santa_stacks=2)
+        self.assertEqual(b._get_damage(o),258)
+        o['_yasuo_night_rounds']=2
+        self.assertEqual(b._get_damage(o),451)
+        # A fixed hit has no attack coefficient, so the old outgoing boost
+        # must not amplify it a second time.
+        self.assertEqual(b._damage_modifiers_104(en[0],100,3,o),100)
+        b._tick_buffs(o)
+        b._tick_buffs(o)
+        self.assertEqual(b._get_damage(o),451)
+        b._tick_buffs(o)
+        self.assertEqual(b._get_damage(o),258)
+
+    def test_bonus_not_recrit_or_double_scaled_by_night_attack_or_global_rate(self):
         b,o,en=self.battle(critical=True)
         b._config['system_simple']['attack'][21]=.5
         o['_yasuo_night_rounds']=1
         with b.context(o,'basic'):b._native_damage(o,en[0],1,1)
-        # 100 * 2 crit * .5 global * 1.5 night =150, plus floor(150*.35)=52.
-        self.assertEqual(100000-en[0]['hp'],202)
+        # Attack 100*1.75=175; crit *2 and global *.5 settle 175,
+        # followed by floor(175*.35)=61 true damage without another boost.
+        self.assertEqual(100000-en[0]['hp'],236)
         self.assertEqual(sum(e['kind']=='yasuo_crit_true' for e in b.ability_events),1)
         self.assertEqual(sum(v.type=='shield' for v in o['_buffs'].values()),1)
 

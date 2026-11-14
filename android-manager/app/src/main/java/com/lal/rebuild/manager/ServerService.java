@@ -106,6 +106,7 @@ public class ServerService extends Service implements PythonBridge.Events {
     private SaveStore saves;
 
     private volatile String phase = PHASE_STOPPED;
+    private int startupAttempt;
     private volatile String detail = "";
     private JSONObject stats;
     private boolean autosaveEnabled = true;
@@ -213,6 +214,7 @@ public class ServerService extends Service implements PythonBridge.Events {
         if (bridge.isRunning() || PHASE_STARTING.equals(phase)) {
             return;
         }
+        startupAttempt++;
         acquireWakeLock();
         publish(PHASE_STARTING, "正在解压运行时…");
 
@@ -403,6 +405,8 @@ public class ServerService extends Service implements PythonBridge.Events {
     String phase() {
         return phase;
     }
+
+    int startupAttempt() { return startupAttempt; }
 
     String detail() {
         return detail;

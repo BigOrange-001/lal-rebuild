@@ -33,6 +33,10 @@ def tint_vertices(image, colors):
 def render_frame(parts):
     result=Image.new('RGBA',(92,93))
     for part in parts:
+        if part.get('movieClip'):
+            from build_rainbow_frame_105 import render_frame as rainbow_frame
+            result.alpha_composite(rainbow_frame(0))
+            continue
         if part.get('quad'):
             scale=8
             w,h=part['width'],part['height']
@@ -120,7 +124,7 @@ console.log(JSON.stringify(rows));'''
               else ['基础边框','炼金进阶1 · 金色角饰','炼金进阶2 · 红色角饰'][phase])
         draw.text((x+12,y+202),title,font=fonts[20],fill='#EAD1AD')
         draw.text((x+12,y+232),note,font=fonts[14],fill='#AAB9BC')
-    draw.text((26,398),'预留终阶：7星 +0 → +1 → +2 → 8星彩虹框（停止进阶）。当前实际炼金上限仍为7星。',font=fonts[17],fill='#AEB8BE')
+    draw.text((26,398),'正常炼金：7星 +0 → +1 → +2 → 8星彩虹框；8星为终阶，不再进阶。',font=fonts[17],fill='#AEB8BE')
     canvas.save(OUT/'装备边框与炼金阶段预览.png')
     print(OUT/'装备边框与炼金阶段预览.png')
 

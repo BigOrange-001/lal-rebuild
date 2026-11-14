@@ -1,8 +1,8 @@
 {
   "schema": "lal-client-build-v2",
-  "version": "1.0.4",
-  "stage_count": 178,
-  "unique_class_count": 152,
+  "version": "1.0.5",
+  "stage_count": 179,
+  "unique_class_count": 153,
   "stages": [
     {
       "index": 1,
@@ -278,7 +278,7 @@
       "index": 46,
       "class": "com.meng52.game.module.map.GameMapTools",
       "source": "client/src/stages/044_GameMapTools.as",
-      "source_sha256": "73a6c5896a72323f5a4a717fb7bf170cba4bf220d450fd27ffcaa0cffb381fe5"
+      "source_sha256": "47cdf40ef56d957933c681952fe4f608e514616560ef9f7c41dc474a623988ee"
     },
     {
       "index": 47,
@@ -362,7 +362,7 @@
       "index": 60,
       "class": "com.meng52.game.module.equip.Equip",
       "source": "client/src/stages/084_Equip.as",
-      "source_sha256": "d7cc2b0ddde98f6f8b0cb028e27866f6ee548fb152375fe4807fafc37864d988"
+      "source_sha256": "1a590f48833715066b22668af4768eb4b8ca39df51889aebd66b9f8402c27f04"
     },
     {
       "index": 61,
@@ -506,7 +506,7 @@
       "index": 84,
       "class": "com.meng52.game.module.map.GameMapTools",
       "source": "client/src/stages/081_GameMapTools.as",
-      "source_sha256": "f06fa6d7ff56e7b5f5abd6b79854c4868990d912aa889b7fc258a8d617372eec"
+      "source_sha256": "6ad95e14433150913880524a58f5f440313e3a9bb78afac32248842e50ee27a8"
     },
     {
       "index": 85,
@@ -830,7 +830,7 @@
       "index": 138,
       "class": "MainLLOL",
       "source": "client/src/stages/136_MainLLOL.as",
-      "source_sha256": "14ec80fb5d48728be8e22071219647083c0a8619d2d402ab95727adf486e52c7"
+      "source_sha256": "7dee5ca2aa414156f48b0f2f1dc63f79da52ddeb4170d9667d3fd8fb89ee763f"
     },
     {
       "index": 139,
@@ -1076,6 +1076,12 @@
       "source": "client/src/stages/177_GameMapLayer.as",
       "class": "com.meng52.game.ui.map.GameMapLayer",
       "source_sha256": "0e34b4ceaf0440e820b2b3e1ce3ca47dee74b60526d5a04863252dbbc8f7ca22"
+    },
+    {
+      "index": 179,
+      "source": "client/src/stages/179_PanelPVEembattleTeam.as",
+      "class": "com.meng52.game.ui.panel.PanelPVEembattleTeam",
+      "source_sha256": "524a9a79fc86e00eb84d4cd939dc6aa1ffde172e3a8056aa551220d296fe4510"
     }
   ],
   "template_swf": {
@@ -1084,7 +1090,7 @@
   },
   "descriptor": {
     "path": "client/air/application.xml",
-    "sha256": "1cc5bc1bccb0dbe83739b8cb420942fa6ff87b3cf91df1485af210530f10b07a"
+    "sha256": "951b6a10e1803c87103f29e0253ddebbdf673de773a1d8c4a0b7efd47d57c996"
   },
   "assets_manifest": {
     "path": "client/resources/assets-manifest.json",

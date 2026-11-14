@@ -570,7 +570,7 @@ package com.meng52.game.module.map
             {
                if(!(param1[_loc5_] == 0 && param2[_loc5_] == null))
                {
-                  if(param1[_loc5_] != param2[_loc5_])
+                  if(!originValuesMatch(param1[_loc5_],param2[_loc5_]))
                   {
                      mismatchPath = param3 == "" ? _loc5_ : param3 + "." + _loc5_;
                      rememberOriginMismatch(mismatchPath,param1[_loc5_],param2[_loc5_]);
@@ -590,6 +590,21 @@ package com.meng52.game.module.map
             }
          }
          return _loc4_;
+      }
+
+      private static function originValuesMatch(clientValue:Object, serverValue:Object) : Boolean
+      {
+         if(clientValue == serverValue) return true;
+         if(!(clientValue is Number) || !(serverValue is Number)) return false;
+         var a:Number = Number(clientValue);
+         var b:Number = Number(serverValue);
+         if(!isFinite(a) || !isFinite(b)) return false;
+         // Discrete stats still require exact equality, even at large values.
+         if(a == Math.floor(a) && b == Math.floor(b)) return false;
+         // AMF/Python and AS3 can differ in the last floating-point bits of
+         // computed skill coefficients. Bound both absolute and relative error.
+         var tolerance:Number = Math.min(0.0000001,Math.max(0.000000000001,Math.max(Math.abs(a),Math.abs(b))*0.000000000001));
+         return Math.abs(a-b) <= tolerance;
       }
 
       private static function rememberOriginMismatch(path:String, clientValue:Object, serverValue:Object) : void

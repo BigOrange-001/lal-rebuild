@@ -55,8 +55,7 @@ function Equipment(id){
  magic:row.magic||[0,0,0,0],magicStage5:row.magic_stage5||0,symp:row.symp??-1,runeLv:row.rune_lv||0,
  _Properties_rate:1,equipData:{id:row.eid,hp0:p[0],ap0:p[1],d10:p[2],d20:p[3],speed:p[4],range:p[5],hasAttr:k=>p.slice(6,8).includes(k)}},input.equipMethods);
  for(let key of ['hit','flee','crit','tough'])unit[key]=(row.new_4attrs||row)[key]||0;
- if(row.alchemy){let key=(int(row.eid.split('_').at(-1))+int(row.alchemy[1]))+'_'+row.alchemy[0];
- if(cfg.system_simple.equip_alchemy.phase[key])unit._Properties_rate=unit.getEquipAlchemyRate(row,0);}
+ if(row.alchemy)unit._Properties_rate=unit.getEquipAlchemyRate(row,0);
  return unit;
 }
 function Avatar(id,data=null){
@@ -213,6 +212,21 @@ class StatPower103Tests(unittest.TestCase):
             row['aid']=f'A_1208_{q}'
             profile['avatars'][iid]=row
             profile['team'][0][0]=iid
+            self.compare(profile)
+
+    def test_eight_star_gear_without_terminal_row_matches_battle_projection(self):
+        legacy=copy.deepcopy(self.document)
+        legacy['cfg']['system_simple']['equip_alchemy']['phase'].pop('8_0',None)
+        for base in (3,5,6):
+            profile=self.profile()
+            profile['my_equips']['weapon'].update(eid=f'E_1001_{base}',alchemy=[0,8-base])
+            self.compare(profile,legacy)
+
+    def test_open_eight_star_terminal_multiplier_matches_native_panel_and_battle(self):
+        self.assertEqual(self.document['cfg']['system_simple']['equip_alchemy']['phase']['8_0'],[1.12,1,1.0])
+        for base in (3,5,6):
+            profile=self.profile()
+            profile['my_equips']['weapon'].update(eid=f'E_1001_{base}',alchemy=[0,8-base])
             self.compare(profile)
 
     def test_scaling_overlay_is_idempotent_and_does_not_change_other_branches(self):

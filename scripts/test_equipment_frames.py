@@ -29,12 +29,22 @@ const GlobalData={$mConfig_simple:{equip_alchemy:{equip_al:1,star_lv:7}},$assetM
 const unit={symp:-1};
 '''
     methods={'getStar':'','getAddStar':'','getProStar':'','getAlchemyColor104':'',
-             'getAdvancedFrame104':'','getStep':'','addRainbowFrame104':'frame','getRainbowCornerTexture104':'',
+             'getAdvancedFrame104':'','getStep':'','addRainbowFrame104':'frame',
              'addAlchemyCorners104':'frame,phase,height','getRes':'param1=null,param2=1'}
     for name,args in methods.items():
         body=method_body(source,name).replace('for each(var area in areas)','for(var area of areas)')
         body=body.replace('for each(var piece in pieces)','for(var piece of pieces)')
+        body=body.replace('function(event:Event)','function(event)')
         script+='unit.'+name+'=function('+args+'){with(this){'+body+'}};\n'
+    script += """
+let atlasBuilds=0;
+unit.getRainbowFrameTextures105=function(){
+ if(!this.cachedFrames){atlasBuilds++;this.cachedFrames=Array.from({length:48},(_,i)=>({width:92,height:93,index:i}));}
+ return this.cachedFrames;
+};
+const Starling={juggler:{active:new Set(),add(x){this.active.add(x)},remove(x){this.active.delete(x)}}};
+function MovieClip(frames,fps){Object.assign(this,{movieClip:true,frames,fps,listeners:{}});this.addEventListener=(name,fn)=>this.listeners[name]=fn;}
+"""
     return script
 
 
@@ -49,34 +59,23 @@ unit.equipData={id:`E_1001_${base}`,res:`EQ_1001_${base}`};unit.my_data={alchemy
 const icon=unit.getRes(null,.5),frame=icon.children.find(x=>x.name==='alchemyFrame104');
 if(!frame)throw Error('missing frame');
 if(unit.getAlchemyColor104()!==(star===7?0xFF586B:0xE6BDFF))throw Error('wrong alchemy text color');
-const parts=star===7?1:24;
+const parts=1;
 if(frame.children.length!==parts+(star===7&&phase>0?4:0))throw Error('wrong phase ornaments');
 if(star===7&&frame.children[0].resource!=='UI_equip_box_0005')throw Error('seven must be red');
 if(star===8){
- const edges=frame.children.filter(x=>x.texture&&x.texture.texture.name==='EQ_1001_20000'),colors=new Set(edges.flatMap(x=>x.colors));
- if(colors.size!==8||edges.some(x=>x.texture.texture.name!=='EQ_1001_20000'))throw Error('rainbow/native frame lost');
- for(const edge of edges){const a=edge.texture.area;
-  if(a.x<84&&a.x+a.width>8&&a.y<85&&a.y+a.height>8)throw Error('rainbow covers equipment');
- }
- const gems=frame.children.filter(x=>x.name==='rainbowCornerGem104');
- if(gems.length!==4||gems.some(g=>new Set(g.colors).size!==4))throw Error('four rainbow gems missing');
- const mounts=frame.children.filter(x=>x.name==='rainbowCornerMount104');
- if(mounts.length!==4)throw Error('gem mounts missing');
- for(const mount of mounts){
-  const a=mount.texture.area;
-  if(a.width!==14||a.height!==14||mount.texture.texture.name!=='__equipRainbowCorners104')throw Error('native relief lost');
-  if(mount.x<0||mount.x+14>92||mount.y<0||mount.y+14>93)throw Error('corner expands icon');
- }
- const keylines=frame.children.filter(x=>x.quad&&x.alpha===.28);
- if(keylines.length!==8||keylines.some(x=>x.width!==1&&x.height!==1))throw Error('rainbow brightness changed footprint');
+ const clip=frame.children[0];
+ if(!clip.movieClip||clip.frames.length!==48||clip.fps!==20||!clip.loop)throw Error('shared animated frame missing');
+ if(clip.frames.some(t=>t.width!==92||t.height!==93))throw Error('frame footprint changed');
+ clip.listeners.addedToStage();if(!Starling.juggler.active.has(clip))throw Error('animation did not start');
+ clip.listeners.removedFromStage();if(Starling.juggler.active.has(clip))throw Error('offstage animation leaked');
+ clip.listeners.addedToStage();clip.listeners.removedFromStage();
+
 }
 if(star===7&&phase>0&&frame.children.slice(-4).some(x=>x.texture.texture.name!==`UI_equip_box_000${phase===1?3:4}`))throw Error('wrong corner stage');
 if(star===8&&unit.getStep()!==-1)throw Error('eight-star progress shown');
 if(frame.scaleX!==.5||frame.scaleY!==.5||icon.children[0].res!==unit.equipData.res)throw Error('icon or scale changed');
 checked++;}
-if(cornerTexturesCreated!==1)throw Error('corner texture not shared');
-cachedTextures.__equipRainbowCorners104.root.onRestore();
-if(cornerRestores!==1)throw Error('corner restoration missing');
+if(atlasBuilds!==1)throw Error('frame textures not shared');
 unit.equipData={id:'E_1001_4',res:'EQ_1001_4'};
 for(const extra of [1,2]){
  unit.my_data={alchemy:[0,extra]};const icon=unit.getRes(),frame=icon.children.find(x=>x.name==='alchemyFrame104');
@@ -123,7 +122,7 @@ for(const base of [1,4,6])for(const star of [6,7]){
  unit.my_data=next;const frame=unit.getRes().children[1];
  if(unit.getStar()!==star+1||next.alchemy[0]!==0)throw Error('phase carry');
  if(star===6&&frame.children[0].resource!=='UI_equip_box_0005')throw Error('six to seven not red');
- if(star===7&&frame.children.length!==24)throw Error('seven to eight not rainbow');
+ if(star===7&&(frame.children.length!==1||!frame.children[0].movieClip))throw Error('seven to eight not rainbow');
  checked++;
 }
 console.log(JSON.stringify({checked}));'''

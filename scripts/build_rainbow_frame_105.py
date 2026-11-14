@@ -1,0 +1,179 @@
+"""Bake the approved 92x93 frame into one shared, context-restorable atlas.
+
+Only the edge/corner pixels are opaque. Forty-eight frames at 20 fps reproduce
+the 2.4 second prototype without per-icon bitmap uploads or particle systems.
+"""
+from pathlib import Path
+import hashlib
+import json
+import math
+import re
+import zlib
+from PIL import Image, ImageDraw
+
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / 'client/src/stages/084_Equip.as'
+RELIEF = ROOT / 'client/resources/equipment/rainbow-corner-relief.png'
+GENERATED = ROOT / 'client/resources/equipment/rainbow-frame-105.json'
+W, H, COUNT, FPS = 92, 93, 48, 20
+AW, AH, COLS, CW, CH, PAD = 1024, 512, 10, 96, 97, 2
+PALETTE = [(255,63,213),(255,111,72),(255,237,101),(88,255,168),
+           (73,240,255),(119,152,255),(211,134,255),(255,99,202)]
+
+
+def lerp(a, b, t):
+    return tuple(round(x*(1-t)+y*t) for x,y in zip(a,b))
+
+
+def rainbow(t):
+    p = (t % 1)*len(PALETTE)
+    i = int(p)
+    return lerp(PALETTE[i], PALETTE[(i+1) % len(PALETTE)], p-i)
+
+
+def native_piece(neutral, index, gem, phase):
+    sx,sy = [(0,0),(14,0),(14,14),(0,14)][index]
+    if gem:
+        sx += 3
+        sy += 3
+    size = 8 if gem else 14
+    image = neutral.crop((sx,sy,sx+size,sy+size))
+    colors = ([PALETTE[(i*2+index*2)%8] for i in range(4)] if gem
+              else [lerp(rainbow(index/4),(255,255,255),.15)]*4)
+    pulse = 1+.12*math.sin(2*math.pi*(phase-index/4)) if gem else 1
+    p = image.load()
+    for y in range(size):
+        for x in range(size):
+            u,v = (x+.5)/size,(y+.5)/size
+            c = lerp(lerp(colors[0],colors[1],u),lerp(colors[2],colors[3],u),v)
+            light = p[x,y][0]/255
+            relief = light**.78 if light>.18 else light*.8
+            p[x,y] = tuple(min(255,round(v*relief*pulse)) for v in c)+(p[x,y][3],)
+    return image
+
+
+def render_frame(phase, neutral=None):
+    neutral = Image.open(RELIEF).convert('RGBA') if neutral is None else neutral
+    result = Image.new('RGBA',(W,H))
+    p = result.load()
+    perimeter = 2*(W-1+H-1)
+    head = (phase+.12)%1
+    for y in range(H):
+        for x in range(W):
+            distances = [y,W-1-x,H-1-y,x]
+            side = min(range(4),key=lambda i:distances[i])
+            d = distances[side]
+            if d>7:
+                continue
+            t = [x,W-1+y,W-1+H-1+W-1-x,2*(W-1)+H-1+H-1-y][side]/perimeter
+            color = rainbow(t)
+            if d==0: rgb,alpha = tuple(round(v*.19) for v in color),255
+            elif d==1: rgb,alpha = lerp(color,(255,255,255),.48),255
+            elif d==2: rgb,alpha = lerp(color,(255,255,255),.12),255
+            elif d==3: rgb,alpha = color,255
+            elif d==4: rgb,alpha = tuple(round(v*.5) for v in color),255
+            elif d==5: rgb,alpha = (19,9,35),205
+            else: rgb,alpha = color,25 if d==6 else 9
+            delta = min(abs(t-head),1-abs(t-head))
+            second = min(abs(t-(head+.5)%1),1-abs(t-(head+.5)%1))
+            wave = math.exp(-(delta/.035)**2)+.28*math.exp(-(second/.045)**2)
+            if 1<=d<=3:
+                rgb = lerp(rgb,(255,255,255),min(.92,wave*.88))
+            p[x,y] = rgb+(alpha,)
+    for i,(x,y) in enumerate([(0,0),(W-14,0),(W-14,H-14),(0,H-14)]):
+        result.alpha_composite(native_piece(neutral,i,False,phase),(x,y))
+        result.alpha_composite(native_piece(neutral,i,True,phase),(x+3,y+3))
+        pulse = max(0,math.cos(2*math.pi*(phase-i/4)))**10
+        glint = Image.new('RGBA',(W,H))
+        draw = ImageDraw.Draw(glint)
+        gx,gy = x+6,y+6
+        draw.line((gx-2,gy,gx+2,gy),fill=(242,255,255,round(pulse*150)))
+        draw.line((gx,gy-2,gx,gy+2),fill=(242,255,255,round(pulse*150)))
+        result.alpha_composite(glint)
+    return result
+
+
+def build():
+    # Bootstrap from the native neutral relief already in the earlier Equip.
+    if not RELIEF.exists():
+        source = SOURCE.read_text('utf8')
+        block = source.split('var rows:Array = [',1)[1].split('];',1)[0]
+        rows = re.findall(r'"([0-9a-f]+)"',block)
+        assert len(rows)==28 and all(len(r)==112 for r in rows)
+        relief = Image.new('RGBA',(28,28))
+        relief.putdata([(int(r[i+2:i+4],16),)*3+(int(r[i:i+2],16),)
+                        for r in rows for i in range(0,112,4)])
+        RELIEF.parent.mkdir(parents=True,exist_ok=True)
+        relief.save(RELIEF)
+    neutral = Image.open(RELIEF).convert('RGBA')
+    atlas = Image.new('RGBA',(AW,AH))
+    for i in range(COUNT):
+        atlas.paste(render_frame(i/COUNT,neutral),((i%COLS)*CW+PAD,(i//COLS)*CH+PAD))
+    # BitmapData.setPixels consumes big-endian ARGB, not Pillow's RGBA.
+    rgba = atlas.tobytes()
+    argb = bytearray(len(rgba))
+    for destination,source in enumerate((3,0,1,2)):
+        argb[destination::4] = rgba[source::4]
+    raw = bytes(argb)
+    packed = zlib.compress(raw,9)
+    chunks = ',\n'.join('            "'+packed.hex()[i:i+4096]+'"' for i in range(0,len(packed)*2,4096))
+    method = '''      // BEGIN GENERATED RAINBOW ATLAS 105
+      // Generated by scripts/build_rainbow_frame_105.py; do not edit pixel data.
+      private function getRainbowFrameTextures105() : Vector.<Texture>
+      {
+         var atlas:Texture = GlobalData.$assetManager.getTexture("__equipRainbowAtlas105");
+         if(!atlas)
+         {
+            var encoded:String = [
+CHUNKS].join("");
+            var bytes:ByteArray = new ByteArray();
+            for(var offset:int=0;offset<encoded.length;offset+=2)
+               bytes.writeByte(parseInt(encoded.substr(offset,2),16));
+            bytes.uncompress();
+            bytes.position = 0;
+            var bitmap:BitmapData = new BitmapData(1024,512,true,0);
+            bitmap.setPixels(new Rectangle(0,0,1024,512),bytes);
+            bytes.clear();
+            atlas = Texture.fromBitmapData(bitmap,false,false);
+            atlas.root.onRestore = function():void { atlas.root.uploadBitmapData(bitmap); };
+            GlobalData.$assetManager.addTexture("__equipRainbowAtlas105",atlas);
+         }
+         var frames:Vector.<Texture> = new Vector.<Texture>();
+         for(var index:int=0;index<48;index++)
+            frames.push(Texture.fromTexture(atlas,new Rectangle((index%10)*96+2,int(index/10)*97+2,92,93)));
+         return frames;
+      }
+      // END GENERATED RAINBOW ATLAS 105
+'''.replace('CHUNKS',chunks)
+    source = SOURCE.read_text('utf8')
+    if '// BEGIN GENERATED RAINBOW ATLAS 105' in source:
+        source = re.sub(r'      // BEGIN GENERATED RAINBOW ATLAS 105.*?      // END GENERATED RAINBOW ATLAS 105\n',lambda _:method,source,flags=re.S)
+    else:
+        start = source.index('      private function addRainbowFrame104(')
+        end = source.index('      private function addAlchemyCorners104(',start)
+        source = source[:start]+'''      private function addRainbowFrame104(frame:Sprite) : void
+      {
+         // One shared atlas; no per-frame uploads. Removing the icon stops its
+         // juggler registration, and re-adding it resumes the same animation.
+         var clip:MovieClip = new MovieClip(getRainbowFrameTextures105(),20);
+         clip.name = "rainbowFlow105";
+         clip.touchable = false;
+         clip.loop = true;
+         clip.addEventListener("addedToStage",function(event:Event):void { Starling.juggler.add(clip); });
+         clip.addEventListener("removedFromStage",function(event:Event):void { Starling.juggler.remove(clip); });
+         frame.addChild(clip);
+      }
+
+'''+method+'\n'+source[end:]
+        source = source.replace('   import starling.display.Quad;','   import flash.utils.ByteArray;\n   import starling.core.Starling;\n   import starling.display.MovieClip;\n   import starling.events.Event;')
+    SOURCE.write_text(source,encoding='utf8',newline='\r\n')
+    metadata = dict(width=W,height=H,frames=COUNT,fps=FPS,cycle_seconds=COUNT/FPS,
+                    atlas_width=AW,atlas_height=AH,columns=COLS,cell_width=CW,cell_height=CH,padding=PAD,
+                    raw_sha256=hashlib.sha256(raw).hexdigest(),compressed_bytes=len(packed),
+                    native_relief_sha256=hashlib.sha256(RELIEF.read_bytes()).hexdigest())
+    GENERATED.write_text(json.dumps(metadata,indent=2)+'\n','utf8')
+    print(json.dumps(metadata))
+
+
+if __name__=='__main__':
+    build()

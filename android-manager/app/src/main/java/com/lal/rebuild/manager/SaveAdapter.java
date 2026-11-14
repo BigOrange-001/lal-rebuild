@@ -102,6 +102,8 @@ final class SaveAdapter extends BaseAdapter {
 
     static String labelFor(String kind) {
         switch (kind) {
+            case "graduation":
+                return "毕业存档";
             case SaveStore.KIND_AUTO:
                 return ManagerStrings.kind_auto;
             case SaveStore.KIND_IMPORTED:

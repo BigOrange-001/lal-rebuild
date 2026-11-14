@@ -96,7 +96,7 @@ try {
     # The runtime assets live outside the project so the build never mutates the
     # server sources; Gradle reads the location from this property.
     $assetsProperty = '-PlalRuntimeAssets=' + ($runtimeAssets -replace '\\', '/')
-    $gradleArgs = @($assetsProperty, ('-PlalBuildPython=' + $python)) + $Tasks
+    $gradleArgs = @('--no-daemon', '--no-watch-fs', $assetsProperty, ('-PlalBuildPython=' + $python)) + $Tasks
     if (!$Tasks) {
         # No task was named, so do the useful default.
         $gradleArgs += 'assembleRelease'

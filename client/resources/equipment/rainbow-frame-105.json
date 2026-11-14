@@ -1,0 +1,16 @@
+{
+  "width": 92,
+  "height": 93,
+  "frames": 48,
+  "fps": 20,
+  "cycle_seconds": 2.4,
+  "atlas_width": 1024,
+  "atlas_height": 512,
+  "columns": 10,
+  "cell_width": 96,
+  "cell_height": 97,
+  "padding": 2,
+  "raw_sha256": "e1ce6a9ab44875adc81415ade8d47fb71608638a8a9c7e991ae9e81657fcc42a",
+  "compressed_bytes": 120708,
+  "native_relief_sha256": "431535011b0220fabe48612f5632ed23f3035358049432e4e073e6df99e7c7b2"
+}

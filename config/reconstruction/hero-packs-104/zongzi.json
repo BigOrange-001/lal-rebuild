@@ -27,8 +27,8 @@
           "name": "粽子",
           "presentation": {
             "basicAttackEffect": "builtin:effect/E_008",
-            "icon": "builtin:icon/A_2002_5",
-            "portrait": "builtin:portrait/A_2002_5",
+            "icon": "builtin:icon/A_2014_5",
+            "portrait": "builtin:portrait/A_2014_5",
             "voice": null
           },
           "progression": {

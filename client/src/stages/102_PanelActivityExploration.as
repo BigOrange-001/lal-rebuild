@@ -291,6 +291,9 @@ import starling.text.TextField;
 
 class AbyssCore104
 {
+   // closePopForPanel(-1) tweens for 0.1s before removing every pop; reopen after it.
+   public static const REOPEN_DELAY:Number = 0.3;
+
    public static const DECK_ORDER:Array = ["blade","flame","venom","summon","star"];
 
    public static const COLOR_TITLE:uint = 0xFFCC66;
@@ -563,7 +566,7 @@ class AbyssCore104
       {
          open(new AbyssMapPanel104());
          openNodeStep();
-      },0.15);
+      },AbyssCore104.REOPEN_DELAY);
    }
 
    // Opens whatever the run currently waits for on top of the map.
@@ -643,7 +646,7 @@ class AbyssCore104
                }
             }
             openNodeStep();
-         },0.15);
+         },AbyssCore104.REOPEN_DELAY);
       });
    }
 
@@ -703,7 +706,7 @@ class AbyssCore104
             Starling.juggler.delayCall(function():void
             {
                open(new AbyssResultPanel104());
-            },0.15);
+            },AbyssCore104.REOPEN_DELAY);
          });
       },"继续本局",closeTop,true,true));
    }
@@ -711,7 +714,7 @@ class AbyssCore104
    public static function backToEntry() : void
    {
       closeAll();
-      Starling.juggler.delayCall(openEntry,0.15);
+      Starling.juggler.delayCall(openEntry,REOPEN_DELAY);
    }
 
    // ---------- relics ----------

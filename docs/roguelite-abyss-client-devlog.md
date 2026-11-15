@@ -90,3 +90,10 @@
 - 27 份对照用例与真实整场双端逐事件对照：**未执行**（用户要求不做测试）。
 - 所有新代码均未编译；FFDec 对新增 stage（PanelAlchemy 反编译源码重编译）也未验证。
 - 仍需后端：节点 `enemy_preview`（前端已按该字段读取）、休息处「离开」选项、3 条报错文字的「圣遗物」。
+
+## 2026-11-16 收尾：休息处离开
+
+遗留2：AbyssRestPanel104 的原生按钮区新增并列的「离开」，发送 user.abyss_rest(option=leave)，不要求选英雄；复用 AbyssCore104.send 的5秒防重复点击和状态刷新，成功后关闭休息页回地图。无可提升英雄时提示可离开。改动位于 .aspart，已依次执行 passives/client 同步脚本；真机布局和点击回地图待验收。
+
+遗留1：现有 enemy_preview → enemies → run.battle.orgin_team_b 读取链已接收后端字段，AbyssEnemyPanel104 按line与leader展示英雄，未改前端逻辑；节点实机显示待验收。遗留3：源文件检索无硬编码「圣遗物」，前端无需替换，服务端错误原样显示。
+

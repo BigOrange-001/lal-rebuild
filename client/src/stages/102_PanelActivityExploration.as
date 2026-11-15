@@ -1678,9 +1678,9 @@ class AbyssRestPanel104 extends AbyssPanel104
          }
          if(hid == heroId) addFrame(hx - 3,hy - 3,90 * scale + 6,90 * scale + 6,AbyssCore104.COLOR_SELECT);
       }
-      if(!any) addText("当前没有可进行此项提升的英雄，请切换上方选项",lx + 20,by - 128,iw - 40,26,17,AbyssCore104.COLOR_RED,"center");
+      if(!any) addText("当前没有可进行此项提升的英雄，可切换选项或离开",lx + 20,by - 128,iw - 40,26,17,AbyssCore104.COLOR_RED,"center");
       var name:String = heroId && r.pool[heroId] ? AbyssCore104.heroName(String(r.pool[heroId].aid)) : "";
-      addButton(heroId ? (option == "skill" ? "升级" + name + "技能" : "将" + name + "升为橙卡") : "请先选择英雄",lx + (iw - 280) * 0.5,by - 90,280,66,function():void
+      addButton(heroId ? (option == "skill" ? "升级" + name + "技能" : "将" + name + "升为橙卡") : "请先选择英雄",lx + 30,by - 90,iw - 250,66,function():void
       {
          if(!heroId) return;
          AbyssCore104.send("user.abyss_rest",{"hero_id":heroId,"option":option},function(d:Object):void
@@ -1689,6 +1689,13 @@ class AbyssRestPanel104 extends AbyssPanel104
             AbyssCore104.toast(option == "skill" ? name + "技能升至10级" : name + "已升为橙卡");
          });
       },heroId != null);
+      addButton("离开",lx + iw - 200,by - 90,170,66,function():void
+      {
+         AbyssCore104.send("user.abyss_rest",{"option":"leave"},function(d:Object):void
+         {
+            AbyssCore104.closeTop();
+         });
+      });
    }
 
    private function reasonFor(h:Object) : String

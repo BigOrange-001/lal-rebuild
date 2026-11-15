@@ -626,7 +626,8 @@
       "index": 104,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "6e2677d53fce36bce8a8c100ef3baa6365ba44a034146834f0c6065640037bf5"
+      "source_sha256": "6e2677d53fce36bce8a8c100ef3baa6365ba44a034146834f0c6065640037bf5",
+      "compiler": "air-mxmlc"
     },
     {
       "index": 105,

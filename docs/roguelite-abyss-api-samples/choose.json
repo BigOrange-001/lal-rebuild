@@ -4,9 +4,9 @@
     "params": {
       "actionID": "fixture-8",
       "heroes": [
-        "A_1082",
-        "A_1002",
-        "A_1010"
+        "A_1085",
+        "A_1077",
+        "A_1040"
       ]
     }
   },
@@ -92,9 +92,10 @@
       ]
     },
     "abyss_run": {
-      "id": "65f9f2f9ac6b41339367602a",
+      "id": "fc94b1237d168492887cb37a",
       "status": "active",
       "seed": 20261116,
+      "rules_schema": 3,
       "difficulty": 1,
       "deck": "blade",
       "map": [
@@ -108,7 +109,42 @@
             "1-2-1",
             "1-2-2"
           ],
-          "completed": true
+          "completed": true,
+          "enemy_preview": [
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1040_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-1-1",
@@ -120,7 +156,42 @@
             "1-2-1",
             "1-2-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1012_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1007_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1005_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-1-2",
@@ -132,7 +203,42 @@
             "1-2-1",
             "1-2-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1014_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1049_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-2-0",
@@ -144,7 +250,42 @@
             "1-3-1",
             "1-3-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1018_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-2-1",
@@ -156,7 +297,42 @@
             "1-3-1",
             "1-3-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1045_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1009_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-2-2",
@@ -168,7 +344,42 @@
             "1-3-1",
             "1-3-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1094_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1011_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-3-0",
@@ -180,7 +391,42 @@
             "1-4-1",
             "1-4-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1008_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1005_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-3-1",
@@ -192,7 +438,42 @@
             "1-4-1",
             "1-4-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1014_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1011_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1018_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-3-2",
@@ -204,7 +485,42 @@
             "1-4-1",
             "1-4-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1018_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1082_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-4-0",
@@ -216,7 +532,8 @@
             "1-5-1",
             "1-5-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "1-4-1",
@@ -228,7 +545,8 @@
             "1-5-1",
             "1-5-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "1-4-2",
@@ -240,7 +558,8 @@
             "1-5-1",
             "1-5-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "1-5-0",
@@ -252,7 +571,64 @@
             "1-6-1",
             "1-6-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1049_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1020_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1063_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1077_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1013_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-5-1",
@@ -264,7 +640,64 @@
             "1-6-1",
             "1-6-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1094_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1008_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1045_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1020_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-5-2",
@@ -276,7 +709,64 @@
             "1-6-1",
             "1-6-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1011_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1094_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1007_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-6-0",
@@ -286,7 +776,64 @@
           "next": [
             "1-7-0"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1085_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1012_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1018_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1007_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-6-1",
@@ -296,7 +843,64 @@
           "next": [
             "1-7-0"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1049_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1012_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1009_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1063_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1045_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-6-2",
@@ -306,7 +910,53 @@
           "next": [
             "1-7-0"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1040_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1013_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1094_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "1-7-0",
@@ -318,7 +968,64 @@
             "2-1-1",
             "2-1-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1013_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1020_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1006_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-1-0",
@@ -330,7 +1037,64 @@
             "2-2-1",
             "2-2-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1002_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1014_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1012_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1085_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-1-1",
@@ -342,7 +1106,53 @@
             "2-2-1",
             "2-2-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1045_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1063_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1010_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1094_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-1-2",
@@ -354,7 +1164,64 @@
             "2-2-1",
             "2-2-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1040_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1007_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1082_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1014_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-2-0",
@@ -366,7 +1233,8 @@
             "2-3-1",
             "2-3-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "2-2-1",
@@ -378,7 +1246,8 @@
             "2-3-1",
             "2-3-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "2-2-2",
@@ -390,7 +1259,8 @@
             "2-3-1",
             "2-3-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "2-3-0",
@@ -401,7 +1271,64 @@
             "2-4-0",
             "2-4-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1013_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1009_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-3-1",
@@ -412,7 +1339,64 @@
             "2-4-0",
             "2-4-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1077_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1045_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1010_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-3-2",
@@ -423,7 +1407,53 @@
             "2-4-0",
             "2-4-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1094_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1009_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1008_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-4-0",
@@ -435,7 +1465,64 @@
             "2-5-1",
             "2-5-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1085_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1013_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1063_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1014_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-4-1",
@@ -447,7 +1534,53 @@
             "2-5-1",
             "2-5-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1002_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1094_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1014_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1006_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-5-0",
@@ -458,7 +1591,64 @@
             "2-6-0",
             "2-6-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1202_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1020_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1012_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-5-1",
@@ -469,7 +1659,64 @@
             "2-6-0",
             "2-6-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1227_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1011_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1085_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1082_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-5-2",
@@ -480,7 +1727,64 @@
             "2-6-0",
             "2-6-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1003_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1006_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1011_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1203_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": true
+            }
+          ]
         },
         {
           "id": "2-6-0",
@@ -490,7 +1794,64 @@
           "next": [
             "2-7-0"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1012_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1085_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1005_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1008_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-6-1",
@@ -500,7 +1861,53 @@
           "next": [
             "2-7-0"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1011_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1012_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1082_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1045_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "2-7-0",
@@ -511,7 +1918,64 @@
             "3-1-0",
             "3-1-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1201_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1085_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1094_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1218_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1040_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-1-0",
@@ -522,7 +1986,53 @@
             "3-2-0",
             "3-2-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1005_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1049_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1040_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-1-1",
@@ -533,7 +2043,53 @@
             "3-2-0",
             "3-2-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1007_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1010_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1012_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-2-0",
@@ -544,7 +2100,8 @@
             "3-3-0",
             "3-3-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "3-2-1",
@@ -555,7 +2112,8 @@
             "3-3-0",
             "3-3-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": []
         },
         {
           "id": "3-3-0",
@@ -566,7 +2124,64 @@
             "3-4-0",
             "3-4-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1094_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1008_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1003_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1010_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-3-1",
@@ -577,7 +2192,64 @@
             "3-4-0",
             "3-4-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1008_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1082_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1005_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-4-0",
@@ -589,7 +2261,53 @@
             "3-5-1",
             "3-5-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1002_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1085_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1094_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1009_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-4-1",
@@ -601,7 +2319,53 @@
             "3-5-1",
             "3-5-2"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1009_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1063_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1016_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1006_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-5-0",
@@ -612,7 +2376,64 @@
             "3-6-0",
             "3-6-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1311_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1012_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1018_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1045_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1140_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": true
+            }
+          ]
         },
         {
           "id": "3-5-1",
@@ -623,7 +2444,64 @@
             "3-6-0",
             "3-6-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1132_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1206_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1007_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1013_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-5-2",
@@ -634,7 +2512,64 @@
             "3-6-0",
             "3-6-1"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1020_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1309_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1011_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1014_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1214_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": true
+            }
+          ]
         },
         {
           "id": "3-6-0",
@@ -644,7 +2579,64 @@
           "next": [
             "3-7-0"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1006_5",
+              "quality": 5,
+              "star": 5,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1010_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1001_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1085_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1011_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-6-1",
@@ -654,7 +2646,53 @@
           "next": [
             "3-7-0"
           ],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1020_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1004_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1045_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1013_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": false
+            }
+          ]
         },
         {
           "id": "3-7-0",
@@ -662,7 +2700,64 @@
           "layer": 7,
           "type": "boss",
           "next": [],
-          "completed": false
+          "completed": false,
+          "enemy_preview": [
+            {
+              "aid": "A_1204_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 450.0,
+              "leader": true,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1090_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": false
+            },
+            {
+              "aid": "A_1208_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 2,
+              "pos": 450.0,
+              "leader": false,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1207_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 0,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": true
+            },
+            {
+              "aid": "A_1214_6",
+              "quality": 6,
+              "star": 6,
+              "lv": 99,
+              "slv": 5,
+              "line": 1,
+              "pos": 989.9999999999999,
+              "leader": false,
+              "is_skin": true
+            }
+          ]
         }
       ],
       "current_node": "1-1-0",
@@ -717,32 +2812,32 @@
           "temporary": false,
           "can_orange": true
         },
-        "A_1082": {
-          "id": "A_1082",
-          "aid": "A_1082_5",
+        "A_1085": {
+          "id": "A_1085",
+          "aid": "A_1085_5",
           "quality": 5,
           "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": true
         },
-        "A_1002": {
-          "id": "A_1002",
-          "aid": "A_1002_5",
+        "A_1077": {
+          "id": "A_1077",
+          "aid": "A_1077_5",
           "quality": 5,
           "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": true
         },
-        "A_1010": {
-          "id": "A_1010",
-          "aid": "A_1010_6",
-          "quality": 6,
+        "A_1040": {
+          "id": "A_1040",
+          "aid": "A_1040_5",
+          "quality": 5,
           "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         }
       },
       "retries": 19,

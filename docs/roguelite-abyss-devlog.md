@@ -160,3 +160,12 @@ python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests t
 验证：`python -m unittest test_roguelite_abyss_enemy_balance test_roguelite_abyss test_roguelite_abyss_calibration test_combat_origin_phase test_campaign_tower_difficulty_104 test_exploration_regressions`，48/48通过。覆盖3幕×10难度×普通/精英/Boss的全部四维、3个弱敌层在10档难度的快照完全一致及固定0.55、原重打次数和Boss人数。
 补充研究插值边界后，`python -m unittest test_roguelite_abyss_enemy_balance` 4/4通过；接口脚本在临时内存账号跑通80次调用（控制sign，不能当作新数值胜率）。起始卡组研究脚本增加--output并改为新的默认输出文件，避免覆写旧历史数据；命令帮助检查通过。
 本次提交：`fix(abyss): 按用户新版调整敌人难度倍率`。新版数值未做胜率校准或实机验证；未推送，未修改其他worktree。
+
+## 2026-11-16 收尾：候选、敌方配额与预览
+
+独立设计同步提交e08bd99。候选按新版4.3逐卡先皮肤后品质；弱敌6选3、普通3选1、精英5选1及保证橙、前两幕Boss3橙选1均已接通。敌方橙卡按用户确认的1/2/3～4及Boss2/3/5固定配额，皮肤计入总数，Boss同定位替换，第3幕主题独立。没有改动用户指定倍率或重打次数。校准报告明确“已被用户否决，数值以设计稿为准”。
+
+遗留1：地图enemy_preview包含aid、quality/star、lv99、slv5、line、pos、leader、is_skin；仅显示身份与站位，首战才生成冻结面板。旧局快照保留、预览从旧快照投影；不接受客户端覆写。前端现有读取链直接使用本字段，无需改界面逻辑；地图显示仍待真机验收。新增候选概率/锁定/去重、Boss选择/跳过/重放、全幕全难度配额、地图不提前生成面板与重打快照测试。
+
+验证：候选/预览/模式/敌人倍率专项36/36通过；内存流程重导出接口样例（含前三幕Boss响应），没有使用正式存档。
+

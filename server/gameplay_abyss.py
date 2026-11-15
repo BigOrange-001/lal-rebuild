@@ -5,7 +5,7 @@ import secrets
 from battle_intents import create_intent, consume_intent
 from player_store import GameplayFault
 from roguelite_abyss import (rules, normalize_account, unlocked_pool, hero_record,
-    rng_for, generate_map, standard_team, candidates, public_run)
+    rng_for, generate_map, generate_enemies, standard_team, candidates, public_run)
 
 
 class GameplayAbyss:
@@ -69,6 +69,7 @@ class GameplayAbyss:
             pool = {a.rsplit('_',1)[0]:hero_record(a,deck=='star' and i==0) for i,a in enumerate(aids)}
             nodes = generate_map(seed,difficulty,self.cfg)
             p['abyss_run'] = {'id':secrets.token_hex(12),'status':'active','seed':seed,
+                'rules_schema':plan['schema'],
                 'difficulty':difficulty,'deck':deck,'map':nodes,'current_node':None,
                 'available_nodes':[n['id'] for n in nodes if n['act']==1 and n['layer']==1],
                 'pool':pool,'retries':plan['difficulties'][difficulty-1]['retries'],
@@ -144,6 +145,8 @@ class GameplayAbyss:
             if not isinstance(formation,list) or not 1<=len(formation)<=5:
                 raise GameplayFault('InvalidFormation', '请选择1至5名英雄并覆盖三路。')
             own = standard_team(self.cfg,run['pool'],formation)
+            if 'enemies' not in node:
+                node['enemies']=generate_enemies(run['seed'],run['difficulty'],node,self.cfg)
             metadata = {'run_id':run['id'],'node_id':node['id']}
             intent = create_intent(p,'abyss',metadata,own,node['enemies'],now=self.store.clock.now(),config=self.config)
             # Combat RNG is deterministic per attempt; map/enemies/candidates
@@ -182,6 +185,8 @@ class GameplayAbyss:
                     cleared = p['abyss_account']['cleared']
                     p['abyss_account']['cleared'] = sorted(set(cleared+[run['difficulty']]))
                     normalize_account(p,self.cfg)
+                else:
+                    run['pending_choice']=candidates(p,run,node,self.cfg)
             else:
                 run['pending_choice'] = candidates(p,run,node,self.cfg)
         return {'sign':intent['sign'],'fight_id':intent['fight_id'],'fight_kind':'abyss'}

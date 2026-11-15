@@ -30,6 +30,10 @@ def walkthrough(destination):
         response = store.dispatch({**login,**request})
         samples.setdefault(name, {'request':request, 'response':response})
         run = response.get('abyss_run') or {}
+        if name=='finish' and fields.get('sign')==1:
+            node=next(n for n in run['map'] if n['id']==run['current_node'])
+            variant='finish_'+node['type']+('_'+str(node['act']) if node['type']=='boss' else '')
+            samples.setdefault(variant,{'request':request,'response':response})
         trace.append({'method':request['method'],'status':run.get('status'),
                       'node':run.get('current_node'),'retries':run.get('retries'),
                       'pool_size':len(run.get('pool',{}))})
@@ -41,7 +45,9 @@ def walkthrough(destination):
         while run['status']=='active':
             if run['pending_choice']:
                 choice = run['pending_choice']
-                if choice['can_skip'] and not skipped:
+                kind=next(n['type'] for n in run['map'] if n['id']==choice['node_id'])
+                act=next(n['act'] for n in run['map'] if n['id']==choice['node_id'])
+                if choice['can_skip'] and (kind=='normal' or act==2):
                     run = call('skip')['abyss_run']; skipped = True
                 else:
                     run = call('choose',heroes=[h['id'] for h in choice['options'][:choice['count']]])['abyss_run']

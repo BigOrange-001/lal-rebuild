@@ -22,6 +22,10 @@ DECKS = {
 DIFFICULTIES = [(.80,20),(.86,20),(.92,18),(.99,18),(1.06,16),
                 (1.13,16),(1.22,14),(1.30,14),(1.40,12),(1.50,10)]
 MAIN_STATS = ('hp', 'ap', 'de_ph', 'de_ma')
+TANK_FAMILIES = {f'A_{i}' for i in (1001,1007,1013,1020,1018,1077,1049,1085,1073,1090,
+                                    1137,1138,1201,1204)}
+SUPPORT_FAMILIES = {f'A_{i}' for i in (1004,1006,1045,1094,1093,1139,1208,1228)}
+SUMMON_FAMILIES = {f'A_{i}' for i in (1014,1040,1103,1212,1218,1221,1311)}
 
 
 def rng_for(seed, *domain):
@@ -50,21 +54,32 @@ def apply_abyss_config(document):
     orange_only = sorted(a for a in avatars if a.endswith('_6') and
                          a.rsplit('_',1)[0] in skin_families and a[:-1]+'5' not in avatars)
     cfg.setdefault('system_simple', {})['roguelite_abyss'] = {
-        'schema': 2, 'level': 99, 'orange_panel_ratio':1.4,
+        'schema': 3, 'level': 99, 'orange_panel_ratio':1.4,
         'standalone_orange_panel_ratio':.7, 'skill_level': 5, 'pool_cap': 20,
         'eligible_ordinary_purple':eligible,
         'initial_purple': initial, 'skin_purple': paired, 'skin_orange_only': orange_only,
+        'skin_families': sorted(skin_families),
+        'enemy_skin_orange': sorted(a for a in skins if a.endswith('_6') and a in avatars),
+        'enemy_skin_counts': {'elite':[0,1,2], 'boss':[0,2,4]},
+        'enemy_orange_counts': {'act1':1, 'act2':2, 'act3_early':3,
+                                'act3_late':4, 'boss':[2,3,5]},
+        'candidate_policy': {
+            'weak': {'options':6, 'pick':3, 'orange':[0,0,0], 'skin':[0,0,0]},
+            'normal': {'options':3, 'pick':1, 'orange':[.01,.015,.04], 'skin':[0,.15,.35]},
+            'elite': {'options':5, 'pick':1, 'orange':[.04,.15,.40], 'skin':[0,.15,.35]},
+            'boss': {'options':3, 'pick':1, 'orange':[1,1,1], 'skin':[0,.15,0]},
+        },
         'decks': {key: {'name':name, 'clear_required':clear,
                         'members':[f'A_{i}_5' for i in ids]}
                   for key,(name,clear,ids) in DECKS.items()},
         'difficulties': [{'multiplier':m, 'retries':r} for m,r in DIFFICULTIES],
         'enemy_rates': {'weak':.55, 'normal':[.8,1,1.2], 'elite':1.3, 'boss':1.6},
         'boss_decks': {
-            str(act): [[f'A_{i}_6' for i in ids] for ids in sets]
+            str(act): [[f'A_{i}_5' for i in ids] for ids in sets]
             for act,sets in enumerate((
                 ([1001,1007,1004,1009,1012],[1013,1020,1006,1003,1016]),
                 ([1018,1077,1045,1063,1082],[1049,1085,1094,1014,1040]),
-                ([1001,1020,1004,1009,1012],[1013,1018,1006,1003,1016])),1)},
+                ([1077,1085,1094,1099,1063],[1073,1090,1093,1098,1081])),1)},
         'ancient_chance': .07, 'ancient_multiplier':1.25,
     }
     return document
@@ -177,8 +192,8 @@ def generate_map(seed, difficulty, cfg):
             for branch,kind in enumerate(kinds):
                 node = {'id':f'{act}-{layer}-{branch}', 'act':act, 'layer':layer,
                         'type':kind, 'next':[], 'completed':False}
-                if kind != 'rest':
-                    node['enemies'] = generate_enemies(seed, difficulty, node, cfg)
+                node['enemy_preview'] = (generate_enemy_preview(seed,difficulty,node,cfg)
+                                         if kind!='rest' else [])
                 nodes.append(node)
                 current.append(node)
             for node in previous:
@@ -187,26 +202,91 @@ def generate_map(seed, difficulty, cfg):
     return nodes
 
 
-def generate_enemies(seed, difficulty, node, cfg):
+def is_skin(aid, cfg):
+    return aid.rsplit('_',1)[0] in rules(cfg)['skin_families']
+
+
+def enemy_role(aid, cfg):
+    """Authored roles: stat_profile is a panel template, not combat position."""
+    family=aid.rsplit('_',1)[0]
+    if family in TANK_FAMILIES:return 'tank'
+    if family in SUPPORT_FAMILIES:return 'support'
+    if family in SUMMON_FAMILIES:return 'summon'
+    return 'physical' if cfg['avatar'][aid]['tl'][2]==1 else 'magic'
+
+
+def enemy_orange_count(node, cfg):
+    kind,act=node['type'],node['act']
+    counts=rules(cfg)['enemy_orange_counts']
+    if kind=='weak':return 0
+    if kind=='boss':return counts['boss'][act-1]
+    if act<3:return counts[f'act{act}']
+    layer=node.get('layer')
+    if layer is None:
+        parts=str(node['id']).split('-')
+        layer=int(parts[1]) if len(parts)>1 and parts[1].isdigit() else 6
+    return counts['act3_early' if layer<=3 else 'act3_late']
+
+
+def preview_from_units(units, cfg):
+    return [{'aid':u['aid'],'quality':int(u['aid'].rsplit('_',1)[1]),
+             'lv':u.get('lv',99),'slv':u.get('slv',5),'star':int(u['aid'].rsplit('_',1)[1]),
+             'line':u['line'],'pos':u['pos'],'leader':bool(u['leader']),'is_skin':is_skin(u['aid'],cfg)}
+            for u in units]
+
+
+def generate_enemy_preview(seed, difficulty, node, cfg):
+    """Freeze identity/quality/formation only; never construct combat stats."""
     plan = rules(cfg)
     rng = rng_for(seed, 'enemy', node['id'])
     kind, act = node['type'], node['act']
-    rate = plan['enemy_rates']
     if kind == 'boss':
         aids = list(rng.choice(plan['boss_decks'][str(act)]))
-        if difficulty >= 7: aids.append(rng.choice(plan['initial_purple'])[:-1]+'6')
+        if difficulty >= 7:
+            used={a.rsplit('_',1)[0] for a in aids}
+            aids.append(rng.choice([a for a in plan['initial_purple'] if a.rsplit('_',1)[0] not in used]))
     else:
         count = 3 if kind=='weak' else 5 if kind=='elite' else rng.randint(4,5)
         aids = rng.sample(plan['initial_purple'], count)
-        if kind != 'weak':
-            aids = [a[:-1]+'6' if a[:-1]+'6' in cfg['avatar'] and rng.random()<.2 else a for a in aids]
-        if kind == 'elite': aids[0] = aids[0][:-1]+'6'
+    aids=[a[:-1]+'5' for a in aids]
+    orange_count=enemy_orange_count(node,cfg)
+    if kind=='boss':
+        # Authored priority: captain, two carries, support, second tank.
+        orange_slots=[0,3,4,2,1][:orange_count]
+    elif kind=='elite':
+        orange_slots=[0]+rng.sample(list(range(1,len(aids))),orange_count-1)
+    else:
+        orange_slots=rng.sample(list(range(len(aids))),orange_count)
+    for slot in orange_slots:aids[slot]=aids[slot][:-1]+'6'
+    skin_count=plan['enemy_skin_counts'].get(kind,[0,0,0])[act-1]
+    used={a.rsplit('_',1)[0] for a in aids}
+    for slot in rng.sample(orange_slots,skin_count):
+        possible=[a for a in plan['enemy_skin_orange'] if a.rsplit('_',1)[0] not in used
+                  and (kind!='boss' or enemy_role(a,cfg)==enemy_role(aids[slot],cfg))]
+        if not possible:
+            raise GameplayFault('AbyssUnavailable','敌方皮肤阵容配置不完整。')
+        replacement=rng.choice(possible)
+        used.remove(aids[slot].rsplit('_',1)[0])
+        aids[slot]=replacement
+        used.add(replacement.rsplit('_',1)[0])
+    line_length=cfg['system_simple']['battle'][1]
+    return [{'aid':aid,'quality':int(aid[-1]),'star':int(aid[-1]),'lv':99,'slv':5,
+             'line':i%3,'pos':(.15+.18*(i//3))*line_length,
+             'leader':i==0,'is_skin':is_skin(aid,cfg)} for i,aid in enumerate(aids)]
+
+
+def generate_enemies(seed, difficulty, node, cfg):
+    plan=rules(cfg)
+    kind,act=node['type'],node['act']
+    preview=node.get('enemy_preview')
+    if preview is None:preview=generate_enemy_preview(seed,difficulty,node,cfg)
+    rate=plan['enemy_rates']
     multiplier = rate['weak'] if kind=='weak' else rate['normal'][act-1]
     if kind in ('elite','boss'): multiplier *= rate[kind]
     if kind!='weak':
         multiplier *= plan['difficulties'][difficulty-1]['multiplier']
-    heroes = {str(i):hero_record(a) for i,a in enumerate(aids)}
-    units = standard_team(cfg, heroes, [[str(i),i%3,.15+.18*(i//3)] for i in range(len(aids))], 2, multiplier)
+    heroes = {str(i):hero_record(u['aid']) for i,u in enumerate(preview)}
+    units = standard_team(cfg, heroes, [[str(i),u['line'],.15+.18*(i//3)] for i,u in enumerate(preview)], 2, multiplier)
     if kind=='elite':
         for key in MAIN_STATS: units[0][key] = int(units[0][key]*1.2)
         units[0]['hp_max'] = units[0]['hp']
@@ -216,27 +296,54 @@ def generate_enemies(seed, difficulty, node, cfg):
 def candidates(profile, run, node, cfg):
     if len(run['pool']) >= rules(cfg)['pool_cap']:
         return None
+    if node['type']=='boss' and node['act']==3:return None
     purple, orange, standalone = unlocked_pool(profile, cfg)
-    families = set(run['pool'])
-    def available(aids): return [a for a in aids if a.rsplit('_',1)[0] not in families]
+    unavailable = set(run['pool'])
+    skin_families=set(rules(cfg)['skin_families'])
+    purples={a.rsplit('_',1)[0]:a for a in purple}
+    oranges={a.rsplit('_',1)[0]:a for a in orange+standalone}
     rng = rng_for(run['seed'], 'candidates', node['id'])
-    high = available(orange + standalone)
-    # A family can be offered at only one quality in a single choice screen.
-    rng.shuffle(high)
-    selected = high[:(1 if run['difficulty']>=3 else 2)] if node['type']=='elite' else []
-    excluded = {a.rsplit('_',1)[0] for a in selected}
-    rest = available(purple + orange + (standalone if node['type']=='elite' else []))
-    rng.shuffle(rest)
-    count = 6 if node['type']=='weak' else 5
-    for aid in rest:
-        family = aid.rsplit('_',1)[0]
-        if len(selected)>=count: break
-        if family not in excluded:
-            selected.append(aid); excluded.add(family)
+    policy=rules(cfg)['candidate_policy'][node['type']]
+    act=node.get('act')
+    if act is None:act=int(node['id'].split('-')[0])
+    guaranteed=(1 if run['difficulty']>=3 else 2) if node['type']=='elite' else 0
+    selected=[]
+
+    def pool(source, skin):
+        return sorted(f for f in source if f not in unavailable and (f in skin_families)==skin)
+
+    for index in range(policy['options']):
+        skin=rng.random()<policy['skin'][act-1]
+        forced=index<guaranteed or node['type']=='boss'
+        # Guaranteed offers require an unlocked orange. When that skin
+        # category is unavailable, use an unlocked ordinary orange instead.
+        if forced:
+            available=pool(oranges,skin)
+            if skin and not available:available=pool(oranges,False)
+            if not available:break
+            aid=oranges[rng.choice(available)]
+        else:
+            available=pool(set(purples)|set(oranges),skin)
+            if skin and not available:
+                skin=False
+                available=pool(set(purples)|set(oranges),False)
+            if not available:break
+            family=rng.choice(available)
+            want_orange=rng.random()<policy['orange'][act-1]
+            aid=oranges.get(family) if want_orange else None
+            if aid is None:aid=purples.get(family)
+            if aid is None:
+                # Orange-only skins cannot appear on a purple roll. Fall
+                # back to another purple of the same class, then ordinary.
+                fallback=pool(purples,skin) or pool(purples,False)
+                if not fallback:break
+                aid=purples[rng.choice(fallback)]
+        unavailable.add(aid.rsplit('_',1)[0])
+        selected.append(aid)
     if not selected: return None
     rng.shuffle(selected)
     return {'node_id':node['id'], 'options':[hero_record(a) for a in selected],
-            'count':min(3 if node['type']=='weak' else 1,len(selected),20-len(run['pool'])),
+            'count':min(policy['pick'],len(selected),20-len(run['pool'])),
             'can_skip':node['type']!='weak'}
 
 
@@ -244,6 +351,8 @@ def public_run(run, profile, cfg):
     if not run: return None
     result = copy.deepcopy(run)
     for node in result['map']:
+        if 'enemy_preview' not in node:
+            node['enemy_preview']=preview_from_units(node.get('enemies',[]),cfg)
         node.pop('enemies', None)
     orange = set(unlocked_pool(profile,cfg)[1])
     for hero in result['pool'].values():

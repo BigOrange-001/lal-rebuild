@@ -150,35 +150,35 @@
       "pool_size": 14
     },
     {
-      "method": "user.abyss_skip",
+      "method": "user.abyss_choose",
       "status": "active",
       "node": "1-5-0",
       "retries": 19,
-      "pool_size": 14
+      "pool_size": 15
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "1-6-0",
       "retries": 19,
-      "pool_size": 14
+      "pool_size": 15
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "1-6-0",
       "retries": 19,
-      "pool_size": 14
+      "pool_size": 15
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "1-6-0",
       "retries": 19,
-      "pool_size": 14
+      "pool_size": 15
     },
     {
-      "method": "user.abyss_choose",
+      "method": "user.abyss_skip",
       "status": "active",
       "node": "1-6-0",
       "retries": 19,
@@ -202,32 +202,39 @@
       "method": "user.abyss_finish",
       "status": "active",
       "node": "1-7-0",
-      "retries": 19,
-      "pool_size": 15
-    },
-    {
-      "method": "user.abyss_route",
-      "status": "active",
-      "node": "2-1-0",
-      "retries": 19,
-      "pool_size": 15
-    },
-    {
-      "method": "user.abyss_combat",
-      "status": "active",
-      "node": "2-1-0",
-      "retries": 19,
-      "pool_size": 15
-    },
-    {
-      "method": "user.abyss_finish",
-      "status": "active",
-      "node": "2-1-0",
       "retries": 19,
       "pool_size": 15
     },
     {
       "method": "user.abyss_choose",
+      "status": "active",
+      "node": "1-7-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "2-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "2-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
       "status": "active",
       "node": "2-1-0",
       "retries": 19,
@@ -269,284 +276,326 @@
       "pool_size": 16
     },
     {
-      "method": "user.abyss_choose",
+      "method": "user.abyss_skip",
       "status": "active",
       "node": "2-3-0",
       "retries": 19,
-      "pool_size": 17
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "2-4-0",
       "retries": 19,
-      "pool_size": 17
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "2-4-0",
       "retries": 19,
-      "pool_size": 17
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "2-4-0",
       "retries": 19,
-      "pool_size": 17
+      "pool_size": 16
     },
     {
-      "method": "user.abyss_choose",
+      "method": "user.abyss_skip",
       "status": "active",
       "node": "2-4-0",
       "retries": 19,
-      "pool_size": 18
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "2-5-0",
       "retries": 19,
-      "pool_size": 18
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "2-5-0",
       "retries": 19,
-      "pool_size": 18
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "2-5-0",
       "retries": 19,
-      "pool_size": 18
+      "pool_size": 16
     },
     {
-      "method": "user.abyss_choose",
+      "method": "user.abyss_skip",
       "status": "active",
       "node": "2-5-0",
       "retries": 19,
-      "pool_size": 19
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "2-6-0",
       "retries": 19,
-      "pool_size": 19
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "2-6-0",
       "retries": 19,
-      "pool_size": 19
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "2-6-0",
       "retries": 19,
-      "pool_size": 19
+      "pool_size": 16
     },
     {
-      "method": "user.abyss_choose",
+      "method": "user.abyss_skip",
       "status": "active",
       "node": "2-6-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "2-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "2-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "2-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "2-7-0",
+      "retries": 19,
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "3-1-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "3-1-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "3-1-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-1-0",
+      "retries": 19,
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "3-2-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_rest",
       "status": "active",
       "node": "3-2-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "3-3-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "3-3-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "3-3-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-3-0",
+      "retries": 19,
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "3-4-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "3-4-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "3-4-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-4-0",
+      "retries": 19,
+      "pool_size": 16
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "3-5-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "3-5-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "3-5-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_choose",
+      "status": "active",
+      "node": "3-5-0",
+      "retries": 19,
+      "pool_size": 17
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "3-6-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "3-6-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_finish",
       "status": "active",
       "node": "3-6-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-6-0",
+      "retries": 19,
+      "pool_size": 17
     },
     {
       "method": "user.abyss_route",
       "status": "active",
       "node": "3-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_combat",
       "status": "active",
       "node": "3-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_finish",
       "status": "cleared",
       "node": "3-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_relics",
       "status": "cleared",
       "node": "3-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_relic_equip",
       "status": "cleared",
       "node": "3-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_relic_reroll",
       "status": "cleared",
       "node": "3-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_relic_unequip",
       "status": "cleared",
       "node": "3-7-0",
       "retries": 19,
-      "pool_size": 20
+      "pool_size": 17
     },
     {
       "method": "user.abyss_start",
@@ -567,12 +616,12 @@
   "rewards": [
     {
       "node_id": "3-7-0",
-      "item_id": "relic-1bb5b3e99c7a4529a7dd38dd",
+      "item_id": "relic-635f3572302b1ab8594acefe",
       "guaranteed": false
     },
     {
       "node_id": "3-7-0",
-      "item_id": "relic-9e7d52946c9239ebb7592894",
+      "item_id": "relic-5161790d95c54e05effeaa86",
       "guaranteed": true
     }
   ]

@@ -6,6 +6,11 @@
   <versionNumber>1.0.5</versionNumber>
   <versionLabel>1.0.5</versionLabel>
   <supportedProfiles>mobileDevice</supportedProfiles>
+  <!-- AIR 51's legacy Android ELS fallback can reject setItem on upgraded installs. -->
+  <encryptedLocalStorage>
+    <fallbackMode>never</fallbackMode>
+    <storageMode>os_store</storageMode>
+  </encryptedLocalStorage>
   <initialWindow>
     <content>MainLLOL.swf</content>
     <softKeyboardBehavior>none</softKeyboardBehavior>

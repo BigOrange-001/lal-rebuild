@@ -119,12 +119,40 @@ package
          }
       }
       
+      // Keep the pre-migration ELS bytes and key in private app storage. The
+      // player database is managed separately and is never touched here.
+      private function preserveLegacyELS104() : void
+      {
+         if(Capabilities.manufacturer.indexOf("Android") < 0) return;
+         var nativePath:String = File.applicationStorageDirectory.nativePath;
+         var basePath:String = nativePath.substring(0,nativePath.lastIndexOf("/"));
+         var rootPath:String = basePath.substring(0,basePath.lastIndexOf("/"));
+         var appId:String = basePath.substring(basePath.lastIndexOf("/") + 1);
+         var backup:File = File.applicationStorageDirectory.resolvePath("els-before-compat-20261116");
+         var sources:Array = [new File(basePath + "/ELS/" + appId + ".dat"),
+            new File(rootPath + "/shared_prefs/com.harman.air.els." + appId + ".xml"),
+            new File(rootPath + "/shared_prefs/" + appId + ".xml")];
+         for each(var source:File in sources)
+         {
+            if(!source.exists) continue;
+            var target:File = backup.resolvePath(source.name);
+            // Never replace the original with a later, already migrated cache.
+            if(target.exists) continue;
+            backup.createDirectory();
+            var pending:File = backup.resolvePath(source.name + ".pending");
+            source.copyTo(pending,true);
+            if(pending.size != source.size) throw new Error("本地缓存备份不完整，请保留应用数据后重试。");
+            pending.moveTo(target,false);
+         }
+      }
+
       private function onADDED_TO_STAGE(param1:Event) : void
       {
          this.alpha = 0.999;
          param1.currentTarget.removeEventListener("addedToStage",onADDED_TO_STAGE);
          if(this.stage)
          {
+            preserveLegacyELS104();
             var startupConfig:ConfigManager = ConfigManager.getInstance();
             startupConfig.init();
             if(Capabilities.manufacturer.indexOf("Android") != -1)

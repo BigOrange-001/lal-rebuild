@@ -1,4 +1,4 @@
-> 最新状态（2026-11-16）：手机进入游戏黑屏，PR #37 暂停合并。旧安装记录仅为历史；启动修复和再次验收以文末新增记录为准。
+> 最新状态（2026-11-16）：手机黑屏已修复，用户已确认进入主界面。正式包与 PR #37 审核收尾进行中；旧安装记录为历史。
 
 # 深渊回廊 前端开发日志
 
@@ -156,3 +156,12 @@ build-merged.ps1合包成功：421+70个dex类无重复，客户端负载逐字�
 恢复编译清单182/183两份词条传承选择器，避免只有四页签入口却遗漏真正选择逻辑。延迟炸弹、区域和引导保存原始小技能上下文，回调恢复原技能与同一份命中集合；大招不继承A类遗物，变身替换skill0后仍按原施法判定。复苏净化后跳过DOT循环副本中已清除的层，与服务端bd1cb61一致。
 
 验证：27份B类样例逐命令对照仍27/27，320组真理边界、反伤/圣佑顺序通过；新增普通/太古复苏多DOT清除，炸弹/区域/引导的真实AS方法延迟来源和大招排除通过。UI专项3/3，包含两份选择器被纳入构建清单。此为方法夹具验证，渲染/调度仍为替身。
+
+
+## Android 启动黑屏修复
+
+直接在正常MainLLOL入口捕获到EncryptedLocalStore.setItem内部错误，调用栈为LocalStore.setItemStr → GlobalLocalStore.setVersion → checkClearLocalStore；统一AIR/合包签名后仍能复现，因此签名不是本次阻塞点。AIR官方记录相同的旧存储fallback写入失败问题：https://github.com/airsdk/Adobe-Runtime-Support/issues/3391 。
+
+移动端descriptor显式采用fallbackMode=never、storageMode=os_store，避开失败的旧格式fallback访问。首次触及ELS前，按nativePath备份原始.dat和两份对应SharedPreferences到应用私有Local Store/els-before-compat-20261116；先写.pending、校验大小再改名，已有原始备份永不覆盖。没有调用EncryptedLocalStore.reset、卸载、清数据，也没有触及files/state中的玩家数据库。旧客户端缓存可能需要重新获取；原始缓存和密钥均保留以便恢复。
+
+手机日志确认三个原文件分别6934528、166、65字节已保留，版本写入和初始化均通过。屏幕已显示游戏加载页，随后用户明确确认“已进主界面”。备份辅助函数以实际AS方法在合成文件系统执行，验证原始内容保留、重复启动不覆盖、Windows无副作用；诊断Socket和额外加载器均不进入正式源码。

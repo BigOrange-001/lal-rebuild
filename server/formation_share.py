@@ -215,13 +215,11 @@ class FormationLibrary:
         rank=snapshot.get('slv', unit['slv'] if key=='skill' else 1)
         if type(rank) is not int or not 1<=rank<=10:
             fail('InvalidFormationCode', '英雄技能等级不正确。')
-        expected=_native_skill_snapshot(self.cfg,snapshot['skid'],rank)
-        if expected is None: return None
-        refreshed=copy.deepcopy(snapshot)
-        # Skill rows follow the current version; rank and identity are kept.
-        for name in ('pl','skills','cd'):
-            if name in expected and not same_skill_value(snapshot.get(name),expected[name]):
-                refreshed[name]=copy.deepcopy(expected[name])
+        refreshed=_native_skill_snapshot(self.cfg,snapshot['skid'],rank)
+        if refreshed is None: return None
+        # Only the saved rank is instance metadata. Every combat setting,
+        # including targeting, conditions and native settings, comes from cfg.
+        if 'slv' in snapshot: refreshed['slv']=rank
         return refreshed
 
     def _unit(self, index, raw):
@@ -335,13 +333,26 @@ class FormationLibrary:
         if name: payload=dict(payload,name=name)
         fid=formation_id(payload['members'])
         db=self.store.db
-        exists=db.execute('SELECT payload,created,wins,losses,last_result,last_at FROM formation_library WHERE uid=? AND id=?',(str(uid),fid)).fetchone()
+        exists=db.execute('SELECT id,payload,created,wins,losses,last_result,last_at FROM formation_library WHERE uid=? AND id=?',(str(uid),fid)).fetchone()
+        if exists is None:
+            # Legacy IDs hash the entire payload; newer IDs may also predate
+            # a skill refresh. Compare both sides under the current cfg, but
+            # keep the stored ID so records and pending battles remain valid.
+            rows=db.execute('SELECT id,payload,created,wins,losses,last_result,last_at FROM formation_library WHERE uid=? ORDER BY created,id',(str(uid),)).fetchall()
+            for row in rows:
+                stored=unwire_value(json.loads(row[1]))
+                try: current=self.normalize(stored)
+                except GameplayFault: continue
+                if formation_id(current['members'])==fid:
+                    exists=row
+                    break
         if exists:
-            stored=unwire_value(json.loads(exists[0]))
+            fid=exists[0]
+            stored=unwire_value(json.loads(exists[1]))
             if name and stored.get('name')!=name:
                 stored['name']=name
                 db.execute('UPDATE formation_library SET payload=? WHERE uid=? AND id=?',(canonical(stored).decode('utf-8'),str(uid),fid))
-            return self.summary(fid,stored,*exists[1:]),True
+            return self.summary(fid,stored,*exists[2:]),True
         created=self.store.clock.now()
         db.execute('INSERT INTO formation_library(uid,id,payload,created) VALUES(?,?,?,?)',(str(uid),fid,canonical(payload).decode('utf-8'),created))
         return self.summary(fid,payload,created),False

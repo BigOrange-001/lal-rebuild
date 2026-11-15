@@ -2212,11 +2212,14 @@ package com.meng52.game.ui.screen
 
       private function saveFormation104(code:String, name:String, done:Function = null) : void
       {
+         var owner:Sprite=shareModal104;
          SendAndSelect.sendAndSelectService("user.import_formation",{code:code,name:name,actionID:formationAction104("import")},function(reply:Object):void
          {
+            // Server success refreshes the library even after this dialog closes.
+            if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
+            if(!formationModalOwner104(owner)) return;
             if(done!=null) done(reply);
             if(!reply || reply.return_code!=0) return;
-            GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
             closeFormationCode104();
             GlobalFunction.popToast(reply.data.already_saved?"这份阵容已在列表中"+(name?"，名称已更新。":"。"):"已保存「"+reply.data.formation.name+"」，点「挑战」即可开打。");
          });
@@ -2342,10 +2345,11 @@ package com.meng52.game.ui.screen
             save.enabled=false;
             SendAndSelect.sendAndSelectService("user.rename_formation",{formation_id:row.formation_id,name:name,actionID:formationAction104("rename")},function(reply:Object):void
             {
-               if(formationModalOwner104(owner)) save.enabled=true;
+               if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
+               if(!formationModalOwner104(owner)) return;
+               save.enabled=true;
                if(!reply || reply.return_code!=0) return;
                closeFormationCode104();
-               GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
                GlobalFunction.popToast("已重命名为「"+reply.data.name+"」。");
             });
          });

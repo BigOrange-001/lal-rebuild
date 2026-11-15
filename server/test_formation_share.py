@@ -141,6 +141,80 @@ class FormationShareTests(unittest.TestCase):
         legacy=copy.deepcopy(payload);legacy['rules']='0'*64;legacy['power']=1
         self.assertTrue(self.imported(code=encode_code(legacy),action='legacy')['already_saved'])
 
+
+    def test_all_skill_slots_refresh_current_configuration_and_saved_rank(self):
+        from native_skill_snapshot import _native_skill_snapshot
+        from formation_share import SKILL_KEYS
+        payload=decode_code(self.export()['code'])
+        unit=payload['members'][0]
+        original=copy.deepcopy(unit['skill'])
+        ranks=dict(zip(SKILL_KEYS,(7,3,4,2)))
+        for key,rank in ranks.items():
+            unit[key]=dict(copy.deepcopy(original),slv=rank,
+                           nativeSettings104={'retiredSetting':99},retiredSetting=True)
+        code=encode_code(payload)
+        fid=self.imported(code=code)['formation']['id']
+        configured=self.library.cfg['skill'][original['skid']]
+        configured.update(actionTargetPolicies=['enemy_global_lowest_current_hp'],
+                          actionTargetPolicyArgs=[{'heroOnly':True}],
+                          actionTargetMaxTargets=[2],modEffectSequence=1,
+                          modCondition={'kind':'event','event':'dodge'},
+                          rankSettingGrowth104={'captainSummonMultiplier':[1,.25]})
+        battle=self.start(fid)
+        imported=self.imported(code=code,uid=self.uid,action='current-skills')
+        saved=self.library._stored(self.uid,imported['formation']['id'])
+        for key,rank in ranks.items():
+            with self.subTest(slot=key):
+                expected=dict(_native_skill_snapshot(self.library.cfg,original['skid'],rank),slv=rank)
+                self.assertEqual(battle['orgin_team_b'][0][key],expected)
+                self.assertEqual(saved['members'][0][key],expected)
+        self.assertEqual(battle['orgin_team_b'][0]['hp_max'],unit['hp_max'])
+        self.assertEqual(battle['orgin_team_b'][0]['pos'],3000-unit['pos'])
+
+    def test_legacy_reimport_preserves_identity_name_records_and_pending_battle(self):
+        from formation_share import canonical
+        payload=decode_code(self.export()['code'])
+        payload.update(rules='0'*64,name='旧阵容')
+        raw=canonical(payload).decode('utf-8')
+        fid='s'+hashlib.sha256(raw.encode('utf-8')).hexdigest()[:32]
+        self.backend.db.execute(
+            'INSERT INTO formation_library(uid,id,payload,created,wins,losses,last_result,last_at) VALUES(?,?,?,?,?,?,?,?)',
+            (str(self.other),fid,raw,7,3,2,2,11))
+        self.backend.db.commit()
+        battle=self.start(fid)
+        result=self.library.import_code(self.other,dict(actionID='legacy-renamed',code=encode_code(payload),name='新阵容'))
+        self.assertTrue(result['already_saved'])
+        self.assertEqual(result['formation']['id'],fid)
+        self.assertEqual(len(self.library.list(self.other)),1)
+        entry=self.library.list(self.other)[0]
+        self.assertEqual((entry['name'],entry['created'],entry['wins'],entry['losses'],entry['last_at']),
+                         ('新阵容',7,3,2,11))
+        self.library.finish(self.other,dict(actionID='legacy-finish',fight_id=battle['fight_id'],
+                            metadata=battle['metadata'],fight_kind='formation',sign=1))
+        self.assertEqual(self.library.list(self.other)[0]['wins'],4)
+        # Renamed/re-encoded codes and configuration refreshes keep that same ID.
+        shared=self.library.code(self.other,dict(formation_id=fid))['code']
+        skid=payload['members'][0]['skill']['skid']
+        self.library.cfg['skill'][skid]['actionTargetPolicies']=['enemy_global_lowest_current_hp']
+        for index,code in enumerate((encode_code(payload),shared)):
+            again=self.imported(code=code,action='legacy-again-'+str(index))
+            self.assertTrue(again['already_saved'])
+            self.assertEqual(again['formation']['id'],fid)
+        self.assertEqual(len(self.library.list(self.other)),1)
+        foreign=self.imported(code=shared,uid=self.uid,action='foreign-legacy')
+        self.assertFalse(foreign['already_saved'])
+        self.assertEqual(self.library.list(self.other)[0]['wins'],4)
+
+    def test_changed_skill_configuration_deduplicates_new_format_entries(self):
+        exported=self.export()
+        entry=self.imported(code=exported['code'])['formation']
+        payload=decode_code(exported['code'])
+        self.library.cfg['skill'][payload['members'][0]['skill']['skid']]['pl'][0]+=1
+        again=self.imported(code=exported['code'],action='refreshed-reimport')
+        self.assertTrue(again['already_saved'])
+        self.assertEqual(again['formation']['id'],entry['id'])
+        self.assertEqual(len(self.library.list(self.other)),1)
+
     def test_unknown_hero_marks_entry_unavailable_without_removing_it(self):
         fid=self.imported()['formation']['id']
         removed=self.library.cfg['avatar'].pop('A_1001_6')

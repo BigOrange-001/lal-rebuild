@@ -34,6 +34,8 @@ def methods(text):
 
 
 def avatar(s):
+    s = s.replace('if(param3 != 0 && param1 != "summon" && !(param1 == "shield" && abyssOrigin104 == "relic_shield")) param3 *= manualEffect;',
+                  'if(param3 != 0 && param1 != "summon") param3 *= manualEffect;')
     # One Kai'Sa volley still has separate missile settlements, but is one cast
     # for relic status application (including misses and repeat targets).
     s = once(s, 'var seen:Array=[];\n         for(var shot:Number=0;',
@@ -132,6 +134,8 @@ def avatar(s):
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();''', '''         if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);''')
+    s = once(s, 'if(param3 != 0 && param1 != "summon") param3 *= manualEffect;',
+             'if(param3 != 0 && param1 != "summon" && !(param1 == "shield" && abyssOrigin104 == "relic_shield")) param3 *= manualEffect;')
     # 疾风步 listens to the native dodge event.
     s = once(s, '''            param2.emitModEvent("dodge",param1,param2);''', '''            param2.emitModEvent("dodge",param1,param2);
             param2.abyssOnDodge104();''')

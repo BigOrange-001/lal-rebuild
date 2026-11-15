@@ -21,7 +21,8 @@ def translate_methods():
     names=set(re.findall(r'function (abyss\w+|hasAbyssDot104|loadAbyssPassives104)\(',source))
     names.update(('injured','addBuff','shieldValue104','absorbShieldDamage',
                   'inheritSummonPanel','isValidSummonMultiplier','scaledSummonStat','countDamage','defenseDamage104',
-                  'abilityBombExplode','abilityTurnStart','kaisaVolley104','yasuoCleanse104','removeBuff'))
+                  'abilityBombExplode','abilityTurnStart','kaisaVolley104','yasuoCleanse104','removeBuff',
+                  'yasuoDamage104','yasuoNight104'))
     out=[]
     for name in sorted(names):
         m=re.search(r'function '+name+r'\((.*?)\)\s*:\s*[\w.*<>]+\s*\{',source,re.S)

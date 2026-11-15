@@ -573,9 +573,9 @@ class GameplayCompetition:
             if target=='f000000000000000000000000000000000':
                 out[target]={"data":[],"as_equips":[],"my_equips":{}}
                 continue
-            if target.startswith('s') and len(target)==33:
-                payload=self.formations._stored(uid,target)
-                out[target]={"data":self._compact(self.formations.enemy(payload)),"as_equips":[],"my_equips":{}}
+            preview=self.formations.preview(uid,target)
+            if preview is not None:
+                out[target]={"data":preview,"as_equips":[],"my_equips":{}}
                 continue
             if target==uid:
                 out[target]={"data":self._own_compact(p),"as_equips":p.get("as_equips",[]),"my_equips":p.get("my_equips",{})}

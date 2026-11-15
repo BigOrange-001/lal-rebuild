@@ -129,26 +129,88 @@ class FormationShareTests(unittest.TestCase):
         with self.assertRaises(GameplayFault):
             self.library.start(self.uid,dict(actionID='deleted-start',formation_id=fid,team_num=0,team=self.team))
 
-    def test_changed_rules_mark_saved_entry_incompatible_without_removing_it(self):
-        fid=self.imported()['formation']['id']
+    def test_changed_rules_keep_saved_entry_playable_with_frozen_attributes(self):
+        payload=decode_code(self.export()['code']);fid=self.imported()['formation']['id']
         self.library.cfg['avatar']['A_1001_6']['pl'][0]+=1
-        self.assertFalse(self.library.list(self.other)[0]['compatible'])
-        with self.assertRaises(GameplayFault) as caught:self.start(fid)
-        self.assertEqual(caught.exception.code,'FormationRulesMismatch')
-        self.assertEqual(len(self.library.list(self.other)),1)
+        self.library.cfg.setdefault('combat_rules',{})['formation_test_change']=1
+        self.assertTrue(self.library.list(self.other)[0]['compatible'])
+        battle=self.start(fid)
+        self.assertEqual([u['hp_max'] for u in battle['orgin_team_b']],[u['hp_max'] for u in payload['members']])
+        self.assertEqual([u['pos'] for u in battle['orgin_team_b']],[3000-u['pos'] for u in payload['members']])
+        # Codes from the first release carried a rules digest and stored power.
+        legacy=copy.deepcopy(payload);legacy['rules']='0'*64;legacy['power']=1
+        self.assertTrue(self.imported(code=encode_code(legacy),action='legacy')['already_saved'])
+
+    def test_unknown_hero_marks_entry_unavailable_without_removing_it(self):
+        fid=self.imported()['formation']['id']
+        removed=self.library.cfg['avatar'].pop('A_1001_6')
+        try:
+            self.assertFalse(self.library.list(self.other)[0]['compatible'])
+            with self.assertRaises(GameplayFault) as caught:self.start(fid)
+            self.assertEqual(caught.exception.code,'FormationHeroUnavailable')
+        finally:self.library.cfg['avatar']['A_1001_6']=removed
+        self.assertTrue(self.library.list(self.other)[0]['compatible'])
+
+    def test_names_save_shortcut_rename_and_reencode(self):
+        named=self.library.dispatch(self.uid,'user.export_formation',dict(actionID='named',team_num=0,team=self.team,name='  打野\n测试队  ',save=True))
+        self.assertEqual(named['name'],'打野测试队')
+        self.assertFalse(named['already_saved'])
+        fid=named['formation']['id']
+        self.assertEqual(self.library.list(self.uid)[0]['name'],'打野测试队')
+        again=self.library.dispatch(self.uid,'user.import_formation',dict(actionID='rename-on-import',code=named['code'],name='新名字'))
+        self.assertTrue(again['already_saved'])
+        self.assertEqual(len(self.library.list(self.uid)),1)
+        self.assertEqual(self.library.list(self.uid)[0]['name'],'新名字')
+        self.library.dispatch(self.uid,'user.rename_formation',dict(actionID='rename',formation_id=fid,name='x'*40))
+        self.assertEqual(self.library.list(self.uid)[0]['name'],'x'*16)
+        shared=self.library.dispatch(self.uid,'user.formation_code',dict(formation_id=fid))
+        self.assertEqual(decode_code(shared['code'])['name'],'x'*16)
+        retitled=self.library.dispatch(self.uid,'user.formation_code',dict(code=named['code'],name='分享版'))
+        self.assertEqual(decode_code(retitled['code'])['name'],'分享版')
+        wrapped='复制这段：'+retitled['code']+'。'
+        self.assertEqual(self.imported(code=wrapped,uid=self.uid,action='wrapped')['formation']['id'],fid)
+        with self.assertRaises(GameplayFault):
+            self.library.dispatch(self.uid,'user.rename_formation',dict(actionID='blank',formation_id=fid,name='   '))
+
+    def test_saves_from_the_first_release_gain_result_columns(self):
+        legacy=Path(self.work.name)/'legacy.sqlite3'
+        db=sqlite3.connect(legacy)
+        db.execute('CREATE TABLE formation_library(uid TEXT NOT NULL,id TEXT NOT NULL,payload TEXT NOT NULL,created INTEGER NOT NULL,PRIMARY KEY(uid,id))')
+        payload=decode_code(self.export()['code'])
+        db.execute('INSERT INTO formation_library VALUES(?,?,?,?)',(self.uid,'s'+'a'*32,json.dumps(payload),7))
+        db.commit();db.close()
+        self.path=legacy
+        reopened=self.open()
+        lib=next(h.formations for h in reopened.players.gameplay_handlers if h.__class__.__name__=='GameplayCompetition')
+        entry=lib.list(self.uid)[0]
+        self.assertEqual((entry['id'],entry['wins'],entry['losses'],entry['created']),('s'+'a'*32,0,0,7))
+        self.assertTrue(entry['compatible'])
+
+    def test_results_are_recorded_once_per_battle(self):
+        fid=self.imported(uid=self.uid)['formation']['id']
+        for index,sign in enumerate((1,2,1)):
+            battle=self.library.start(self.uid,dict(actionID='record-fight-%d'%index,formation_id=fid,team_num=0,team=self.team))
+            params=dict(actionID='record-finish-%d'%index,fight_kind='formation',fight_id=battle['fight_id'],metadata=battle['metadata'],sign=sign)
+            reply=self.arena.dispatch(self.uid,'user.battle_finish',params)
+            self.arena.dispatch(self.uid,'user.battle_finish',params)
+        self.assertEqual(reply['formation_record'],dict(wins=2,losses=1,last_result=1))
+        entry=self.library.list(self.uid)[0]
+        self.assertEqual((entry['wins'],entry['losses'],entry['last_result']),(2,1,1))
+        self.assertTrue(entry['last_at'])
 
     def test_codes_reject_damage_corruption_unknown_heroes_and_skill_mutation(self):
         response=self.export();payload=decode_code(response['code'])
         for code in ('','invalid',response['code'][:-1]+'Z'):
             with self.assertRaises(GameplayFault):self.imported(code=code,action='bad-'+str(len(code)))
-        for field,value in (('hp',-1),('pos',float('inf')),('talent',[])):
+        for field,value in (('hp_max',-1),('pos',float('inf')),('talent',[])):
             edited=copy.deepcopy(payload);edited['members'][0][field]=value
             with self.assertRaises((GameplayFault,ValueError)):
                 self.imported(code=encode_code(edited),action='bad-'+field)
         edited=copy.deepcopy(payload);edited['members'][0]['aid']='A_missing_6'
         with self.assertRaises(GameplayFault):self.imported(code=encode_code(edited),action='missing')
         edited=copy.deepcopy(payload);edited['members'][0]['skill']['skills'][0][4]+=1
-        with self.assertRaises(GameplayFault):self.imported(code=encode_code(edited),action='skill-edit')
+        fid=self.imported(code=encode_code(edited),action='skill-edit')['formation']['id']
+        self.assertEqual(self.library._stored(self.other,fid)['members'][0]['skill'],payload['members'][0]['skill'])
 
     def test_code_size_bounds_and_chat_wrapping(self):
         raw=b' '* (MAX_PAYLOAD+1);packed=base64.urlsafe_b64encode(zlib.compress(raw)).decode().rstrip('=')
@@ -163,12 +225,6 @@ class FormationShareTests(unittest.TestCase):
         self.assertEqual([struct.pack('>d',v) for v in restored],[struct.pack('>d',v) for v in values])
         self.assertTrue(same_skill_value(values,[math.nextafter(v,math.inf) for v in values]))
         self.assertFalse(same_skill_value([2.0],[2.001]))
-        self.library.cfg['avatar']['A_1001_6']['pl'][0]=math.nextafter(float(self.library.cfg['avatar']['A_1001_6']['pl'][0]),math.inf)
-        # Integers and floating-point configuration rows retain their types;
-        # compare the stable representation between neighboring doubles.
-        first=self.library.rules
-        self.library.cfg['avatar']['A_1001_6']['pl'][0]=math.nextafter(self.library.cfg['avatar']['A_1001_6']['pl'][0],math.inf)
-        self.assertEqual(first,self.library.rules)
 
     def test_invalid_formation_duplicate_missing_lane_and_unowned_are_rejected(self):
         for team in ([self.team[0]]*5, [self.team[0]], [['unowned',0,.2]]+self.team[1:],
@@ -186,11 +242,14 @@ class FormationShareTests(unittest.TestCase):
         exported=rpc('user.export_formation',team=self.team,team_num=0.0)
         fid=rpc('user.import_formation',code=exported['code'])['formation']['id']
         self.assertEqual(rpc('user.list_formations')['formations'][0]['id'],fid)
-        preview=rpc('user.get_battle_users',users=[[fid,0],['f000000000000000000000000000000000',0]])
+        preview=rpc('user.get_battle_users',users=[[fid,0],['f000000000000000000000000000000000',0],['s'+'0'*32,0]])
+        self.assertEqual(preview['s'+'0'*32]['data'],[])
         self.assertEqual(preview[fid]['data'][0][9],600)
         self.assertEqual(preview['f000000000000000000000000000000000']['data'],[])
         battle=rpc('user.pk_combat_formation',formation_id=fid,team=self.team,team_num=0.0)
         self.assertEqual(rpc('user.battle_finish',fight_kind='formation',fight_id=battle['fight_id'],metadata=battle['metadata'],sign=1)['fight_kind'],'formation')
+        self.assertEqual(rpc('user.rename_formation',formation_id=fid,name='网关测试')['name'],'网关测试')
+        self.assertTrue(rpc('user.formation_code',formation_id=fid)['code'].startswith('LALF1.'))
         self.assertTrue(rpc('user.delete_formation',formation_id=fid)['deleted'])
         self.assertEqual(rpc('user.list_formations')['formations'],[])
 

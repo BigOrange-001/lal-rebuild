@@ -28,7 +28,7 @@ CLIENT_PROFILE_SYNC_REQUIRED_FIELDS = (
  'create_time','add_time','friends','combat_main','combat_score','ploy_cids','tasks',
  'association','check_in','title','zone','spending',
 )
-CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','pending_limit_break','task','boss_state','mod_state')
+CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS = ('as_equips','pending_pve','pending_limit_break','task','boss_state','mod_state','abyss_account','abyss_run','abyss_relics')
 
 class PlayerStore:
  def __init__(self,db,config,clock=None):
@@ -74,7 +74,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   self.adventure=AdventureTasks(self,config or {})
   self.economy=GameplayEconomy(self,config or {})
   self.gameplay_handlers=[]
-  for module_name,class_name in [('gameplay_combat','GameplayCombat'),('gameplay_roster','GameplayRosterEquipment'),('gameplay_competition','GameplayCompetition'),('gameplay_guild_boss','GameplayGuildBoss'),('gameplay_social','GameplaySocial')]:
+  for module_name,class_name in [('gameplay_abyss','GameplayAbyss'),('gameplay_combat','GameplayCombat'),('gameplay_roster','GameplayRosterEquipment'),('gameplay_competition','GameplayCompetition'),('gameplay_guild_boss','GameplayGuildBoss'),('gameplay_social','GameplaySocial')]:
    if importlib.util.find_spec(module_name) is None:continue
    self.gameplay_handlers.append(getattr(__import__(module_name),class_name)(self,config or {}))
  def context_for(self,uid):
@@ -435,6 +435,10 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   if len(sp)<color_count:sp.extend([0]*(color_count-len(sp)))
   p['attrs']['sp']=sp
   self._normalize_equipment_attrs(p.get('my_equips'))
+  from roguelite_abyss import normalize_account
+  normalize_account(p,self.config)
+  from abyss_relics import normalize_relic_slots
+  normalize_relic_slots(p)
   normalized=json.dumps(self._profile_json(p),ensure_ascii=False,separators=(',',':'))
   if normalized!=profile_row[0]:
    with self.lock:
@@ -601,8 +605,14 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
     row=self.db.execute('SELECT profile FROM players WHERE uid=?',(uid,)).fetchone()
     if not row:raise GameplayFault('UnknownPlayer','Player does not exist')
     profile=json.loads(row[0])
+    from roguelite_abyss import normalize_account
+    normalize_account(profile,self.config)
+    from abyss_relics import normalize_relic_slots
+    normalize_relic_slots(profile)
     normalize_daily_counters(profile,self.clock.now())
     updated,response=mutator(profile)
+    normalize_account(updated,self.config)
+    normalize_relic_slots(updated)
     if not isinstance(updated,dict) or not isinstance(response,(dict,list,int,float,str,bool,type(None))):raise GameplayFault('InvalidMutation','Mutator must return a profile object and JSON response value')
     updated_json=json.dumps(self._profile_json(updated),ensure_ascii=False,separators=(',',':'))
     response_json=json.dumps(self._profile_json(response),ensure_ascii=False,separators=(',',':'))
@@ -806,7 +816,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    return self.economy.dispatch(uid,method,params)
   if method=='user.battle_finish':
    kind=params.get('fight_kind')
-   wanted='GameplayCompetition' if kind in {'pvp','fragment','formation'} else 'GameplayCombat'
+   wanted='GameplayAbyss' if kind=='abyss' else 'GameplayCompetition' if kind in {'pvp','fragment','formation'} else 'GameplayCombat'
    for handler in self.gameplay_handlers:
     if handler.__class__.__name__==wanted:return handler.dispatch(uid,method,params)
    raise GameplayFault('NotImplemented','Battle finish handler is not loaded for kind: '+str(kind))

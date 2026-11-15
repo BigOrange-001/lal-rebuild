@@ -1,0 +1,143 @@
+{
+  "request": {
+    "method": "user.abyss_query",
+    "params": {
+      "actionID": "fixture-1"
+    }
+  },
+  "response": {
+    "abyss_relics": {},
+    "as_equips": [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
+    "abyss_account": {
+      "schema": 1,
+      "obtained": [
+        "A_1001_3",
+        "A_1002_3",
+        "A_1003_3",
+        "A_1004_3",
+        "A_1005_3"
+      ],
+      "appeared": [],
+      "cleared": [],
+      "max_difficulty": 1,
+      "decks": [
+        "blade",
+        "flame"
+      ]
+    },
+    "abyss_run": null,
+    "unlocked": {
+      "purple": [
+        "A_1001_5",
+        "A_1002_5",
+        "A_1003_5",
+        "A_1004_5",
+        "A_1005_5",
+        "A_1006_5",
+        "A_1007_5",
+        "A_1008_5",
+        "A_1009_5",
+        "A_1010_5",
+        "A_1011_5",
+        "A_1012_5",
+        "A_1013_5",
+        "A_1014_5",
+        "A_1016_5",
+        "A_1018_5",
+        "A_1020_5",
+        "A_1040_5",
+        "A_1045_5",
+        "A_1049_5",
+        "A_1063_5",
+        "A_1077_5",
+        "A_1082_5",
+        "A_1085_5",
+        "A_1094_5"
+      ],
+      "orange": [
+        "A_1001_6",
+        "A_1002_6",
+        "A_1003_6",
+        "A_1004_6",
+        "A_1005_6",
+        "A_1006_6",
+        "A_1007_6",
+        "A_1008_6",
+        "A_1009_6",
+        "A_1010_6",
+        "A_1011_6",
+        "A_1012_6",
+        "A_1013_6",
+        "A_1014_6",
+        "A_1016_6",
+        "A_1018_6",
+        "A_1020_6",
+        "A_1040_6",
+        "A_1045_6",
+        "A_1049_6",
+        "A_1063_6",
+        "A_1077_6",
+        "A_1082_6",
+        "A_1085_6",
+        "A_1094_6"
+      ],
+      "standalone_orange": []
+    },
+    "replayed": false
+  }
+}

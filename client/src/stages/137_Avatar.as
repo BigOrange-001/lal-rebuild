@@ -3959,8 +3959,11 @@ package com.meng52.game.module.avatar
          var abyssTrue104:Number = (param4 == 1 || param4 == 2) ? param1.abyssConversion104() : 0;
          if(abyssTrue104 > 0)
          {
-            var abyssTrueRaw104:Number = _loc7_ * abyssTrue104;
-            _loc7_ = defenseDamage104(_loc7_ - abyssTrueRaw104,param2.getDefenseAgainst(param1,param4),param1.ap) + Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE);
+            // Split raw damage before each branch's element and rounding stages.
+            var abyssPhysicalRaw104:Number = Tools.toInt(param3 * (1 - abyssTrue104) * _loc6_[1]);
+            var abyssTrueRaw104:Number = Tools.toInt(param3 * abyssTrue104 * _loc6_[1]);
+            _loc7_ = Tools.toInt(Tools.toInt(defenseDamage104(abyssPhysicalRaw104,param2.getDefenseAgainst(param1,param4),param1.ap)) * param5) + Tools.toInt(Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE) * param5);
+            param5 = 1;
          }
          else if(param4 == 1)
          {
@@ -5267,9 +5270,9 @@ package com.meng52.game.module.avatar
          var source:Avatar = param6 || (sourceContext ? sourceContext.owner as Avatar : null);
          var manualEffect:Number = sourceContext ? Number(sourceContext.manualEffectMultiplier) : 1;
          if(!isFinite(manualEffect) || manualEffect <= 0) manualEffect = 1;
-         if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);
          if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
+         if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);
          var _loc11_:Buff = new Buff(param1,param2,param3);
          _loc11_.source = source;
          if(param1 == "poison" && source && GlobalData.$mConfig_simple.hero_skill_output_rate_104 != null) _loc11_.poisonHpRate104 = source.poisonSkillOutputRate104();
@@ -8615,7 +8618,7 @@ package com.meng52.game.module.avatar
          var statisticsShield104:Number = 0;
          var abyssShieldSpent104:Number = 0;
          var abyssRevivedNow104:Boolean = false;
-         param1 = int(param1 * abilityDirectMultiplier(param7,param4));
+         if(abyssOrigin104 != "relic_reflect") param1 = int(param1 * abilityDirectMultiplier(param7,param4));
          var _loc12_:String = null;
          var _loc21_:* = 0;
          var _loc9_:Buff = null;
@@ -8747,8 +8750,11 @@ package com.meng52.game.module.avatar
             }
             trace("最终伤害算减伤之后" + param1);
             if(hasManualDotKind("poison")) param1 = Tools.toInt(param1 * 1.2);
-            param1 = int(skin2Incoming(param1,param7 || param5,param4));
-            param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));
+            if(abyssOrigin104 != "relic_reflect")
+            {
+               param1 = int(skin2Incoming(param1,param7 || param5,param4));
+               param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));
+            }
             param1 = abyssModifyDamage104(param1,param7,param4,dotKind);
             settledCriticalDamage104=Math.max(0,param1);
             _loc9_ = buffs["shield"] as Buff;

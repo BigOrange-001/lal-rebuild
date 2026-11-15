@@ -181,12 +181,17 @@ def ensure_relic_skill_variants(document):
             for ancient in (False,True):
                 sid = variant_id(source,kind,ancient)
                 if sid in cfg['skill']:continue
-                row = copy.deepcopy(cfg['skill'][source])
+                # Configuration arrays are read-only. Share unchanged data so
+                # AMF3 and deepcopy preserve references instead of replicating
+                # every action matrix for every relic/quality combination.
+                row = cfg['skill'][source].copy()
                 row['equipment_source_skill_104'] = row.get('equipment_source_skill_104') or source
                 row['abyss_relic_A'] = main_effect(kind,ancient)
                 row['relic_source_skill'] = source
-                if isinstance(row.get('manualClonePolicy'),dict) and row['manualClonePolicy'].get('skillId')==source:
-                    row['manualClonePolicy']['skillId']=sid
+                for policy in ('manualSummonPolicy','manualClonePolicy'):
+                    if isinstance(row.get(policy),dict) and row[policy].get('skillId')==source:
+                        row[policy] = copy.deepcopy(row[policy])
+                        row[policy]['skillId']=sid
                 row['info'] = str(row.get('info',''))+'\n'+main_text(row['abyss_relic_A'])
                 cfg['skill'][sid] = row
     return document

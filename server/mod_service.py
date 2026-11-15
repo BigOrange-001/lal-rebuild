@@ -12,6 +12,7 @@ from pathlib import Path
 
 from player_store import GameplayFault, PlayerStore, native_dates
 from mod_packages import ModCatalog, ModError
+from config_fingerprint import fingerprint_config
 
 
 def canonical(value):
@@ -58,7 +59,7 @@ class ModService:
             state = json.loads(raw).get("mod_state", {})
             if isinstance(state, dict):
                 self._restore_saved_bindings(str(uid), state)
-        self._base_digest = digest(self.base)
+        self._base_digest = digest(fingerprint_config(self.base))
         from gameplay_common import game_day
         self._calendar_year = int(game_day(store.clock.now())[:4])
         store.mod_service = self
@@ -80,7 +81,7 @@ class ModService:
                 return
             apply_check_in_rewards(self.store.config, year)
             self.base.setdefault("cfg", {})["check_in"] = copy.deepcopy(self.store.config["cfg"]["check_in"])
-            self._base_digest = digest(self.base)
+            self._base_digest = digest(fingerprint_config(self.base))
             self._calendar_year = year
             self._contexts.clear()
 

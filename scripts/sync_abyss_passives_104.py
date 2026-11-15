@@ -34,6 +34,16 @@ def methods(text):
 
 
 def avatar(s):
+    # Migrate earlier integration hooks before reapplying the current anchors.
+    s = s.replace('         if(abyssOrigin104 != "relic_reflect") param1 = int(param1 * abilityDirectMultiplier(param7,param4));',
+        '         param1 = int(param1 * abilityDirectMultiplier(param7,param4));')
+    s = s.replace('''            if(abyssOrigin104 != "relic_reflect")
+            {
+               param1 = int(skin2Incoming(param1,param7 || param5,param4));
+               param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));
+            }''', '''            param1 = int(skin2Incoming(param1,param7 || param5,param4));
+            param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));''')
+    s = s.replace('         if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);\n','')
     # Snapshot fields (battle units only; owned/display avatars carry none).
     s = once(s, '''         limitBreak = 0;
          cultureSchema = "";
@@ -88,9 +98,9 @@ def avatar(s):
              '''         if(param4 == 4 && nurseHealAmount > 0 && abyssOrigin104 != "relic_lifesteal") queueNurseHealing(''')
     # Shields cast by a 圣佑 wearer.
     s = once(s, '''         if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
-         if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();''', '''         if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);
-         if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
-         if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();''')
+         if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();''', '''         if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
+         if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
+         if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);''')
     # 疾风步 listens to the native dodge event.
     s = once(s, '''            param2.emitModEvent("dodge",param1,param2);''', '''            param2.emitModEvent("dodge",param1,param2);
             param2.abyssOnDodge104();''')
@@ -119,7 +129,7 @@ def avatar(s):
          }
          if(yasuoNightRounds104>=0 && --yasuoNightRounds104<0) yasuoQueueNight104(false);''')
     # 真理之刃: split before defense, sharing the hit and crit rolls.
-    s = once(s, '''         if(param4 == 1)
+    s = s if 'var abyssTrue104:Number' in s else once(s, '''         if(param4 == 1)
          {
             _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,1),param1.ap);
          }''', '''         var abyssTrue104:Number = (param4 == 1 || param4 == 2) ? param1.abyssConversion104() : 0;
@@ -137,6 +147,20 @@ def avatar(s):
          statisticsOwner104 = owner;''', '''         var panel:Object = owner.abyssSummonPanel104(owner.getSummonPanelSnapshot());
          abyssReduction104 = owner.abyssReduction104;
          statisticsOwner104 = owner;''')
+    s = s.replace('            var abyssTrueRaw104:Number = _loc7_ * abyssTrue104;\n            _loc7_ = defenseDamage104(_loc7_ - abyssTrueRaw104,param2.getDefenseAgainst(param1,param4),param1.ap) + Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE);',
+        '''            // Split raw damage before each branch's element and rounding stages.
+            var abyssPhysicalRaw104:Number = Tools.toInt(param3 * (1 - abyssTrue104) * _loc6_[1]);
+            var abyssTrueRaw104:Number = Tools.toInt(param3 * abyssTrue104 * _loc6_[1]);
+            _loc7_ = Tools.toInt(Tools.toInt(defenseDamage104(abyssPhysicalRaw104,param2.getDefenseAgainst(param1,param4),param1.ap)) * param5) + Tools.toInt(Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE) * param5);
+            param5 = 1;''')
+    s = s.replace('         param1 = int(param1 * abilityDirectMultiplier(param7,param4));',
+        '         if(abyssOrigin104 != "relic_reflect") param1 = int(param1 * abilityDirectMultiplier(param7,param4));')
+    s = s.replace('            param1 = int(skin2Incoming(param1,param7 || param5,param4));\n            param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));',
+        '''            if(abyssOrigin104 != "relic_reflect")
+            {
+               param1 = int(skin2Incoming(param1,param7 || param5,param4));
+               param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));
+            }''')
     return methods(s)
 
 

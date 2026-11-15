@@ -123,6 +123,17 @@ class GameplayRosterEquipment:
     def _fail(code: str, msg: str):
         raise GameplayFault(code, msg)
 
+    def _locked(self, p, field, asset_id, row, action):
+        """Reject a locked hero/equipment with its name and the lock reason."""
+        from inventory_locks import locked_fault
+        if field == "avatars":
+            aid = str(row.get("aid", asset_id)).split("|")[0]
+            name = self.heroes.get(aid, {}).get("name") or aid
+        else:
+            eid = row.get("eid", "")
+            name = self.equipment.get(eid, {}).get("name") or eid or "装备"
+        raise locked_fault(p, field, asset_id, name, action)
+
     @staticmethod
     def _pending_culture_hero_ids(profile):
         """Return owned hero IDs referenced by an uncommitted cultivation roll."""
@@ -1059,7 +1070,7 @@ class GameplayRosterEquipment:
             self._check_not_pending_culture(p, hid)
             if hid in keys: self._fail("InvalidSelection", "Duplicate hero selection")
             if hero.get("lock"):
-                self._fail("HeroLocked", "Unlock the hero before selling")
+                self._locked(p, "avatars", hid, hero, "sell")
             self._check_not_team(p, hid)
             self._check_not_dn(p, hid)
             keys.append(hid)
@@ -1383,7 +1394,7 @@ class GameplayRosterEquipment:
                     self._check_not_pending_culture(p, hid)
                     if hid == tid or hid in ids: self._fail("InvalidMaterials", "Target and duplicate heroes cannot be consumed")
                     if material.get('lock') or material.get('locked'):
-                        self._fail('HeroLocked', 'Unlock material heroes before upgrading')
+                        self._locked(p, 'avatars', hid, material, 'swallow')
                     self._check_not_team(p, hid); self._check_not_dn(p, hid); ids.append(hid); materials.append(material)
                 target_aid = target.get("aid", tid).split("|")[0]
                 level_cap = self._hero_level_cap(target_aid, target)
@@ -1460,7 +1471,7 @@ class GameplayRosterEquipment:
                 if any(eid in squad for squad in p.get("as_equips", [])):
                     self._fail("EquipmentInUse", "Unequip material first")
                 if material.get("lock") or material.get("locked"):
-                    self._fail("EquipmentLocked", "Unlock material books before upgrading")
+                    self._locked(p, "my_equips", eid, material, "book")
                 if isinstance(pending, dict) and pending.get("eqid") == eid:
                     self._fail("PendingOperation", "Finish the pending material operation first")
                 definition = self.equipment.get(material.get("eid"), {})
@@ -1497,7 +1508,7 @@ class GameplayRosterEquipment:
                 hid, mat = self._hero(p, v)
                 if hid == tid or hid in ids: self._fail("InvalidMaterials", "Target and duplicate heroes cannot be consumed")
                 if mat.get('lock') or mat.get('locked'):
-                    self._fail('HeroLocked', 'Unlock material heroes before ascension')
+                    self._locked(p, 'avatars', hid, mat, 'upgrade')
                 self._check_not_team(p, hid)
                 self._check_not_dn(p, hid)
                 if m == "user.phase_up":
@@ -1597,7 +1608,7 @@ class GameplayRosterEquipment:
                 self._check_not_pending_culture(p, hid)
                 if hid in keys: self._fail("InvalidSelection", "Duplicate hero selection")
                 if hero.get("lock"):
-                    self._fail("HeroLocked", "Unlock the hero before selling")
+                    self._locked(p, "avatars", hid, hero, "sell")
                 self._check_not_team(p, hid); self._check_not_dn(p, hid); keys.append(hid)
             gain = 0
             for hid in keys:
@@ -1955,7 +1966,7 @@ class GameplayRosterEquipment:
                 unique.add(eqid)
                 if any(eqid in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip an item before selling")
                 if item.get("lock"):
-                    self._fail("EquipmentLocked", "Unlock an item before selling")
+                    self._locked(p, "my_equips", eqid, item, "sell")
                 if isinstance(pending_wash, dict) and pending_wash.get("eqid") == eqid:
                     self._fail("PendingOperation", "Save or cancel the equipment wash before selling")
                 gold, mark, dust = self._equip_sell_rewards(item)
@@ -1985,7 +1996,7 @@ class GameplayRosterEquipment:
                 self._fail("MaxGrowth", "Equipment has reached its alchemy limit")
             if any(mat_id in squad for squad in p.get("as_equips", [])): self._fail("EquipmentInUse", "Unequip material first")
             if mat.get("lock"):
-                self._fail("EquipmentLocked", "Unlock material equipment before alchemy")
+                self._locked(p, "my_equips", mat_id, mat, "alchemy")
             if target.get("eid") != mat.get("eid"): self._fail("IncompatibleEquipment", "Only matching equipment can be combined")
             min_star = int(self.simple.get("equip_alchemy", {}).get("equip_al", 0))
             if self._equip_star(target) < min_star or self._equip_star(mat) != self._equip_star(target):

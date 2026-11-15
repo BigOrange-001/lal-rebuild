@@ -30,6 +30,18 @@ from equipment_growth_v2 import (
     upgrade_result as equipment_upgrade_result,
     wash_roll as equipment_wash_roll,
     wash_stats as equipment_wash_stats,
+    template_wash_stats as equipment_template_wash_stats,
+)
+from equipment_stardust import (
+    MAX_INHERIT_COUNT as STARDUST_MAX_INHERIT,
+    alchemy_cost as stardust_alchemy_cost,
+    balance as stardust_balance,
+    decompose_yield as stardust_decompose_yield,
+    equipment_type as stardust_equipment_type,
+    inherit_count as stardust_inherit_count,
+    is_skill_book as stardust_is_skill_book,
+    merge_inheritance as stardust_merge_inheritance,
+    set_balance as stardust_set_balance,
 )
 from equipment_upgrade_cost import cost_table as equipment_upgrade_cost_table, MAX_EQUIPMENT_LEVEL
 from halo_progression import halo_rank_threshold
@@ -59,6 +71,7 @@ class GameplayRosterEquipment:
         "user.soul_exchange_equip", "user.compose_fragment", "user.equip_dress",
         "user.equip_rise", "user.equip_wash", "user.equip_wash_cancel",
         "user.equip_wash_save", "user.equip_sell", "user.equip_alchemy", "user.add_magic",
+        "user.equip_decompose", "user.equip_inherit",
         "user.equip_rune_up",
         "user.set_defensive_squad", "user.get_newzone_ranks",
         "user.team_preset_save", "user.team_preset_load", "user.team_preset_delete",
@@ -439,6 +452,43 @@ class GameplayRosterEquipment:
         # These getters return AS `int` directly, unlike getRiseGold which
         # explicitly calls Tools.toInt (five-decimal rounding).
         return int(gold), mark, dust
+
+    def _advance_alchemy(self, p, target, max_star):
+        """Apply one paid alchemy attempt (VIP may add a step); return bonus steps."""
+        alchemy = target.get("alchemy", [0, 0])
+        if not isinstance(alchemy, list) or len(alchemy) != 2:
+            self._fail("InvalidEquipment", "Equipment alchemy state is invalid")
+        phase, extra = [int(v) for v in alchemy]
+        if phase not in (0, 1, 2) or extra < 0:
+            self._fail("InvalidEquipment", "Equipment alchemy state is invalid")
+        base_star = int(str(target["eid"]).rsplit("_", 1)[-1])
+        steps = equipment_alchemy_upgrade_steps(int(p.get("vip_lv", 0)), self.rng)
+        max_steps = 3 * (max_star - base_star)
+        old_steps = 3 * extra + phase
+        final_steps = min(max_steps, old_steps + steps)
+        bonus_applied = max(0, final_steps - min(max_steps, old_steps + 1))
+        next_extra, next_phase = divmod(final_steps, 3)
+        target["alchemy"] = [next_phase, next_extra]
+        return bonus_applied
+
+    @staticmethod
+    def _grant_equipment_refund(p, gold_gain, mark_gain, dust_gain):
+        p["gold"] = int(p.get("gold", 0)) + gold_gain
+        p["mark"] = int(p.get("mark", 0)) + mark_gain
+        dust = p.setdefault("attrs", {}).setdefault("dust", [0, 0, 0, 0])
+        if not isinstance(dust, list): dust = [dust, 0, 0, 0]
+        while len(dust) < 4: dust.append(0)
+        p["attrs"]["dust"] = [int(a) + int(b) for a, b in zip(dust, dust_gain)]
+
+    def _check_consumable_equipment(self, p, eqid, item, action):
+        """Worn, locked (including preset-protected) and pending-wash items stay."""
+        if any(eqid in squad for squad in p.get("as_equips", [])):
+            self._fail("EquipmentInUse", f"Unequip an item before {action}")
+        if item.get("lock"):
+            self._fail("EquipmentLocked", f"Unlock an item before {action}")
+        pending_wash = p.get("attrs", {}).get("equip_wash")
+        if isinstance(pending_wash, dict) and pending_wash.get("eqid") == eqid:
+            self._fail("PendingOperation", f"Save or cancel the equipment wash before {action}")
 
     def _equip_wash_halo(self, item, count, kind):
         cfg = self.simple.get("equipwash", [])
@@ -823,7 +873,7 @@ class GameplayRosterEquipment:
             "user.sell_avatars", "user.swallow_avatar", "user.swallow_skillbook",
             "user.star_up", "user.phase_up", "user.morph", "user.equip_rise",
             "user.equip_wash", "user.add_magic", "user.equip_rune_up", "user.equip_sell",
-            "user.equip_alchemy", "user.wager_avatar",
+            "user.equip_alchemy", "user.wager_avatar", "user.equip_decompose", "user.equip_inherit",
         }
         if method in raw_methods:
             change = (lambda p: self._sell_avatars(p, params)) if method == "user.sell_avatars" else (lambda p: self._mutate(p, method, params))
@@ -1982,6 +2032,73 @@ class GameplayRosterEquipment:
             for i, n in enumerate(dust_gain): dust[i] += n
             p["attrs"]["dust"] = dust
             return [p["mark"], p["gold"], p["attrs"]["dust"]]
+        if m == "user.equip_decompose":
+            ids = x.get("eqids")
+            if not isinstance(ids, list) or not ids: self._fail("InvalidSelection", "Select equipment to decompose")
+            unique = []; gold_gain = 0; mark_gain = 0; dust_gain = [0, 0, 0, 0]; stardust_gain = 0
+            for v in ids:
+                eqid, item = self._equip(p, v)
+                if eqid in unique: self._fail("InvalidSelection", "Duplicate equipment")
+                unique.append(eqid)
+                if stardust_is_skill_book(item.get("eid")):
+                    self._fail("IncompatibleEquipment", "Skill books cannot be decomposed")
+                self._check_consumable_equipment(p, eqid, item, "decompose")
+                gold, mark, dust = self._equip_sell_rewards(item)
+                gold_gain += gold
+                mark_gain += mark
+                dust_gain = [a + b for a, b in zip(dust_gain, dust)]
+                stardust_gain += stardust_decompose_yield(item)
+            for eqid in unique: del p["my_equips"][eqid]
+            self._grant_equipment_refund(p, gold_gain, mark_gain, dust_gain)
+            stardust_set_balance(p, stardust_balance(p) + stardust_gain)
+            return {"my_equips": p["my_equips"], "gold": p["gold"], "mark": p["mark"],
+                    "attrs": p["attrs"], "stardust_gain": stardust_gain, "eqids": unique}
+        if m == "user.equip_inherit":
+            ids = x.get("eqids")
+            if not isinstance(ids, list) or len(ids) != 2 or ids[0] == ids[1]: self._fail("InvalidSelection", "Select two different equipment")
+            target_id, target = self._equip(p, ids[0]); mat_id, mat = self._equip(p, ids[1])
+            pending_wash = p.get("attrs", {}).get("equip_wash")
+            if isinstance(pending_wash, dict) and pending_wash.get("eqid") == target_id:
+                self._fail("PendingOperation", "Save or cancel the equipment wash before inheritance")
+            if stardust_is_skill_book(target.get("eid")) or stardust_is_skill_book(mat.get("eid")):
+                self._fail("IncompatibleEquipment", "Skill books cannot inherit affixes")
+            if stardust_equipment_type(target.get("eid")) != stardust_equipment_type(mat.get("eid")):
+                self._fail("IncompatibleEquipment", "Inheritance requires equipment of the same slot")
+            if stardust_inherit_count(target) >= STARDUST_MAX_INHERIT:
+                self._fail("MaxGrowth", "Equipment has reached its inheritance limit")
+            self._check_consumable_equipment(p, mat_id, mat, "inheritance")
+            material_affixes = equipment_template_wash_stats(
+                mat, self.equipment.get(mat.get("eid"), {}), self.simple)
+            gold_gain, mark_gain, dust_gain = self._equip_sell_rewards(mat)
+            stardust_merge_inheritance(target, material_affixes)
+            del p["my_equips"][mat_id]
+            self._grant_equipment_refund(p, gold_gain, mark_gain, dust_gain)
+            return {"my_equips": p["my_equips"], "gold": p["gold"], "mark": p["mark"],
+                    "attrs": p["attrs"], "inherit_4attrs": target["inherit_4attrs"],
+                    "inherit_count": target["inherit_count"]}
+        if m == "user.equip_alchemy" and x.get("stardust"):
+            ids = x.get("eqids")
+            if not isinstance(ids, list) or len(ids) != 1: self._fail("InvalidSelection", "Select one equipment for stardust alchemy")
+            target_id, target = self._equip(p, ids[0])
+            if stardust_is_skill_book(target.get("eid")):
+                self._fail("IncompatibleEquipment", "Skill books cannot use alchemy")
+            pending_wash = p.get("attrs", {}).get("equip_wash")
+            if isinstance(pending_wash, dict) and pending_wash.get("eqid") == target_id:
+                self._fail("PendingOperation", "Save or cancel the equipment wash before alchemy")
+            max_star = min(8, int(self.simple.get("equip_alchemy", {}).get("star_lv", 7)))
+            if self._equip_star(target) >= max_star:
+                self._fail("MaxGrowth", "Equipment has reached its alchemy limit")
+            min_star = int(self.simple.get("equip_alchemy", {}).get("equip_al", 0))
+            if self._equip_star(target) < min_star:
+                self._fail("IncompatibleEquipment", "Equipment star is below the alchemy threshold")
+            cost = stardust_alchemy_cost(target)
+            have = stardust_balance(p)
+            if have < cost:
+                self._fail("InsufficientStardust", "Not enough stardust")
+            bonus_applied = self._advance_alchemy(p, target, max_star)
+            stardust_set_balance(p, have - cost)
+            return {"my_equips": p["my_equips"], "gold": p.get("gold", 0), "mark": p.get("mark", 0),
+                    "attrs": p["attrs"], "alchemy_bonus_step": bonus_applied, "stardust_cost": cost}
         if m == "user.equip_alchemy":
             ids = x.get("eqids")
             if not isinstance(ids, list) or len(ids) != 2 or ids[0] == ids[1]: self._fail("InvalidSelection", "Select two different equipment")
@@ -2006,28 +2123,9 @@ class GameplayRosterEquipment:
             # gold fee; return those exact amounts in the normal profile-data
             # envelope consumed by GlobalFunction.update_UserData.
             gold_gain, mark_gain, dust_gain = self._equip_sell_rewards(mat)
-            alchemy = target.get("alchemy", [0, 0])
-            if not isinstance(alchemy, list) or len(alchemy) != 2:
-                self._fail("InvalidEquipment", "Equipment alchemy state is invalid")
-            phase, extra = [int(v) for v in alchemy]
-            if phase not in (0, 1, 2) or extra < 0:
-                self._fail("InvalidEquipment", "Equipment alchemy state is invalid")
-            base_star = int(str(target["eid"]).rsplit("_", 1)[-1])
-            steps = equipment_alchemy_upgrade_steps(int(p.get("vip_lv", 0)), self.rng)
-            max_steps = 3 * (max_star - base_star)
-            old_steps = 3 * extra + phase
-            final_steps = min(max_steps, old_steps + steps)
-            bonus_applied = max(0, final_steps - min(max_steps, old_steps + 1))
-            next_extra, next_phase = divmod(final_steps, 3)
-            target["alchemy"] = [next_phase, next_extra]
+            bonus_applied = self._advance_alchemy(p, target, max_star)
             del p["my_equips"][mat_id]
-            p["gold"] = int(p.get("gold", 0)) + gold_gain
-            p["mark"] = int(p.get("mark", 0)) + mark_gain
-            dust = p.setdefault("attrs", {}).setdefault("dust", [0, 0, 0, 0])
-            if not isinstance(dust, list): dust = [dust, 0, 0, 0]
-            while len(dust) < 4: dust.append(0)
-            dust = [int(a) + int(b) for a, b in zip(dust, dust_gain)]
-            p["attrs"]["dust"] = dust
+            self._grant_equipment_refund(p, gold_gain, mark_gain, dust_gain)
             return {"my_equips": p["my_equips"], "gold": p["gold"], "mark": p["mark"],
                     "attrs": p["attrs"], "alchemy_bonus_step": bonus_applied}
         self._fail("NotImplemented", f"Method not reconstructed: {m}")

@@ -66,17 +66,43 @@ package com.meng52.game.ui.panel
       private const TOP:int = 85;
       
       private var m_data:Object;
-      
+
+      // Set by the alchemy institute tab: the same panels then perform
+      // affix inheritance instead of alchemy.
+      public static var $inheritMode:Boolean = false;
+
+      private var m_inherit:Boolean = false;
+
+      private var m_stardust_btn:LOL_Scale9Button;
+
+      private var m_stardust_txt:TextField;
+
       public function PanelEquipAlchemyStart(param1:Object)
       {
          m_data = param1;
+         m_inherit = $inheritMode;
          super();
       }
-      
+
+      public static function inheritPreview(param1:Object, param2:Array) : Object
+      {
+         var _preview:Object = Tools.clone(param1);
+         var _keys:Array = ["hit","flee","crit","tough"];
+         var _old:Object = param1.inherit_4attrs ? param1.inherit_4attrs : {};
+         var _merged:Object = {};
+         for(var _i:int = 0; _i < 4; _i++)
+         {
+            _merged[_keys[_i]] = Math.max(0,int(_old[_keys[_i]])) + (param2 == null ? 0 : Math.max(0,int(param2[_i])));
+         }
+         _preview.inherit_4attrs = _merged;
+         _preview.inherit_count = (param1.inherit_count == undefined ? 0 : int(param1.inherit_count)) + (param2 == null ? 0 : 1);
+         return _preview;
+      }
+
       override protected function initializeHandler(param1:Event) : void
       {
          this.removeEventListener("addedToStage",initializeHandler);
-         this.setPopPanelBg(GlobalLanguageStr.getStr(90691),820);
+         this.setPopPanelBg(m_inherit ? "词条传承" : GlobalLanguageStr.getStr(90691),820);
          GlobalData.$mEventDispatcher.addEventListener("select_alchemy_stuff",onSaveSelectStuff);
          initUI();
       }
@@ -99,7 +125,11 @@ package com.meng52.game.ui.panel
          m_select_equip_spr.y = m_equip_add_img.y - m_equip_add_img.height * 0.5;
          m_select_equip_spr.addEventListener("touch",onTouch);
          addChild(m_select_equip_spr);
-         m_start_btn.text = GlobalLanguageStr.getStr(98201);
+         m_start_btn.text = m_inherit ? "确认传承" : GlobalLanguageStr.getStr(98201);
+         if(m_inherit)
+         {
+            createOtherUI(m_select_equip.getTemplateAffixes());
+         }
          update_expend_info();
       }
       
@@ -115,8 +145,7 @@ package com.meng52.game.ui.panel
          var _loc2_:int = m_select_equip.getSellGold();
          var _loc1_:int = m_select_equip.getSellMark();
          var _loc4_:Array = m_select_equip.getSellDust();
-         var _loc5_:String = m_box_2.equip_alchemy_lv;
-         var _loc3_:int = m_select_equip.getAlchemyGold(_loc5_);
+         m_return_gift_info.text = m_inherit ? "传承增加：" + m_select_equip.getInheritText(m_select_equip.getTemplateAffixes()) : GlobalLanguageStr.getStr(90698);
          m_return_gold.text = GlobalLanguageStr.getLanguageStr(90699,GlobalLanguageStr.getStr(20162),_loc2_);
          m_return_gift_mark.text = GlobalLanguageStr.getLanguageStr(90699,GlobalLanguageStr.getStr(20272),_loc1_);
          var _loc9_:Array = GlobalLanguageStr.getStr(90197).split("$");
@@ -180,7 +209,7 @@ package com.meng52.game.ui.panel
          m_select_equip_spr = null;
       }
       
-      private function createOtherUI() : void
+      private function createOtherUI(param1:Array = null) : void
       {
          if(m_box_1)
          {
@@ -207,7 +236,7 @@ package com.meng52.game.ui.panel
          m_arrow.x = m_box_1.x + m_box_1.width + 2;
          m_arrow.y = m_box_1.y + m_box_1.height * 0.5;
          this.addChild(m_arrow);
-         m_box_2 = new infoBox(m_data,true);
+         m_box_2 = m_inherit ? new infoBox(inheritPreview(m_data,param1),false) : new infoBox(m_data,true);
          m_box_2.x = m_box_1.x + m_box_1.width + 40;
          m_box_2.y = 85;
          this.addChild(m_box_2);
@@ -226,7 +255,7 @@ package com.meng52.game.ui.panel
          m_equip_add_img.y = m_bg.y + m_bg.height * 0.5;
          m_equip_add_img.addEventListener("touch",onTouch);
          this.addChild(m_equip_add_img);
-         m_empty_info = GlobalFunction.createTextField(MainConfig.$isEA ? 410 : 390,MainConfig.$isEA ? 70 : 60,"请选择同名闲置装备\n每次炼金主属性×1.12\n强化等级保持不变","",20,4926491);
+         m_empty_info = GlobalFunction.createTextField(MainConfig.$isEA ? 410 : 390,MainConfig.$isEA ? 70 : 60,m_inherit ? "请选择同部位闲置装备\n其两项副属性加到本装备，素材消耗\n已传承 " + inheritCountOf(m_data) + "/" + Equip.MAX_INHERIT_COUNT + " 次" : "请选择同名闲置装备，或消耗星辉\n每次炼金主属性×1.12\n强化等级保持不变","",20,4926491);
          m_empty_info.x = MainConfig.$isEA ? m_equip_add_img.x + m_equip_add_img.width + 5 : (MainConfig.$isEnglish ? m_equip_add_img.x + m_equip_add_img.width + 25 : m_equip_add_img.x + m_equip_add_img.width + 40);
          m_empty_info.y = m_equip_add_img.y - m_empty_info.height * 0.5;
          m_empty_info.hAlign = "left";
@@ -245,13 +274,29 @@ package com.meng52.game.ui.panel
          m_return_gift_mark.y = m_return_gold.y + m_return_gold.height;
          m_return_gift_mark.hAlign = "left";
          m_return_spr.addChild(m_return_gift_mark);
-         m_start_btn = new LOL_Scale9Button(GlobalLanguageStr.getStr(98200),150,70);
+         m_start_btn = new LOL_Scale9Button(m_inherit ? "传承" : GlobalLanguageStr.getStr(98200),150,70);
          m_start_btn.enabled = checkContinueAlchemy(m_data);
          m_start_btn.name = "const_alchemy";
          m_start_btn.x = m_bg.x + m_bg.width - m_start_btn.width - 20;
          m_start_btn.y = m_equip_add_img.y + m_equip_add_img.height + 10;
          m_start_btn.addEventListener("triggered",onTRIGGERED);
          this.addChild(m_start_btn);
+         if(!m_inherit)
+         {
+            m_stardust_btn = new LOL_Scale9Button("星辉炼金",150,70);
+            m_stardust_btn.name = "const_stardust_alchemy";
+            m_stardust_btn.enabled = checkContinueAlchemy(m_data);
+            m_stardust_btn.x = m_start_btn.x - m_stardust_btn.width - 20;
+            m_stardust_btn.y = m_start_btn.y;
+            m_stardust_btn.addEventListener("triggered",onTRIGGERED);
+            this.addChild(m_stardust_btn);
+            m_stardust_txt = GlobalFunction.createTextField(195,50,"","",18,4926491);
+            m_stardust_txt.hAlign = "left";
+            m_stardust_txt.x = m_bg.x + 20;
+            m_stardust_txt.y = m_start_btn.y + (m_start_btn.height - m_stardust_txt.height) * 0.5;
+            this.addChild(m_stardust_txt);
+            updateStardustInfo();
+         }
          m_return_spr.pivotY = m_return_spr.height * 0.5;
          m_return_spr.x = m_equip_add_img.x + m_equip_add_img.width + 40;
          m_return_spr.y = m_bg.y + m_bg.height * 0.5 - 25;
@@ -268,7 +313,14 @@ package com.meng52.game.ui.panel
          var _loc7_:String = _loc2_.name;
          if("const_alchemy" === _loc7_)
          {
-            if(m_select_stuff)
+            if(m_select_stuff && m_inherit)
+            {
+               GlobalFunction.popAlert("",Tools.formatLineX("确认传承？素材装备将被消耗，返还其金币、印记和粉尘，不返还星辉。",GlobalTextStyle.COLOR_F_FFCC66),{
+                  "ok":send_msg,
+                  "no":GlobalFunction.functionNull
+               });
+            }
+            else if(m_select_stuff)
             {
                _loc5_ = false;
                if(m_select_equip.magic)
@@ -300,15 +352,60 @@ package com.meng52.game.ui.panel
             }
             else
             {
-               LayoutUIAnimation.getOnlyExample().popWords(GlobalLanguageStr.getStr(90696));
+               LayoutUIAnimation.getOnlyExample().popWords(m_inherit ? "请选择传承素材" : GlobalLanguageStr.getStr(90696));
             }
          }
+         else if("const_stardust_alchemy" === _loc7_)
+         {
+            confirmStardustAlchemy();
+         }
       }
-      
+
+      private static function inheritCountOf(param1:Object) : int
+      {
+         return param1 != null && param1.inherit_count != undefined ? Math.max(0,int(param1.inherit_count)) : 0;
+      }
+
+      private function updateStardustInfo() : void
+      {
+         if(m_stardust_txt == null)
+         {
+            return;
+         }
+         var _equip:Equip = new Equip(m_data.id,m_data);
+         m_stardust_txt.text = "星辉 " + Equip.getStardustBalance() + "\n每次消耗 " + _equip.getStardustAlchemyCost();
+      }
+
+      private function confirmStardustAlchemy() : void
+      {
+         if(!checkContinueAlchemy(m_data)) return;
+         var _cost:int = new Equip(m_data.id,m_data).getStardustAlchemyCost();
+         if(Equip.getStardustBalance() < _cost)
+         {
+            LayoutUIAnimation.getOnlyExample().popWords("星辉不足，需要 " + _cost);
+            return;
+         }
+         GlobalFunction.popAlert("",Tools.formatLineX("消耗星辉[" + _cost + "]进行一次炼金？",GlobalTextStyle.COLOR_F_FFCC66),{
+            "ok":send_stardust_msg,
+            "no":GlobalFunction.functionNull
+         });
+      }
+
+      private function send_stardust_msg() : void
+      {
+         if(!checkContinueAlchemy(m_data)) return;
+         SendServiceAMFFun.send_user_equip_alchemy(refun,{"eqids":[m_data.id],"stardust":1});
+      }
+
       private function send_msg() : void
       {
          if(!checkContinueAlchemy(m_data)) return;
          var _loc1_:Object = {"eqids":[m_data.id,m_select_stuff.id]};
+         if(m_inherit)
+         {
+            SendServiceAMFFun.send_user_equip_inherit(refun,_loc1_);
+            return;
+         }
          SendServiceAMFFun.send_user_equip_alchemy(refun,_loc1_);
       }
       
@@ -346,7 +443,26 @@ package com.meng52.game.ui.panel
             m_data = Tools.clone(GlobalData.$userData.my_equips[_loc6_]);
             m_data["id"] = _loc6_;
             GlobalData.$mEventDispatcher.dispatchEventWith("update_alchemy_select");
-            if(checkContinueAlchemy(m_data))
+            updateStardustInfo();
+            if(m_inherit)
+            {
+               LayoutUIAnimation.getOnlyExample().popEffect({
+                  "id":"e008",
+                  "x":_loc2_,
+                  "y":_loc3_,
+                  "sc":1.2
+               });
+               createOtherUI();
+               clear_select_stuff_data();
+               m_return_spr.visible = false;
+               m_start_btn.text = "传承";
+               m_start_btn.enabled = checkContinueAlchemy(m_data);
+               m_equip_add_img.visible = m_start_btn.enabled;
+               m_empty_info.visible = true;
+               m_empty_info.text = "请选择同部位闲置装备\n其两项副属性加到本装备，素材消耗\n已传承 " + inheritCountOf(m_data) + "/" + Equip.MAX_INHERIT_COUNT + " 次";
+               LayoutUIAnimation.getOnlyExample().popWords("传承完成");
+            }
+            else if(checkContinueAlchemy(m_data))
             {
                LayoutUIAnimation.getOnlyExample().popEffect({
                   "id":"e008",
@@ -359,6 +475,7 @@ package com.meng52.game.ui.panel
                m_equip_add_img.visible = true;
                m_empty_info.visible = true;
                m_return_spr.visible = false;
+               m_start_btn.text = GlobalLanguageStr.getStr(98200);
                LayoutUIAnimation.getOnlyExample().popWords(GlobalLanguageStr.getStr(90701));
             }
             else
@@ -375,6 +492,10 @@ package com.meng52.game.ui.panel
       
       private function checkContinueAlchemy(param1:Object) : Boolean
       {
+         if(m_inherit)
+         {
+            return inheritCountOf(param1) < Equip.MAX_INHERIT_COUNT;
+         }
          var _loc5_:Boolean = false;
          var _loc2_:Array = param1["eid"].split("_");
          var alchemy:Array = param1["alchemy"] as Array;
@@ -442,6 +563,18 @@ package com.meng52.game.ui.panel
             m_start_btn.removeFromParent(true);
          }
          m_start_btn = null;
+         if(m_stardust_btn)
+         {
+            m_stardust_btn.dispose();
+            m_stardust_btn.removeFromParent(true);
+         }
+         m_stardust_btn = null;
+         if(m_stardust_txt)
+         {
+            m_stardust_txt.dispose();
+            m_stardust_txt.removeFromParent(true);
+         }
+         m_stardust_txt = null;
          if(m_arrow)
          {
             m_arrow.dispose();
@@ -729,6 +862,15 @@ class infoBox extends Sprite
          falseNum += _equip.getTough(_equip.lv);
       }
       createAttTxt(20321,falseNum,_spr);
+      if(_equip.inheritCount > 0 || _equip.getInheritText() != "")
+      {
+         var _inheritTxt:TextField = GlobalTextStyle.getTextField("传承" + _equip.inheritCount + "/" + Equip.MAX_INHERIT_COUNT + " " + _equip.getInheritText(),16,16764006,"left",250,50,GlobalConfig.FONT_1);
+         _inheritTxt.touchable = false;
+         _inheritTxt.x = 20;
+         _inheritTxt.y = mAttBaseNum * 29 + 160;
+         mAttBaseNum += 2;
+         _spr.addChild(_inheritTxt);
+      }
       i = 0;
       l = int(_equip.magic.length);
       _num = 0;

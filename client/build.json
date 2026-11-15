@@ -626,7 +626,7 @@
       "index": 104,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "edae42bf0d7bbf0d975d467d039454aa36e87fb299e5ac3a20a503842b442477"
+      "source_sha256": "f1946a0f3fe1130ba0483f366340e135d42c15f9e8e69f507690292c4cb1359d"
     },
     {
       "index": 105,
@@ -878,7 +878,7 @@
       "index": 146,
       "class": "com.meng52.game.ui.element.LOL_DetailAvatar",
       "source": "client/src/stages/143_LOL_DetailAvatar.as",
-      "source_sha256": "ae21e71117335f0be3ee1b2c99c53ffa1ff405e678dcd24284e869ae81f5bbe3"
+      "source_sha256": "7832b84abdb89759ae0d4e37ebe996f05ca68b50a89bdf36e7ecaa33ca30a637"
     },
     {
       "index": 147,

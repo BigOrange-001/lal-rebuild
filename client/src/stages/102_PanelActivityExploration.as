@@ -773,7 +773,7 @@ class AbyssCore104
       {
          send("user.abyss_relic_equip",{"item_id":itemId,"slot":slot},function(d:Object):void
          {
-            GlobalData.$mEventDispatcher.dispatchEventWith("update_team_avatar_list");
+            GlobalData.$mEventDispatcher.dispatchEventWith("abyss_relic_changed_104");
             if(done != null) done();
          });
       };
@@ -792,7 +792,7 @@ class AbyssCore104
    {
       send("user.abyss_relic_unequip",{"item_id":itemId},function(d:Object):void
       {
-         GlobalData.$mEventDispatcher.dispatchEventWith("update_team_avatar_list");
+         GlobalData.$mEventDispatcher.dispatchEventWith("abyss_relic_changed_104");
          if(done != null) done();
       });
    }

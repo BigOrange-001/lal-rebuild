@@ -34,6 +34,20 @@ def methods(text):
 
 
 def avatar(s):
+    # Preserve the source small-skill and shared hit set for delayed effects.
+    for prefix in ('abilityState.zone={line:', 'abilityState.channel={pos:',
+                   'target.abilityState["bomb_"+abilityIndex]={owner:'):
+        s = once(s, prefix, prefix.replace('={', '={abyssRelicContext104:abyssCaptureContext104(this),'))
+    for name, owner, state in (('context', 'owner', 'bomb'),
+                               ('zoneContext', 'this', 'state'),
+                               ('channelContext', 'this', 'state')):
+        anchor = f'var {name}:Object = beginAbilityAttack({owner},"active");\n'
+        # "context" occurs elsewhere; its multiplier line identifies the bomb.
+        tail = f'         {name}.manualDamageMultiplier = {state}.manualDamageMultiplier;'
+        before = anchor + tail if name == 'context' else anchor
+        after = anchor + f'         abyssRestoreContext104({name},{state}.abyssRelicContext104);\n'
+        if name == 'context': after += tail
+        s = once(s, before, after)
     # Migrate earlier integration hooks before reapplying the current anchors.
     s = s.replace('         if(abyssOrigin104 != "relic_reflect") param1 = int(param1 * abilityDirectMultiplier(param7,param4));',
         '         param1 = int(param1 * abilityDirectMultiplier(param7,param4));')

@@ -954,6 +954,7 @@ package com.meng52.game.module.avatar
          var owner:Avatar = bomb.owner as Avatar;
          if(!owner || owner.hp <= 0) return;
          var context:Object = beginAbilityAttack(owner,"active");
+         abyssRestoreContext104(context,bomb.abyssRelicContext104);
          context.manualDamageMultiplier = bomb.manualDamageMultiplier;
          var targets:Array = owner.abilityCandidates(owner.otherTeam,line,pos,250,4);
          if(hp > 0 && targets.indexOf(this) < 0) { targets.unshift(this); targets = targets.slice(0,4); }
@@ -1016,6 +1017,7 @@ package com.meng52.game.module.avatar
          if(state && hp > 0)
          {
             var zoneContext:Object = beginAbilityAttack(this,"active");
+         abyssRestoreContext104(zoneContext,state.abyssRelicContext104);
             zoneContext.manualDamageMultiplier = state.manualDamageMultiplier;
             zoneContext.manualEffectMultiplier = state.manualEffectMultiplier;
             for each(var enemy:Avatar in abilityCandidates(otherTeam,state.line,state.pos,350,3))
@@ -1032,6 +1034,7 @@ package com.meng52.game.module.avatar
             if(hp > 0 && !buffs.stun && !buffs.silence && pos == state.pos && line == state.line)
             {
                var channelContext:Object = beginAbilityAttack(this,"active");
+         abyssRestoreContext104(channelContext,state.abyssRelicContext104);
                channelContext.manualDamageMultiplier = state.manualDamageMultiplier;
                channelContext.manualEffectMultiplier = state.manualEffectMultiplier;
                var channelPresentation:Object = beginParallelVisualBatch();
@@ -2831,7 +2834,7 @@ package com.meng52.game.module.avatar
                break;
             case "gangplank_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",800)); if(!enemies.length) return false; primary=enemies[0];
-               abilityState.zone={line:primary.line,pos:primary.pos,left:nativeAbilityNumber(sourceSkill,kind,"cast_2",2),manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier};
+               abilityState.zone={abyssRelicContext104:abyssCaptureContext104(this),line:primary.line,pos:primary.pos,left:nativeAbilityNumber(sourceSkill,kind,"cast_2",2),manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier};
                for each(target in abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_3",350),primary,nativeAbilityNumber(sourceSkill,kind,"cast_4",3))) if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_5",1.2),nativeAbilityNumber(sourceSkill,kind,"cast_6",1),effect)) abilityControl(target,"weak",nativeAbilityNumber(sourceSkill,kind,"cast_8",1),nativeAbilityNumber(sourceSkill,kind,"cast_9",0.2));
                break;
             case "yi_n":
@@ -2902,7 +2905,7 @@ package com.meng52.game.module.avatar
                abilityHeal(this,equipmentPart104(sourceSkill,"consume_heal",nativeAbilityNumber(sourceSkill,kind,"cast_6",0.7))*scale);
                break;
             case "nunu_c":
-               abilityShield(this,equipmentPart104(sourceSkill,"channel_shield",nativeAbilityNumber(sourceSkill,kind,"cast_0",1.2))); abilityState.channel={pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
+               abilityShield(this,equipmentPart104(sourceSkill,"channel_shield",nativeAbilityNumber(sourceSkill,kind,"cast_0",1.2))); abilityState.channel={abyssRelicContext104:abyssCaptureContext104(this),pos:pos,line:line,manualDamageMultiplier:manualDamageMultiplier,manualEffectMultiplier:manualEffectMultiplier}; abilityFeedback("绝对零度：开始引导","FX_A_1073_MAGIC");
                break;
             case "alistar_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",500)); if(!enemies.length || !abilityDash(enemies[0])) return false; primary=enemies[0];
@@ -2996,7 +2999,7 @@ package com.meng52.game.module.avatar
                break;
             case "kaelthas_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
+               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={abyssRelicContext104:abyssCaptureContext104(this),owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
                break;
             case "kaelthas_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",700)); if(!enemies.length) return false; primary=enemies[0];
@@ -9862,11 +9865,27 @@ package com.meng52.game.module.avatar
       // skillB and other casters never inherit it).
       private static function abyssNormalContext104(source:Avatar) : Object
       {
-         if(!source || !source.abyssRelicA104 || !source.skill0) return null;
+         if(!source || !source.abyssRelicA104) return null;
          var context:Object = currentAbilityAttack();
-         if(!context || context.owner !== source || context.kind != "active" || context.skill !== source.skill0) return null;
+         if(!context || context.owner !== source || context.kind != "active") return null;
+         if(context.abyssNormalOwner104 !== source && (!source.skill0 || context.skill !== source.skill0)) return null;
          if(!(context.abyssHits104 is Array)) context.abyssHits104 = [];
          return context;
+      }
+
+      // Deferred hits retain the original cast, including its once-per-target set.
+      private static function abyssCaptureContext104(source:Avatar) : Object
+      {
+         var context:Object = abyssNormalContext104(source);
+         return context ? {owner:source,skill:context.skill,hits:context.abyssHits104} : null;
+      }
+
+      private static function abyssRestoreContext104(context:Object, saved:Object) : void
+      {
+         if(!saved || saved.owner !== context.owner) return;
+         context.skill = saved.skill;
+         context.abyssHits104 = saved.hits;
+         context.abyssNormalOwner104 = saved.owner;
       }
 
       public function abyssConversion104() : Number
@@ -10019,6 +10038,7 @@ package com.meng52.game.module.avatar
          for each(var dot:Object in abyssDots104.concat())
          {
             if(hp <= 0) break;
+            if(!abyssDots104 || abyssDots104.indexOf(dot) < 0) continue;
             abyssTrace104("dot_tick",dot.source as Avatar,this,{"kind":dot.kind,"amount":dot.amount});
             injured(int(dot.amount),1,null,dot.kind == "poison" ? 6 : 7,null,false,dot.source as Avatar,null,String(dot.kind));
             dot.left = int(dot.left) - 1;

@@ -155,6 +155,14 @@
          return context && int(abyssRelicA104.id) == 20 ? Number(abyssRelicA104.value) : 0;
       }
 
+      private function abyssRemoveDots104(kind:String) : void
+      {
+         if(!abyssDots104 || (kind != "poison" && kind != "burn")) return;
+         var kept:Array = [];
+         for each(var dot:Object in abyssDots104) if(dot.kind != kind) kept.push(dot);
+         abyssDots104 = kept.length ? kept : null;
+      }
+
       public function abyssShieldMultiplier104() : Number
       {
          var affix:Object = abyssEffect104(12);

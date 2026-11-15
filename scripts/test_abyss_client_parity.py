@@ -21,7 +21,7 @@ def translate_methods():
     names=set(re.findall(r'function (abyss\w+|hasAbyssDot104|loadAbyssPassives104)\(',source))
     names.update(('injured','addBuff','shieldValue104','absorbShieldDamage',
                   'inheritSummonPanel','isValidSummonMultiplier','scaledSummonStat','countDamage','defenseDamage104',
-                  'abilityBombExplode','abilityTurnStart'))
+                  'abilityBombExplode','abilityTurnStart','kaisaVolley104','yasuoCleanse104','removeBuff'))
     out=[]
     for name in sorted(names):
         m=re.search(r'function '+name+r'\((.*?)\)\s*:\s*[\w.*<>]+\s*\{',source,re.S)
@@ -56,6 +56,15 @@ class ParityTests(unittest.TestCase):
             docs.append(doc)
         self.assertEqual(len(docs),27)
         script=(ROOT/'scripts/abyss_client_parity_fixture.js').read_text('utf-8').replace('/*METHODS*/',translate_methods())
+        summon_source=(ROOT/'client/src/stages/139_SkillSet.as').read_text('utf-8')
+        summon_body=re.sub(r'\bvar (\w+)\s*:\w+',r'var \1',method_body(summon_source,'isManualSummonPolicyAllowed'))
+        script=script.replace('/*SUMMON_POLICY*/','const summonAllowed=function(){with(this){'+summon_body+'}};')
+        from abyss_relics import A_TYPES,variant_id
+        summons=[]
+        for aid in ('A_1040_5','A_1040_6','A_1124_5','A_1124_6'):
+            source=cfg['avatar'][aid]['pl'][10]
+            for sid in [source]+[variant_id(source,k,a) for k in A_TYPES for a in (False,True)]:
+                summons.append({'source':source,'id':sid,'policy':cfg['skill'][sid]['manualSummonPolicy']})
         from combat_math import damage_before_final
         extra=[]
         attack=cfg['system_simple']['attack'][:];attack[1]=.5
@@ -68,7 +77,7 @@ class ParityTests(unittest.TestCase):
                         extra.append(dict(fraction=fraction,sign=sign,share=share,raw=raw,expected=expected,minimum=attack[0]))
         with tempfile.TemporaryDirectory(prefix='abyss-parity-') as tmp:
             fixture=Path(tmp)/'fixture.js';fixture.write_text(script,'utf-8')
-            result=subprocess.run(['node',str(fixture)],input=json.dumps({'docs':docs,'conversion':extra}),capture_output=True,text=True,encoding='utf-8',cwd=ROOT)
+            result=subprocess.run(['node',str(fixture)],input=json.dumps({'docs':docs,'conversion':extra,'summons':summons}),capture_output=True,text=True,encoding='utf-8',cwd=ROOT)
         self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
         print(result.stdout)
 

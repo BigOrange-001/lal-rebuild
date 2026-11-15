@@ -32,6 +32,8 @@
 
 ## 主线关卡名
 
+> 本表已被 [stage-rename-proposal.md](stage-rename-proposal.md) 取代，当前生效的名字以 `STAGE_TITLES_104` 和 `CHAPTER_TITLES_104` 为准。
+
 | 章节 | 关卡 | 原名 | 新名 |
 |---|---|---|---|
 | 前哨失联 | M_001_2 | 第1章·车辙里的伏兵 | 第1章·车辙伏兵 |

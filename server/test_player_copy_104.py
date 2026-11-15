@@ -30,13 +30,35 @@ class PlayerCopyTests(unittest.TestCase):
                   'pve':{'combat_main':copy.deepcopy(stages)}}
         apply_player_copy_104(document)
         cfg=document['cfg']
-        self.assertEqual(cfg['combat_main']['M_010_5']['name'],'第10章·仓促火线')
-        self.assertEqual(cfg['combat_main']['M_001_1']['name'],'第1章·散落的工事')
-        self.assertEqual(document['pve']['combat_main']['M_010_5']['name'],'第10章·仓促火线')
+        self.assertEqual(cfg['combat_main']['M_010_5']['name'],'第10章·荆棘花园')
+        self.assertEqual(cfg['combat_main']['M_001_1']['name'],'第1章·黑默丁格炮台')
+        self.assertEqual(document['pve']['combat_main']['M_010_5']['name'],'第10章·荆棘花园')
         self.assertEqual([cfg['combat_ploy'][k]['name'] for k in ('P_1','P_2','P_3')],
                          ['英雄经验副本·高级','远古试炼·第4关','灵魂塔·第12层'])
         self.assertEqual(cfg['avatar']['A_1907_4']['name'],'正义执剑者')
         self.assertEqual(cfg['avatar']['A_1001_2']['name'],'盖伦')
+
+    def test_chapter_names_cover_every_battle_main_copy(self):
+        chapters={'M_001':{'name':'前哨失联'},'M_030':{'name':'终幕中庭'}}
+        document={'cfg':{'battle_main':copy.deepcopy(chapters)},'pve':{'battle_main':copy.deepcopy(chapters)},
+                  'battle_main':copy.deepcopy(chapters)}
+        apply_player_copy_104(document)
+        for holder in (document['cfg'],document['pve'],document):
+            self.assertEqual(holder['battle_main']['M_001']['name'],'泉水出发')
+            self.assertEqual(holder['battle_main']['M_030']['name'],'王者之巅')
+
+    def test_campaign_title_tables_are_complete_and_tidy(self):
+        from player_copy_104 import STAGE_TITLES_104, CHAPTER_TITLES_104
+        expected=[f'M_{c:03d}_{s}' for c in range(1,31) for s in range(1,(6 if c<=15 else 3)+1)]
+        self.assertEqual(sorted(STAGE_TITLES_104),expected)
+        self.assertEqual(sorted(CHAPTER_TITLES_104),[f'M_{c:03d}' for c in range(1,31)])
+        titles=list(STAGE_TITLES_104.values())
+        self.assertEqual(len(set(titles)),len(titles))
+        self.assertEqual(len(set(CHAPTER_TITLES_104.values())),30)
+        for title in titles:
+            self.assertTrue(4<=len(title)<=7,title)
+            for word in ('封锁','封口','封门','近卫','最后的'):
+                self.assertNotIn(word,title)
 
     def test_talent_and_bond_text_use_planner_copy(self):
         from copy_polish_104 import polish_text

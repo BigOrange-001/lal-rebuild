@@ -66,16 +66,19 @@ def mutate(roster, profile, method, params):
         if (not isinstance(team, list) or len(team) != 3
                 or any(not isinstance(row, list) or len(row) != 6 for row in team)
                 or not isinstance(equips, list) or len(equips) != 6
-                or any(not isinstance(row, list) or len(row) != 6 for row in equips)
+                or any(not isinstance(row, list) or len(row) not in (6, 7) for row in equips)
                 or not isinstance(bindings, dict)):
             roster._fail('InvalidPreset', '该阵容数据异常，请重新保存。')
         heroes = [hid for row in team for hid in row if hid is not None]
         heroes += [hid for hid in bindings.values() if hid is not None]
-        equipment = [eqid for row in equips for eqid in row if eqid is not None]
+        equipment = [eqid for row in equips for eqid in row[:6] if eqid is not None]
+        relics = [row[6] for row in equips if len(row)==7 and row[6] is not None]
         if any(not isinstance(hid, str) or hid not in profile.get('avatars', {}) for hid in heroes):
             roster._fail('PresetMissingAssets', '该阵容有英雄已不在背包中，当前配队未改动，请重新保存阵容。')
         if any(not isinstance(eqid, str) or eqid not in profile.get('my_equips', {}) for eqid in equipment):
             roster._fail('PresetMissingAssets', '该阵容有装备已不在背包中，当前配队未改动，请重新保存阵容。')
+        if any(not isinstance(iid,str) or iid not in profile.get('abyss_relics',{}) for iid in relics):
+            roster._fail('PresetMissingAssets', '该阵容有遗物已不在背包中，当前配队未改动，请重新保存阵容。')
         current_dn = roster._normalize_dn(profile)
         if any(key not in current_dn and hero_id is not None for key, hero_id in bindings.items()):
             roster._fail('InvalidPreset', '该阵容使用了当前未解锁的德诺阵节点，当前配队未改动。')

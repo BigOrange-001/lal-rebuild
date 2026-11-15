@@ -165,9 +165,9 @@ def variant_id(source, kind, ancient):
     return f'S_ABYSS{kind}{int(ancient)}_{digest}_{source.rsplit("_",1)[-1]}'
 
 
-def apply_relic_config(document):
+def ensure_relic_skill_variants(document):
+    """Add variants for the effective normal skills, including per-save Mods."""
     cfg = document.get('cfg',document)
-    if cfg.get('system_simple',{}).get('abyss_relic_schema')==1: return document
     sources = {v['pl'][10] for aid,v in cfg.get('avatar',{}).items() if aid.startswith('A_1')}
     simple = cfg.setdefault('system_simple',{})
     for variants in simple.get('bond_skill_variants_104',{}).values():
@@ -180,6 +180,7 @@ def apply_relic_config(document):
         for kind in A_TYPES:
             for ancient in (False,True):
                 sid = variant_id(source,kind,ancient)
+                if sid in cfg['skill']:continue
                 row = copy.deepcopy(cfg['skill'][source])
                 row['equipment_source_skill_104'] = row.get('equipment_source_skill_104') or source
                 row['abyss_relic_A'] = main_effect(kind,ancient)
@@ -188,6 +189,14 @@ def apply_relic_config(document):
                     row['manualClonePolicy']['skillId']=sid
                 row['info'] = str(row.get('info',''))+'\n'+main_text(row['abyss_relic_A'])
                 cfg['skill'][sid] = row
+    return document
+
+
+def apply_relic_config(document):
+    cfg = document.get('cfg',document)
+    if cfg.get('system_simple',{}).get('abyss_relic_schema')==1: return document
+    ensure_relic_skill_variants(document)
+    simple = cfg.setdefault('system_simple',{})
     simple['abyss_relic_schema'] = 1
     simple['abyss_relic_types'] = [{'id':kind,'name':NAMES[kind-1],
         'class':'A' if kind in A_TYPES else 'B', 'normal':main_effect(kind),

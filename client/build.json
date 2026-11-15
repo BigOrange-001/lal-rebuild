@@ -2,7 +2,7 @@
   "schema": "lal-client-build-v2",
   "version": "1.0.5",
   "stage_count": 183,
-  "unique_class_count": 154,
+  "unique_class_count": 156,
   "stages": [
     {
       "index": 1,

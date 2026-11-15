@@ -347,15 +347,16 @@ class AbyssCore104
    public static function retriesTotal(difficulty:int) : int
    {
       var rows:Array = cfg().difficulties as Array;
+      // Config is the only source of these numbers (calibrated server-side); never hard-code.
       if(rows && difficulty >= 1 && difficulty <= rows.length) return int(rows[difficulty - 1].retries);
-      return [20,20,18,18,16,16,14,14,12,10][Math.max(0,Math.min(9,difficulty - 1))];
+      return -1;
    }
 
    public static function enemyMultiplier(difficulty:int) : Number
    {
       var rows:Array = cfg().difficulties as Array;
       if(rows && difficulty >= 1 && difficulty <= rows.length) return Number(rows[difficulty - 1].multiplier);
-      return [1,1.08,1.16,1.25,1.35,1.45,1.56,1.68,1.81,1.95][Math.max(0,Math.min(9,difficulty - 1))];
+      return NaN;
    }
 
    // Same formula as the server: act base rate scaled linearly to double at difficulty 10.
@@ -363,6 +364,12 @@ class AbyssCore104
    {
       var base:Number = [0.2,0.3,0.5][act - 1];
       return Math.min(1,base * (1 + (difficulty - 1) / 9));
+   }
+
+   public static function retriesText(difficulty:int) : String
+   {
+      var total:int = retriesTotal(difficulty);
+      return total < 0 ? "—" : String(total);
    }
 
    public static function percent(value:Number) : String
@@ -407,7 +414,7 @@ class AbyssCore104
          "id":id,
          "aid":aid,
          "base_aid":aid,
-         "lv":125,
+         "lv":cfg().level ? int(cfg().level) : 99,
          "slv":slv,
          "exp":0,
          "hp":0,
@@ -667,7 +674,7 @@ class AbyssCore104
       var r:Object = run;
       var total:int = retriesTotal(int(r.difficulty));
       open(new AbyssConfirmPanel104("战斗失败",[
-         "已消耗 1 次重打机会，剩余 " + int(r.retries) + "/" + total + " 次。",
+         "已消耗 1 次重打机会，剩余 " + int(r.retries) + "/" + AbyssCore104.retriesText(int(r.difficulty)) + " 次。",
          "敌人不变，可以调整阵容和站位后再次挑战。",
          int(r.retries) == 0 ? "重打次数已用完：下一场战斗再失败，本局即失败。" : ""
       ],"放弃本局",confirmAbandon,"调整布阵",function():void
@@ -1077,7 +1084,8 @@ class AbyssEntryPanel104 extends AbyssPanel104
          if(difficulty < maxD) { difficulty++; refresh(); }
       },!active && difficulty < maxD);
       y += 70;
-      addText("敌人强度 ×" + AbyssCore104.enemyMultiplier(difficulty).toFixed(2) + "　重打次数 " + AbyssCore104.retriesTotal(difficulty),lx + 30,y,iw - 60,28,20,AbyssCore104.COLOR_TEXT,"center");
+      var mult:Number = AbyssCore104.enemyMultiplier(difficulty);
+      addText("敌人强度 ×" + (isNaN(mult) ? "—" : mult.toFixed(2)) + "　重打次数 " + AbyssCore104.retriesText(difficulty),lx + 30,y,iw - 60,28,20,AbyssCore104.COLOR_TEXT,"center");
       y += 30;
       addText("Boss 掉落深渊遗物：第1幕 " + AbyssCore104.percent(AbyssCore104.bossRate(difficulty,1)) + " · 第2幕 " + AbyssCore104.percent(AbyssCore104.bossRate(difficulty,2)) + " · 第3幕 " + AbyssCore104.percent(AbyssCore104.bossRate(difficulty,3)),lx + 20,y,iw - 40,28,17,AbyssCore104.COLOR_TEXT,"center");
       y += 26;
@@ -1168,7 +1176,7 @@ class AbyssMapPanel104 extends AbyssPanel104
       if(!r) return;
       var act:int = currentAct(r);
       var total:int = AbyssCore104.retriesTotal(int(r.difficulty));
-      addText("第" + act + "幕　剩余重打 " + int(r.retries) + "/" + total + "　阵容池 " + AbyssCore104.poolCount() + "/" + AbyssCore104.poolCap(),lx + 20,88,iw - 40,30,21,AbyssCore104.COLOR_TITLE,"center");
+      addText("第" + act + "幕　剩余重打 " + int(r.retries) + "/" + AbyssCore104.retriesText(int(r.difficulty)) + "　阵容池 " + AbyssCore104.poolCount() + "/" + AbyssCore104.poolCap(),lx + 20,88,iw - 40,30,21,AbyssCore104.COLOR_TITLE,"center");
       var top:Number = 124;
       var bottom:Number = by - 100;
       var areaW:Number = iw - 40;
@@ -1932,7 +1940,7 @@ class AbyssResultPanel104 extends AbyssPanel104
       var acc:Object = AbyssCore104.account;
       var y:Number = 90;
       var total:int = AbyssCore104.retriesTotal(int(r.difficulty));
-      addText("难度 " + int(r.difficulty) + "　剩余重打 " + int(r.retries) + "/" + total,lx + 20,y,iw - 40,28,22,AbyssCore104.COLOR_TITLE,"center");
+      addText("难度 " + int(r.difficulty) + "　剩余重打 " + int(r.retries) + "/" + AbyssCore104.retriesText(int(r.difficulty)),lx + 20,y,iw - 40,28,22,AbyssCore104.COLOR_TITLE,"center");
       y += 34;
       var unlockText:Array = [];
       var orangeNow:Array = AbyssCore104.unlocked.orange as Array;

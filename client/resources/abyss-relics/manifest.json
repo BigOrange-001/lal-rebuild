@@ -1,0 +1,255 @@
+{
+  "schema": 1,
+  "atlas": [
+    512,
+    512
+  ],
+  "icon": [
+    92,
+    93
+  ],
+  "frame": "native Equip.createRainbowFrame104 (48 frames, 20 fps)",
+  "argb_sha256": "cddf7b7305be6484f7b9fbfe716eeb2f358762c97c86443a61d183dc67524b21",
+  "icons": [
+    {
+      "relic_id": 1,
+      "name": "不灭圣盾",
+      "file": "abyss_relic_01.png",
+      "sha256": "75ee2f28f047d0a8d2d73cd8b357cb07ec56f361f632c8a767723cef675e0939",
+      "region": [
+        0,
+        0,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 2,
+      "name": "先声夺人",
+      "file": "abyss_relic_02.png",
+      "sha256": "2e7462f991c00ba567aa7ef00df55736760c494bee0ad4404fba6dad021a1ce5",
+      "region": [
+        100,
+        0,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 3,
+      "name": "坚守誓约",
+      "file": "abyss_relic_03.png",
+      "sha256": "2c2fed2ade47654029e0af32a4f77183ca9bf4ac95c5e822540cead78dd37dc7",
+      "region": [
+        200,
+        0,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 4,
+      "name": "复苏之羽",
+      "file": "abyss_relic_04.png",
+      "sha256": "b2ef35089b0ee264e189294515ee53136fc9ab5142348a9f0a4af9e55642c503",
+      "region": [
+        300,
+        0,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 5,
+      "name": "荆棘之躯",
+      "file": "abyss_relic_05.png",
+      "sha256": "0dedc1d70903a22953a28978fe26e464f0a4269515cb45df2af1581361357feb",
+      "region": [
+        400,
+        0,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 6,
+      "name": "疾风步",
+      "file": "abyss_relic_06.png",
+      "sha256": "61881cff3b1a09c98038e7d739ff8518255fb2a54b66c4700d4882288ed36b5d",
+      "region": [
+        0,
+        100,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 7,
+      "name": "嗜血",
+      "file": "abyss_relic_07.png",
+      "sha256": "49d202a32769d85c071178e6211e387787bfacc417c6e3fde4461aa6ce16adba",
+      "region": [
+        100,
+        100,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 8,
+      "name": "破军",
+      "file": "abyss_relic_08.png",
+      "sha256": "f7f026808499d0c8f7d8d0db4b0a6a290e5bf4a264c58ed1667c3e8d925e8e11",
+      "region": [
+        200,
+        100,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 9,
+      "name": "斩首",
+      "file": "abyss_relic_09.png",
+      "sha256": "223bb5877144a2aca5c8916b4abbcb072afaee09cdaa004a43aa70ce9d8b608a",
+      "region": [
+        300,
+        100,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 10,
+      "name": "余烬",
+      "file": "abyss_relic_10.png",
+      "sha256": "7150dc1a12e17688b0b57d1a28b9f9a1de480e9e0232cde856a86cd23bfd1298",
+      "region": [
+        400,
+        100,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 11,
+      "name": "剧毒",
+      "file": "abyss_relic_11.png",
+      "sha256": "0e8967b4d4f6be32d530de427a9d297bed9b5aab47d6be3d25f4ee74da830cf5",
+      "region": [
+        0,
+        200,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 12,
+      "name": "碎盾",
+      "file": "abyss_relic_12.png",
+      "sha256": "fe4f4b0612d7b6f130fa54359243eb38b762153f99a3bb73e5921e291922e796",
+      "region": [
+        100,
+        200,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 13,
+      "name": "寒霜",
+      "file": "abyss_relic_13.png",
+      "sha256": "e63bc9d9e23ac8e0371c9b60a8f3e19dcff16e2264da3b7eb3bc55dc647eedbe",
+      "region": [
+        200,
+        200,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 14,
+      "name": "圣佑",
+      "file": "abyss_relic_14.png",
+      "sha256": "ae8c75afaacf75d6742edf749cc2dd128bf00e591c6d9d420038b3fd7de66c50",
+      "region": [
+        300,
+        200,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 15,
+      "name": "坚城",
+      "file": "abyss_relic_15.png",
+      "sha256": "94e9175c2cfeddf9ff228f8f07608fd1c9a9e01b912867d02e8ac51e44893264",
+      "region": [
+        400,
+        200,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 16,
+      "name": "统御",
+      "file": "abyss_relic_16.png",
+      "sha256": "865f8fc30e98149781bd0b597c90caa89694986783c5bac80096a7d93d85b7c0",
+      "region": [
+        0,
+        300,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 17,
+      "name": "同心",
+      "file": "abyss_relic_17.png",
+      "sha256": "7bcd1f5e23a5c7dfd59244af44fd2ff2cf9acc72ac4f439289d44036101606a7",
+      "region": [
+        100,
+        300,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 18,
+      "name": "召唤契约",
+      "file": "abyss_relic_18.png",
+      "sha256": "73eb06356a9485c93e5f73b580d27e091abf693659c4514c558d58eb85418c2d",
+      "region": [
+        200,
+        300,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 19,
+      "name": "时之沙",
+      "file": "abyss_relic_19.png",
+      "sha256": "9fb36c2334fc28494dd733846d50b89edd681873b7ce5fbd43ae8f0930ed1fb4",
+      "region": [
+        300,
+        300,
+        92,
+        93
+      ]
+    },
+    {
+      "relic_id": 20,
+      "name": "真理之刃",
+      "file": "abyss_relic_20.png",
+      "sha256": "f89a4cd4dab0eb66f22c8d14b3a9443fb5172a7d9414677ee95c8a2ac2dd2a1f",
+      "region": [
+        400,
+        300,
+        92,
+        93
+      ]
+    }
+  ]
+}

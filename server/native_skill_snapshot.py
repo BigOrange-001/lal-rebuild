@@ -91,6 +91,8 @@ def _native_skill_snapshot(config, skill_id, level=1):
         "equipment_source_skill_104": row.get("equipment_source_skill_104"),
         "chainDot": copy.deepcopy(row.get("chainDot")),
     }
+    if row.get('abyss_relic_A'):
+        result['abyss_relic_A'] = copy.deepcopy(row['abyss_relic_A'])
     settings = {key: rank_native_setting(row, key, level)
                 for key in row.get('rankSettingGrowth104', {})}
     if settings:

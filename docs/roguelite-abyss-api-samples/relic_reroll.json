@@ -1,0 +1,971 @@
+{
+  "request": {
+    "method": "user.abyss_relic_reroll",
+    "params": {
+      "actionID": "fixture-77",
+      "item_id": "relic-504c5b32ce29b6e72d376865",
+      "material_id": "relic-1dc675c52848a74b83618b9a"
+    }
+  },
+  "response": {
+    "abyss_relics": {
+      "relic-504c5b32ce29b6e72d376865": {
+        "id": "relic-504c5b32ce29b6e72d376865",
+        "type": "relic",
+        "relic_id": 16,
+        "name": "统御",
+        "main": {
+          "id": 16,
+          "ancient": false,
+          "value": 0.06,
+          "shield_rate": 0,
+          "duration": 0,
+          "per_round": 0,
+          "threshold": 0,
+          "text": "作为队长时，全队攻击提高6%。"
+        },
+        "substats": [
+          {
+            "stat": "crit",
+            "value": 0.468949,
+            "ancient": false,
+            "text": "暴击+46.8949%"
+          },
+          {
+            "stat": "de_ph",
+            "value": 0.15,
+            "ancient": true,
+            "text": "*物防+15%"
+          },
+          {
+            "stat": "tough",
+            "value": 0.206026,
+            "ancient": false,
+            "text": "韧性+20.6026%"
+          }
+        ],
+        "schema": 1
+      }
+    },
+    "as_equips": [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "relic-504c5b32ce29b6e72d376865"
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
+    "abyss_account": {
+      "schema": 1,
+      "obtained": [
+        "A_1001_3",
+        "A_1002_3",
+        "A_1003_3",
+        "A_1004_3",
+        "A_1005_3"
+      ],
+      "appeared": [
+        "A_1001_5",
+        "A_1004_5",
+        "A_1007_5",
+        "A_1009_5",
+        "A_1012_5"
+      ],
+      "cleared": [
+        1
+      ],
+      "max_difficulty": 2,
+      "decks": [
+        "blade",
+        "flame",
+        "venom"
+      ]
+    },
+    "abyss_run": {
+      "id": "ba323024194dc8e2f788523c",
+      "status": "cleared",
+      "seed": 20261116,
+      "difficulty": 1,
+      "deck": "blade",
+      "map": [
+        {
+          "id": "1-1-0",
+          "act": 1,
+          "layer": 1,
+          "type": "weak",
+          "next": [
+            "1-2-0",
+            "1-2-1",
+            "1-2-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "1-1-1",
+          "act": 1,
+          "layer": 1,
+          "type": "weak",
+          "next": [
+            "1-2-0",
+            "1-2-1",
+            "1-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-1-2",
+          "act": 1,
+          "layer": 1,
+          "type": "weak",
+          "next": [
+            "1-2-0",
+            "1-2-1",
+            "1-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-2-0",
+          "act": 1,
+          "layer": 2,
+          "type": "weak",
+          "next": [
+            "1-3-0",
+            "1-3-1",
+            "1-3-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "1-2-1",
+          "act": 1,
+          "layer": 2,
+          "type": "weak",
+          "next": [
+            "1-3-0",
+            "1-3-1",
+            "1-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-2-2",
+          "act": 1,
+          "layer": 2,
+          "type": "weak",
+          "next": [
+            "1-3-0",
+            "1-3-1",
+            "1-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-3-0",
+          "act": 1,
+          "layer": 3,
+          "type": "weak",
+          "next": [
+            "1-4-0",
+            "1-4-1",
+            "1-4-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "1-3-1",
+          "act": 1,
+          "layer": 3,
+          "type": "weak",
+          "next": [
+            "1-4-0",
+            "1-4-1",
+            "1-4-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-3-2",
+          "act": 1,
+          "layer": 3,
+          "type": "weak",
+          "next": [
+            "1-4-0",
+            "1-4-1",
+            "1-4-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-4-0",
+          "act": 1,
+          "layer": 4,
+          "type": "rest",
+          "next": [
+            "1-5-0",
+            "1-5-1",
+            "1-5-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "1-4-1",
+          "act": 1,
+          "layer": 4,
+          "type": "rest",
+          "next": [
+            "1-5-0",
+            "1-5-1",
+            "1-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-4-2",
+          "act": 1,
+          "layer": 4,
+          "type": "rest",
+          "next": [
+            "1-5-0",
+            "1-5-1",
+            "1-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-5-0",
+          "act": 1,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "1-6-0",
+            "1-6-1",
+            "1-6-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "1-5-1",
+          "act": 1,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "1-6-0",
+            "1-6-1",
+            "1-6-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-5-2",
+          "act": 1,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "1-6-0",
+            "1-6-1",
+            "1-6-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-6-0",
+          "act": 1,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "1-7-0"
+          ],
+          "completed": true
+        },
+        {
+          "id": "1-6-1",
+          "act": 1,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "1-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-6-2",
+          "act": 1,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "1-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-7-0",
+          "act": 1,
+          "layer": 7,
+          "type": "boss",
+          "next": [
+            "2-1-0",
+            "2-1-1",
+            "2-1-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "2-1-0",
+          "act": 2,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "2-2-0",
+            "2-2-1",
+            "2-2-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "2-1-1",
+          "act": 2,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "2-2-0",
+            "2-2-1",
+            "2-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-1-2",
+          "act": 2,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "2-2-0",
+            "2-2-1",
+            "2-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-2-0",
+          "act": 2,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "2-3-0",
+            "2-3-1",
+            "2-3-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "2-2-1",
+          "act": 2,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "2-3-0",
+            "2-3-1",
+            "2-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-2-2",
+          "act": 2,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "2-3-0",
+            "2-3-1",
+            "2-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-3-0",
+          "act": 2,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "2-4-0",
+            "2-4-1"
+          ],
+          "completed": true
+        },
+        {
+          "id": "2-3-1",
+          "act": 2,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "2-4-0",
+            "2-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-3-2",
+          "act": 2,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "2-4-0",
+            "2-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-4-0",
+          "act": 2,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "2-5-0",
+            "2-5-1",
+            "2-5-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "2-4-1",
+          "act": 2,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "2-5-0",
+            "2-5-1",
+            "2-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-5-0",
+          "act": 2,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "2-6-0",
+            "2-6-1"
+          ],
+          "completed": true
+        },
+        {
+          "id": "2-5-1",
+          "act": 2,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "2-6-0",
+            "2-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-5-2",
+          "act": 2,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "2-6-0",
+            "2-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-6-0",
+          "act": 2,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "2-7-0"
+          ],
+          "completed": true
+        },
+        {
+          "id": "2-6-1",
+          "act": 2,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "2-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-7-0",
+          "act": 2,
+          "layer": 7,
+          "type": "boss",
+          "next": [
+            "3-1-0",
+            "3-1-1"
+          ],
+          "completed": true
+        },
+        {
+          "id": "3-1-0",
+          "act": 3,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "3-2-0",
+            "3-2-1"
+          ],
+          "completed": true
+        },
+        {
+          "id": "3-1-1",
+          "act": 3,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "3-2-0",
+            "3-2-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-2-0",
+          "act": 3,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "3-3-0",
+            "3-3-1"
+          ],
+          "completed": true
+        },
+        {
+          "id": "3-2-1",
+          "act": 3,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "3-3-0",
+            "3-3-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-3-0",
+          "act": 3,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "3-4-0",
+            "3-4-1"
+          ],
+          "completed": true
+        },
+        {
+          "id": "3-3-1",
+          "act": 3,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "3-4-0",
+            "3-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-4-0",
+          "act": 3,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "3-5-0",
+            "3-5-1",
+            "3-5-2"
+          ],
+          "completed": true
+        },
+        {
+          "id": "3-4-1",
+          "act": 3,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "3-5-0",
+            "3-5-1",
+            "3-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-5-0",
+          "act": 3,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "3-6-0",
+            "3-6-1"
+          ],
+          "completed": true
+        },
+        {
+          "id": "3-5-1",
+          "act": 3,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "3-6-0",
+            "3-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-5-2",
+          "act": 3,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "3-6-0",
+            "3-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-6-0",
+          "act": 3,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "3-7-0"
+          ],
+          "completed": true
+        },
+        {
+          "id": "3-6-1",
+          "act": 3,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "3-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-7-0",
+          "act": 3,
+          "layer": 7,
+          "type": "boss",
+          "next": [],
+          "completed": true
+        }
+      ],
+      "current_node": "3-7-0",
+      "available_nodes": [],
+      "pool": {
+        "A_1001": {
+          "id": "A_1001",
+          "aid": "A_1001_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 10,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1007": {
+          "id": "A_1007",
+          "aid": "A_1007_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 10,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1004": {
+          "id": "A_1004",
+          "aid": "A_1004_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 10,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1009": {
+          "id": "A_1009",
+          "aid": "A_1009_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1012": {
+          "id": "A_1012",
+          "aid": "A_1012_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1029": {
+          "id": "A_1029",
+          "aid": "A_1029_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1060": {
+          "id": "A_1060",
+          "aid": "A_1060_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1040": {
+          "id": "A_1040",
+          "aid": "A_1040_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1005": {
+          "id": "A_1005",
+          "aid": "A_1005_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1073": {
+          "id": "A_1073",
+          "aid": "A_1073_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1036": {
+          "id": "A_1036",
+          "aid": "A_1036_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1020": {
+          "id": "A_1020",
+          "aid": "A_1020_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1006": {
+          "id": "A_1006",
+          "aid": "A_1006_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1019": {
+          "id": "A_1019",
+          "aid": "A_1019_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1082": {
+          "id": "A_1082",
+          "aid": "A_1082_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1063": {
+          "id": "A_1063",
+          "aid": "A_1063_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1008": {
+          "id": "A_1008",
+          "aid": "A_1008_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1016": {
+          "id": "A_1016",
+          "aid": "A_1016_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1003": {
+          "id": "A_1003",
+          "aid": "A_1003_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1033": {
+          "id": "A_1033",
+          "aid": "A_1033_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        }
+      },
+      "retries": 19,
+      "pending_choice": null,
+      "battle": null,
+      "rewards": [
+        {
+          "node_id": "3-7-0",
+          "item_id": "relic-504c5b32ce29b6e72d376865",
+          "guaranteed": false
+        },
+        {
+          "node_id": "3-7-0",
+          "item_id": "relic-1dc675c52848a74b83618b9a",
+          "guaranteed": true
+        }
+      ],
+      "attempt": 19
+    },
+    "unlocked": {
+      "purple": [
+        "A_1001_5",
+        "A_1002_5",
+        "A_1003_5",
+        "A_1004_5",
+        "A_1005_5",
+        "A_1006_5",
+        "A_1007_5",
+        "A_1008_5",
+        "A_1009_5",
+        "A_1010_5",
+        "A_1011_5",
+        "A_1012_5",
+        "A_1013_5",
+        "A_1014_5",
+        "A_1015_5",
+        "A_1016_5",
+        "A_1017_5",
+        "A_1018_5",
+        "A_1019_5",
+        "A_1020_5",
+        "A_1021_5",
+        "A_1022_5",
+        "A_1023_5",
+        "A_1024_5",
+        "A_1025_5",
+        "A_1026_5",
+        "A_1027_5",
+        "A_1028_5",
+        "A_1029_5",
+        "A_1030_5",
+        "A_1032_5",
+        "A_1033_5",
+        "A_1036_5",
+        "A_1040_5",
+        "A_1041_5",
+        "A_1045_5",
+        "A_1049_5",
+        "A_1052_5",
+        "A_1053_5",
+        "A_1054_5",
+        "A_1056_5",
+        "A_1060_5",
+        "A_1063_5",
+        "A_1068_5",
+        "A_1071_5",
+        "A_1073_5",
+        "A_1077_5",
+        "A_1082_5",
+        "A_1085_5",
+        "A_1094_5"
+      ],
+      "orange": [
+        "A_1001_6",
+        "A_1004_6",
+        "A_1007_6",
+        "A_1009_6",
+        "A_1012_6"
+      ],
+      "standalone_orange": []
+    },
+    "replayed": false
+  }
+}

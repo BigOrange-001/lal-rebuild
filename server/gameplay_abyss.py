@@ -10,16 +10,18 @@ from roguelite_abyss import (rules, normalize_account, unlocked_pool, hero_recor
 
 class GameplayAbyss:
     METHODS = {'user.abyss_'+name for name in
-               ('query','start','route','combat','finish','choose','skip','rest','abandon')}
+               ('query','start','route','combat','finish','choose','skip','rest','abandon',
+                'relics','relic_equip','relic_unequip','relic_reroll')}
 
     def __init__(self, store, config):
         self.store, self.config = store, config
         self.cfg = config.get('cfg', config)
 
     def response(self, profile):
+        from abyss_relics import relic_response
         account = normalize_account(profile, self.cfg)
         purple, orange, standalone = unlocked_pool(profile, self.cfg)
-        return {'abyss_account':copy.deepcopy(account),
+        return {**relic_response(profile),'abyss_account':copy.deepcopy(account),
                 'abyss_run':public_run(profile.get('abyss_run'),profile,self.cfg),
                 'unlocked':{'purple':purple,'orange':orange,'standalone_orange':standalone}}
 
@@ -41,6 +43,9 @@ class GameplayAbyss:
         return {**data, 'replayed':replayed}
 
     def _mutate(self, p, method, x):
+        if method.startswith('user.abyss_relic'):
+            from abyss_relics import mutate_relic
+            return mutate_relic(p,method,x,self.cfg)
         if method == 'user.abyss_query':
             return {}
         if method == 'user.abyss_start':

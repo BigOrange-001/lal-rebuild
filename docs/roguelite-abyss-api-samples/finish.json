@@ -3,10 +3,10 @@
     "method": "user.abyss_finish",
     "params": {
       "actionID": "fixture-5",
-      "fight_id": "ZWH2yNxrLX3GQiZqRtIT6OZA",
+      "fight_id": "eOYSiQuDvkhT0P8ZIABOGcpB",
       "fight_kind": "abyss",
       "metadata": {
-        "run_id": "ed5d1c1cf4b97afd78f41ec6",
+        "run_id": "ba323024194dc8e2f788523c",
         "node_id": "1-1-0"
       },
       "sign": 2,
@@ -14,6 +14,63 @@
     }
   },
   "response": {
+    "abyss_relics": {},
+    "as_equips": [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
     "abyss_account": {
       "schema": 1,
       "obtained": [
@@ -38,7 +95,7 @@
       ]
     },
     "abyss_run": {
-      "id": "ed5d1c1cf4b97afd78f41ec6",
+      "id": "ba323024194dc8e2f788523c",
       "status": "active",
       "seed": 20261116,
       "difficulty": 1,
@@ -729,7 +786,7 @@
       "standalone_orange": []
     },
     "sign": 2,
-    "fight_id": "ZWH2yNxrLX3GQiZqRtIT6OZA",
+    "fight_id": "eOYSiQuDvkhT0P8ZIABOGcpB",
     "fight_kind": "abyss",
     "replayed": false
   }

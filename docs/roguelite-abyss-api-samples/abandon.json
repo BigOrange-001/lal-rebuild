@@ -2,10 +2,105 @@
   "request": {
     "method": "user.abyss_abandon",
     "params": {
-      "actionID": "fixture-76"
+      "actionID": "fixture-80"
     }
   },
   "response": {
+    "abyss_relics": {
+      "relic-504c5b32ce29b6e72d376865": {
+        "id": "relic-504c5b32ce29b6e72d376865",
+        "type": "relic",
+        "relic_id": 16,
+        "name": "统御",
+        "main": {
+          "id": 16,
+          "ancient": false,
+          "value": 0.06,
+          "shield_rate": 0,
+          "duration": 0,
+          "per_round": 0,
+          "threshold": 0,
+          "text": "作为队长时，全队攻击提高6%。"
+        },
+        "substats": [
+          {
+            "stat": "crit",
+            "value": 0.468949,
+            "ancient": false,
+            "text": "暴击+46.8949%"
+          },
+          {
+            "stat": "de_ph",
+            "value": 0.15,
+            "ancient": true,
+            "text": "*物防+15%"
+          },
+          {
+            "stat": "tough",
+            "value": 0.206026,
+            "ancient": false,
+            "text": "韧性+20.6026%"
+          }
+        ],
+        "schema": 1
+      }
+    },
+    "as_equips": [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
     "abyss_account": {
       "schema": 1,
       "obtained": [
@@ -33,7 +128,7 @@
       ]
     },
     "abyss_run": {
-      "id": "4e76a1114c8dca72952702d7",
+      "id": "a1c55065a71563ec37ae5ff8",
       "status": "abandoned",
       "seed": 20261117,
       "difficulty": 2,

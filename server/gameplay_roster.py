@@ -737,11 +737,13 @@ class GameplayRosterEquipment:
         return row
 
     def _team_response(self, p):
+        from abyss_relics import normalize_relic_slots
+        normalize_relic_slots(p)
         groups = p.setdefault("as_equips", [[] for _ in range(6)])
         while len(groups) < 6: groups.append([])
         for i in range(6):
             if not isinstance(groups[i], list): groups[i] = []
-            groups[i] = (groups[i] + [None] * 6)[:6]
+            groups[i] = (groups[i] + [None] * 7)[:7]
         teams = p.setdefault("team", [[], [], []])
         if not isinstance(teams, list): teams = []
         normalized = []
@@ -1172,11 +1174,19 @@ class GameplayRosterEquipment:
             return {"team": norm, "attrs": p["attrs"], "dn": dn}
         if m == "user.equip_dress":
             data = x.get("data")
-            if not isinstance(data, list) or len(data) != 6 or any(not isinstance(row, list) or len(row) != 6 for row in data): self._fail("InvalidEquipmentGroup", "Expected six squads with six equipment slots")
+            if not isinstance(data, list) or len(data) != 6 or any(not isinstance(row, list) or len(row) not in (6,7) for row in data): self._fail("InvalidEquipmentGroup", "Expected six squads with six or seven equipment slots")
+            from abyss_relics import normalize_relic_slots
+            normalize_relic_slots(p)
+            data = [list(row) + ([p['as_equips'][i][6]] if len(row)==6 else []) for i,row in enumerate(data)]
             seen = set()
             for si, row in enumerate(data):
                 for slot, eqid in enumerate(row):
                     if eqid in (None, ""): continue
+                    if slot==6:
+                        if not isinstance(eqid,str) or eqid not in p.get('abyss_relics',{}): self._fail('AbyssUnknownRelic','该圣遗物不存在。')
+                        if eqid in seen: self._fail('EquipmentInUse','该圣遗物已在其他阵位穿戴。')
+                        seen.add(eqid)
+                        continue
                     eqid = self._id(eqid, "equipment instance")
                     eq, item = self._equip(p, eqid)
                     if eq in seen: self._fail("EquipmentInUse", "An item cannot be equipped in two slots")
@@ -2519,6 +2529,19 @@ class GameplayRosterEquipment:
         skill0=equipment_skill(skill0,max(1,int(hero.get('slv',1))))
         skill1=equipment_skill(skill1)
         skillb=equipment_skill(skillb)
+        from abyss_relics import equipped_relic, apply_panel, A_TYPES, variant_id
+        relic = None if hero_only else equipped_relic(profile,slot)
+        if relic:
+            delta = apply_panel(stats,relic)
+            effect = copy.deepcopy(relic['main'])
+            stats['equip_passives'] = [] if relic['relic_id'] in A_TYPES else [effect]
+            stats['relic_contribution'] = {'item_id':relic['id'],'stats':delta,
+                'main_power_rate':self.simple.get('abyss_relic_main_power_rate',.15)*(1.25 if effect['ancient'] else 1)}
+            if relic['relic_id'] in A_TYPES and skill0:
+                source = skill0['skid']
+                sid = variant_id(source,relic['relic_id'],effect['ancient'])
+                if sid not in self.skills: self._fail('InvalidConfig','圣遗物技能变体不存在。')
+                skill0 = self._skill(sid,max(1,int(hero.get('slv',1))))
         return {"aid": aid, **stats, "growth_stats_applied": True, "hp_max": stats["hp"], "sign_type": int(tl[0]), "action_type": int(tl[1]), "damage_type": int(tl[2]), "skill": skill0, "leader_skill": skill1, "book_skill": book_skill, "skillB": skillb, "talent": talent_id, "phase": phase, "morph": int(hero.get("morph", 0)), "lv": lv, "slv": int(hero.get("slv", 1)), "culture_schema": hero.get("culture_schema") if weighted_hero else None, "tpl": [int(tl[i]) for i in (0, 1, 2)] + [stats["speed"], stats["range"]]}
 
     def _skill(self, skill_id, level=1):

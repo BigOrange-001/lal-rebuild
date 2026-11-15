@@ -174,6 +174,8 @@ def load_game_config(path, now=None):
  apply_player_copy_104(document)
  from roguelite_abyss import apply_abyss_config
  apply_abyss_config(document)
+ from abyss_relics import apply_relic_config
+ apply_relic_config(document)
  apply_check_in_rewards(document,int(game_day(now)[:4]))
  from game_calendar import apply_daily_reset_config
  apply_daily_reset_config(document)

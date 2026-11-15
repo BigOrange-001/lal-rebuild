@@ -521,6 +521,34 @@
       "pool_size": 20
     },
     {
+      "method": "user.abyss_relics",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 20
+    },
+    {
+      "method": "user.abyss_relic_equip",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 20
+    },
+    {
+      "method": "user.abyss_relic_reroll",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 20
+    },
+    {
+      "method": "user.abyss_relic_unequip",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 20
+    },
+    {
       "method": "user.abyss_start",
       "status": "active",
       "node": null,
@@ -539,13 +567,13 @@
   "rewards": [
     {
       "node_id": "3-7-0",
-      "index": 0,
-      "pending_relic": true
+      "item_id": "relic-504c5b32ce29b6e72d376865",
+      "guaranteed": false
     },
     {
       "node_id": "3-7-0",
-      "index": 1,
-      "pending_relic": true
+      "item_id": "relic-1dc675c52848a74b83618b9a",
+      "guaranteed": true
     }
   ]
 }

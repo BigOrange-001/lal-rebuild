@@ -6,6 +6,63 @@
     }
   },
   "response": {
+    "abyss_relics": {},
+    "as_equips": [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
     "abyss_account": {
       "schema": 1,
       "obtained": [
@@ -30,7 +87,7 @@
       ]
     },
     "abyss_run": {
-      "id": "ed5d1c1cf4b97afd78f41ec6",
+      "id": "ba323024194dc8e2f788523c",
       "status": "active",
       "seed": 20261116,
       "difficulty": 1,

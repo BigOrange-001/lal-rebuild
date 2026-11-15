@@ -99,3 +99,48 @@ teams 可省略；填写时只作诊断，单队至多30个对象，每个对象
 8. 重打、放弃确认与奖励保留说明：retries、abandon、rewards。
 
 客户端界面、客户端战斗结算和双端一致性均未验证。阶段2/3在下文追加圣遗物协议及被动规格。
+
+## 圣遗物协议（阶段2）
+
+所有 abyss 方法额外返回 `abyss_relics`（id 到物品对象的字典）和 `as_equips`（6个阵位，每阵位7格）。
+第7格为 `as_equips[阵位][6]`，存圣遗物实例 id，空格为 null。前6格继续存 my_equips 的 id，圣遗物物品单独存 abyss_relics，不能通过普通装备出售/炼金接口操作。
+加载旧6格存档时只追加 null；重复加载不重复追加。旧 user.equip_dress 的6格请求保留第7格；新7格请求能同时设置完整装备，并校验所有圣遗物归属与唯一占位。
+所有预设继续使用现有的“阵位装备”语义；不是按预设复制多件装备。
+
+物品完整例子（具体随机结果见 [relics.json](roguelite-abyss-api-samples/relics.json)）：
+
+```json
+{"id":"relic-实例id","type":"relic","relic_id":1,"name":"不灭圣盾","schema":1,
+ "main":{"id":1,"ancient":false,"value":1,"shield_rate":0,"duration":3,"per_round":0,"threshold":0,"text":"登场时获得100%生命上限的护盾，持续3回合。"},
+ "substats":[{"stat":"hp","value":0.1,"ancient":false,"text":"生命+10%"},
+             {"stat":"ap","value":0.08,"ancient":false,"text":"攻击+8%"},
+             {"stat":"tough","value":0.625,"ancient":true,"text":"*韧性+62.5%"}]}
+```
+
+副词条 value 为比例，对当次全部已有面板乘算，四属性为零时百分比仍为零。三条 stat 不重复。
+主、副词条各独立7%太古概率；太古副词条取上限1.25倍，普通值均匀抽取；主词条太古状态在生成后固定。
+#19始终 ancient=false。主词条的 value 仅为效果幅度；#12 value 为护盾额外倍率（普通1，即最终2倍，太古1.5，即最终2.5倍），以设计稿明确的2.5倍为准。
+客户端直接显示 text，不自行拼效果文字；ancient=true 时 text 以 * 开头，另按专用太古颜色渲染。文本只描述实际效果。
+
+| 方法 | 请求（除actionID） | 结果与状态变更 | 完整真实样例 |
+| --- | --- | --- | --- |
+| user.abyss_relics | {} | 查询背包和穿戴，初始化旧格位；同键重放 | [relics.json](roguelite-abyss-api-samples/relics.json) |
+| user.abyss_relic_equip | {item_id,slot:0至5} | 穿到该阵位第7格，原件回背包；同键重放 | [relic_equip.json](roguelite-abyss-api-samples/relic_equip.json) |
+| user.abyss_relic_unequip | {item_id} | 卸下此件；已卸下也成功；同键重放 | [relic_unequip.json](roguelite-abyss-api-samples/relic_unequip.json) |
+| user.abyss_relic_reroll | {item_id,material_id} | 消耗另一件未穿戴圣遗物，重抽3副词条和各自太古标记，主词条不变，无其他资源消耗；同键重放相同结果且不再消耗 | [relic_reroll.json](roguelite-abyss-api-samples/relic_reroll.json) |
+
+新增错误：AbyssUnknownRelic（除relics外：无效/非本人item_id）、AbyssInvalidRelicSlot（equip：非整数或不在0～5）、AbyssInvalidRelicMaterial（reroll：材料不存在或与目标同件）、EquipmentInUse（equip：其他阵位已穿；reroll：材料未卸下）。事务和重放共通错误同上。
+这些接口不需要有 active 局，不改变本局池/地图。Boss奖励在结算事务中直接入背包，通关最后发额外保底，失败/放弃不回收；同凭证不重复发。
+
+面板 battle_attributes 额外包含 `relic_contribution:{item_id,stats:{hp,ap,de_ph,de_ma,hit,flee,crit,tough},main_power_rate}`，stats 为副词条产生的实际面板增量，main_power_rate 为主词条计入战力的独立预算。
+战斗快照透传 `relic_contribution` 与 `equip_passives`；后者为B类主词条列表，不覆盖 skillB。
+A类小技能映射到配置中预生成变体（包含全部现有英雄/装备羁绊变体），snapshot.skill.abyss_relic_A 描述该附加效果，原动作和等级成长保持不变。
+装备不参与深渊标准化快照，因此本模式完全不生效。前端的面板和战力必须按同一字段排除深渊装备贡献。
+
+### 追加前端待办
+
+9. 圣遗物背包、详情、对比与太古专用颜色：abyss_relics、main/substats.text/ancient。
+10. 第7格穿脱、旧6格保存兼容：as_equips[*][6] 和 relic_equip/unequip。
+11. 重随材料选择和消耗提示：relic_reroll，材料必须未穿戴且与目标不同。
+12. 面板/战力同步展示与模式排除：relic_contribution，深渊直接使用标准化战斗快照。
+13. A类新效果钩子：skill.abyss_relic_A。现有客户端没有“仅普通技能命中”的统一效果钩子；仅加载变体元数据不会自动生效，须按下一阶段被动规格接入所有原生、手写和延迟命中通道。

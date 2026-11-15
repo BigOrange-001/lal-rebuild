@@ -330,6 +330,7 @@ class GameplayCompetition:
             slv=max(1,int(unit.get("slv",1) or 1))
             book=unit.get("book_skill")
             multiplier=1.0+skill_factor(unit.get("skill"),level=slv)+skill_factor(unit.get("leader_skill"),True)+skill_factor(book,book=True,level=book.get("slv",1) if isinstance(book,dict) else 1)+skill_factor(unit.get("skillB"))
+            multiplier += max(0,number((unit.get('relic_contribution') or {}).get('main_power_rate',0)))
             weighted=hp*float(power_cfg[1])+ap*float(power_cfg[2])+de_ph*float(power_cfg[3])+de_ma*float(power_cfg[4])
             stat_multiplier=1.0+math.pow(max(0.0,substats),1.0/float(power_cfg[10]))*float(power_cfg[9]) if float(power_cfg[10])>0 else 1.0
             value=(max(0.0,weighted)**2)*multiplier*(float(power_cfg[5])+speed+reach)*stat_multiplier*float(power_cfg[0])

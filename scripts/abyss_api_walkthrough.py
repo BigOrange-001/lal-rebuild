@@ -59,6 +59,12 @@ def walkthrough(destination):
                 run = call('finish',fight_id=battle['fight_id'],fight_kind='abyss',
                     metadata=battle['metadata'],sign=sign,teams={})['abyss_run']
                 node = next(n for n in run['map'] if n['id']==run['current_node'])
+        inventory = call('relics')['abyss_relics']
+        ids = list(inventory)
+        if len(ids)<2: raise AssertionError('fixture seed must grant two relics')
+        call('relic_equip',item_id=ids[0],slot=0)
+        call('relic_reroll',item_id=ids[0],material_id=ids[1])
+        call('relic_unequip',item_id=ids[0])
         call('start',difficulty=2,deck='venom',seed=20261117)
         call('abandon')
         for name, data in samples.items():

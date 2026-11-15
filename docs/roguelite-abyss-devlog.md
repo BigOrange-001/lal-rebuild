@@ -36,3 +36,13 @@
 既有回归：equipment_flows、equipment_magic、equipment_bonds_104、new_skin_bonds_104、stat_power_103、dn_power、exploration_regressions、exploration_overhaul、campaign_tower_difficulty_104、activity_tower、combat_origin_phase、roster_sale_promotion 共97项，96通过、1项既有失败。
 既有失败是 NewSkinBondsTests.test_yasuo_derived_damage_and_silence_exception_require_own_bond：期望队长技CD=4，实为3。通过 git archive main 的 server/config/scripts/VERSION 解包到临时目录，在纯 main 源码上独立重跑同一测试，复现同样失败。未修改该断言或无关亚索逻辑。
 本阶段无新增失败。提交以 `feat(abyss): 阶段1 模式规则与事务接口` 标识；其哈希在下一阶段日志记录。
+
+## 阶段2：圣遗物数据
+
+阶段1提交：5fa5035。完成20种圣遗物、主/副词条独立太古判定、3条排重副词条、Boss即时入背包及通关保底、消耗另一件圣遗物重随、独立背包、穿脱、第7格兼容、面板百分比及主词条战力预算。原前6格与装备羁绊保留，旧6格equip_dress请求不清除第7格。
+A类全部6种为现有普通技能和英雄/装备羁绊版本预生成25296条变体，保留动作与技能成长，另加abyss_relic_A元数据。元数据需要新增统一命中钩子才能执行，服务端钩子在阶段3接入，客户端明确列为待办；没有把仅有数据写成客户端效果已完成。
+默认决定：重随只消耗另一件圣遗物；坚守太古护盾3回合；碎盾太古采用设计稿明确的最终2.5倍（value=1.5），而非按额外增幅1.25倍得到2.25倍。
+验证：`python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests test_equipment_flows test_equipment_magic test_equipment_bonds_104 test_stat_power_103 test_dn_power test_exploration_regressions test_exploration_overhaul test_campaign_tower_difficulty_104 test_activity_tower test_combat_origin_phase test_roster_sale_promotion`，110/110通过。修改碎盾太古特例后单独复跑主词条边界1/1通过。已确认的main亚索失败未再次重复整套运行。
+接口脚本更新为80次调用并覆盖13种接口，所有成功响应样例已重导出；副词条是测试中真实随机结果，控制sign仍不是胜率证据。
+未验证：客户端第7格、太古配色、A类钩子、所有实机战斗与双端一致性。需用户决定仍为精英橙卡不足的规则冲突；无新增冲突。
+提交以 `feat(abyss): 阶段2 圣遗物背包与装备数据` 标识；哈希随后补记。

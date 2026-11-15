@@ -200,6 +200,8 @@ def serialize_player_team(config, profile, team_num, submitted_team, attributes_
         result[-1]["phase"] = max(0, int(instance.get("phase", 0)))
         result[-1]['bonds_104'] = list(raw.get('bonds_104', []))
         result[-1]['equipment_bonds_104'] = list(raw.get('equipment_bonds_104', []))
+        for field in ('equip_passives','relic_contribution'):
+            if field in raw: result[-1][field] = copy.deepcopy(raw[field])
         result[-1]["culture_schema"] = str(raw.get("culture_schema", instance.get("culture_schema", "")) or "")
     if not result: raise ValueError("battle requires at least one saved formation avatar")
     return result

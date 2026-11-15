@@ -1,8 +1,8 @@
 {
   "schema": "lal-client-build-v2",
   "version": "1.0.5",
-  "stage_count": 180,
-  "unique_class_count": 153,
+  "stage_count": 181,
+  "unique_class_count": 154,
   "stages": [
     {
       "index": 1,
@@ -626,7 +626,7 @@
       "index": 104,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "557e0adf1988b63b291d4d8ddc7cd9a153583e91bf6b2f04cbe6fa6fac7b2701"
+      "source_sha256": "a15e0dead72f5cd246de150aa13f5dabe6c6526e7514aa5bc5e7e530e94a5ad9"
     },
     {
       "index": 105,
@@ -1088,6 +1088,12 @@
       "source": "client/src/stages/180_PanelPVEembattle.as",
       "class": "com.meng52.game.ui.panel.PanelPVEembattle",
       "source_sha256": "e88d9e0b8902c4c6164a7ab5b4c976db6e9f8cb4cff0e1374b3b26c3d101eef3"
+    },
+    {
+      "index": 181,
+      "class": "com.meng52.game.ui.panel.PanelAlchemy",
+      "source": "client/src/stages/181_PanelAlchemy.as",
+      "source_sha256": "4deb72ac184b313d6eddcc1825da03ed4ed1814dd30d9afa466fa76ae335557d"
     }
   ],
   "template_swf": {

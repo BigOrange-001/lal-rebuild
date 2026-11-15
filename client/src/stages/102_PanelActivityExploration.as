@@ -200,6 +200,12 @@ package com.meng52.game.ui.panel
          AbyssCore104.openRelicBag(-1);
       }
 
+      // Alchemy institute tab content: reroll one relic substat.
+      public static function createRerollView104(param1:Number) : Sprite
+      {
+         return new AbyssRerollView104(param1);
+      }
+
       // Native-framed 7th equipment slot for the hero detail panel.
       public static function createRelicSlotView104(param1:int) : Sprite
       {
@@ -1911,7 +1917,7 @@ class AbyssRelicView104
       }
    }
 
-   private static function add(parent:Sprite, value:String, x:Number, y:Number, w:Number, h:Number, size:int, color:uint) : void
+   public static function add(parent:Sprite, value:String, x:Number, y:Number, w:Number, h:Number, size:int, color:uint) : void
    {
       var tf:TextField = GlobalFunction.createTextField(w,h,value,"",size,color);
       tf.hAlign = "left";
@@ -1998,16 +2004,33 @@ class AbyssResultPanel104 extends AbyssPanel104
 class AbyssRelicBagPanel104 extends AbyssPanel104
 {
    private var slot:int;
+   // Reroll picking: "target" or "material"; onPick(itemId) receives the choice.
+   private var pickMode:String;
+   private var onPick:Function;
+   private var excludeId:String;
 
-   public function AbyssRelicBagPanel104(pickSlot:int)
+   public function AbyssRelicBagPanel104(pickSlot:int, mode:String = null, picked:Function = null, exclude:String = null)
    {
       super();
       slot = pickSlot;
+      pickMode = mode;
+      onPick = picked;
+      excludeId = exclude;
    }
 
    override protected function panelTitle() : String
    {
+      if(pickMode == "target") return "选择要重随的深渊遗物";
+      if(pickMode == "material") return "选择消耗的深渊遗物";
       return slot >= 0 ? "选择深渊遗物" : "深渊遗物";
+   }
+
+   private function pickReason(id:String) : String
+   {
+      if(pickMode != "material") return null;
+      if(id == excludeId) return "不能消耗目标本身";
+      if(AbyssCore104.relicSlotOf(id) >= 0) return "已穿戴，请先卸下";
+      return null;
    }
 
    override protected function build() : void
@@ -2016,7 +2039,9 @@ class AbyssRelicBagPanel104 extends AbyssPanel104
       var ids:Array = [];
       for(var id:String in items) ids.push(id);
       ids.sort();
-      addText(slot >= 0 ? "穿戴到 " + AbyssCore104.positionName(slot) + "（第7格）" : "共 " + ids.length + " 件　每个阵位第7格可穿 1 件，在深渊回廊以外的玩法生效",lx + 20,88,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
+      if(pickMode == "material") addText("消耗品会被销毁，必须未穿戴且不是目标本身",lx + 20,88,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
+      else if(pickMode == "target") addText("可选择已穿戴的深渊遗物，重随后仍在原位",lx + 20,88,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
+      else addText(slot >= 0 ? "穿戴到 " + AbyssCore104.positionName(slot) + "（第7格）" : "共 " + ids.length + " 件　每个阵位第7格可穿 1 件，在深渊回廊以外的玩法生效",lx + 20,88,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
       if(!ids.length)
       {
          addText("暂无深渊遗物。在深渊回廊中击败 Boss 或通关可获得。",lx + 40,180,iw - 80,60,20,AbyssCore104.COLOR_DIM,"center");
@@ -2038,7 +2063,9 @@ class AbyssRelicBagPanel104 extends AbyssPanel104
          var holder:Sprite = new Sprite();
          holder.y = i * 150;
          content.addChild(holder);
-         AbyssRelicView104.draw(this,holder,item,0,0,iw - 40,worn >= 0 ? "已穿戴：" + (worn + 1) + "号位" : "");
+         var reason:String = pickReason(String(ids[i]));
+         AbyssRelicView104.draw(this,holder,item,0,0,iw - 40,reason ? reason : (worn >= 0 ? "已穿戴：" + (worn + 1) + "号位" : ""));
+         if(reason) holder.alpha = 0.45;
          var hit:Quad = new Quad(iw - 40,140,0x000000);
          hit.alpha = 0.01;
          holder.addChild(hit);
@@ -2050,6 +2077,18 @@ class AbyssRelicBagPanel104 extends AbyssPanel104
    {
       onTap(hit,function():void
       {
+         if(pickMode)
+         {
+            var reason:String = pickReason(id);
+            if(reason)
+            {
+               AbyssCore104.toast(reason);
+               return;
+            }
+            AbyssCore104.closeTop();
+            if(onPick != null) onPick(id);
+            return;
+         }
          AbyssCore104.open(new AbyssRelicDetailPanel104(id,slot));
       });
    }
@@ -2185,6 +2224,236 @@ class AbyssRelicSlotView104
          if(e.getTouch(hit,"ended")) PanelActivityExploration.openRelicSlot104(slot);
       });
       return holder;
+   }
+}
+
+// Alchemy institute tab "深渊遗物": reroll exactly one substat by consuming another relic.
+// Layout: target slot <- material slot, main affix block marked 不变, three selectable
+// substat rows, and a button that names the chosen substat.
+class AbyssRerollView104 extends Sprite
+{
+   private var targetId:String = null;
+   private var materialId:String = null;
+   private var index:int = -1;
+   private var flashIndex:int = -1;
+   private var area:Sprite;
+   private var areaHeight:Number;
+
+   public function AbyssRerollView104(height:Number)
+   {
+      super();
+      areaHeight = height;
+      area = new Sprite();
+      addChild(area);
+      addEventListener("removedFromStage",onRemoved);
+      AbyssCore104.send("user.abyss_relics",{},function(d:Object):void
+      {
+         if(stage) draw();
+      });
+      draw();
+   }
+
+   private function onRemoved(e:Event) : void
+   {
+      removeEventListener("removedFromStage",onRemoved);
+      area.removeChildren(0,-1,true);
+   }
+
+   private function txt(value:String, x:Number, y:Number, w:Number, h:Number, size:int, color:uint, align:String = "left") : TextField
+   {
+      var tf:TextField = GlobalFunction.createTextField(w,h,value,"",size,color);
+      tf.hAlign = align;
+      tf.vAlign = "top";
+      tf.x = x;
+      tf.y = y;
+      tf.touchable = false;
+      area.addChild(tf);
+      return tf;
+   }
+
+   private function box(x:Number, y:Number, w:Number, h:Number) : DisplayObject
+   {
+      var bg:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_4_0000",w,h,new Rectangle(40,30,30,30));
+      bg.x = x;
+      bg.y = y;
+      bg.touchable = false;
+      area.addChild(bg);
+      return bg;
+   }
+
+   private function tap(x:Number, y:Number, w:Number, h:Number, fn:Function) : void
+   {
+      var hit:Quad = new Quad(w,h,0x000000);
+      hit.alpha = 0.01;
+      hit.x = x;
+      hit.y = y;
+      area.addChild(hit);
+      hit.addEventListener("touch",function(e:TouchEvent):void
+      {
+         if(e.getTouch(hit,"ended")) fn();
+      });
+   }
+
+   // One relic slot: native ItemEquip frame plus the relic name.
+   private function slotView(x:Number, y:Number, itemId:String, caption:String, empty:String) : void
+   {
+      var frame:ItemEquip = new ItemEquip();
+      frame.width = 100;
+      frame.data = {"id":null,"indexID_s":null,"status":-1,"isPVP":0,"lock":0,"lockdesc":0,"sympClip":false};
+      frame.touchable = false;
+      frame.x = x;
+      frame.y = y;
+      area.addChild(frame);
+      var item:Object = itemId ? AbyssCore104.relics[itemId] : null;
+      var name:String = item ? AbyssCore104.relicName(item) : empty;
+      txt(name,x,y + 22,100,60,item ? 18 : 16,item ? (name.charAt(0) == "*" ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE) : AbyssCore104.COLOR_DIM,"center");
+      txt(caption,x - 40,y + 104,180,24,17,AbyssCore104.COLOR_TEXT,"center");
+   }
+
+   private function draw() : void
+   {
+      area.removeChildren(0,-1,true);
+      var w:Number = GlobalData.$mStageWidth;
+      var items:Object = AbyssCore104.relics;
+      if(targetId && !items[targetId])
+      {
+         targetId = null;
+         index = -1;
+      }
+      if(materialId && (!items[materialId] || AbyssCore104.relicSlotOf(materialId) >= 0 || materialId == targetId)) materialId = null;
+      var y:Number = 0;
+      txt("消耗另一件深渊遗物，只重随所选的 1 条副词条；主词条和另外 2 条不变",20,y,w - 40,26,17,AbyssCore104.COLOR_DIM,"center");
+      y += 34;
+      var leftX:Number = w * 0.5 - 170;
+      var rightX:Number = w * 0.5 + 70;
+      slotView(leftX,y,targetId,"目标","点击选择");
+      txt("←",w * 0.5 - 40,y + 26,80,50,40,AbyssCore104.COLOR_TITLE,"center");
+      slotView(rightX,y,materialId,"消耗","点击放入");
+      tap(leftX,y,100,100,pickTarget);
+      tap(rightX,y,100,100,pickMaterial);
+      y += 140;
+      var target:Object = targetId ? items[targetId] : null;
+      box(25,y,w - 50,96);
+      txt("主词条　不变",45,y + 10,w - 90,26,19,AbyssCore104.COLOR_TITLE);
+      if(target && target.main) txt(String(target.main.text),45,y + 40,w - 90,50,18,target.main.ancient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TEXT);
+      else txt("先选择目标深渊遗物",45,y + 40,w - 90,30,18,AbyssCore104.COLOR_DIM);
+      y += 108;
+      txt("副词条（点选要重随的一条）",25,y,w - 50,26,19,AbyssCore104.COLOR_TITLE);
+      y += 32;
+      var subs:Array = target && target.substats is Array ? target.substats as Array : [null,null,null];
+      for(var i:int = 0; i < 3; i++)
+      {
+         var sub:Object = i < subs.length ? subs[i] : null;
+         var rowY:Number = y + i * 66;
+         box(25,rowY,w - 50,58);
+         if(i == index)
+         {
+            var mark:Quad = new Quad(w - 62,46,AbyssCore104.COLOR_SELECT);
+            mark.alpha = 0.35;
+            mark.x = 31;
+            mark.y = rowY + 6;
+            mark.touchable = false;
+            area.addChild(mark);
+         }
+         if(i == flashIndex) flash(25,rowY,w - 50,58);
+         txt(sub ? String(sub.text) : "—",50,rowY + 16,w - 300,30,21,sub && sub.ancient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TEXT);
+         txt(i == index ? "重随这条 ✓" : "保留",w - 230,rowY + 17,180,30,19,i == index ? AbyssCore104.COLOR_SELECT : AbyssCore104.COLOR_DIM,"right");
+         bindRow(rowY,w,i,sub != null);
+      }
+      y += 3 * 66 + 8;
+      var material:Object = materialId ? items[materialId] : null;
+      txt(material ? "将消耗：" + AbyssCore104.relicName(material) + "（重随后该件消失）" : "需要放入一件未穿戴的深渊遗物作为消耗",25,y,w - 50,26,17,material ? AbyssCore104.COLOR_RED : AbyssCore104.COLOR_DIM,"center");
+      var label:String = target && index >= 0 && index < subs.length && subs[index] ? "重随『" + String(subs[index].text) + "』这条" : "重随所选词条";
+      var btn:LOL_Scale9Button = new LOL_Scale9Button(label,300,66,"UI_btn_normalFun_0000");
+      btn.fontSize = label.length > 10 ? 19 : 22;
+      btn.x = (w - 300) * 0.5;
+      btn.y = Math.max(y + 34,areaHeight - 80);
+      // Always tappable: tell the player what is missing instead of disabling.
+      btn.addEventListener("triggered",function(e:Event):void
+      {
+         submit();
+      });
+      area.addChild(btn);
+      flashIndex = -1;
+   }
+
+   private function bindRow(rowY:Number, w:Number, i:int, valid:Boolean) : void
+   {
+      tap(25,rowY,w - 50,58,function():void
+      {
+         if(!valid)
+         {
+            AbyssCore104.toast("请先选择目标深渊遗物");
+            return;
+         }
+         index = index == i ? -1 : i;
+         draw();
+      });
+   }
+
+   private function flash(x:Number, y:Number, w:Number, h:Number) : void
+   {
+      var q:Quad = new Quad(w,h,AbyssCore104.COLOR_ANCIENT);
+      q.x = x;
+      q.y = y;
+      q.alpha = 0;
+      q.touchable = false;
+      area.addChild(q);
+      var t:Tween = new Tween(q,0.25);
+      t.animate("alpha",0.6);
+      t.repeatCount = 4;
+      t.reverse = true;
+      t.onComplete = function():void
+      {
+         q.removeFromParent(true);
+      };
+      Starling.juggler.add(t);
+   }
+
+   private function pickTarget() : void
+   {
+      AbyssCore104.open(new AbyssRelicBagPanel104(-1,"target",function(id:String):void
+      {
+         if(targetId != id) index = -1;
+         targetId = id;
+         if(materialId == id) materialId = null;
+         draw();
+      }));
+   }
+
+   private function pickMaterial() : void
+   {
+      if(!targetId)
+      {
+         AbyssCore104.toast("请先选择目标深渊遗物");
+         return;
+      }
+      AbyssCore104.open(new AbyssRelicBagPanel104(-1,"material",function(id:String):void
+      {
+         materialId = id;
+         draw();
+      },targetId));
+   }
+
+   private function submit() : void
+   {
+      var missing:Array = [];
+      if(!targetId) missing.push("目标深渊遗物");
+      if(index < 0) missing.push("要重随的副词条");
+      if(!materialId) missing.push("消耗的深渊遗物");
+      if(missing.length)
+      {
+         AbyssCore104.toast("请选择" + missing.join("、"));
+         return;
+      }
+      var chosen:int = index;
+      AbyssCore104.send("user.abyss_relic_reroll",{"item_id":targetId,"material_id":materialId,"substat_index":chosen},function(d:Object):void
+      {
+         materialId = null;
+         flashIndex = chosen;
+         if(stage) draw();
+         GlobalData.$mEventDispatcher.dispatchEventWith("abyss_relic_changed_104");
+      });
    }
 }
 // END ABYSS_UI_104

@@ -1,4 +1,5 @@
 """Isolated difficulty-1 normal fights with unmodified starting decks."""
+import argparse
 import json
 from pathlib import Path
 
@@ -37,7 +38,12 @@ def trials(document):
 
 
 if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output',type=Path,
+        default=ROOT/'docs/roguelite-abyss-calibration-data/starter-trials-current.json')
+    args=parser.parse_args()
     result=trials(load_game_config(ROOT/'config/reconstruction/full-config.json'))
-    target=ROOT/'docs/roguelite-abyss-calibration-data/starter-trials.json'
+    target=args.output
+    target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n','utf-8')
     print(json.dumps({k:result[k] for k in ('trials','passes')},ensure_ascii=False))

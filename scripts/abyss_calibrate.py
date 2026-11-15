@@ -109,8 +109,9 @@ def study(document, seeds, scale=1, max_rounds=120, top_multiplier=None, decks=(
     # Weak battles keep the authored rate: no recruitment-stage shortcut.
     difficulties=plan['difficulties']
     if top_multiplier is not None:
+        old_bottom=difficulties[0]['multiplier']
         old_top=difficulties[-1]['multiplier']
-        difficulties=[{**row,'multiplier':round(1+(row['multiplier']-1)*(top_multiplier-1)/(old_top-1),4)} for row in difficulties]
+        difficulties=[{**row,'multiplier':round(old_bottom+(row['multiplier']-old_bottom)*(top_multiplier-old_bottom)/(old_top-old_bottom),4)} for row in difficulties]
     updated={**document,'cfg':{**cfg,'system_simple':{**simple,'roguelite_abyss':{**plan,'enemy_rates':rates,'difficulties':difficulties}}}}
     runs=[]
     for difficulty in (1,10):
@@ -139,6 +140,7 @@ def study(document, seeds, scale=1, max_rounds=120, top_multiplier=None, decks=(
             'unfinished':sum(v[0]==kind and not v[2] for v in counts.values())}
             for kind in ('weak','normal','elite','boss')}
     return {'schema':1,'model':'SkillCompleteBattle','native_verified':False,
+            'weak_uses_difficulty_multiplier':False,
             'max_rounds':max_rounds,'enemy_normal_scale':scale,'enemy_rates':rates,
             'difficulties':difficulties,
             'summary':summary,'runs':runs}
@@ -151,7 +153,7 @@ if __name__=='__main__':
     parser.add_argument('--rounds',type=int,default=120)
     parser.add_argument('--top-multiplier',type=float)
     parser.add_argument('--decks',nargs='+',choices=['blade','flame','venom','summon','star'],default=['blade','flame'])
-    parser.add_argument('--original-initials',action='store_true',help='reproduce the pre-calibration enemy tables')
+    parser.add_argument('--original-initials',action='store_true',help='restore old tables only; weak enemies retain the current fixed-scaling rule')
     parser.add_argument('--output',type=Path,default=ROOT/'docs/roguelite-abyss-calibration.json')
     args=parser.parse_args()
     document=load_game_config(ROOT/'config/reconstruction/full-config.json')

@@ -1,17 +1,21 @@
-"""Accepted evidence must match published tables and decisive-win criteria."""
+"""Historical calibration evidence retains its original tables and criteria.
+
+Enemy parameters were superseded by the user's 2026-11-16 instruction. These
+artifacts remain evidence of the former configuration, never current balance.
+"""
 import json
 import unittest
 from pathlib import Path
-
-from roguelite_abyss import DIFFICULTIES
 
 ROOT=Path(__file__).resolve().parents[1]
 
 
 class CalibrationEvidenceTests(unittest.TestCase):
-    def test_actual_config_report_matches_difficulty_and_explicit_win_criteria(self):
+    def test_historical_report_retains_original_tables_and_explicit_win_criteria(self):
         report=json.loads((ROOT/'docs/roguelite-abyss-calibration-data/accepted.json').read_text('utf-8'))
-        self.assertEqual([(d['multiplier'],d['retries']) for d in report['difficulties']],DIFFICULTIES)
+        self.assertEqual([(d['multiplier'],d['retries']) for d in report['difficulties']],
+            [(1,20),(1.0084,20),(1.0168,18),(1.0263,18),(1.0368,16),
+             (1.0474,16),(1.0589,14),(1.0716,14),(1.0853,12),(1.1,10)])
         self.assertEqual(report['enemy_rates']['normal'],[.36,.45,.54])
         self.assertEqual(len(report['runs']),40)
         self.assertFalse(report['native_verified'])

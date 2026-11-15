@@ -19,8 +19,8 @@ DECKS = {
     'summon': ('群策', 3, [1049, 1085, 1094, 1014, 1040]),
     'star': ('星裔', 5, []),
 }
-DIFFICULTIES = [(1,20),(1.0084,20),(1.0168,18),(1.0263,18),(1.0368,16),
-                (1.0474,16),(1.0589,14),(1.0716,14),(1.0853,12),(1.1,10)]
+DIFFICULTIES = [(.80,20),(.86,20),(.92,18),(.99,18),(1.06,16),
+                (1.13,16),(1.22,14),(1.30,14),(1.40,12),(1.50,10)]
 MAIN_STATS = ('hp', 'ap', 'de_ph', 'de_ma')
 
 
@@ -58,7 +58,7 @@ def apply_abyss_config(document):
                         'members':[f'A_{i}_5' for i in ids]}
                   for key,(name,clear,ids) in DECKS.items()},
         'difficulties': [{'multiplier':m, 'retries':r} for m,r in DIFFICULTIES],
-        'enemy_rates': {'weak':.55, 'normal':[.36,.45,.54], 'elite':1.3, 'boss':1.6},
+        'enemy_rates': {'weak':.55, 'normal':[.8,1,1.2], 'elite':1.3, 'boss':1.6},
         'boss_decks': {
             str(act): [[f'A_{i}_6' for i in ids] for ids in sets]
             for act,sets in enumerate((
@@ -203,7 +203,8 @@ def generate_enemies(seed, difficulty, node, cfg):
         if kind == 'elite': aids[0] = aids[0][:-1]+'6'
     multiplier = rate['weak'] if kind=='weak' else rate['normal'][act-1]
     if kind in ('elite','boss'): multiplier *= rate[kind]
-    multiplier *= plan['difficulties'][difficulty-1]['multiplier']
+    if kind!='weak':
+        multiplier *= plan['difficulties'][difficulty-1]['multiplier']
     heroes = {str(i):hero_record(a) for i,a in enumerate(aids)}
     units = standard_team(cfg, heroes, [[str(i),i%3,.15+.18*(i//3)] for i in range(len(aids))], 2, multiplier)
     if kind=='elite':

@@ -1,9 +1,11 @@
-# 深渊回廊离线校准与后端验收
+# 深渊回廊历史离线校准与后端验收
+
+**敌人参数历史记录：** 用户2026-11-16后续指令已替代本报告中的敌人数值。当前普通系数为0.8/1.0/1.2，难度倍率为0.80/0.86/0.92/0.99/1.06/1.13/1.22/1.30/1.40/1.50，只用于普通、精英与Boss；弱敌固定0.55且不乘难度。精英×1.3、Boss×1.6和重打次数保留。以下40局流程及60场起始卡组结果仍保留原数据，只证明旧配置，不证明当前参数达标；当前参数未做胜率校准。深渊遗物预算与普通灵魂塔探针不受此表修改影响。
 
 2026-11-16，采用新版99级标准化和25人紫橙双解锁。所有账号为内存合成账号，没有读取、复制或修改正式runtime存档。
 这些是服务端 SkillCompleteBattle 的测量，未运行原生客户端。主动提交sign的80次接口流程与本报告自然模拟结果分别记录，不能混用。
 
-## 方法与采纳值
+## 历史方法与当时采纳值
 
 每局使用确定种子生成地图、敌人、候选；固定策略每节点选择第一条路线，按品质和坦克/辅助/主力优先级选人，休息优先将当前上阵紫卡升橙，其后升级技能。保持2坦克、1辅助、2主力，若随机卡池缺职业则补足5人，队长按预定主力优先级选。失败后轮转三路站位再试，不读取未来候选。
 每场上限120回合仅用于离线计算；双方仍存活的场次记为未决，按失败消耗重打，**从不接受模型按剩余生命比分返回的winner作为胜利**。正式模式没有新增120回合上限。
@@ -24,7 +26,7 @@
 难度倍率由1～1.95压缩为1～1.10，按原相对位置线性映射并保留4位小数；各难度重打上限和额外精英/Boss成员规则保留。这样难度仍同时来自重打额度、精英橙卡保证数、额外精英层和Boss人数，避免把新版1.4倍橙面板再乘过高的敌方四维。
 配置和设计稿均已回写。只调整设计稿明确为初值的敌人强度与难度倍率，没有改99级/1.4倍/0.7倍或英雄技能配置。
 
-## 最终独立样本与实际配置复测
+## 历史独立样本与当时配置复测
 
 新种子20261126～20261129，5套卡组×难度1/10，共40局。候选验证后，直接从最终配置重新运行同40局，结果一致；统计按40局，不把复跑算成80个独立样本。
 实际配置结果：[accepted.json](roguelite-abyss-calibration-data/accepted.json)。此前候选结果：[final-heldout.json](roguelite-abyss-calibration-data/abyss-calibration-final-heldout.json)。
@@ -53,19 +55,19 @@
 灵魂塔探针：固定5人主线养成阵容，100/125/150/180层，空遗物或队长单件11类B遗物，各3种战斗种子，共144场。
 100/125层均3/3通关；150层基线21/23/34回合，带单件遗物的样本多数14～22回合；180层所有样本均未通关，没有未决场次。此测试检查有限样本下的推进变化，不能据此保证整座塔的平衡，也没有测试5件遗物组合。
 
-## 可复现命令
+## 研究命令与历史复现
 
 使用包内Python，PYTHONPATH先指向本worktree的server/scripts；不得使用原project的导入路径。
 
 ```text
 python scripts/abyss_api_walkthrough.py
 python scripts/abyss_passive_cases.py
-python scripts/abyss_calibrate.py --decks blade flame venom summon star --seeds 20261126 20261127 20261128 20261129 --output docs/roguelite-abyss-calibration-data/accepted.json
-python scripts/abyss_starter_trials.py
+python scripts/abyss_calibrate.py --decks blade flame venom summon star --seeds 20261126 20261127 20261128 20261129 --output docs/roguelite-abyss-calibration-data/current-user-parameters.json
+python scripts/abyss_starter_trials.py --output docs/roguelite-abyss-calibration-data/starter-trials-current.json
 python scripts/abyss_relic_budget.py
 ```
 
-复现淘汰方案时加 `--original-initials`，再传原记录的--scale和--top-multiplier；该开关只改变内存研究配置，不写正式配置。
+上述命令现在读取当前配置，运行时应输出到新文件，不要覆盖本报告的历史数据。要精确复现本报告，请使用7ba6548代码快照及其研究脚本。当前脚本的 `--original-initials` 只恢复旧数表，弱敌仍遵守当前“不乘难度”规则，因此不等于复现旧版；所有研究开关都只改变内存配置。
 
 ## 设计第10节后端验收对应
 

@@ -77,6 +77,8 @@ package com.meng52.game.ui.panel
 
       private var m_stardust_txt:TextField;
 
+      private var m_stardust_icon:Image;
+
       public function PanelEquipAlchemyStart(param1:Object)
       {
          m_data = param1;
@@ -290,9 +292,14 @@ package com.meng52.game.ui.panel
             m_stardust_btn.y = m_start_btn.y;
             m_stardust_btn.addEventListener("triggered",onTRIGGERED);
             this.addChild(m_stardust_btn);
-            m_stardust_txt = GlobalFunction.createTextField(195,50,"","",18,4926491);
+            m_stardust_icon = Equip.createStardustIcon();
+            m_stardust_icon.x = m_bg.x + 20;
+            m_stardust_icon.y = m_start_btn.y + (m_start_btn.height - m_stardust_icon.height) * 0.5;
+            this.addChild(m_stardust_icon);
+            m_stardust_txt = GlobalFunction.createTextField(m_stardust_btn.x - m_stardust_icon.x - m_stardust_icon.width - 14,50,"","",18,4926491);
+            m_stardust_txt.autoScale = true;
             m_stardust_txt.hAlign = "left";
-            m_stardust_txt.x = m_bg.x + 20;
+            m_stardust_txt.x = m_stardust_icon.x + m_stardust_icon.width + 4;
             m_stardust_txt.y = m_start_btn.y + (m_start_btn.height - m_stardust_txt.height) * 0.5;
             this.addChild(m_stardust_txt);
             updateStardustInfo();
@@ -575,6 +582,11 @@ package com.meng52.game.ui.panel
             m_stardust_txt.removeFromParent(true);
          }
          m_stardust_txt = null;
+         if(m_stardust_icon)
+         {
+            m_stardust_icon.removeFromParent(true);
+         }
+         m_stardust_icon = null;
          if(m_arrow)
          {
             m_arrow.dispose();

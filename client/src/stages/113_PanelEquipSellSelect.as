@@ -47,6 +47,8 @@ package com.meng52.game.ui.panel
 
       public var mTxt_stardust:TextField;
 
+      private var mImg_stardust:Image;
+
       public var mTxt_info:TextFieldHtmlRenderer;
       
       public var mEquip_curr:ItemEquipSelect;
@@ -265,6 +267,11 @@ package com.meng52.game.ui.panel
             mTxt_stardust.dispose();
          }
          mTxt_stardust = null;
+         if(mImg_stardust)
+         {
+            mImg_stardust.removeFromParent(true);
+         }
+         mImg_stardust = null;
          if(mImgBg)
          {
             mImgBg.removeFromParent(true);
@@ -317,11 +324,17 @@ package com.meng52.game.ui.panel
          _txt.bgWidth = 626;
          addChild(_txt);
          mBox_dust = getDustUIs();
-         mBox_dust.x = MainConfig.$isEA ? this.mBtn_clear.x + this.mBtn_clear.width - 13 : this.mBtn_clear.x + this.mBtn_clear.width - 30;
+         // Five currencies fit inside the same 630px panel at native scale.
+         mBox_dust.x = bg.x + 20;
          mBox_dust.y = this.mBtn_clear.y + 90;
          addChild(mBox_dust);
-         mTxt_stardust = GlobalTextStyle.getTextField("",20,16764006,"left",140,35);
-         mTxt_stardust.x = mBox_dust.x + mBox_dust.width + 10;
+         mImg_stardust = Equip.createStardustIcon();
+         mImg_stardust.x = mBox_dust.x + mBox_dust.width + 8;
+         mImg_stardust.y = mBox_dust.y;
+         addChild(mImg_stardust);
+         mTxt_stardust = GlobalTextStyle.getTextField("",20,16764006,"left",bg.x + bg.width - mImg_stardust.x - mImg_stardust.width - 16,35);
+         mTxt_stardust.autoScale = true;
+         mTxt_stardust.x = mImg_stardust.x + mImg_stardust.width + 4;
          mTxt_stardust.y = mBox_dust.y + 2;
          addChild(mTxt_stardust);
          updateStardustNum();

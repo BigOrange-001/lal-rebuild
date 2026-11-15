@@ -1,0 +1,16 @@
+{
+  "width": 52,
+  "height": 50,
+  "display_scale": 0.6,
+  "reference": "UI_magic_money_0000..0003: 52x50; PanelEquipSellSelect.getDustUIs scale=0.6",
+  "crop": [
+    184,
+    182,
+    1025,
+    1033
+  ],
+  "imagegen_mode": "built-in",
+  "master_sha256": "4a45c949a231c31f4b2022f56be3f33a6d3aec0cf757efec05f7fe71efcf2b95",
+  "png_sha256": "299e440aff34913fa5f3662ac0cee6e0d21f3755321780ef53c816ab3dcc860e",
+  "argb_sha256": "01f3f062e9fabc3b22aea2722ddcd9d9e25ebc66fa88243a5df1cb52a7209276"
+}

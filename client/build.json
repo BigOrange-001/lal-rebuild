@@ -362,7 +362,7 @@
       "index": 60,
       "class": "com.meng52.game.module.equip.Equip",
       "source": "client/src/stages/084_Equip.as",
-      "source_sha256": "19bd3a6478740cbb9c3ce280ba63ab2b271b9e3b6cce3e4954723c65a341be23"
+      "source_sha256": "31ae1aff6a89c7f893b96aa1bb3fcb3cd7b46a873de2880c589c4b00da8f81fc"
     },
     {
       "index": 61,
@@ -386,7 +386,7 @@
       "index": 64,
       "class": "com.meng52.game.ui.panel.PanelEquipAlchemyStart",
       "source": "client/src/stages/061_PanelEquipAlchemyStart.as",
-      "source_sha256": "8f29520ae18b671d7827ffac84b5f128bac78ec21eda94f37b6e87ccc504f9cb"
+      "source_sha256": "8c87720f954fa61d52e9022705235104a59fd386174936fd0571b675d1e3a373"
     },
     {
       "index": 65,
@@ -693,7 +693,7 @@
       "index": 115,
       "class": "com.meng52.game.ui.panel.PanelEquipSellSelect",
       "source": "client/src/stages/113_PanelEquipSellSelect.as",
-      "source_sha256": "bbfc1d61aaaa94c3095c2b7fac5cf16ce8530adc0fc729559656b2feb7afe3f5"
+      "source_sha256": "13d32d7f3ea604ccac98affba748a59a48aab6bb96f6258a236178722facba95"
     },
     {
       "index": 116,

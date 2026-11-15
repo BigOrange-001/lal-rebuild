@@ -808,6 +808,16 @@ package com.meng52.net
       {
          SendAndSelect.sendAndSelectService("user.equip_alchemy",param2,param1);
       }
+
+      public static function send_user_equip_decompose(param1:Function = null, param2:Object = null) : void
+      {
+         SendAndSelect.sendAndSelectService("user.equip_decompose",param2,param1);
+      }
+
+      public static function send_user_equip_inherit(param1:Function = null, param2:Object = null) : void
+      {
+         SendAndSelect.sendAndSelectService("user.equip_inherit",param2,param1);
+      }
       
       public static function send_user_avatar_soul(param1:Function = null, param2:Object = null) : void
       {

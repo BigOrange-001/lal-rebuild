@@ -55,6 +55,8 @@ function Equipment(id){
  magic:row.magic||[0,0,0,0],magicStage5:row.magic_stage5||0,symp:row.symp??-1,runeLv:row.rune_lv||0,
  _Properties_rate:1,equipData:{id:row.eid,hp0:p[0],ap0:p[1],d10:p[2],d20:p[3],speed:p[4],range:p[5],hasAttr:k=>p.slice(6,8).includes(k)}},input.equipMethods);
  for(let key of ['hit','flee','crit','tough'])unit[key]=(row.new_4attrs||row)[key]||0;
+ for(let key of ['hit','flee','crit','tough'])unit['inherit'+key[0].toUpperCase()+key.slice(1)]=Math.max(0,int((row.inherit_4attrs||{})[key]));
+ unit.inheritCount=Math.max(0,int(row.inherit_count));
  if(row.alchemy)unit._Properties_rate=unit.getEquipAlchemyRate(row,0);
  return unit;
 }
@@ -228,6 +230,12 @@ class StatPower103Tests(unittest.TestCase):
             profile=self.profile()
             profile['my_equips']['weapon'].update(eid=f'E_1001_{base}',alchemy=[0,8-base])
             self.compare(profile)
+
+    def test_inherited_affixes_match_native_panel_and_battle(self):
+        profile=self.profile()
+        # E_1001 declares hit/crit; inherited flee/tough must still count.
+        profile['my_equips']['weapon'].update(inherit_4attrs={'hit':40,'flee':130,'crit':0,'tough':77},inherit_count=2)
+        self.compare(profile)
 
     def test_scaling_overlay_is_idempotent_and_does_not_change_other_branches(self):
         original = copy.deepcopy(self.document)

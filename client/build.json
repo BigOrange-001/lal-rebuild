@@ -1,8 +1,8 @@
 {
   "schema": "lal-client-build-v2",
   "version": "1.0.5",
-  "stage_count": 180,
-  "unique_class_count": 153,
+  "stage_count": 183,
+  "unique_class_count": 156,
   "stages": [
     {
       "index": 1,
@@ -92,7 +92,7 @@
       "index": 15,
       "class": "com.meng52.net.SendServiceAMFFun",
       "source": "client/src/stages/015_SendServiceAMFFun.as",
-      "source_sha256": "8cbc6de382a4e694f5ee2b6aebc9e21199ef12c08fe452b20bdef47eb36c9ae4"
+      "source_sha256": "0ad8d0e5aac7d681eeaf8ddd8ad91441aa2580e0644fbc9381e99513da66a5d8"
     },
     {
       "index": 16,
@@ -362,7 +362,7 @@
       "index": 60,
       "class": "com.meng52.game.module.equip.Equip",
       "source": "client/src/stages/084_Equip.as",
-      "source_sha256": "1a590f48833715066b22668af4768eb4b8ca39df51889aebd66b9f8402c27f04"
+      "source_sha256": "55e3d9cabb0a9b8db04b0fe57a83e70775d36de047de0aff76441ca2d4ee8370"
     },
     {
       "index": 61,
@@ -386,7 +386,7 @@
       "index": 64,
       "class": "com.meng52.game.ui.panel.PanelEquipAlchemyStart",
       "source": "client/src/stages/061_PanelEquipAlchemyStart.as",
-      "source_sha256": "85e07998fbae7982ea1db648534f9203e0fab285afec98c28e1c888663d92725"
+      "source_sha256": "8f29520ae18b671d7827ffac84b5f128bac78ec21eda94f37b6e87ccc504f9cb"
     },
     {
       "index": 65,
@@ -692,7 +692,7 @@
       "index": 115,
       "class": "com.meng52.game.ui.panel.PanelEquipSellSelect",
       "source": "client/src/stages/113_PanelEquipSellSelect.as",
-      "source_sha256": "7d39dea662d63242d78ce410ba09a0f68b418b2d1ddc7e8fd3c8edacd955fac7"
+      "source_sha256": "bbfc1d61aaaa94c3095c2b7fac5cf16ce8530adc0fc729559656b2feb7afe3f5"
     },
     {
       "index": 116,
@@ -1057,7 +1057,7 @@
       "index": 175,
       "source": "client/src/stages/174_LOL_DetailEquip.as",
       "class": "com.meng52.game.ui.element.LOL_DetailEquip",
-      "source_sha256": "86b251950bf93e676b73946fd2a57638e40ecbe855c14c40c07f10d998296fb9"
+      "source_sha256": "0ecde76a016b9e7bc7e08c2bec5d8bfa7c3df56155193e9c2c41bceefd1786c1"
     },
     {
       "index": 176,
@@ -1088,6 +1088,24 @@
       "source": "client/src/stages/180_PanelPVEembattle.as",
       "class": "com.meng52.game.ui.panel.PanelPVEembattle",
       "source_sha256": "9118c0036ffc0dfb8e890064ce90db4ebbf6f398955d1e2ea7c1ed199003185c"
+    },
+    {
+      "index": 181,
+      "class": "com.meng52.game.ui.panel.PanelAlchemy",
+      "source": "client/src/stages/181_PanelAlchemy.as",
+      "source_sha256": "b4250d7f079cc3190006c98251ba886f8c201be1fb81b72f5e69ea57c239592a"
+    },
+    {
+      "index": 182,
+      "class": "com.meng52.game.ui.panel.PanelEquipAlchemySelect",
+      "source": "client/src/stages/182_PanelEquipAlchemySelect.as",
+      "source_sha256": "7a8921f5bdc218b270aa96e44e43671d74ddd44230aa940660f2755352416d20"
+    },
+    {
+      "index": 183,
+      "class": "com.meng52.game.ui.panel.PanelEquipAlchemyStuffSelect",
+      "source": "client/src/stages/183_PanelEquipAlchemyStuffSelect.as",
+      "source_sha256": "7f595009338d35a8a83acfd5e5c3b01932a9c9aabfa1e576239689d531d6feab"
     }
   ],
   "template_swf": {

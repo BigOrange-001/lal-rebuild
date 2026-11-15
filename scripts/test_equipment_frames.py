@@ -136,7 +136,7 @@ console.log(JSON.stringify({checked}));'''
     def test_terminal_eight_star_has_no_next_preview_progress_or_request(self):
         source=(STAGES/'061_PanelEquipAlchemyStart.as').read_text('utf8')
         script=frame_script()+'''const Tools={clone:x=>JSON.parse(JSON.stringify(x))};
-const gate={};let sent=0;const SendServiceAMFFun={send_user_equip_alchemy:()=>sent++};\n'''
+const gate={m_inherit:false};let sent=0;const SendServiceAMFFun={send_user_equip_alchemy:()=>sent++};\n'''
         for name,args in [('nextEquip','param1'),('checkContinueAlchemy','param1'),('send_msg','')]:
             script+='gate.'+name+'=function('+args+'){with(this){'+method_body(source,name)+'}};\n'
         script+='''let checked=0;

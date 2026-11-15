@@ -239,7 +239,15 @@ def main_stat(base: float, level: int, simple: dict, item: dict,
 
 
 def wash_stats(item: dict, definition: dict, simple: dict) -> dict[str, int]:
-    """Mirror native Equip.getX(-1,true): only pl[6:8] contributes, with getPoint."""
+    """Mirror native Equip.getX(-1,true): template affixes plus inherited ones."""
+    from equipment_stardust import inherited
+    own = template_wash_stats(item, definition, simple)
+    extra = inherited(item)
+    return {key: own[key] + extra[key] for key in ATTRS}
+
+
+def template_wash_stats(item: dict, definition: dict, simple: dict) -> dict[str, int]:
+    """Only pl[6:8] contributes, with getPoint; excludes inherited affixes."""
     pl = definition.get("pl", []) if isinstance(definition, dict) else []
     pair = tuple(key for key in pl[6:8] if key in ATTRS) if len(pl) >= 8 else ()
     result = {key: 0 for key in ATTRS}

@@ -40,7 +40,13 @@ package com.meng52.game.ui.panel
       public var mBtn_clear:LOL_Scale9Button;
       
       public var mBtn_sell:LOL_Scale9Button;
-      
+
+      public static var BTN_NAME_DECOMPOSE:String = "btn_name_decompose";
+
+      public var mBtn_decompose:LOL_Scale9Button;
+
+      public var mTxt_stardust:TextField;
+
       public var mTxt_info:TextFieldHtmlRenderer;
       
       public var mEquip_curr:ItemEquipSelect;
@@ -247,6 +253,18 @@ package com.meng52.game.ui.panel
             mBtn_sell.removeFromParent(true);
             mBtn_sell.dispose();
          }
+         if(mBtn_decompose)
+         {
+            mBtn_decompose.removeFromParent(true);
+            mBtn_decompose.dispose();
+         }
+         mBtn_decompose = null;
+         if(mTxt_stardust)
+         {
+            mTxt_stardust.removeFromParent(true);
+            mTxt_stardust.dispose();
+         }
+         mTxt_stardust = null;
          if(mImgBg)
          {
             mImgBg.removeFromParent(true);
@@ -283,6 +301,14 @@ package com.meng52.game.ui.panel
          this.mBtn_clear.addEventListener("triggered",this.onTRIGGERED_btns);
          this.mBtn_sell.addEventListener("triggered",this.onTRIGGERED_btns);
          this.mBtn_sell.y = this.mBtn_clear.y = bg.y + 35;
+         // Sell and decompose share the right column; decompose also grants stardust.
+         this.mBtn_sell.y = bg.y + 10;
+         this.mBtn_decompose = new LOL_Scale9Button("分解",125,45,"UI_btn_enterGame_0_0000");
+         this.mBtn_decompose.x = this.mBtn_sell.x;
+         this.mBtn_decompose.y = this.mBtn_sell.y + this.mBtn_sell.height + 8;
+         this.mBtn_decompose.name = BTN_NAME_DECOMPOSE;
+         this.mBtn_decompose.addEventListener("triggered",this.onTRIGGERED_btns);
+         this.addChild(this.mBtn_decompose);
          GlobalData.$mEventDispatcher.addEventListener("update_equip_sell_data",this.onUPDATE_DATA);
          var _loc1_:String = GlobalLanguageStr.getLanguageStr(20458);
          _txt = new LOL_IconText(_loc1_);
@@ -294,6 +320,11 @@ package com.meng52.game.ui.panel
          mBox_dust.x = MainConfig.$isEA ? this.mBtn_clear.x + this.mBtn_clear.width - 13 : this.mBtn_clear.x + this.mBtn_clear.width - 30;
          mBox_dust.y = this.mBtn_clear.y + 90;
          addChild(mBox_dust);
+         mTxt_stardust = GlobalTextStyle.getTextField("",20,16764006,"left",140,35);
+         mTxt_stardust.x = mBox_dust.x + mBox_dust.width + 10;
+         mTxt_stardust.y = mBox_dust.y + 2;
+         addChild(mTxt_stardust);
+         updateStardustNum();
          formatTxtInfo();
          setList();
          addList();
@@ -401,8 +432,90 @@ package com.meng52.game.ui.panel
                GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(90010),GlobalLanguageStr.getLanguageStr(97003));
             }
          }
+         else if(_loc15_.name == BTN_NAME_DECOMPOSE)
+         {
+            confirmDecompose();
+         }
       }
-      
+
+      private function confirmDecompose() : void
+      {
+         var _ids:Array = GlobalData.$tempEquipSellArr;
+         if(_ids.length <= 0)
+         {
+            GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(90010),GlobalLanguageStr.getLanguageStr(97003));
+            return;
+         }
+         var _stardust:int = 0;
+         for each(var _id:String in _ids)
+         {
+            var _equip:Equip = new Equip(_id,GlobalData.$userData.my_equips[_id]);
+            if(_equip.getType() == 6)
+            {
+               GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(90010),"技能书不能分解，请取消选择技能书。");
+               return;
+            }
+            _stardust += _equip.getStardustYield();
+         }
+         var _refund:Object = getEquipSellAttrs(_ids);
+         var _names:Array = GlobalLanguageStr.getLanguageStr(90197).split("$");
+         var _text:String = "分解" + _ids.length + "件装备，获得星辉[" + _stardust + "]\n返还" + GlobalLanguageStr.getLanguageStr(20162) + "[" + _refund["gold"] + "]";
+         if(_refund["mark"] > 0)
+         {
+            _text += " " + GlobalLanguageStr.getLanguageStr(20272) + "[" + _refund["mark"] + "]";
+         }
+         var _dust:Array = _refund["dust"] as Array;
+         for(var _i:int = 0; _i < _dust.length; _i++)
+         {
+            if(_dust[_i] > 0)
+            {
+               _text += " " + _names[_i] + "[" + _dust[_i] + "]";
+            }
+         }
+         GlobalFunction.popAlert("",Tools.formatLineX(_text,GlobalTextStyle.COLOR_W_Y_Y_G),{
+            "ok":service_decompose,
+            "no":GlobalFunction.functionNull
+         });
+      }
+
+      private function service_decompose() : void
+      {
+         SendServiceAMFFun.send_user_equip_decompose(re_equip_decompose,{"eqids":GlobalData.$tempEquipSellArr.concat()});
+      }
+
+      private function re_equip_decompose(param1:Object) : void
+      {
+         if(GlobalFunction.isMalformedProfileReceipt(param1) || param1.data == null)
+         {
+            return;
+         }
+         SoundManager.getOnlyExample().playSound("E_9005",0.2);
+         var _ids:Array = param1["params"] != null && param1["params"]["eqids"] is Array ? param1["params"]["eqids"].concat() : [];
+         for each(var _id:String in _ids)
+         {
+            var _index:int = GlobalData.$tempEquipSellArr.indexOf(_id);
+            while(_index >= 0)
+            {
+               GlobalData.$tempEquipSellArr.splice(_index,1);
+               _index = GlobalData.$tempEquipSellArr.indexOf(_id);
+            }
+         }
+         LayoutUIAnimation.getOnlyExample().popWords("获得星辉 " + int(param1.data.stardust_gain));
+         GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
+         if(this.stage)
+         {
+            update();
+         }
+      }
+
+      public function updateStardustNum() : void
+      {
+         if(mTxt_stardust)
+         {
+            mTxt_stardust.text = "星辉 " + Equip.getStardustBalance();
+         }
+      }
+
       private function service_sell() : void
       {
          SendServiceAMFFun.send_user_equip_sell(re_equip_sell,{"eqids":GlobalData.$tempEquipSellArr.concat()});
@@ -471,6 +584,10 @@ package com.meng52.game.ui.panel
             this.mBtn_sell.enabled = false;
             this.mBtn_clear.text = GlobalLanguageStr.getLanguageStr(20228);
          }
+         if(this.mBtn_decompose)
+         {
+            this.mBtn_decompose.enabled = this.mBtn_sell.enabled;
+         }
       }
       
       public function setTxtInfo(param1:*, param2:* = null, param3:* = null) : void
@@ -506,6 +623,7 @@ package com.meng52.game.ui.panel
          super.update();
          this.formatTxtInfo();
          updateDustNum(mBox_dust);
+         updateStardustNum();
       }
       
       override public function setList() : void

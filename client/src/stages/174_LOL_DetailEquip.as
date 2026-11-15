@@ -306,6 +306,15 @@ package com.meng52.game.ui.element
          _loc14_.x = 273;
          _loc14_.y = _loc15_.y + _loc15_.height - 7;
          _bg.addChild(_loc14_);
+         if(_equip.inheritCount > 0)
+         {
+            var _inheritTxt:LOL_TextField = new LOL_TextField("传承" + _equip.inheritCount + "/" + Equip.MAX_INHERIT_COUNT + " " + _equip.getInheritText(),330,33);
+            _inheritTxt.fontColor = 16737792;
+            _inheritTxt.fontSize = 16;
+            _inheritTxt.x = 273;
+            _inheritTxt.y = _loc14_.y + _loc14_.height - 7;
+            _bg.addChild(_inheritTxt);
+         }
       }
 
       private function createAttTxt(param1:int, param2:int, param3:DisplayObject) : void

@@ -95,6 +95,7 @@ GAMEPLAY_ERROR_MESSAGES_ZH.update({
  'MagicAtMaximum':'该附魔阶段已达到上限。',
  'RuneLocked':'请先附魔装备，激活风林火山符文。',
  'RuneAtMaximum':'该装备符文已强化至满级。',
+ 'InsufficientStardust':'星辉不足。',
 })
 
 def gameplay_fault_message(error):

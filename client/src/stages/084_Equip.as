@@ -54,7 +54,21 @@ package com.meng52.game.module.equip
       public var magicStage5:int = 0;
 
       public var runeLv:int = 0;
-      
+
+      public static const MAX_INHERIT_COUNT:int = 3;
+
+      public static const STARDUST_ALCHEMY_MULTIPLIER:int = 5;
+
+      public var inheritHit:int = 0;
+
+      public var inheritFlee:int = 0;
+
+      public var inheritCrit:int = 0;
+
+      public var inheritTough:int = 0;
+
+      public var inheritCount:int = 0;
+
       public var mDestiny:Object;
       
       public var my_data:Object;
@@ -591,40 +605,97 @@ package com.meng52.game.module.equip
          return Math.max(0,int(getPoteMax(param1) - (getHit(param1) + getFlee(param1) + getCrit(param1) + getTough(param1))));
       }
       
+      // param2=true is the hero-stat path: template affixes plus inherited
+      // ones. Display and wash-potential callers (param2=false) keep the
+      // template value only; inherited affixes are listed separately.
       public function getHit(param1:int = -1, param2:Boolean = false) : int
       {
          if(param2 && !hasHit())
          {
-            return 0;
+            return inheritHit;
          }
-         return int(hit + getPoint(param1));
+         return int(hit + getPoint(param1)) + (param2 ? inheritHit : 0);
       }
-      
+
       public function getFlee(param1:int = -1, param2:Boolean = false) : int
       {
          if(param2 && !hasFlee())
          {
-            return 0;
+            return inheritFlee;
          }
-         return int(flee + getPoint(param1));
+         return int(flee + getPoint(param1)) + (param2 ? inheritFlee : 0);
       }
-      
+
       public function getCrit(param1:int = -1, param2:Boolean = false) : int
       {
          if(param2 && !hasCrit())
          {
-            return 0;
+            return inheritCrit;
          }
-         return int(crit + getPoint(param1));
+         return int(crit + getPoint(param1)) + (param2 ? inheritCrit : 0);
       }
-      
+
       public function getTough(param1:int = -1, param2:Boolean = false) : int
       {
          if(param2 && !hasTough())
          {
+            return inheritTough;
+         }
+         return int(tough + getPoint(param1)) + (param2 ? inheritTough : 0);
+      }
+
+      // The two template affixes at their displayed value, without any
+      // inherited points: exactly what inheritance moves to a target.
+      public function getTemplateAffixes() : Array
+      {
+         return [hasHit() ? getHit() : 0,hasFlee() ? getFlee() : 0,hasCrit() ? getCrit() : 0,hasTough() ? getTough() : 0];
+      }
+
+      public function getInheritAffixes() : Array
+      {
+         return [inheritHit,inheritFlee,inheritCrit,inheritTough];
+      }
+
+      public function getInheritText(param1:Array = null) : String
+      {
+         var _values:Array = param1 == null ? getInheritAffixes() : param1;
+         var _names:Array = [30021,30022,30023,30024];
+         var _parts:Array = [];
+         for(var _i:int = 0; _i < 4; _i++)
+         {
+            if(int(_values[_i]) > 0)
+            {
+               _parts.push(GlobalLanguageStr.getLanguageStr(_names[_i]) + "+" + int(_values[_i]));
+            }
+         }
+         return _parts.join(" ");
+      }
+
+      public static function getStardustForStar(param1:int, param2:int = 0) : int
+      {
+         return int(Math.pow(4,Math.max(1,param1) - 1)) * (1 + Math.max(0,Math.min(2,param2)));
+      }
+
+      public static function getStardustBalance() : int
+      {
+         var _attrs:Object = GlobalData.$userData != null ? GlobalData.$userData.attrs : null;
+         return _attrs != null && _attrs.stardust != undefined ? Math.max(0,int(_attrs.stardust)) : 0;
+      }
+
+      public function getStardustYield() : int
+      {
+         if(getType() == 6)
+         {
             return 0;
          }
-         return int(tough + getPoint(param1));
+         var _alchemy:Array = my_data ? my_data.alchemy as Array : null;
+         var _phase:int = _alchemy && _alchemy.length > 1 ? int(_alchemy[0]) : 0;
+         return getStardustForStar(getStar(),_phase);
+      }
+
+      public function getStardustAlchemyCost() : int
+      {
+         return STARDUST_ALCHEMY_MULTIPLIER * getStardustForStar(getStar(),0);
       }
       
       public function getfalseNum(param1:int = -1) : int
@@ -916,6 +987,14 @@ package com.meng52.game.module.equip
             magic = param1.magic == undefined ? [0,0,0,0] : param1.magic;
             magicStage5 = param1.magic_stage5 == 1 ? 1 : 0;
             runeLv = param1.rune_lv == undefined ? 0 : Math.max(0,int(param1.rune_lv));
+            if(param1.inherit_4attrs)
+            {
+               inheritHit = Math.max(0,int(param1.inherit_4attrs.hit));
+               inheritFlee = Math.max(0,int(param1.inherit_4attrs.flee));
+               inheritCrit = Math.max(0,int(param1.inherit_4attrs.crit));
+               inheritTough = Math.max(0,int(param1.inherit_4attrs.tough));
+            }
+            inheritCount = param1.inherit_count == undefined ? 0 : Math.max(0,int(param1.inherit_count));
          }
          else
          {

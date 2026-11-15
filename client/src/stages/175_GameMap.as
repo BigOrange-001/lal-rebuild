@@ -71,6 +71,9 @@ package com.meng52.game.module.map
 
       public var roundNum:int;
 
+      // Abyss relic passives initialize once per fight (reset by startFight).
+      public var abyssPassivesReady104:Boolean = false;
+
       public var roundTeam:int;
 
       public var team1Num:int;
@@ -2114,6 +2117,7 @@ package com.meng52.game.module.map
             autoSort();
          }
          roundTeam = firstTeam;
+         abyssPassivesReady104 = false;
          roundNum = 0;
          team1Num = 0;
          team2Num = 0;
@@ -2135,6 +2139,11 @@ package com.meng52.game.module.map
 
       public function beginFight() : void
       {
+         if(!abyssPassivesReady104)
+         {
+            abyssPassivesReady104 = true;
+            Avatar.abyssInitialize104(team1List,team2List);
+         }
          for each(var statisticsUnit104:Avatar in team1List.concat(team2List)) Avatar.statisticsRow104(statisticsUnit104);
          Avatar.statisticsRunning104 = true;
          var _loc2_:Number = NaN;

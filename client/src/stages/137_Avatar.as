@@ -916,7 +916,8 @@ package com.meng52.game.module.avatar
          if(deMaRatio == -1) deMaRatio = apRatio;
          if(secondaryRatio == -1) secondaryRatio = apRatio;
          if(!owner || !isValidSummonMultiplier(apRatio) || !isValidSummonMultiplier(hpRatio) || !isValidSummonMultiplier(dePhRatio) || !isValidSummonMultiplier(deMaRatio) || !isValidSummonMultiplier(secondaryRatio)) return false;
-         var panel:Object = owner.getSummonPanelSnapshot();
+         var panel:Object = owner.abyssSummonPanel104(owner.getSummonPanelSnapshot());
+         abyssReduction104 = owner.abyssReduction104;
          statisticsOwner104 = owner;
          hpMax = scaledSummonStat(Number(panel.hpMax),hpRatio,1);
          hp = hpMax;
@@ -3955,7 +3956,13 @@ package com.meng52.game.module.avatar
             trace(param2.getDePh() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + param2.getDefenseAgainst(param1,1));
             trace(param2.getDeMa() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + param2.getDefenseAgainst(param1,2));
          }
-         if(param4 == 1)
+         var abyssTrue104:Number = (param4 == 1 || param4 == 2) ? param1.abyssConversion104() : 0;
+         if(abyssTrue104 > 0)
+         {
+            var abyssTrueRaw104:Number = _loc7_ * abyssTrue104;
+            _loc7_ = defenseDamage104(_loc7_ - abyssTrueRaw104,param2.getDefenseAgainst(param1,param4),param1.ap) + Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE);
+         }
+         else if(param4 == 1)
          {
             _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,1),param1.ap);
          }
@@ -4716,6 +4723,7 @@ package com.meng52.game.module.avatar
          talent = null;
          limitBreak = 0;
          cultureSchema = "";
+         loadAbyssPassives104(param1 != null && !(param1 is Array) && param1.hp_max ? param1 : null);
          if(param1 == null)
          {
             mData = {
@@ -5182,6 +5190,7 @@ package com.meng52.game.module.avatar
          var _loc1_:String = null;
          if(param1 == "poison" && buffs && buffs["poison"]) return true;
          if(param1 == "burn" && buffs && buffs["burn"]) return true;
+         if(hasAbyssDot104(param1)) return true;
          for(_loc1_ in manualSkillDots)
          {
             if(manualSkillDots[_loc1_] && manualSkillDots[_loc1_].round >= 0 && manualSkillDots[_loc1_].kind == param1) return true;
@@ -5258,6 +5267,7 @@ package com.meng52.game.module.avatar
          var source:Avatar = param6 || (sourceContext ? sourceContext.owner as Avatar : null);
          var manualEffect:Number = sourceContext ? Number(sourceContext.manualEffectMultiplier) : 1;
          if(!isFinite(manualEffect) || manualEffect <= 0) manualEffect = 1;
+         if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);
          if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          var _loc11_:Buff = new Buff(param1,param2,param3);
@@ -5628,6 +5638,7 @@ package com.meng52.game.module.avatar
             }
          }
          clearManualSkillDots();
+         abyssDots104 = null;
       }
 
       protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
@@ -5694,6 +5705,15 @@ package com.meng52.game.module.avatar
          var manualDotAmount:int = 0;
          var manualDotRaw:Number = Number(NaN);
          var manualDotEffect:Object = null;
+         if(abyssDots104 && abyssDots104.length)
+         {
+            abyssTickDots104();
+            if(hp <= 0)
+            {
+               hp = 0;
+               return true;
+            }
+         }
          if(yasuoNightRounds104>=0 && --yasuoNightRounds104<0) yasuoQueueNight104(false);
          if(yasuoVampRounds104>=0) --yasuoVampRounds104;
          tickManualLethalFloors();
@@ -7866,6 +7886,7 @@ package com.meng52.game.module.avatar
             _loc8_.delayCall(SoundManager.getOnlyExample().playSound,GameMap.actionDelay - 0.1,"miss");
             param1.emitModEvent("miss",param1,param2);
             param2.emitModEvent("dodge",param1,param2);
+            param2.abyssOnDodge104();
             GameMapTools.gameTrace(GameMap.currentAvatar.id,GameMap.currentAvatar.team,"        ",param2.id,param2.team + "閃避");
             if(param3)
             {
@@ -8592,6 +8613,8 @@ package com.meng52.game.module.avatar
          var nurseHealAmount:int = 0;
          var abilityDamageTaken:Number = 0;
          var statisticsShield104:Number = 0;
+         var abyssShieldSpent104:Number = 0;
+         var abyssRevivedNow104:Boolean = false;
          param1 = int(param1 * abilityDirectMultiplier(param7,param4));
          var _loc12_:String = null;
          var _loc21_:* = 0;
@@ -8683,6 +8706,7 @@ package com.meng52.game.module.avatar
          {
             param1 = int(skin2Incoming(param1,param7 || param5,param4));
             var bookHealer:Avatar = param7 || param5 || this;
+            param1 = int(bookHealer.abyssAmplifyHeal104(param1));
             param1 = Tools.toInt(param1 * (1 + bookHealer.getBookCombatBonus("healing")));
             if(hasManualDotKind("burn"))
             {
@@ -8704,7 +8728,7 @@ package com.meng52.game.module.avatar
             GameMapTools.gameTrace("減傷" + _loc18_,"原傷害" + param1,"新傷害" + Tools.toInt(param1 / _loc18_));
             if(!derivedDamage104) param1 = Tools.toInt(param1 / _loc18_);
             trace("最终伤害算减伤之前" + param1);
-            switch(param4 - 1)
+            if(abyssOrigin104 != "relic_reflect") switch(param4 - 1)
             {
                case 0:
                   param1 = Tools.toInt(param1 + param1 * checkTalent(14,param7 ? 1 : 0));
@@ -8725,15 +8749,17 @@ package com.meng52.game.module.avatar
             if(hasManualDotKind("poison")) param1 = Tools.toInt(param1 * 1.2);
             param1 = int(skin2Incoming(param1,param7 || param5,param4));
             param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));
+            param1 = abyssModifyDamage104(param1,param7,param4,dotKind);
             settledCriticalDamage104=Math.max(0,param1);
             _loc9_ = buffs["shield"] as Buff;
             if(shieldValue104()>0)
             {
-               var bookShieldFactor:Number = 1 + (param7 ? param7.getBookCombatBonus("shield_damage") : 0);
+               var bookShieldFactor:Number = (1 + (param7 ? param7.getBookCombatBonus("shield_damage") : 0)) * (param7 ? param7.abyssShieldMultiplier104() : 1);
                if(dotKind == "bleed" || dotKind == "phantasm") bookShieldFactor *= 3;
                var statisticsBeforeShield104:Number = param1;
                param1 = absorbShieldDamage(param1,bookShieldFactor);
                statisticsShield104 = Math.max(0,statisticsBeforeShield104-param1);
+               abyssShieldSpent104 = Math.max(0,modShieldBefore - shieldValue104());
             }
             if(param7 && param7.manualSkillDamageCapture && param7.manualSkillDamageCapture.active === true && param7.manualSkillDamageCapture.owner === param7)
             {
@@ -8899,7 +8925,13 @@ package com.meng52.game.module.avatar
             GameMapTools.gameTrace(id + "触发限时一次免死，保留1生命");
             _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
          }
-         var modActualDamage:Number = param4 == 4 ? 0 : Math.max(0,abilityHpBefore-Math.max(0,hp));
+         if(hp <= 0 && abilityHpBefore > 0 && param4 != 4 && abyssTryRevive104())
+         {
+            abyssRevivedNow104 = true;
+            _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
+         }
+         var modActualDamage:Number = param4 == 4 ? 0 : (abyssRevivedNow104 ? Math.max(0,abilityHpBefore) : Math.max(0,abilityHpBefore-Math.max(0,hp)));
+         if(abilityHpBefore > 0 && param4 != 0 && param4 != 4 && param4 != 5) abyssAfterDamage104(param7,modActualDamage,abyssShieldSpent104,param4,dotKind);
          if(param4 >= 1 && param4 != 4 && param4 != 5)
             recordStatistics104(param7 || param5,this,abilityDamageTaken+statisticsShield104,0);
          var modActualHeal:Number = Math.min(Math.max(0,hpMax-abilityHpBefore),nurseHealAmount);
@@ -8991,7 +9023,7 @@ package com.meng52.game.module.avatar
             param7.queueCatSkinKill();
          if(hp <= 0 && abilityHpBefore > 0 && param7 && param7.team != team && param7.skillB && param7.skillB.skills && param7.skillB.skills.length && param7.skillB.skills[0][0] == "santa_kill")
             if(getType() == 1 && !isManualSummonUnit) param7.queueSantaKill();
-         if(param4 == 4 && nurseHealAmount > 0) queueNurseHealing(nurseHealAmount,Math.max(0,nurseHealAmount-Math.max(0,hpMax-abilityHpBefore)));
+         if(param4 == 4 && nurseHealAmount > 0 && abyssOrigin104 != "relic_lifesteal") queueNurseHealing(nurseHealAmount,Math.max(0,nurseHealAmount-Math.max(0,hpMax-abilityHpBefore)));
          return param1;
       }
 
@@ -9694,5 +9726,345 @@ package com.meng52.game.module.avatar
          clearRes();
          clearData();
       }
+
+      // BEGIN ABYSS_PASSIVES_104
+      // ---- Abyss relic equipment passives -------------------------------------
+      // Spec: docs/roguelite-abyss-equip-passive.md (server: abyss_equip_passives.py).
+      // B-class affixes come from snapshot.equip_passives and never touch skillB.
+      // A-class affixes come from snapshot.skill.abyss_relic_A and apply only inside
+      // the owner's own small-skill (skill0) cast context. Abyss-standardized
+      // snapshots carry neither field and are ignored even if one is sent.
+      public var equipPassives104:Array = null;
+      public var abyssRelicA104:Object = null;
+      public var abyssReduction104:Number = 0;
+      public var abyssRevived104:Boolean = false;
+      public var abyssRecovered104:Boolean = false;
+      public var abyssDodgeRound104:int = -1;
+      public var abyssDodgeCount104:int = 0;
+      public var abyssDots104:Array = null;
+      public var abyssToken104:String = null;
+      // relic_reflect / relic_lifesteal while that settlement is running.
+      public static var abyssOrigin104:String = null;
+      // Optional event trace (tests); null in the game.
+      public static var abyssEvents104:Array = null;
+
+      public function loadAbyssPassives104(data:Object) : void
+      {
+         equipPassives104 = null;
+         abyssRelicA104 = null;
+         abyssReduction104 = 0;
+         abyssRevived104 = false;
+         abyssRecovered104 = false;
+         abyssDodgeRound104 = -1;
+         abyssDodgeCount104 = 0;
+         abyssDots104 = null;
+         if(!data || data.abyss_standardized) return;
+         if(data.equip_passives is Array && data.equip_passives.length) equipPassives104 = (data.equip_passives as Array).concat();
+         if(data.skill && data.skill.abyss_relic_A) abyssRelicA104 = data.skill.abyss_relic_A;
+      }
+
+      public function abyssEffect104(kind:int) : Object
+      {
+         if(!equipPassives104) return null;
+         for each(var affix:Object in equipPassives104)
+         {
+            if(affix && int(affix.id) == kind) return affix;
+         }
+         return null;
+      }
+
+      private static function abyssRound104() : int
+      {
+         return GameMap.currentMap ? GameMap.currentMap.roundNum : 0;
+      }
+
+      private static function abyssTrace104(event:String, owner:Avatar, target:Avatar, fields:Object = null) : void
+      {
+         if(!abyssEvents104) return;
+         var row:Object = {"event":event,"round":abyssRound104(),
+            "owner":owner ? (owner.abyssToken104 ? owner.abyssToken104 : owner.id) : null,
+            "target":(target || owner) ? ((target || owner).abyssToken104 ? (target || owner).abyssToken104 : (target || owner).id) : null};
+         if(fields) for(var key:String in fields) row[key] = fields[key];
+         abyssEvents104.push(row);
+      }
+
+      // Once per battle, before the first action: captain auras, then entry shields
+      // and the captain's ultimate preparation.
+      public static function abyssInitialize104(teamA:*, teamB:*) : void
+      {
+         var rosters:Array = [teamA,teamB];
+         for each(var roster:* in rosters)
+         {
+            if(!roster) continue;
+            var unit:Avatar;
+            for each(var captain:Avatar in roster)
+            {
+               if(!captain.isLeader || captain.hp <= 0) continue;
+               var reduction:Object = captain.abyssEffect104(15);
+               if(reduction)
+               {
+                  for each(unit in roster)
+                  {
+                     unit.abyssReduction104 = 1 - (1 - unit.abyssReduction104) * (1 - Number(reduction.value));
+                     abyssTrace104("captain_aura",captain,unit,{"kind":15,"value":reduction.value});
+                  }
+               }
+               var command:Object = captain.abyssEffect104(16);
+               if(command)
+               {
+                  for each(unit in roster)
+                  {
+                     unit.ap = int(unit.ap * (1 + Number(command.value)));
+                     abyssTrace104("captain_aura",captain,unit,{"kind":16,"value":command.value});
+                  }
+               }
+            }
+            for each(unit in roster)
+            {
+               if(!unit.equipPassives104) continue;
+               for each(var affix:Object in unit.equipPassives104)
+               {
+                  var kind:int = int(affix.id);
+                  if(kind == 1)
+                  {
+                     unit.abyssShield104(unit,int(unit.hpMax * Number(affix.value)),3,"entry_shield");
+                  }
+                  else if(kind == 19 && unit.isLeader && unit.skill1)
+                  {
+                     unit.skill1.m_cooldownNum = Math.max(0,unit.skill1.m_cooldownNum - 2);
+                     abyssTrace104("leader_preparation",unit,unit,{"value":unit.skill1.m_cooldownNum});
+                  }
+               }
+            }
+         }
+      }
+
+      public function abyssShield104(source:Avatar, amount:int, rounds:int, event:String) : void
+      {
+         addBuff("shield",rounds,amount,0,-1,source);
+         abyssTrace104(event,source,this,{"amount":amount,"duration":rounds});
+      }
+
+      // 圣佑: healing and shields cast by the wearer, applied once.
+      public function abyssAmplifyHeal104(amount:Number) : Number
+      {
+         var affix:Object = abyssEffect104(14);
+         return affix ? int(amount * (1 + Number(affix.value))) : amount;
+      }
+
+      // The owner's small-skill cast context, or null (ultimate, normal attack,
+      // skillB and other casters never inherit it).
+      private static function abyssNormalContext104(source:Avatar) : Object
+      {
+         if(!source || !source.abyssRelicA104 || !source.skill0) return null;
+         var context:Object = currentAbilityAttack();
+         if(!context || context.owner !== source || context.kind != "active" || context.skill !== source.skill0) return null;
+         if(!(context.abyssHits104 is Array)) context.abyssHits104 = [];
+         return context;
+      }
+
+      public function abyssConversion104() : Number
+      {
+         var context:Object = abyssNormalContext104(this);
+         return context && int(abyssRelicA104.id) == 20 ? Number(abyssRelicA104.value) : 0;
+      }
+
+      public function abyssShieldMultiplier104() : Number
+      {
+         var affix:Object = abyssEffect104(12);
+         return affix ? 1 + Number(affix.value) : 1;
+      }
+
+      // 先声夺人 -> 同心 -> A-class hp line -> 坚城 (target), after existing modifiers.
+      public function abyssModifyDamage104(amount:int, source:Avatar, damageType:int, dotKind:String) : int
+      {
+         var before:int = amount;
+         if(source)
+         {
+            var affix:Object = source.abyssEffect104(2);
+            if(affix && abyssRound104() == 0) amount = Tools.toInt(amount * (1 + Number(affix.value)));
+            affix = source.abyssEffect104(17);
+            if(affix)
+            {
+               var count:int = 0;
+               var allies:* = GameMap.currentMap ? GameMap.currentMap.getAliveList(source.team) : null;
+               for each(var ally:Avatar in allies)
+               {
+                  if(ally !== source && ally.hp > 0 && ally.line == source.line) count++;
+               }
+               amount = Tools.toInt(amount * (1 + Number(affix.value) * count));
+            }
+            var context:Object = abyssNormalContext104(source);
+            affix = context ? source.abyssRelicA104 : null;
+            if(affix && damageType >= 1 && damageType <= 3 && !dotKind)
+            {
+               var ratio:Number = hp / Math.max(1,hpMax);
+               if(int(affix.id) == 8 && ratio > 0.5 || int(affix.id) == 9 && ratio < 0.5) amount = Tools.toInt(amount * (1 + Number(affix.value)));
+            }
+         }
+         if(abyssReduction104) amount = Tools.toInt(amount * (1 - abyssReduction104));
+         if(amount != before) abyssTrace104("damage_adjust",source || this,this,{"before":before,"after":amount});
+         return amount;
+      }
+
+      // 复苏之羽, after bless and Tryndamere undying failed to save the unit.
+      public function abyssTryRevive104() : Boolean
+      {
+         var affix:Object = abyssEffect104(4);
+         if(!affix || abyssRevived104) return false;
+         abyssRevived104 = true;
+         hp = Math.max(1,int(hpMax * Number(affix.value)));
+         removeAllDebuff();
+         abyssTrace104("revive",this,this,{"amount":hp});
+         return true;
+      }
+
+      // 坚守誓约 -> 嗜血 (attacker) -> 荆棘之躯 -> A-class status, after a hit settled.
+      public function abyssAfterDamage104(source:Avatar, healthDamage:Number, shieldDamage:Number, damageType:int, dotKind:String) : void
+      {
+         var total:Number = Math.max(0,healthDamage) + Math.max(0,shieldDamage);
+         var amount:int;
+         var previous:String;
+         var affix:Object = abyssEffect104(3);
+         if(affix && !abyssRecovered104 && hp > 0 && hp < hpMax * 0.5)
+         {
+            abyssRecovered104 = true;
+            amount = hpMax - hp;
+            hp = hpMax;
+            abyssTrace104("full_recovery",this,this,{"amount":amount});
+            if(Number(affix.shield_rate) > 0) abyssShield104(this,int(hpMax * Number(affix.shield_rate)),3,"recovery_shield");
+            if(GameMapLayer.gl) GameMapLayer.gl.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
+         }
+         if(!source || total <= 0) return;
+         affix = source.abyssEffect104(7);
+         if(affix && source.hp > 0)
+         {
+            amount = int(total * Number(affix.value));
+            previous = abyssOrigin104;
+            abyssOrigin104 = "relic_lifesteal";
+            var healed:int = 0;
+            try
+            {
+               healed = source.injured(amount,1,null,4,null,false,source);
+            }
+            finally
+            {
+               abyssOrigin104 = previous;
+            }
+            abyssTrace104("lifesteal",source,source,{"amount":amount,"healed":healed,"source_tag":"relic_lifesteal"});
+         }
+         affix = abyssEffect104(5);
+         if(affix && damageType >= 1 && damageType <= 3 && !dotKind && abyssOrigin104 != "relic_reflect" && source.hp > 0 && source.team != team)
+         {
+            amount = int(total * Number(affix.value));
+            abyssTrace104("reflect",this,source,{"amount":amount,"source_tag":"relic_reflect"});
+            previous = abyssOrigin104;
+            abyssOrigin104 = "relic_reflect";
+            try
+            {
+               // Absolute true damage: no crit/global multiplier/toughness (derived).
+               source.injured(amount,1,null,3,null,false,this,null,"",true);
+            }
+            finally
+            {
+               abyssOrigin104 = previous;
+            }
+         }
+         var context:Object = abyssNormalContext104(source);
+         var normal:Object = context ? source.abyssRelicA104 : null;
+         if(!normal || dotKind || damageType < 1 || damageType > 3 || context.abyssHits104.indexOf(this) >= 0 || hp <= 0) return;
+         context.abyssHits104.push(this);
+         var kind:int = int(normal.id);
+         if(kind == 10 || kind == 11)
+         {
+            var dotName:String = kind == 10 ? "burn" : "poison";
+            var dotAmount:int = int(source.abyssApWithTalent104() * Number(normal.value));
+            if(yasuoImmune104(dotName)) return;
+            if(buffs["purify"])
+            {
+               removeBuff("purify",true);
+               return;
+            }
+            var kept:Array = [];
+            for each(var row:Object in abyssDots104)
+            {
+               if(row.kind != dotName || row.source !== source) kept.push(row);
+            }
+            kept.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2});
+            abyssDots104 = kept;
+            abyssTrace104("normal_dot",source,this,{"kind":dotName,"amount":dotAmount,"duration":2});
+         }
+         else if(kind == 13 && Random.getRandom(1000000) < int(Number(normal.value) * 1000000))
+         {
+            addBuff("stun",1,0,0,-1,source);
+            abyssTrace104("normal_stun",source,this,{"duration":1});
+         }
+      }
+
+      public function abyssApWithTalent104() : int
+      {
+         return Tools.toInt(getDamage() + getDamage() * checkTalent(1));
+      }
+
+      // Relic DOT layers tick on the holder's turn before native buffs.
+      public function abyssTickDots104() : void
+      {
+         if(!abyssDots104 || !abyssDots104.length) return;
+         for each(var dot:Object in abyssDots104.concat())
+         {
+            if(hp <= 0) break;
+            abyssTrace104("dot_tick",dot.source as Avatar,this,{"kind":dot.kind,"amount":dot.amount});
+            injured(int(dot.amount),1,null,dot.kind == "poison" ? 6 : 7,null,false,dot.source as Avatar,null,String(dot.kind));
+            dot.left = int(dot.left) - 1;
+            if(int(dot.left) <= 0 && abyssDots104)
+            {
+               var at:int = abyssDots104.indexOf(dot);
+               if(at >= 0) abyssDots104.splice(at,1);
+            }
+         }
+      }
+
+      public function hasAbyssDot104(kind:String) : Boolean
+      {
+         for each(var dot:Object in abyssDots104)
+         {
+            if(dot && dot.kind == kind) return true;
+         }
+         return false;
+      }
+
+      // 疾风步: shield after a successful dodge, at most twice per global round.
+      public function abyssOnDodge104() : void
+      {
+         if(hp <= 0) return;
+         var affix:Object = abyssEffect104(6);
+         if(!affix) return;
+         var nowRound:int = abyssRound104();
+         if(abyssDodgeRound104 != nowRound)
+         {
+            abyssDodgeRound104 = nowRound;
+            abyssDodgeCount104 = 0;
+         }
+         if(abyssDodgeCount104 >= 2) return;
+         abyssDodgeCount104++;
+         abyssShield104(this,int(hpMax * Number(affix.value)),2,"dodge_shield");
+      }
+
+      // 召唤契约: the owner's 8-stat snapshot before the summon's own inheritance ratios.
+      public function abyssSummonPanel104(panel:Object) : Object
+      {
+         var affix:Object = abyssEffect104(18);
+         if(!affix || !panel) return panel;
+         var result:Object = {};
+         for(var key:String in panel) result[key] = panel[key];
+         for each(var stat:String in ["hpMax","ap","dePh","deMa","hit","flee","crit","tough"])
+         {
+            if(result[stat] != null) result[stat] = int(Number(result[stat]) * (1 + Number(affix.value)));
+         }
+         return result;
+      }
+      // ---- end Abyss relic equipment passives ---------------------------------
+      // END ABYSS_PASSIVES_104
+
    }
 }

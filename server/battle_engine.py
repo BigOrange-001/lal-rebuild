@@ -442,6 +442,8 @@ class ReferenceBattle:
         # back / summon and every other kind: the new buff is discarded.
 
     def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
+        if kind in ('poison','burn') and unit.get('_relic_dots'):
+            unit['_relic_dots'] = [d for d in unit['_relic_dots'] if d['kind']!=kind]
         container = unit.get("_buffs")
         if isinstance(container, dict):
             if kind == 'shield' and clear_shields:

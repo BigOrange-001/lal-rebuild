@@ -7,8 +7,8 @@
   },
   "response": {
     "abyss_relics": {
-      "relic-070cc7320a1dc40bad8f52a7": {
-        "id": "relic-070cc7320a1dc40bad8f52a7",
+      "relic-1bb5b3e99c7a4529a7dd38dd": {
+        "id": "relic-1bb5b3e99c7a4529a7dd38dd",
         "type": "relic",
         "relic_id": 16,
         "name": "统御",
@@ -30,10 +30,10 @@
             "text": "精准+28.1%"
           },
           {
-            "stat": "crit",
-            "value": 0.275628,
+            "stat": "hp",
+            "value": 0.115508,
             "ancient": false,
-            "text": "暴击+27.6%"
+            "text": "生命+11.6%"
           },
           {
             "stat": "ap",
@@ -128,7 +128,7 @@
       ]
     },
     "abyss_run": {
-      "id": "fb1e369ebee79e9bb669363a",
+      "id": "b2e9275bbb73cb4a01d38557",
       "status": "abandoned",
       "seed": 20261117,
       "difficulty": 2,

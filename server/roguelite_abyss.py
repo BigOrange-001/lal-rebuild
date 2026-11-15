@@ -19,8 +19,8 @@ DECKS = {
     'summon': ('群策', 3, [1049, 1085, 1094, 1014, 1040]),
     'star': ('星裔', 5, []),
 }
-DIFFICULTIES = [(1,20),(1.08,20),(1.16,18),(1.25,18),(1.35,16),
-                (1.45,16),(1.56,14),(1.68,14),(1.81,12),(1.95,10)]
+DIFFICULTIES = [(1,20),(1.0084,20),(1.0168,18),(1.0263,18),(1.0368,16),
+                (1.0474,16),(1.0589,14),(1.0716,14),(1.0853,12),(1.1,10)]
 MAIN_STATS = ('hp', 'ap', 'de_ph', 'de_ma')
 
 
@@ -58,7 +58,7 @@ def apply_abyss_config(document):
                         'members':[f'A_{i}_5' for i in ids]}
                   for key,(name,clear,ids) in DECKS.items()},
         'difficulties': [{'multiplier':m, 'retries':r} for m,r in DIFFICULTIES],
-        'enemy_rates': {'weak':.55, 'normal':[.8,1,1.2], 'elite':1.3, 'boss':1.6},
+        'enemy_rates': {'weak':.55, 'normal':[.36,.45,.54], 'elite':1.3, 'boss':1.6},
         'boss_decks': {
             str(act): [[f'A_{i}_6' for i in ids] for ids in sets]
             for act,sets in enumerate((
@@ -100,11 +100,11 @@ def unlocked_pool(profile, cfg):
     purple = set(plan['initial_purple'])
     for aid in account['obtained']:
         counterpart = aid.rsplit('_',1)[0]+'_5'
-        if counterpart in cfg['avatar']:
+        if counterpart.startswith('A_1') and counterpart in cfg['avatar']:
             purple.add(counterpart)
     orange = {a[:-1]+'6' for a in plan['initial_purple']}
     orange.update(a.rsplit('_',1)[0]+'_6' for a in account['appeared']
-              if a.rsplit('_',1)[0]+'_6' in cfg['avatar'])
+              if a.startswith('A_1') and a.rsplit('_',1)[0]+'_6' in cfg['avatar'])
     standalone = set(plan['skin_orange_only']).intersection(account['obtained'])
     return sorted(purple), sorted(orange), sorted(standalone)
 

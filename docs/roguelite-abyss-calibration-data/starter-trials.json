@@ -1,0 +1,850 @@
+{
+  "schema": 1,
+  "native_verified": false,
+  "difficulty": 1,
+  "pool_growth": false,
+  "trials": 60,
+  "passes": 60,
+  "results": [
+    {
+      "deck": "blade",
+      "seed": 20261126,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 235685426,
+          "win": true,
+          "censored": false,
+          "rounds": 13
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261127,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1181419032,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261128,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1891651093,
+          "win": true,
+          "censored": false,
+          "rounds": 12
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261129,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1884638771,
+          "win": true,
+          "censored": false,
+          "rounds": 10
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261130,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 6032326,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261131,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 916270968,
+          "win": true,
+          "censored": false,
+          "rounds": 11
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261132,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1411879959,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261133,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1820405429,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261134,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 891600712,
+          "win": true,
+          "censored": false,
+          "rounds": 12
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261135,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1082597457,
+          "win": true,
+          "censored": false,
+          "rounds": 10
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261136,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 173213089,
+          "win": true,
+          "censored": false,
+          "rounds": 17
+        }
+      ]
+    },
+    {
+      "deck": "blade",
+      "seed": 20261137,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 876861306,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261126,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 235685426,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261127,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1181419032,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261128,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1891651093,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261129,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1884638771,
+          "win": true,
+          "censored": false,
+          "rounds": 10
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261130,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 6032326,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261131,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 916270968,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261132,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1411879959,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261133,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1820405429,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261134,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 891600712,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261135,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1082597457,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261136,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 173213089,
+          "win": true,
+          "censored": false,
+          "rounds": 12
+        }
+      ]
+    },
+    {
+      "deck": "flame",
+      "seed": 20261137,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 876861306,
+          "win": true,
+          "censored": false,
+          "rounds": 5
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261126,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 235685426,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261127,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1181419032,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261128,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1891651093,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261129,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1884638771,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261130,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 6032326,
+          "win": true,
+          "censored": false,
+          "rounds": 5
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261131,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 916270968,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261132,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1411879959,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261133,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1820405429,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261134,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 891600712,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261135,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1082597457,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261136,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 173213089,
+          "win": true,
+          "censored": false,
+          "rounds": 11
+        }
+      ]
+    },
+    {
+      "deck": "venom",
+      "seed": 20261137,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 876861306,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261126,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 235685426,
+          "win": true,
+          "censored": false,
+          "rounds": 9
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261127,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1181419032,
+          "win": true,
+          "censored": false,
+          "rounds": 5
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261128,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1891651093,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261129,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1884638771,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261130,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 6032326,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261131,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 916270968,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261132,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1411879959,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261133,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1820405429,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261134,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 891600712,
+          "win": true,
+          "censored": false,
+          "rounds": 10
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261135,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1082597457,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261136,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 173213089,
+          "win": true,
+          "censored": false,
+          "rounds": 11
+        }
+      ]
+    },
+    {
+      "deck": "summon",
+      "seed": 20261137,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 876861306,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261126,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 235685426,
+          "win": true,
+          "censored": false,
+          "rounds": 9
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261127,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1181419032,
+          "win": true,
+          "censored": false,
+          "rounds": 5
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261128,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1891651093,
+          "win": true,
+          "censored": false,
+          "rounds": 5
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261129,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1884638771,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261130,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 6032326,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261131,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 916270968,
+          "win": true,
+          "censored": false,
+          "rounds": 8
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261132,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1411879959,
+          "win": true,
+          "censored": false,
+          "rounds": 4
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261133,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1820405429,
+          "win": true,
+          "censored": false,
+          "rounds": 6
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261134,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 891600712,
+          "win": true,
+          "censored": false,
+          "rounds": 10
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261135,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 1082597457,
+          "win": true,
+          "censored": false,
+          "rounds": 7
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261136,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 173213089,
+          "win": true,
+          "censored": false,
+          "rounds": 18
+        }
+      ]
+    },
+    {
+      "deck": "star",
+      "seed": 20261137,
+      "passed": true,
+      "attempts": [
+        {
+          "attempt": 1,
+          "combat_seed": 876861306,
+          "win": true,
+          "censored": false,
+          "rounds": 5
+        }
+      ]
+    }
+  ]
+}

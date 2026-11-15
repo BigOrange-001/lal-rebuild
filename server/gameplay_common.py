@@ -279,6 +279,10 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
                 for _ in range(count):
                     iid = next_hero_instance_id(profile, aid, config)
                     avatars[iid] = {"id":iid,"aid":iid,"lv":1,"slv":1,"exp":0,"hp":0,"ap":0,"de_ph":0,"de_ma":0,"phase":0,"morph":0,"love_exp":0,"equips":[]}
+            # Mail owns an existing transaction rather than atomic_update;
+            # record acquisition at the shared grant source as well.
+            from roguelite_abyss import normalize_account
+            normalize_account(profile,cfg)
         elif key == "items":
             definitions = cfg.get("equip", {}) if isinstance(cfg, dict) else {}
             equipment = profile.setdefault("my_equips", {})

@@ -143,6 +143,35 @@ class PassiveTests(unittest.TestCase):
         self.assertEqual(1000-e['hp'],70)  # (100*.6-10)+100*.4*.5
         self.assertEqual(b.rng.calls,2)
 
+    def test_frost_probability_boundary_and_once_per_target_per_cast(self):
+        for ancient,roll,expected in ((False,199999,True),(False,200000,False),
+                                     (True,249999,True),(True,250000,False)):
+            b,o,e=self.battle();o['equip_passives']=[]
+            o['skill']={'abyss_relic_A':main_effect(13,ancient)}
+            calls=[]
+            def draw(bound):calls.append(bound);return roll
+            b.rng.get_random=draw
+            with casting(b,o,'skill'):
+                b._injured(e,10,1,source=o);b._injured(e,10,1,source=o)
+            self.assertEqual(bool(b._buff(e,'stun')),expected)
+            self.assertEqual(calls,[1000000])
+
+    def test_delayed_small_skill_preserves_relic_context(self):
+        b,o,e=self.battle();o['equip_passives']=[]
+        o['skill']={'abyss_relic_A':main_effect(8)}
+        with casting(b,o,'skill'):
+            b._injured(e,10,1,source=o)
+            b._act_pending_area_strike(o,[e],[o],o['skill'],
+                ['pending_area_strike',0,1,1,300,1,1,'fixture'],0,{'targets':{0:e}})
+        b._resolve_pending_strike(o)
+        self.assertEqual(1000-e['hp'],154)
+
+    def test_lifesteal_counts_hp_lost_before_relic_revive(self):
+        b,o,e=self.battle(7);o['hp']=500;e['equip_passives']=[main_effect(4)]
+        b._injured(e,2000,1,source=o)
+        self.assertEqual(e['hp'],500)
+        self.assertEqual(o['hp'],750)
+
     def test_reference_engine_has_same_independent_passive_channel(self):
         b,o,e=self.battle(12,engine=ReferenceBattle)
         b._add_buff(e,'shield',3,150)

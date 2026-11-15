@@ -2040,6 +2040,8 @@ class GameplayRosterEquipment:
         obj = copy.deepcopy(retain) if retain else {"lv": 1, "slv": 1, "exp": 0, "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0, "phase": 0, "morph": 0, "limit_break": 0, "love_exp": 0, "equips": []}
         obj.update({"id": iid, "aid": iid})
         p["avatars"][iid] = obj
+        from roguelite_abyss import normalize_account
+        normalize_account(p,self.full_config)
         return obj
 
     def _new_equip(self, p, eid):

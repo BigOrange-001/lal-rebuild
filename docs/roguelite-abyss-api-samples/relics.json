@@ -7,8 +7,8 @@
   },
   "response": {
     "abyss_relics": {
-      "relic-070cc7320a1dc40bad8f52a7": {
-        "id": "relic-070cc7320a1dc40bad8f52a7",
+      "relic-1bb5b3e99c7a4529a7dd38dd": {
+        "id": "relic-1bb5b3e99c7a4529a7dd38dd",
         "type": "relic",
         "relic_id": 16,
         "name": "统御",
@@ -44,8 +44,8 @@
         ],
         "schema": 1
       },
-      "relic-ef30ec58f71a623171c89660": {
-        "id": "relic-ef30ec58f71a623171c89660",
+      "relic-9e7d52946c9239ebb7592894": {
+        "id": "relic-9e7d52946c9239ebb7592894",
         "type": "relic",
         "relic_id": 10,
         "name": "余烬",
@@ -165,7 +165,7 @@
       ]
     },
     "abyss_run": {
-      "id": "9d0f7b67232cdc3516390ede",
+      "id": "65f9f2f9ac6b41339367602a",
       "status": "cleared",
       "seed": 20261116,
       "difficulty": 1,
@@ -928,12 +928,12 @@
       "rewards": [
         {
           "node_id": "3-7-0",
-          "item_id": "relic-070cc7320a1dc40bad8f52a7",
+          "item_id": "relic-1bb5b3e99c7a4529a7dd38dd",
           "guaranteed": false
         },
         {
           "node_id": "3-7-0",
-          "item_id": "relic-ef30ec58f71a623171c89660",
+          "item_id": "relic-9e7d52946c9239ebb7592894",
           "guaranteed": true
         }
       ],

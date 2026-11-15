@@ -85,3 +85,40 @@ A类全部6种为现有普通技能和英雄/装备羁绊版本预生成25296条
 未指定的疾风步护盾时长采用原生默认2回合；原生护盾按既有较强/刷新规则，未改为叠加。整数统一5位小数后截断，修复浮点114.999…与遗物中毒末跳状态提前解除。
 扩展战斗回归执行150项时，另发现hero_skills_103的2个历史数值断言、skin_revision_104的1个数值断言，以及hero_packs_104类setUp旧配置IndexError；已把main的server/config/scripts/VERSION归档到临时目录独立重跑，全部复现。没有修改这些无关测试或原断言。
 未验证：客户端装备通道、实际UI、真实战斗结算、Android、客户端27用例逐事件一致性。前端待办15项，详见API文档。阶段4数值尚在测量，不把流程控制sign或HP比分裁定胜利当作自然战斗通过。
+
+## 五项调整的提交索引
+
+| 用户要求 | 对应提交 |
+| --- | --- |
+| 先覆盖并单独提交设计稿 | **2802bb4** `docs(abyss): 同步设计稿` |
+| 1 全面改名为深渊遗物 | **f527860** `feat(abyss): 阶段3 装备被动与新版设计适配` |
+| 2 99级、橙1.4倍、仅橙皮肤0.7倍 | **f527860** |
+| 3 substat_index单条重随 | **f527860** |
+| 4 副词条text一位小数、value原精度 | **f527860** |
+| 5 25人初始紫橙双解锁 | **f527860** |
+
+五项以同一实装提交交付，设计稿同步保持独立提交。25人名单和四套卡组无变动的说明见上节。第4阶段只继续调整被授权的敌人/难度初值，不改变这五项规则。
+
+## 阶段4：离线校准与最终验收
+
+完成基线、多候选淘汰、额外种子复查、五卡组独立样本及实际配置复测；40局最终样本全部通关，难度1普通节点最多1次、Boss最多3次；难度10平均重打0.9次，上限10。未决的15场不接受HP比分判胜，一律失败重打。另有纯起始卡组60/60场在2次内通过。
+最终初值：普通系数0.8/1/1.2→0.36/0.45/0.54；难度倍率1～1.95→1～1.10（按原相对位置线性映射）。重打20/20/18/18/16/16/14/14/12/10、弱敌0.55、精英×1.3、Boss×1.6保留。依据：原8局基线全失败；仅降普通系数仍无法稳定达到高难重打目标；最终五套卡组与新种子40局通过，实际配置复测结果一致。设计稿初值表已标记“已离线校准”，不表述为实机通过。
+深渊遗物战力：主词条预算保留0.15，太古0.1875；三种角色各56种满太古副词条组合，最优组合约为满养成普通橙武器的1.01～1.02倍，中位组合约0.64倍。144场灵魂塔探针均为离线结果：150层缩短部分战斗，180层没有样本通关，不宣称全塔或多遗物组合已平衡。
+补充审计：共同奖励来源和_new_hero直接登记曾获得记录，覆盖邮件自有事务；不让非英雄材料进入卡池。补测休息升橙后的实际开战面板、寒霜精确概率边界/每目标一次、延迟打击归属、复活前实际伤害吸血；遗物DOT遵守负面免疫及指定毒/灼烧驱散。
+
+产物：`docs/roguelite-abyss-calibration.md`含设计第10节逐项验收对应；`roguelite-abyss-calibration-data/`保留所有采用/淘汰数据；`roguelite-abyss-relic-budget.json`保留168组预算及144场塔层结果；新增3个可复跑研究脚本。参数调整只发生在本模式配置。
+
+最后一轮受影响回归命令：
+
+```text
+python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests test_roguelite_abyss_passives test_equipment_flows test_equipment_magic test_equipment_bonds_104 test_stat_power_103 test_dn_power test_exploration_regressions test_exploration_overhaul test_campaign_tower_difficulty_104 test_activity_tower test_combat_origin_phase test_roster_sale_promotion test_combat_redesign test_pass_battle_gift test_check_in_rewards
+```
+
+151/151通过；另有14/14被动专项、3/3升橙及校准证据专项通过。邮件/签到/奖励来源专项12/12通过。最终模式专项 `python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests test_roguelite_abyss_passives test_roguelite_abyss_calibration` **45/45通过**。以上批次有重叠，不能相加当作独立测试总数。已复现的无关main失败保留上方记录，未删改原断言。
+接口流程80次调用、13种方法样例已按最终配置重导出；27份B词条对照用例可重复回放。
+
+**需用户决定：无。** 原精英橙卡不足冲突已关闭。
+**前端待办：15项。** 包含模式界面、5人三路、战斗凭证、深渊遗物第7格与太古色、单条重随、A/B通道与来源标记、27用例双端验证、新版共用放弃确认框与第7格布局。
+**未验证：** 客户端UI/真实战斗结算、Android安装与表现、双端逐事件一致性、设备配置体积/性能、长期全构筑与5件遗物叠加、所有中间难度完整胜率分布；未部署。
+
+阶段4提交以 `feat(abyss): 阶段4 离线数值校准与验收报告` 标识；最终哈希在最后的收尾索引补记。

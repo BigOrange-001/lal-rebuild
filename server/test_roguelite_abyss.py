@@ -127,6 +127,12 @@ class AbyssTests(unittest.TestCase):
                 self.assertGreaterEqual(sum(h['quality']==6 for h in choice['options']),2 if difficulty==1 else 1)
                 self.assertTrue(all(h['id'] not in pool for h in choice['options']))
 
+    def test_nonhero_materials_do_not_enter_hero_pool(self):
+        p=self.store.profile_raw(self.uid)
+        p['avatars']['material']={'aid':'A_6992_5|material'}
+        cfg={**self.cfg,'avatar':{**self.cfg['avatar'],'A_6992_5':self.cfg['avatar']['A_1001_5']}}
+        self.assertNotIn('A_6992_5',unlocked_pool(p,cfg)[0])
+
     def test_migration_before_sale_after_award_and_repeat_load(self):
         before = self.store.profile_raw(self.uid)
         before.pop('abyss_account',None)
@@ -150,6 +156,16 @@ class AbyssTests(unittest.TestCase):
         revision = self.store.state_revision(self.uid)
         self.assertEqual(first['abyss_account'],self.store.profile(self.uid)['abyss_account'])
         self.assertEqual(revision,self.store.state_revision(self.uid))
+
+    def test_direct_reward_source_records_mail_hero_before_later_consumption(self):
+        from gameplay_common import grant_reward
+        p=self.store.profile_raw(self.uid)
+        aid='A_1022_5'
+        self.assertNotIn(aid,p['abyss_account']['obtained'])
+        grant_reward(p,{'avatar':{aid:1}},self.document)
+        self.assertIn(aid,p['abyss_account']['obtained'])
+        p['avatars']={}
+        self.assertIn(aid,p['abyss_account']['obtained'])
 
     def test_locked_deck_and_difficulty_roll_back(self):
         for params in ({'difficulty':2,'deck':'blade'},{'difficulty':1,'deck':'summon'}):
@@ -262,6 +278,11 @@ class AbyssTests(unittest.TestCase):
         self.db.execute('UPDATE players SET profile=? WHERE uid=?',(json.dumps(p),self.uid)); self.db.commit()
         after = self.call('rest',hero_id=hero['id'],option='orange')['abyss_run']
         self.assertEqual(after['pool'][hero['id']]['quality'],6)
+        battle = self.combat(self.enter(after))
+        promoted = next(u for u in battle['orgin_team_a'] if u['aid']==hero['aid'][:-1]+'6')
+        from combat_math import level_stats, to_int
+        raw = level_stats(self.cfg['avatar'][hero['aid']],99,enforce_cap=False)
+        self.assertEqual(promoted['ap'],to_int(raw['attack']*1.4))
         for aid in rules(self.cfg)['initial_purple']:
             after['pool'][aid.rsplit('_',1)[0]]=hero_record(aid)
             if len(after['pool'])>=20: break

@@ -142,6 +142,10 @@ package com.meng52.game.ui.panel
                this.setPopPanelBg(GlobalLanguageStr.getLanguageStr(97667),_loc3_);
             }
          }
+         else if(GlobalData.$isExploration && GlobalData.$abyss104)
+         {
+            this.setPopPanelBg("深渊回廊 · 调整站位",_loc3_ - 100);
+         }
          else if(GlobalData.$isExploration)
          {
             this.setPopPanelBg(GlobalLanguageStr.getLanguageStr(90554),_loc3_ - 100);
@@ -189,7 +193,27 @@ package com.meng52.game.ui.panel
          this.mBtn_play.x = this.mBtn_random.x + this.mBtn_random.width + 30;
          this.mBtn_play.y = this.mBtn_random.y;
          this.mBtn_team.addEventListener("triggered",onTRIGGERED_);
-         if(GlobalData.$isExploration)
+         if(GlobalData.$isExploration && GlobalData.$abyss104)
+         {
+            // Abyss: standardized heroes, no exploration buff/power line. "返回"
+            // closes only this pop and goes back to hero selection; no retry is used.
+            mExploration_Power = GlobalFunction.createTextField(560,30,GlobalData.$abyss104.pending ? "上次开战的阵容已保存，开始战斗将按当时的站位继续。" : "拖动英雄调整三路站位，每路至少1人；1号位为队长。","",18,16777215);
+            mExploration_Power.x = this.m9x9_bg.x + (m9x9_bg.width - 560) * 0.5;
+            mExploration_Power.y = this.m9x9_bg.y + this.m9x9_bg.height + 2;
+            mExploration_Power.hAlign = "center";
+            this.addChild(mExploration_Power);
+            mBtn_team.visible = false;
+            mBtn_team.x = this.mBtn_random.x - mBtn_team.width - 30;
+            mBtn_team.y = this.mBtn_random.y;
+            this.mBtn_play.text = "开始战斗";
+            mExploration_Back = new LOL_Scale9Button("返回选人",150,70,"UI_btn_normalFun_0000");
+            mExploration_Back.name = "btn_name_back";
+            mExploration_Back.x = mBtn_team.x;
+            mExploration_Back.y = mBtn_team.y;
+            mExploration_Back.addEventListener("triggered",onTRIGGERED_);
+            this.addChild(mExploration_Back);
+         }
+         else if(GlobalData.$isExploration)
          {
             _loc10_ = GlobalData.$userData.exploration;
             _loc4_ = GlobalFunction.getStage_Mode(_loc10_.stage_mode);
@@ -822,7 +846,29 @@ package com.meng52.game.ui.panel
          this.mCurr_drag = null;
          var _loc7_:uint = 0;
          var _loc6_:Array = [];
-         if(GlobalData.$isExploration)
+         if(GlobalData.$isExploration && GlobalData.$abyss104)
+         {
+            // Five numbered slots from the Abyss selection step; slot 0 is the captain.
+            _loc3_ = 5;
+            _loc6_ = GlobalData.$tempTeam = GlobalData.$exploration_team_avtId_arr;
+            _loc7_ = 0;
+            while(_loc7_ < _loc3_)
+            {
+               if(_loc6_ && _loc7_ < _loc6_.length && _loc6_[_loc7_] != null && GlobalData.$abyss104.heroes[_loc6_[_loc7_]])
+               {
+                  _loc5_ = Tools.clone(GlobalData.$abyss104.heroes[_loc6_[_loc7_]]);
+                  _loc5_["id"] = _loc6_[_loc7_];
+                  _loc5_["indexID_s"] = _loc7_;
+                  _loc1_ = new ItemDDAvatar();
+                  _loc1_.data = _loc5_;
+                  _loc1_.visible = false;
+                  this.mList_drag.addChild(_loc1_);
+                  this.mArr_drag.push(_loc1_);
+               }
+               _loc7_++;
+            }
+         }
+         else if(GlobalData.$isExploration)
          {
             _loc3_ = 3;
             _loc2_ = GlobalData.$exploration_team_avatar;
@@ -1052,7 +1098,7 @@ package com.meng52.game.ui.panel
                      _loc2_.isOthers = true;
                   }
                   _loc2_ = _loc10_.getSameAvatar(_loc2_);
-                  if(GlobalData.$isExploration)
+                  if(GlobalData.$isExploration && !GlobalData.$abyss104)
                   {
                      _loc9_ = 0;
                      _loc7_.x = Math.round(Math.min(GameMapConfig.sideOffset,Math.max(_loc7_.x - _loc9_ * GameMapConfig.lineOffset,-GameMapConfig.sideOffset)));
@@ -1074,7 +1120,7 @@ package com.meng52.game.ui.panel
                         _loc2_.hp = 0;
                         _loc7_.x = Math.round(Math.min(GameMapConfig.sideOffset,Math.max(_loc7_.x - _loc9_ * GameMapConfig.lineOffset,-GameMapConfig.sideOffset)));
                         _loc7_.y = Math.round(Math.min(GameMapConfig.LINE_POS,Math.max((1 - GameMapConfig.MAX_POS_PER) * GameMapConfig.LINE_POS,_loc7_.y)));
-                        if(!_loc2_.isOthers)
+                        if(!_loc2_.isOthers && !GlobalData.$abyss104)
                         {
                            _loc6_ = GlobalData.$userData.as_equips;
                            _loc2_.setEquips(_loc6_[_loc2_.indexID_s]);

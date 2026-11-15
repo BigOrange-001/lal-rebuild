@@ -1,0 +1,67 @@
+      // Saved formation row for the "阵容挑战" tab: name, five heroes, power, record and actions.
+      private function initFormation104(row:Object) : void
+      {
+         formationButtons104=[];
+         mBox_UIs=new Sprite();addChild(mBox_UIs);
+         var bg:Scale9Textures=new Scale9Textures(GlobalFunction.getTexture("UI_pvp_bg_1_0000"),new Rectangle(30,30,50,50));
+         mScale9Image=new Scale9Image(bg);mScale9Image.width=570;mScale9Image.height=118;
+         mBox_UIs.addChild(mScale9Image);
+         this.width=mScale9Image.width;this.height=mScale9Image.height-5;
+         var playable:Boolean=row["compatible"]!=false;
+         var name:TextField=GlobalTextStyle.getTextField(String(row["name"]),22,9116186,"left",300,30,GlobalConfig.FONT_1);
+         name.x=20;name.y=8;mBox_UIs.addChild(name);
+         var date:TextField=GlobalTextStyle.getTextField(row["created_text"]?String(row["created_text"]):"",15,8022613,"right",150,22,GlobalConfig.FONT_1);
+         date.x=315;date.y=12;mBox_UIs.addChild(date);
+         var author:TextField=GlobalTextStyle.getTextField("作者 "+row["author"]+" · Lv."+int(row["lv"]),16,4926491,"left",260,24,GlobalConfig.FONT_1);
+         author.x=20;author.y=36;mBox_UIs.addChild(author);
+         var heroes:Array=row["data_base"] as Array;
+         if(heroes && heroes.length)
+         {
+            mBox_avatars=new Sprite();
+            for(var i:int=0;i<heroes.length && i<5;i++)
+            {
+               var unit:Array=heroes[i] as Array;
+               var avatar:Avatar=new Avatar(unit[0],{lv:unit[1],slv:unit[2],hp:unit[3],ap:unit[4],de_ph:unit[5],de_ma:unit[6],phase:unit[7],morph:unit[11]});
+               var art:Sprite=avatar.getAvatarRes();
+               art.pivotY=90;art.scaleX=art.scaleY=i==0?0.55:0.48;art.x=i*50;
+               mBox_avatars.addChildAt(art,0);
+            }
+            mBox_avatars.x=30;mBox_avatars.y=110;addChild(mBox_avatars);mBox_avatars.flatten();
+         }
+         else
+         {
+            var missing:TextField=GlobalTextStyle.getTextField("阵容中有英雄在当前版本不可用",17,8022613,"left",260,26,GlobalConfig.FONT_1);
+            missing.x=20;missing.y=70;mBox_UIs.addChild(missing);
+         }
+         var power:TextField=GlobalTextStyle.getTextField("战力 "+int(row["formation_power"]),22,1513239,"left",175,30,GlobalConfig.FONT_1);
+         power.x=290;power.y=40;mBox_UIs.addChild(power);
+         var wins:int=int(row["wins"]);var losses:int=int(row["losses"]);
+         var record:TextField=GlobalTextStyle.getTextField(wins+losses==0?"尚未挑战":"战绩 "+wins+"胜 "+losses+"负",17,4926491,"left",175,24,GlobalConfig.FONT_1);
+         record.x=290;record.y=70;mBox_UIs.addChild(record);
+         if(wins+losses>0)
+         {
+            var won:Boolean=int(row["last_result"])==1;
+            var last:TextField=GlobalTextStyle.getTextField(won?"上次 胜利":"上次 失败",16,won?3046706:12000284,"left",175,22,GlobalConfig.FONT_1);
+            last.x=290;last.y=92;mBox_UIs.addChild(last);
+         }
+         mBtn_pk=new LOL_Scale9Button(playable?"挑战":"不可用",85,60,playable?"UI_btn_enterGame_0_0000":"UI_btn_smallFun_1_0000");
+         mBtn_pk.fontSize=22;mBtn_pk.x=570-85-12;mBtn_pk.y=10;
+         if(!playable) mBtn_pk.alpha=0.6;
+         mBtn_pk.addEventListener("triggered",challengeFormation104);addChild(mBtn_pk);
+         var more:LOL_Scale9Button=new LOL_Scale9Button("更多",85,38,"UI_btn_normalFun_0000");
+         more.fontSize=18;more.x=mBtn_pk.x;more.y=74;
+         more.addEventListener("triggered",function(event:Event):void
+         {
+            GlobalData.$mEventDispatcher.dispatchEventWith("formation_action",false,{action:"more",row:_data});
+         });
+         addChild(more);formationButtons104.push(more);
+         mBox_UIs.flatten();
+      }
+
+      private function challengeFormation104(event:Event) : void
+      {
+         if(_data["compatible"]==false) {GlobalFunction.popToast("阵容中有英雄在当前版本不可用，无法挑战。","info");return;}
+         GlobalData.$formationShare104={mode:"challenge",id:_data["formation_id"]};
+         GlobalData.$pvp_rival=data;GlobalData.$pvp_Embattle=_data["name"];
+         GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);
+      }

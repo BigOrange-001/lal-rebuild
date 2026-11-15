@@ -125,13 +125,12 @@ package com.meng52.game.ui.panel
          for each(var row:Object in Avatar.statisticsRows104)
             statisticsSnapshot104.push({name:row.name,team:row.team,res:statisticsRes104(row.unit),damage:row.damage,healing:row.healing,taken:row.taken});
          if(statisticsButton104) statisticsButton104.removeFromParent(true);
-         statisticsButton104 = new LOL_Scale9Button("战斗数据",170,56,"UI_btn_enterGame_0_0000");
-         statisticsButton104.fontSize = 22;
-         statisticsButton104.x = (GlobalData.$mStageWidth-statisticsButton104.width)/2;
-         // Sit just above the replay/continue row so reward cards stay uncovered.
-         statisticsButton104.y = int(GameMapConfig.SCREEN_HEIGHT * 0.66 + 8);
+         // Same native skin/size family as the replay/continue row (150x70 normalFun);
+         // 60px tall so it ends 12px above that row at SCREEN_HEIGHT*0.66+80.
+         // Centred on the same axis as the replay/continue row below it, and
+         // above it so reward cards stay uncovered.
+         statisticsButton104 = GlobalFunction.uiButton("战斗数据",150,60,"normal",mBox_btn,int(GameMapConfig.SCREEN_WIDTH * 0.5 - 75),int(GameMapConfig.SCREEN_HEIGHT * 0.66 + 8));
          statisticsButton104.addEventListener("triggered",openStatistics104);
-         mBox_btn.addChild(statisticsButton104);
       }
 
       private function openStatistics104(event:Event) : void
@@ -174,11 +173,11 @@ package com.meng52.game.ui.panel
       private function statisticsNav104(panel:Sprite, label:String, key:String, x:Number, y:Number, width:Number, selected:Boolean) : void
       {
          var tab:Boolean = key == "team1" || key == "team2";
-         var button:LOL_Scale9Button = tab ? new LOL_Scale9Button(label,width,48,selected ? "UI_btn_smallFun_1_0000" : "UI_btn_enterGame_0_0000") : new LOL_Scale9Button(label,width,42,"UI_btn_enterGame_0_0000");
-         button.name = key; button.x = x; button.y = y;
-         if(tab) button.fontSize = 21;
+         // Native skins: the selected team tab is the highlighted (yellow) action,
+         // other tabs and the pager use the normal function button.
+         var button:LOL_Scale9Button = GlobalFunction.uiButton(label,width,tab ? 48 : 46,tab && selected ? "primary" : "normal",panel,x,y);
+         button.name = key;
          button.addEventListener("triggered",statisticsNavigate104);
-         panel.addChild(button);
       }
 
       private function statisticsIcon104(panel:Sprite, res:String, x:Number, y:Number) : void

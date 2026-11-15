@@ -98,6 +98,8 @@ GAMEPLAY_ERROR_MESSAGES_ZH.update({
 })
 
 def gameplay_fault_message(error):
+ # Faults marked detail carry a specific, already localized explanation.
+ if getattr(error,'detail',False):return error.message
  return GAMEPLAY_ERROR_MESSAGES_ZH.get(error.code,error.message)
 
 def load_game_config(path, now=None):

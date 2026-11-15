@@ -38,8 +38,12 @@ s=once(s,'      public static var $tabBarSelectedIndex:int = 0;','''      public
       private var shareExport104:LOL_Scale9Button;
       private var shareImport104:LOL_Scale9Button;
       private var shareModal104:Sprite;
-      private var shareInput104:TextInput;''')
-s=once(s,'GlobalData.$mEventDispatcher.addEventListener("update_signup",afterSignUpdate);','GlobalData.$mEventDispatcher.addEventListener("update_signup",afterSignUpdate);\n         GlobalData.$mEventDispatcher.addEventListener("formation_library_changed",loadFormations104);')
+      private var shareInput104:TextInput;
+      private var shareNameInput104:TextInput;
+      private var formationHeader104:Sprite;
+      private var formationEmpty104:Sprite;
+      private var formationStrip104:TextField;''')
+s=once(s,'GlobalData.$mEventDispatcher.addEventListener("update_signup",afterSignUpdate);','GlobalData.$mEventDispatcher.addEventListener("update_signup",afterSignUpdate);\n         GlobalData.$mEventDispatcher.addEventListener("formation_library_changed",loadFormations104);\n         GlobalData.$mEventDispatcher.addEventListener("formation_action",onFormationAction104);')
 s=once(s,'"indexID":3\n         }],tabBar_changeHandler,tabBar_CREATION_COMPLETE,MainConfig.$isEnglish ? 155 : 135,55);','"indexID":3\n         },{"label":"阵容挑战","indexID":4}],tabBar_changeHandler,tabBar_CREATION_COMPLETE,Math.min(MainConfig.$isEnglish ? 155 : 135,(GlobalData.$mStageWidth-40)/5),55);')
 s=once(s,'      override public function update() : void\n      {','''      override public function update() : void
       {
@@ -52,13 +56,12 @@ s=once(s,'      override public function update() : void\n      {','''      over
 s=once(s,'            if(_loc4_)\n            {\n               update();','            if(this.mTabBar.selectedIndex==4) _loc4_=true;\n            if(_loc4_)\n            {\n               update();')
 s=once(s,'      private function delPVPList() : void\n      {','''      private function delPVPList() : void
       {
-         if(shareExport104) shareExport104.removeFromParent(true);
-         if(shareImport104) shareImport104.removeFromParent(true);
-         shareExport104=null;shareImport104=null;''')
+         clearFormationControls104();''')
 s=once(s,'      override public function onREMOVED_FROM_STAGE(param1:Event) : void\n      {','''      override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
-         closeFormationCode104();
-         GlobalData.$mEventDispatcher.removeEventListener("formation_library_changed",loadFormations104);''')
+         closeFormationCode104();clearFormationControls104();
+         GlobalData.$mEventDispatcher.removeEventListener("formation_library_changed",loadFormations104);
+         GlobalData.$mEventDispatcher.removeEventListener("formation_action",onFormationAction104);''')
 anchor='''         if(mFun_status)
          {
             selectMsg();
@@ -68,76 +71,37 @@ anchor='''         if(mFun_status)
             selectList(true);
          }
          checkGuide();'''
-s=once(s,anchor,'''         addFormationControls104();
-         if(mTabBar.selectedIndex==4)
+s=once(s,anchor,'''         if(mTabBar.selectedIndex==4)
          {
-            mBtn_re.visible=false;if(mBtn_change) mBtn_change.visible=false;
-            pvpRule.visible=false;headImg.visible=false;
-            mTxt_pkTimes.text="已保存阵容：加载中";
+            addFormationControls104();
             formationRows104=[];setList();loadFormations104();
+            consumeFormationCode104();
          }
          else
          {
             if(mFun_status) selectMsg();else selectList(true);
             checkGuide();
-         }
-         consumeFormationCode104();''')
+         }''')
 s=once(s,'else if(this.mTabBar.selectedIndex == 3)\n         {\n            setPVPList_listData();','else if(this.mTabBar.selectedIndex == 3 || this.mTabBar.selectedIndex == 4)\n         {\n            setPVPList_listData();')
 s=once(s,'         if(mTabBar.selectedIndex == 1)\n         {\n            i = 0;','''         if(mTabBar.selectedIndex==4)
          {
-            delTips();
-            if(formationRows104.length==0) setTips("还没有敌方阵容，点击“导入敌阵”保存阵容代码。");
-            else this.setListTimer(mList,formationRows104,ItemPVP,false);
-            if(shareModal104) addChild(shareModal104);
+            delTips();showFormationList104();
             return;
          }
          if(mTabBar.selectedIndex == 1)
          {
             i = 0;''')
 s=once(s,'if(mTxt_pkTimes && mPVP_list.length > 6)','if(mTxt_pkTimes && mPVP_list.length > 6 && mTabBar.selectedIndex==1)')
-s=once(s,'if(mBtn_change) mBtn_change.visible = !mFun_status;','if(mBtn_change) mBtn_change.visible = !mFun_status;\n         if(shareExport104) shareExport104.visible=!mFun_status;\n         if(shareImport104) shareImport104.visible=!mFun_status;')
 s=once(s,'if(mTabBar.selectedIndex != 0)\n         {\n            this.setList();\n            this.addList();','if(mTabBar.selectedIndex == 1)\n         {\n            this.setList();\n            this.addList();\n            if(shareModal104) addChild(shareModal104);')
 s=methods(s,'client/src/formation_share_104.aspart','FORMATION PANEL 104');write(p,s)
 
 p='client/src/stages/047_ItemPVP.as';s=read(p)
 s=once(s,'   import feathers.controls.renderers.IListItemRenderer;','   import feathers.controls.renderers.IListItemRenderer;\n   import com.meng52.net.SendAndSelect;')
-s=once(s,'      protected var mBtn_pk:LOL_Scale9Button;','      protected var mBtn_pk:LOL_Scale9Button;\n      private var formationDelete104:LOL_Scale9Button;')
-s=once(s,'      override public function onREMOVED_FROM_STAGE(param1:Event) : void\n      {','      override public function onREMOVED_FROM_STAGE(param1:Event) : void\n      {\n         if(formationDelete104) formationDelete104.removeFromParent(true);\n         formationDelete104=null;')
-s=once(s,'_loc33_ = GlobalFunction.checkIsFirstPVP();','_loc33_ = param1["formation_id"] ? false : GlobalFunction.checkIsFirstPVP();')
-s=once(s,'mBtn_pk.addEventListener("triggered",onTRIGGERED_btns);','''mBtn_pk.addEventListener("triggered",onTRIGGERED_btns);
-            if(param1["formation_id"])
-            {
-               _loc27_.text="战力 "+String(param1["formation_power"]);_loc27_.fontSize=23;
-               _loc18_.visible=false;
-               mBtn_pk.text=param1["compatible"]?"挑战":"不兼容";mBtn_pk.y=4;mBtn_pk.height=50;
-               formationDelete104=new LOL_Scale9Button("删除",85,38,"UI_btn_normalFun_0000");
-               formationDelete104.fontSize=20;formationDelete104.x=mBtn_pk.x;formationDelete104.y=66;
-               formationDelete104.addEventListener("triggered",deleteFormation104);addChild(formationDelete104);
-            }''')
-s=once(s,'         if(mBtn_pk.alpha < 1)','''         if(_data["formation_id"])
-         {
-            if(!_data["compatible"]) {GlobalFunction.popError("阵容与当前战斗规则不兼容，请导入同版本代码。");return;}
-            GlobalData.$formationShare104={mode:"challenge",id:_data["formation_id"]};
-            GlobalData.$pvp_rival=data;GlobalData.$pvp_Embattle=_data["name"];
-            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);return;
-         }
-         GlobalData.$formationShare104={};
-         if(mBtn_pk.alpha < 1)''')
-part='''      private function deleteFormation104(event:Event) : void
-      {
-         var id:String=String(_data["formation_id"]);
-         GlobalFunction.popAlert("删除阵容","删除这份敌阵？之后仍可重新导入代码。",{
-            ok:function():void
-            {
-               SendAndSelect.sendAndSelectService("user.delete_formation",{formation_id:id,actionID:"formation-delete-"+new Date().time+"-"+Math.random()},function(reply:Object):void
-               {
-                  if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
-               });
-            },okUI:"删除",no:function():void{},noUI:"取消"});
-      }
-'''
-if '// BEGIN FORMATION DELETE 104' not in s:
-    at=s.rfind('\n   }\n}');s=s[:at]+'\n      // BEGIN FORMATION DELETE 104\n'+part+s[at:]
+s=once(s,'      protected var mBtn_pk:LOL_Scale9Button;','      protected var mBtn_pk:LOL_Scale9Button;\n      private var formationButtons104:Array;')
+s=once(s,'      override public function onREMOVED_FROM_STAGE(param1:Event) : void\n      {','      override public function onREMOVED_FROM_STAGE(param1:Event) : void\n      {\n         for each(var formationButton104:LOL_Scale9Button in formationButtons104) formationButton104.removeFromParent(true);\n         formationButtons104=null;')
+s=once(s,'      override public function init(param1:Object) : void\n      {','      override public function init(param1:Object) : void\n      {\n         if(param1["formation_id"])\n         {\n            initFormation104(param1);\n            return;\n         }')
+s=once(s,'         if(mBtn_pk.alpha < 1)','         GlobalData.$formationShare104={};\n         if(mBtn_pk.alpha < 1)')
+s=methods(s,'client/src/formation_item_104.aspart','FORMATION ITEM 104')
 write(p,s)
 
 p='client/src/stages/175_GameMap.as';s=read(p)
@@ -165,7 +129,7 @@ p='client/src/stages/180_PanelPVEembattle.as'
 if not (ROOT/p).exists():
     write(p,read('build/formation-share/decompiled/scripts/com/meng52/game/ui/panel/PanelPVEembattle.as'))
 s=read(p)
-s=once(s,'this.mBtn_play.name = "btn_name_play";','this.mBtn_play.name = "btn_name_play";\n         if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="export") this.mBtn_play.text="导出";')
+s=once(s,'this.mBtn_play.name = "btn_name_play";','this.mBtn_play.name = "btn_name_play";\n         if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="export") this.mBtn_play.text="导出阵容";')
 s=once(s,'         else if(_loc10_.name == "btn_name_play")\n         {','''         else if(_loc10_.name == "btn_name_play")
          {
             if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="export")

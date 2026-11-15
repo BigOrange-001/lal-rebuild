@@ -79,6 +79,8 @@ package com.meng52.game.global
    import starling.filters.BlurFilter;
    import starling.filters.FragmentFilter;
    import starling.text.TextField;
+   import com.meng52.game.ui.element.LOL_Scale9Button;
+   import feathers.controls.TextInput;
    import starling.textures.Texture;
    
    public class GlobalFunction
@@ -7720,6 +7722,122 @@ package com.meng52.game.global
          PanelCenterActivity.$activityFunObj = null;
          GuideData.clear();
       }
+
+      // BEGIN UI KIT 105
+      // Shared native-style widgets for mod features. Use these instead of
+      // hand-placed Quads or one-off buttons so new pages match the game and
+      // button rows never overlap on narrow or full-screen layouts.
+      public static const UI_DARK:uint = 1513239;
+      public static const UI_BROWN:uint = 4926491;
+      public static const UI_RED:uint = 9116186;
+      public static const UI_LIGHT:uint = 15260080;
+      public static const UI_MUTED:uint = 8022613;
+      public static const UI_WIN:uint = 3046706;
+      public static const UI_LOSE:uint = 12000284;
+      private static var uiToast:Sprite;
+
+      /** Native text, non-touchable, added to parent. */
+      public static function uiText(text:String, size:int, color:uint, align:String, w:Number, h:Number, parent:Sprite, x:Number, y:Number) : TextField
+      {
+         var field:TextField=GlobalTextStyle.getTextField(text,size,color,align,w,h,GlobalConfig.FONT_1);
+         field.x=x;field.y=y;field.touchable=false;
+         if(parent) parent.addChild(field);
+         return field;
+      }
+
+      /** Native button. kind: "primary" (yellow), "normal" (default) or "small". */
+      public static function uiButton(label:String, w:Number, h:Number, kind:String, parent:Sprite, x:Number, y:Number, handler:Function = null) : LOL_Scale9Button
+      {
+         var skin:String=kind=="primary"?"UI_btn_enterGame_0_0000":(kind=="small"?"UI_btn_smallFun_1_0000":"UI_btn_normalFun_0000");
+         var button:LOL_Scale9Button=new LOL_Scale9Button(label,w,h,skin);
+         button.fontSize=h>=56?22:(h>=42?20:18);button.x=x;button.y=y;
+         if(handler!=null) button.addEventListener("triggered",function(event:Event):void {handler();});
+         if(parent) parent.addChild(button);
+         return button;
+      }
+
+      /**
+       * Lay out display objects in one row between left and right.
+       * align: "left", "right", "center" or "spread". Items that do not fit are
+       * scaled down together, so neighbours can never overlap.
+       */
+      public static function uiRow(items:Array, left:Number, right:Number, y:Number, gap:Number = 12, align:String = "center") : void
+      {
+         var shown:Array=[];
+         for each(var item:DisplayObject in items) if(item && item.visible) shown.push(item);
+         if(shown.length==0) return;
+         var available:Number=Math.max(1,right-left);
+         var total:Number=0;
+         for each(item in shown) {item.scaleX=item.scaleY=1;total+=item.width;}
+         var spacing:Number=gap;
+         if(total+gap*(shown.length-1)>available)
+         {
+            var scale:Number=Math.max(0.5,(available-gap*(shown.length-1))/total);
+            total=0;
+            for each(item in shown) {item.scaleX=item.scaleY=scale;total+=item.width;}
+            spacing=shown.length>1?Math.max(2,(available-total)/(shown.length-1)):0;
+            spacing=Math.min(spacing,gap);
+         }
+         else if(align=="spread" && shown.length>1) spacing=(available-total)/(shown.length-1);
+         var used:Number=total+spacing*(shown.length-1);
+         var x:Number=align=="right"?right-used:(align=="center"?left+(available-used)/2:left);
+         for each(item in shown) {item.x=int(x);item.y=y;x+=item.width+spacing;}
+      }
+
+      /**
+       * Native dialog: dimmed backdrop, parchment box and title. Returns
+       * {root, box}; remove root with removeFromParent(true) to close.
+       */
+      public static function uiModal(host:Sprite, title:String, width:Number, height:Number) : Object
+      {
+         var root:Sprite=new Sprite();
+         var mask:Quad=new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0);mask.alpha=.7;root.addChild(mask);
+         var box:Sprite=new Sprite();
+         box.x=int((GlobalData.$mStageWidth-width)/2);
+         box.y=int(Math.max(40,(GlobalData.$mStageHeight-height)/2-40));
+         root.addChild(box);
+         box.addChild(createScale9Image("UI_bg_9slice_0_0000",width,height,new Rectangle(110,55,70,20)));
+         uiText(title,28,UI_DARK,"center",width-40,42,box,20,20);
+         if(host) host.addChild(root);
+         return {root:root,box:box};
+      }
+
+      /** Text input on a parchment frame, with an optional label above it. */
+      public static function uiField(box:Sprite, label:String, x:Number, y:Number, width:Number, text:String, prompt:String, maxChars:int) : TextInput
+      {
+         if(label) uiText(label,18,UI_BROWN,"left",width,26,box,x,y-30);
+         var frame:Scale9Image=createScale9Image("UI_pvp_bg_1_0000",width,58,new Rectangle(30,30,50,50));
+         frame.x=x;frame.y=y;box.addChild(frame);
+         var input:TextInput=new TextInput();
+         input.text=text;input.prompt=prompt;input.maxChars=maxChars;
+         input.x=x+15;input.y=y+9;input.width=width-30;input.height=40;
+         box.addChild(input);
+         return input;
+      }
+
+      /** Non-blocking notice that fades out; kind "success" or "info". */
+      public static function popToast(message:String, kind:String = "success") : void
+      {
+         var stage:Sprite=GlobalData.$mGameClassObject as Sprite;
+         if(stage==null || GlobalData.$mStarling==null) {popError(message,true);return;}
+         if(uiToast) {GlobalData.$mStarling.juggler.removeTweens(uiToast);uiToast.removeFromParent(true);}
+         var toast:Sprite=new Sprite();uiToast=toast;toast.touchable=false;
+         var width:Number=Math.min(GlobalData.$mStageWidth-60,560);
+         var label:TextField=GlobalTextStyle.getTextField(message,21,kind=="success"?11003770:16777215,"center",width-40,56,GlobalConfig.FONT_1);
+         var bg:Quad=new Quad(width,64,0);bg.alpha=.82;toast.addChild(bg);
+         var accent:Quad=new Quad(6,64,kind=="success"?UI_WIN:UI_LIGHT);toast.addChild(accent);
+         label.x=20;label.y=4;toast.addChild(label);
+         toast.x=int((GlobalData.$mStageWidth-width)/2);toast.y=int(GlobalData.$mStageHeight*0.28);
+         toast.alpha=0;stage.addChild(toast);
+         var juggler:Juggler=GlobalData.$mStarling.juggler;
+         juggler.tween(toast,0.18,{alpha:1});
+         juggler.tween(toast,0.35,{alpha:0,delay:1.8,onComplete:function():void
+         {
+            toast.removeFromParent(true);
+            if(uiToast==toast) uiToast=null;
+         }});
+      }
+      // END UI KIT 105
    }
 }
 

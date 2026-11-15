@@ -48,6 +48,72 @@ def require_file(path: Path, label: str) -> Path:
     return path
 
 
+def compile_stage(ffdec_base: list[str], ffdec: Path, java: str, current_swf: Path, output_swf: Path, stage: dict) -> str:
+    """Compile one build.json stage into ``current_swf``, writing ``output_swf``."""
+    source = (ROOT / stage["source"]).resolve()
+    command = ffdec_base + ["-air", "-replace", str(current_swf), str(output_swf), stage["class"], str(source)]
+    output = checked_run(command, label=f"FFDec stage {stage['index']} {stage['class']}")
+    if not output_swf.is_file() or output_swf.stat().st_size == 0:
+        raise RuntimeError(f"FFDec stage {stage['index']} did not produce a SWF")
+    if stage.get("methods"):
+        # Replacing a large class recompiles all its unrelated closures.
+        # A leaf-method stage keeps their original bytecode and rejects
+        # signature, constant-pool, or method-index dependencies.
+        if ffdec.suffix.lower() != ".jar":
+            raise ValueError("Scoped method stages require the FFDec JAR")
+        compiled_swf = output_swf.with_suffix(".compiled.swf")
+        output_swf.replace(compiled_swf)
+        output += checked_run([
+            java, "-cp", str(ffdec), str(ROOT / "scripts/CopyAs3Methods.java"),
+            str(current_swf), str(compiled_swf), str(output_swf),
+            stage["class"], *(["--allow-constant-pool-append"] if stage.get("allow_constant_pool_append") is True else []), *stage["methods"],
+        ], label=f"Scoped methods in stage {stage['index']}")
+    return output
+
+
+def class_replay(stages: list[dict]) -> dict[str, list[dict]]:
+    """Stages that determine each class in the final SWF.
+
+    A whole-class stage replaces everything before it; method-scoped stages
+    after it patch that result. The final class therefore depends on the last
+    whole-class stage and every later stage of the same class.
+    """
+    replay: dict[str, list[dict]] = {}
+    for stage in stages:
+        chain = replay.setdefault(stage["class"], [])
+        if not stage.get("methods"):
+            chain.clear()
+        chain.append(stage)
+    return replay
+
+
+def source_manifest(stages: list[dict]) -> dict[str, dict]:
+    """Per class: the stages replayed for it and a digest of their sources."""
+    manifest = {}
+    for name, chain in class_replay(stages).items():
+        digest = hashlib.sha256()
+        for stage in chain:
+            digest.update(json.dumps({k: stage.get(k) for k in ("class", "methods", "allow_constant_pool_append")}, sort_keys=True).encode("utf-8"))
+            digest.update(sha256_file((ROOT / stage["source"]).resolve()).encode("ascii"))
+        manifest[name] = {"stages": [stage["index"] for stage in chain], "digest": digest.hexdigest()}
+    return manifest
+
+
+def save_compiled_swf(swf: Path, destination: Path, stages: list[dict], manifest: dict | None = None) -> Path:
+    """Keep a compiled SWF with the source manifest incremental builds start from.
+
+    Pass the manifest computed before compiling, so source edits made while a
+    build runs are not recorded as compiled.
+    """
+    destination = destination.expanduser().absolute()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(swf, destination)
+    sidecar = destination.with_name(destination.name + ".sources.json")
+    sidecar.write_text(json.dumps({"schema": 1, "swf_sha256": sha256_file(destination), "classes": manifest if manifest is not None else source_manifest(stages)},
+                                  ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    return sidecar
+
+
 def checked_run(command: list[str], *, label: str, cwd: Path | None = None) -> str:
     completed = subprocess.run(
         command,
@@ -311,6 +377,7 @@ def main() -> int:
     parser.add_argument("--metadata", type=Path, default=BUILD / "build-metadata.json", help="Build attestation output path")
     parser.add_argument("--prebuilt-swf", type=Path, help="Package an already compiled SWF without rerunning FFDec stages")
     parser.add_argument("--skip-swf-build", action="store_true", help="Package the pinned template SWF; only for toolchain smoke tests")
+    parser.add_argument("--keep-swf", type=Path, help="Save the compiled SWF and its source manifest here before packaging (base for build_swf_incremental.py)")
     args = parser.parse_args()
     if args.prebuilt_swf and args.skip_swf_build:
         parser.error("--prebuilt-swf and --skip-swf-build are mutually exclusive")
@@ -342,28 +409,13 @@ def main() -> int:
         current_swf = require_file(args.prebuilt_swf, "prebuilt SWF")
         prebuilt_swf_hash = sha256_file(current_swf)
     elif not args.skip_swf_build:
+        compiled_sources = source_manifest(config["stages"])
         total_stages = len(config["stages"])
         for position, stage in enumerate(config["stages"], start=1):
             source = (ROOT / stage["source"]).resolve()
             output_swf = stage_dir / f"stage-{stage['index']:03d}.swf"
-            command = ffdec_base + ["-air", "-replace", str(current_swf), str(output_swf), stage["class"], str(source)]
             print(f"[{position}/{total_stages}] FFDec {stage['class']}", flush=True)
-            output = checked_run(command, label=f"FFDec stage {stage['index']} {stage['class']}")
-            if not output_swf.is_file() or output_swf.stat().st_size == 0:
-                raise RuntimeError(f"FFDec stage {stage['index']} did not produce a SWF")
-            if stage.get("methods"):
-                # Replacing a large class recompiles all its unrelated closures.
-                # A leaf-method stage keeps their original bytecode and rejects
-                # signature, constant-pool, or method-index dependencies.
-                if ffdec.suffix.lower() != ".jar":
-                    raise ValueError("Scoped method stages require the FFDec JAR")
-                compiled_swf = output_swf.with_suffix(".compiled.swf")
-                output_swf.replace(compiled_swf)
-                output += checked_run([
-                    java, "-cp", str(ffdec), str(ROOT / "scripts/CopyAs3Methods.java"),
-                    str(current_swf), str(compiled_swf), str(output_swf),
-                    stage["class"], *(["--allow-constant-pool-append"] if stage.get("allow_constant_pool_append") is True else []), *stage["methods"],
-                ], label=f"Scoped methods in stage {stage['index']}")
+            output = compile_stage(ffdec_base, ffdec, java, current_swf, output_swf, stage)
             stage_results.append({
                 "index": stage["index"],
                 "class": stage["class"],
@@ -376,6 +428,8 @@ def main() -> int:
             print(f"[{position}/{total_stages}] complete {stage['class']} sha256={stage_results[-1]['output_swf_sha256']}", flush=True)
     else:
         current_swf = template
+    if args.keep_swf and stage_results:
+        print(f"Kept SWF manifest {save_compiled_swf(current_swf, args.keep_swf, config['stages'], compiled_sources)}", flush=True)
 
     swf_hash = sha256_file(current_swf)
     release = release_metadata(version, swf_hash)

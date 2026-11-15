@@ -44,7 +44,9 @@ package com.meng52.game.ui.panel
          var _loc2_:String = _equip.getStep() > -1 ? GlobalLanguageStr.getLanguageStr(90703,_equip.getStep().toString()) : "";
          setPopPanelBg(_equip.equipData.name,570,640,false,true,_loc2_,_equip.getAlchemyColor104());
          _detailEquip = new LOL_DetailEquip(_data,width,height);
-         _detailEquip.x = 40;
+         // The lock joins the native button row below instead of floating over it.
+         _detailEquip.externalLock104 = true;
+         _detailEquip.x = (mImg9_baseBg ? mImg9_baseBg.x : 0) + 40;
          _detailEquip.y = 100;
          addChild(_detailEquip);
          init();
@@ -53,41 +55,49 @@ package com.meng52.game.ui.panel
       private function init() : void
       {
          var _loc1_:Boolean = GlobalFunction.checkEquipIsBook(_equip.equipData.id);
+         // One native row: book/reset or rise/wash/magic/reset, plus the inventory
+         // lock for owned equipment. Width shrinks so five buttons still fit
+         // inside the 640px frame with 30px margins and 10px gaps.
+         var gap:int = 10;
+         var count:int = (_loc1_ ? 2 : 4) + (_detailEquip.canLock104() ? 1 : 0);
+         var w:int = Math.min(_loc1_ ? 140 : 135,int((_width - 60 - gap * (count - 1)) / count));
+         var row:Array = [];
          if(_loc1_)
          {
-            _book = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20406),140,70);
-            _book.x = 150;
-            _book.y = _height - _book.height - 40;
-            addChild(_book);
-            _reset = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(25025),140,70);
-            _reset.x = width - _reset.width - 80;
-            _reset.y = _book.y;
-            addChild(_reset);
+            _book = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20406),w,70);
+            row.push(_book);
+            _reset = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(25025),w,70);
+            row.push(_reset);
             _book.addEventListener("triggered",book_Triggered);
          }
          else
          {
-            _rise = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20259),135,70);
-            _rise.x = 35;
-            _rise.y = _height - _rise.height - 40;
-            addChild(_rise);
-            _wash = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20260),135,70);
+            _rise = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20259),w,70);
+            row.push(_rise);
+            _wash = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20260),w,70);
             _wash.enabled = GlobalFunction.checkGameFunIsOpenByType("equip_fun_wash") < 0;
-            _wash.x = _rise.x + _rise.width + 10;
-            _wash.y = _rise.y;
-            addChild(_wash);
-            _magic = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(98146),135,70);
+            row.push(_wash);
+            _magic = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(98146),w,70);
             _magic.enabled = GlobalFunction.checkGameFunIsOpenByType("equip_fun_magic") < 0;
-            _magic.x = _wash.x + _wash.width + 10;
-            _magic.y = _rise.y;
-            addChild(_magic);
-            _reset = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(25025),135,70);
-            _reset.x = _magic.x + _magic.width + 10;
-            _reset.y = _rise.y;
-            addChild(_reset);
+            row.push(_magic);
+            _reset = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(25025),w,70);
+            row.push(_reset);
             _rise.addEventListener("triggered",rise_Triggered);
             _wash.addEventListener("triggered",wash_Triggered);
             _magic.addEventListener("triggered",magic_Triggered);
+         }
+         var lock:LOL_Scale9Button = _detailEquip.createLockButton104(w,70);
+         if(lock)
+         {
+            lock.fontSize = 25; // match the native row's default label size
+            row.push(lock);
+         }
+         // Widths above already fit, so uiRow only places (never shrinks) the row.
+         var left:Number = (mImg9_baseBg ? mImg9_baseBg.x : 0) + 30;
+         GlobalFunction.uiRow(row,left,left + _width - 60,_height - 70 - 40,gap,"center");
+         for each(var button:LOL_Scale9Button in row)
+         {
+            addChild(button);
          }
          _reset.addEventListener("triggered",reset_Triggered);
       }

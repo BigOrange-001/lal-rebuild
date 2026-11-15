@@ -91,6 +91,30 @@ class InventoryMagic103Tests(unittest.TestCase):
         self.change(lambda p: p['my_equips'].update(eq2={'eid': 'E_6001_2', 'slv': 1}))
         self.fault('EquipmentLocked', 'user.swallow_skillbook', eqid='eq2', eqids=['eq1'])
 
+    def test_lock_rejections_name_the_item_the_action_and_the_preset(self):
+        from gateway import gameplay_fault_message
+        self.call('user.team_preset_save', 'save', slot=2)
+        self.change(lambda p: p.update(team=[['h3'] + [None] * 5, [], []], as_equips=[[] for _ in range(6)]))
+        hero = self.roster.heroes['A_1001_3']['name']
+        with self.assertRaises(GameplayFault) as caught:
+            self.call('user.swallow_avatar', aid='h3', aids=['h1'])
+        message = gameplay_fault_message(caught.exception)
+        self.assertIn('「' + hero + '」', message)
+        self.assertIn('阵容预设「阵容2」', message)
+        self.assertIn('不能当作吞噬材料', message)
+        self.assertIn('解锁', message)
+        with self.assertRaises(GameplayFault) as caught:
+            self.call('user.equip_sell', eqids=['eq0'])
+        self.assertIn('不能出售', gameplay_fault_message(caught.exception))
+        self.assertIn(self.roster.equipment['E_1001_3']['name'], caught.exception.message)
+        # A lock the player set by hand says so instead of naming a preset.
+        self.change(lambda p: p['avatars'].update(h3={'aid': 'A_1001_3', 'lv': 1, 'lock': 1}))
+        with self.assertRaises(GameplayFault) as caught:
+            self.call('user.sell_avatars', aids=['h3'])
+        self.assertIn('已手动锁定，不能出售', gameplay_fault_message(caught.exception))
+        # Unrelated faults keep the shared translation table.
+        self.assertEqual(gameplay_fault_message(GameplayFault('StageLocked', 'x')), '该关卡尚未解锁')
+
     def test_lock_input_and_ownership_are_validated(self):
         self.fault('UnknownHero', 'user.inventory_lock', kind='hero', id='other-account', locked=True)
         self.fault('InvalidSelection', 'user.inventory_lock', kind='hero', id='h3', locked=1)

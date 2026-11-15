@@ -3,10 +3,10 @@
     "method": "user.abyss_finish",
     "params": {
       "actionID": "fixture-81",
-      "fight_id": "y0-iw95r5MzMNuAC_92qUctd",
+      "fight_id": "EYgfb6CptnlY5qMaY50P2Bf5",
       "fight_kind": "abyss",
       "metadata": {
-        "run_id": "fc94b1237d168492887cb37a",
+        "run_id": "1b533bb3654e4cdea697dc44",
         "node_id": "3-7-0"
       },
       "sign": 1,
@@ -15,8 +15,8 @@
   },
   "response": {
     "abyss_relics": {
-      "relic-635f3572302b1ab8594acefe": {
-        "id": "relic-635f3572302b1ab8594acefe",
+      "relic-4abeb006b30540d1e5d3db49": {
+        "id": "relic-4abeb006b30540d1e5d3db49",
         "type": "relic",
         "relic_id": 16,
         "name": "统御",
@@ -52,8 +52,8 @@
         ],
         "schema": 1
       },
-      "relic-5161790d95c54e05effeaa86": {
-        "id": "relic-5161790d95c54e05effeaa86",
+      "relic-ca4ddb3c69036bc9e5e913d6": {
+        "id": "relic-ca4ddb3c69036bc9e5e913d6",
         "type": "relic",
         "relic_id": 10,
         "name": "余烬",
@@ -173,7 +173,7 @@
       ]
     },
     "abyss_run": {
-      "id": "fc94b1237d168492887cb37a",
+      "id": "1b533bb3654e4cdea697dc44",
       "status": "cleared",
       "seed": 20261116,
       "rules_schema": 3,
@@ -2867,7 +2867,7 @@
           "aid": "A_1004_5",
           "quality": 5,
           "lv": 99,
-          "slv": 10,
+          "slv": 5,
           "temporary": false,
           "can_orange": true
         },
@@ -3004,12 +3004,12 @@
       "rewards": [
         {
           "node_id": "3-7-0",
-          "item_id": "relic-635f3572302b1ab8594acefe",
+          "item_id": "relic-4abeb006b30540d1e5d3db49",
           "guaranteed": false
         },
         {
           "node_id": "3-7-0",
-          "item_id": "relic-5161790d95c54e05effeaa86",
+          "item_id": "relic-ca4ddb3c69036bc9e5e913d6",
           "guaranteed": true
         }
       ],
@@ -3073,7 +3073,7 @@
       "standalone_orange": []
     },
     "sign": 1,
-    "fight_id": "y0-iw95r5MzMNuAC_92qUctd",
+    "fight_id": "EYgfb6CptnlY5qMaY50P2Bf5",
     "fight_kind": "abyss",
     "replayed": false
   }

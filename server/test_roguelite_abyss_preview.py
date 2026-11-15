@@ -59,6 +59,17 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(projected['enemy_preview'],preview_from_units(expected,self.cfg))
         self.assertEqual(node['enemies'],expected)
 
+    def test_rest_leave_without_a_hero_when_everyone_is_fully_upgraded(self):
+        self.start();before=self.jump('1-4-0',full_pool=True)
+        first=self.call('rest',option='leave',actionID='leave-rest')['abyss_run']
+        self.assertEqual(first['pool'],before['pool'])
+        self.assertTrue(next(n for n in first['map'] if n['id']=='1-4-0')['completed'])
+        self.assertTrue(first['available_nodes'])
+        self.assertTrue(self.call('rest',option='leave',actionID='leave-rest')['replayed'])
+        with self.assertRaises(GameplayFault):self.call('rest',option='leave')
+        self.enter(first)
+        with self.assertRaises(GameplayFault):self.call('rest',option='leave')
+
     def test_first_two_boss_offers_are_saved_replayable_and_skippable_final_boss_has_none(self):
         self.start()
         for act in (1,2,3):

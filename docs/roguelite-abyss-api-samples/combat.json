@@ -108,7 +108,7 @@
       ]
     },
     "abyss_run": {
-      "id": "fc94b1237d168492887cb37a",
+      "id": "1b533bb3654e4cdea697dc44",
       "status": "active",
       "seed": 20261116,
       "rules_schema": 3,
@@ -2828,11 +2828,11 @@
       "retries": 20,
       "pending_choice": null,
       "battle": {
-        "fight_id": "kt6aqx6-QTsiXtnB9ZFpS4vF",
+        "fight_id": "fGPR6_N4KpoagI30_uTeNyVh",
         "seed": 876183062,
         "fight_kind": "abyss",
         "metadata": {
-          "run_id": "fc94b1237d168492887cb37a",
+          "run_id": "1b533bb3654e4cdea697dc44",
           "node_id": "1-1-0"
         },
         "orgin_team_a": [
@@ -3907,7 +3907,7 @@
         ],
         "is_pve": false,
         "round_max": 0,
-        "expires": 1794771391
+        "expires": 1794771429
       },
       "rewards": [],
       "attempt": 0
@@ -3969,11 +3969,11 @@
       ],
       "standalone_orange": []
     },
-    "fight_id": "kt6aqx6-QTsiXtnB9ZFpS4vF",
+    "fight_id": "fGPR6_N4KpoagI30_uTeNyVh",
     "seed": 876183062,
     "fight_kind": "abyss",
     "metadata": {
-      "run_id": "fc94b1237d168492887cb37a",
+      "run_id": "1b533bb3654e4cdea697dc44",
       "node_id": "1-1-0"
     },
     "orgin_team_a": [
@@ -5048,7 +5048,7 @@
     ],
     "is_pve": false,
     "round_max": 0,
-    "expires": 1794771391,
+    "expires": 1794771429,
     "replayed": false
   }
 }

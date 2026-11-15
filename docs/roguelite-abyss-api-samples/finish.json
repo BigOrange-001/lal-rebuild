@@ -3,10 +3,10 @@
     "method": "user.abyss_finish",
     "params": {
       "actionID": "fixture-5",
-      "fight_id": "kt6aqx6-QTsiXtnB9ZFpS4vF",
+      "fight_id": "fGPR6_N4KpoagI30_uTeNyVh",
       "fight_kind": "abyss",
       "metadata": {
-        "run_id": "fc94b1237d168492887cb37a",
+        "run_id": "1b533bb3654e4cdea697dc44",
         "node_id": "1-1-0"
       },
       "sign": 2,
@@ -95,7 +95,7 @@
       ]
     },
     "abyss_run": {
-      "id": "fc94b1237d168492887cb37a",
+      "id": "1b533bb3654e4cdea697dc44",
       "status": "active",
       "seed": 20261116,
       "rules_schema": 3,
@@ -2876,7 +2876,7 @@
       "standalone_orange": []
     },
     "sign": 2,
-    "fight_id": "kt6aqx6-QTsiXtnB9ZFpS4vF",
+    "fight_id": "fGPR6_N4KpoagI30_uTeNyVh",
     "fight_kind": "abyss",
     "replayed": false
   }

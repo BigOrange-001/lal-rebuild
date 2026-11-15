@@ -616,12 +616,12 @@
   "rewards": [
     {
       "node_id": "3-7-0",
-      "item_id": "relic-635f3572302b1ab8594acefe",
+      "item_id": "relic-4abeb006b30540d1e5d3db49",
       "guaranteed": false
     },
     {
       "node_id": "3-7-0",
-      "item_id": "relic-5161790d95c54e05effeaa86",
+      "item_id": "relic-ca4ddb3c69036bc9e5e913d6",
       "guaranteed": true
     }
   ]

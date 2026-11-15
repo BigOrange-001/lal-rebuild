@@ -119,6 +119,10 @@ class GameplayAbyss:
         if method=='user.abyss_rest':
             if node['type']!='rest':
                 raise GameplayFault('AbyssInvalidNode', '当前节点不是休息处。')
+            if x.get('option')=='leave':
+                node['completed']=True
+                run['available_nodes']=node['next'][:]
+                return {}
             hid, option = x.get('hero_id'), x.get('option')
             hero = run['pool'].get(hid) if isinstance(hid,str) else None
             if not hero:

@@ -29,6 +29,8 @@ def walkthrough(destination):
         request = {'method':'user.abyss_'+name,'params':{'actionID':f'fixture-{sequence}',**fields}}
         response = store.dispatch({**login,**request})
         samples.setdefault(name, {'request':request, 'response':response})
+        if name=='rest' and fields.get('option')=='leave':
+            samples['rest_leave']={'request':request,'response':response}
         run = response.get('abyss_run') or {}
         if name=='finish' and fields.get('sign')==1:
             node=next(n for n in run['map'] if n['id']==run['current_node'])
@@ -55,6 +57,9 @@ def walkthrough(destination):
             run = call('route',node_id=run['available_nodes'][0])['abyss_run']
             node = next(n for n in run['map'] if n['id']==run['current_node'])
             if node['type']=='rest':
+                if node['act']==2:
+                    run=call('rest',option='leave')['abyss_run']
+                    continue
                 hero = next(h for h in run['pool'].values() if h['slv']==5)
                 run = call('rest',hero_id=hero['id'],option='skill')['abyss_run']
                 continue

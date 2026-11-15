@@ -52,7 +52,7 @@ unlocked 包括 purple、orange、standalone_orange 三个 aid 列表。
 | user.abyss_finish | 结算 `{fight_id,fight_kind:"abyss",metadata:{run_id,node_id},sign:1或2,teams:{team_a:[],team_b:[]}}` | 是；胜利推进、失败消耗次数，胜负均登记紫卡登场 | [finish.json](roguelite-abyss-api-samples/finish.json) |
 | user.abyss_choose | 选人 `{"heroes":["A_1022","A_1023","A_1024"]}`；传候选 id，必须选满 count | 是；只添加，不能删除 | [choose.json](roguelite-abyss-api-samples/choose.json) |
 | user.abyss_skip | 跳过选人 `{}`；弱敌不可跳 | 是 | [skip.json](roguelite-abyss-api-samples/skip.json) |
-| user.abyss_rest | 休息提升 `{"hero_id":"A_1001","option":"skill"}`；option 另可为 orange | 是；单节点只能一次 | [rest.json](roguelite-abyss-api-samples/rest.json) |
+| user.abyss_rest | 休息提升 `{"hero_id":"A_1001","option":"skill"}`；option 另可为 orange；传 {"option":"leave"} 不需hero_id，直接完成节点且不修改英雄 | 是；单节点只能一次 | [rest.json](roguelite-abyss-api-samples/rest.json) |
 | user.abyss_abandon | 放弃 `{}`；已掉落奖励保留，清理未结算战斗 | 是 | [abandon.json](roguelite-abyss-api-samples/abandon.json) |
 
 开战额外返回 fight_id、seed、fight_kind、metadata、orgin_team_a、orgin_team_b、line=[3,1,1]、is_pve=false、round_max=0、expires。
@@ -168,3 +168,5 @@ A类小技能映射到配置中预生成变体（包含全部现有英雄/装备
 弱敌6选3全紫；普通3选1；精英5选1（难度1～2保证2橙，3起保证1橙）；前两幕Boss胜利后3橙选1可跳过，最终Boss直接结算。池满20人不再选人。先判皮肤，再判品质；普通每卡橙率1%/1.5%/4%，精英非保证卡4%/15%/40%，皮肤0/15%/35%，Boss皮肤0/15%。橙阶段未解锁给同类紫卡，橙独有皮肤仅两项都命中时出现；同界面英雄不重复，保证橙从已解锁且不在池中英雄抽取。
 
 敌方橙卡配额：第1幕弱敌0、精英及之后普通1、Boss2；第2幕普通/精英2、Boss3；第3幕1～3层普通/精英3，4～6层4，Boss5。皮肤计入配额；普通/弱敌不出皮肤，精英0/1/2、Boss0/2/4；Boss皮肤同定位替换，第3幕主题区别于第1幕。敌方皮肤不受玩家解锁限制。难度7起Boss额外成员仍保留。
+
+休息离开真实请求/响应：[rest_leave.json](roguelite-abyss-api-samples/rest_leave.json)。leave沿用原事务、actionID重放与节点检查；重复完成或非休息处报AbyssInvalidNode。

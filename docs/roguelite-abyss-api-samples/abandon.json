@@ -7,8 +7,8 @@
   },
   "response": {
     "abyss_relics": {
-      "relic-635f3572302b1ab8594acefe": {
-        "id": "relic-635f3572302b1ab8594acefe",
+      "relic-4abeb006b30540d1e5d3db49": {
+        "id": "relic-4abeb006b30540d1e5d3db49",
         "type": "relic",
         "relic_id": 16,
         "name": "统御",
@@ -31,9 +31,9 @@
           },
           {
             "stat": "tough",
-            "value": 0.219074,
+            "value": 0.48812,
             "ancient": false,
-            "text": "韧性+21.9%"
+            "text": "韧性+48.8%"
           },
           {
             "stat": "ap",
@@ -128,7 +128,7 @@
       ]
     },
     "abyss_run": {
-      "id": "bec44d1e138ba8ea85918ec1",
+      "id": "3a5a67e126192ba2349d0b5b",
       "status": "abandoned",
       "seed": 20261117,
       "rules_schema": 3,

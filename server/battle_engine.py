@@ -707,7 +707,8 @@ class ReferenceBattle:
             amount = _to_int(amount * (1 + self._talent(target, 16)))
         if self._has_manual_dot_kind(target, 'poison'):
             amount = _to_int(amount * 1.2)
-        amount = self._damage_modifiers_104(target, amount, damage_type, source)
+        if getattr(self,'_equip_origin',None)!='relic_reflect':
+            amount = self._damage_modifiers_104(target, amount, damage_type, source)
         from abyss_equip_passives import modify_damage, shield_multiplier
         amount = modify_damage(self,source,target,amount,damage_type,dot_kind)
         if receipt is not None:receipt['settled']=amount

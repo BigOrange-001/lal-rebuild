@@ -728,7 +728,8 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         if self.yasuo_immune(unit,kind):return
         if self.state(unit).get("channel") and kind in ("stun","silence","root","pull","push"):return
         ctx=self._context()
-        if ctx and value and kind!='summon':value*=ctx['effect_factor']
+        relic_shield=kind=='shield' and getattr(self,'_equip_origin',None)=='relic_shield'
+        if ctx and value and kind!='summon' and not relic_shield:value*=ctx['effect_factor']
         result=super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
         if kind=='stun' and self._buff(unit,'stun'):self.kaisa_stun(unit)
         return result
@@ -757,8 +758,9 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
-        if state.get('alistar_guard104') and damage_type!=4:amount=_to_int(amount*round(max(0,1-state['alistar_guard104'].get('reduction',.8)),10))
-        if ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
+        relic_reflect=getattr(self,'_equip_origin',None)=='relic_reflect'
+        if not relic_reflect and state.get('alistar_guard104') and damage_type!=4:amount=_to_int(amount*round(max(0,1-state['alistar_guard104'].get('reduction',.8)),10))
+        if not relic_reflect and ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')

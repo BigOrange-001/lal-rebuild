@@ -1,7 +1,7 @@
 import copy
 import unittest
 
-from abyss_equip_passives import tick_dots
+from abyss_equip_passives import tick_dots, initialize, on_event, shield
 from abyss_relics import A_TYPES, apply_relic_config, variant_id
 from battle_engine import _native_skill_snapshot
 from player_store import GameplayFault
@@ -9,6 +9,7 @@ import test_team_presets as presets
 import test_roguelite_abyss_passives as passives
 import test_mod_packages as mods
 from mod_packages import ModCatalog
+import test_nightbringer_yasuo as night
 
 
 class PresetRelicTests(unittest.TestCase):
@@ -45,6 +46,34 @@ class PresetRelicTests(unittest.TestCase):
 class CleansedDotTests(unittest.TestCase):
     setUpClass=classmethod(passives.PassiveTests.setUpClass.__func__)
     battle=passives.PassiveTests.battle
+
+    def test_triggered_shields_ignore_foreign_effect_factor_and_preserve_amplification(self):
+        for factor in (.37,2.5):
+            b,owner,enemy=self.battle(3,True)
+            with b.context(enemy,effect=factor) as context:
+                b._injured(owner,600,1,source=enemy)
+                self.assertEqual(b._buff_value(owner,'shield'),250)
+                self.assertEqual(context['effect_factor'],factor)
+                b._add_buff(b.a[1],'shield',3,100,source=enemy)
+                self.assertEqual(b._buff_value(b.a[1],'shield'),100*factor)
+            b,owner,enemy=self.battle(6,True)
+            with b.context(enemy,effect=factor):on_event(b,owner,'dodge')
+            self.assertEqual(b._buff_value(owner,'shield'),125)
+            b,owner,enemy=self.battle(14)
+            with b.context(enemy,effect=factor):shield(b,owner,owner,100,3,'test')
+            self.assertEqual(b._buff_value(owner,'shield'),150)
+
+    def test_reflection_bypasses_actual_yasuo_night_but_ordinary_damage_does_not(self):
+        from abyss_relics import main_effect
+        b,yasuo,enemies=night.NightbringerYasuoTests.battle(self)
+        wearer=enemies[0];wearer['equip_passives']=[main_effect(5)]
+        initialize(b);yasuo['_yasuo_night_rounds']=2
+        before=yasuo['hp']
+        b._injured(wearer,100,1,source=yasuo)
+        self.assertEqual(before-yasuo['hp'],20)
+        self.assertEqual([e['amount'] for e in b.equip_events if e['event']=='reflect'],[20])
+        before=yasuo['hp'];b._injured(yasuo,100,3,source=wearer)
+        self.assertEqual(before-yasuo['hp'],20)
 
     def test_revive_cleansing_stops_other_attackers_dot_ticks(self):
         for ancient in (False,True):

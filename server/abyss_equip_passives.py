@@ -60,7 +60,8 @@ def initialize(battle):
 
 
 def shield(battle, source, target, amount, duration, event):
-    battle._add_buff(target,'shield',duration,amount,source=source)
+    with origin(battle,'relic_shield'):
+        battle._add_buff(target,'shield',duration,amount,source=source)
     trace(battle,event,source,target,amount=amount,duration=duration)
 
 

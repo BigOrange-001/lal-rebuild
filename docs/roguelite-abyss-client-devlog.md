@@ -52,3 +52,41 @@
 - 选人界面“飞入卡位”只做了刷新+淡入，没有逐个飞行动画。
 - 深渊战斗不支持战斗回放按钮（回放会按普通探险重建地图）。
 - 结算页“新开放橙卡”按本次进入模式时的快照对比；若中途重启客户端，开始前已开放的也可能被算作新开放。
+
+---
+
+## 第二轮（合入后端 7ba6548/0431630 之后）
+
+本轮同样**只写代码，未编译、未打包、未运行任何测试**（用户中途明确要求不做测试）。
+
+### 合入与核对
+- `git merge feat/roguelite-abyss` 无冲突（后端只改 docs/server/scripts）。
+- 按新版接口核对：英雄等级改为读 `roguelite_abyss.level`（99），难度倍率/重打次数只取配置 `difficulties`，配置缺失时显示「—」，不再写死旧初值。Boss 掉率配置里没有，仍按服务端 `grant_boss_rewards` 同一公式计算。
+
+### 待办 11 重随（提交 c16d8bd）
+- 炼金研究所 `PanelAlchemy` 新增第三个页签「深渊遗物」。该类原本只在模板 SWF 中，现由反编译源码加入构建（`client/src/stages/181_PanelAlchemy.as`，build.json stage 181，stage_count 181 / unique_class_count 154）。
+- 界面 `AbyssRerollView104`：目标格 ← 消耗格（ItemEquip 框）、主词条一块标「不变」、3 条副词条可点选（选中「重随这条 ✓」，其余「保留」）、按钮「重随『X』这条」；缺目标/词条/消耗品时按钮仍可点并飘字说明缺什么；消耗品列表中已穿戴、与目标同件的灰显并写原因；返回后被重随的行闪烁。请求带 `substat_index`。
+
+### 待办 12 面板/战力（提交 896932f）
+- `Avatar.setEquips`（本人阵位、param2=true）读取 `abyss_relic_slots` 对应的遗物；四维（含装备时）与四属性在所有原有加成之后逐条 `int(v*(1+value))`，与服务端 `apply_panel` 一致；战力在技能乘区加 `main_power_rate`（`abyss_relic_main_power_rate`，太古 ×1.25）。
+- 深渊战斗单位来自服务端标准化快照（`hp_max` 已定，getter 直接返回快照值），且深渊流程不调用 `setEquips`，因此不计入。
+- 注意：`137_Avatar.as` 也被其他同步脚本修改；本改动是直接编辑，若以后重新生成 Avatar，需要重新执行这些改动（锚点见提交）。
+
+### 待办 13～15 战斗通道（提交 bd34dc3）
+- 代码：`client/src/abyss_equip_passives_104.aspart`（Avatar 方法）+ `scripts/sync_abyss_passives_104.py`（幂等插入方法与钩子，执行后再跑 `sync_abyss_client_104.py` 刷新哈希）。
+- 数据：`Avatar.init` 只从战斗快照（有 `hp_max`）读取 `equip_passives` 与 `skill.abyss_relic_A`；`abyss_standardized` 时全部忽略。
+- 钩子位置：`injured`（伤害修正、碎盾倍率、复苏、受击后效果、治疗放大、护士跳过）、`addBuff`（护盾放大）、`checkMiss`（疾风步）、`removeAllDebuff`（清遗物 DOT）、`hasManualDotKind`（遗物 DOT 保留中毒易伤/灼烧减疗）、`settleBuffs104`（持有者回合先结算遗物 DOT）、`countDamage`（真理之刃防御前拆分）、`inheritSummonPanel`（召唤契约、坚城继承）、`GameMap.beginFight`（每场一次初始化：队长光环→入场护盾→时之沙）。
+- A 类上下文：使用原生 `beginAbilityAttack(owner,"active")` 的上下文，且要求 `context.skill === owner.skill0`；大招、普攻、skillB、他人代打不继承。
+
+### 规格不清 / 与服务端可能不一致（需对照确认）
+- **延迟命中通道**：客户端的延迟范围打击、炸弹、持续区域、蓄力在施放上下文结束（`endAbilityAttack`）后结算的，目前拿不到 A 类上下文，因此这些命中**不会**触发 #8～#11、#13、#20。服务端已传递，需要后续逐个通道接入。
+- **手写技能命中**：只接了原生 `countDamage` 的拆分（#20）；不经过 `countDamage` 的手写伤害不拆分。
+- #20 拆分作用在已乘属性克制倍率的数值上（客户端 `countDamage` 先乘克制）；服务端 legacy 分支未乘克制，取整可能差 1。
+- 荆棘反弹：按“绝对真伤”跳过暴击/全局倍率/韧性（derived）和原生天赋真伤加成，但仍吃中毒 1.2 易伤、皮肤与亚索的既有入伤修正——服务端 `_damage_modifiers_104` 为空实现，这两项可能与服务端不同。
+- 护盾放大（圣佑）放在 `addBuff` 的技能效果倍率、恢复天赋之前；服务端 `_add_buff` 的这两项倍率顺序未确认。
+- 坚守誓约回满后的显示刷新用 `refreshHp` 延时调用，未确认与原生弹字时序一致。
+
+### 未做 / 未验证
+- 27 份对照用例与真实整场双端逐事件对照：**未执行**（用户要求不做测试）。
+- 所有新代码均未编译；FFDec 对新增 stage（PanelAlchemy 反编译源码重编译）也未验证。
+- 仍需后端：节点 `enemy_preview`（前端已按该字段读取）、休息处「离开」选项、3 条报错文字的「圣遗物」。

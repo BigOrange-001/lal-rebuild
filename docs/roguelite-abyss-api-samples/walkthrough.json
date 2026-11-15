@@ -1,0 +1,628 @@
+{
+  "seed": 20261116,
+  "controlled_signs": true,
+  "trace": [
+    {
+      "method": "user.abyss_query",
+      "status": null,
+      "node": null,
+      "retries": null,
+      "pool_size": 0
+    },
+    {
+      "method": "user.abyss_start",
+      "status": "active",
+      "node": null,
+      "retries": 20,
+      "pool_size": 5
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "1-1-0",
+      "retries": 20,
+      "pool_size": 5
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "1-1-0",
+      "retries": 20,
+      "pool_size": 5
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "1-1-0",
+      "retries": 19,
+      "pool_size": 5
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "1-1-0",
+      "retries": 19,
+      "pool_size": 5
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "1-1-0",
+      "retries": 19,
+      "pool_size": 5
+    },
+    {
+      "method": "user.abyss_choose",
+      "status": "active",
+      "node": "1-1-0",
+      "retries": 19,
+      "pool_size": 8
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "1-2-0",
+      "retries": 19,
+      "pool_size": 8
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "1-2-0",
+      "retries": 19,
+      "pool_size": 8
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "1-2-0",
+      "retries": 19,
+      "pool_size": 8
+    },
+    {
+      "method": "user.abyss_choose",
+      "status": "active",
+      "node": "1-2-0",
+      "retries": 19,
+      "pool_size": 11
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "1-3-0",
+      "retries": 19,
+      "pool_size": 11
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "1-3-0",
+      "retries": 19,
+      "pool_size": 11
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "1-3-0",
+      "retries": 19,
+      "pool_size": 11
+    },
+    {
+      "method": "user.abyss_choose",
+      "status": "active",
+      "node": "1-3-0",
+      "retries": 19,
+      "pool_size": 14
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "1-4-0",
+      "retries": 19,
+      "pool_size": 14
+    },
+    {
+      "method": "user.abyss_rest",
+      "status": "active",
+      "node": "1-4-0",
+      "retries": 19,
+      "pool_size": 14
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "1-5-0",
+      "retries": 19,
+      "pool_size": 14
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "1-5-0",
+      "retries": 19,
+      "pool_size": 14
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "1-5-0",
+      "retries": 19,
+      "pool_size": 14
+    },
+    {
+      "method": "user.abyss_choose",
+      "status": "active",
+      "node": "1-5-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "1-6-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "1-6-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "1-6-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "1-6-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "1-7-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "1-7-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "1-7-0",
+      "retries": 19,
+      "pool_size": 15
+    },
+    {
+      "method": "user.abyss_choose",
+      "status": "active",
+      "node": "1-7-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "2-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "2-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "2-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-2-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_rest",
+      "status": "active",
+      "node": "2-2-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "2-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "2-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "2-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "2-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "2-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "2-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-5-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "2-5-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "2-5-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "2-5-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-6-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "2-6-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "2-6-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "2-6-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "2-7-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "2-7-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "2-7-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "2-7-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "3-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "3-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "3-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-1-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "3-2-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_rest",
+      "status": "active",
+      "node": "3-2-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "3-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "3-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "3-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-3-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "3-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "3-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "3-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-4-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "3-5-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "3-5-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "3-5-0",
+      "retries": 19,
+      "pool_size": 16
+    },
+    {
+      "method": "user.abyss_choose",
+      "status": "active",
+      "node": "3-5-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "3-6-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "3-6-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "active",
+      "node": "3-6-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_skip",
+      "status": "active",
+      "node": "3-6-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_route",
+      "status": "active",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_combat",
+      "status": "active",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_finish",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_relics",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_relic_equip",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_relic_reroll",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_relic_unequip",
+      "status": "cleared",
+      "node": "3-7-0",
+      "retries": 19,
+      "pool_size": 17
+    },
+    {
+      "method": "user.abyss_start",
+      "status": "active",
+      "node": null,
+      "retries": 20,
+      "pool_size": 5
+    },
+    {
+      "method": "user.abyss_abandon",
+      "status": "abandoned",
+      "node": null,
+      "retries": 20,
+      "pool_size": 5
+    }
+  ],
+  "final_status": "cleared",
+  "rewards": [
+    {
+      "node_id": "3-7-0",
+      "item_id": "relic-4abeb006b30540d1e5d3db49",
+      "guaranteed": false
+    },
+    {
+      "node_id": "3-7-0",
+      "item_id": "relic-ca4ddb3c69036bc9e5e913d6",
+      "guaranteed": true
+    }
+  ]
+}

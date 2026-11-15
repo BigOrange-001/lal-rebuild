@@ -8,7 +8,7 @@
       "index": 1,
       "class": "com.meng52.game.global.GlobalData",
       "source": "client/src/stages/001_GlobalData.as",
-      "source_sha256": "3fbe147ea28049685da0d065e261baaab344e760d6bacebe704aac3cbb16e5e0"
+      "source_sha256": "5e9c5711c7a4c4bc085b1f644eb936f65e163e9ede46d9e828b5a356482bbb3c"
     },
     {
       "index": 2,
@@ -362,7 +362,7 @@
       "index": 60,
       "class": "com.meng52.game.module.equip.Equip",
       "source": "client/src/stages/084_Equip.as",
-      "source_sha256": "55e3d9cabb0a9b8db04b0fe57a83e70775d36de047de0aff76441ca2d4ee8370"
+      "source_sha256": "e8c686ad181d1648458141de1e1b8a479fc21dbca6bfde3b0db070f0aa6d3a10"
     },
     {
       "index": 61,
@@ -626,7 +626,8 @@
       "index": 104,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "67ff29333a4a9c760ea78f960a4ec348e701e0ad8c3dbab1b8a833c1510f23e3"
+      "source_sha256": "01ae45ccd951a860c37e184246503e0ae454c7ca62d6b12f31d01ab764d7c444",
+      "compiler": "air-mxmlc"
     },
     {
       "index": 105,
@@ -830,7 +831,7 @@
       "index": 138,
       "class": "MainLLOL",
       "source": "client/src/stages/136_MainLLOL.as",
-      "source_sha256": "7dee5ca2aa414156f48b0f2f1dc63f79da52ddeb4170d9667d3fd8fb89ee763f"
+      "source_sha256": "2999b911632fe206b145abc51a58dbb817cfff6adf8a853377ae813b3c073493"
     },
     {
       "index": 139,
@@ -842,7 +843,7 @@
       "index": 140,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "28ca5ec441631e4be3a4edb0d0153ab41edd0a2e6a162c62de3824ae7e95a365"
+      "source_sha256": "53bd470c7b5c3ac93e5c868473c11c8cb0b17f4f0a12034bae0c48b2557aa85e"
     },
     {
       "index": 141,
@@ -878,7 +879,7 @@
       "index": 146,
       "class": "com.meng52.game.ui.element.LOL_DetailAvatar",
       "source": "client/src/stages/143_LOL_DetailAvatar.as",
-      "source_sha256": "ae21e71117335f0be3ee1b2c99c53ffa1ff405e678dcd24284e869ae81f5bbe3"
+      "source_sha256": "7832b84abdb89759ae0d4e37ebe996f05ca68b50a89bdf36e7ecaa33ca30a637"
     },
     {
       "index": 147,
@@ -1051,7 +1052,7 @@
       "index": 174,
       "source": "client/src/stages/173_PanelActivityExplorationMyTeam.as",
       "class": "com.meng52.game.ui.panel.PanelActivityExplorationMyTeam",
-      "source_sha256": "eb691e00d7167773675f18ca5acf988c8c680fe6854d8cea045170fe2d629d9c"
+      "source_sha256": "63bea8c19a54046f1bf61312609992991607830e3322f2d3d58be19ec8f1ba4e"
     },
     {
       "index": 175,
@@ -1063,7 +1064,7 @@
       "index": 176,
       "class": "com.meng52.game.module.map.GameMap",
       "source": "client/src/stages/175_GameMap.as",
-      "source_sha256": "0bf88da720dc335925486ded3240d6fdce046a6f57e471c30b86f50e5b812c90"
+      "source_sha256": "ceb1920fbaaab43b2d3cb0be0d8003db8865690cfbe7f66481bba65bcc567362"
     },
     {
       "index": 177,
@@ -1087,13 +1088,13 @@
       "index": 180,
       "source": "client/src/stages/180_PanelPVEembattle.as",
       "class": "com.meng52.game.ui.panel.PanelPVEembattle",
-      "source_sha256": "9118c0036ffc0dfb8e890064ce90db4ebbf6f398955d1e2ea7c1ed199003185c"
+      "source_sha256": "36d52ea911ae14392835bf3b4411ea5162587be89d7f51d5a6f271e7d4ee6610"
     },
     {
       "index": 181,
       "class": "com.meng52.game.ui.panel.PanelAlchemy",
       "source": "client/src/stages/181_PanelAlchemy.as",
-      "source_sha256": "b4250d7f079cc3190006c98251ba886f8c201be1fb81b72f5e69ea57c239592a"
+      "source_sha256": "c3d91f6b6be0c6086384f978fe048c380755cf668a2d7d5590cf6e275a343424"
     },
     {
       "index": 182,
@@ -1114,7 +1115,7 @@
   },
   "descriptor": {
     "path": "client/air/application.xml",
-    "sha256": "951b6a10e1803c87103f29e0253ddebbdf673de773a1d8c4a0b7efd47d57c996"
+    "sha256": "62fd0e7c7769caa061681df36bd3550a7e9564fa738efa69cbcf8a621e07db09"
   },
   "assets_manifest": {
     "path": "client/resources/assets-manifest.json",

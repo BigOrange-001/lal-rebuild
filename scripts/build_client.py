@@ -48,10 +48,15 @@ def require_file(path: Path, label: str) -> Path:
     return path
 
 
-def compile_stage(ffdec_base: list[str], ffdec: Path, java: str, current_swf: Path, output_swf: Path, stage: dict) -> str:
+def compile_stage(ffdec_base: list[str], ffdec: Path, java: str, current_swf: Path, output_swf: Path, stage: dict, air_sdk: Path | None = None) -> str:
     """Compile one build.json stage into ``current_swf``, writing ``output_swf``."""
     source = (ROOT / stage["source"]).resolve()
     command = ffdec_base + ["-air", "-replace", str(current_swf), str(output_swf), stage["class"], str(source)]
+    if stage.get('compiler') == 'air-mxmlc':
+        if not air_sdk:
+            raise ValueError('This stage needs --air-sdk for AIR mxmlc')
+        command = [java,'-cp',str(ffdec),str(ROOT/'scripts/CompileAirAs3.java'),
+                   str(current_swf),str(output_swf),stage['class'],str(source),str(air_sdk)]
     output = checked_run(command, label=f"FFDec stage {stage['index']} {stage['class']}")
     if not output_swf.is_file() or output_swf.stat().st_size == 0:
         raise RuntimeError(f"FFDec stage {stage['index']} did not produce a SWF")
@@ -93,8 +98,10 @@ def source_manifest(stages: list[dict]) -> dict[str, dict]:
     for name, chain in class_replay(stages).items():
         digest = hashlib.sha256()
         for stage in chain:
-            digest.update(json.dumps({k: stage.get(k) for k in ("class", "methods", "allow_constant_pool_append")}, sort_keys=True).encode("utf-8"))
+            digest.update(json.dumps({k: stage.get(k) for k in ("class", "methods", "allow_constant_pool_append", "compiler")}, sort_keys=True).encode("utf-8"))
             digest.update(sha256_file((ROOT / stage["source"]).resolve()).encode("ascii"))
+            if stage.get('compiler') == 'air-mxmlc':
+                digest.update(sha256_file(ROOT/'scripts/CompileAirAs3.java').encode('ascii'))
         manifest[name] = {"stages": [stage["index"] for stage in chain], "digest": digest.hexdigest()}
     return manifest
 
@@ -415,7 +422,7 @@ def main() -> int:
             source = (ROOT / stage["source"]).resolve()
             output_swf = stage_dir / f"stage-{stage['index']:03d}.swf"
             print(f"[{position}/{total_stages}] FFDec {stage['class']}", flush=True)
-            output = compile_stage(ffdec_base, ffdec, java, current_swf, output_swf, stage)
+            output = compile_stage(ffdec_base, ffdec, java, current_swf, output_swf, stage, sdk)
             stage_results.append({
                 "index": stage["index"],
                 "class": stage["class"],

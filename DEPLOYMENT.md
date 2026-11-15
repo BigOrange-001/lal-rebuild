@@ -168,3 +168,8 @@ Windows 打包复用完整冷编译后的 SWF，额外生成桌面启动适配�
 后端启动时加载标定；更新文件后重启后端。原始输入和补齐确认版另存于工作区 `outputs/召唤池标定-1.0.4/`，确认版可重新导入离线网页查看。
 
 `summon_pools.confirm_custom_hero` 为确认导入接口：用户确认后向对应品质池添加权重 1 的记录，保留已有权重和品质概率。已应用 Mod 配置的 `mod_runtime.heroes` 会按各召唤渠道的确认状态自动加入，缺包、禁用、未开放渠道均不入池；新条目不修改基础配置。
+
+### 深渊界面编译
+
+深渊界面新增同文件私有类继承，build.json 对102_PanelActivityExploration.as阶段指定compiler=air-mxmlc：使用本次--air-sdk提供的官方mxmlc编译实际源码，通过FFDec合入原模板，其他阶段保持原构建器。增量脚本同样需要--air-sdk。修改界面/图标后依次运行build_abyss_relic_art_104.py（图标有变化时）、sync_abyss_passives_104.py、sync_abyss_client_104.py；不要直接修改生成代码。
+

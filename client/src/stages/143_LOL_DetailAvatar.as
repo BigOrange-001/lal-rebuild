@@ -12,6 +12,7 @@ package com.meng52.game.ui.element
    import com.meng52.game.module.skill.SkillSet;
    import com.meng52.game.module.talent.Talent;
    import com.meng52.game.ui.effect.DisplayTools;
+   import com.meng52.game.ui.panel.PanelActivityExploration;
    import com.meng52.game.ui.panel.PanelDetailAvatar;
    import com.meng52.game.ui.panel.PanelInforPop;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
@@ -159,6 +160,7 @@ package com.meng52.game.ui.element
       {
          removeEventListener("addedToStage",ADDED_TO_STAGE);
          addEventListener("removedFromStage",REMOVED_FROM_STAGE);
+         GlobalData.$mEventDispatcher.addEventListener("abyss_relic_changed_104",onAbyssRelicChanged104);
          init();
          bind(_data,_playRoleSound);
       }
@@ -1962,7 +1964,8 @@ package com.meng52.game.ui.element
             _loc9_ = [null,null,null,null,null,null];
          }
          _loc11_ = 0;
-         while(_loc11_ < _loc9_.length)
+         // Columns 0-5 are owned equipment; the Abyss relic slot is drawn separately below.
+         while(_loc11_ < Math.min(6,_loc9_.length))
          {
             if(_loc9_[_loc11_] != null)
             {
@@ -2035,7 +2038,20 @@ package com.meng52.game.ui.element
             _euqipMain.addChild(_loc15_);
             _loc11_++;
          }
+         if(_type == "show_type_team")
+         {
+            // 7th slot (Abyss relic): same ItemEquip frame at 0.8, centred between the
+            // two columns under the hero art. RELIC_SLOT_OFFSET_104 moves it down if the
+            // emulator check shows it covering the figure.
+            var relicSlot:Sprite = PanelActivityExploration.createRelicSlotView104(_loc2_);
+            relicSlot.scaleX = relicSlot.scaleY = 0.8;
+            relicSlot.x = int((_width - 80) * 0.5);
+            relicSlot.y = _loc8_ + 2 * (_loc12_ + 75) + RELIC_SLOT_OFFSET_104;
+            _euqipMain.addChild(relicSlot);
+         }
       }
+
+      private static const RELIC_SLOT_OFFSET_104:int = 40;
 
       private function onType(param1:TouchEvent) : void
       {
@@ -2135,7 +2151,13 @@ package com.meng52.game.ui.element
       private function REMOVED_FROM_STAGE(param1:Event) : void
       {
          removeEventListener("removedFromStage",REMOVED_FROM_STAGE);
+         GlobalData.$mEventDispatcher.removeEventListener("abyss_relic_changed_104",onAbyssRelicChanged104);
          clear();
+      }
+
+      private function onAbyssRelicChanged104(param1:Event) : void
+      {
+         if(_type == "show_type_team" && _euqipMain && _euqipMain.stage) updateEquip();
       }
 
       public function get data() : Object

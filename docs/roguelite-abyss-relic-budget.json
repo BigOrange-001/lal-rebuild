@@ -1,0 +1,1186 @@
+{
+  "schema": 1,
+  "native_verified": false,
+  "reference": "125级3阶橙英雄；四件200级8星满附魔/符文/洗练橙装；新增一件同样养成的普通橙武器",
+  "main_power_rate": 0.15,
+  "budget": [
+    {
+      "aid": "A_1002_6",
+      "gear_delta": 220421338,
+      "combinations": 56,
+      "min_ratio": 0.46313111482881936,
+      "median_ratio": 0.6447088144433639,
+      "max_ratio": 1.0108456605049734
+    },
+    {
+      "aid": "A_1001_6",
+      "gear_delta": 192448169,
+      "combinations": 56,
+      "min_ratio": 0.4606081495116745,
+      "median_ratio": 0.6452573445892333,
+      "max_ratio": 1.0191036423942281
+    },
+    {
+      "aid": "A_1004_6",
+      "gear_delta": 216595435,
+      "combinations": 56,
+      "min_ratio": 0.4592507547539033,
+      "median_ratio": 0.6429915224205902,
+      "max_ratio": 1.0161442830039331
+    }
+  ],
+  "tower": [
+    {
+      "floor": 100,
+      "relic": 0,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 0,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 0,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 1,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 1,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 1,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 3,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 3,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 3,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 4,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 4,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 4,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 7,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 7,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 7,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 12,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 12,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 12,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 14,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 14,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 14,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 15,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 15,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 15,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 16,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 16,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 16,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 17,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 17,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 17,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 18,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 18,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 18,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 19,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 4
+    },
+    {
+      "floor": 100,
+      "relic": 19,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 3
+    },
+    {
+      "floor": 100,
+      "relic": 19,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 3
+    },
+    {
+      "floor": 125,
+      "relic": 0,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 0,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 0,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 1,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 1,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 1,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 3,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 3,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 3,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 4,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 4,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 4,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 7,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 7,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 7,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 12,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 12,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 12,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 14,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 14,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 14,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 15,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 15,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 15,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 16,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 16,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 16,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 17,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 17,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 17,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 18,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 18,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 18,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 125,
+      "relic": 19,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 19,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 125,
+      "relic": 19,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 150,
+      "relic": 0,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 21
+    },
+    {
+      "floor": 150,
+      "relic": 0,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 23
+    },
+    {
+      "floor": 150,
+      "relic": 0,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 34
+    },
+    {
+      "floor": 150,
+      "relic": 1,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 1,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 1,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 18
+    },
+    {
+      "floor": 150,
+      "relic": 3,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 3,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 3,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 4,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 4,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 4,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 18
+    },
+    {
+      "floor": 150,
+      "relic": 7,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 7,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 7,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 18
+    },
+    {
+      "floor": 150,
+      "relic": 12,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 12,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 12,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 18
+    },
+    {
+      "floor": 150,
+      "relic": 14,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 14,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 14,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 18
+    },
+    {
+      "floor": 150,
+      "relic": 15,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 15,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 15,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 18
+    },
+    {
+      "floor": 150,
+      "relic": 16,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 16,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 16
+    },
+    {
+      "floor": 150,
+      "relic": 16,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 17,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 17
+    },
+    {
+      "floor": 150,
+      "relic": 17,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 14
+    },
+    {
+      "floor": 150,
+      "relic": 17,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 20
+    },
+    {
+      "floor": 150,
+      "relic": 18,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 18,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 19
+    },
+    {
+      "floor": 150,
+      "relic": 18,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 18
+    },
+    {
+      "floor": 150,
+      "relic": 19,
+      "seed": 173,
+      "win": true,
+      "censored": false,
+      "rounds": 22
+    },
+    {
+      "floor": 150,
+      "relic": 19,
+      "seed": 174,
+      "win": true,
+      "censored": false,
+      "rounds": 17
+    },
+    {
+      "floor": 150,
+      "relic": 19,
+      "seed": 175,
+      "win": true,
+      "censored": false,
+      "rounds": 16
+    },
+    {
+      "floor": 180,
+      "relic": 0,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 0,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 0,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 5
+    },
+    {
+      "floor": 180,
+      "relic": 1,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 1,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 8
+    },
+    {
+      "floor": 180,
+      "relic": 1,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 3,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 8
+    },
+    {
+      "floor": 180,
+      "relic": 3,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 8
+    },
+    {
+      "floor": 180,
+      "relic": 3,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 8
+    },
+    {
+      "floor": 180,
+      "relic": 4,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 8
+    },
+    {
+      "floor": 180,
+      "relic": 4,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 8
+    },
+    {
+      "floor": 180,
+      "relic": 4,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 8
+    },
+    {
+      "floor": 180,
+      "relic": 7,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 7,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 7,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 12,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 12,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 7
+    },
+    {
+      "floor": 180,
+      "relic": 12,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 14,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 7
+    },
+    {
+      "floor": 180,
+      "relic": 14,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 14,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 9
+    },
+    {
+      "floor": 180,
+      "relic": 15,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 15,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 9
+    },
+    {
+      "floor": 180,
+      "relic": 15,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 7
+    },
+    {
+      "floor": 180,
+      "relic": 16,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 16,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 7
+    },
+    {
+      "floor": 180,
+      "relic": 16,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 17,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 17,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 7
+    },
+    {
+      "floor": 180,
+      "relic": 17,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 18,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 18,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 7
+    },
+    {
+      "floor": 180,
+      "relic": 18,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 19,
+      "seed": 173,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 19,
+      "seed": 174,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    },
+    {
+      "floor": 180,
+      "relic": 19,
+      "seed": 175,
+      "win": false,
+      "censored": false,
+      "rounds": 6
+    }
+  ]
+}

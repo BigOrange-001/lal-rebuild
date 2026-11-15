@@ -602,6 +602,7 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         return True
 
     def _on_healing_received(self,target,amount,overheal=0):
+        if getattr(self,'_equip_origin',None)=='relic_lifesteal':return
         actions=(target.get('skillB') or {}).get('skills') or []
         if target.get('hp',0)<=0 or amount<=0 or not actions or actions[0][0]!='nurse_healing':return
         state=self.state(target);pending=state.setdefault('nurse_pending',[])
@@ -727,7 +728,8 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         if self.yasuo_immune(unit,kind):return
         if self.state(unit).get("channel") and kind in ("stun","silence","root","pull","push"):return
         ctx=self._context()
-        if ctx and value and kind!='summon':value*=ctx['effect_factor']
+        relic_shield=kind=='shield' and getattr(self,'_equip_origin',None)=='relic_shield'
+        if ctx and value and kind!='summon' and not relic_shield:value*=ctx['effect_factor']
         result=super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
         if kind=='stun' and self._buff(unit,'stun'):self.kaisa_stun(unit)
         return result
@@ -756,8 +758,9 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
-        if state.get('alistar_guard104') and damage_type!=4:amount=_to_int(amount*round(max(0,1-state['alistar_guard104'].get('reduction',.8)),10))
-        if ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
+        relic_reflect=getattr(self,'_equip_origin',None)=='relic_reflect'
+        if not relic_reflect and state.get('alistar_guard104') and damage_type!=4:amount=_to_int(amount*round(max(0,1-state['alistar_guard104'].get('reduction',.8)),10))
+        if not relic_reflect and ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')
@@ -797,6 +800,14 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         sign_a=(row_a.get('tl') or [0,0,0])[0];sign_b=(row_b.get('tl') or [0,0,0])[0]
         raw=to_int(self._get_damage(attacker)*float(multiplier))
         amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share,base_attack=attacker.get('ap',0),rules=self._combat_rules)
+        from abyss_equip_passives import conversion
+        fraction = conversion(self,attacker) if damage_type in (1,2) else 0
+        if fraction:
+            amount=damage_before_final(raw*(1-fraction),sign_a,sign_b,damage_type,
+                self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share,
+                base_attack=attacker.get('ap',0),rules=self._combat_rules)
+            amount+=damage_before_final(raw*fraction,sign_a,sign_b,3,0,0,attack,share,
+                base_attack=attacker.get('ap',0),rules=self._combat_rules)
         amount=self._final_direct_damage(amount,target,crit)
         receipt={}
         result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt)
@@ -862,9 +873,10 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         return result
 
     def explode(self, target, bomb):
+        from abyss_equip_passives import delayed_cast
         owner=bomb['owner']
         if owner['hp']<=0:return
-        with self.context(owner,'active',damage=bomb['damage']):
+        with self.context(owner,'active',damage=bomb['damage']), delayed_cast(self,owner,bomb):
             targets=self.candidates(owner,3-self._team_number(owner),target['line'],target['pos'],250,4)
             if target['hp']>0 and all(u is not target for u in targets):targets=([target]+targets)[:4]
             for victim in targets:self.hit(owner,victim,bomb['coefficient'],2)
@@ -902,14 +914,16 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
             elif 'until' in entry and serial>entry['until']:state.pop(key,None)
         zone=state.get('zone')
         if zone and owner['hp']>0:
-            with self.context(owner,'active',damage=zone['damage'],effect=zone['effect']):
+            from abyss_equip_passives import delayed_cast
+            with self.context(owner,'active',damage=zone['damage'],effect=zone['effect']), delayed_cast(self,owner,zone):
                 for target in self.candidates(owner,3-self._team_number(owner),zone['line'],zone['pos'],350,3):
                     if self.hit(owner,target,1.2,1):self.control(owner,target,'weak',1,.2)
             zone['left']-=1
             if zone['left']<=0:state.pop('zone',None)
         channel=state.pop('channel',None)
         if channel and owner['hp']>0 and not self._buff(owner,'stun') and not self._buff(owner,'silence') and owner['pos']==channel['pos'] and owner['line']==channel['line']:
-            with self.context(owner,'active',damage=channel['damage'],effect=channel['effect']):
+            from abyss_equip_passives import delayed_cast
+            with self.context(owner,'active',damage=channel['damage'],effect=channel['effect']), delayed_cast(self,owner,channel):
                 for target in self.enemies(owner,400,maximum=3):
                     if self.hit(owner,target,3.6,2):self.control(owner,target,'weak',2,.3)
             return True

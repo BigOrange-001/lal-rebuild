@@ -577,6 +577,7 @@ package com.meng52.game.ui.panel
             case "go_btn_name":
                if(setTeamIdArr())
                {
+                  GlobalData.$abyss104 = null;
                   GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_exploration_battle",false,true);
                }
                else

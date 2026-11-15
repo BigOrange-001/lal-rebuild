@@ -33,7 +33,7 @@ class RainbowAtlasTests(unittest.TestCase):
 
     def test_actual_decoder_shares_upload_and_restores_texture(self):
         source = SOURCE.read_text('utf8')
-        start = source.index('private function getRainbowFrameTextures105(')
+        start = source.index('private static function getRainbowFrameTextures105(')
         start = source.index('{',start)+1
         end = source.index('      // END GENERATED RAINBOW ATLAS 105',start)
         body = source[start:end].rsplit('}',1)[0]

@@ -50,6 +50,7 @@ def main(argv=None) -> int:
     parser.add_argument('--output', type=Path, required=True, help='Where to write the new SWF and manifest')
     parser.add_argument('--ffdec', type=Path, required=True, help='FFDec CLI jar or wrapper')
     parser.add_argument('--java', required=True, help='Java 17+ executable')
+    parser.add_argument('--air-sdk', type=Path, help='AIR SDK for stages using mxmlc')
     parser.add_argument('--dry-run', action='store_true', help='Only list the classes that would be recompiled')
     args = parser.parse_args(argv)
 
@@ -87,7 +88,7 @@ def main(argv=None) -> int:
                         step += 1
                         output = work / f'step-{step:03d}.swf'
                         print(f'[{step}] FFDec stage {index} {name}', flush=True)
-                        compile_stage(ffdec_base, ffdec, args.java, current, output, by_index[index])
+                        compile_stage(ffdec_base, ffdec, args.java, current, output, by_index[index], args.air_sdk)
                         current = output
                 except RuntimeError as error:
                     failed.append((name, str(error)))

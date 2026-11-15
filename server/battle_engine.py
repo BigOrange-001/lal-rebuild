@@ -42,8 +42,7 @@ def validate_team_lane_coverage(team, lane_count, side="team"):
 
 def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1,
               instance_id=None, overrides=None, *, enforce_avatar_level_cap=True,
-              limit_break=False, npc_limit_break=False, summoned=False, scope=None,
-              standardized=False):
+              limit_break=False, npc_limit_break=False, summoned=False, scope=None):
     original_aid = base_aid(config, aid)
     if mod_runtime(config):
         ensure_available(config, original_aid)
@@ -63,13 +62,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
         raise ValueError("limit-broken NPC requires an authored level 100..125 stage row")
     if limit_break and level > 125:
         raise ValueError("limit-broken player level exceeds 125")
-    if standardized:
-        # A mode-authored snapshot is independent of owned progression. Keep
-        # the permission explicit instead of weakening NPC/owned level guards.
-        if level != 125 or str(aid).rsplit('_', 1)[-1] not in ('5', '6'):
-            raise ValueError('standardized heroes require level 125 and purple/orange quality')
-        enforce_avatar_level_cap = False
-    elif enforce_avatar_level_cap and not limit_break:
+    if enforce_avatar_level_cap and not limit_break:
         # tl[4] limits levels players may train this avatar to. Stage and NPC
         # tuples carry their own battle level and native Avatar.init accepts
         # that explicit value even when it exceeds the avatar progression cap.
@@ -112,7 +105,7 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
     result["equipment_bonds_104"] = []
     if limit_break or npc_limit_break: result["limit_break"] = 1
     if overrides:
-        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema","growth_stats_applied","bonds_104","equipment_bonds_104"):
+        for key in ("hp","hp_max","ap","de_ma","de_ph","line","pos","new_4attrs","tpl","talent","skill","leader_skill","book_skill","skillB","morph","phase","culture_schema","growth_stats_applied","bonds_104","equipment_bonds_104","equip_passives","relic_contribution"):
             if key in overrides: result[key] = overrides[key]
     result["culture_schema"] = str(result.get("culture_schema") or "")
     if not result.get('growth_stats_applied'):
@@ -384,6 +377,10 @@ class ReferenceBattle:
         Two compare arms and one merge arm; a kind in neither arm has its new
         buff silently discarded when one is already present.
         """
+        from abyss_equip_passives import amplify_shield
+        casts = getattr(self,'_equip_casts',[])
+        shield_source = source or (casts[-1]['owner'] if casts else None)
+        value = amplify_shield(shield_source,kind,value)
         kind = str(kind)
         container = unit.setdefault("_buffs", {})
         current = container.get(kind)
@@ -445,6 +442,8 @@ class ReferenceBattle:
         # back / summon and every other kind: the new buff is discarded.
 
     def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
+        if kind in ('poison','burn') and unit.get('_relic_dots'):
+            unit['_relic_dots'] = [d for d in unit['_relic_dots'] if d['kind']!=kind]
         container = unit.get("_buffs")
         if isinstance(container, dict):
             if kind == 'shield' and clear_shields:
@@ -464,6 +463,7 @@ class ReferenceBattle:
             del container[kind]
 
     def _remove_all_debuff(self, unit):
+        unit.pop('_relic_dots',None)
         if isinstance(unit.get("_manual_dots"), dict):
             unit["_manual_dots"].clear()
         container = unit.get("_buffs")
@@ -474,6 +474,10 @@ class ReferenceBattle:
 
     def _tick_buffs(self, unit):
         """checkBuff (137_Avatar.as:2857): per-owner-turn buff expiry and DOTs."""
+        from abyss_equip_passives import tick_dots
+        had_relic_dots = bool(unit.get('_relic_dots'))
+        tick_dots(self,unit)
+        if had_relic_dots and unit.get('hp',0)<=0:return True
         container = unit.get("_buffs")
         if not isinstance(container, dict) or not container:
             # Manual DOT rows live outside the buff map and still expire.
@@ -631,12 +635,20 @@ class ReferenceBattle:
 
     def _emit_mod_event(self, owner, event, source=None, target=None, amount=0, overheal=0):
         from battle_mod_events import emit
-        return emit(self,owner,event,source,target,amount,overheal)
+        from abyss_equip_passives import on_event
+        result = emit(self,owner,event,source,target,amount,overheal)
+        on_event(self,owner,event)
+        return result
 
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
-        before=int(target.get('hp',0));had_shield=self._buff_value(target,'shield')>0
+        before=int(target.get('hp',0));shield_before=self._buff_value(target,'shield');had_shield=shield_before>0
+        revived_before = target.get('_equip_revived',False)
         result=self._injured_base(target,amount,damage_type,source,dot_kind,receipt=receipt)
         actual=max(0,before-max(0,int(target.get('hp',0)))) if damage_type!=4 else 0
+        if not revived_before and target.get('_equip_revived'):actual=max(0,before)
+        if before>0 and damage_type not in (0,4,5):
+            from abyss_equip_passives import after_damage
+            after_damage(self,source,target,actual,max(0,shield_before-self._buff_value(target,'shield')),damage_type,dot_kind)
         if receipt is not None:receipt.update(actual=actual,before=before,after=int(target.get('hp',0)))
         killed=before>0 and target.get('hp',0)<=0
         shield_broke=had_shield and self._buff_value(target,'shield')<=0
@@ -666,6 +678,8 @@ class ReferenceBattle:
         if int(damage_type) == 4:
             if target.get("hp", 0) <= 0:
                 return 0
+            from abyss_equip_passives import amplify_healing
+            amount = amplify_healing(source or target,amount)
             amount = _to_int(amount * (1 + self._book_bonus(source if source is not None else target, 'healing')))
             if self._has_manual_dot_kind(target, "burn"):
                 amount = _to_int(amount * .6)
@@ -694,11 +708,13 @@ class ReferenceBattle:
         if self._has_manual_dot_kind(target, 'poison'):
             amount = _to_int(amount * 1.2)
         amount = self._damage_modifiers_104(target, amount, damage_type, source)
+        from abyss_equip_passives import modify_damage, shield_multiplier
+        amount = modify_damage(self,source,target,amount,damage_type,dot_kind)
         if receipt is not None:receipt['settled']=amount
         absorbed = 0
         shields = [(k,v) for k,v in target.get('_buffs',{}).items() if v.type == 'shield']
         if shields:
-            factor = 1 + self._book_bonus(source, 'shield_damage') if source is not None else 1
+            factor = (1 + self._book_bonus(source, 'shield_damage') if source is not None else 1)*shield_multiplier(source)
             if dot_kind in ('bleed', 'phantasm'):
                 factor *= 3
             budget = _to_int(amount * factor)
@@ -733,6 +749,8 @@ class ReferenceBattle:
             target["_trynd_rounds"] = 0
             target["hp"] = 1
             return
+        from abyss_equip_passives import revive
+        if revive(self,target):return
         target["hp"] = 0
 
     def _injured_absolute(self, target, amount, damage_type, source=None):
@@ -784,6 +802,13 @@ class ReferenceBattle:
             dealt = damage_before_final(raw, sign_a, sign_b, damage_type,
                 self._defense_against(attacker, target, 1), self._defense_against(attacker, target, 2),
                 self._attack, base_attack=attacker.get('ap', 0), rules=self._combat_rules)
+            from abyss_equip_passives import conversion
+            fraction = conversion(self,attacker) if damage_type in (1,2) else 0
+            if fraction:
+                dealt = damage_before_final(raw*(1-fraction),sign_a,sign_b,damage_type,
+                    self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),
+                    self._attack,base_attack=attacker.get('ap',0),rules=self._combat_rules)
+                dealt += damage_before_final(raw*fraction,sign_a,sign_b,3,0,0,self._attack)
             return self._injured(target, self._final_direct_damage(dealt, target), damage_type, source=attacker)
         if damage_type == 1:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
@@ -795,6 +820,13 @@ class ReferenceBattle:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
             defense = self._defense_against(attacker,target,2)
             dealt = defense_damage(base, defense, attacker.get('ap', 0), self._min_damage_rate)
+        from abyss_equip_passives import conversion
+        fraction = conversion(self,attacker) if damage_type in (1,2) else 0
+        if fraction:
+            raw = max(1,_to_int(self._get_damage(attacker)*float(multiplier)))
+            defense = self._defense_against(attacker,target,damage_type)
+            dealt = defense_damage(raw*(1-fraction),defense,attacker.get('ap',0),self._min_damage_rate)
+            dealt += _to_int(raw*fraction*self._real_damage_rate)
         return self._injured(target, dealt, damage_type, source=attacker)
 
     # -------------------------------------------------------------- targeting
@@ -941,6 +973,7 @@ class ReferenceBattle:
 
     def _has_manual_dot_kind(self, unit, kind):
         """137_Avatar.as:2426 hasManualDotKind."""
+        if any(d.get('kind')==kind and d.get('left',0)>0 for d in unit.get('_relic_dots',[])):return True
         if kind == 'phantasm':
             return any(isinstance(k, tuple) and k[0] == 'malz' and isinstance(v, dict) and v.get('ticks', 0) > 0
                        for k, v in (unit.get('_ability') or {}).items())
@@ -1335,7 +1368,9 @@ class ReferenceBattle:
                 and action[0] in _ACTION_HANDLERS)
 
     def _apply_native_skill(self, attacker, enemies, slot="skill"):
-        result=self._apply_native_skill_steps(attacker,enemies,slot)
+        from abyss_equip_passives import casting
+        with casting(self,attacker,slot):
+            result=self._apply_native_skill_steps(attacker,enemies,slot)
         if result and slot!='skillB':self._emit_mod_event(attacker,'skill_cast',attacker,attacker)
         return result
 
@@ -2675,6 +2710,8 @@ class ReferenceBattle:
         except (ValueError, KeyError, TypeError, IndexError):
             return None
         panel = self._summon_panel_snapshot(owner)
+        from abyss_equip_passives import summon_panel
+        panel = summon_panel(owner,panel)
         for key, ratio in ratios.items():
             minimum = 1 if key in ("hp_max", "ap") else 0
             value = self._scaled_summon_stat(panel[key], ratio, minimum)
@@ -2684,6 +2721,8 @@ class ReferenceBattle:
             else:
                 unit[key] = value
         unit["hp"] = unit["hp_max"]
+        if owner.get('_equip_reduction'):
+            unit['_equip_reduction'] = owner['_equip_reduction']
         unit["_summon_stat_snapshot"] = True
         if bounded:
             unit["_bounded_summon"] = True
@@ -2767,7 +2806,7 @@ class ReferenceBattle:
         known_policy = isinstance(policy, dict) and policy.get("skillId") == skill.get("skid")
         normal=attacker.get('skill') or {}
         source=self._config.get('skill',{}).get(normal.get('skid'),{})
-        normal_id=source.get('builtin_native_source_104',normal.get('skid'))
+        normal_id=source.get('builtin_native_source_104') or normal.get('equipment_source_skill_104') or normal.get('skid')
         if not known_policy or normal_id!='S_621132_'+owner_aid.rsplit('_',1)[1]:return
         ratio = policy.get("panelStatRatio", 1) if known_policy else 1
         ttl = policy.get("ttlOwnTurns", 1) if known_policy else 1
@@ -2957,6 +2996,11 @@ class ReferenceBattle:
             "rounds": rounds,
             "effect": str(action[7]),
         }
+        from abyss_equip_passives import active_normal
+        equip_cast = active_normal(self,attacker)
+        if equip_cast and equip_cast['affix']:
+            attacker['_pending_strike']['_equip_affix'] = equip_cast['affix']
+            attacker['_pending_strike']['_equip_hits'] = equip_cast['hit']
 
     def _resolve_pending_strike(self, owner):
         """139_SkillSet.as:2990 resolvePendingAreaStrike."""
@@ -2985,8 +3029,10 @@ class ReferenceBattle:
         damage_type = _to_int(strike.get("type", 0))
         if damage_type == 3:
             coefficient = self._true_skill_coefficient(coefficient)
-        for target in pool:
-            self._native_damage(owner, target, coefficient, damage_type)
+        from abyss_equip_passives import delayed_cast
+        with delayed_cast(self,owner,strike):
+            for target in pool:
+                self._native_damage(owner, target, coefficient, damage_type)
 
     def _act_damage_chain(self, attacker, enemies, allies, skill, action, index, context):
         """damage_chain (139_SkillSet.as:965): hop a chain across neighbours.
@@ -3109,6 +3155,8 @@ class ReferenceBattle:
                 unit.setdefault("_skill_cd_leader",
                                 int((unit.get("leader_skill") or {}).get("pl", [0, 0])[0]))
                 unit.setdefault("_buffs", {})
+        from abyss_equip_passives import initialize
+        initialize(self)
         rounds = 0
         for rounds in range(1, self.max_rounds + 1):
             self.round_index=rounds-1

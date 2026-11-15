@@ -7,8 +7,8 @@
   },
   "response": {
     "abyss_relics": {
-      "relic-504c5b32ce29b6e72d376865": {
-        "id": "relic-504c5b32ce29b6e72d376865",
+      "relic-1bb5b3e99c7a4529a7dd38dd": {
+        "id": "relic-1bb5b3e99c7a4529a7dd38dd",
         "type": "relic",
         "relic_id": 16,
         "name": "统御",
@@ -27,25 +27,25 @@
             "stat": "hit",
             "value": 0.281184,
             "ancient": false,
-            "text": "精准+28.1184%"
+            "text": "精准+28.1%"
           },
           {
             "stat": "hp",
             "value": 0.109676,
             "ancient": false,
-            "text": "生命+10.9676%"
+            "text": "生命+11.0%"
           },
           {
             "stat": "ap",
             "value": 0.05005,
             "ancient": false,
-            "text": "攻击+5.005%"
+            "text": "攻击+5.0%"
           }
         ],
         "schema": 1
       },
-      "relic-1dc675c52848a74b83618b9a": {
-        "id": "relic-1dc675c52848a74b83618b9a",
+      "relic-9e7d52946c9239ebb7592894": {
+        "id": "relic-9e7d52946c9239ebb7592894",
         "type": "relic",
         "relic_id": 10,
         "name": "余烬",
@@ -64,19 +64,19 @@
             "stat": "de_ph",
             "value": 0.107857,
             "ancient": false,
-            "text": "物防+10.7857%"
+            "text": "物防+10.8%"
           },
           {
             "stat": "flee",
             "value": 0.451754,
             "ancient": false,
-            "text": "闪避+45.1754%"
+            "text": "闪避+45.2%"
           },
           {
             "stat": "crit",
             "value": 0.299659,
             "ancient": false,
-            "text": "暴击+29.9659%"
+            "text": "暴击+30.0%"
           }
         ],
         "schema": 1
@@ -165,7 +165,7 @@
       ]
     },
     "abyss_run": {
-      "id": "ba323024194dc8e2f788523c",
+      "id": "65f9f2f9ac6b41339367602a",
       "status": "cleared",
       "seed": 20261116,
       "difficulty": 1,
@@ -745,7 +745,7 @@
           "id": "A_1001",
           "aid": "A_1001_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 10,
           "temporary": false,
           "can_orange": true
@@ -754,7 +754,7 @@
           "id": "A_1007",
           "aid": "A_1007_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 10,
           "temporary": false,
           "can_orange": true
@@ -763,7 +763,7 @@
           "id": "A_1004",
           "aid": "A_1004_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 10,
           "temporary": false,
           "can_orange": true
@@ -772,7 +772,7 @@
           "id": "A_1009",
           "aid": "A_1009_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": true
@@ -781,34 +781,43 @@
           "id": "A_1012",
           "aid": "A_1012_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": true
         },
-        "A_1029": {
-          "id": "A_1029",
-          "aid": "A_1029_5",
+        "A_1082": {
+          "id": "A_1082",
+          "aid": "A_1082_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1002": {
+          "id": "A_1002",
+          "aid": "A_1002_5",
+          "quality": 5,
+          "lv": 99,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1010": {
+          "id": "A_1010",
+          "aid": "A_1010_6",
+          "quality": 6,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": false
         },
-        "A_1060": {
-          "id": "A_1060",
-          "aid": "A_1060_5",
-          "quality": 5,
-          "lv": 125,
-          "slv": 5,
-          "temporary": false,
-          "can_orange": false
-        },
-        "A_1040": {
-          "id": "A_1040",
-          "aid": "A_1040_5",
-          "quality": 5,
-          "lv": 125,
+        "A_1045": {
+          "id": "A_1045",
+          "aid": "A_1045_6",
+          "quality": 6,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": false
@@ -817,79 +826,70 @@
           "id": "A_1005",
           "aid": "A_1005_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
-        "A_1073": {
-          "id": "A_1073",
-          "aid": "A_1073_5",
+        "A_1077": {
+          "id": "A_1077",
+          "aid": "A_1077_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
-        "A_1036": {
-          "id": "A_1036",
-          "aid": "A_1036_5",
+        "A_1013": {
+          "id": "A_1013",
+          "aid": "A_1013_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
-        "A_1020": {
-          "id": "A_1020",
-          "aid": "A_1020_5",
+        "A_1018": {
+          "id": "A_1018",
+          "aid": "A_1018_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
-        },
-        "A_1006": {
-          "id": "A_1006",
-          "aid": "A_1006_5",
-          "quality": 5,
-          "lv": 125,
-          "slv": 5,
-          "temporary": false,
-          "can_orange": false
-        },
-        "A_1019": {
-          "id": "A_1019",
-          "aid": "A_1019_5",
-          "quality": 5,
-          "lv": 125,
-          "slv": 5,
-          "temporary": false,
-          "can_orange": false
-        },
-        "A_1082": {
-          "id": "A_1082",
-          "aid": "A_1082_5",
-          "quality": 5,
-          "lv": 125,
-          "slv": 5,
-          "temporary": false,
-          "can_orange": false
-        },
-        "A_1063": {
-          "id": "A_1063",
-          "aid": "A_1063_5",
-          "quality": 5,
-          "lv": 125,
-          "slv": 5,
-          "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
         "A_1008": {
           "id": "A_1008",
-          "aid": "A_1008_5",
+          "aid": "A_1008_6",
+          "quality": 6,
+          "lv": 99,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1049": {
+          "id": "A_1049",
+          "aid": "A_1049_6",
+          "quality": 6,
+          "lv": 99,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1011": {
+          "id": "A_1011",
+          "aid": "A_1011_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1094": {
+          "id": "A_1094",
+          "aid": "A_1094_6",
+          "quality": 6,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": false
@@ -898,25 +898,25 @@
           "id": "A_1016",
           "aid": "A_1016_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": true
+        },
+        "A_1006": {
+          "id": "A_1006",
+          "aid": "A_1006_6",
+          "quality": 6,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": false
         },
-        "A_1003": {
-          "id": "A_1003",
-          "aid": "A_1003_5",
-          "quality": 5,
-          "lv": 125,
-          "slv": 5,
-          "temporary": false,
-          "can_orange": false
-        },
-        "A_1033": {
-          "id": "A_1033",
-          "aid": "A_1033_5",
-          "quality": 5,
-          "lv": 125,
+        "A_1020": {
+          "id": "A_1020",
+          "aid": "A_1020_6",
+          "quality": 6,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
           "can_orange": false
@@ -928,12 +928,12 @@
       "rewards": [
         {
           "node_id": "3-7-0",
-          "item_id": "relic-504c5b32ce29b6e72d376865",
+          "item_id": "relic-1bb5b3e99c7a4529a7dd38dd",
           "guaranteed": false
         },
         {
           "node_id": "3-7-0",
-          "item_id": "relic-1dc675c52848a74b83618b9a",
+          "item_id": "relic-9e7d52946c9239ebb7592894",
           "guaranteed": true
         }
       ],
@@ -955,38 +955,13 @@
         "A_1012_5",
         "A_1013_5",
         "A_1014_5",
-        "A_1015_5",
         "A_1016_5",
-        "A_1017_5",
         "A_1018_5",
-        "A_1019_5",
         "A_1020_5",
-        "A_1021_5",
-        "A_1022_5",
-        "A_1023_5",
-        "A_1024_5",
-        "A_1025_5",
-        "A_1026_5",
-        "A_1027_5",
-        "A_1028_5",
-        "A_1029_5",
-        "A_1030_5",
-        "A_1032_5",
-        "A_1033_5",
-        "A_1036_5",
         "A_1040_5",
-        "A_1041_5",
         "A_1045_5",
         "A_1049_5",
-        "A_1052_5",
-        "A_1053_5",
-        "A_1054_5",
-        "A_1056_5",
-        "A_1060_5",
         "A_1063_5",
-        "A_1068_5",
-        "A_1071_5",
-        "A_1073_5",
         "A_1077_5",
         "A_1082_5",
         "A_1085_5",
@@ -994,10 +969,30 @@
       ],
       "orange": [
         "A_1001_6",
+        "A_1002_6",
+        "A_1003_6",
         "A_1004_6",
+        "A_1005_6",
+        "A_1006_6",
         "A_1007_6",
+        "A_1008_6",
         "A_1009_6",
-        "A_1012_6"
+        "A_1010_6",
+        "A_1011_6",
+        "A_1012_6",
+        "A_1013_6",
+        "A_1014_6",
+        "A_1016_6",
+        "A_1018_6",
+        "A_1020_6",
+        "A_1040_6",
+        "A_1045_6",
+        "A_1049_6",
+        "A_1063_6",
+        "A_1077_6",
+        "A_1082_6",
+        "A_1085_6",
+        "A_1094_6"
       ],
       "standalone_orange": []
     },

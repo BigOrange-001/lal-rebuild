@@ -387,6 +387,7 @@ class GameplayCombat:
                 "hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema",
                 "skill", "leader_skill", "book_skill", "skillB", "bonds_104", "equipment_bonds_104", "growth_stats_applied")}
             overrides["leader_skill"] = avatar.get("leader_skill") if is_friend else None
+            overrides.update({field:copy.deepcopy(avatar[field]) for field in ('equip_passives','relic_contribution') if field in avatar})
             overrides["new_4attrs"] = {
                 key: (avatar.get("new_4attrs") or {}).get(key, 0)
                 for key in ("hit", "flee", "crit", "tough")}
@@ -1063,6 +1064,7 @@ class GameplayCombat:
                     line = 0
                     overrides = {k: raw.get(k) for k in ("hp", "hp_max", "ap", "de_ph", "de_ma", "tpl", "talent", "morph", "phase", "culture_schema", "skill", "leader_skill", "book_skill", "skillB", "growth_stats_applied", "bonds_104", "equipment_bonds_104")}
                     # Native exploration marks every selected hero as captain.
+                    overrides.update({field:copy.deepcopy(raw[field]) for field in ('equip_passives','relic_contribution') if field in raw})
                     overrides["leader_skill"] = raw.get("leader_skill")
                     overrides["hp"] = current_hp
                     overrides["new_4attrs"] = {k: raw.get(k, 0) for k in ("hit", "flee", "crit", "tough")}

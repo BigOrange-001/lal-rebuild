@@ -1,0 +1,6583 @@
+{
+  "schema": 1,
+  "model": "SkillCompleteBattle",
+  "native_verified": false,
+  "max_rounds": 120,
+  "enemy_normal_scale": 1,
+  "enemy_rates": {
+    "weak": 0.55,
+    "normal": [
+      0.8,
+      1,
+      1.2
+    ],
+    "elite": 1.3,
+    "boss": 1.6
+  },
+  "summary": [
+    {
+      "difficulty": 1,
+      "runs": 4,
+      "clears": 0,
+      "mean_retries": 20,
+      "censored_battles": 1,
+      "battle_count": 110
+    },
+    {
+      "difficulty": 10,
+      "runs": 4,
+      "clears": 0,
+      "mean_retries": 10,
+      "censored_battles": 1,
+      "battle_count": 56
+    }
+  ],
+  "runs": [
+    {
+      "difficulty": 1,
+      "deck": "blade",
+      "seed": 20261116,
+      "status": "failed",
+      "retries_used": 20,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1012",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1007",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1009",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 876183062
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 55515556
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 5,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1013",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1002",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1996238687
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 64,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1002",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1706671318
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 2,
+          "win": true,
+          "rounds": 23,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1013",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1002",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2078587441
+        },
+        {
+          "node_id": "1-6-0",
+          "type": "normal",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 11,
+          "censored": false,
+          "own_alive": 12,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 412894974
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 18,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 462264047
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1468393133
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 3,
+          "win": false,
+          "rounds": 25,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 485340939
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 4,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1506029664
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 5,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 271525345
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 6,
+          "win": false,
+          "rounds": 22,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 794426776
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 7,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 899326742
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 8,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1863114355
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 9,
+          "win": false,
+          "rounds": 27,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 2049743074
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 10,
+          "win": false,
+          "rounds": 18,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1202990523
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 11,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2130362216
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 12,
+          "win": false,
+          "rounds": 26,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 543816859
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 13,
+          "win": false,
+          "rounds": 18,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1302886204
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 14,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 688282627
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 15,
+          "win": false,
+          "rounds": 29,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 985576155
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 16,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1139060856
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 17,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1154434176
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 18,
+          "win": false,
+          "rounds": 24,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 1715792071
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 19,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 610168478
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 20,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 493800914
+        }
+      ]
+    },
+    {
+      "difficulty": 1,
+      "deck": "blade",
+      "seed": 20261117,
+      "status": "failed",
+      "retries_used": 20,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 18,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1012",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1007",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1009",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1785901580
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 9,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 919785464
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 8,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2019195678
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1963213891
+        },
+        {
+          "node_id": "1-6-0",
+          "type": "normal",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 6,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1409125319
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1899991990
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1016",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1638144024
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 3,
+          "win": false,
+          "rounds": 19,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1016",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 112924723
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 4,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 248044860
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 5,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1016",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1899276601
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 6,
+          "win": false,
+          "rounds": 21,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1016",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 1180797633
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 7,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1450542111
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 8,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1016",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1175797528
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 9,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1016",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 437039909
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 10,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 611065848
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 11,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1016",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 939979955
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 12,
+          "win": false,
+          "rounds": 21,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1016",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 2140909394
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 13,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 69583324
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 14,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1016",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1891161132
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 15,
+          "win": false,
+          "rounds": 21,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1016",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 212680780
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 16,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 886205254
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 17,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1016",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1929976511
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 18,
+          "win": false,
+          "rounds": 19,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1016",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 919729349
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 19,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1016",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1687903580
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 20,
+          "win": false,
+          "rounds": 10,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1016",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1352901244
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 21,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1016",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 1688893178
+        }
+      ]
+    },
+    {
+      "difficulty": 1,
+      "deck": "flame",
+      "seed": 20261116,
+      "status": "failed",
+      "retries_used": 20,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 11,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1003",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 876183062
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 11,
+          "censored": false,
+          "own_alive": 6,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1008",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1014",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 55515556
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 6,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1008",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1996238687
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 120,
+          "censored": true,
+          "own_alive": 4,
+          "enemy_alive": 1,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1008",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1706671318
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 2,
+          "win": true,
+          "rounds": 60,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1008",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2078587441
+        },
+        {
+          "node_id": "1-6-0",
+          "type": "normal",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 15,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 412894974
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 462264047
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 18,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1468393133
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 3,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 485340939
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 4,
+          "win": false,
+          "rounds": 19,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1506029664
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 5,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 271525345
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 6,
+          "win": false,
+          "rounds": 22,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 794426776
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 7,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 899326742
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 8,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1863114355
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 9,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 2049743074
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 10,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1202990523
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 11,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2130362216
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 12,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 543816859
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 13,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1302886204
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 14,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 688282627
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 15,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 985576155
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 16,
+          "win": false,
+          "rounds": 24,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1139060856
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 17,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1154434176
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 18,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1010",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 1715792071
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 19,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1040",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1010",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 610168478
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 20,
+          "win": false,
+          "rounds": 11,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1040",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1010",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 493800914
+        }
+      ]
+    },
+    {
+      "difficulty": 1,
+      "deck": "flame",
+      "seed": 20261117,
+      "status": "failed",
+      "retries_used": 20,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1003",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1785901580
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 10,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 919785464
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 11,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2019195678
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1963213891
+        },
+        {
+          "node_id": "1-6-0",
+          "type": "normal",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 6,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1409125319
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1899991990
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 19,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1082",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1638144024
+        },
+        {
+          "node_id": "1-7-0",
+          "type": "boss",
+          "act": 1,
+          "attempt": 3,
+          "win": true,
+          "rounds": 36,
+          "censored": false,
+          "own_alive": 3,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1082",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 112924723
+        },
+        {
+          "node_id": "2-1-0",
+          "type": "normal",
+          "act": 2,
+          "attempt": 1,
+          "win": true,
+          "rounds": 22,
+          "censored": false,
+          "own_alive": 6,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1780653381
+        },
+        {
+          "node_id": "2-3-0",
+          "type": "normal",
+          "act": 2,
+          "attempt": 1,
+          "win": true,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 6,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 879698360
+        },
+        {
+          "node_id": "2-4-0",
+          "type": "normal",
+          "act": 2,
+          "attempt": 1,
+          "win": true,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 6,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1063",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2041405638
+        },
+        {
+          "node_id": "2-5-0",
+          "type": "elite",
+          "act": 2,
+          "attempt": 1,
+          "win": true,
+          "rounds": 35,
+          "censored": false,
+          "own_alive": 4,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1063",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1375859924
+        },
+        {
+          "node_id": "2-6-0",
+          "type": "normal",
+          "act": 2,
+          "attempt": 1,
+          "win": true,
+          "rounds": 22,
+          "censored": false,
+          "own_alive": 11,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1847088232
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 1,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 51549535
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 2,
+          "win": false,
+          "rounds": 18,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1040",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 396805832
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 3,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1004",
+              2,
+              0.1
+            ],
+            [
+              "A_1040",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 877976726
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 4,
+          "win": false,
+          "rounds": 23,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 149122672
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 5,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1040",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1047985444
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 6,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1004",
+              2,
+              0.1
+            ],
+            [
+              "A_1040",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 1254466623
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 7,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1041410974
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 8,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1040",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 886232443
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 9,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1004",
+              2,
+              0.1
+            ],
+            [
+              "A_1040",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 1594844666
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 10,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1836146494
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 11,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1040",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1523677422
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 12,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1004",
+              2,
+              0.1
+            ],
+            [
+              "A_1040",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 1231151867
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 13,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1069460528
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 14,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1040",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1582006198
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 15,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1004",
+              2,
+              0.1
+            ],
+            [
+              "A_1040",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 390264931
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 16,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 933850087
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 17,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1040",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1811032399
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 18,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1004",
+              2,
+              0.1
+            ],
+            [
+              "A_1040",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 993117904
+        },
+        {
+          "node_id": "2-7-0",
+          "type": "boss",
+          "act": 2,
+          "attempt": 19,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1014",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1040",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1475680345
+        }
+      ]
+    },
+    {
+      "difficulty": 10,
+      "deck": "blade",
+      "seed": 20261116,
+      "status": "failed",
+      "retries_used": 10,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 74,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 16,
+          "formation": [
+            [
+              "A_1012",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1007",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1009",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 876183062
+        },
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 2,
+          "win": true,
+          "rounds": 101,
+          "censored": false,
+          "own_alive": 2,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1012",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1007",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1009",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1736592622
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 71,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 280303035
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 10,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1013",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1002",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1598896004
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1002",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2078587441
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 19,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 4,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1013",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1002",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 141193133
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 3,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1013",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1002",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 632767396
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 4,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1002",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1942397698
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 5,
+          "win": false,
+          "rounds": 27,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 3,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1013",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1002",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 29742664
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 6,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1013",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1002",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 2049110214
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 7,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1002",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 690860025
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 8,
+          "win": false,
+          "rounds": 34,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 2,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1013",
+              2,
+              0.4
+            ],
+            [
+              "A_1006",
+              1,
+              0.1
+            ],
+            [
+              "A_1002",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 805642836
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 9,
+          "win": false,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1013",
+              0,
+              0.4
+            ],
+            [
+              "A_1006",
+              2,
+              0.1
+            ],
+            [
+              "A_1002",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 641679398
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 10,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1002",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2019252617
+        }
+      ]
+    },
+    {
+      "difficulty": 10,
+      "deck": "blade",
+      "seed": 20261117,
+      "status": "failed",
+      "retries_used": 10,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 120,
+          "censored": true,
+          "own_alive": 3,
+          "enemy_alive": 1,
+          "formation": [
+            [
+              "A_1012",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1007",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1009",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1785901580
+        },
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 2,
+          "win": true,
+          "rounds": 59,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1012",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1007",
+              2,
+              0.4
+            ],
+            [
+              "A_1004",
+              1,
+              0.1
+            ],
+            [
+              "A_1009",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1112407330
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 12,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1351528896
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1004",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 982160984
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 35,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 6,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2030692156
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 10,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 8,
+          "formation": [
+            [
+              "A_1016",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1082",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2112681255
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 3,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 6,
+          "formation": [
+            [
+              "A_1016",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1082",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 898927297
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 4,
+          "win": false,
+          "rounds": 36,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1879473814
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 5,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 9,
+          "formation": [
+            [
+              "A_1016",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1082",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 576056335
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 6,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 6,
+          "formation": [
+            [
+              "A_1016",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1082",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 295311624
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 7,
+          "win": false,
+          "rounds": 33,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1705032465
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 8,
+          "win": false,
+          "rounds": 20,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 8,
+          "formation": [
+            [
+              "A_1016",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1082",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 267533556
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 9,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1016",
+              1,
+              0.4
+            ],
+            [
+              "A_1020",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1082",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 220503913
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 10,
+          "win": false,
+          "rounds": 30,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 6,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1082",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1529305105
+        }
+      ]
+    },
+    {
+      "difficulty": 10,
+      "deck": "flame",
+      "seed": 20261116,
+      "status": "failed",
+      "retries_used": 10,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 22,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1003",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 876183062
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 44,
+          "censored": false,
+          "own_alive": 6,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1008",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1014",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 55515556
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1008",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1996238687
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1008",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1706671318
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1008",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2078587441
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 3,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1008",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 141193133
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 4,
+          "win": false,
+          "rounds": 15,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1008",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 632767396
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 5,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1008",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1942397698
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 6,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1008",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 29742664
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 7,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1008",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2049110214
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 8,
+          "win": false,
+          "rounds": 19,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1008",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 690860025
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 9,
+          "win": false,
+          "rounds": 13,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1049",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1008",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 805642836
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 10,
+          "win": false,
+          "rounds": 14,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1049",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1008",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 641679398
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 11,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 5,
+          "formation": [
+            [
+              "A_1010",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1049",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1008",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2019252617
+        }
+      ]
+    },
+    {
+      "difficulty": 10,
+      "deck": "flame",
+      "seed": 20261117,
+      "status": "failed",
+      "retries_used": 10,
+      "rows": [
+        {
+          "node_id": "1-1-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 47,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1016",
+              2,
+              0.4
+            ],
+            [
+              "A_1020",
+              0,
+              0.4
+            ],
+            [
+              "A_1013",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1003",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1785901580
+        },
+        {
+          "node_id": "1-2-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 919785464
+        },
+        {
+          "node_id": "1-3-0",
+          "type": "weak",
+          "act": 1,
+          "attempt": 1,
+          "win": true,
+          "rounds": 35,
+          "censored": false,
+          "own_alive": 5,
+          "enemy_alive": 0,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1020",
+              1,
+              0.4
+            ],
+            [
+              "A_1006",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 2019195678
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 1,
+          "win": false,
+          "rounds": 39,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 11,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 1963213891
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 2,
+          "win": false,
+          "rounds": 22,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 10,
+          "formation": [
+            [
+              "A_1082",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1012",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 2030692156
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 3,
+          "win": false,
+          "rounds": 22,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 8,
+          "formation": [
+            [
+              "A_1082",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1012",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 2112681255
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 4,
+          "win": false,
+          "rounds": 39,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 10,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 898927297
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 5,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 9,
+          "formation": [
+            [
+              "A_1082",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1012",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1879473814
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 6,
+          "win": false,
+          "rounds": 21,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 7,
+          "formation": [
+            [
+              "A_1082",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1012",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 576056335
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 7,
+          "win": false,
+          "rounds": 42,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 11,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 295311624
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 8,
+          "win": false,
+          "rounds": 17,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 9,
+          "formation": [
+            [
+              "A_1082",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1012",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1705032465
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 9,
+          "win": false,
+          "rounds": 23,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 8,
+          "formation": [
+            [
+              "A_1082",
+              1,
+              0.4
+            ],
+            [
+              "A_1001",
+              2,
+              0.4
+            ],
+            [
+              "A_1018",
+              0,
+              0.4
+            ],
+            [
+              "A_1045",
+              2,
+              0.1
+            ],
+            [
+              "A_1012",
+              0,
+              0.1
+            ]
+          ],
+          "combat_seed": 267533556
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 10,
+          "win": false,
+          "rounds": 46,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 11,
+          "formation": [
+            [
+              "A_1082",
+              2,
+              0.4
+            ],
+            [
+              "A_1001",
+              0,
+              0.4
+            ],
+            [
+              "A_1018",
+              1,
+              0.4
+            ],
+            [
+              "A_1045",
+              0,
+              0.1
+            ],
+            [
+              "A_1012",
+              1,
+              0.1
+            ]
+          ],
+          "combat_seed": 220503913
+        },
+        {
+          "node_id": "1-5-0",
+          "type": "elite",
+          "act": 1,
+          "attempt": 11,
+          "win": false,
+          "rounds": 16,
+          "censored": false,
+          "own_alive": 0,
+          "enemy_alive": 9,
+          "formation": [
+            [
+              "A_1082",
+              0,
+              0.4
+            ],
+            [
+              "A_1001",
+              1,
+              0.4
+            ],
+            [
+              "A_1018",
+              2,
+              0.4
+            ],
+            [
+              "A_1045",
+              1,
+              0.1
+            ],
+            [
+              "A_1012",
+              2,
+              0.1
+            ]
+          ],
+          "combat_seed": 1529305105
+        }
+      ]
+    }
+  ]
+}

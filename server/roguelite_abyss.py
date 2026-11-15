@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import random
+from combat_math import level_stats, to_int
 
 from battle_engine import base_unit, validate_team_lane_coverage
 from bonds_104 import active_bonds, apply_stats, skill_ids
@@ -18,8 +19,8 @@ DECKS = {
     'summon': ('群策', 3, [1049, 1085, 1094, 1014, 1040]),
     'star': ('星裔', 5, []),
 }
-DIFFICULTIES = [(1,20),(1.08,20),(1.16,18),(1.25,18),(1.35,16),
-                (1.45,16),(1.56,14),(1.68,14),(1.81,12),(1.95,10)]
+DIFFICULTIES = [(1,20),(1.0084,20),(1.0168,18),(1.0263,18),(1.0368,16),
+                (1.0474,16),(1.0589,14),(1.0716,14),(1.0853,12),(1.1,10)]
 MAIN_STATS = ('hp', 'ap', 'de_ph', 'de_ma')
 
 
@@ -39,20 +40,25 @@ def apply_abyss_config(document):
     skin_families = {aid.rsplit('_', 1)[0] for aid in skins}
     purple = sorted(a for a in avatars if a.endswith('_5') and a.startswith('A_1'))
     normal = [a for a in purple if a.rsplit('_', 1)[0] not in skin_families]
-    chosen = list(dict.fromkeys([f'A_{i}_5' for i in range(1001,1022)] +
-                               [f'A_{i}_5' for _,_,ids in DECKS.values() for i in ids] + normal))
-    initial = [a for a in chosen if a in normal][:50]
+    eligible = [a for a in normal if 1001<=int(a.split('_')[1])<=1099 and a[:-1]+'6' in avatars]
+    chosen = [f'A_{i}_5' for _,_,ids in DECKS.values() for i in ids]+[
+        'A_1002_5','A_1005_5','A_1008_5','A_1010_5','A_1011_5']
+    if len(set(chosen))!=25 or not set(chosen)<=set(eligible):
+        raise ValueError('Abyss initial pool must contain 25 distinct eligible ordinary heroes')
+    initial = sorted(chosen)
     paired = [a for a in purple if a.rsplit('_',1)[0] in skin_families and a[:-1]+'6' in avatars]
     orange_only = sorted(a for a in avatars if a.endswith('_6') and
                          a.rsplit('_',1)[0] in skin_families and a[:-1]+'5' not in avatars)
     cfg.setdefault('system_simple', {})['roguelite_abyss'] = {
-        'schema': 1, 'level': 125, 'skill_level': 5, 'pool_cap': 20,
+        'schema': 2, 'level': 99, 'orange_panel_ratio':1.4,
+        'standalone_orange_panel_ratio':.7, 'skill_level': 5, 'pool_cap': 20,
+        'eligible_ordinary_purple':eligible,
         'initial_purple': initial, 'skin_purple': paired, 'skin_orange_only': orange_only,
         'decks': {key: {'name':name, 'clear_required':clear,
                         'members':[f'A_{i}_5' for i in ids]}
                   for key,(name,clear,ids) in DECKS.items()},
         'difficulties': [{'multiplier':m, 'retries':r} for m,r in DIFFICULTIES],
-        'enemy_rates': {'weak':.55, 'normal':[.8,1,1.2], 'elite':1.3, 'boss':1.6},
+        'enemy_rates': {'weak':.55, 'normal':[.36,.45,.54], 'elite':1.3, 'boss':1.6},
         'boss_decks': {
             str(act): [[f'A_{i}_6' for i in ids] for ids in sets]
             for act,sets in enumerate((
@@ -94,17 +100,18 @@ def unlocked_pool(profile, cfg):
     purple = set(plan['initial_purple'])
     for aid in account['obtained']:
         counterpart = aid.rsplit('_',1)[0]+'_5'
-        if counterpart in cfg['avatar']:
+        if counterpart.startswith('A_1') and counterpart in cfg['avatar']:
             purple.add(counterpart)
-    orange = {a.rsplit('_',1)[0]+'_6' for a in account['appeared']
-              if a.rsplit('_',1)[0]+'_6' in cfg['avatar']}
+    orange = {a[:-1]+'6' for a in plan['initial_purple']}
+    orange.update(a.rsplit('_',1)[0]+'_6' for a in account['appeared']
+              if a.startswith('A_1') and a.rsplit('_',1)[0]+'_6' in cfg['avatar'])
     standalone = set(plan['skin_orange_only']).intersection(account['obtained'])
     return sorted(purple), sorted(orange), sorted(standalone)
 
 
 def hero_record(aid, temporary=False):
     return {'id':aid.rsplit('_',1)[0], 'aid':aid, 'quality':int(aid[-1]),
-            'lv':125, 'slv':5, 'temporary':temporary}
+            'lv':99, 'slv':5, 'temporary':temporary}
 
 
 def standard_team(cfg, heroes, formation, team=1, scale=1):
@@ -121,8 +128,17 @@ def standard_team(cfg, heroes, formation, team=1, scale=1):
             raise GameplayFault('InvalidFormation', '布阵成员、路线或位置无效。')
         ids.add(hid)
         hero = heroes[hid]
-        result.append(base_unit(cfg, hero['aid'], 125, hero['slv'], line, pos,
-                                index==0, team, standardized=True))
+        unit = base_unit(cfg, hero['aid'],99,hero['slv'],line,pos,index==0,team,
+                         enforce_avatar_level_cap=False)
+        if hero['aid'].endswith('_6'):
+            purple = hero['aid'][:-1]+'5'
+            source = cfg['avatar'].get(purple,cfg['avatar'][hero['aid']])
+            ratio = rules(cfg)['orange_panel_ratio'] if purple in cfg['avatar'] else rules(cfg)['standalone_orange_panel_ratio']
+            raw = level_stats(source,99,enforce_cap=False)
+            for key,stat in zip(MAIN_STATS,('health','attack','physical_defense','magic_defense')):
+                unit[key] = to_int(raw[stat]*ratio)
+            unit['hp_max'] = unit['hp']
+        result.append(unit)
     aids = [u['aid'] for u in result]
     for unit in result:
         bonds = active_bonds(cfg, unit['aid'], aids)
@@ -216,8 +232,6 @@ def candidates(profile, run, node, cfg):
         if len(selected)>=count: break
         if family not in excluded:
             selected.append(aid); excluded.add(family)
-    # Fresh accounts may have fewer unlocked oranges than the guaranteed
-    # count. Never create an unearned unlock to fill that shortage.
     if not selected: return None
     rng.shuffle(selected)
     return {'node_id':node['id'], 'options':[hero_record(a) for a in selected],
@@ -230,7 +244,7 @@ def public_run(run, profile, cfg):
     result = copy.deepcopy(run)
     for node in result['map']:
         node.pop('enemies', None)
-    appeared = set(profile['abyss_account']['appeared'])
+    orange = set(unlocked_pool(profile,cfg)[1])
     for hero in result['pool'].values():
-        hero['can_orange'] = hero['quality']==5 and hero['aid'] in appeared and hero['aid'][:-1]+'6' in cfg['avatar']
+        hero['can_orange'] = hero['quality']==5 and hero['aid'][:-1]+'6' in orange
     return result

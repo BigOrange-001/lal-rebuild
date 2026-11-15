@@ -125,7 +125,7 @@ class GameplayAbyss:
             if option=='skill' and hero['slv']==5:
                 hero['slv'] = 10
             elif (option=='orange' and hero['quality']==5 and
-                  hero['aid'] in p['abyss_account']['appeared'] and hero['aid'][:-1]+'6' in self.cfg['avatar']):
+                  hero['aid'][:-1]+'6' in unlocked_pool(p,self.cfg)[1]):
                 hero.update(aid=hero['aid'][:-1]+'6',quality=6)
             else:
                 raise GameplayFault('AbyssRestUnavailable', '该英雄不能进行此项提升。')

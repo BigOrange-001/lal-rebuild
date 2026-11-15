@@ -63,7 +63,7 @@ def walkthrough(destination):
         ids = list(inventory)
         if len(ids)<2: raise AssertionError('fixture seed must grant two relics')
         call('relic_equip',item_id=ids[0],slot=0)
-        call('relic_reroll',item_id=ids[0],material_id=ids[1])
+        call('relic_reroll',item_id=ids[0],material_id=ids[1],substat_index=1)
         call('relic_unequip',item_id=ids[0])
         call('start',difficulty=2,deck='venom',seed=20261117)
         call('abandon')

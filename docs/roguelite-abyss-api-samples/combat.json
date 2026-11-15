@@ -108,7 +108,7 @@
       ]
     },
     "abyss_run": {
-      "id": "ba323024194dc8e2f788523c",
+      "id": "65f9f2f9ac6b41339367602a",
       "status": "active",
       "seed": 20261116,
       "difficulty": 1,
@@ -688,72 +688,72 @@
           "id": "A_1001",
           "aid": "A_1001_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
         "A_1007": {
           "id": "A_1007",
           "aid": "A_1007_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
         "A_1004": {
           "id": "A_1004",
           "aid": "A_1004_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
         "A_1009": {
           "id": "A_1009",
           "aid": "A_1009_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         },
         "A_1012": {
           "id": "A_1012",
           "aid": "A_1012_5",
           "quality": 5,
-          "lv": 125,
+          "lv": 99,
           "slv": 5,
           "temporary": false,
-          "can_orange": false
+          "can_orange": true
         }
       },
       "retries": 20,
       "pending_choice": null,
       "battle": {
-        "fight_id": "eOYSiQuDvkhT0P8ZIABOGcpB",
+        "fight_id": "PfRpqk2yIIQjgmfi5dWiyY9k",
         "seed": 876183062,
         "fight_kind": "abyss",
         "metadata": {
-          "run_id": "ba323024194dc8e2f788523c",
+          "run_id": "65f9f2f9ac6b41339367602a",
           "node_id": "1-1-0"
         },
         "orgin_team_a": [
           {
             "aid": "A_1001_5",
-            "ap": 1697,
+            "ap": 1400,
             "morph": 0,
             "buffs": {},
-            "de_ma": 2848,
-            "de_ph": 3013,
-            "hp": 95422,
-            "hp_max": 95422,
+            "de_ma": 2349,
+            "de_ph": 2485,
+            "hp": 78715,
+            "hp_max": 78715,
             "isme": true,
             "leader": 1,
             "line": 0,
-            "lv": 125,
+            "lv": 99,
             "new_4attrs": {
               "hit": 0,
               "flee": 0,
@@ -950,17 +950,17 @@
           },
           {
             "aid": "A_1007_5",
-            "ap": 3189,
+            "ap": 2630,
             "morph": 0,
             "buffs": {},
-            "de_ma": 2857,
-            "de_ph": 2294,
-            "hp": 46228,
-            "hp_max": 46228,
+            "de_ma": 2357,
+            "de_ph": 1893,
+            "hp": 38135,
+            "hp_max": 38135,
             "isme": true,
             "leader": 0,
             "line": 1,
-            "lv": 125,
+            "lv": 99,
             "new_4attrs": {
               "hit": 0,
               "flee": 0,
@@ -1058,17 +1058,17 @@
           },
           {
             "aid": "A_1004_5",
-            "ap": 1845,
+            "ap": 1522,
             "morph": 0,
             "buffs": {},
-            "de_ma": 1459,
-            "de_ph": 2041,
-            "hp": 74073,
-            "hp_max": 74073,
+            "de_ma": 1203,
+            "de_ph": 1684,
+            "hp": 61104,
+            "hp_max": 61104,
             "isme": true,
             "leader": 0,
             "line": 2,
-            "lv": 125,
+            "lv": 99,
             "new_4attrs": {
               "hit": 0,
               "flee": 0,
@@ -1154,17 +1154,17 @@
           },
           {
             "aid": "A_1009_5",
-            "ap": 3070,
+            "ap": 2532,
             "morph": 0,
             "buffs": {},
-            "de_ma": 3921,
-            "de_ph": 3897,
-            "hp": 58813,
-            "hp_max": 58813,
+            "de_ma": 3235,
+            "de_ph": 3215,
+            "hp": 48516,
+            "hp_max": 48516,
             "isme": true,
             "leader": 0,
             "line": 0,
-            "lv": 125,
+            "lv": 99,
             "new_4attrs": {
               "hit": 0,
               "flee": 0,
@@ -1273,17 +1273,17 @@
           },
           {
             "aid": "A_1012_5",
-            "ap": 4561,
+            "ap": 3762,
             "morph": 0,
             "buffs": {},
-            "de_ma": 3810,
-            "de_ph": 3656,
-            "hp": 46614,
-            "hp_max": 46614,
+            "de_ma": 3143,
+            "de_ph": 3016,
+            "hp": 38453,
+            "hp_max": 38453,
             "isme": true,
             "leader": 0,
             "line": 1,
-            "lv": 125,
+            "lv": 99,
             "new_4attrs": {
               "hit": 0,
               "flee": 0,
@@ -1371,17 +1371,17 @@
         "orgin_team_b": [
           {
             "aid": "A_1001_5",
-            "ap": 933,
+            "ap": 770,
             "morph": 0,
             "buffs": {},
-            "de_ma": 1382,
-            "de_ph": 1462,
-            "hp": 46307,
-            "hp_max": 46307,
+            "de_ma": 1140,
+            "de_ph": 1206,
+            "hp": 38200,
+            "hp_max": 38200,
             "isme": false,
             "leader": 1,
             "line": 0,
-            "lv": 125,
+            "lv": 99,
             "new_4attrs": {
               "hit": 0,
               "flee": 0,
@@ -1575,103 +1575,18 @@
             "abyss_standardized": true
           },
           {
-            "aid": "A_1027_5",
-            "ap": 1949,
+            "aid": "A_1040_5",
+            "ap": 2538,
             "morph": 0,
             "buffs": {},
-            "de_ma": 1821,
-            "de_ph": 2368,
-            "hp": 35003,
-            "hp_max": 35003,
+            "de_ma": 1127,
+            "de_ph": 878,
+            "hp": 18575,
+            "hp_max": 18575,
             "isme": false,
             "leader": 0,
             "line": 1,
-            "lv": 125,
-            "new_4attrs": {
-              "hit": 0,
-              "flee": 0,
-              "crit": 0,
-              "tough": 0
-            },
-            "pos": 450,
-            "slv": 5,
-            "tpl": [
-              2,
-              1,
-              2,
-              350,
-              300
-            ],
-            "talent": null,
-            "skill": {
-              "modCondition": null,
-              "modEffectSequence": 0,
-              "cd": 0,
-              "pl": [
-                0,
-                0,
-                600,
-                0,
-                0,
-                1
-              ],
-              "skid": "S_641027_5",
-              "skills": [
-                [
-                  "manual_ability",
-                  "veigar_n",
-                  2.0,
-                  "FX_A_1027_MAGIC"
-                ]
-              ],
-              "actionTargetPolicies": [
-                "enemy_lane_frontmost"
-              ],
-              "actionTargetPolicyArgs": [
-                null
-              ],
-              "actionTargetMaxTargets": [
-                1
-              ],
-              "actionTargetGroups": [
-                null
-              ],
-              "manualSummonPolicy": null,
-              "manualClonePolicy": null,
-              "captainSummonMultiplier": 1,
-              "equipment_source_skill_104": null,
-              "chainDot": null,
-              "nativeSettings104": {
-                "manualFixedScale104": 0.7222222222222222,
-                "manualDamageMultiplier": 1.00381264475882,
-                "manualEffectMultiplier": 0.8365105372990167
-              }
-            },
-            "leader_skill": null,
-            "book_skill": null,
-            "skillB": null,
-            "skill_diff": 0,
-            "modUnitType": "hero",
-            "phase": 0,
-            "culture_schema": "",
-            "bonds_104": [],
-            "equipment_bonds_104": [],
-            "growth_stats_applied": true,
-            "abyss_standardized": true
-          },
-          {
-            "aid": "A_1040_5",
-            "ap": 3077,
-            "morph": 0,
-            "buffs": {},
-            "de_ma": 1366,
-            "de_ph": 1065,
-            "hp": 22517,
-            "hp_max": 22517,
-            "isme": false,
-            "leader": 0,
-            "line": 2,
-            "lv": 125,
+            "lv": 99,
             "new_4attrs": {
               "hit": 0,
               "flee": 0,
@@ -1777,6 +1692,117 @@
             "equipment_bonds_104": [],
             "growth_stats_applied": true,
             "abyss_standardized": true
+          },
+          {
+            "aid": "A_1016_5",
+            "ap": 3430,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 1101,
+            "de_ph": 943,
+            "hp": 12297,
+            "hp_max": 12297,
+            "isme": false,
+            "leader": 0,
+            "line": 2,
+            "lv": 99,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 450,
+            "slv": 5,
+            "tpl": [
+              3,
+              2,
+              2,
+              245,
+              614
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                2,
+                600,
+                0,
+                0,
+                1
+              ],
+              "skid": "S_621016_5",
+              "skills": [
+                [
+                  "damage",
+                  0.5751324646166667,
+                  1,
+                  "FX_A_1016_PHYSICAL"
+                ],
+                [
+                  "damage",
+                  0.5751324646166667,
+                  1,
+                  "FX_A_1016_PHYSICAL"
+                ],
+                [
+                  "damage",
+                  1.9171082164000002,
+                  2,
+                  "FX_A_1016_MAGIC"
+                ],
+                [
+                  "stun",
+                  0.0,
+                  2,
+                  1,
+                  "FX60_STUN"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                "primary",
+                "primary",
+                "primary",
+                "primary"
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null
+            },
+            "leader_skill": null,
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
           }
         ],
         "line": [
@@ -1786,7 +1812,7 @@
         ],
         "is_pve": false,
         "round_max": 0,
-        "expires": 1794766492
+        "expires": 1794768651
       },
       "rewards": [],
       "attempt": 0
@@ -1807,67 +1833,68 @@
         "A_1012_5",
         "A_1013_5",
         "A_1014_5",
-        "A_1015_5",
         "A_1016_5",
-        "A_1017_5",
         "A_1018_5",
-        "A_1019_5",
         "A_1020_5",
-        "A_1021_5",
-        "A_1022_5",
-        "A_1023_5",
-        "A_1024_5",
-        "A_1025_5",
-        "A_1026_5",
-        "A_1027_5",
-        "A_1028_5",
-        "A_1029_5",
-        "A_1030_5",
-        "A_1032_5",
-        "A_1033_5",
-        "A_1036_5",
         "A_1040_5",
-        "A_1041_5",
         "A_1045_5",
         "A_1049_5",
-        "A_1052_5",
-        "A_1053_5",
-        "A_1054_5",
-        "A_1056_5",
-        "A_1060_5",
         "A_1063_5",
-        "A_1068_5",
-        "A_1071_5",
-        "A_1073_5",
         "A_1077_5",
         "A_1082_5",
         "A_1085_5",
         "A_1094_5"
       ],
-      "orange": [],
+      "orange": [
+        "A_1001_6",
+        "A_1002_6",
+        "A_1003_6",
+        "A_1004_6",
+        "A_1005_6",
+        "A_1006_6",
+        "A_1007_6",
+        "A_1008_6",
+        "A_1009_6",
+        "A_1010_6",
+        "A_1011_6",
+        "A_1012_6",
+        "A_1013_6",
+        "A_1014_6",
+        "A_1016_6",
+        "A_1018_6",
+        "A_1020_6",
+        "A_1040_6",
+        "A_1045_6",
+        "A_1049_6",
+        "A_1063_6",
+        "A_1077_6",
+        "A_1082_6",
+        "A_1085_6",
+        "A_1094_6"
+      ],
       "standalone_orange": []
     },
-    "fight_id": "eOYSiQuDvkhT0P8ZIABOGcpB",
+    "fight_id": "PfRpqk2yIIQjgmfi5dWiyY9k",
     "seed": 876183062,
     "fight_kind": "abyss",
     "metadata": {
-      "run_id": "ba323024194dc8e2f788523c",
+      "run_id": "65f9f2f9ac6b41339367602a",
       "node_id": "1-1-0"
     },
     "orgin_team_a": [
       {
         "aid": "A_1001_5",
-        "ap": 1697,
+        "ap": 1400,
         "morph": 0,
         "buffs": {},
-        "de_ma": 2848,
-        "de_ph": 3013,
-        "hp": 95422,
-        "hp_max": 95422,
+        "de_ma": 2349,
+        "de_ph": 2485,
+        "hp": 78715,
+        "hp_max": 78715,
         "isme": true,
         "leader": 1,
         "line": 0,
-        "lv": 125,
+        "lv": 99,
         "new_4attrs": {
           "hit": 0,
           "flee": 0,
@@ -2064,17 +2091,17 @@
       },
       {
         "aid": "A_1007_5",
-        "ap": 3189,
+        "ap": 2630,
         "morph": 0,
         "buffs": {},
-        "de_ma": 2857,
-        "de_ph": 2294,
-        "hp": 46228,
-        "hp_max": 46228,
+        "de_ma": 2357,
+        "de_ph": 1893,
+        "hp": 38135,
+        "hp_max": 38135,
         "isme": true,
         "leader": 0,
         "line": 1,
-        "lv": 125,
+        "lv": 99,
         "new_4attrs": {
           "hit": 0,
           "flee": 0,
@@ -2172,17 +2199,17 @@
       },
       {
         "aid": "A_1004_5",
-        "ap": 1845,
+        "ap": 1522,
         "morph": 0,
         "buffs": {},
-        "de_ma": 1459,
-        "de_ph": 2041,
-        "hp": 74073,
-        "hp_max": 74073,
+        "de_ma": 1203,
+        "de_ph": 1684,
+        "hp": 61104,
+        "hp_max": 61104,
         "isme": true,
         "leader": 0,
         "line": 2,
-        "lv": 125,
+        "lv": 99,
         "new_4attrs": {
           "hit": 0,
           "flee": 0,
@@ -2268,17 +2295,17 @@
       },
       {
         "aid": "A_1009_5",
-        "ap": 3070,
+        "ap": 2532,
         "morph": 0,
         "buffs": {},
-        "de_ma": 3921,
-        "de_ph": 3897,
-        "hp": 58813,
-        "hp_max": 58813,
+        "de_ma": 3235,
+        "de_ph": 3215,
+        "hp": 48516,
+        "hp_max": 48516,
         "isme": true,
         "leader": 0,
         "line": 0,
-        "lv": 125,
+        "lv": 99,
         "new_4attrs": {
           "hit": 0,
           "flee": 0,
@@ -2387,17 +2414,17 @@
       },
       {
         "aid": "A_1012_5",
-        "ap": 4561,
+        "ap": 3762,
         "morph": 0,
         "buffs": {},
-        "de_ma": 3810,
-        "de_ph": 3656,
-        "hp": 46614,
-        "hp_max": 46614,
+        "de_ma": 3143,
+        "de_ph": 3016,
+        "hp": 38453,
+        "hp_max": 38453,
         "isme": true,
         "leader": 0,
         "line": 1,
-        "lv": 125,
+        "lv": 99,
         "new_4attrs": {
           "hit": 0,
           "flee": 0,
@@ -2485,17 +2512,17 @@
     "orgin_team_b": [
       {
         "aid": "A_1001_5",
-        "ap": 933,
+        "ap": 770,
         "morph": 0,
         "buffs": {},
-        "de_ma": 1382,
-        "de_ph": 1462,
-        "hp": 46307,
-        "hp_max": 46307,
+        "de_ma": 1140,
+        "de_ph": 1206,
+        "hp": 38200,
+        "hp_max": 38200,
         "isme": false,
         "leader": 1,
         "line": 0,
-        "lv": 125,
+        "lv": 99,
         "new_4attrs": {
           "hit": 0,
           "flee": 0,
@@ -2689,103 +2716,18 @@
         "abyss_standardized": true
       },
       {
-        "aid": "A_1027_5",
-        "ap": 1949,
+        "aid": "A_1040_5",
+        "ap": 2538,
         "morph": 0,
         "buffs": {},
-        "de_ma": 1821,
-        "de_ph": 2368,
-        "hp": 35003,
-        "hp_max": 35003,
+        "de_ma": 1127,
+        "de_ph": 878,
+        "hp": 18575,
+        "hp_max": 18575,
         "isme": false,
         "leader": 0,
         "line": 1,
-        "lv": 125,
-        "new_4attrs": {
-          "hit": 0,
-          "flee": 0,
-          "crit": 0,
-          "tough": 0
-        },
-        "pos": 450,
-        "slv": 5,
-        "tpl": [
-          2,
-          1,
-          2,
-          350,
-          300
-        ],
-        "talent": null,
-        "skill": {
-          "modCondition": null,
-          "modEffectSequence": 0,
-          "cd": 0,
-          "pl": [
-            0,
-            0,
-            600,
-            0,
-            0,
-            1
-          ],
-          "skid": "S_641027_5",
-          "skills": [
-            [
-              "manual_ability",
-              "veigar_n",
-              2.0,
-              "FX_A_1027_MAGIC"
-            ]
-          ],
-          "actionTargetPolicies": [
-            "enemy_lane_frontmost"
-          ],
-          "actionTargetPolicyArgs": [
-            null
-          ],
-          "actionTargetMaxTargets": [
-            1
-          ],
-          "actionTargetGroups": [
-            null
-          ],
-          "manualSummonPolicy": null,
-          "manualClonePolicy": null,
-          "captainSummonMultiplier": 1,
-          "equipment_source_skill_104": null,
-          "chainDot": null,
-          "nativeSettings104": {
-            "manualFixedScale104": 0.7222222222222222,
-            "manualDamageMultiplier": 1.00381264475882,
-            "manualEffectMultiplier": 0.8365105372990167
-          }
-        },
-        "leader_skill": null,
-        "book_skill": null,
-        "skillB": null,
-        "skill_diff": 0,
-        "modUnitType": "hero",
-        "phase": 0,
-        "culture_schema": "",
-        "bonds_104": [],
-        "equipment_bonds_104": [],
-        "growth_stats_applied": true,
-        "abyss_standardized": true
-      },
-      {
-        "aid": "A_1040_5",
-        "ap": 3077,
-        "morph": 0,
-        "buffs": {},
-        "de_ma": 1366,
-        "de_ph": 1065,
-        "hp": 22517,
-        "hp_max": 22517,
-        "isme": false,
-        "leader": 0,
-        "line": 2,
-        "lv": 125,
+        "lv": 99,
         "new_4attrs": {
           "hit": 0,
           "flee": 0,
@@ -2891,6 +2833,117 @@
         "equipment_bonds_104": [],
         "growth_stats_applied": true,
         "abyss_standardized": true
+      },
+      {
+        "aid": "A_1016_5",
+        "ap": 3430,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 1101,
+        "de_ph": 943,
+        "hp": 12297,
+        "hp_max": 12297,
+        "isme": false,
+        "leader": 0,
+        "line": 2,
+        "lv": 99,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 450,
+        "slv": 5,
+        "tpl": [
+          3,
+          2,
+          2,
+          245,
+          614
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            2,
+            600,
+            0,
+            0,
+            1
+          ],
+          "skid": "S_621016_5",
+          "skills": [
+            [
+              "damage",
+              0.5751324646166667,
+              1,
+              "FX_A_1016_PHYSICAL"
+            ],
+            [
+              "damage",
+              0.5751324646166667,
+              1,
+              "FX_A_1016_PHYSICAL"
+            ],
+            [
+              "damage",
+              1.9171082164000002,
+              2,
+              "FX_A_1016_MAGIC"
+            ],
+            [
+              "stun",
+              0.0,
+              2,
+              1,
+              "FX60_STUN"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost",
+            "enemy_lane_frontmost"
+          ],
+          "actionTargetPolicyArgs": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "actionTargetMaxTargets": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            "primary",
+            "primary",
+            "primary",
+            "primary"
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null
+        },
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
       }
     ],
     "line": [
@@ -2900,7 +2953,7 @@
     ],
     "is_pve": false,
     "round_max": 0,
-    "expires": 1794766492,
+    "expires": 1794768651,
     "replayed": false
   }
 }

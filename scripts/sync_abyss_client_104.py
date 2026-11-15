@@ -33,6 +33,7 @@ def splice() -> None:
 
 def refresh_hashes() -> None:
     config = json.loads(CONFIG.read_text('utf-8'))
+    config['stage_count'] = len(config['stages'])
     for stage in config['stages']:
         source = ROOT / stage['source']
         stage['source_sha256'] = hashlib.sha256(source.read_bytes()).hexdigest()

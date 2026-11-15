@@ -24,6 +24,7 @@ def method(source,name,params):
 class AbyssUITests(unittest.TestCase):
     def test_inheritance_selectors_are_compiled_into_shipping_swf(self):
         config=json.loads((ROOT/'client/build.json').read_text('utf-8'))
+        self.assertEqual(config['stage_count'],len(config['stages']))
         by_class={s['class'].rsplit('.',1)[-1]:s for s in config['stages']}
         for name in ('PanelEquipAlchemySelect','PanelEquipAlchemyStuffSelect'):
             row=by_class[name]

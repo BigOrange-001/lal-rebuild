@@ -198,3 +198,9 @@ python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests t
 存档压缩4/4，真实Java SaveStore边界8/8通过；只用临时合成账号/文件，没有读取或修改正式存档。
 
 未连接ADB设备；地图节点敌方展示、第7格遗物位置、所有深渊界面布局、休息处离开按钮仍留真机验收。图标按用户新增要求制作并接入最终APK，产物/签名/最终集成提交另记集成分支日志。未推送、未合并main。
+
+## 单机包完成记录
+
+2026-11-16集成代码ea9edcf，181阶段冷编译通过，单机合包成功；最终交付release/lal-abyss-1.0.5-20261116.apk，版本1.0.5/1000005，包名air.com.meng52.lol.android。最终使用用户提供的原签名密钥，证书SHA256为9ea69ea5377b1d59f0b4b410d581ac21aea510933adcd733ea05913b5aed71af，与手机既有版本一致；v2/v3验证通过。APK SHA256为c56e3bf8a21828bfff24b32800e3c33891eee762e0a3ee1d4e6fefa7f4f330fc。用户随后明确授权安装，adb install -r成功，安装后base.apk摘要一致，原首次安装时间保留。20图标已接入并共用原生彩虹框。完整前端编译/被动/图标/手机验收边界见集成分支前端开发日志。
+
+用户最新追加要求：推送集成分支创建PR，等待自动审核、修复反馈后合并；此要求取代此前“不推送、不合并main”的约束。发布包、密钥、SDK、缓存和存档均不提交。

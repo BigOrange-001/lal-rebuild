@@ -1,0 +1,2849 @@
+{
+  "request": {
+    "method": "user.abyss_combat",
+    "params": {
+      "actionID": "fixture-4",
+      "team": [
+        [
+          "A_1001",
+          0,
+          0.2
+        ],
+        [
+          "A_1007",
+          1,
+          0.2
+        ],
+        [
+          "A_1004",
+          2,
+          0.2
+        ],
+        [
+          "A_1009",
+          0,
+          0.2
+        ],
+        [
+          "A_1012",
+          1,
+          0.2
+        ]
+      ]
+    }
+  },
+  "response": {
+    "abyss_account": {
+      "schema": 1,
+      "obtained": [
+        "A_1001_3",
+        "A_1002_3",
+        "A_1003_3",
+        "A_1004_3",
+        "A_1005_3"
+      ],
+      "appeared": [],
+      "cleared": [],
+      "max_difficulty": 1,
+      "decks": [
+        "blade",
+        "flame"
+      ]
+    },
+    "abyss_run": {
+      "id": "ed5d1c1cf4b97afd78f41ec6",
+      "status": "active",
+      "seed": 20261116,
+      "difficulty": 1,
+      "deck": "blade",
+      "map": [
+        {
+          "id": "1-1-0",
+          "act": 1,
+          "layer": 1,
+          "type": "weak",
+          "next": [
+            "1-2-0",
+            "1-2-1",
+            "1-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-1-1",
+          "act": 1,
+          "layer": 1,
+          "type": "weak",
+          "next": [
+            "1-2-0",
+            "1-2-1",
+            "1-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-1-2",
+          "act": 1,
+          "layer": 1,
+          "type": "weak",
+          "next": [
+            "1-2-0",
+            "1-2-1",
+            "1-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-2-0",
+          "act": 1,
+          "layer": 2,
+          "type": "weak",
+          "next": [
+            "1-3-0",
+            "1-3-1",
+            "1-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-2-1",
+          "act": 1,
+          "layer": 2,
+          "type": "weak",
+          "next": [
+            "1-3-0",
+            "1-3-1",
+            "1-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-2-2",
+          "act": 1,
+          "layer": 2,
+          "type": "weak",
+          "next": [
+            "1-3-0",
+            "1-3-1",
+            "1-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-3-0",
+          "act": 1,
+          "layer": 3,
+          "type": "weak",
+          "next": [
+            "1-4-0",
+            "1-4-1",
+            "1-4-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-3-1",
+          "act": 1,
+          "layer": 3,
+          "type": "weak",
+          "next": [
+            "1-4-0",
+            "1-4-1",
+            "1-4-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-3-2",
+          "act": 1,
+          "layer": 3,
+          "type": "weak",
+          "next": [
+            "1-4-0",
+            "1-4-1",
+            "1-4-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-4-0",
+          "act": 1,
+          "layer": 4,
+          "type": "rest",
+          "next": [
+            "1-5-0",
+            "1-5-1",
+            "1-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-4-1",
+          "act": 1,
+          "layer": 4,
+          "type": "rest",
+          "next": [
+            "1-5-0",
+            "1-5-1",
+            "1-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-4-2",
+          "act": 1,
+          "layer": 4,
+          "type": "rest",
+          "next": [
+            "1-5-0",
+            "1-5-1",
+            "1-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-5-0",
+          "act": 1,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "1-6-0",
+            "1-6-1",
+            "1-6-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-5-1",
+          "act": 1,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "1-6-0",
+            "1-6-1",
+            "1-6-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-5-2",
+          "act": 1,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "1-6-0",
+            "1-6-1",
+            "1-6-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-6-0",
+          "act": 1,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "1-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-6-1",
+          "act": 1,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "1-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-6-2",
+          "act": 1,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "1-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "1-7-0",
+          "act": 1,
+          "layer": 7,
+          "type": "boss",
+          "next": [
+            "2-1-0",
+            "2-1-1",
+            "2-1-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-1-0",
+          "act": 2,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "2-2-0",
+            "2-2-1",
+            "2-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-1-1",
+          "act": 2,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "2-2-0",
+            "2-2-1",
+            "2-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-1-2",
+          "act": 2,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "2-2-0",
+            "2-2-1",
+            "2-2-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-2-0",
+          "act": 2,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "2-3-0",
+            "2-3-1",
+            "2-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-2-1",
+          "act": 2,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "2-3-0",
+            "2-3-1",
+            "2-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-2-2",
+          "act": 2,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "2-3-0",
+            "2-3-1",
+            "2-3-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-3-0",
+          "act": 2,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "2-4-0",
+            "2-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-3-1",
+          "act": 2,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "2-4-0",
+            "2-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-3-2",
+          "act": 2,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "2-4-0",
+            "2-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-4-0",
+          "act": 2,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "2-5-0",
+            "2-5-1",
+            "2-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-4-1",
+          "act": 2,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "2-5-0",
+            "2-5-1",
+            "2-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-5-0",
+          "act": 2,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "2-6-0",
+            "2-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-5-1",
+          "act": 2,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "2-6-0",
+            "2-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-5-2",
+          "act": 2,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "2-6-0",
+            "2-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-6-0",
+          "act": 2,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "2-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-6-1",
+          "act": 2,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "2-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "2-7-0",
+          "act": 2,
+          "layer": 7,
+          "type": "boss",
+          "next": [
+            "3-1-0",
+            "3-1-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-1-0",
+          "act": 3,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "3-2-0",
+            "3-2-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-1-1",
+          "act": 3,
+          "layer": 1,
+          "type": "normal",
+          "next": [
+            "3-2-0",
+            "3-2-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-2-0",
+          "act": 3,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "3-3-0",
+            "3-3-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-2-1",
+          "act": 3,
+          "layer": 2,
+          "type": "rest",
+          "next": [
+            "3-3-0",
+            "3-3-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-3-0",
+          "act": 3,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "3-4-0",
+            "3-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-3-1",
+          "act": 3,
+          "layer": 3,
+          "type": "normal",
+          "next": [
+            "3-4-0",
+            "3-4-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-4-0",
+          "act": 3,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "3-5-0",
+            "3-5-1",
+            "3-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-4-1",
+          "act": 3,
+          "layer": 4,
+          "type": "normal",
+          "next": [
+            "3-5-0",
+            "3-5-1",
+            "3-5-2"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-5-0",
+          "act": 3,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "3-6-0",
+            "3-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-5-1",
+          "act": 3,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "3-6-0",
+            "3-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-5-2",
+          "act": 3,
+          "layer": 5,
+          "type": "elite",
+          "next": [
+            "3-6-0",
+            "3-6-1"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-6-0",
+          "act": 3,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "3-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-6-1",
+          "act": 3,
+          "layer": 6,
+          "type": "normal",
+          "next": [
+            "3-7-0"
+          ],
+          "completed": false
+        },
+        {
+          "id": "3-7-0",
+          "act": 3,
+          "layer": 7,
+          "type": "boss",
+          "next": [],
+          "completed": false
+        }
+      ],
+      "current_node": "1-1-0",
+      "available_nodes": [],
+      "pool": {
+        "A_1001": {
+          "id": "A_1001",
+          "aid": "A_1001_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1007": {
+          "id": "A_1007",
+          "aid": "A_1007_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1004": {
+          "id": "A_1004",
+          "aid": "A_1004_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1009": {
+          "id": "A_1009",
+          "aid": "A_1009_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        },
+        "A_1012": {
+          "id": "A_1012",
+          "aid": "A_1012_5",
+          "quality": 5,
+          "lv": 125,
+          "slv": 5,
+          "temporary": false,
+          "can_orange": false
+        }
+      },
+      "retries": 20,
+      "pending_choice": null,
+      "battle": {
+        "fight_id": "ZWH2yNxrLX3GQiZqRtIT6OZA",
+        "seed": 876183062,
+        "fight_kind": "abyss",
+        "metadata": {
+          "run_id": "ed5d1c1cf4b97afd78f41ec6",
+          "node_id": "1-1-0"
+        },
+        "orgin_team_a": [
+          {
+            "aid": "A_1001_5",
+            "ap": 1697,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 2848,
+            "de_ph": 3013,
+            "hp": 95422,
+            "hp_max": 95422,
+            "isme": true,
+            "leader": 1,
+            "line": 0,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 2400,
+            "slv": 5,
+            "tpl": [
+              3,
+              1,
+              1,
+              245,
+              337
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                3,
+                1500,
+                0,
+                0,
+                0
+              ],
+              "skid": "S_201001_5",
+              "skills": [
+                [
+                  "move_to_target",
+                  "enemy_lane_frontmost",
+                  0,
+                  "FX60_GAREN_DASH"
+                ],
+                [
+                  "damage",
+                  1.5427876177999997,
+                  1,
+                  "FX60_GAREN_SLASH"
+                ],
+                [
+                  "hp_shield",
+                  0.23375569988333333,
+                  2,
+                  "FX60_SHIELD"
+                ],
+                [
+                  "silence",
+                  0.0,
+                  1,
+                  1,
+                  "FX60_SILENCE"
+                ],
+                [
+                  "purify",
+                  1,
+                  "FX60_PURIFY"
+                ],
+                [
+                  "cure",
+                  0.4005715451111111,
+                  "FX60_HEAL"
+                ],
+                [
+                  "purify",
+                  1,
+                  "FX60_PURIFY"
+                ],
+                [
+                  "cure",
+                  0.4044444444444445,
+                  "FX60_HEAL"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                null,
+                "ally_self",
+                null,
+                "ally_all_lowest_hp_ratio",
+                "ally_all_lowest_hp_ratio",
+                "ally_all_lowest_hp_ratio",
+                "ally_all_lowest_hp_ratio"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null,
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                },
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                },
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                },
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                }
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null
+            },
+            "leader_skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 3,
+              "pl": [
+                3,
+                4,
+                3000,
+                0,
+                0,
+                0
+              ],
+              "skid": "S_301001_5",
+              "skills": [
+                [
+                  "attrup",
+                  1.517164397,
+                  "hit",
+                  10000,
+                  2,
+                  "FX60_HIT"
+                ],
+                [
+                  "true_damage",
+                  7.2823891054,
+                  "FX60_GAREN_R"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "ally_self",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [],
+              "actionTargetMaxTargets": [
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                null,
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null
+            },
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [
+              "b001"
+            ],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          },
+          {
+            "aid": "A_1007_5",
+            "ap": 3189,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 2857,
+            "de_ph": 2294,
+            "hp": 46228,
+            "hp_max": 46228,
+            "isme": true,
+            "leader": 0,
+            "line": 1,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 2400,
+            "slv": 5,
+            "tpl": [
+              3,
+              1,
+              1,
+              245,
+              337
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                2,
+                1500,
+                0,
+                0,
+                0
+              ],
+              "skid": "S_753366479882439_5",
+              "skills": [
+                [
+                  "move_to_target",
+                  "enemy_lane_frontmost",
+                  0,
+                  "FX60_JARVAN_DASH"
+                ],
+                [
+                  "damage",
+                  2.0892531062722224,
+                  1,
+                  "FX60_SLASH"
+                ],
+                [
+                  "stun",
+                  0.0,
+                  1,
+                  1,
+                  "FX60_STUN"
+                ],
+                [
+                  "strong",
+                  0.19784593869444445,
+                  2,
+                  "FX60_STRONG"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                null,
+                null,
+                "ally_lane_all"
+              ],
+              "actionTargetPolicyArgs": [],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                -1
+              ],
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": "S_201007_5",
+              "chainDot": null
+            },
+            "leader_skill": null,
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [
+              "b001"
+            ],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          },
+          {
+            "aid": "A_1004_5",
+            "ap": 1845,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 1459,
+            "de_ph": 2041,
+            "hp": 74073,
+            "hp_max": 74073,
+            "isme": true,
+            "leader": 0,
+            "line": 2,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 2400,
+            "slv": 5,
+            "tpl": [
+              3,
+              2,
+              2,
+              245,
+              614
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                0,
+                600,
+                0,
+                0,
+                0
+              ],
+              "skid": "S_203004_5",
+              "skills": [
+                [
+                  "cure",
+                  1.3516052368,
+                  "FX60_HEAL"
+                ],
+                [
+                  "purify",
+                  1,
+                  "FX60_PURIFY"
+                ],
+                [
+                  "attrup",
+                  5.631688487533333,
+                  "hit",
+                  361.1111111111111,
+                  1,
+                  "FX60_HIT"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "ally_lane_lowest_current_hp_hero",
+                null,
+                null
+              ],
+              "actionTargetPolicyArgs": [],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                "ally",
+                "ally",
+                "ally"
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null
+            },
+            "leader_skill": null,
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          },
+          {
+            "aid": "A_1009_5",
+            "ap": 3070,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 3921,
+            "de_ph": 3897,
+            "hp": 58813,
+            "hp_max": 58813,
+            "isme": true,
+            "leader": 0,
+            "line": 0,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 2400,
+            "slv": 5,
+            "tpl": [
+              2,
+              1,
+              1,
+              350,
+              337
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                2,
+                3000,
+                0,
+                0,
+                0
+              ],
+              "skid": "S_7254638986189583_5",
+              "skills": [
+                [
+                  "locked_sequence",
+                  3,
+                  0.7314514674277777,
+                  0.7314514674277777,
+                  1.645765801911111,
+                  1,
+                  0.0,
+                  "FX60_SLASH_COMBO"
+                ],
+                [
+                  "stun",
+                  0.0,
+                  1,
+                  1,
+                  "FX60_STUN"
+                ],
+                [
+                  "heal_ap",
+                  0.7619286117444444,
+                  "FX60_HEAL"
+                ],
+                [
+                  "caster_hp_shield",
+                  0.104,
+                  2,
+                  "FX60_SHIELD"
+                ],
+                [
+                  "purify",
+                  1,
+                  "FX60_PURIFY"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                null,
+                "ally_self",
+                "ally_self",
+                "ally_self"
+              ],
+              "actionTargetPolicyArgs": [],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": "S_201009_5",
+              "chainDot": null
+            },
+            "leader_skill": null,
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [
+              "b001"
+            ],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          },
+          {
+            "aid": "A_1012_5",
+            "ap": 4561,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 3810,
+            "de_ph": 3656,
+            "hp": 46614,
+            "hp_max": 46614,
+            "isme": true,
+            "leader": 0,
+            "line": 1,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 2400,
+            "slv": 5,
+            "tpl": [
+              2,
+              1,
+              1,
+              350,
+              300
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                2,
+                600,
+                0,
+                0,
+                1
+              ],
+              "skid": "S_984101210_5",
+              "skills": [
+                [
+                  "manual_ability",
+                  "yi_n",
+                  2.3999999997,
+                  "FX_A_1012_PHYSICAL"
+                ],
+                [
+                  "stat_flat",
+                  "flee",
+                  1734.975536344628,
+                  1,
+                  "FX_S9140_FLEE"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                "ally_self"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                null,
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null,
+              "nativeSettings104": {
+                "manualFixedScale104": 0.7222222222222222,
+                "manualDamageMultiplier": 0.5783251787815138,
+                "manualEffectMultiplier": 0.4819376489845949
+              }
+            },
+            "leader_skill": null,
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          }
+        ],
+        "orgin_team_b": [
+          {
+            "aid": "A_1001_5",
+            "ap": 933,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 1382,
+            "de_ph": 1462,
+            "hp": 46307,
+            "hp_max": 46307,
+            "isme": false,
+            "leader": 1,
+            "line": 0,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 450,
+            "slv": 5,
+            "tpl": [
+              3,
+              1,
+              1,
+              245,
+              337
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                3,
+                1500,
+                0,
+                0,
+                0
+              ],
+              "skid": "S_201001_5",
+              "skills": [
+                [
+                  "move_to_target",
+                  "enemy_lane_frontmost",
+                  0,
+                  "FX60_GAREN_DASH"
+                ],
+                [
+                  "damage",
+                  1.5427876177999997,
+                  1,
+                  "FX60_GAREN_SLASH"
+                ],
+                [
+                  "hp_shield",
+                  0.23375569988333333,
+                  2,
+                  "FX60_SHIELD"
+                ],
+                [
+                  "silence",
+                  0.0,
+                  1,
+                  1,
+                  "FX60_SILENCE"
+                ],
+                [
+                  "purify",
+                  1,
+                  "FX60_PURIFY"
+                ],
+                [
+                  "cure",
+                  0.4005715451111111,
+                  "FX60_HEAL"
+                ],
+                [
+                  "purify",
+                  1,
+                  "FX60_PURIFY"
+                ],
+                [
+                  "cure",
+                  0.4044444444444445,
+                  "FX60_HEAL"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost",
+                null,
+                "ally_self",
+                null,
+                "ally_all_lowest_hp_ratio",
+                "ally_all_lowest_hp_ratio",
+                "ally_all_lowest_hp_ratio",
+                "ally_all_lowest_hp_ratio"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                null,
+                null,
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                },
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                },
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                },
+                {
+                  "effectRange": 9999,
+                  "heroOnly": true
+                }
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null
+            },
+            "leader_skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 3,
+              "pl": [
+                3,
+                4,
+                3000,
+                0,
+                0,
+                0
+              ],
+              "skid": "S_301001_5",
+              "skills": [
+                [
+                  "attrup",
+                  1.517164397,
+                  "hit",
+                  10000,
+                  2,
+                  "FX60_HIT"
+                ],
+                [
+                  "true_damage",
+                  7.2823891054,
+                  "FX60_GAREN_R"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "ally_self",
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [],
+              "actionTargetMaxTargets": [
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                null,
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null
+            },
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          },
+          {
+            "aid": "A_1027_5",
+            "ap": 1949,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 1821,
+            "de_ph": 2368,
+            "hp": 35003,
+            "hp_max": 35003,
+            "isme": false,
+            "leader": 0,
+            "line": 1,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 450,
+            "slv": 5,
+            "tpl": [
+              2,
+              1,
+              2,
+              350,
+              300
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 0,
+              "pl": [
+                0,
+                0,
+                600,
+                0,
+                0,
+                1
+              ],
+              "skid": "S_641027_5",
+              "skills": [
+                [
+                  "manual_ability",
+                  "veigar_n",
+                  2.0,
+                  "FX_A_1027_MAGIC"
+                ]
+              ],
+              "actionTargetPolicies": [
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null
+              ],
+              "actionTargetMaxTargets": [
+                1
+              ],
+              "actionTargetGroups": [
+                null
+              ],
+              "manualSummonPolicy": null,
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 1,
+              "equipment_source_skill_104": null,
+              "chainDot": null,
+              "nativeSettings104": {
+                "manualFixedScale104": 0.7222222222222222,
+                "manualDamageMultiplier": 1.00381264475882,
+                "manualEffectMultiplier": 0.8365105372990167
+              }
+            },
+            "leader_skill": null,
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          },
+          {
+            "aid": "A_1040_5",
+            "ap": 3077,
+            "morph": 0,
+            "buffs": {},
+            "de_ma": 1366,
+            "de_ph": 1065,
+            "hp": 22517,
+            "hp_max": 22517,
+            "isme": false,
+            "leader": 0,
+            "line": 2,
+            "lv": 125,
+            "new_4attrs": {
+              "hit": 0,
+              "flee": 0,
+              "crit": 0,
+              "tough": 0
+            },
+            "pos": 450,
+            "slv": 5,
+            "tpl": [
+              3,
+              2,
+              2,
+              245,
+              633
+            ],
+            "talent": null,
+            "skill": {
+              "modCondition": null,
+              "modEffectSequence": 0,
+              "cd": 1,
+              "pl": [
+                1,
+                3,
+                600,
+                0,
+                1,
+                0
+              ],
+              "skid": "S_621040_5",
+              "skills": [
+                [
+                  "damage",
+                  0.46123970894444444,
+                  2,
+                  "FX_A_1040_MAGIC"
+                ],
+                [
+                  "stun",
+                  0.0,
+                  1,
+                  1,
+                  "FX60_STUN"
+                ],
+                [
+                  "summon",
+                  0.5777777777777778,
+                  "A_2326_5",
+                  99,
+                  "SUMMON_EFF"
+                ]
+              ],
+              "actionTargetPolicies": [
+                null,
+                null,
+                "enemy_lane_frontmost"
+              ],
+              "actionTargetPolicyArgs": [
+                null,
+                null,
+                {
+                  "centerActionIndex": 0,
+                  "useLastPosition": true
+                }
+              ],
+              "actionTargetMaxTargets": [
+                1,
+                1,
+                1
+              ],
+              "actionTargetGroups": [
+                "primary",
+                "primary",
+                null
+              ],
+              "manualSummonPolicy": {
+                "skillId": "S_621040_5",
+                "familyKey": "manual-1040-plant",
+                "unitId": "A_2326_5",
+                "apRatio": 0.4,
+                "hpRatio": 0.4,
+                "dePhRatio": 0.4,
+                "deMaRatio": 0.4,
+                "maxAlive": 3,
+                "replaceOldest": true,
+                "ttlOwnerTurns": 99,
+                "actionType": 1,
+                "attackRange": 550,
+                "clearSkills": true
+              },
+              "manualClonePolicy": null,
+              "captainSummonMultiplier": 0.71276740744338,
+              "equipment_source_skill_104": null,
+              "chainDot": null
+            },
+            "leader_skill": null,
+            "book_skill": null,
+            "skillB": null,
+            "skill_diff": 0,
+            "modUnitType": "hero",
+            "phase": 0,
+            "culture_schema": "",
+            "bonds_104": [],
+            "equipment_bonds_104": [],
+            "growth_stats_applied": true,
+            "abyss_standardized": true
+          }
+        ],
+        "line": [
+          3,
+          1,
+          1
+        ],
+        "is_pve": false,
+        "round_max": 0,
+        "expires": 1794766051
+      },
+      "rewards": [],
+      "attempt": 0
+    },
+    "unlocked": {
+      "purple": [
+        "A_1001_5",
+        "A_1002_5",
+        "A_1003_5",
+        "A_1004_5",
+        "A_1005_5",
+        "A_1006_5",
+        "A_1007_5",
+        "A_1008_5",
+        "A_1009_5",
+        "A_1010_5",
+        "A_1011_5",
+        "A_1012_5",
+        "A_1013_5",
+        "A_1014_5",
+        "A_1015_5",
+        "A_1016_5",
+        "A_1017_5",
+        "A_1018_5",
+        "A_1019_5",
+        "A_1020_5",
+        "A_1021_5",
+        "A_1022_5",
+        "A_1023_5",
+        "A_1024_5",
+        "A_1025_5",
+        "A_1026_5",
+        "A_1027_5",
+        "A_1028_5",
+        "A_1029_5",
+        "A_1030_5",
+        "A_1032_5",
+        "A_1033_5",
+        "A_1036_5",
+        "A_1040_5",
+        "A_1041_5",
+        "A_1045_5",
+        "A_1049_5",
+        "A_1052_5",
+        "A_1053_5",
+        "A_1054_5",
+        "A_1056_5",
+        "A_1060_5",
+        "A_1063_5",
+        "A_1068_5",
+        "A_1071_5",
+        "A_1073_5",
+        "A_1077_5",
+        "A_1082_5",
+        "A_1085_5",
+        "A_1094_5"
+      ],
+      "orange": [],
+      "standalone_orange": []
+    },
+    "fight_id": "ZWH2yNxrLX3GQiZqRtIT6OZA",
+    "seed": 876183062,
+    "fight_kind": "abyss",
+    "metadata": {
+      "run_id": "ed5d1c1cf4b97afd78f41ec6",
+      "node_id": "1-1-0"
+    },
+    "orgin_team_a": [
+      {
+        "aid": "A_1001_5",
+        "ap": 1697,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 2848,
+        "de_ph": 3013,
+        "hp": 95422,
+        "hp_max": 95422,
+        "isme": true,
+        "leader": 1,
+        "line": 0,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 2400,
+        "slv": 5,
+        "tpl": [
+          3,
+          1,
+          1,
+          245,
+          337
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            3,
+            1500,
+            0,
+            0,
+            0
+          ],
+          "skid": "S_201001_5",
+          "skills": [
+            [
+              "move_to_target",
+              "enemy_lane_frontmost",
+              0,
+              "FX60_GAREN_DASH"
+            ],
+            [
+              "damage",
+              1.5427876177999997,
+              1,
+              "FX60_GAREN_SLASH"
+            ],
+            [
+              "hp_shield",
+              0.23375569988333333,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "silence",
+              0.0,
+              1,
+              1,
+              "FX60_SILENCE"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "cure",
+              0.4005715451111111,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "cure",
+              0.4044444444444445,
+              "FX60_HEAL"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "enemy_lane_frontmost",
+            null,
+            "ally_self",
+            null,
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "actionTargetPolicyArgs": [
+            null,
+            null,
+            null,
+            null,
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            },
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            },
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            },
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            }
+          ],
+          "actionTargetMaxTargets": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null
+        },
+        "leader_skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 3,
+          "pl": [
+            3,
+            4,
+            3000,
+            0,
+            0,
+            0
+          ],
+          "skid": "S_301001_5",
+          "skills": [
+            [
+              "attrup",
+              1.517164397,
+              "hit",
+              10000,
+              2,
+              "FX60_HIT"
+            ],
+            [
+              "true_damage",
+              7.2823891054,
+              "FX60_GAREN_R"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "ally_self",
+            "enemy_lane_frontmost"
+          ],
+          "actionTargetPolicyArgs": [],
+          "actionTargetMaxTargets": [
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            null,
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null
+        },
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [
+          "b001"
+        ],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      },
+      {
+        "aid": "A_1007_5",
+        "ap": 3189,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 2857,
+        "de_ph": 2294,
+        "hp": 46228,
+        "hp_max": 46228,
+        "isme": true,
+        "leader": 0,
+        "line": 1,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 2400,
+        "slv": 5,
+        "tpl": [
+          3,
+          1,
+          1,
+          245,
+          337
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            2,
+            1500,
+            0,
+            0,
+            0
+          ],
+          "skid": "S_753366479882439_5",
+          "skills": [
+            [
+              "move_to_target",
+              "enemy_lane_frontmost",
+              0,
+              "FX60_JARVAN_DASH"
+            ],
+            [
+              "damage",
+              2.0892531062722224,
+              1,
+              "FX60_SLASH"
+            ],
+            [
+              "stun",
+              0.0,
+              1,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "strong",
+              0.19784593869444445,
+              2,
+              "FX60_STRONG"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "enemy_lane_frontmost",
+            null,
+            null,
+            "ally_lane_all"
+          ],
+          "actionTargetPolicyArgs": [],
+          "actionTargetMaxTargets": [
+            1,
+            1,
+            1,
+            -1
+          ],
+          "actionTargetGroups": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": "S_201007_5",
+          "chainDot": null
+        },
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [
+          "b001"
+        ],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      },
+      {
+        "aid": "A_1004_5",
+        "ap": 1845,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 1459,
+        "de_ph": 2041,
+        "hp": 74073,
+        "hp_max": 74073,
+        "isme": true,
+        "leader": 0,
+        "line": 2,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 2400,
+        "slv": 5,
+        "tpl": [
+          3,
+          2,
+          2,
+          245,
+          614
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            0,
+            600,
+            0,
+            0,
+            0
+          ],
+          "skid": "S_203004_5",
+          "skills": [
+            [
+              "cure",
+              1.3516052368,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "attrup",
+              5.631688487533333,
+              "hit",
+              361.1111111111111,
+              1,
+              "FX60_HIT"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "ally_lane_lowest_current_hp_hero",
+            null,
+            null
+          ],
+          "actionTargetPolicyArgs": [],
+          "actionTargetMaxTargets": [
+            1,
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            "ally",
+            "ally",
+            "ally"
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null
+        },
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      },
+      {
+        "aid": "A_1009_5",
+        "ap": 3070,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 3921,
+        "de_ph": 3897,
+        "hp": 58813,
+        "hp_max": 58813,
+        "isme": true,
+        "leader": 0,
+        "line": 0,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 2400,
+        "slv": 5,
+        "tpl": [
+          2,
+          1,
+          1,
+          350,
+          337
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            2,
+            3000,
+            0,
+            0,
+            0
+          ],
+          "skid": "S_7254638986189583_5",
+          "skills": [
+            [
+              "locked_sequence",
+              3,
+              0.7314514674277777,
+              0.7314514674277777,
+              1.645765801911111,
+              1,
+              0.0,
+              "FX60_SLASH_COMBO"
+            ],
+            [
+              "stun",
+              0.0,
+              1,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "heal_ap",
+              0.7619286117444444,
+              "FX60_HEAL"
+            ],
+            [
+              "caster_hp_shield",
+              0.104,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "enemy_lane_frontmost",
+            null,
+            "ally_self",
+            "ally_self",
+            "ally_self"
+          ],
+          "actionTargetPolicyArgs": [],
+          "actionTargetMaxTargets": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": "S_201009_5",
+          "chainDot": null
+        },
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [
+          "b001"
+        ],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      },
+      {
+        "aid": "A_1012_5",
+        "ap": 4561,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 3810,
+        "de_ph": 3656,
+        "hp": 46614,
+        "hp_max": 46614,
+        "isme": true,
+        "leader": 0,
+        "line": 1,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 2400,
+        "slv": 5,
+        "tpl": [
+          2,
+          1,
+          1,
+          350,
+          300
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            2,
+            600,
+            0,
+            0,
+            1
+          ],
+          "skid": "S_984101210_5",
+          "skills": [
+            [
+              "manual_ability",
+              "yi_n",
+              2.3999999997,
+              "FX_A_1012_PHYSICAL"
+            ],
+            [
+              "stat_flat",
+              "flee",
+              1734.975536344628,
+              1,
+              "FX_S9140_FLEE"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "enemy_lane_frontmost",
+            "ally_self"
+          ],
+          "actionTargetPolicyArgs": [
+            null,
+            null
+          ],
+          "actionTargetMaxTargets": [
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            null,
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null,
+          "nativeSettings104": {
+            "manualFixedScale104": 0.7222222222222222,
+            "manualDamageMultiplier": 0.5783251787815138,
+            "manualEffectMultiplier": 0.4819376489845949
+          }
+        },
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      }
+    ],
+    "orgin_team_b": [
+      {
+        "aid": "A_1001_5",
+        "ap": 933,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 1382,
+        "de_ph": 1462,
+        "hp": 46307,
+        "hp_max": 46307,
+        "isme": false,
+        "leader": 1,
+        "line": 0,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 450,
+        "slv": 5,
+        "tpl": [
+          3,
+          1,
+          1,
+          245,
+          337
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            3,
+            1500,
+            0,
+            0,
+            0
+          ],
+          "skid": "S_201001_5",
+          "skills": [
+            [
+              "move_to_target",
+              "enemy_lane_frontmost",
+              0,
+              "FX60_GAREN_DASH"
+            ],
+            [
+              "damage",
+              1.5427876177999997,
+              1,
+              "FX60_GAREN_SLASH"
+            ],
+            [
+              "hp_shield",
+              0.23375569988333333,
+              2,
+              "FX60_SHIELD"
+            ],
+            [
+              "silence",
+              0.0,
+              1,
+              1,
+              "FX60_SILENCE"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "cure",
+              0.4005715451111111,
+              "FX60_HEAL"
+            ],
+            [
+              "purify",
+              1,
+              "FX60_PURIFY"
+            ],
+            [
+              "cure",
+              0.4044444444444445,
+              "FX60_HEAL"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "enemy_lane_frontmost",
+            null,
+            "ally_self",
+            null,
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio",
+            "ally_all_lowest_hp_ratio"
+          ],
+          "actionTargetPolicyArgs": [
+            null,
+            null,
+            null,
+            null,
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            },
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            },
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            },
+            {
+              "effectRange": 9999,
+              "heroOnly": true
+            }
+          ],
+          "actionTargetMaxTargets": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null
+        },
+        "leader_skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 3,
+          "pl": [
+            3,
+            4,
+            3000,
+            0,
+            0,
+            0
+          ],
+          "skid": "S_301001_5",
+          "skills": [
+            [
+              "attrup",
+              1.517164397,
+              "hit",
+              10000,
+              2,
+              "FX60_HIT"
+            ],
+            [
+              "true_damage",
+              7.2823891054,
+              "FX60_GAREN_R"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "ally_self",
+            "enemy_lane_frontmost"
+          ],
+          "actionTargetPolicyArgs": [],
+          "actionTargetMaxTargets": [
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            null,
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null
+        },
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      },
+      {
+        "aid": "A_1027_5",
+        "ap": 1949,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 1821,
+        "de_ph": 2368,
+        "hp": 35003,
+        "hp_max": 35003,
+        "isme": false,
+        "leader": 0,
+        "line": 1,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 450,
+        "slv": 5,
+        "tpl": [
+          2,
+          1,
+          2,
+          350,
+          300
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 0,
+          "pl": [
+            0,
+            0,
+            600,
+            0,
+            0,
+            1
+          ],
+          "skid": "S_641027_5",
+          "skills": [
+            [
+              "manual_ability",
+              "veigar_n",
+              2.0,
+              "FX_A_1027_MAGIC"
+            ]
+          ],
+          "actionTargetPolicies": [
+            "enemy_lane_frontmost"
+          ],
+          "actionTargetPolicyArgs": [
+            null
+          ],
+          "actionTargetMaxTargets": [
+            1
+          ],
+          "actionTargetGroups": [
+            null
+          ],
+          "manualSummonPolicy": null,
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 1,
+          "equipment_source_skill_104": null,
+          "chainDot": null,
+          "nativeSettings104": {
+            "manualFixedScale104": 0.7222222222222222,
+            "manualDamageMultiplier": 1.00381264475882,
+            "manualEffectMultiplier": 0.8365105372990167
+          }
+        },
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      },
+      {
+        "aid": "A_1040_5",
+        "ap": 3077,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 1366,
+        "de_ph": 1065,
+        "hp": 22517,
+        "hp_max": 22517,
+        "isme": false,
+        "leader": 0,
+        "line": 2,
+        "lv": 125,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 450,
+        "slv": 5,
+        "tpl": [
+          3,
+          2,
+          2,
+          245,
+          633
+        ],
+        "talent": null,
+        "skill": {
+          "modCondition": null,
+          "modEffectSequence": 0,
+          "cd": 1,
+          "pl": [
+            1,
+            3,
+            600,
+            0,
+            1,
+            0
+          ],
+          "skid": "S_621040_5",
+          "skills": [
+            [
+              "damage",
+              0.46123970894444444,
+              2,
+              "FX_A_1040_MAGIC"
+            ],
+            [
+              "stun",
+              0.0,
+              1,
+              1,
+              "FX60_STUN"
+            ],
+            [
+              "summon",
+              0.5777777777777778,
+              "A_2326_5",
+              99,
+              "SUMMON_EFF"
+            ]
+          ],
+          "actionTargetPolicies": [
+            null,
+            null,
+            "enemy_lane_frontmost"
+          ],
+          "actionTargetPolicyArgs": [
+            null,
+            null,
+            {
+              "centerActionIndex": 0,
+              "useLastPosition": true
+            }
+          ],
+          "actionTargetMaxTargets": [
+            1,
+            1,
+            1
+          ],
+          "actionTargetGroups": [
+            "primary",
+            "primary",
+            null
+          ],
+          "manualSummonPolicy": {
+            "skillId": "S_621040_5",
+            "familyKey": "manual-1040-plant",
+            "unitId": "A_2326_5",
+            "apRatio": 0.4,
+            "hpRatio": 0.4,
+            "dePhRatio": 0.4,
+            "deMaRatio": 0.4,
+            "maxAlive": 3,
+            "replaceOldest": true,
+            "ttlOwnerTurns": 99,
+            "actionType": 1,
+            "attackRange": 550,
+            "clearSkills": true
+          },
+          "manualClonePolicy": null,
+          "captainSummonMultiplier": 0.71276740744338,
+          "equipment_source_skill_104": null,
+          "chainDot": null
+        },
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "abyss_standardized": true
+      }
+    ],
+    "line": [
+      3,
+      1,
+      1
+    ],
+    "is_pve": false,
+    "round_max": 0,
+    "expires": 1794766051,
+    "replayed": false
+  }
+}

@@ -42,7 +42,8 @@ def validate_team_lane_coverage(team, lane_count, side="team"):
 
 def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1,
               instance_id=None, overrides=None, *, enforce_avatar_level_cap=True,
-              limit_break=False, npc_limit_break=False, summoned=False, scope=None):
+              limit_break=False, npc_limit_break=False, summoned=False, scope=None,
+              standardized=False):
     original_aid = base_aid(config, aid)
     if mod_runtime(config):
         ensure_available(config, original_aid)
@@ -62,7 +63,13 @@ def base_unit(config, aid, level=1, slv=1, line=0, pos=0.2, leader=False, team=1
         raise ValueError("limit-broken NPC requires an authored level 100..125 stage row")
     if limit_break and level > 125:
         raise ValueError("limit-broken player level exceeds 125")
-    if enforce_avatar_level_cap and not limit_break:
+    if standardized:
+        # A mode-authored snapshot is independent of owned progression. Keep
+        # the permission explicit instead of weakening NPC/owned level guards.
+        if level != 125 or str(aid).rsplit('_', 1)[-1] not in ('5', '6'):
+            raise ValueError('standardized heroes require level 125 and purple/orange quality')
+        enforce_avatar_level_cap = False
+    elif enforce_avatar_level_cap and not limit_break:
         # tl[4] limits levels players may train this avatar to. Stage and NPC
         # tuples carry their own battle level and native Avatar.init accepts
         # that explicit value even when it exceeds the avatar progression cap.

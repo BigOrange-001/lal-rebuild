@@ -4167,6 +4167,16 @@ package com.meng52.game.module.avatar
             }
          }
          equips = new Vector.<Equip>();
+         // Abyss relic (7th slot) of this team position; only the player's own
+         // equipment rows carry it. Abyss battles use server snapshots (hpMax set).
+         abyssRelic104 = null;
+         if(param2)
+         {
+            var relicIndex:int = GlobalData.$userData && GlobalData.$userData.team is Array && GlobalData.$userData.team[0] is Array ? getIndex() : -1;
+            var relicSlots:Array = GlobalData.$userData && GlobalData.$userData.abyss_relic_slots is Array ? GlobalData.$userData.abyss_relic_slots as Array : null;
+            var relicItems:Object = GlobalData.$userData ? GlobalData.$userData.abyss_relics : null;
+            if(relicIndex >= 0 && relicSlots && relicItems && relicSlots[relicIndex]) abyssRelic104 = relicItems[relicSlots[relicIndex]];
+         }
          if(!param1 || param1.length == 0)
          {
             skill2 = null;
@@ -4215,6 +4225,28 @@ package com.meng52.game.module.avatar
          }
          skill2 = getBookSkill();
          updateBondSkills104();
+      }
+
+      public var abyssRelic104:Object = null;
+
+      // Same as server abyss_relics.apply_panel: each substat multiplies the final
+      // panel value of its stat and truncates (substat stats never repeat).
+      public function applyAbyssRelic104(stat:String, value:int) : int
+      {
+         if(!abyssRelic104 || !(abyssRelic104.substats is Array)) return value;
+         for each(var affix:Object in abyssRelic104.substats)
+         {
+            if(affix && affix.stat == stat) value = int(value * (1 + Number(affix.value)));
+         }
+         return value;
+      }
+
+      // Main affix power budget, added to the skill factor of the power formula.
+      public function abyssRelicPowerRate104() : Number
+      {
+         if(!abyssRelic104 || !abyssRelic104.main) return 0;
+         var rate:Number = GlobalData.$mConfig_simple && GlobalData.$mConfig_simple.abyss_relic_main_power_rate != null ? Number(GlobalData.$mConfig_simple.abyss_relic_main_power_rate) : 0.15;
+         return rate * (abyssRelic104.main.ancient ? 1.25 : 1);
       }
 
       public function getIndex() : int
@@ -6024,6 +6056,7 @@ package com.meng52.game.module.avatar
          _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("hp")));
          _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("hp") / 100));
          _loc4_ = Tools.toInt(bondPanel104("hp",_loc4_));
+         if(param3) _loc4_ = applyAbyssRelic104("hp",_loc4_);
          return Math.max(_loc4_,0);
       }
 
@@ -6132,6 +6165,7 @@ package com.meng52.game.module.avatar
          _loc6_ = Tools.toInt(_loc6_ * (1 + getBookCombatBonus("ap")));
          _loc6_ = Tools.toInt(_loc6_ * (1 + ownGrowthValue("attack") / 100));
          _loc6_ = Tools.toInt(bondPanel104("ap",_loc6_));
+         if(param3) _loc6_ = applyAbyssRelic104("ap",_loc6_);
          }
          var _loc4_:Number = 1;
          if(buffs)
@@ -6242,6 +6276,7 @@ package com.meng52.game.module.avatar
          _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("de_ph")));
          _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("defense") / 100));
          _loc4_ = Tools.toInt(bondPanel104("de_ph",_loc4_));
+         if(param3) _loc4_ = applyAbyssRelic104("de_ph",_loc4_);
          }
          var _loc5_:Number = 1;
          if(buffs)
@@ -6329,6 +6364,7 @@ package com.meng52.game.module.avatar
          _loc4_ = Tools.toInt(_loc4_ * (1 + getBookCombatBonus("de_ma")));
          _loc4_ = Tools.toInt(_loc4_ * (1 + ownGrowthValue("defense") / 100));
          _loc4_ = Tools.toInt(bondPanel104("de_ma",_loc4_));
+         if(param3) _loc4_ = applyAbyssRelic104("de_ma",_loc4_);
          }
          var _loc5_:Number = 1;
          if(buffs)
@@ -6438,6 +6474,7 @@ package com.meng52.game.module.avatar
          }
          if(!hpMax) _loc3_ = Tools.toInt(_loc3_ * (1 + getBookCombatBonus("hit")));
          if(!hpMax) _loc3_ = Tools.toInt(bondPanel104("hit",_loc3_));
+         if(!hpMax) _loc3_ = applyAbyssRelic104("hit",_loc3_);
          if(buffs)
          {
             _loc1_ = buffs["hitup"] as Buff;
@@ -6479,6 +6516,7 @@ package com.meng52.game.module.avatar
          }
          if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("flee")));
          if(!hpMax) _loc2_ = Tools.toInt(bondPanel104("flee",_loc2_));
+         if(!hpMax) _loc2_ = applyAbyssRelic104("flee",_loc2_);
          if(buffs)
          {
             _loc1_ = buffs["fleeup"] as Buff;
@@ -6520,6 +6558,7 @@ package com.meng52.game.module.avatar
          }
          if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("crit")));
          if(!hpMax) _loc2_ = Tools.toInt(bondPanel104("crit",_loc2_));
+         if(!hpMax) _loc2_ = applyAbyssRelic104("crit",_loc2_);
          if(buffs)
          {
             _loc1_ = buffs["critup"] as Buff;
@@ -6561,6 +6600,7 @@ package com.meng52.game.module.avatar
          }
          if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("tough")));
          if(!hpMax) _loc2_ = Tools.toInt(bondPanel104("tough",_loc2_));
+         if(!hpMax) _loc2_ = applyAbyssRelic104("tough",_loc2_);
          if(buffs)
          {
             _loc1_ = buffs["toughup"] as Buff;
@@ -6930,7 +6970,7 @@ package com.meng52.game.module.avatar
          {
             param2 = lv;
          }
-         var _loc5_:Number = Math.pow(Math.max(0,getHpMax(param2,-1,param3) * Number(_loc6_[1]) + getDamage(param2,-1,param3) * Number(_loc6_[2]) + getDePh(param2,-1,param3) * Number(_loc6_[3]) + getDeMa(param2,-1,param3) * Number(_loc6_[4])),2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(Math.max(0,getHit() + getFlee() + getCrit() + getTough()),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
+         var _loc5_:Number = Math.pow(Math.max(0,getHpMax(param2,-1,param3) * Number(_loc6_[1]) + getDamage(param2,-1,param3) * Number(_loc6_[2]) + getDePh(param2,-1,param3) * Number(_loc6_[3]) + getDeMa(param2,-1,param3) * Number(_loc6_[4])),2) * (1 + _loc10_ + _loc9_ + _loc4_ + _loc8_ + abyssRelicPowerRate104()) * (POWER_SPEED_RANGE + getSpeed(param3) + getRange(param3)) * (1 + Math.pow(Math.max(0,getHit() + getFlee() + getCrit() + getTough()),1 / _loc6_[10]) * _loc6_[9]) * POWER_RATE;
          _loc5_ = Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10)) + _loc5_ * _loc7_;
          return Number(Math.floor(Number(_loc5_.toFixed(5))).toString(10));
       }

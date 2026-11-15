@@ -1,14 +1,14 @@
 {
   "schema": "lal-client-build-v2",
   "version": "1.0.5",
-  "stage_count": 179,
+  "stage_count": 180,
   "unique_class_count": 153,
   "stages": [
     {
       "index": 1,
       "class": "com.meng52.game.global.GlobalData",
       "source": "client/src/stages/001_GlobalData.as",
-      "source_sha256": "a788a2fd5425b2e0fd9e4b7979c58b7c0df84cef4cef51fcbe9077bd905b2980"
+      "source_sha256": "3fbe147ea28049685da0d065e261baaab344e760d6bacebe704aac3cbb16e5e0"
     },
     {
       "index": 2,
@@ -290,13 +290,13 @@
       "index": 48,
       "class": "com.meng52.game.ui.screen.PanelCenterPVP",
       "source": "client/src/stages/046_PanelCenterPVP.as",
-      "source_sha256": "1a0719f4147bc4a7b67df01871de37e5307e8bf2ab45ce33b6817a7d9298efe9"
+      "source_sha256": "36b662164a43183b667e624036e4ba6bcc6852c1c9bfa80096888314dcdf119e"
     },
     {
       "index": 49,
       "class": "com.meng52.game.ui.element.ItemPVP",
       "source": "client/src/stages/047_ItemPVP.as",
-      "source_sha256": "93ead8194c7b68f4247891727367d430e60d4d6f7eb552b18886807618cde0f8"
+      "source_sha256": "abb9fcb8c2c1840c2ab44457bc8ae82060caa81b134d0807aa7f60c101e651fd"
     },
     {
       "index": 50,
@@ -992,7 +992,7 @@
       "index": 165,
       "class": "com.meng52.game.ui.map.UiLayer",
       "source": "client/src/stages/163_UiLayer.as",
-      "source_sha256": "b2270eea7f024a9356ddaef6c581450329bef489efca7491cb213a50243794c3"
+      "source_sha256": "0064b4ddae8976333c3af29f9724b2a6ca97a8292ceb2204ce9bc0f7a7deeeef"
     },
     {
       "index": 166,
@@ -1063,7 +1063,7 @@
       "index": 176,
       "class": "com.meng52.game.module.map.GameMap",
       "source": "client/src/stages/175_GameMap.as",
-      "source_sha256": "1e2bab0783b1c802f0dca5ef41533fb625d83e979f49d3c5c5aaaba752eed45b"
+      "source_sha256": "0236f9e0df8849a9b6f9b844e5145c49d6c66c9ace123c027b2f4f083c43efd1"
     },
     {
       "index": 177,
@@ -1082,6 +1082,12 @@
       "source": "client/src/stages/179_PanelPVEembattleTeam.as",
       "class": "com.meng52.game.ui.panel.PanelPVEembattleTeam",
       "source_sha256": "524a9a79fc86e00eb84d4cd939dc6aa1ffde172e3a8056aa551220d296fe4510"
+    },
+    {
+      "index": 180,
+      "source": "client/src/stages/180_PanelPVEembattle.as",
+      "class": "com.meng52.game.ui.panel.PanelPVEembattle",
+      "source_sha256": "19aedc0672f111d6b7ca2c01d9323833c91bb844bd0e798e80728182ffc66e5e"
     }
   ],
   "template_swf": {

@@ -1427,7 +1427,12 @@ package com.meng52.game.module.map
          {
             GlobalData.$isFightReplay = false;
             _team.pop();
-            SendServiceAMFFun.send_user_pk_combat_pvp(reSend,_obj);
+            if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="challenge")
+            {
+               _obj.formation_id=GlobalData.$formationShare104.id;
+               SendAndSelect.sendAndSelectService("user.pk_combat_formation",_obj,reSend);
+            }
+            else SendServiceAMFFun.send_user_pk_combat_pvp(reSend,_obj);
          }
          else if(GlobalData.$isFragment)
          {
@@ -2168,7 +2173,7 @@ package com.meng52.game.module.map
          if(!param1 && !param2 && re && re.data && re.data.fight_id &&
             (re.data.fight_kind == "main" || re.data.fight_kind == "main_hard" ||
              re.data.fight_kind == "activity" || re.data.fight_kind == "exploration" ||
-             re.data.fight_kind == "pvp" || re.data.fight_kind == "fragment") &&
+             re.data.fight_kind == "pvp" || re.data.fight_kind == "fragment" || re.data.fight_kind == "formation") &&
             !isLoad && !settlementSent)
          {
             settlementSent = true;
@@ -2555,5 +2560,27 @@ package com.meng52.game.module.map
          actionDelay = 0;
          GameMap.currentMap = null;
       }
+      // BEGIN FORMATION MAP 104
+      public function exportFormation104() : void
+      {
+         var exportingMap:GameMap=this;
+         var rows:Array=["","","","",""];
+         for(var i:int=0;i<myList.length;i++)
+         {
+            var owner:Avatar=team1List[i];
+            if(owner && owner.indexID_s<5) rows[owner.indexID_s]=myList[i];
+         }
+         SendAndSelect.sendAndSelectService("user.export_formation",{team:rows,team_num:GlobalData.$tempTeamID,actionID:"formation-export-"+new Date().time+"-"+Math.random()},function(reply:Object):void
+         {
+            if(!reply || reply.return_code!=0 || GameMap.currentMap!=exportingMap || !GlobalData.$formationShare104 || GlobalData.$formationShare104.mode!="export") return;
+            GlobalData.$formationShare104={code:reply.data.code};
+            com.meng52.game.ui.screen.PanelCenterPVP.$tabBarSelectedIndex=1;
+            GlobalData.$mGameClassObject.closePopForPanel();
+            GlobalData.$mGameClassObject.mLayoutUICenter.mCurrPanel="";
+            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp");
+         });
+      }
+      // END FORMATION MAP 104
+
    }
 }

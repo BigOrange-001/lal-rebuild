@@ -26,6 +26,11 @@ package com.meng52.game.ui.screen
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
    import feathers.controls.List;
+   import feathers.controls.TextInput;
+   import flash.system.System;
+   import flash.desktop.Clipboard;
+   import flash.desktop.ClipboardFormats;
+   import starling.display.Quad;
    import feathers.data.ListCollection;
    import feathers.display.Scale3Image;
    import feathers.display.Scale9Image;
@@ -45,6 +50,11 @@ package com.meng52.game.ui.screen
    {
       
       public static var $tabBarSelectedIndex:int = 0;
+      private var formationRows104:Array = [];
+      private var shareExport104:LOL_Scale9Button;
+      private var shareImport104:LOL_Scale9Button;
+      private var shareModal104:Sprite;
+      private var shareInput104:TextInput;
       
       public var mBg_list:Scale9Image;
       
@@ -181,6 +191,8 @@ package com.meng52.game.ui.screen
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         closeFormationCode104();
+         GlobalData.$mEventDispatcher.removeEventListener("formation_library_changed",loadFormations104);
          GlobalData.$mStarling.juggler.removeTweens(this);
          delPVPList();
          delPVP_elite();
@@ -197,6 +209,7 @@ package com.meng52.game.ui.screen
       {
          this.removeEventListener("addedToStage",initializeHandler);
          GlobalData.$mEventDispatcher.addEventListener("update_signup",afterSignUpdate);
+         GlobalData.$mEventDispatcher.addEventListener("formation_library_changed",loadFormations104);
          GlobalData.$mEventDispatcher.addEventListener("update_pvpelite_updateaward",update_tag);
          mImg_head = getImg_headBg(-60);
          addChild(mImg_head);
@@ -213,7 +226,7 @@ package com.meng52.game.ui.screen
          },{
             "label":GlobalLanguageStr.getLanguageStr(96557),
             "indexID":3
-         }],tabBar_changeHandler,tabBar_CREATION_COMPLETE,MainConfig.$isEnglish ? 155 : 135,55);
+         },{"label":"阵容挑战","indexID":4}],tabBar_changeHandler,tabBar_CREATION_COMPLETE,Math.min(MainConfig.$isEnglish ? 155 : 135,(GlobalData.$mStageWidth-40)/5),55);
          mTabBar.y = 20;
          if(GlobalFunction.check_panelIDsort(["stage_game","center_pvp"]) && GameMap.isLoadFile)
          {
@@ -366,6 +379,12 @@ package com.meng52.game.ui.screen
       
       override public function update() : void
       {
+         if(this.mTabBar.selectedIndex==4)
+         {
+            $tabBarSelectedIndex=4;mFun_status=false;
+            delTimer_Extreme();delPVPList();delPVP_elite();delPVP_fragment();delPVP_BattleOfThePeak();
+            setPVPList();return;
+         }
          $tabBarSelectedIndex = this.mTabBar.selectedIndex;
          LayoutUIAnimation.getOnlyExample().clear();
          if(this.mTabBar.selectedIndex == 0)
@@ -640,6 +659,7 @@ package com.meng52.game.ui.screen
                   _loc4_ = true;
                }
             }
+            if(this.mTabBar.selectedIndex==4) _loc4_=true;
             if(_loc4_)
             {
                update();
@@ -649,6 +669,9 @@ package com.meng52.game.ui.screen
       
       private function delPVPList() : void
       {
+         if(shareExport104) shareExport104.removeFromParent(true);
+         if(shareImport104) shareImport104.removeFromParent(true);
+         shareExport104=null;shareImport104=null;
          if(mBox_info)
          {
             if(mBox_info.isFlattened)
@@ -774,15 +797,20 @@ package com.meng52.game.ui.screen
          {
             mBox_info.flatten();
          }
-         if(mFun_status)
+         addFormationControls104();
+         if(mTabBar.selectedIndex==4)
          {
-            selectMsg();
+            mBtn_re.visible=false;if(mBtn_change) mBtn_change.visible=false;
+            pvpRule.visible=false;headImg.visible=false;
+            mTxt_pkTimes.text="已保存阵容：加载中";
+            formationRows104=[];setList();loadFormations104();
          }
          else
          {
-            selectList(true);
+            if(mFun_status) selectMsg();else selectList(true);
+            checkGuide();
          }
-         checkGuide();
+         consumeFormationCode104();
       }
       
       private function pvpRuleTriggered(param1:Event) : void
@@ -794,6 +822,8 @@ package com.meng52.game.ui.screen
       {
          mFun_status = !mFun_status;
          if(mBtn_change) mBtn_change.visible = !mFun_status;
+         if(shareExport104) shareExport104.visible=!mFun_status;
+         if(shareImport104) shareImport104.visible=!mFun_status;
          if(mFun_status)
          {
             mBtn_re.text = GlobalLanguageStr.getLanguageStr(98124);
@@ -847,14 +877,15 @@ package com.meng52.game.ui.screen
             }
          }
          mPVP_list = param1.data;
-         if(mTxt_pkTimes && mPVP_list.length > 6)
+         if(mTxt_pkTimes && mPVP_list.length > 6 && mTabBar.selectedIndex==1)
          {
             mTxt_pkTimes.text = (MainConfig.$isEnglish ? "Daily reward battles: " : "今日奖励场次：") + String(Math.min(10,Math.max(0,int(mPVP_list[6])))) + "/10";
          }
-         if(mTabBar.selectedIndex != 0)
+         if(mTabBar.selectedIndex == 1)
          {
             this.setList();
             this.addList();
+            if(shareModal104) addChild(shareModal104);
          }
       }
       
@@ -899,7 +930,7 @@ package com.meng52.game.ui.screen
             GlobalData.$mStarling.juggler.tween(this,0.4,{"onComplete":tweenComplete});
             setPVPList_listData();
          }
-         else if(this.mTabBar.selectedIndex == 3)
+         else if(this.mTabBar.selectedIndex == 3 || this.mTabBar.selectedIndex == 4)
          {
             setPVPList_listData();
          }
@@ -970,6 +1001,14 @@ package com.meng52.game.ui.screen
          if(this.mTabBar)
          {
             $tabBarSelectedIndex = this.mTabBar.selectedIndex;
+         }
+         if(mTabBar.selectedIndex==4)
+         {
+            delTips();
+            if(formationRows104.length==0) setTips("还没有敌方阵容，点击“导入敌阵”保存阵容代码。");
+            else this.setListTimer(mList,formationRows104,ItemPVP,false);
+            if(shareModal104) addChild(shareModal104);
+            return;
          }
          if(mTabBar.selectedIndex == 1)
          {
@@ -2035,6 +2074,106 @@ package com.meng52.game.ui.screen
             _loc7_ = _loc4_.time;
          }
       }
+      // BEGIN FORMATION PANEL 104
+      // Formation codes contain only battle snapshots; the account library is server-owned.
+      private function addFormationControls104() : void
+      {
+         shareExport104=new LOL_Scale9Button("导出阵容",150,42,"UI_btn_normalFun_0000");
+         shareExport104.fontSize=22;shareExport104.x=20;shareExport104.y=148;
+         shareExport104.addEventListener("triggered",exportFormation104);addChild(shareExport104);
+         shareImport104=new LOL_Scale9Button("导入敌阵",150,42,"UI_btn_normalFun_0000");
+         shareImport104.fontSize=22;shareImport104.x=180;shareImport104.y=148;
+         shareImport104.addEventListener("triggered",importFormation104);addChild(shareImport104);
+         shareExport104.visible=shareImport104.visible=!mFun_status;
+      }
+
+      private function exportFormation104(event:Event) : void
+      {
+         GlobalData.$formationShare104={mode:"export"};
+         GlobalData.$pvp_rival={id:"f000000000000000000000000000000000",name:"导出阵容",indexID_s:1000,lv:GlobalData.$userData.lv,is_enemy:-1,data_base:[]};
+         GlobalData.$pvp_Embattle="导出阵容";
+         GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);
+      }
+
+      private function importFormation104(event:Event) : void {showFormationCode104("",true);}
+
+      private function loadFormations104(event:Event = null) : void
+      {
+         if(!stage || !mTabBar || mTabBar.selectedIndex!=4) return;
+         SendAndSelect.sendAndSelectService("user.list_formations",{},function(reply:Object):void
+         {
+            if(!stage || !mTabBar || mTabBar.selectedIndex!=4 || !reply || reply.return_code!=0) return;
+            formationRows104=reply.data.formations as Array;
+            if(formationRows104==null) formationRows104=[];
+            if(mTxt_pkTimes) mTxt_pkTimes.text="已保存阵容："+formationRows104.length;
+            setList();addList();
+         });
+      }
+
+      private function consumeFormationCode104() : void
+      {
+         if(GlobalData.$formationShare104 && GlobalData.$formationShare104.code)
+         {
+            var code:String=String(GlobalData.$formationShare104.code);
+            GlobalData.$formationShare104={};
+            showFormationCode104(code,false);
+         }
+      }
+
+      private function closeFormationCode104(event:Event = null) : void
+      {
+         if(shareModal104) shareModal104.removeFromParent(true);
+         shareModal104=null;shareInput104=null;
+      }
+
+      private function showFormationCode104(code:String, importing:Boolean) : void
+      {
+         closeFormationCode104();
+         shareModal104=new Sprite();addChild(shareModal104);
+         var owningModal:Sprite=shareModal104;
+         var mask:Quad=new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0);mask.alpha=.65;shareModal104.addChild(mask);
+         var box:Sprite=new Sprite();box.x=(GlobalData.$mStageWidth-600)/2;box.y=Math.max(30,(GlobalData.$center_height-370)/2);shareModal104.addChild(box);
+         var bg:Scale9Image=GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",600,370,new Rectangle(110,55,70,20));box.addChild(bg);
+         var title:TextField=GlobalTextStyle.getTextField(importing?"导入敌阵":"阵容代码",28,1513239,"center",560,45);title.x=20;title.y=18;box.addChild(title);
+         var note:TextField=GlobalTextStyle.getTextField(importing?"粘贴阵容代码，保存后即可反复挑战。":"已保存导出时的布阵与战斗属性，可复制分享。",21,4926491,"center",560,65);note.x=20;note.y=68;box.addChild(note);
+         shareInput104=new TextInput();shareInput104.text=code;shareInput104.width=550;shareInput104.height=65;
+         shareInput104.maxChars=131072;shareInput104.x=25;shareInput104.y=145;box.addChild(shareInput104);
+         var confirm:LOL_Scale9Button=new LOL_Scale9Button(importing?"导入保存":"复制代码",170,60,"UI_btn_normalFun_0000");
+         confirm.x=20;confirm.y=260;confirm.fontSize=23;box.addChild(confirm);
+         confirm.addEventListener("triggered",function(event:Event):void
+         {
+            if(!shareInput104) return;
+            var text:String=shareInput104.text;
+            if(!importing)
+            {
+               System.setClipboard(text);closeFormationCode104();GlobalFunction.popError("阵容代码已复制。",true);return;
+            }
+            if(text==null || text.length==0) {GlobalFunction.popError("请先粘贴阵容代码。");return;}
+            confirm.enabled=false;
+            SendAndSelect.sendAndSelectService("user.import_formation",{code:text,actionID:"formation-import-"+new Date().time+"-"+Math.random()},function(reply:Object):void
+            {
+               if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
+               if(!stage || shareModal104!=owningModal) return;
+               confirm.enabled=true;
+               if(!reply || reply.return_code!=0) return;
+               closeFormationCode104();$tabBarSelectedIndex=4;mTabBar.selectedIndex=4;
+               if(mTabBar.selectedIndex==4) loadFormations104();
+               GlobalFunction.popError(reply.data.already_saved?"这份阵容已保存。":"敌方阵容已保存。",true);
+            });
+         });
+         if(importing)
+         {
+            var paste:LOL_Scale9Button=new LOL_Scale9Button("粘贴",170,60,"UI_btn_normalFun_0000");paste.x=215;paste.y=260;paste.fontSize=23;box.addChild(paste);
+            paste.addEventListener("triggered",function(event:Event):void
+            {
+               var value:Object=Clipboard.generalClipboard.getData(ClipboardFormats.TEXT_FORMAT);
+               if(shareInput104 && value!=null) shareInput104.text=String(value);
+            });
+         }
+         var close:LOL_Scale9Button=new LOL_Scale9Button("关闭",170,60,"UI_btn_normalFun_0000");close.x=410;close.y=260;close.fontSize=23;box.addChild(close);close.addEventListener("triggered",closeFormationCode104);
+      }
+      // END FORMATION PANEL 104
+
    }
 }
 
@@ -2192,5 +2331,6 @@ class headSprite extends Sprite
    public function set scale(param1:Number) : void
    {
       this.scaleX = this.scaleY = param1;
+
    }
 }

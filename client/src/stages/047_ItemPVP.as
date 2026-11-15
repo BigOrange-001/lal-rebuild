@@ -9,6 +9,7 @@ package com.meng52.game.ui.element
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
    import feathers.controls.renderers.IListItemRenderer;
+   import com.meng52.net.SendAndSelect;
    import feathers.display.Scale9Image;
    import feathers.textures.Scale9Textures;
    import flash.geom.Rectangle;
@@ -21,6 +22,7 @@ package com.meng52.game.ui.element
    {
       
       protected var mBtn_pk:LOL_Scale9Button;
+      private var formationDelete104:LOL_Scale9Button;
       
       protected var mImg_title:Image;
       
@@ -50,6 +52,8 @@ package com.meng52.game.ui.element
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         if(formationDelete104) formationDelete104.removeFromParent(true);
+         formationDelete104=null;
          if(mImg_title)
          {
             mImg_title.removeFromParent(true);
@@ -127,7 +131,7 @@ package com.meng52.game.ui.element
             mBox_UIs.addChild(this.mScale9Image);
             this.width = mScale9Image.width;
             this.height = mScale9Image.height - 5;
-            _loc33_ = GlobalFunction.checkIsFirstPVP();
+            _loc33_ = param1["formation_id"] ? false : GlobalFunction.checkIsFirstPVP();
             _loc38_ = param1["status"] < 0;
             _loc26_ = param1["id"];
             _loc19_ = _loc26_.indexOf("r") > -1;
@@ -252,6 +256,15 @@ package com.meng52.game.ui.element
                mBtn_pk.alpha = 0.5;
             }
             mBtn_pk.addEventListener("triggered",onTRIGGERED_btns);
+            if(param1["formation_id"])
+            {
+               _loc27_.text="战力 "+String(param1["formation_power"]);_loc27_.fontSize=23;
+               _loc18_.visible=false;
+               mBtn_pk.text=param1["compatible"]?"挑战":"不兼容";mBtn_pk.y=4;mBtn_pk.height=50;
+               formationDelete104=new LOL_Scale9Button("删除",85,38,"UI_btn_normalFun_0000");
+               formationDelete104.fontSize=20;formationDelete104.x=mBtn_pk.x;formationDelete104.y=66;
+               formationDelete104.addEventListener("triggered",deleteFormation104);addChild(formationDelete104);
+            }
             if(_loc33_)
             {
                mBtn_pk.visible = false;
@@ -347,6 +360,14 @@ package com.meng52.game.ui.element
          var _loc4_:* = null;
          var _loc3_:Object = null;
          var _loc5_:int = 0;
+         if(_data["formation_id"])
+         {
+            if(!_data["compatible"]) {GlobalFunction.popError("阵容与当前战斗规则不兼容，请导入同版本代码。");return;}
+            GlobalData.$formationShare104={mode:"challenge",id:_data["formation_id"]};
+            GlobalData.$pvp_rival=data;GlobalData.$pvp_Embattle=_data["name"];
+            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);return;
+         }
+         GlobalData.$formationShare104={};
          if(mBtn_pk.alpha < 1)
          {
             GlobalFunction.popAlert("",GlobalLanguageStr.getLanguageStr(20362));
@@ -399,6 +420,20 @@ package com.meng52.game.ui.element
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_change_pvp",false,true);
          }
       }
+      // BEGIN FORMATION DELETE 104
+      private function deleteFormation104(event:Event) : void
+      {
+         var id:String=String(_data["formation_id"]);
+         GlobalFunction.popAlert("删除阵容","删除这份敌阵？之后仍可重新导入代码。",{
+            ok:function():void
+            {
+               SendAndSelect.sendAndSelectService("user.delete_formation",{formation_id:id,actionID:"formation-delete-"+new Date().time+"-"+Math.random()},function(reply:Object):void
+               {
+                  if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
+               });
+            },okUI:"删除",no:function():void{},noUI:"取消"});
+      }
+
    }
 }
 

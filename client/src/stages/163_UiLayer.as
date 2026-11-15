@@ -16,6 +16,7 @@ package com.meng52.game.ui.map
    import com.meng52.game.module.map.GameMapConfig;
    import com.meng52.game.module.map.GameMapTools;
    import com.meng52.game.ui.effect.BaseLayer;
+   import com.meng52.game.ui.screen.PanelCenterPVP;
    import com.meng52.game.ui.effect.DisplayTools;
    import com.meng52.game.ui.element.HtmlTextField;
    import com.meng52.game.ui.element.LOL_Button;
@@ -388,6 +389,12 @@ package com.meng52.game.ui.map
          {
             GameMap.currentMap.retryBattleFinish();
             return;
+         }
+         if(GameMap.currentMap && GameMap.currentMap.re && GameMap.currentMap.re.data.fight_kind=="formation")
+         {
+            GlobalData.$formationShare104={};PanelCenterPVP.$tabBarSelectedIndex=4;
+            GlobalData.$mGameClassObject.mLayoutUICenter.mCurrPanel="center_pvp";
+            GlobalData.$mEventDispatcher.dispatchEventWith("stage_ui");return;
          }
          if(GameMap.isLoadFile && (GameMap.lastCid == "pvp" || GameMap.lastCid == "extreme"))
          {

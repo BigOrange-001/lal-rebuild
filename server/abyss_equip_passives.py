@@ -220,6 +220,7 @@ def after_damage(battle, source, target, health_damage, shield_damage, damage_ty
 def tick_dots(battle, unit):
     for dot in list(unit.get('_relic_dots',[])):
         if unit.get('hp',0)<=0: break
+        if not any(active is dot for active in unit.get('_relic_dots',[])):continue
         trace(battle,'dot_tick',dot['source'],unit,kind=dot['kind'],amount=dot['amount'])
         battle._injured(unit,dot['amount'],6 if dot['kind']=='poison' else 7,
                         source=dot['source'],dot_kind=dot['kind'])

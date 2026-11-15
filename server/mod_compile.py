@@ -549,6 +549,9 @@ class Compiler:
                 for index in (10,11,13):
                     sid=native["pl"][index] if len(native["pl"])>index else None
                     if sid and sid not in self.cfg["skill"]:fail("Compiled hero references missing skill",aid)
+        if self.cfg.get('system_simple',{}).get('abyss_relic_schema')==1:
+            from abyss_relics import ensure_relic_skill_variants
+            ensure_relic_skill_variants(self.document)
         summary={"api":ENGINE_API,"base":digest(self.base),"effective":digest(self.cfg),"roster":digest(self.roster),"selections":[{**self.selected[p.package_id],"digest":p.digest} for p in self.ordered],"metadata":self.metadata,"scopeAliases":self.scoped,"warnings":self.warnings}
         effective_digest=digest(summary)
         runtime={"digest":effective_digest,"engineApi":ENGINE_API,"heroes":self.metadata,"scopedAvatarIds":self.scoped,"aliasBaseIds":self.aliases,"missingHeroIds":sorted(self.missing),"knownHeroIds":sorted(self.metadata),"assets":sorted(self.assets.values(),key=lambda r:r["alias"]),"textureAliases":self.texture_aliases,"packages":[{"packageId":p.package_id,"version":p.version,"contentDigest":p.digest} for p in self.ordered],"warnings":self.warnings,"errors":copy.deepcopy(self.warnings),"capabilities":sorted(CAPABILITIES)}

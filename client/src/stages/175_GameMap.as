@@ -15,6 +15,7 @@ package com.meng52.game.module.map
    import com.meng52.game.ui.stage.GuideTools;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendServiceAMFFun;
+   import com.meng52.net.SendAndSelect;
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.Tools;
    import starling.animation.Tween;
@@ -69,6 +70,9 @@ package com.meng52.game.module.map
       public var firstTeam:int;
 
       public var roundNum:int;
+
+      // Abyss relic passives initialize once per fight (reset by startFight).
+      public var abyssPassivesReady104:Boolean = false;
 
       public var roundTeam:int;
 
@@ -149,7 +153,9 @@ package com.meng52.game.module.map
          }
          if(param1 == "exploration")
          {
-            m_data = GameMapManager.getOnlyExample().getExplorationData(param2);
+            // Abyss Corridor reuses the exploration flow but fights on the
+            // native three-lane arena layout.
+            m_data = GlobalData.$abyss104 ? GameMapManager.getOnlyExample().getPVPData(-1) : GameMapManager.getOnlyExample().getExplorationData(param2);
             GlobalData.$setExploration();
             initMap();
             return;
@@ -490,7 +496,7 @@ package com.meng52.game.module.map
                   {
                      _loc2_ = new Avatar(_loc8_[0]);
                   }
-                  if(GlobalData.$isExploration)
+                  if(GlobalData.$isExploration && !GlobalData.$abyss104)
                   {
                      _loc3_ = true;
                   }
@@ -504,8 +510,12 @@ package com.meng52.game.module.map
                      {
                         _loc3_ = false;
                      }
-                     _loc2_.setEquips();
-                     _loc2_.setDestinyAndDN();
+                     // Abyss heroes are standardized: no owned equipment or Destiny/DN.
+                     if(!GlobalData.$abyss104)
+                     {
+                        _loc2_.setEquips();
+                        _loc2_.setDestinyAndDN();
+                     }
                   }
                }
                else
@@ -1440,6 +1450,28 @@ package com.meng52.game.module.map
             _team.pop();
             SendServiceAMFFun.send_user_pk_combat_fragment(reSend,_obj);
          }
+         else if(GlobalData.$isExploration && GlobalData.$abyss104)
+         {
+            GlobalData.$isFightReplay = false;
+            if(GlobalData.$abyss104.pending)
+            {
+               // A frozen, unexpired combat already exists on the server; the
+               // server-side snapshot (including lanes) is authoritative.
+               var pendingBattle:Object = GlobalData.$abyss104.pending;
+               GlobalData.$abyss104.pending = null;
+               reSend({"return_code":0,"data":pendingBattle});
+            }
+            else
+            {
+               // Slot 0 is the captain; the server reads [pool id, lane, position].
+               var abyssTeam:Array = [];
+               for(var abyssSlot:int = 0; abyssSlot < _team.length; abyssSlot++)
+               {
+                  if(_team[abyssSlot] is Array) abyssTeam.push([String(_team[abyssSlot][0]),int(_team[abyssSlot][1]),Math.max(0,Math.min(1,Number(_team[abyssSlot][2])))]);
+               }
+               SendAndSelect.sendAndSelectService("user.abyss_combat",{"team":abyssTeam},reSend);
+            }
+         }
          else if(GlobalData.$isExploration)
          {
             GlobalData.$isFightReplay = false;
@@ -1586,7 +1618,12 @@ package com.meng52.game.module.map
          {
             return;
          }
-         if(GlobalData.$isExploration)
+         if(GlobalData.$isExploration && GlobalData.$abyss104)
+         {
+            // Abyss replies carry no exploration fields; never clobber exploration state.
+            GlobalData.$abyss104.resume = true;
+         }
+         else if(GlobalData.$isExploration)
          {
             GlobalData.backFromExploration = true;
             GlobalData.$setPVE;
@@ -2080,6 +2117,7 @@ package com.meng52.game.module.map
             autoSort();
          }
          roundTeam = firstTeam;
+         abyssPassivesReady104 = false;
          roundNum = 0;
          team1Num = 0;
          team2Num = 0;
@@ -2101,6 +2139,11 @@ package com.meng52.game.module.map
 
       public function beginFight() : void
       {
+         if(!abyssPassivesReady104)
+         {
+            abyssPassivesReady104 = true;
+            Avatar.abyssInitialize104(team1List,team2List);
+         }
          for each(var statisticsUnit104:Avatar in team1List.concat(team2List)) Avatar.statisticsRow104(statisticsUnit104);
          Avatar.statisticsRunning104 = true;
          var _loc2_:Number = NaN;
@@ -2173,7 +2216,8 @@ package com.meng52.game.module.map
          if(!param1 && !param2 && re && re.data && re.data.fight_id &&
             (re.data.fight_kind == "main" || re.data.fight_kind == "main_hard" ||
              re.data.fight_kind == "activity" || re.data.fight_kind == "exploration" ||
-             re.data.fight_kind == "pvp" || re.data.fight_kind == "fragment" || re.data.fight_kind == "formation") &&
+             re.data.fight_kind == "pvp" || re.data.fight_kind == "fragment" || re.data.fight_kind == "formation" ||
+             re.data.fight_kind == "abyss") &&
             !isLoad && !settlementSent)
          {
             settlementSent = true;
@@ -2330,6 +2374,7 @@ package com.meng52.game.module.map
             }
             for(key in reply.data) merged[key] = reply.data[key];
             reply.data = merged;
+            if(request.fight_kind == "abyss" && GlobalData.$abyss104) GlobalData.$abyss104.finish = reply.data;
             if(merged.poke_data && merged.poke_data.gift_list)
             {
                GlobalData.$poke_Data = merged.poke_data;

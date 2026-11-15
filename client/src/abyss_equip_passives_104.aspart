@@ -1,0 +1,336 @@
+      // ---- Abyss relic equipment passives -------------------------------------
+      // Spec: docs/roguelite-abyss-equip-passive.md (server: abyss_equip_passives.py).
+      // B-class affixes come from snapshot.equip_passives and never touch skillB.
+      // A-class affixes come from snapshot.skill.abyss_relic_A and apply only inside
+      // the owner's own small-skill (skill0) cast context. Abyss-standardized
+      // snapshots carry neither field and are ignored even if one is sent.
+      public var equipPassives104:Array = null;
+      public var abyssRelicA104:Object = null;
+      public var abyssReduction104:Number = 0;
+      public var abyssRevived104:Boolean = false;
+      public var abyssRecovered104:Boolean = false;
+      public var abyssDodgeRound104:int = -1;
+      public var abyssDodgeCount104:int = 0;
+      public var abyssDots104:Array = null;
+      public var abyssToken104:String = null;
+      // relic_reflect / relic_lifesteal while that settlement is running.
+      public static var abyssOrigin104:String = null;
+      // Optional event trace (tests); null in the game.
+      public static var abyssEvents104:Array = null;
+
+      public function loadAbyssPassives104(data:Object) : void
+      {
+         equipPassives104 = null;
+         abyssRelicA104 = null;
+         abyssReduction104 = 0;
+         abyssRevived104 = false;
+         abyssRecovered104 = false;
+         abyssDodgeRound104 = -1;
+         abyssDodgeCount104 = 0;
+         abyssDots104 = null;
+         if(!data || data.abyss_standardized) return;
+         if(data.equip_passives is Array && data.equip_passives.length) equipPassives104 = (data.equip_passives as Array).concat();
+         if(data.skill && data.skill.abyss_relic_A) abyssRelicA104 = data.skill.abyss_relic_A;
+      }
+
+      public function abyssEffect104(kind:int) : Object
+      {
+         if(!equipPassives104) return null;
+         for each(var affix:Object in equipPassives104)
+         {
+            if(affix && int(affix.id) == kind) return affix;
+         }
+         return null;
+      }
+
+      private static function abyssRound104() : int
+      {
+         return GameMap.currentMap ? GameMap.currentMap.roundNum : 0;
+      }
+
+      private static function abyssTrace104(event:String, owner:Avatar, target:Avatar, fields:Object = null) : void
+      {
+         if(!abyssEvents104) return;
+         var row:Object = {"event":event,"round":abyssRound104(),
+            "owner":owner ? (owner.abyssToken104 ? owner.abyssToken104 : owner.id) : null,
+            "target":(target || owner) ? ((target || owner).abyssToken104 ? (target || owner).abyssToken104 : (target || owner).id) : null};
+         if(fields) for(var key:String in fields) row[key] = fields[key];
+         abyssEvents104.push(row);
+      }
+
+      // Once per battle, before the first action: captain auras, then entry shields
+      // and the captain's ultimate preparation.
+      public static function abyssInitialize104(teamA:*, teamB:*) : void
+      {
+         var rosters:Array = [teamA,teamB];
+         for each(var roster:* in rosters)
+         {
+            if(!roster) continue;
+            var unit:Avatar;
+            for each(var captain:Avatar in roster)
+            {
+               if(!captain.isLeader || captain.hp <= 0) continue;
+               var reduction:Object = captain.abyssEffect104(15);
+               if(reduction)
+               {
+                  for each(unit in roster)
+                  {
+                     unit.abyssReduction104 = 1 - (1 - unit.abyssReduction104) * (1 - Number(reduction.value));
+                     abyssTrace104("captain_aura",captain,unit,{"kind":15,"value":reduction.value});
+                  }
+               }
+               var command:Object = captain.abyssEffect104(16);
+               if(command)
+               {
+                  for each(unit in roster)
+                  {
+                     unit.ap = int(unit.ap * (1 + Number(command.value)));
+                     abyssTrace104("captain_aura",captain,unit,{"kind":16,"value":command.value});
+                  }
+               }
+            }
+            for each(unit in roster)
+            {
+               if(!unit.equipPassives104) continue;
+               for each(var affix:Object in unit.equipPassives104)
+               {
+                  var kind:int = int(affix.id);
+                  if(kind == 1)
+                  {
+                     unit.abyssShield104(unit,int(unit.hpMax * Number(affix.value)),3,"entry_shield");
+                  }
+                  else if(kind == 19 && unit.isLeader && unit.skill1)
+                  {
+                     unit.skill1.m_cooldownNum = Math.max(0,unit.skill1.m_cooldownNum - 2);
+                     abyssTrace104("leader_preparation",unit,unit,{"value":unit.skill1.m_cooldownNum});
+                  }
+               }
+            }
+         }
+      }
+
+      public function abyssShield104(source:Avatar, amount:int, rounds:int, event:String) : void
+      {
+         addBuff("shield",rounds,amount,0,-1,source);
+         abyssTrace104(event,source,this,{"amount":amount,"duration":rounds});
+      }
+
+      // 圣佑: healing and shields cast by the wearer, applied once.
+      public function abyssAmplifyHeal104(amount:Number) : Number
+      {
+         var affix:Object = abyssEffect104(14);
+         return affix ? int(amount * (1 + Number(affix.value))) : amount;
+      }
+
+      // The owner's small-skill cast context, or null (ultimate, normal attack,
+      // skillB and other casters never inherit it).
+      private static function abyssNormalContext104(source:Avatar) : Object
+      {
+         if(!source || !source.abyssRelicA104 || !source.skill0) return null;
+         var context:Object = currentAbilityAttack();
+         if(!context || context.owner !== source || context.kind != "active" || context.skill !== source.skill0) return null;
+         if(!(context.abyssHits104 is Array)) context.abyssHits104 = [];
+         return context;
+      }
+
+      public function abyssConversion104() : Number
+      {
+         var context:Object = abyssNormalContext104(this);
+         return context && int(abyssRelicA104.id) == 20 ? Number(abyssRelicA104.value) : 0;
+      }
+
+      public function abyssShieldMultiplier104() : Number
+      {
+         var affix:Object = abyssEffect104(12);
+         return affix ? 1 + Number(affix.value) : 1;
+      }
+
+      // 先声夺人 -> 同心 -> A-class hp line -> 坚城 (target), after existing modifiers.
+      public function abyssModifyDamage104(amount:int, source:Avatar, damageType:int, dotKind:String) : int
+      {
+         var before:int = amount;
+         if(source)
+         {
+            var affix:Object = source.abyssEffect104(2);
+            if(affix && abyssRound104() == 0) amount = Tools.toInt(amount * (1 + Number(affix.value)));
+            affix = source.abyssEffect104(17);
+            if(affix)
+            {
+               var count:int = 0;
+               var allies:* = GameMap.currentMap ? GameMap.currentMap.getAliveList(source.team) : null;
+               for each(var ally:Avatar in allies)
+               {
+                  if(ally !== source && ally.hp > 0 && ally.line == source.line) count++;
+               }
+               amount = Tools.toInt(amount * (1 + Number(affix.value) * count));
+            }
+            var context:Object = abyssNormalContext104(source);
+            affix = context ? source.abyssRelicA104 : null;
+            if(affix && damageType >= 1 && damageType <= 3 && !dotKind)
+            {
+               var ratio:Number = hp / Math.max(1,hpMax);
+               if(int(affix.id) == 8 && ratio > 0.5 || int(affix.id) == 9 && ratio < 0.5) amount = Tools.toInt(amount * (1 + Number(affix.value)));
+            }
+         }
+         if(abyssReduction104) amount = Tools.toInt(amount * (1 - abyssReduction104));
+         if(amount != before) abyssTrace104("damage_adjust",source || this,this,{"before":before,"after":amount});
+         return amount;
+      }
+
+      // 复苏之羽, after bless and Tryndamere undying failed to save the unit.
+      public function abyssTryRevive104() : Boolean
+      {
+         var affix:Object = abyssEffect104(4);
+         if(!affix || abyssRevived104) return false;
+         abyssRevived104 = true;
+         hp = Math.max(1,int(hpMax * Number(affix.value)));
+         removeAllDebuff();
+         abyssTrace104("revive",this,this,{"amount":hp});
+         return true;
+      }
+
+      // 坚守誓约 -> 嗜血 (attacker) -> 荆棘之躯 -> A-class status, after a hit settled.
+      public function abyssAfterDamage104(source:Avatar, healthDamage:Number, shieldDamage:Number, damageType:int, dotKind:String) : void
+      {
+         var total:Number = Math.max(0,healthDamage) + Math.max(0,shieldDamage);
+         var amount:int;
+         var previous:String;
+         var affix:Object = abyssEffect104(3);
+         if(affix && !abyssRecovered104 && hp > 0 && hp < hpMax * 0.5)
+         {
+            abyssRecovered104 = true;
+            amount = hpMax - hp;
+            hp = hpMax;
+            abyssTrace104("full_recovery",this,this,{"amount":amount});
+            if(Number(affix.shield_rate) > 0) abyssShield104(this,int(hpMax * Number(affix.shield_rate)),3,"recovery_shield");
+            if(GameMapLayer.gl) GameMapLayer.gl.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
+         }
+         if(!source || total <= 0) return;
+         affix = source.abyssEffect104(7);
+         if(affix && source.hp > 0)
+         {
+            amount = int(total * Number(affix.value));
+            previous = abyssOrigin104;
+            abyssOrigin104 = "relic_lifesteal";
+            var healed:int = 0;
+            try
+            {
+               healed = source.injured(amount,1,null,4,null,false,source);
+            }
+            finally
+            {
+               abyssOrigin104 = previous;
+            }
+            abyssTrace104("lifesteal",source,source,{"amount":amount,"healed":healed,"source_tag":"relic_lifesteal"});
+         }
+         affix = abyssEffect104(5);
+         if(affix && damageType >= 1 && damageType <= 3 && !dotKind && abyssOrigin104 != "relic_reflect" && source.hp > 0 && source.team != team)
+         {
+            amount = int(total * Number(affix.value));
+            abyssTrace104("reflect",this,source,{"amount":amount,"source_tag":"relic_reflect"});
+            previous = abyssOrigin104;
+            abyssOrigin104 = "relic_reflect";
+            try
+            {
+               // Absolute true damage: no crit/global multiplier/toughness (derived).
+               source.injured(amount,1,null,3,null,false,this,null,"",true);
+            }
+            finally
+            {
+               abyssOrigin104 = previous;
+            }
+         }
+         var context:Object = abyssNormalContext104(source);
+         var normal:Object = context ? source.abyssRelicA104 : null;
+         if(!normal || dotKind || damageType < 1 || damageType > 3 || context.abyssHits104.indexOf(this) >= 0 || hp <= 0) return;
+         context.abyssHits104.push(this);
+         var kind:int = int(normal.id);
+         if(kind == 10 || kind == 11)
+         {
+            var dotName:String = kind == 10 ? "burn" : "poison";
+            var dotAmount:int = int(source.abyssApWithTalent104() * Number(normal.value));
+            if(yasuoImmune104(dotName)) return;
+            if(buffs["purify"])
+            {
+               removeBuff("purify",true);
+               return;
+            }
+            var kept:Array = [];
+            for each(var row:Object in abyssDots104)
+            {
+               if(row.kind != dotName || row.source !== source) kept.push(row);
+            }
+            kept.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2});
+            abyssDots104 = kept;
+            abyssTrace104("normal_dot",source,this,{"kind":dotName,"amount":dotAmount,"duration":2});
+         }
+         else if(kind == 13 && Random.getRandom(1000000) < int(Number(normal.value) * 1000000))
+         {
+            addBuff("stun",1,0,0,-1,source);
+            abyssTrace104("normal_stun",source,this,{"duration":1});
+         }
+      }
+
+      public function abyssApWithTalent104() : int
+      {
+         return Tools.toInt(getDamage() + getDamage() * checkTalent(1));
+      }
+
+      // Relic DOT layers tick on the holder's turn before native buffs.
+      public function abyssTickDots104() : void
+      {
+         if(!abyssDots104 || !abyssDots104.length) return;
+         for each(var dot:Object in abyssDots104.concat())
+         {
+            if(hp <= 0) break;
+            abyssTrace104("dot_tick",dot.source as Avatar,this,{"kind":dot.kind,"amount":dot.amount});
+            injured(int(dot.amount),1,null,dot.kind == "poison" ? 6 : 7,null,false,dot.source as Avatar,null,String(dot.kind));
+            dot.left = int(dot.left) - 1;
+            if(int(dot.left) <= 0 && abyssDots104)
+            {
+               var at:int = abyssDots104.indexOf(dot);
+               if(at >= 0) abyssDots104.splice(at,1);
+            }
+         }
+      }
+
+      public function hasAbyssDot104(kind:String) : Boolean
+      {
+         for each(var dot:Object in abyssDots104)
+         {
+            if(dot && dot.kind == kind) return true;
+         }
+         return false;
+      }
+
+      // 疾风步: shield after a successful dodge, at most twice per global round.
+      public function abyssOnDodge104() : void
+      {
+         if(hp <= 0) return;
+         var affix:Object = abyssEffect104(6);
+         if(!affix) return;
+         var nowRound:int = abyssRound104();
+         if(abyssDodgeRound104 != nowRound)
+         {
+            abyssDodgeRound104 = nowRound;
+            abyssDodgeCount104 = 0;
+         }
+         if(abyssDodgeCount104 >= 2) return;
+         abyssDodgeCount104++;
+         abyssShield104(this,int(hpMax * Number(affix.value)),2,"dodge_shield");
+      }
+
+      // 召唤契约: the owner's 8-stat snapshot before the summon's own inheritance ratios.
+      public function abyssSummonPanel104(panel:Object) : Object
+      {
+         var affix:Object = abyssEffect104(18);
+         if(!affix || !panel) return panel;
+         var result:Object = {};
+         for(var key:String in panel) result[key] = panel[key];
+         for each(var stat:String in ["hpMax","ap","dePh","deMa","hit","flee","crit","tough"])
+         {
+            if(result[stat] != null) result[stat] = int(Number(result[stat]) * (1 + Number(affix.value)));
+         }
+         return result;
+      }
+      // ---- end Abyss relic equipment passives ---------------------------------

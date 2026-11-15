@@ -37,6 +37,10 @@ package com.meng52.game.global
    public class GlobalData
    {
       public static var $formationShare104:Object = {};
+      // Non-null only while an Abyss Corridor battle is being prepared or fought.
+      // Fields: heroes (pool id -> display data), team (slot order), node_id,
+      // pending (saved combat result to resume), finish (last finish reply), resume.
+      public static var $abyss104:Object = null;
       
       public static var First_Get_5Star_Avatar:String = "first_get_5star_avatar";
       
@@ -947,8 +951,31 @@ package com.meng52.game.global
          return $currentGuide == "A" || $currentGuide == "B";
       }
       
+      // The server stores the Abyss relic as the 7th column of each as_equips row.
+      // Every legacy equipment loop indexes my_equips by each column, so keep
+      // as_equips at six columns on the client and expose the 7th separately.
+      public static function normalizeAbyssSlots104(param1:Object) : void
+      {
+         if(param1 == null || !(param1.as_equips is Array)) return;
+         var rows:Array = param1.as_equips as Array;
+         var relics:Array = param1.abyss_relic_slots is Array ? param1.abyss_relic_slots as Array : [null,null,null,null,null,null];
+         while(relics.length < 6) relics.push(null);
+         for(var i:int = 0; i < rows.length; i++)
+         {
+            var row:Array = rows[i] as Array;
+            if(row == null) continue;
+            if(row.length > 6)
+            {
+               if(i < 6) relics[i] = row[6];
+               rows[i] = row.slice(0,6);
+            }
+         }
+         param1.abyss_relic_slots = relics;
+      }
+
       public static function set $userData(param1:Object) : void
       {
+         normalizeAbyssSlots104(param1);
          if($currentGuide == "A")
          {
             $gUserData = param1;
@@ -1070,11 +1097,18 @@ package com.meng52.game.global
          if(_profile.hasOwnProperty("as_equips"))
          {
             _data.as_equips = _profile.as_equips;
+            delete _data.abyss_relic_slots;
+            normalizeAbyssSlots104(_data);
          }
          else
          {
             delete _data.as_equips;
+            delete _data.abyss_relic_slots;
          }
+         if(_profile.hasOwnProperty("abyss_relics")) _data.abyss_relics = _profile.abyss_relics;
+         else delete _data.abyss_relics;
+         if(_profile.hasOwnProperty("abyss_account")) _data.abyss_account = _profile.abyss_account;
+         else delete _data.abyss_account;
          _data.avatar_soul = _profile.avatar_soul;
          _data.equip_soul = _profile.equip_soul;
          var committedTempIndex:int = -1;

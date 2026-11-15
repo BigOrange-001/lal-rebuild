@@ -14,21 +14,23 @@ const SIGN_DAMAGE_RATE=1.5,REAL_DAMAGE_RATE=.5;
 let MIN_DAMAGE_RATE=.1;
 const ratioDamage104=()=>false;
 const GameMap={roundNum:0,actionDelay:0,damageNum:0,currentAvatar:null,currentMap:null};
-let roster=[],context=null,attack=[],rngCalls=0;
+let roster=[],context=null,attack=[],rngCalls=0,attackContexts=0;
 const Random={getRandom:()=>{rngCalls++;return 99;}};
 const currentAbilityAttack=()=>context;
-const beginAbilityAttack=(owner,kind)=>(context={owner,kind});
+const beginAbilityAttack=(owner,kind)=>{attackContexts++;return context={owner,kind};};
 const endAbilityAttack=()=>{context=null;};
 class Buff {constructor(type,round,value){Object.assign(this,{type,round,value});}}
 Buff.LIST_DEBUFF=['stun','silence','weak','sunder','poison','burn','curse','taunt','root'];
 /*METHODS*/
+/*SUMMON_POLICY*/
 const Avatar=methods;
 function unit(data){
  const u={...methods,id:data.aid,abyssToken104:data.instance_id,hp:data.hp,hpMax:data.hp_max,
  ap:data.ap,dePh:data.de_ph,deMa:data.de_ma,line:data.line,pos:data.pos,team:data.team||1,otherTeam:data.team===2?1:2,
  isLeader:!!data.leader,skill0:null,skill1:data.leader_skill?{m_cooldownNum:data.leader_skill.pl[0]}:null,skillB:null,
- buffs:{},abilityState:{},abilitySerial:0,skin2:{},__avatar:true,avatarData:{signType:0,skill_diff:0},fightRes:{parent:null},offset:0,
+ buffs:{},abilityState:{},abilitySerial:0,manualSkillDots:{},kaisaRoot104:null,kaisaCast104:0,skin2:{},__avatar:true,avatarData:{signType:0,skill_diff:0},fightRes:{parent:null},offset:0,
  fxPulse104:noop,beginParallelVisualBatch:noop,endParallelVisualBatch:noop,abilityControl:noop,
+ abilityFeedback:noop,removeIndependentShields104:noop,
  currentSkillKillContext:null,manualSkillDamageCapture:null,manualLethalFloor:null,tryndUndyingActive:false,
  dotPopup104:false,abyssReduction104:0,abyssRevived104:false,abyssRecovered104:false,
  abyssDodgeRound104:-1,abyssDodgeCount104:0,abyssDots104:null,abyssRelicA104:null,
@@ -41,7 +43,6 @@ function unit(data){
  recordStatistics104:noop,emitModEvent:noop,yasuoCritical104:noop,abilityRecordDamage:noop,
  refreshHp:noop,dead:noop,showBuff:noop,queueNurseHealing:noop,queueVitalBar104:noop,
  showCurseImpact:noop,blessFade:noop,blessCure:noop,kaisaNotifyStun104:noop,
- removeBuff(k){delete this.buffs[k];},
  removeAllDebuff(){for(const k of Buff.LIST_DEBUFF)delete this.buffs[k];this.abyssDots104=null;},
  getSummonPanelSnapshot(){return {hpMax:this.hpMax,ap:this.ap,dePh:this.dePh,deMa:this.deMa,hit:0,flee:0,crit:0,tough:0};}
  };
@@ -129,3 +130,27 @@ for(const kind of ['bomb','zone','channel'])for(const ultimate of [false,true]) 
 }
 context=null;
 console.log('Revive cleansing and delayed bomb/zone/channel cast provenance passed.');
+{
+ const own=unit(docs[0].input.team_a[0]),enemy=unit(docs[0].input.team_b[0]);
+ own.abyssRelicA104={id:13,value:.2};own.skill0={skills:[['dragon_kaisa_q',0,0,0,1]],getNativeSetting:()=>1};
+ own.kaisaLane104=()=>[enemy];own.kaisaProjectile104=noop;own.skinBondNumber104=()=>0;
+ own.abilityHit=target=>{target.abyssAfterDamage104(own,1,0,2,'');return true;};
+ rngCalls=attackContexts=0;
+ assert(own.kaisaVolley104(own.skill0));assert.equal(attackContexts,3);assert.equal(rngCalls,1);
+ assert(own.kaisaVolley104(own.skill0));assert.equal(attackContexts,8);assert.equal(rngCalls,2);
+ // Targeted removal also works when there is no native poison/burn Buff.
+ enemy.abyssDots104=[{kind:'burn'},{kind:'poison'},{kind:'phantasm'}];
+ enemy.removeBuff('burn');assert.deepEqual(enemy.abyssDots104.map(d=>d.kind),['poison','phantasm']);
+ enemy.yasuoCleanse104();assert.deepEqual(enemy.abyssDots104.map(d=>d.kind),['phantasm']);
+ assert(!enemy.hasAbyssDot104('poison'));assert(!enemy.hasAbyssDot104('burn'));
+}
+console.log('KaiSa per-volley rolls and Yasuo targeted relic cleansing passed.');
+for(const row of input.summons){
+ const skill={getMechanismId:()=>row.source,getNativeSetting:()=>row.policy,skillSetData:{id:row.id}};
+ assert(summonAllowed.call(skill),row.id+' must retain native summoning');
+ if(row.id!==row.source){
+  skill.getNativeSetting=()=>({...row.policy,skillId:row.source});
+  assert(!summonAllowed.call(skill),'regression control: old mismatched policy must fail');
+ }
+}
+console.log(`Native Zyra/Azir summon policy checks: ${input.summons.length} passed.`);

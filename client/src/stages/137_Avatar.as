@@ -1173,6 +1173,7 @@ package com.meng52.game.module.avatar
          var globalRate:Number=Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104);
          if(!isFinite(globalRate) || globalRate<=0) globalRate=1;
          var seen:Array=[];
+         var abyssVolleyHits104:Array=[];
          for(var shot:Number=0;shot<count && hp>0;shot++)
          {
             var live:Array=kaisaLane104(castLane);
@@ -1187,6 +1188,7 @@ package com.meng52.game.module.avatar
             var context:Object=beginAbilityAttack(this,"active");
             context.skill=sourceSkill;
             context.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+            context.abyssHits104=abyssVolleyHits104;
             try
             {
                var hit:Boolean=abilityHit(target,coefficient/globalRate,2,"FX_KAISA_MISSILE104");
@@ -5649,6 +5651,7 @@ package com.meng52.game.module.avatar
 
       protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
       {
+         abyssRemoveDots104(param1);
          if(param1=="shield" && clearShields) removeIndependentShields104();
          if(param1 == "root") delete abilityState.root;
          var _loc2_:Buff = buffs[param1];
@@ -9892,6 +9895,14 @@ package com.meng52.game.module.avatar
       {
          var context:Object = abyssNormalContext104(this);
          return context && int(abyssRelicA104.id) == 20 ? Number(abyssRelicA104.value) : 0;
+      }
+
+      private function abyssRemoveDots104(kind:String) : void
+      {
+         if(!abyssDots104 || (kind != "poison" && kind != "burn")) return;
+         var kept:Array = [];
+         for each(var dot:Object in abyssDots104) if(dot.kind != kind) kept.push(dot);
+         abyssDots104 = kept.length ? kept : null;
       }
 
       public function abyssShieldMultiplier104() : Number

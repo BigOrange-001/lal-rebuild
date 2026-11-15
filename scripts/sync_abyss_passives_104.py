@@ -34,6 +34,23 @@ def methods(text):
 
 
 def avatar(s):
+    # One Kai'Sa volley still has separate missile settlements, but is one cast
+    # for relic status application (including misses and repeat targets).
+    s = once(s, 'var seen:Array=[];\n         for(var shot:Number=0;',
+             'var seen:Array=[];\n         var abyssVolleyHits104:Array=[];\n         for(var shot:Number=0;')
+    before = '''            context.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+            try
+            {
+               var hit:Boolean=abilityHit(target,coefficient/globalRate,2,"FX_KAISA_MISSILE104");'''
+    s = once(s, before, before.replace('            try\n',
+             '            context.abyssHits104=abyssVolleyHits104;\n            try\n',1))
+    # Targeted purges must clear relic layers even if no ordinary Buff exists.
+    s = once(s, '''      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
+      {
+''', '''      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
+      {
+         abyssRemoveDots104(param1);
+''')
     # Preserve the source small-skill and shared hit set for delayed effects.
     for prefix in ('abilityState.zone={line:', 'abilityState.channel={pos:',
                    'target.abilityState["bomb_"+abilityIndex]={owner:'):

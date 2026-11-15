@@ -45,7 +45,7 @@ A类全部6种为现有普通技能和英雄/装备羁绊版本预生成25296条
 验证：`python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests test_equipment_flows test_equipment_magic test_equipment_bonds_104 test_stat_power_103 test_dn_power test_exploration_regressions test_exploration_overhaul test_campaign_tower_difficulty_104 test_activity_tower test_combat_origin_phase test_roster_sale_promotion`，110/110通过。修改碎盾太古特例后单独复跑主词条边界1/1通过。已确认的main亚索失败未再次重复整套运行。
 接口脚本更新为80次调用并覆盖13种接口，所有成功响应样例已重导出；副词条是测试中真实随机结果，控制sign仍不是胜率证据。
 未验证：客户端第7格、太古配色、A类钩子、所有实机战斗与双端一致性。当时的精英橙卡不足冲突已由下方新版规则关闭。
-提交以 `feat(abyss): 阶段2 深渊遗物背包与装备数据` 标识；哈希随后补记。
+阶段2实现提交为e3d8637；历史提交标题保留原样，本文显示名称已统一更新。
 
 ## 新版设计同步与五项调整（2026-11-16）
 
@@ -122,3 +122,22 @@ python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests t
 **未验证：** 客户端UI/真实战斗结算、Android安装与表现、双端逐事件一致性、设备配置体积/性能、长期全构筑与5件遗物叠加、所有中间难度完整胜率分布；未部署。
 
 阶段4提交以 `feat(abyss): 阶段4 离线数值校准与验收报告` 标识；最终哈希在最后的收尾索引补记。
+
+## 收尾索引与总结
+
+分支：**feat/roguelite-abyss**；worktree：**E:/My Project/lal-rebuild/lal-abyss**，保留不删除。
+
+| 内容 | 提交 |
+| --- | --- |
+| 原设计稿导入 | 188b944 |
+| 阶段1规则与接口 | 5fa5035 |
+| 阶段2深渊遗物数据 | e3d8637 |
+| 用户指定新版设计稿独立同步 | 2802bb4 |
+| 阶段3装备被动及用户五项调整 | f527860 |
+| **最终实现、阶段4校准及验收报告** | **7ba654883981772eb5e5d4fade2a5785f6e88150** |
+
+本节所在的收尾文档提交只补齐已经完成的提交索引，不改变实现或验收数据。
+最终验证：受影响回归151/151；最新模式/遗物/被动/证据专项45/45；实际配置40局自然模型流程、60场纯起始普通战、27个被动样例回放、144场塔层探针；各批次重叠，未相加虚报。所有已确认的main既有失败详见上文，未修无关问题。
+需用户决定：**无**。前端待办：**15项**。本会话未验收客户端UI、客户端实际结算、Android和双端一致性，其他离线样本边界见阶段4和校准报告。
+接口文档、13个接口的真实成功样例、被动规格、27份逐事件对照用例、25人名单与四套起始卡组、五项改动对应提交、设计第10节验收对应均已在本worktree交付。
+未推送、未合并main；没有修改client/private，未构建SWF/APK或操作模拟器；没有读取或修改正式runtime数据库。原project目录不由本任务修改。

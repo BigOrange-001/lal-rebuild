@@ -2573,8 +2573,8 @@ package com.meng52.game.module.map
          SendAndSelect.sendAndSelectService("user.export_formation",{team:rows,team_num:GlobalData.$tempTeamID,actionID:"formation-export-"+new Date().time+"-"+Math.random()},function(reply:Object):void
          {
             if(!reply || reply.return_code!=0 || GameMap.currentMap!=exportingMap || !GlobalData.$formationShare104 || GlobalData.$formationShare104.mode!="export") return;
-            GlobalData.$formationShare104={code:reply.data.code};
-            com.meng52.game.ui.screen.PanelCenterPVP.$tabBarSelectedIndex=1;
+            GlobalData.$formationShare104={exported:reply.data};
+            com.meng52.game.ui.screen.PanelCenterPVP.$tabBarSelectedIndex=4;
             GlobalData.$mGameClassObject.closePopForPanel();
             GlobalData.$mGameClassObject.mLayoutUICenter.mCurrPanel="";
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp");

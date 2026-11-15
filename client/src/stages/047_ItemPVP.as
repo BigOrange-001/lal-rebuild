@@ -22,7 +22,7 @@ package com.meng52.game.ui.element
    {
       
       protected var mBtn_pk:LOL_Scale9Button;
-      private var formationDelete104:LOL_Scale9Button;
+      private var formationButtons104:Array;
       
       protected var mImg_title:Image;
       
@@ -52,8 +52,8 @@ package com.meng52.game.ui.element
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
-         if(formationDelete104) formationDelete104.removeFromParent(true);
-         formationDelete104=null;
+         for each(var formationButton104:LOL_Scale9Button in formationButtons104) formationButton104.removeFromParent(true);
+         formationButtons104=null;
          if(mImg_title)
          {
             mImg_title.removeFromParent(true);
@@ -81,6 +81,11 @@ package com.meng52.game.ui.element
       
       override public function init(param1:Object) : void
       {
+         if(param1["formation_id"])
+         {
+            initFormation104(param1);
+            return;
+         }
          var _loc12_:Scale9Textures = null;
          var _loc33_:Boolean = false;
          var _loc38_:Boolean = false;
@@ -131,7 +136,7 @@ package com.meng52.game.ui.element
             mBox_UIs.addChild(this.mScale9Image);
             this.width = mScale9Image.width;
             this.height = mScale9Image.height - 5;
-            _loc33_ = param1["formation_id"] ? false : GlobalFunction.checkIsFirstPVP();
+            _loc33_ = GlobalFunction.checkIsFirstPVP();
             _loc38_ = param1["status"] < 0;
             _loc26_ = param1["id"];
             _loc19_ = _loc26_.indexOf("r") > -1;
@@ -256,15 +261,6 @@ package com.meng52.game.ui.element
                mBtn_pk.alpha = 0.5;
             }
             mBtn_pk.addEventListener("triggered",onTRIGGERED_btns);
-            if(param1["formation_id"])
-            {
-               _loc27_.text="战力 "+String(param1["formation_power"]);_loc27_.fontSize=23;
-               _loc18_.visible=false;
-               mBtn_pk.text=param1["compatible"]?"挑战":"不兼容";mBtn_pk.y=4;mBtn_pk.height=50;
-               formationDelete104=new LOL_Scale9Button("删除",85,38,"UI_btn_normalFun_0000");
-               formationDelete104.fontSize=20;formationDelete104.x=mBtn_pk.x;formationDelete104.y=66;
-               formationDelete104.addEventListener("triggered",deleteFormation104);addChild(formationDelete104);
-            }
             if(_loc33_)
             {
                mBtn_pk.visible = false;
@@ -360,13 +356,6 @@ package com.meng52.game.ui.element
          var _loc4_:* = null;
          var _loc3_:Object = null;
          var _loc5_:int = 0;
-         if(_data["formation_id"])
-         {
-            if(!_data["compatible"]) {GlobalFunction.popError("阵容与当前战斗规则不兼容，请导入同版本代码。");return;}
-            GlobalData.$formationShare104={mode:"challenge",id:_data["formation_id"]};
-            GlobalData.$pvp_rival=data;GlobalData.$pvp_Embattle=_data["name"];
-            GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);return;
-         }
          GlobalData.$formationShare104={};
          if(mBtn_pk.alpha < 1)
          {
@@ -420,19 +409,75 @@ package com.meng52.game.ui.element
             GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_change_pvp",false,true);
          }
       }
-      // BEGIN FORMATION DELETE 104
-      private function deleteFormation104(event:Event) : void
+      // BEGIN FORMATION ITEM 104
+      // Saved formation row for the "阵容挑战" tab: name, five heroes, power, record and actions.
+      private function initFormation104(row:Object) : void
       {
-         var id:String=String(_data["formation_id"]);
-         GlobalFunction.popAlert("删除阵容","删除这份敌阵？之后仍可重新导入代码。",{
-            ok:function():void
+         formationButtons104=[];
+         mBox_UIs=new Sprite();addChild(mBox_UIs);
+         var bg:Scale9Textures=new Scale9Textures(GlobalFunction.getTexture("UI_pvp_bg_1_0000"),new Rectangle(30,30,50,50));
+         mScale9Image=new Scale9Image(bg);mScale9Image.width=570;mScale9Image.height=118;
+         mBox_UIs.addChild(mScale9Image);
+         this.width=mScale9Image.width;this.height=mScale9Image.height-5;
+         var playable:Boolean=row["compatible"]!=false;
+         var name:TextField=GlobalTextStyle.getTextField(String(row["name"]),22,9116186,"left",300,30,GlobalConfig.FONT_1);
+         name.x=20;name.y=8;mBox_UIs.addChild(name);
+         var date:TextField=GlobalTextStyle.getTextField(row["created_text"]?String(row["created_text"]):"",15,8022613,"right",150,22,GlobalConfig.FONT_1);
+         date.x=315;date.y=12;mBox_UIs.addChild(date);
+         var author:TextField=GlobalTextStyle.getTextField("作者 "+row["author"]+" · Lv."+int(row["lv"]),16,4926491,"left",260,24,GlobalConfig.FONT_1);
+         author.x=20;author.y=36;mBox_UIs.addChild(author);
+         var heroes:Array=row["data_base"] as Array;
+         if(heroes && heroes.length)
+         {
+            mBox_avatars=new Sprite();
+            for(var i:int=0;i<heroes.length && i<5;i++)
             {
-               SendAndSelect.sendAndSelectService("user.delete_formation",{formation_id:id,actionID:"formation-delete-"+new Date().time+"-"+Math.random()},function(reply:Object):void
-               {
-                  if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
-               });
-            },okUI:"删除",no:function():void{},noUI:"取消"});
+               var unit:Array=heroes[i] as Array;
+               var avatar:Avatar=new Avatar(unit[0],{lv:unit[1],slv:unit[2],hp:unit[3],ap:unit[4],de_ph:unit[5],de_ma:unit[6],phase:unit[7],morph:unit[11]});
+               var art:Sprite=avatar.getAvatarRes();
+               art.pivotY=90;art.scaleX=art.scaleY=i==0?0.55:0.48;art.x=i*50;
+               mBox_avatars.addChildAt(art,0);
+            }
+            mBox_avatars.x=30;mBox_avatars.y=110;addChild(mBox_avatars);mBox_avatars.flatten();
+         }
+         else
+         {
+            var missing:TextField=GlobalTextStyle.getTextField("阵容中有英雄在当前版本不可用",17,8022613,"left",260,26,GlobalConfig.FONT_1);
+            missing.x=20;missing.y=70;mBox_UIs.addChild(missing);
+         }
+         var power:TextField=GlobalTextStyle.getTextField("战力 "+int(row["formation_power"]),22,1513239,"left",175,30,GlobalConfig.FONT_1);
+         power.x=290;power.y=40;mBox_UIs.addChild(power);
+         var wins:int=int(row["wins"]);var losses:int=int(row["losses"]);
+         var record:TextField=GlobalTextStyle.getTextField(wins+losses==0?"尚未挑战":"战绩 "+wins+"胜 "+losses+"负",17,4926491,"left",175,24,GlobalConfig.FONT_1);
+         record.x=290;record.y=70;mBox_UIs.addChild(record);
+         if(wins+losses>0)
+         {
+            var won:Boolean=int(row["last_result"])==1;
+            var last:TextField=GlobalTextStyle.getTextField(won?"上次 胜利":"上次 失败",16,won?3046706:12000284,"left",175,22,GlobalConfig.FONT_1);
+            last.x=290;last.y=92;mBox_UIs.addChild(last);
+         }
+         mBtn_pk=new LOL_Scale9Button(playable?"挑战":"不可用",85,60,playable?"UI_btn_enterGame_0_0000":"UI_btn_smallFun_1_0000");
+         mBtn_pk.fontSize=22;mBtn_pk.x=570-85-12;mBtn_pk.y=10;
+         if(!playable) mBtn_pk.alpha=0.6;
+         mBtn_pk.addEventListener("triggered",challengeFormation104);addChild(mBtn_pk);
+         var more:LOL_Scale9Button=new LOL_Scale9Button("更多",85,38,"UI_btn_normalFun_0000");
+         more.fontSize=18;more.x=mBtn_pk.x;more.y=74;
+         more.addEventListener("triggered",function(event:Event):void
+         {
+            GlobalData.$mEventDispatcher.dispatchEventWith("formation_action",false,{action:"more",row:_data});
+         });
+         addChild(more);formationButtons104.push(more);
+         mBox_UIs.flatten();
       }
+
+      private function challengeFormation104(event:Event) : void
+      {
+         if(_data["compatible"]==false) {GlobalFunction.popToast("阵容中有英雄在当前版本不可用，无法挑战。","info");return;}
+         GlobalData.$formationShare104={mode:"challenge",id:_data["formation_id"]};
+         GlobalData.$pvp_rival=data;GlobalData.$pvp_Embattle=_data["name"];
+         GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);
+      }
+      // END FORMATION ITEM 104
 
    }
 }

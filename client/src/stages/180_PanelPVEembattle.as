@@ -180,7 +180,7 @@ package com.meng52.game.ui.panel
          this.mBtn_random.addEventListener("triggered",onTRIGGERED_);
          this.mBtn_play = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20042),150,70,"UI_btn_normalFun_0000");
          this.mBtn_play.name = "btn_name_play";
-         if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="export") this.mBtn_play.text="导出";
+         if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="export") this.mBtn_play.text="导出阵容";
          addChild(this.mBtn_play);
          this.mBtn_play.addEventListener("triggered",onTRIGGERED_);
          this.mBtn_team = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20018),150,70,"UI_btn_normalFun_0000");

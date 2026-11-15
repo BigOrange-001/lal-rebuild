@@ -55,6 +55,10 @@ package com.meng52.game.ui.screen
       private var shareImport104:LOL_Scale9Button;
       private var shareModal104:Sprite;
       private var shareInput104:TextInput;
+      private var shareNameInput104:TextInput;
+      private var formationHeader104:Sprite;
+      private var formationEmpty104:Sprite;
+      private var formationStrip104:TextField;
       
       public var mBg_list:Scale9Image;
       
@@ -191,8 +195,9 @@ package com.meng52.game.ui.screen
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
-         closeFormationCode104();
+         closeFormationCode104();clearFormationControls104();
          GlobalData.$mEventDispatcher.removeEventListener("formation_library_changed",loadFormations104);
+         GlobalData.$mEventDispatcher.removeEventListener("formation_action",onFormationAction104);
          GlobalData.$mStarling.juggler.removeTweens(this);
          delPVPList();
          delPVP_elite();
@@ -210,6 +215,7 @@ package com.meng52.game.ui.screen
          this.removeEventListener("addedToStage",initializeHandler);
          GlobalData.$mEventDispatcher.addEventListener("update_signup",afterSignUpdate);
          GlobalData.$mEventDispatcher.addEventListener("formation_library_changed",loadFormations104);
+         GlobalData.$mEventDispatcher.addEventListener("formation_action",onFormationAction104);
          GlobalData.$mEventDispatcher.addEventListener("update_pvpelite_updateaward",update_tag);
          mImg_head = getImg_headBg(-60);
          addChild(mImg_head);
@@ -669,9 +675,7 @@ package com.meng52.game.ui.screen
       
       private function delPVPList() : void
       {
-         if(shareExport104) shareExport104.removeFromParent(true);
-         if(shareImport104) shareImport104.removeFromParent(true);
-         shareExport104=null;shareImport104=null;
+         clearFormationControls104();
          if(mBox_info)
          {
             if(mBox_info.isFlattened)
@@ -797,20 +801,17 @@ package com.meng52.game.ui.screen
          {
             mBox_info.flatten();
          }
-         addFormationControls104();
          if(mTabBar.selectedIndex==4)
          {
-            mBtn_re.visible=false;if(mBtn_change) mBtn_change.visible=false;
-            pvpRule.visible=false;headImg.visible=false;
-            mTxt_pkTimes.text="已保存阵容：加载中";
+            addFormationControls104();
             formationRows104=[];setList();loadFormations104();
+            consumeFormationCode104();
          }
          else
          {
             if(mFun_status) selectMsg();else selectList(true);
             checkGuide();
          }
-         consumeFormationCode104();
       }
       
       private function pvpRuleTriggered(param1:Event) : void
@@ -822,8 +823,6 @@ package com.meng52.game.ui.screen
       {
          mFun_status = !mFun_status;
          if(mBtn_change) mBtn_change.visible = !mFun_status;
-         if(shareExport104) shareExport104.visible=!mFun_status;
-         if(shareImport104) shareImport104.visible=!mFun_status;
          if(mFun_status)
          {
             mBtn_re.text = GlobalLanguageStr.getLanguageStr(98124);
@@ -1004,10 +1003,7 @@ package com.meng52.game.ui.screen
          }
          if(mTabBar.selectedIndex==4)
          {
-            delTips();
-            if(formationRows104.length==0) setTips("还没有敌方阵容，点击“导入敌阵”保存阵容代码。");
-            else this.setListTimer(mList,formationRows104,ItemPVP,false);
-            if(shareModal104) addChild(shareModal104);
+            delTips();showFormationList104();
             return;
          }
          if(mTabBar.selectedIndex == 1)
@@ -2076,26 +2072,62 @@ package com.meng52.game.ui.screen
       }
       // BEGIN FORMATION PANEL 104
       // Formation codes contain only battle snapshots; the account library is server-owned.
-      private function addFormationControls104() : void
+      // Tab 4 ("阵容挑战") owns every formation control; other arena tabs are untouched.
+      private static const FORMATION_DARK104:uint = GlobalFunction.UI_DARK;
+      private static const FORMATION_BROWN104:uint = GlobalFunction.UI_BROWN;
+      private static const FORMATION_RED104:uint = GlobalFunction.UI_RED;
+      private static const FORMATION_LIGHT104:uint = GlobalFunction.UI_LIGHT;
+
+      private function formationAction104(prefix:String) : String
       {
-         shareExport104=new LOL_Scale9Button("导出阵容",150,42,"UI_btn_normalFun_0000");
-         shareExport104.fontSize=22;shareExport104.x=20;shareExport104.y=148;
-         shareExport104.addEventListener("triggered",exportFormation104);addChild(shareExport104);
-         shareImport104=new LOL_Scale9Button("导入敌阵",150,42,"UI_btn_normalFun_0000");
-         shareImport104.fontSize=22;shareImport104.x=180;shareImport104.y=148;
-         shareImport104.addEventListener("triggered",importFormation104);addChild(shareImport104);
-         shareExport104.visible=shareImport104.visible=!mFun_status;
+         return "formation-"+prefix+"-"+new Date().time+"-"+int(Math.random()*1000000);
       }
 
-      private function exportFormation104(event:Event) : void
+      private function formationText104(text:String, size:int, color:uint, align:String, w:Number, h:Number, parent:Sprite, x:Number, y:Number) : TextField
       {
+         return GlobalFunction.uiText(text,size,color,align,w,h,parent,x,y);
+      }
+
+      private function formationButton104(label:String, w:Number, h:Number, primary:Boolean, parent:Sprite, x:Number, y:Number, handler:Function) : LOL_Scale9Button
+      {
+         return GlobalFunction.uiButton(label,w,h,primary?"primary":"normal",parent,x,y,handler);
+      }
+
+      private function clearFormationControls104() : void
+      {
+         if(shareExport104) shareExport104.removeFromParent(true);
+         if(shareImport104) shareImport104.removeFromParent(true);
+         if(formationHeader104) formationHeader104.removeFromParent(true);
+         if(formationEmpty104) formationEmpty104.removeFromParent(true);
+         shareExport104=null;shareImport104=null;formationHeader104=null;formationEmpty104=null;formationStrip104=null;
+      }
+
+      private function addFormationControls104() : void
+      {
+         clearFormationControls104();
+         var left:Number=mBg_list.x;var right:Number=mBg_list.x+mBg_list.width;
+         if(mBox_info) mBox_info.visible=false;
+         if(_txt_coin) _txt_coin.visible=false;
+         mBtn_re.visible=false;if(mBtn_change) mBtn_change.visible=false;
+         pvpRule.visible=false;headImg.visible=false;
+         formationHeader104=new Sprite();addChild(formationHeader104);
+         shareExport104=formationButton104("导出我的阵容",170,62,true,this,right-170-4,mBg_list.y-74,exportFormation104);
+         shareImport104=formationButton104("导入阵容码",140,62,false,this,shareExport104.x-140-10,mBg_list.y-74,function():void {showImportFormation104();});
+         GlobalFunction.uiRow([shareImport104,shareExport104],left+250,right-4,mBg_list.y-74,10,"right");
+         var textWidth:Number=Math.max(150,shareImport104.x-left-16);
+         formationText104("阵容挑战",26,16777215,"left",textWidth,36,formationHeader104,left+10,mBg_list.y-86);
+         formationText104("练习对战 · 不耗次数 · 不影响排名",16,FORMATION_LIGHT104,"left",textWidth,26,formationHeader104,left+10,mBg_list.y-46);
+         formationStrip104=formationText104("正在读取阵容…",18,FORMATION_BROWN104,"center",mBg_list.width-40,30,formationHeader104,left+20,mBg_list.y+12);
+      }
+
+      private function exportFormation104() : void
+      {
+         closeFormationCode104();
          GlobalData.$formationShare104={mode:"export"};
          GlobalData.$pvp_rival={id:"f000000000000000000000000000000000",name:"导出阵容",indexID_s:1000,lv:GlobalData.$userData.lv,is_enemy:-1,data_base:[]};
          GlobalData.$pvp_Embattle="导出阵容";
          GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);
       }
-
-      private function importFormation104(event:Event) : void {showFormationCode104("",true);}
 
       private function loadFormations104(event:Event = null) : void
       {
@@ -2105,72 +2137,219 @@ package com.meng52.game.ui.screen
             if(!stage || !mTabBar || mTabBar.selectedIndex!=4 || !reply || reply.return_code!=0) return;
             formationRows104=reply.data.formations as Array;
             if(formationRows104==null) formationRows104=[];
-            if(mTxt_pkTimes) mTxt_pkTimes.text="已保存阵容："+formationRows104.length;
             setList();addList();
          });
       }
 
+      private function showFormationList104() : void
+      {
+         if(formationEmpty104) formationEmpty104.removeFromParent(true);
+         formationEmpty104=null;
+         if(formationStrip104)
+            formationStrip104.text=formationRows104.length?"共 "+formationRows104.length+" 份阵容　点「挑战」开打，点「更多」复制、改名或删除":"还没有保存的阵容";
+         if(formationRows104.length==0) showFormationEmpty104();
+         else this.setListTimer(mList,formationRows104,ItemPVP,false);
+         if(shareModal104) addChild(shareModal104);
+      }
+
+      private function showFormationEmpty104() : void
+      {
+         formationEmpty104=new Sprite();addChild(formationEmpty104);
+         var w:Number=mBg_list.width-48;var x:Number=mBg_list.x+24;var y:Number=mBg_list.y+64;
+         var cards:Array=[
+            ["挑战自己","用现在的英雄和站位导出一份阵容并保存，培养或换装后再来对比强弱。","导出我的阵容",true,exportFormation104],
+            ["挑战好友","粘贴好友分享的阵容码（以 LALF1 开头），保存后可反复挑战。","导入阵容码",false,function():void {showImportFormation104();}]];
+         for(var i:int=0;i<cards.length;i++)
+         {
+            var row:Array=cards[i];
+            var card:Scale9Image=GlobalFunction.createScale9Image("UI_pvp_bg_1_0000",w,150,new Rectangle(30,30,50,50));
+            card.x=x;card.y=y+i*170;formationEmpty104.addChild(card);
+            formationText104(row[0],24,FORMATION_RED104,"left",w-220,34,formationEmpty104,x+24,card.y+18);
+            formationText104(row[1],18,FORMATION_BROWN104,"left",w-220,78,formationEmpty104,x+24,card.y+56);
+            formationButton104(row[2],170,62,row[3],formationEmpty104,x+w-170-20,card.y+44,row[4]);
+         }
+      }
+
       private function consumeFormationCode104() : void
       {
-         if(GlobalData.$formationShare104 && GlobalData.$formationShare104.code)
+         var share:Object=GlobalData.$formationShare104;
+         if(share && share.exported)
          {
-            var code:String=String(GlobalData.$formationShare104.code);
             GlobalData.$formationShare104={};
-            showFormationCode104(code,false);
+            showExportedFormation104(share.exported);
          }
       }
 
       private function closeFormationCode104(event:Event = null) : void
       {
          if(shareModal104) shareModal104.removeFromParent(true);
-         shareModal104=null;shareInput104=null;
+         shareModal104=null;shareInput104=null;shareNameInput104=null;
       }
 
-      private function showFormationCode104(code:String, importing:Boolean) : void
+      private function openFormationModal104(title:String, height:Number) : Sprite
       {
          closeFormationCode104();
-         shareModal104=new Sprite();addChild(shareModal104);
-         var owningModal:Sprite=shareModal104;
-         var mask:Quad=new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0);mask.alpha=.65;shareModal104.addChild(mask);
-         var box:Sprite=new Sprite();box.x=(GlobalData.$mStageWidth-600)/2;box.y=Math.max(30,(GlobalData.$center_height-370)/2);shareModal104.addChild(box);
-         var bg:Scale9Image=GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",600,370,new Rectangle(110,55,70,20));box.addChild(bg);
-         var title:TextField=GlobalTextStyle.getTextField(importing?"导入敌阵":"阵容代码",28,1513239,"center",560,45);title.x=20;title.y=18;box.addChild(title);
-         var note:TextField=GlobalTextStyle.getTextField(importing?"粘贴阵容代码，保存后即可反复挑战。":"已保存导出时的布阵与战斗属性，可复制分享。",21,4926491,"center",560,65);note.x=20;note.y=68;box.addChild(note);
-         shareInput104=new TextInput();shareInput104.text=code;shareInput104.width=550;shareInput104.height=65;
-         shareInput104.maxChars=131072;shareInput104.x=25;shareInput104.y=145;box.addChild(shareInput104);
-         var confirm:LOL_Scale9Button=new LOL_Scale9Button(importing?"导入保存":"复制代码",170,60,"UI_btn_normalFun_0000");
-         confirm.x=20;confirm.y=260;confirm.fontSize=23;box.addChild(confirm);
-         confirm.addEventListener("triggered",function(event:Event):void
+         var modal:Object=GlobalFunction.uiModal(this,title,600,height);
+         shareModal104=modal.root as Sprite;
+         return modal.box as Sprite;
+      }
+
+      private function formationField104(box:Sprite, label:String, y:Number, text:String, prompt:String, maxChars:int, width:Number = 550) : TextInput
+      {
+         return GlobalFunction.uiField(box,label,25,y,width,text,prompt,maxChars);
+      }
+
+      private function formationName104(input:TextInput) : String
+      {
+         if(!input || input.text==null) return "";
+         return input.text.replace(/^\s+|\s+$/g,"");
+      }
+
+      private function formationModalOwner104(owner:Sprite) : Boolean
+      {
+         return stage!=null && shareModal104==owner;
+      }
+
+      private function saveFormation104(code:String, name:String, done:Function = null) : void
+      {
+         SendAndSelect.sendAndSelectService("user.import_formation",{code:code,name:name,actionID:formationAction104("import")},function(reply:Object):void
          {
-            if(!shareInput104) return;
-            var text:String=shareInput104.text;
-            if(!importing)
+            if(done!=null) done(reply);
+            if(!reply || reply.return_code!=0) return;
+            GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
+            closeFormationCode104();
+            GlobalFunction.popToast(reply.data.already_saved?"这份阵容已在列表中"+(name?"，名称已更新。":"。"):"已保存「"+reply.data.formation.name+"」，点「挑战」即可开打。");
+         });
+      }
+
+      private function showExportedFormation104(exported:Object) : void
+      {
+         var box:Sprite=openFormationModal104("阵容已导出",430);
+         var owner:Sprite=shareModal104;
+         var code:String=String(exported.code);var original:String=String(exported.name);
+         formationText104(int(exported.hero_count)+" 名英雄 · 战力 "+int(exported.power)+"\n属性、技能和站位已固定，之后培养不会影响这份阵容",18,FORMATION_BROWN104,"center",560,56,box,20,70);
+         shareNameInput104=formationField104(box,"阵容名称（最多16字）",168,original,String(exported.default_name||""),16);
+         formationText104("「复制阵容码」可发给好友，对方在「导入阵容码」里粘贴即可",16,FORMATION_BROWN104,"center",560,26,box,20,236);
+         var buttons:Array=[];
+         var busy:Function=function(value:Boolean):void {for each(var b:LOL_Scale9Button in buttons) b.enabled=!value;};
+         buttons.push(formationButton104("保存并去挑战",180,62,true,box,20,300,function():void
+         {
+            busy(true);
+            saveFormation104(code,formationName104(shareNameInput104),function(reply:Object):void {if(formationModalOwner104(owner)) busy(false);});
+         }));
+         buttons.push(formationButton104("复制阵容码",180,62,false,box,210,300,function():void
+         {
+            var name:String=formationName104(shareNameInput104);
+            if(!name || name==original) {System.setClipboard(code);GlobalFunction.popToast("阵容码已复制。");return;}
+            busy(true);
+            SendAndSelect.sendAndSelectService("user.formation_code",{code:code,name:name},function(reply:Object):void
             {
-               System.setClipboard(text);closeFormationCode104();GlobalFunction.popError("阵容代码已复制。",true);return;
-            }
-            if(text==null || text.length==0) {GlobalFunction.popError("请先粘贴阵容代码。");return;}
-            confirm.enabled=false;
-            SendAndSelect.sendAndSelectService("user.import_formation",{code:text,actionID:"formation-import-"+new Date().time+"-"+Math.random()},function(reply:Object):void
-            {
-               if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
-               if(!stage || shareModal104!=owningModal) return;
-               confirm.enabled=true;
+               if(!formationModalOwner104(owner)) return;
+               busy(false);
                if(!reply || reply.return_code!=0) return;
-               closeFormationCode104();$tabBarSelectedIndex=4;mTabBar.selectedIndex=4;
-               if(mTabBar.selectedIndex==4) loadFormations104();
-               GlobalFunction.popError(reply.data.already_saved?"这份阵容已保存。":"敌方阵容已保存。",true);
+               code=String(reply.data.code);original=String(reply.data.name);
+               System.setClipboard(code);GlobalFunction.popToast("已复制「"+original+"」的阵容码。");
+            });
+         }));
+         buttons.push(formationButton104("关闭",180,62,false,box,400,300,closeFormationCode104));
+         formationText104("关闭后仍可在列表的「更多」里复制已保存阵容的代码",15,FORMATION_BROWN104,"center",560,24,box,20,372);
+      }
+
+      private function showImportFormation104(code:String = "") : void
+      {
+         var box:Sprite=openFormationModal104("导入阵容码",430);
+         var owner:Sprite=shareModal104;
+         formationText104("粘贴好友分享的阵容码（以 LALF1 开头），也可以导入自己的。",18,FORMATION_BROWN104,"center",560,28,box,20,70);
+         shareInput104=formationField104(box,"阵容码",136,code,"在这里粘贴阵容码",131072,430);
+         formationButton104("粘贴",110,58,false,box,465,136,function():void
+         {
+            var value:Object=Clipboard.generalClipboard.getData(ClipboardFormats.TEXT_FORMAT);
+            if(shareInput104 && value!=null) shareInput104.text=String(value);
+            else GlobalFunction.popToast("剪贴板里没有文字。","info");
+         });
+         shareNameInput104=formationField104(box,"阵容名称（选填，最多16字）",238,"","留空则使用原名称",16);
+         var confirm:LOL_Scale9Button;
+         confirm=formationButton104("导入保存",200,62,true,box,80,330,function():void
+         {
+            var text:String=shareInput104?shareInput104.text:"";
+            if(text==null || text.replace(/\s+/g,"").length==0) {GlobalFunction.popToast("请先粘贴阵容码。","info");return;}
+            confirm.enabled=false;
+            saveFormation104(text,formationName104(shareNameInput104),function(reply:Object):void
+            {
+               if(formationModalOwner104(owner)) confirm.enabled=true;
+               if(reply && reply.return_code==0) {$tabBarSelectedIndex=4;if(mTabBar.selectedIndex!=4) mTabBar.selectedIndex=4;}
             });
          });
-         if(importing)
+         formationButton104("取消",200,62,false,box,320,330,closeFormationCode104);
+      }
+
+      private function formationRecord104(row:Object) : String
+      {
+         var wins:int=int(row.wins);var losses:int=int(row.losses);
+         if(wins+losses==0) return "尚未挑战";
+         return "战绩 "+wins+" 胜 "+losses+" 负 · 上次"+(int(row.last_result)==1?"胜利":"失败");
+      }
+
+      private function onFormationAction104(event:Event) : void
+      {
+         var detail:Object=event.data;
+         if(!stage || !detail || !detail.row || !mTabBar || mTabBar.selectedIndex!=4) return;
+         if(detail.action=="more") showFormationMore104(detail.row);
+      }
+
+      private function showFormationMore104(row:Object) : void
+      {
+         var box:Sprite=openFormationModal104(String(row.name),470);
+         var id:String=String(row.formation_id);
+         formationText104("作者 "+row.author+" · Lv."+int(row.lv)+" · 战力 "+int(row.formation_power),19,FORMATION_DARK104,"center",560,28,box,20,74);
+         formationText104(formationRecord104(row)+(row.created_text?"　导入于 "+row.created_text:""),17,FORMATION_BROWN104,"center",560,26,box,20,106);
+         var x:Number=150;
+         formationButton104("复制阵容码",300,60,true,box,x,150,function():void
          {
-            var paste:LOL_Scale9Button=new LOL_Scale9Button("粘贴",170,60,"UI_btn_normalFun_0000");paste.x=215;paste.y=260;paste.fontSize=23;box.addChild(paste);
-            paste.addEventListener("triggered",function(event:Event):void
+            SendAndSelect.sendAndSelectService("user.formation_code",{formation_id:id},function(reply:Object):void
             {
-               var value:Object=Clipboard.generalClipboard.getData(ClipboardFormats.TEXT_FORMAT);
-               if(shareInput104 && value!=null) shareInput104.text=String(value);
+               if(!reply || reply.return_code!=0) return;
+               System.setClipboard(String(reply.data.code));
+               GlobalFunction.popToast("阵容码已复制，可以发给好友了。");
             });
-         }
-         var close:LOL_Scale9Button=new LOL_Scale9Button("关闭",170,60,"UI_btn_normalFun_0000");close.x=410;close.y=260;close.fontSize=23;box.addChild(close);close.addEventListener("triggered",closeFormationCode104);
+         });
+         formationButton104("重命名",300,60,false,box,x,222,function():void {showRenameFormation104(row);});
+         formationButton104("删除阵容",300,60,false,box,x,294,function():void
+         {
+            closeFormationCode104();
+            GlobalFunction.popAlert("删除阵容","确定删除「"+row.name+"」？\n战绩会一起清除，之后仍可重新导入阵容码。",{
+               ok:function():void
+               {
+                  SendAndSelect.sendAndSelectService("user.delete_formation",{formation_id:id,actionID:formationAction104("delete")},function(reply:Object):void
+                  {
+                     if(reply && reply.return_code==0) GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
+                  });
+               },okUI:"删除",no:function():void{},noUI:"取消"});
+         });
+         formationButton104("关闭",300,60,false,box,x,366,closeFormationCode104);
+      }
+
+      private function showRenameFormation104(row:Object) : void
+      {
+         var box:Sprite=openFormationModal104("重命名阵容",300);
+         var owner:Sprite=shareModal104;
+         shareNameInput104=formationField104(box,"新名称（最多16字）",112,String(row.name),"输入阵容名称",16);
+         var save:LOL_Scale9Button;
+         save=formationButton104("保存",200,62,true,box,80,200,function():void
+         {
+            var name:String=formationName104(shareNameInput104);
+            if(!name) {GlobalFunction.popToast("请输入阵容名称。","info");return;}
+            save.enabled=false;
+            SendAndSelect.sendAndSelectService("user.rename_formation",{formation_id:row.formation_id,name:name,actionID:formationAction104("rename")},function(reply:Object):void
+            {
+               if(formationModalOwner104(owner)) save.enabled=true;
+               if(!reply || reply.return_code!=0) return;
+               closeFormationCode104();
+               GlobalData.$mEventDispatcher.dispatchEventWith("formation_library_changed");
+               GlobalFunction.popToast("已重命名为「"+reply.data.name+"」。");
+            });
+         });
+         formationButton104("取消",200,62,false,box,320,200,closeFormationCode104);
       }
       // END FORMATION PANEL 104
 

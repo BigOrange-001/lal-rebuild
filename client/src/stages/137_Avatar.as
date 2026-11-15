@@ -5275,7 +5275,7 @@ package com.meng52.game.module.avatar
          var source:Avatar = param6 || (sourceContext ? sourceContext.owner as Avatar : null);
          var manualEffect:Number = sourceContext ? Number(sourceContext.manualEffectMultiplier) : 1;
          if(!isFinite(manualEffect) || manualEffect <= 0) manualEffect = 1;
-         if(param3 != 0 && param1 != "summon") param3 *= manualEffect;
+         if(param3 != 0 && param1 != "summon" && !(param1 == "shield" && abyssOrigin104 == "relic_shield")) param3 *= manualEffect;
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);
          var _loc11_:Buff = new Buff(param1,param2,param3);
@@ -9853,7 +9853,10 @@ package com.meng52.game.module.avatar
 
       public function abyssShield104(source:Avatar, amount:int, rounds:int, event:String) : void
       {
-         addBuff("shield",rounds,amount,0,-1,source);
+         var previous:String = abyssOrigin104;
+         abyssOrigin104 = "relic_shield";
+         try { addBuff("shield",rounds,amount,0,-1,source); }
+         finally { abyssOrigin104 = previous; }
          abyssTrace104(event,source,this,{"amount":amount,"duration":rounds});
       }
 

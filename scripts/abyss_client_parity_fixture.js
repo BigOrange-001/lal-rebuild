@@ -154,3 +154,27 @@ for(const row of input.summons){
  }
 }
 console.log(`Native Zyra/Azir summon policy checks: ${input.summons.length} passed.`);
+attack[21]=1;
+for(const factor of [.37,2.5]) {
+ const enemy=unit(docs[0].input.team_b[0]);
+ let own=unit(docs.find(d=>d.kind===3&&d.ancient).input.team_a[0]);
+ context={owner:enemy,manualEffectMultiplier:factor};own.injured(600,1,null,1,null,false,enemy);
+ assert.equal(own.shieldValue104(),250);assert.equal(context.manualEffectMultiplier,factor);
+ own=unit(docs.find(d=>d.kind===6&&d.ancient).input.team_a[0]);own.abyssOnDodge104();
+ assert.equal(own.shieldValue104(),125);
+ own=unit(docs.find(d=>d.kind===14&&!d.ancient).input.team_a[0]);own.abyssShield104(own,100,3,'test');
+ assert.equal(own.shieldValue104(),150);
+ const ally=unit(docs[0].input.team_a[0]);ally.addBuff('shield',3,100,0,-1,enemy);
+ assert.equal(ally.shieldValue104(),100*factor,'ordinary shield keeps skill effect scaling');
+ assert.equal(methods.abyssOrigin104,null);
+}
+context=null;
+{
+ const wearer=unit(docs.find(d=>d.kind===5&&!d.ancient).input.team_a[0]);
+ const yasuo=unit({...docs[0].input.team_b[0],team:2});
+ yasuo.yasuoDamage104=methods.yasuoDamage104;yasuo.yasuoNightRounds104=2;
+ assert(yasuo.yasuoNight104());assert.equal(yasuo.yasuoDamage104(100,wearer),20);
+ const before=yasuo.hp;wearer.injured(100,1,null,1,null,false,yasuo);
+ assert.equal(before-yasuo.hp,20,'reflect must bypass actual night mitigation');
+}
+console.log('Triggered shields ignore foreign effect factors; actual Yasuo night reflect parity passed.');

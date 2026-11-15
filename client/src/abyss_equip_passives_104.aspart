@@ -111,7 +111,10 @@
 
       public function abyssShield104(source:Avatar, amount:int, rounds:int, event:String) : void
       {
-         addBuff("shield",rounds,amount,0,-1,source);
+         var previous:String = abyssOrigin104;
+         abyssOrigin104 = "relic_shield";
+         try { addBuff("shield",rounds,amount,0,-1,source); }
+         finally { abyssOrigin104 = previous; }
          abyssTrace104(event,source,this,{"amount":amount,"duration":rounds});
       }
 

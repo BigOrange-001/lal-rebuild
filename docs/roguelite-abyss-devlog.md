@@ -173,3 +173,7 @@ python -m unittest test_roguelite_abyss test_roguelite_abyss_relics.RelicTests t
 遗留1对应后端提交acafee7（候选生成、敌方皮肤与固定橙配额、不自动校准也同属此提交）；前端现有协议读取无需修改。
 
 遗留2：user.abyss_rest增加option=leave，不需hero_id，不变更阵容池，直接完成当前休息节点并开放下一层；保留事务与幂等重放。新增全员已满级/橙卡仍可离开、重复调用和非休息节点拒绝测试，接口及真实样例同步。前端独立提交97035f2。
+
+遗留2后端提交eeec36b；专项6/6通过，内存流程87次调用，rest_leave.json已导出。
+
+遗留3：按本轮用户明确措辞，把gameplay_roster.py三条遗留报错统一为“遗物”（不是此前的“深渊遗物”）；其他模式名称保留。前端检索无硬编码“圣遗物”，无对应代码改动。

@@ -1183,8 +1183,8 @@ class GameplayRosterEquipment:
                 for slot, eqid in enumerate(row):
                     if eqid in (None, ""): continue
                     if slot==6:
-                        if not isinstance(eqid,str) or eqid not in p.get('abyss_relics',{}): self._fail('AbyssUnknownRelic','该圣遗物不存在。')
-                        if eqid in seen: self._fail('EquipmentInUse','该圣遗物已在其他阵位穿戴。')
+                        if not isinstance(eqid,str) or eqid not in p.get('abyss_relics',{}): self._fail('AbyssUnknownRelic','该遗物不存在。')
+                        if eqid in seen: self._fail('EquipmentInUse','该遗物已在其他阵位穿戴。')
                         seen.add(eqid)
                         continue
                     eqid = self._id(eqid, "equipment instance")
@@ -2544,7 +2544,7 @@ class GameplayRosterEquipment:
             if relic['relic_id'] in A_TYPES and skill0:
                 source = skill0['skid']
                 sid = variant_id(source,relic['relic_id'],effect['ancient'])
-                if sid not in self.skills: self._fail('InvalidConfig','圣遗物技能变体不存在。')
+                if sid not in self.skills: self._fail('InvalidConfig','遗物技能变体不存在。')
                 skill0 = self._skill(sid,max(1,int(hero.get('slv',1))))
         return {"aid": aid, **stats, "growth_stats_applied": True, "hp_max": stats["hp"], "sign_type": int(tl[0]), "action_type": int(tl[1]), "damage_type": int(tl[2]), "skill": skill0, "leader_skill": skill1, "book_skill": book_skill, "skillB": skillb, "talent": talent_id, "phase": phase, "morph": int(hero.get("morph", 0)), "lv": lv, "slv": int(hero.get("slv", 1)), "culture_schema": hero.get("culture_schema") if weighted_hero else None, "tpl": [int(tl[i]) for i in (0, 1, 2)] + [stats["speed"], stats["range"]]}
 

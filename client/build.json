@@ -374,7 +374,7 @@
       "index": 62,
       "class": "com.meng52.game.ui.element.LOL_DetailEquip",
       "source": "client/src/stages/059_LOL_DetailEquip.as",
-      "source_sha256": "695dad0ec1df22802672143b39584d11a728363e6cb780e35e807d98914315e4"
+      "source_sha256": "8d23d1c5033fca1093572d8f7c66573f02a2aeb319ea5fae3fce18d3c452cd12"
     },
     {
       "index": 63,
@@ -410,7 +410,7 @@
       "index": 68,
       "class": "com.meng52.game.ui.panel.PanelEquipChange",
       "source": "client/src/stages/065_PanelEquipChange.as",
-      "source_sha256": "e58570c253c43a2df15dc4e446f7acbbb2af79bd6da1b5380026904511a42742"
+      "source_sha256": "c35560ed99bca7c21243eccba1fef8f08419bf70dff9a618161ce766f84fe7d8"
     },
     {
       "index": 69,
@@ -1057,7 +1057,7 @@
       "index": 175,
       "source": "client/src/stages/174_LOL_DetailEquip.as",
       "class": "com.meng52.game.ui.element.LOL_DetailEquip",
-      "source_sha256": "ae6916ba85903775a6923e1bc7c52fe1beeee35977101ba6ce8a2881f4c494e0"
+      "source_sha256": "86b251950bf93e676b73946fd2a57638e40ecbe855c14c40c07f10d998296fb9"
     },
     {
       "index": 176,
@@ -1069,7 +1069,7 @@
       "index": 177,
       "class": "com.meng52.game.ui.panel.PanelGameEndAward",
       "source": "client/src/stages/176_PanelGameEndAward.as",
-      "source_sha256": "45977867947598920b0e4bf5623626f9937dcac52c9e6be5bb8ce163f827696c"
+      "source_sha256": "b8c72208e5773b87ddb9f60a5d7f4ffed6816bcb43f156b0511fa8b14b318bfb"
     },
     {
       "index": 178,

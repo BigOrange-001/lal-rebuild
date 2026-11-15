@@ -25,11 +25,34 @@ package com.meng52.game.ui.element
    {
       private var mLockButton:LOL_Scale9Button;
 
+      // Set by hosts that lay the lock button out in their own native button row
+      // (PanelEquipChange) instead of letting it float under the destiny box.
+      public var externalLock104:Boolean = false;
+
+      public function canLock104() : Boolean
+      {
+         return !(_data is String) && _data != null && GlobalData.$userData.my_equips[_data.id] != null;
+      }
+
+      private function inventoryLockLabel104() : String
+      {
+         var row:Object = canLock104() ? GlobalData.$userData.my_equips[_data.id] : null;
+         return row && (row.lock || row.locked) ? "解除上锁" : "上锁保护";
+      }
+
+      public function createLockButton104(w:int, h:int) : LOL_Scale9Button
+      {
+         if(!canLock104()) return null;
+         if(mLockButton) mLockButton.removeFromParent(true);
+         mLockButton = GlobalFunction.uiButton(inventoryLockLabel104(),w,h,"normal",null,0,0);
+         mLockButton.addEventListener("triggered",toggleInventoryLock);
+         return mLockButton;
+      }
+
       private function refreshInventoryLock() : void
       {
-         if(!stage || !mLockButton || !_data || !(_data is Object)) return;
-         var row:Object = GlobalData.$userData.my_equips[_data.id];
-         mLockButton.text = row && (row.lock || row.locked) ? "解除上锁" : "上锁保护";
+         if(!mLockButton || !mLockButton.stage || !canLock104()) return;
+         mLockButton.text = inventoryLockLabel104();
          mLockButton.touchable = true;
       }
 
@@ -136,15 +159,13 @@ package com.meng52.game.ui.element
          {
             equip();
          }
-         if(!(_data is String) && _data && GlobalData.$userData.my_equips[_data.id])
+         if(!externalLock104 && createLockButton104(140,36))
          {
-            mLockButton = new LOL_Scale9Button("",145,30,"UI_btn_enterGame_0_0000");
-            mLockButton.x = _width-165;
-            mLockButton.y = _iconBg.y+_iconBg.height+8;
-            mLockButton.fontSize = 17;
-            mLockButton.addEventListener("triggered",toggleInventoryLock);
+            // Read-only hosts (PanelEquipAttrs) have no button row: keep the lock
+            // right-aligned with the destiny box, inside the panel frame.
+            mLockButton.x = int(_iconBg.x + _iconBg.width - mLockButton.width);
+            mLockButton.y = int(_iconBg.y + _iconBg.height + 6);
             addChild(mLockButton);
-            refreshInventoryLock();
          }
       }
       

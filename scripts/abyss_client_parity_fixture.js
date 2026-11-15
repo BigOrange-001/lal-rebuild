@@ -17,15 +17,18 @@ const GameMap={roundNum:0,actionDelay:0,damageNum:0,currentAvatar:null,currentMa
 let roster=[],context=null,attack=[],rngCalls=0;
 const Random={getRandom:()=>{rngCalls++;return 99;}};
 const currentAbilityAttack=()=>context;
+const beginAbilityAttack=(owner,kind)=>(context={owner,kind});
+const endAbilityAttack=()=>{context=null;};
 class Buff {constructor(type,round,value){Object.assign(this,{type,round,value});}}
 Buff.LIST_DEBUFF=['stun','silence','weak','sunder','poison','burn','curse','taunt','root'];
 /*METHODS*/
 const Avatar=methods;
 function unit(data){
  const u={...methods,id:data.aid,abyssToken104:data.instance_id,hp:data.hp,hpMax:data.hp_max,
- ap:data.ap,dePh:data.de_ph,deMa:data.de_ma,line:data.line,pos:data.pos,team:data.team||1,
+ ap:data.ap,dePh:data.de_ph,deMa:data.de_ma,line:data.line,pos:data.pos,team:data.team||1,otherTeam:data.team===2?1:2,
  isLeader:!!data.leader,skill0:null,skill1:data.leader_skill?{m_cooldownNum:data.leader_skill.pl[0]}:null,skillB:null,
- buffs:{},abilityState:{},avatarData:{signType:0,skill_diff:0},fightRes:{parent:null},offset:0,
+ buffs:{},abilityState:{},abilitySerial:0,skin2:{},__avatar:true,avatarData:{signType:0,skill_diff:0},fightRes:{parent:null},offset:0,
+ fxPulse104:noop,beginParallelVisualBatch:noop,endParallelVisualBatch:noop,abilityControl:noop,
  currentSkillKillContext:null,manualSkillDamageCapture:null,manualLethalFloor:null,tryndUndyingActive:false,
  dotPopup104:false,abyssReduction104:0,abyssRevived104:false,abyssRecovered104:false,
  abyssDodgeRound104:-1,abyssDodgeCount104:0,abyssDots104:null,abyssRelicA104:null,
@@ -97,3 +100,32 @@ context=null;
  assert.equal(enemy.hp,960,'reflect: one 20% share, bypass outgoing/context/skin multipliers');
 }
 console.log(`Additional parity: ${input.conversion.length} raw/element/split rounding boundaries, shield ordering and reflect scaling passed.`);
+for(const ancient of [false,true]) {
+ const own=unit(docs.find(d=>d.kind===4&&d.ancient===ancient).input.team_a[0]);
+ const enemy=unit(docs[0].input.team_b[0]);own.hp=10;own.hpMax=100;
+ own.abyssDots104=[enemy,{}].map(source=>({kind:'burn',source,amount:20,left:2}));
+ own.abyssTickDots104();assert.equal(own.hp,ancient?62:50,'revive must cancel remaining copied DOT ticks');
+}
+for(const kind of ['bomb','zone','channel'])for(const ultimate of [false,true]) {
+ const own=unit(docs[0].input.team_a[0]),enemy=unit(docs[0].input.team_b[0]);
+ own.skill0={};own.abyssRelicA104={id:20,value:.4};
+ context={owner:own,kind:'active',skill:ultimate?{}:own.skill0};
+ const saved=methods.abyssCaptureContext104(own),hits=context.abyssHits104;
+ assert.equal(saved===null,ultimate);
+ // Transformation after the cast must not change a delayed hit's origin.
+ own.skill0={};context=null;let count=0;
+ own.abilityCandidates=own.abilityEnemies=()=>[enemy];
+ own.abilityHit=()=>{
+  assert.equal(own.abyssConversion104(),ultimate?0:.4,kind+' origin');
+  if(!ultimate){assert.equal(context.abyssHits104,hits);context.abyssHits104.push(enemy);}
+  count++;return true;
+ };
+ const state={owner:own,abyssRelicContext104:saved,coefficient:1,line:own.line,pos:own.pos,left:2};
+ if(kind==='bomb') {enemy.abilityBombExplode(state);enemy.abilityBombExplode(state);}
+ else {own.abilityState[kind]=state;own.abilityTurnStart();
+  if(kind==='zone')own.abilityTurnStart();}
+ assert.equal(count,kind==='channel'?1:2);
+ if(!ultimate)assert.equal(saved.hits.length,count,'shared per-cast target history');
+}
+context=null;
+console.log('Revive cleansing and delayed bomb/zone/channel cast provenance passed.');

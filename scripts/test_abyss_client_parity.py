@@ -20,7 +20,8 @@ def translate_methods():
     source=(ROOT/'client/src/stages/137_Avatar.as').read_text('utf-8')
     names=set(re.findall(r'function (abyss\w+|hasAbyssDot104|loadAbyssPassives104)\(',source))
     names.update(('injured','addBuff','shieldValue104','absorbShieldDamage',
-                  'inheritSummonPanel','isValidSummonMultiplier','scaledSummonStat','countDamage','defenseDamage104'))
+                  'inheritSummonPanel','isValidSummonMultiplier','scaledSummonStat','countDamage','defenseDamage104',
+                  'abilityBombExplode','abilityTurnStart'))
     out=[]
     for name in sorted(names):
         m=re.search(r'function '+name+r'\((.*?)\)\s*:\s*[\w.*<>]+\s*\{',source,re.S)
@@ -31,6 +32,9 @@ def translate_methods():
         body=re.sub(r'\s+as\s+\w+','',body)
         body=re.sub(r'function\((.*?)\)(?:\s*:\s*\w+)?',lambda m:'function('+re.sub(r':\w+','',m[1])+')',body)
         body=re.sub(r'([\w.]+) is Array',r'Array.isArray(\1)',body)
+        for typename, js in (('Number','number'),('Boolean','boolean'),('String','string')):
+            body=re.sub(r'([\w.]+) is '+typename,lambda m:'(typeof '+m[1]+' === "'+js+'")',body)
+        body=re.sub(r'([\w.]+) is Avatar',r'(\1 && \1.__avatar)',body)
         while 'for each(' in body:
             a=body.index('for each(');b=balanced(body,a+8)
             left,right=body[a+9:b].split(' in ',1)

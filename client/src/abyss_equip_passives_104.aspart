@@ -126,11 +126,27 @@
       // skillB and other casters never inherit it).
       private static function abyssNormalContext104(source:Avatar) : Object
       {
-         if(!source || !source.abyssRelicA104 || !source.skill0) return null;
+         if(!source || !source.abyssRelicA104) return null;
          var context:Object = currentAbilityAttack();
-         if(!context || context.owner !== source || context.kind != "active" || context.skill !== source.skill0) return null;
+         if(!context || context.owner !== source || context.kind != "active") return null;
+         if(context.abyssNormalOwner104 !== source && (!source.skill0 || context.skill !== source.skill0)) return null;
          if(!(context.abyssHits104 is Array)) context.abyssHits104 = [];
          return context;
+      }
+
+      // Deferred hits retain the original cast, including its once-per-target set.
+      private static function abyssCaptureContext104(source:Avatar) : Object
+      {
+         var context:Object = abyssNormalContext104(source);
+         return context ? {owner:source,skill:context.skill,hits:context.abyssHits104} : null;
+      }
+
+      private static function abyssRestoreContext104(context:Object, saved:Object) : void
+      {
+         if(!saved || saved.owner !== context.owner) return;
+         context.skill = saved.skill;
+         context.abyssHits104 = saved.hits;
+         context.abyssNormalOwner104 = saved.owner;
       }
 
       public function abyssConversion104() : Number
@@ -283,6 +299,7 @@
          for each(var dot:Object in abyssDots104.concat())
          {
             if(hp <= 0) break;
+            if(!abyssDots104 || abyssDots104.indexOf(dot) < 0) continue;
             abyssTrace104("dot_tick",dot.source as Avatar,this,{"kind":dot.kind,"amount":dot.amount});
             injured(int(dot.amount),1,null,dot.kind == "poison" ? 6 : 7,null,false,dot.source as Avatar,null,String(dot.kind));
             dot.left = int(dot.left) - 1;

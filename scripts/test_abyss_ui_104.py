@@ -22,6 +22,15 @@ def method(source,name,params):
 
 
 class AbyssUITests(unittest.TestCase):
+    def test_inheritance_selectors_are_compiled_into_shipping_swf(self):
+        config=json.loads((ROOT/'client/build.json').read_text('utf-8'))
+        by_class={s['class'].rsplit('.',1)[-1]:s for s in config['stages']}
+        for name in ('PanelEquipAlchemySelect','PanelEquipAlchemyStuffSelect'):
+            row=by_class[name]
+            source=(ROOT/row['source']).read_text('utf-8')
+            self.assertIn('$inheritMode',source)
+        self.assertIn('checkInheritStuff',(ROOT/by_class['PanelEquipAlchemyStuffSelect']['source']).read_text('utf-8'))
+
     def test_alchemy_keeps_inheritance_and_relic_tabs_separate(self):
         source=(ROOT/'client/src/stages/181_PanelAlchemy.as').read_text('utf-8')
         script='''const assert=require('node:assert/strict'),int=Math.trunc;let errors=0,added=[];

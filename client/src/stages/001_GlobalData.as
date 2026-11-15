@@ -36,6 +36,7 @@ package com.meng52.game.global
    
    public class GlobalData
    {
+      public static var $formationShare104:Object = {};
       
       public static var First_Get_5Star_Avatar:String = "first_get_5star_avatar";
       

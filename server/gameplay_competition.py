@@ -11,18 +11,21 @@ from battle_engine import serialize_player_team, serialize_stage_team, validate_
 from solo_progression import arena_equipment
 from arena_opponents import POWER_ORDER_SCHEMA, combat_config_signature, generate_opponents
 from arena_rewards import DAILY_RANK_MARK, DAILY_PAID_BATTLES, DAILY_BATTLE_MARK
+from formation_share import FormationLibrary, METHODS as FORMATION_METHODS
 from mod_policy import (runtime as mod_runtime, candidate_ids, channel_enabled,
                         effective_digest)
 
 class GameplayCompetition:
     METHODS={"user.get_rank_list","user.refresh_pvp_opponents","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
     DAILY_RANK_MARK=DAILY_RANK_MARK
+    METHODS=METHODS | FORMATION_METHODS
     DAILY_PAID_BATTLES=DAILY_PAID_BATTLES
     DAILY_BATTLE_MARK=DAILY_BATTLE_MARK
     def __init__(self,store,full_config):
         self.store=store
         self.full_config=full_config if isinstance(full_config,dict) else {}
         self.cfg=self.full_config.get("cfg",self.full_config)
+        self.formations=FormationLibrary(self)
         path=Path(__file__).resolve().parents[1]/"config/reconstruction/competition-config.json"
         self.side=json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         roster_path=Path(__file__).resolve().parents[1]/"config/reconstruction/roster-config.json"
@@ -87,6 +90,7 @@ class GameplayCompetition:
     def dispatch(self,uid,method,params):
         if method not in self.METHODS: self._fail("NotImplemented",f"Competition method not reconstructed: {method}")
         if not isinstance(params,dict): self._fail("InvalidParameter","Expected an object")
+        if method in FORMATION_METHODS: return self.formations.dispatch(uid,method,params)
         if method=="user.get_rank_list": return self._rank_list(uid)
         if method=="user.refresh_pvp_opponents": return self._refresh_pvp_opponents(uid,params)
         if method=="user.get_fragment_users": return self._fragment_users(uid)
@@ -566,6 +570,13 @@ class GameplayCompetition:
         for row in users:
             if not isinstance(row,(list,tuple)) or not row or not isinstance(row[0],str): continue
             target=row[0]
+            if target=='f000000000000000000000000000000000':
+                out[target]={"data":[],"as_equips":[],"my_equips":{}}
+                continue
+            if target.startswith('s') and len(target)==33:
+                payload=self.formations._stored(uid,target)
+                out[target]={"data":self._compact(self.formations.enemy(payload)),"as_equips":[],"my_equips":{}}
+                continue
             if target==uid:
                 out[target]={"data":self._own_compact(p),"as_equips":p.get("as_equips",[]),"my_equips":p.get("my_equips",{})}
             else:
@@ -676,6 +687,7 @@ class GameplayCompetition:
             attrs["fragment_energy"]={"$date":state["last"]+state["interval"]}
     def _finish(self,uid,params):
         kind=params.get("fight_kind")
+        if kind=='formation': return self.formations.finish(uid,params)
         if kind not in ("pvp","fragment"): self._fail("InvalidBattle","Unsupported competition battle kind")
         def change(p):
             intent=consume_intent(p,kind,params,metadata_keys=("target_uid","rank","eid","fragment_index","team_num"),now=self.store.clock.now(),config=self.cfg)

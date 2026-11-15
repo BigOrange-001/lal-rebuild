@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,uid TEXT NOT NULL,exp
 CREATE TABLE IF NOT EXISTS operation_ledger(uid TEXT NOT NULL,operation_key TEXT NOT NULL,payload_hash TEXT NOT NULL,result TEXT NOT NULL,created INTEGER NOT NULL,PRIMARY KEY(uid,operation_key));
 CREATE TABLE IF NOT EXISTS gift_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,uid TEXT NOT NULL,title TEXT NOT NULL,gifts TEXT NOT NULL,created INTEGER NOT NULL,claimed INTEGER NOT NULL DEFAULT 0,request_key TEXT UNIQUE NOT NULL,read_at INTEGER NOT NULL DEFAULT 0,allow_skin INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS player_state_revision(uid TEXT PRIMARY KEY,revision INTEGER NOT NULL CHECK(revision>=0));
+CREATE TABLE IF NOT EXISTS formation_library(uid TEXT NOT NULL,id TEXT NOT NULL,payload TEXT NOT NULL,created INTEGER NOT NULL,PRIMARY KEY(uid,id));
 INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM players;''')
   self.lock=threading.RLock()
   compact_ledger(db)
@@ -805,7 +806,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    return self.economy.dispatch(uid,method,params)
   if method=='user.battle_finish':
    kind=params.get('fight_kind')
-   wanted='GameplayCompetition' if kind in {'pvp','fragment'} else 'GameplayCombat'
+   wanted='GameplayCompetition' if kind in {'pvp','fragment','formation'} else 'GameplayCombat'
    for handler in self.gameplay_handlers:
     if handler.__class__.__name__==wanted:return handler.dispatch(uid,method,params)
    raise GameplayFault('NotImplemented','Battle finish handler is not loaded for kind: '+str(kind))

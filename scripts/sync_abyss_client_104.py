@@ -25,6 +25,9 @@ def splice() -> None:
         text = text[:start] + text[stop:]
     text = text.rstrip() + '\n'
     part = PART.read_text('utf-8-sig').replace('\r\n', '\n').rstrip() + '\n'
+    art = ROOT / 'client/src/abyss_relic_art_104.aspart'
+    if art.is_file():
+        part += art.read_text('utf-8-sig').replace('\r\n', '\n').rstrip() + '\n'
     HOST.write_text(text + BEGIN + part + END, 'utf-8', newline='\n')
 
 

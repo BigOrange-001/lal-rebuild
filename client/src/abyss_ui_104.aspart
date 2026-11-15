@@ -6,6 +6,7 @@
 import com.meng52.game.global.GlobalData;
 import com.meng52.game.global.GlobalFunction;
 import com.meng52.game.module.avatar.Avatar;
+import com.meng52.game.module.equip.Equip;
 import com.meng52.game.module.skill.SkillSet;
 import com.meng52.game.ui.element.ItemEquip;
 import com.meng52.game.ui.element.LOL_Scale9Button;
@@ -16,6 +17,8 @@ import com.meng52.utils.Tools;
 import feathers.controls.ScrollContainer;
 import feathers.layout.VerticalLayout;
 import flash.geom.Rectangle;
+import flash.display.BitmapData;
+import flash.utils.ByteArray;
 import flash.utils.getTimer;
 import starling.animation.Tween;
 import starling.core.Starling;
@@ -27,6 +30,7 @@ import starling.events.Event;
 import starling.events.Touch;
 import starling.events.TouchEvent;
 import starling.text.TextField;
+import starling.textures.Texture;
 
 class AbyssCore104
 {
@@ -1647,13 +1651,17 @@ class AbyssRelicView104
       bg.y = y;
       bg.touchable = false;
       parent.addChild(bg);
+      var icon:Sprite = AbyssRelicArt104.create(item,92);
+      icon.x = x + 12;
+      icon.y = y + 18;
+      parent.addChild(icon);
       var mainAncient:Boolean = item.main && item.main.ancient;
-      add(parent,AbyssCore104.relicName(item) + (tag ? "　" + tag : ""),x + 20,y + 10,w - 40,28,22,mainAncient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE);
-      add(parent,item.main ? String(item.main.text) : "",x + 20,y + 40,w - 40,46,17,mainAncient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TEXT);
+      add(parent,AbyssCore104.relicName(item) + (tag ? "　" + tag : ""),x + 116,y + 10,w - 132,28,22,mainAncient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE);
+      add(parent,item.main ? String(item.main.text) : "",x + 116,y + 40,w - 132,46,17,mainAncient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TEXT);
       var subs:Array = item.substats is Array ? item.substats as Array : [];
       for(var i:int = 0; i < subs.length; i++)
       {
-         add(parent,String(subs[i].text),x + 20 + i * ((w - 40) / 3),y + 98,(w - 40) / 3,28,18,subs[i].ancient ? AbyssCore104.COLOR_ANCIENT : 0xCCCCCC);
+         add(parent,String(subs[i].text),x + 116 + i * ((w - 132) / 3),y + 98,(w - 132) / 3,28,18,subs[i].ancient ? AbyssCore104.COLOR_ANCIENT : 0xCCCCCC);
       }
    }
 
@@ -1933,9 +1941,11 @@ class AbyssRelicSlotView104
       var label:TextField;
       if(item)
       {
+         holder.addChild(AbyssRelicArt104.create(item,100));
          var ancient:Boolean = AbyssCore104.relicName(item).charAt(0) == "*";
          label = GlobalFunction.createTextField(96,60,AbyssCore104.relicName(item),"",18,ancient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE);
-         label.y = 20;
+         label.y = 104;
+         label.height = 44;
       }
       else
       {
@@ -2045,9 +2055,16 @@ class AbyssRerollView104 extends Sprite
       frame.y = y;
       area.addChild(frame);
       var item:Object = itemId ? AbyssCore104.relics[itemId] : null;
+      if(item)
+      {
+         var art:Sprite = AbyssRelicArt104.create(item,100);
+         art.x = x;
+         art.y = y;
+         area.addChild(art);
+      }
       var name:String = item ? AbyssCore104.relicName(item) : empty;
-      txt(name,x,y + 22,100,60,item ? 18 : 16,item ? (name.charAt(0) == "*" ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE) : AbyssCore104.COLOR_DIM,"center");
-      txt(caption,x - 40,y + 104,180,24,17,AbyssCore104.COLOR_TEXT,"center");
+      txt(name,x - 30,y + (item ? 104 : 22),160,item ? 38 : 60,item ? 18 : 16,item ? (name.charAt(0) == "*" ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE) : AbyssCore104.COLOR_DIM,"center");
+      txt(caption,x - 40,y - 28,180,24,17,AbyssCore104.COLOR_TEXT,"center");
    }
 
    private function draw() : void
@@ -2071,7 +2088,7 @@ class AbyssRerollView104 extends Sprite
       slotView(rightX,y,materialId,"消耗","点击放入");
       tap(leftX,y,100,100,pickTarget);
       tap(rightX,y,100,100,pickMaterial);
-      y += 140;
+      y += 160;
       var target:Object = targetId ? items[targetId] : null;
       box(25,y,w - 50,96);
       txt("主词条　不变",45,y + 10,w - 90,26,19,AbyssCore104.COLOR_TITLE);

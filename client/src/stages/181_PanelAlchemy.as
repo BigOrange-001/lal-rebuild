@@ -39,9 +39,12 @@ package com.meng52.game.ui.panel
          },{
             "label":"深渊遗物",
             "indexID":2
+         },{
+            "label":"词条传承",
+            "indexID":3
          }],tabBar_Change,tabBar_CREATION_COMPLETE,130);
          this.mTabBar.y = 17;
-         this.mTabBar.selectedIndex = GlobalData.$tempAlchemyIndex;
+         this.mTabBar.selectedIndex = Math.min(3,GlobalData.$tempAlchemyIndex);
          tabBar_Change(null);
          _bg1 = getImg_headBg(-50);
          addChildAt(_bg1,1);
@@ -57,6 +60,7 @@ package com.meng52.game.ui.panel
          if(GlobalData.$userData.lv < GlobalData.$mConfig_simple.start_lv[18])
          {
             mTabBar.setChildStatus(1,false,tabBar_changeHandler_false);
+            mTabBar.setChildStatus(3,false,tabBar_changeHandler_false);
          }
       }
       
@@ -66,7 +70,7 @@ package com.meng52.game.ui.panel
          var _loc2_:String = null;
          if(mTabBar)
          {
-            if(param1 == 1)
+            if(param1 == 1 || param1 == 3)
             {
                _loc3_ = GlobalFunction.checkGameFunIsOpenByType("alchemy_");
                if(_loc3_ > -1)
@@ -92,6 +96,7 @@ package com.meng52.game.ui.panel
          var _loc3_:int = 0;
          GlobalData.$tempAlchemyIndex = this.mTabBar.selectedIndex;
          clearPanel();
+         PanelEquipAlchemyStart.$inheritMode = false;
          switch(mTabBar.selectedIndex)
          {
             case 0:
@@ -99,6 +104,7 @@ package com.meng52.game.ui.panel
                addChildAt(_panelAvatarTalent,0);
                break;
             case 1:
+            case 3:
                if(GlobalData.$userData.lv < GlobalData.$mConfig_simple.start_lv[18])
                {
                   _loc2_ = GlobalData.$mConfig_simple.show_id[8];
@@ -106,6 +112,7 @@ package com.meng52.game.ui.panel
                   GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90129,_loc3_),false,_loc2_);
                   break;
                }
+               PanelEquipAlchemyStart.$inheritMode = mTabBar.selectedIndex == 3;
                _panelEquipAlchemy = new PanelEquipAlchemy();
                addChildAt(_panelEquipAlchemy,0);
                break;
@@ -134,6 +141,12 @@ package com.meng52.game.ui.panel
          _abyssReroll104 = null;
          _panelAvatarTalent = null;
          _panelEquipAlchemy = null;
+      }
+
+      override public function onREMOVED_FROM_STAGE(param1:Event) : void
+      {
+         PanelEquipAlchemyStart.$inheritMode = false;
+         super.onREMOVED_FROM_STAGE(param1);
       }
    }
 }

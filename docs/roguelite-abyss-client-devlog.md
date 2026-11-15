@@ -111,3 +111,8 @@
 
 FFDec内置编译器在102_PanelActivityExploration.as:1054报AbyssPanel104 is not an existing type，无法解析新增私有类继承链。没有改界面继承或用临时桩绕过：该阶段改用官方AIR SDK的mxmlc编译实际完整源码，经FFDec原生MxmlcAs3ScriptReplacer合回模板ABC；既有模板类型使用external-library-path，不重复链接游戏类。CompileAirAs3.java直调SDK编译器并保留完整错误输出，移除仅Apache Flex支持的include-inheritance-dependencies-only参数。验证编译产物反编译包含全部18个Abyss类、enemy_preview读取与leave按钮。后续AIR签名打包仍走官方ADT。
 
+
+## 集成兼容：炼金页签
+
+集成时client/两处冲突按用户要求先采用前端分支；随后发现main已有的词条传承与遗物重随都占第三个页签，会丢失原入口。保留本分支遗物第三页，将原词条传承追加为第四页，继续复用main的PanelEquipAlchemyStart继承模式、原等级门槛，并在切页/离开时重置模式。没有更改遗物重随流程。此为保护既有功能的必要集成修复，不是编译器报错修复。
+

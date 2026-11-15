@@ -567,12 +567,12 @@
   "rewards": [
     {
       "node_id": "3-7-0",
-      "item_id": "relic-504c5b32ce29b6e72d376865",
+      "item_id": "relic-070cc7320a1dc40bad8f52a7",
       "guaranteed": false
     },
     {
       "node_id": "3-7-0",
-      "item_id": "relic-1dc675c52848a74b83618b9a",
+      "item_id": "relic-ef30ec58f71a623171c89660",
       "guaranteed": true
     }
   ]

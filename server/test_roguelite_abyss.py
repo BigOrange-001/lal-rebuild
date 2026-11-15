@@ -62,9 +62,13 @@ class AbyssTests(unittest.TestCase):
                 self.assertEqual(layers[-1],{'boss'})
                 self.assertTrue(all(2<=len(n['next'])<=3 or n['type']=='boss' or n['layer']==6 for n in nodes if n['next']))
 
-    def test_config_decks_unique_and_initial_pool_fifty(self):
+    def test_config_decks_unique_and_initial_pool_twenty_five(self):
         plan = rules(self.cfg)
-        self.assertEqual(len(plan['initial_purple']),50)
+        self.assertEqual(len(plan['initial_purple']),25)
+        self.assertEqual(len(plan['eligible_ordinary_purple']),63)
+        self.assertTrue(set(plan['initial_purple'])<=set(plan['eligible_ordinary_purple']))
+        unlocked = self.call('query')['unlocked']
+        self.assertTrue({a[:-1]+'6' for a in plan['initial_purple']}<=set(unlocked['orange']))
         members = [a for d in plan['decks'].values() for a in d['members']]
         self.assertEqual(len(members),len(set(members)))
         self.assertTrue(set(members)<=set(plan['initial_purple']))
@@ -74,11 +78,54 @@ class AbyssTests(unittest.TestCase):
         heroes = {a:hero_record(a) for a in ('A_1001_5','A_1007_5','A_1009_5')}
         units = standard_team(self.cfg,heroes,[[a,i,.2] for i,a in enumerate(heroes)])
         self.assertTrue(units[0]['bonds_104'])
-        self.assertTrue(all(u['lv']==125 and u['talent'] is None and 'limit_break' not in u for u in units))
+        self.assertTrue(all(u['lv']==99 and u['talent'] is None and 'limit_break' not in u for u in units))
         self.assertEqual(sum(u['leader'] for u in units),1)
         self.assertTrue(all(u['leader_skill'] is None for u in units[1:]))
         base = standard_team(self.cfg,{'a':hero_record('A_1002_5'),'b':hero_record('A_1003_5'),'c':hero_record('A_1004_5')},[['a',0,.2],['b',1,.2],['c',2,.2]])
-        self.assertEqual(base[0]['ap'],int(self.cfg['avatar']['A_1002_5']['pl'][2]+124*self.cfg['avatar']['A_1002_5']['pl'][3]))
+        self.assertEqual(base[0]['ap'],int(self.cfg['avatar']['A_1002_5']['pl'][2]+98*self.cfg['avatar']['A_1002_5']['pl'][3]))
+
+    def test_orange_panel_uses_purple_99_times_one_point_four_and_orange_skills(self):
+        from combat_math import level_stats, to_int
+        from battle_engine import _native_skill_snapshot
+        for aid in ('A_1002_6',rules(self.cfg)['skin_purple'][0][:-1]+'6',rules(self.cfg)['skin_orange_only'][0]):
+            heroes = {'owner':hero_record(aid),'b':hero_record('A_1003_5'),'c':hero_record('A_1004_5')}
+            unit = standard_team(self.cfg,heroes,[['owner',0,.2],['b',1,.2],['c',2,.2]])[0]
+            purple = aid[:-1]+'5'
+            source = purple if purple in self.cfg['avatar'] else aid
+            ratio = 1.4 if source==purple else .7
+            raw = level_stats(self.cfg['avatar'][source],99,enforce_cap=False)
+            for key,stat in zip(('hp','ap','de_ph','de_ma'),('health','attack','physical_defense','magic_defense')):
+                self.assertEqual(unit[key],to_int(raw[stat]*ratio),aid)
+            pl = self.cfg['avatar'][aid]['pl']
+            self.assertEqual(unit['skill'],_native_skill_snapshot(self.cfg,pl[10],5))
+            self.assertEqual(unit['skillB'],_native_skill_snapshot(self.cfg,pl[13]))
+            self.assertNotIn('limit_break',unit)
+
+    def test_initial_orange_rest_needs_no_appearance_and_external_heroes_do(self):
+        response = self.call('query')
+        self.assertFalse(response['abyss_account']['appeared'])
+        run = self.start()
+        self.assertTrue(all(h['can_orange'] for h in run['pool'].values()))
+        p = self.store.profile_raw(self.uid)
+        outside = next(a for a in rules(self.cfg)['eligible_ordinary_purple'] if a not in rules(self.cfg)['initial_purple'])
+        p['avatars']['outside']={'aid':outside+'|outside'}
+        purple,orange,_ = unlocked_pool(p,self.cfg)
+        self.assertIn(outside,purple)
+        self.assertNotIn(outside[:-1]+'6',orange)
+        p['abyss_account']['appeared'].append(outside)
+        self.assertIn(outside[:-1]+'6',unlocked_pool(p,self.cfg)[1])
+
+    def test_elite_has_five_distinct_choices_and_guaranteed_oranges_near_capacity(self):
+        p = self.store.profile_raw(self.uid)
+        for count in (5,14,19):
+            for difficulty in (1,3,10):
+                pool = {a.rsplit('_',1)[0]:hero_record(a) for a in rules(self.cfg)['initial_purple'][:count]}
+                run={'pool':pool,'seed':53,'difficulty':difficulty}
+                choice=candidates(p,run,{'id':'2-5-0','type':'elite'},self.cfg)
+                self.assertEqual(len(choice['options']),5)
+                self.assertEqual(len({h['id'] for h in choice['options']}),5)
+                self.assertGreaterEqual(sum(h['quality']==6 for h in choice['options']),2 if difficulty==1 else 1)
+                self.assertTrue(all(h['id'] not in pool for h in choice['options']))
 
     def test_migration_before_sale_after_award_and_repeat_load(self):
         before = self.store.profile_raw(self.uid)
@@ -210,7 +257,7 @@ class AbyssTests(unittest.TestCase):
         run = self.start()
         p = self.store.profile_raw(self.uid)
         hero = next(iter(run['pool'].values()))
-        p['abyss_account']['appeared']=[hero['aid']]
+        p['abyss_account']['appeared']=[]
         p['abyss_run']['current_node']='1-4-0'
         self.db.execute('UPDATE players SET profile=? WHERE uid=?',(json.dumps(p),self.uid)); self.db.commit()
         after = self.call('rest',hero_id=hero['id'],option='orange')['abyss_run']

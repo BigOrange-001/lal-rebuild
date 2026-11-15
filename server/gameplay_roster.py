@@ -2530,7 +2530,9 @@ class GameplayRosterEquipment:
         skill1=equipment_skill(skill1)
         skillb=equipment_skill(skillb)
         from abyss_relics import equipped_relic, apply_panel, A_TYPES, variant_id
-        relic = None if hero_only else equipped_relic(profile,slot)
+        # Exploration excludes the original six slots, but relics apply in
+        # every mode except Abyss (which uses its own clean serializer).
+        relic = equipped_relic(profile,equipment_slot(profile,key))
         if relic:
             delta = apply_panel(stats,relic)
             effect = copy.deepcopy(relic['main'])

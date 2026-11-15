@@ -55,16 +55,20 @@ def main_text(effect):
     return ('*' if effect['ancient'] else '')+texts[kind]
 
 
-def roll_substats(rng, cfg):
+def roll_substat(rng, cfg, key):
     plan = rules(cfg)
-    result = []
-    for key in rng.sample(list(SUBSTATS),3):
-        name, lower, upper = SUBSTATS[key]
-        ancient = rng.random()<plan['ancient_chance']
-        value = upper*plan['ancient_multiplier'] if ancient else round(rng.uniform(lower,upper),6)
-        result.append({'stat':key,'value':value,'ancient':ancient,
-                       'text':('*' if ancient else '')+f'{name}+{value*100:g}%'})
-    return result
+    _, lower, upper = SUBSTATS[key]
+    ancient = rng.random()<plan['ancient_chance']
+    value = upper*plan['ancient_multiplier'] if ancient else round(rng.uniform(lower,upper),6)
+    return {'stat':key,'value':value,'ancient':ancient,'text':substat_text(key,value,ancient)}
+
+
+def substat_text(key, value, ancient):
+    return ('*' if ancient else '')+f'{SUBSTATS[key][0]}+{value*100:.1f}%'
+
+
+def roll_substats(rng, cfg):
+    return [roll_substat(rng,cfg,key) for key in rng.sample(list(SUBSTATS),3)]
 
 
 def new_relic(cfg, rng, kind=None, item_id=None):
@@ -78,6 +82,9 @@ def new_relic(cfg, rng, kind=None, item_id=None):
 
 def normalize_relic_slots(profile):
     profile.setdefault('abyss_relics',{})
+    for item in profile['abyss_relics'].values():
+        for affix in item.get('substats',[]):
+            affix['text'] = substat_text(affix['stat'],affix['value'],affix['ancient'])
     groups = profile.setdefault('as_equips',[[] for _ in range(6)])
     if not isinstance(groups,list): groups = []; profile['as_equips'] = groups
     while len(groups)<6: groups.append([])
@@ -110,22 +117,28 @@ def mutate_relic(profile, method, params, cfg):
     if method=='user.abyss_relics': return relic_response(profile)
     iid = params.get('item_id')
     if not isinstance(iid,str) or iid not in profile['abyss_relics']:
-        raise GameplayFault('AbyssUnknownRelic','该圣遗物不存在。')
+        raise GameplayFault('AbyssUnknownRelic','该深渊遗物不存在。')
     item = profile['abyss_relics'][iid]
     if method=='user.abyss_relic_reroll':
+        index = params.get('substat_index')
+        if type(index) is not int or not 0<=index<=2:
+            raise GameplayFault('AbyssInvalidSubstatIndex','请选择第1至3条副词条。')
         material = params.get('material_id')
         if not isinstance(material,str) or material==iid or material not in profile['abyss_relics']:
-            raise GameplayFault('AbyssInvalidRelicMaterial','请选择另一件圣遗物作为材料。')
+            raise GameplayFault('AbyssInvalidRelicMaterial','请选择另一件深渊遗物作为材料。')
         if any(row[6]==material for row in profile['as_equips']):
-            raise GameplayFault('EquipmentInUse','请先卸下材料圣遗物。')
-        item['substats'] = roll_substats(secrets.SystemRandom(),cfg)
+            raise GameplayFault('EquipmentInUse','请先卸下材料深渊遗物。')
+        rng = secrets.SystemRandom()
+        excluded = {affix['stat'] for i,affix in enumerate(item['substats']) if i!=index}
+        key = rng.choice([key for key in SUBSTATS if key not in excluded])
+        item['substats'][index] = roll_substat(rng,cfg,key)
         del profile['abyss_relics'][material]
     elif method=='user.abyss_relic_equip':
         slot = params.get('slot')
         if type(slot) is not int or not 0<=slot<6:
             raise GameplayFault('AbyssInvalidRelicSlot','阵位必须为0至5。')
         if any(row[6]==iid for i,row in enumerate(profile['as_equips']) if i!=slot):
-            raise GameplayFault('EquipmentInUse','该圣遗物已在其他阵位穿戴。')
+            raise GameplayFault('EquipmentInUse','该深渊遗物已在其他阵位穿戴。')
         profile['as_equips'][slot][6] = iid
     elif method=='user.abyss_relic_unequip':
         for row in profile['as_equips']:
@@ -171,6 +184,8 @@ def apply_relic_config(document):
                 row['equipment_source_skill_104'] = row.get('equipment_source_skill_104') or source
                 row['abyss_relic_A'] = main_effect(kind,ancient)
                 row['relic_source_skill'] = source
+                if isinstance(row.get('manualClonePolicy'),dict) and row['manualClonePolicy'].get('skillId')==source:
+                    row['manualClonePolicy']['skillId']=sid
                 row['info'] = str(row.get('info',''))+'\n'+main_text(row['abyss_relic_A'])
                 cfg['skill'][sid] = row
     simple['abyss_relic_schema'] = 1

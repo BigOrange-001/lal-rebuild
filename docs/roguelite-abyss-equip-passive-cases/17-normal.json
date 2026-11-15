@@ -1,0 +1,367 @@
+{
+  "schema": 1,
+  "kind": 17,
+  "ancient": false,
+  "seed": 173,
+  "combat_model": "legacy",
+  "attack_overrides": {
+    "1": 0.5,
+    "2": 1,
+    "3": 1,
+    "4": 0,
+    "5": 0,
+    "15": 0,
+    "16": 0,
+    "21": 1
+  },
+  "input": {
+    "team_a": [
+      {
+        "aid": "A_1001_5",
+        "ap": 100,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 0,
+        "de_ph": 0,
+        "hp": 1000,
+        "hp_max": 1000,
+        "isme": true,
+        "leader": 1,
+        "line": 0,
+        "lv": 1,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 1500,
+        "slv": 1,
+        "tpl": [
+          3,
+          1,
+          1,
+          245,
+          337
+        ],
+        "talent": null,
+        "skill": null,
+        "leader_skill": {
+          "skid": "S_fixture_5",
+          "pl": [
+            4,
+            6,
+            1000,
+            0,
+            1
+          ],
+          "skills": [
+            [
+              "damage",
+              1,
+              1
+            ]
+          ]
+        },
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "instance_id": "owner",
+        "equip_passives": [
+          {
+            "id": 17,
+            "ancient": false,
+            "value": 0.15,
+            "shield_rate": 0,
+            "duration": 0,
+            "per_round": 0,
+            "threshold": 0
+          }
+        ]
+      },
+      {
+        "aid": "A_1007_5",
+        "ap": 100,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 0,
+        "de_ph": 0,
+        "hp": 1000,
+        "hp_max": 1000,
+        "isme": true,
+        "leader": 0,
+        "line": 0,
+        "lv": 1,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 1500,
+        "slv": 1,
+        "tpl": [
+          3,
+          1,
+          1,
+          245,
+          337
+        ],
+        "talent": null,
+        "skill": null,
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "instance_id": "ally"
+      }
+    ],
+    "team_b": [
+      {
+        "aid": "A_1009_5",
+        "ap": 100,
+        "morph": 0,
+        "buffs": {},
+        "de_ma": 0,
+        "de_ph": 0,
+        "hp": 1000,
+        "hp_max": 1000,
+        "isme": false,
+        "leader": 0,
+        "line": 0,
+        "lv": 1,
+        "new_4attrs": {
+          "hit": 0,
+          "flee": 0,
+          "crit": 0,
+          "tough": 0
+        },
+        "pos": 1500,
+        "slv": 1,
+        "tpl": [
+          2,
+          1,
+          1,
+          350,
+          337
+        ],
+        "talent": null,
+        "skill": null,
+        "leader_skill": null,
+        "book_skill": null,
+        "skillB": null,
+        "skill_diff": 0,
+        "modUnitType": "hero",
+        "phase": 0,
+        "culture_schema": "",
+        "bonds_104": [],
+        "equipment_bonds_104": [],
+        "growth_stats_applied": true,
+        "instance_id": "enemy"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "op": "initialize"
+    },
+    {
+      "op": "damage",
+      "source": "owner",
+      "target": "enemy",
+      "amount": 100
+    },
+    {
+      "op": "hp",
+      "target": "ally",
+      "value": 0
+    },
+    {
+      "op": "damage",
+      "source": "owner",
+      "target": "enemy",
+      "amount": 100
+    }
+  ],
+  "expected": [
+    {
+      "command": {
+        "op": "initialize"
+      },
+      "units": {
+        "owner": {
+          "hp": 1000,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "ally": {
+          "hp": 1000,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "enemy": {
+          "hp": 1000,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        }
+      },
+      "equipment_events": [],
+      "rng_calls": 0
+    },
+    {
+      "command": {
+        "op": "damage",
+        "source": "owner",
+        "target": "enemy",
+        "amount": 100
+      },
+      "units": {
+        "owner": {
+          "hp": 1000,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "ally": {
+          "hp": 1000,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "enemy": {
+          "hp": 885,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        }
+      },
+      "equipment_events": [
+        {
+          "event": "damage_adjust",
+          "round": 0,
+          "owner": "owner",
+          "target": "enemy",
+          "before": 100,
+          "after": 115
+        }
+      ],
+      "rng_calls": 0
+    },
+    {
+      "command": {
+        "op": "hp",
+        "target": "ally",
+        "value": 0
+      },
+      "units": {
+        "owner": {
+          "hp": 1000,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "ally": {
+          "hp": 0,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "enemy": {
+          "hp": 885,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        }
+      },
+      "equipment_events": [
+        {
+          "event": "damage_adjust",
+          "round": 0,
+          "owner": "owner",
+          "target": "enemy",
+          "before": 100,
+          "after": 115
+        }
+      ],
+      "rng_calls": 0
+    },
+    {
+      "command": {
+        "op": "damage",
+        "source": "owner",
+        "target": "enemy",
+        "amount": 100
+      },
+      "units": {
+        "owner": {
+          "hp": 1000,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "ally": {
+          "hp": 0,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        },
+        "enemy": {
+          "hp": 785,
+          "hp_max": 1000,
+          "ap": 100,
+          "shield": 0,
+          "buffs": [],
+          "leader_preparation": null
+        }
+      },
+      "equipment_events": [
+        {
+          "event": "damage_adjust",
+          "round": 0,
+          "owner": "owner",
+          "target": "enemy",
+          "before": 100,
+          "after": 115
+        }
+      ],
+      "rng_calls": 0
+    }
+  ]
+}

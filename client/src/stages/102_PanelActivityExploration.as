@@ -7,6 +7,7 @@ package com.meng52.game.ui.panel
    import com.meng52.game.ui.element.LOL_IconText;
    import com.meng52.game.ui.element.LOL_Scale9Button;
    import com.meng52.game.ui.screen.PanelBase;
+   import com.meng52.game.ui.screen.PanelCenterPVE;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendServiceAMFFun;
    import com.meng52.utils.Tools;
@@ -31,7 +32,6 @@ package com.meng52.game.ui.panel
       
       private var mBtn_In:LOL_Scale9Button;
       
-      private var mBtn_Abyss104:LOL_Scale9Button;
       
       private var mInfo_bg:Scale9Image;
       
@@ -138,11 +138,6 @@ package com.meng52.game.ui.panel
          mBtn_In.y = mBg.y + mBg.height - 200;
          mBtn_In.addEventListener("triggered",onTRIGGERED_btn);
          addChild(mBtn_In);
-         mBtn_Abyss104 = new LOL_Scale9Button("深渊回廊",150,70,"UI_btn_normalFun_0000");
-         mBtn_Abyss104.x = mBtn_In.x;
-         mBtn_Abyss104.y = mBtn_In.y - 85;
-         mBtn_Abyss104.addEventListener("triggered",onTRIGGERED_abyss104);
-         addChild(mBtn_Abyss104);
          mInfo_bg = GlobalFunction.createScale9Image("UI_bg_9slice_5_0000",618,100,new Rectangle(40,30,30,30));
          mInfo_bg.x = mBg.x + (mBg.width - mInfo_bg.width) * 0.5;
          mInfo_bg.y = mBg.y + mBg.height - mInfo_bg.height - 10;
@@ -173,20 +168,31 @@ package com.meng52.game.ui.panel
          }
          else if(GlobalData.$abyss104 && GlobalData.$abyss104.resume)
          {
-            // Back from an Abyss battle: rebuild the run screens from a fresh query.
-            Starling.juggler.delayCall(AbyssCore104.resumeAfterBattle,0.1);
+            // The Abyss now lives in 副本 (center_pve, 4th tab); that tab resumes the run.
+            PanelCenterPVE.$abyssTab104 = true;
+            Starling.juggler.delayCall(function():void
+            {
+               GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pve");
+            },0.1);
          }
       }
       
-      private function onTRIGGERED_abyss104(param1:Event) : void
+      // 副本 · 深渊回廊 tab page (entry: difficulty, deck, codex, start/continue).
+      public static function createAbyssTab104(param1:Rectangle) : Sprite
       {
-         openAbyss104();
+         return AbyssCore104.createEntryTab(param1);
       }
 
-      // Entry for the Abyss Corridor screens implemented below this package.
-      public static function openAbyss104() : void
+      // Rebuilds the run screens after an Abyss battle; called by the 副本 tab.
+      public static function resumeAbyss104() : void
       {
-         AbyssCore104.openEntry();
+         AbyssCore104.resumeAfterBattle();
+      }
+
+      // Equipment management (PanelEquipBase) tab content listing every relic.
+      public static function createRelicManageView104(param1:Number) : Sprite
+      {
+         return new AbyssRelicManageView104(param1);
       }
 
       // Called from the hero detail panel for the 7th (relic) slot of a team position.
@@ -195,10 +201,6 @@ package com.meng52.game.ui.panel
          AbyssCore104.openRelicSlot(param1);
       }
 
-      public static function openRelicBag104() : void
-      {
-         AbyssCore104.openRelicBag(-1);
-      }
 
       // Alchemy institute tab content: reroll one relic substat.
       public static function createRerollView104(param1:Number) : Sprite
@@ -290,6 +292,7 @@ import flash.utils.getTimer;
 import starling.animation.Tween;
 import starling.core.Starling;
 import starling.display.DisplayObject;
+import starling.display.DisplayObjectContainer;
 import starling.display.Image;
 import starling.display.Quad;
 import starling.display.Sprite;
@@ -316,6 +319,14 @@ class AbyssCore104
    // Ancient affixes: a cyan distinct from normal (white) and orange-quality text.
    public static const COLOR_ANCIENT:uint = 0x3CF0E0;
    public static const COLOR_SELECT:uint = 0x33AAFF;
+   // Text on the tan UI_bg_9slice_4 box, same values the native equipment lists use.
+   public static const INK_NAME:uint = 0x990000;
+   public static const INK_TEXT:uint = 0x4B2C1B;
+   public static const INK_ANCIENT:uint = 0x006E66;
+   public static const INK_GREEN:uint = 0x1A6F1A;
+   // Selection mark: warm gold with a dark outline, the palette of native leader/VIP tags.
+   public static const MARK_GOLD:uint = 0xFFD24A;
+   public static const MARK_EDGE:uint = 0x4A2A00;
 
    // Last successful reply of any user.abyss_* method.
    public static var data:Object = null;
@@ -401,6 +412,57 @@ class AbyssCore104
       return fallback[key];
    }
 
+   public static function deckName(key:String) : String
+   {
+      var info:Object = deckInfo(key);
+      var fallback:Object = {"blade":"锋刃","flame":"炎咒","venom":"蚀骨","summon":"群策","star":"星裔"};
+      return info && info.name ? String(info.name) : (fallback[key] ? fallback[key] : key);
+   }
+
+   // Pool bonds under the pool rule: a bond counts once every member family is in
+   // the pool at one quality (purple set or orange set), as bonds_104.active_bonds.
+   public static function poolBonds() : Array
+   {
+      var defs:Array = GlobalData.$mConfig_simple ? GlobalData.$mConfig_simple.bonds_104 as Array : null;
+      var r:Object = run;
+      var aids:Object = {};
+      var fams:Object = {};
+      if(r && r.pool) for(var id:String in r.pool)
+      {
+         var aid:String = String(r.pool[id].aid);
+         aids[aid] = true;
+         fams[family(aid)] = true;
+      }
+      var result:Array = [];
+      for each(var bond:Object in defs)
+      {
+         var members:Array = bond.families as Array;
+         if(!members || !members.length) continue;
+         var present:int = 0;
+         var missing:Array = [];
+         for each(var f:String in members)
+         {
+            if(fams[f]) present++;
+            else missing.push(heroName(f + "_5"));
+         }
+         if(present == 0) continue;
+         var active:Boolean = false;
+         for each(var q:String in ["5","6"])
+         {
+            var all:Boolean = true;
+            for each(f in members) if(!aids[f + "_" + q]) { all = false; break; }
+            if(all) { active = true; break; }
+         }
+         result.push({"name":String(bond.name),"active":active,"missing":missing,"mixed":!active && missing.length == 0,"present":present,"total":members.length});
+      }
+      result.sort(function(a:Object, b:Object):int
+      {
+         if(a.active != b.active) return a.active ? -1 : 1;
+         return a.missing.length - b.missing.length;
+      });
+      return result;
+   }
+
    public static function family(aid:String) : String
    {
       return aid.split("_").slice(0,2).join("_");
@@ -418,7 +480,8 @@ class AbyssCore104
    }
 
    // Display/battle-preview data for a standardized pool hero (no owned progression).
-   public static function heroData(aid:String, id:String, slv:int) : Object
+   // limitBreak only switches on the native pulse edge (elite boosted enemy); stats stay 0.
+   public static function heroData(aid:String, id:String, slv:int, limitBreak:Boolean = false) : Object
    {
       return {
          "id":id,
@@ -433,7 +496,7 @@ class AbyssCore104
          "de_ma":0,
          "love_exp":0,
          "phase":0,
-         "limit_break":0,
+         "limit_break":limitBreak ? 1 : 0,
          "culture_schema":"",
          "morph":0
       };
@@ -556,12 +619,35 @@ class AbyssCore104
 
    // ---------- navigation ----------
 
+   public static function embeddedEntry() : AbyssPanel104
+   {
+      for each(var p:AbyssPanel104 in panels) if(p.embed && p.stage) return p;
+      return null;
+   }
+
+   // The entry page lives in the 副本 screen's 深渊回廊 tab; a pop-up entry is only the
+   // fallback when that tab is not on screen.
    public static function openEntry() : void
    {
       query(function(d:Object):void
       {
-         open(new AbyssEntryPanel104());
+         if(!embeddedEntry()) open(new AbyssEntryPanel104());
       });
+   }
+
+   public static function createEntryTab(area:Rectangle) : Sprite
+   {
+      var p:AbyssEntryPanel104 = new AbyssEntryPanel104();
+      p.embed = area;
+      query(function(d:Object):void
+      {
+         p.resetChoice();
+         p.refresh();
+         // This reply already refreshed the run. Resume only after it arrives,
+         // so the shared request guard cannot discard a second timed query.
+         if(GlobalData.$abyss104 && GlobalData.$abyss104.resume) resumeAfterBattle(true);
+      });
+      return p;
    }
 
    public static function startRun(difficulty:int, deck:String) : void
@@ -633,14 +719,16 @@ class AbyssCore104
    }
 
    // Called by PanelActivityExploration after the battle scene returns to the hub.
-   public static function resumeAfterBattle() : void
+   public static function resumeAfterBattle(afterQuery:Boolean = false) : void
    {
       var state:Object = GlobalData.$abyss104;
+      if(!state || !state.resume) return;
       var finish:Object = state ? state.finish : null;
       var nodeId:String = state ? String(state.node_id) : "";
-      GlobalData.$abyss104 = null;
-      query(function(d:Object):void
+      var restore:Function = function(d:Object):void
       {
+         // Preserve the return context until a successful query can restore it.
+         if(GlobalData.$abyss104 == state) GlobalData.$abyss104 = null;
          closeAll();
          Starling.juggler.delayCall(function():void
          {
@@ -664,7 +752,9 @@ class AbyssCore104
             }
             openNodeStep();
          },AbyssCore104.REOPEN_DELAY);
-      });
+      };
+      if(afterQuery) restore(null);
+      else query(restore);
    }
 
    public static function rewardsOf(nodeId:String) : Array
@@ -768,22 +858,37 @@ class AbyssCore104
       return (slot + 1) + "号位 · " + name;
    }
 
-   public static function openRelicBag(slot:int) : void
-   {
-      send("user.abyss_relics",{},function(d:Object):void
-      {
-         open(new AbyssRelicBagPanel104(slot));
-      });
-   }
-
+   // 7th slot of a team position, same behaviour as the six equipment slots:
+   // empty -> chooser list, worn -> detail with 卸下 / 更换.
    public static function openRelicSlot(slot:int) : void
    {
       send("user.abyss_relics",{},function(d:Object):void
       {
          var itemId:* = relicSlots()[slot];
-         if(itemId && relics[itemId]) open(new AbyssRelicDetailPanel104(String(itemId),slot));
-         else open(new AbyssRelicBagPanel104(slot));
+         if(itemId && relics[itemId]) open(new AbyssRelicInfoPanel104(String(itemId),slot));
+         else open(new AbyssRelicPickPanel104(slot));
       });
+   }
+
+   // Native team/hero screen, where every position's 7th slot lives.
+   public static function goEquip() : void
+   {
+      closeAll();
+      Starling.juggler.delayCall(function():void
+      {
+         GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_main_avatar");
+      },REOPEN_DELAY);
+   }
+
+   // Alchemy institute, relic reroll tab (index 2 of PanelAlchemy).
+   public static function goReroll() : void
+   {
+      closeAll();
+      Starling.juggler.delayCall(function():void
+      {
+         GlobalData.$tempAlchemyIndex = 2;
+         GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("equip_fun_panel_alchemy");
+      },REOPEN_DELAY);
    }
 
    public static function equipRelic(itemId:String, slot:int, done:Function) : void
@@ -845,17 +950,17 @@ class AbyssCore104
          if(!bond.families || (bond.families as Array).indexOf(fam) < 0) continue;
          var missing:int = 0;
          for each(var member:String in bond.families) if(!have[member]) missing++;
-         parts.push(String(bond.name) + (missing == 0 ? "（可组成）" : "（差" + missing + "人）"));
+         parts.push(String(bond.name) + (missing == 0 ? "（已集齐）" : "（差" + missing + "人）"));
       }
       return "羁绊：" + (parts.length ? parts.join("、") : "无");
    }
 
-   public static function showHeroInfo(aid:String, slv:int) : void
+   public static function showHeroInfo(aid:String, slv:int, note:String = null) : void
    {
       var av:Avatar = new Avatar(aid,heroData(aid,family(aid),slv));
       var res:String = av.resId;
       av.clear();
-      var text:String = heroInfoLines(aid,slv,[]).join("\n");
+      var text:String = (note ? note + "\n" : "") + heroInfoLines(aid,slv,[]).join("\n");
       GlobalFunction.popAlert(heroName(aid) + (isOrange(aid) ? "（橙卡）" : "（紫卡）"),Tools.formatLineX(text + "\n"),{"res":res},false);
    }
 }
@@ -864,7 +969,11 @@ class AbyssPanel104 extends PanelBase
 {
    protected var body:Sprite;
    protected var avatars:Array = [];
+   protected var pulses:Array = [];
    protected var built:Boolean = false;
+   // Set when the panel is drawn inside another screen (副本 · 深渊回廊 tab) instead of
+   // as a pop-up: no pop frame; body is shifted so the pop layout's y=80 is embed.y.
+   public var embed:Rectangle = null;
 
    public function AbyssPanel104()
    {
@@ -874,9 +983,10 @@ class AbyssPanel104 extends PanelBase
    override protected function initializeHandler(param1:Event) : void
    {
       this.removeEventListener("addedToStage",initializeHandler);
-      this.setPopPanelBg(panelTitle(),panelHeight());
+      if(!embed) this.setPopPanelBg(panelTitle(),panelHeight());
       AbyssCore104.panels.push(this);
       body = new Sprite();
+      if(embed) body.y = embed.y - 80;
       addChild(body);
       built = true;
       refresh();
@@ -907,6 +1017,8 @@ class AbyssPanel104 extends PanelBase
    {
       for each(var av:Avatar in avatars) av.clear();
       avatars = [];
+      for each(var m:DisplayObject in pulses) Starling.juggler.removeTweens(m);
+      pulses = [];
       if(body) body.removeChildren(0,-1,true);
    }
 
@@ -921,16 +1033,19 @@ class AbyssPanel104 extends PanelBase
 
    protected function get lx() : Number
    {
+      if(embed) return embed.x;
       return mImg9_baseBg ? mImg9_baseBg.x : 0;
    }
 
    protected function get iw() : Number
    {
+      if(embed) return embed.width;
       return mImg9_baseBg ? mImg9_baseBg.width : 640;
    }
 
    protected function get by() : Number
    {
+      if(embed) return embed.y + embed.height - (body ? body.y : 0);
       return mImg9_baseBg ? mImg9_baseBg.y + mImg9_baseBg.height : panelHeight();
    }
 
@@ -985,6 +1100,92 @@ class AbyssPanel104 extends PanelBase
       }
    }
 
+   // The one selection mark of every abyss screen: gold corner brackets with a dark
+   // outline and a soft inner glow, like the native target/leader highlights.
+   //   "picked"  chosen item: brackets + native check badge (UI_select_0), breathing.
+   //   "current" the active option of a group (deck, tab, default button): static.
+   //   "focus"   the item whose details are shown but not chosen: thin and light.
+   protected function selectMark(x:Number, y:Number, w:Number, h:Number, style:String = "picked", parent:Sprite = null) : Sprite
+   {
+      var m:Sprite = new Sprite();
+      m.touchable = false;
+      var focus:Boolean = style == "focus";
+      var color:uint = focus ? 0xFFF4D6 : AbyssCore104.MARK_GOLD;
+      if(!focus)
+      {
+         var g:Number = Math.max(8,Math.min(w,h) * 0.12);
+         var a:Number = style == "picked" ? 0.55 : 0.4;
+         glow(m,0,0,w,g,color,a,0,0,a);
+         glow(m,0,h - g,w,g,color,0,0,a,a);
+         glow(m,0,0,g,h,color,a,0,a,0);
+         glow(m,w - g,0,g,h,color,0,a,0,a);
+      }
+      var len:Number = Math.max(14,Math.min(w,h) * (focus ? 0.22 : 0.3));
+      var t:Number = focus ? 3 : 5;
+      // Outline first, then the gold stroke inset by 1px.
+      corners(m,w,h,len + 2,t + 2,-1,focus ? 0x5A4A30 : AbyssCore104.MARK_EDGE);
+      corners(m,w,h,len,t,0,color);
+      if(style == "picked")
+      {
+         var badge:Sprite = new Sprite();
+         var edge:Quad = new Quad(30,30,AbyssCore104.MARK_EDGE);
+         badge.addChild(edge);
+         var fill:Quad = new Quad(26,26,0x2A1A06);
+         fill.x = fill.y = 2;
+         badge.addChild(fill);
+         var check:Image = GlobalFunction.createImage("UI_select_0_0000");
+         check.x = int((30 - check.width) * 0.5);
+         check.y = int((30 - check.height) * 0.5);
+         badge.addChild(check);
+         badge.x = w - 24;
+         badge.y = -6;
+         m.addChild(badge);
+         var pulse:Tween = new Tween(m,0.8,"easeInOut");
+         pulse.animate("alpha",0.6);
+         pulse.repeatCount = 0;
+         pulse.reverse = true;
+         Starling.juggler.add(pulse);
+         pulses.push(m);
+      }
+      m.x = x;
+      m.y = y;
+      (parent ? parent : body).addChild(m);
+      return m;
+   }
+
+   // Gradient strip; alphas are per vertex: top-left, top-right, bottom-left, bottom-right.
+   private function glow(target:Sprite, x:Number, y:Number, w:Number, h:Number, color:uint, a0:Number, a1:Number, a2:Number, a3:Number) : void
+   {
+      var q:Quad = new Quad(Math.max(1,w),Math.max(1,h),color);
+      q.setVertexAlpha(0,a0);
+      q.setVertexAlpha(1,a1);
+      q.setVertexAlpha(2,a2);
+      q.setVertexAlpha(3,a3);
+      q.x = x;
+      q.y = y;
+      q.touchable = false;
+      target.addChild(q);
+   }
+
+   private function corners(target:Sprite, w:Number, h:Number, len:Number, t:Number, inset:Number, color:uint) : void
+   {
+      var o:Number = inset;
+      var bars:Array = [
+         [o,o,len,t],[o,o,t,len],
+         [w - o - len,o,len,t],[w - o - t,o,t,len],
+         [o,h - o - t,len,t],[o,h - o - len,t,len],
+         [w - o - len,h - o - t,len,t],[w - o - t,h - o - len,t,len]
+      ];
+      for each(var b:Array in bars)
+      {
+         var q:Quad = new Quad(b[2],b[3],color);
+         q.x = b[0];
+         q.y = b[1];
+         q.touchable = false;
+         target.addChild(q);
+      }
+   }
+
    protected function onTap(target:DisplayObject, fn:Function) : void
    {
       target.addEventListener("touch",function(e:TouchEvent):void
@@ -1000,18 +1201,30 @@ class AbyssPanel104 extends PanelBase
    }
 
    // Native hero card (same art as roster/exploration cards). Returns its holder.
-   protected function heroCard(aid:String, id:String, slv:int, x:Number, y:Number, scale:Number = 1, leader:Boolean = false, parent:Sprite = null) : Sprite
+   protected function heroCard(aid:String, id:String, slv:int, x:Number, y:Number, scale:Number = 1, leader:Boolean = false, parent:Sprite = null, limitBreak:Boolean = false) : Sprite
    {
       var holder:Sprite = new Sprite();
-      var av:Avatar = new Avatar(aid,AbyssCore104.heroData(aid,id,slv));
+      var av:Avatar = new Avatar(aid,AbyssCore104.heroData(aid,id,slv,limitBreak));
       avatars.push(av);
       var res:Sprite = av.getAvatarRes(false,leader,false);
+      // Keep the native pulse edge but not its unnamed "突破极限" caption (user decision).
+      if(limitBreak) removeCaption(res,"突破极限");
       holder.addChild(res);
       holder.scaleX = holder.scaleY = scale;
       holder.x = x;
       holder.y = y;
       (parent ? parent : body).addChild(holder);
       return holder;
+   }
+
+   private function removeCaption(root:DisplayObjectContainer, text:String) : void
+   {
+      for(var i:int = root.numChildren - 1; i >= 0; i--)
+      {
+         var child:DisplayObject = root.getChildAt(i);
+         if(child is TextField && TextField(child).text == text) child.removeFromParent(true);
+         else if(child is DisplayObjectContainer) removeCaption(DisplayObjectContainer(child),text);
+      }
    }
 
    protected function emptyCard(label:String, x:Number, y:Number, scale:Number = 1, parent:Sprite = null) : Sprite
@@ -1062,6 +1275,12 @@ class AbyssEntryPanel104 extends AbyssPanel104
    public function AbyssEntryPanel104()
    {
       super();
+      resetChoice();
+   }
+
+   // Defaults follow the account/run; re-run when the first query reply arrives.
+   public function resetChoice() : void
+   {
       var r:Object = AbyssCore104.run;
       var acc:Object = AbyssCore104.account;
       if(r && r.status == "active")
@@ -1101,7 +1320,9 @@ class AbyssEntryPanel104 extends AbyssPanel104
       y += 26;
       var note:String = active ? "本局进行中，结束后可重新选择难度和卡组" : (maxD < 10 ? "通关难度 " + maxD + " 后解锁难度 " + (maxD + 1) + "　通关保底 1 件深渊遗物" : "通关保底 1 件深渊遗物");
       addText(note,lx + 20,y,iw - 40,26,16,AbyssCore104.COLOR_DIM,"center");
-      y += 36;
+      y += 32;
+      addText("起始卡组 · " + AbyssCore104.deckName(deck) + (active ? "" : "　（点击下方一行切换）"),lx + 20,y,iw - 40,30,21,AbyssCore104.COLOR_TITLE,"center");
+      y += 38;
       var unlockedDecks:Array = acc.decks as Array;
       var bottomY:Number = by - 100;
       var rowH:Number = Math.min(96,(bottomY - y - 10) / 5);
@@ -1111,15 +1332,11 @@ class AbyssEntryPanel104 extends AbyssPanel104
          buildDeckRow(key,y,rowH,scale,unlockedDecks && unlockedDecks.indexOf(key) >= 0,active);
          y += rowH;
       }
-      addButton("卡池图鉴",lx + 30,bottomY + 10,175,66,function():void
+      addButton("卡池图鉴",lx + 60,bottomY + 10,200,66,function():void
       {
          AbyssCore104.open(new AbyssCodexPanel104());
       });
-      addButton("深渊遗物",lx + 232,bottomY + 10,175,66,function():void
-      {
-         AbyssCore104.openRelicBag(-1);
-      });
-      addButton(active ? "继续本局" : "开始新的一局",lx + iw - 205,bottomY + 10,175,66,function():void
+      addButton(active ? "继续本局" : "开始新的一局",lx + iw - 260,bottomY + 10,200,66,function():void
       {
          if(active) AbyssCore104.continueRun();
          else AbyssCore104.startRun(difficulty,deck);
@@ -1157,7 +1374,7 @@ class AbyssEntryPanel104 extends AbyssPanel104
          row.addChild(cover);
          addText("首次通关难度 " + int(info ? info.clear_required : 0) + " 后解锁",0,cover.y + 2,iw - 80,28,20,AbyssCore104.COLOR_TEXT,"center",row);
       }
-      if(key == deck) addFrame(-6,0,iw - 68,rowH - 2,AbyssCore104.COLOR_SELECT,row);
+      if(key == deck) selectMark(-8,-2,iw - 64,rowH,"current",row);
       if(open && !active)
       {
          onTap(hit,function():void
@@ -1174,6 +1391,9 @@ class AbyssEntryPanel104 extends AbyssPanel104
 class AbyssMapPanel104 extends AbyssPanel104
 {
    private static const TYPE_NAMES:Object = {"weak":"弱敌","normal":"普通战","elite":"精英战","rest":"休息处","boss":"Boss"};
+   // map_version 2: route nodes sit on a 4-column grid (col 0..3); the fixed rest and
+   // the boss carry col=null and are centred. v1 saves have no col: spread by index.
+   private static const COLUMNS:int = 4;
 
    override protected function panelTitle() : String
    {
@@ -1185,7 +1405,6 @@ class AbyssMapPanel104 extends AbyssPanel104
       var r:Object = AbyssCore104.run;
       if(!r) return;
       var act:int = currentAct(r);
-      var total:int = AbyssCore104.retriesTotal(int(r.difficulty));
       addText("第" + act + "幕　剩余重打 " + int(r.retries) + "/" + AbyssCore104.retriesText(int(r.difficulty)) + "　阵容池 " + AbyssCore104.poolCount() + "/" + AbyssCore104.poolCap(),lx + 20,88,iw - 40,30,21,AbyssCore104.COLOR_TITLE,"center");
       var top:Number = 124;
       var bottom:Number = by - 100;
@@ -1198,66 +1417,43 @@ class AbyssMapPanel104 extends AbyssPanel104
       bg.height = areaH;
       bg.touchable = false;
       body.addChild(bg);
-      var layers:Array = [];
-      for(var L:int = 1; L <= 7; L++) layers.push([]);
+      var nodes:Array = [];
+      var layerCount:int = 1;
       for each(var n:Object in r.map)
       {
-         if(int(n.act) == act) (layers[int(n.layer) - 1] as Array).push(n);
+         if(int(n.act) != act) continue;
+         nodes.push(n);
+         layerCount = Math.max(layerCount,int(n.layer));
       }
-      var rowGap:Number = (areaH - 90) / 6;
+      var layers:Array = [];
+      for(var L:int = 0; L < layerCount; L++) layers.push([]);
+      for each(n in nodes) (layers[int(n.layer) - 1] as Array).push(n);
+      var rowGap:Number = (areaH - 80) / Math.max(1,layerCount - 1);
       var pos:Object = {};
-      for(L = 0; L < 7; L++)
+      for(L = 0; L < layerCount; L++)
       {
          var row:Array = layers[L];
          for(var i:int = 0; i < row.length; i++)
          {
-            pos[row[i].id] = {"x":lx + 20 + areaW * (i + 1) / (row.length + 1),"y":bottom - 45 - L * rowGap};
+            var c:* = row[i].col;
+            var share:Number = c === null || c === undefined ? (row.length == 1 || row[i].hasOwnProperty("col") ? 0.5 : (i + 1) / (row.length + 1)) : (Number(c) + 0.5) / COLUMNS;
+            pos[row[i].id] = {"x":lx + 20 + areaW * share,"y":bottom - 40 - L * rowGap};
          }
       }
       var available:Array = r.available_nodes is Array ? r.available_nodes as Array : [];
-      // Paths first so node buttons sit on top. Walked edges are dashed.
-      for(L = 0; L < 6; L++)
+      // Only real connections (node.next) are drawn; walked edges are gold and dashed.
+      for each(var from:Object in nodes)
       {
-         for each(var from:Object in layers[L])
+         for each(var toId:String in from.next)
          {
-            for each(var toId:String in from.next)
-            {
-               if(!pos[toId]) continue;
-               var to:Object = AbyssCore104.node(toId);
-               var walked:Boolean = from.completed && to && (to.completed || to.id == r.current_node);
-               var reachable:Boolean = (from.id == r.current_node || from.completed) && available.indexOf(toId) >= 0;
-               line(pos[from.id].x,pos[from.id].y,pos[toId].x,pos[toId].y,walked ? 0xFFE08A : (reachable ? 0xFFFFFF : 0x6A6A6A),walked);
-            }
+            if(!pos[toId]) continue;
+            var to:Object = AbyssCore104.node(toId);
+            var walked:Boolean = from.completed && to && (to.completed || to.id == r.current_node);
+            var reachable:Boolean = (from.id == r.current_node || from.completed) && available.indexOf(toId) >= 0;
+            line(pos[from.id].x,pos[from.id].y,pos[toId].x,pos[toId].y,walked ? 0xFFE08A : (reachable ? 0xFFFFFF : 0x8A8A8A),walked);
          }
       }
-      var reachLayer:int = 0;
-      for(L = 0; L < 7; L++)
-      {
-         for each(n in layers[L])
-         {
-            if(n.completed || n.id == r.current_node || available.indexOf(n.id) >= 0) reachLayer = L + 1;
-         }
-      }
-      // Fog above the next reachable layer.
-      if(reachLayer + 1 < 7)
-      {
-         var fogBottom:Number = bottom - 45 - (reachLayer + 0.5) * rowGap;
-         if(fogBottom > top + 10)
-         {
-            var fog:Image = GlobalFunction.createImage("pic_war_fog",true);
-            fog.x = lx + 20;
-            fog.y = top;
-            fog.width = areaW;
-            fog.height = fogBottom - top;
-            fog.alpha = 0.85;
-            fog.touchable = false;
-            body.addChild(fog);
-         }
-      }
-      for(L = 0; L < 7; L++)
-      {
-         for each(n in layers[L]) addNode(n,pos[n.id],r,available,L <= reachLayer);
-      }
+      for each(n in nodes) addNode(n,pos[n.id],r,available,rowGap);
       addButton("阵容池",lx + 60,bottom + 14,170,66,function():void
       {
          AbyssCore104.open(new AbyssPoolPanel104());
@@ -1277,23 +1473,24 @@ class AbyssMapPanel104 extends AbyssPanel104
       return cur ? int(cur.act) : 1;
    }
 
-   private function addNode(n:Object, p:Object, r:Object, available:Array, visible:Boolean) : void
+   // Every node shows its type (the whole map is known from the start).
+   private function addNode(n:Object, p:Object, r:Object, available:Array, rowGap:Number) : void
    {
       var isCurrent:Boolean = n.id == r.current_node && !n.completed;
       var canGo:Boolean = available.indexOf(n.id) >= 0 && !r.pending_choice;
       var label:String = TYPE_NAMES[n.type] ? TYPE_NAMES[n.type] : String(n.type);
-      if(!visible) label = "？";
       var w:Number = n.type == "boss" ? 140 : 112;
+      var h:Number = Math.min(50,Math.max(40,rowGap - 20));
       if(isCurrent || canGo)
       {
-         var glow:Quad = new Quad(w + 14,64,isCurrent ? 0x55DD55 : 0xFFCC33);
+         var glow:Quad = new Quad(w + 14,h + 14,isCurrent ? 0x55DD55 : 0xFFCC33);
          glow.alpha = 0.45;
          glow.x = p.x - (w + 14) * 0.5;
-         glow.y = p.y - 32;
+         glow.y = p.y - (h + 14) * 0.5;
          glow.touchable = false;
          body.addChild(glow);
       }
-      var b:LOL_Scale9Button = addButton(label,p.x - w * 0.5,p.y - 25,w,50,function():void
+      var b:LOL_Scale9Button = addButton(label,p.x - w * 0.5,p.y - h * 0.5,w,h,function():void
       {
          if(canGo) AbyssCore104.route(String(n.id));
          else if(isCurrent || r.pending_choice) AbyssCore104.openNodeStep();
@@ -1304,7 +1501,7 @@ class AbyssMapPanel104 extends AbyssPanel104
       if(n.completed)
       {
          b.alpha = 0.55;
-         addText("已完成",p.x - 50,p.y + 24,100,22,15,AbyssCore104.COLOR_DIM,"center");
+         if(rowGap >= 76) addText("已完成",p.x - 50,p.y + h * 0.5 - 1,100,22,15,AbyssCore104.COLOR_DIM,"center");
       }
       else if(!isCurrent && !canGo) gray(b);
    }
@@ -1320,7 +1517,7 @@ class AbyssChoicePanel104 extends AbyssPanel104
    override protected function panelTitle() : String
    {
       var c:Object = AbyssCore104.run ? AbyssCore104.run.pending_choice : null;
-      return c && int(c.count) > 1 ? "选择" + int(c.count) + "名英雄" : "选择1名英雄";
+      return c && int(c.count) > 1 ? "最多选择" + int(c.count) + "名英雄" : "选择1名英雄";
    }
 
    override protected function build() : void
@@ -1330,7 +1527,7 @@ class AbyssChoicePanel104 extends AbyssPanel104
       if(!c) return;
       var options:Array = c.options as Array;
       var count:int = int(c.count);
-      addText("阵容池 " + AbyssCore104.poolCount() + "/" + AbyssCore104.poolCap() + "　" + (count > 1 ? "选满 " + count + " 名后加入" : "选 1 名加入，也可以跳过"),lx + 20,88,iw - 40,28,20,AbyssCore104.COLOR_TITLE,"center");
+      addText("阵容池 " + AbyssCore104.poolCount() + "/" + AbyssCore104.poolCap() + "　" + (count > 1 ? "可选 1～" + count + " 名加入，也可以跳过" : "选 1 名加入，也可以跳过"),lx + 20,88,iw - 40,28,20,AbyssCore104.COLOR_TITLE,"center");
       if(!focus && options.length) focus = options[0];
       var cols:int = 3;
       var cellW:Number = (iw - 60) / cols;
@@ -1346,8 +1543,8 @@ class AbyssChoicePanel104 extends AbyssPanel104
          var cy:Number = 126 + rowIndex * cellH;
          var card:Sprite = heroCard(String(hero.aid),String(hero.id),int(hero.slv),cx,cy);
          addText(AbyssCore104.heroName(String(hero.aid)),cx - 30,cy + 96,150,26,18,AbyssCore104.isOrange(String(hero.aid)) ? AbyssCore104.COLOR_ORANGE : AbyssCore104.COLOR_PURPLE,"center");
-         if(selected.indexOf(hero.id) >= 0) addFrame(cx - 6,cy - 6,102,102,AbyssCore104.COLOR_SELECT);
-         else if(focus == hero) addFrame(cx - 4,cy - 4,98,98,0xFFFFFF);
+         if(selected.indexOf(hero.id) >= 0) selectMark(cx - 7,cy - 7,104,104,"picked");
+         else if(focus == hero) selectMark(cx - 5,cy - 5,100,100,"focus");
          bindPick(card,hero,count);
       }
       var infoY:Number = 126 + Math.ceil(options.length / cols) * cellH + 4;
@@ -1361,28 +1558,27 @@ class AbyssChoicePanel104 extends AbyssPanel104
          addText(lines.join("\n"),lx + 45,infoY + 14,iw - 90,infoH - 24,17,AbyssCore104.COLOR_TEXT,"left");
       }
       var bottomY:Number = by - 90;
-      if(c.can_skip)
+      // Every offer may be skipped (server rule since map_version 2, legacy saves too).
+      addButton("跳过，不加入",lx + 50,bottomY,190,66,function():void
       {
-         addButton("跳过",lx + 60,bottomY,170,66,function():void
+         AbyssCore104.send("user.abyss_skip",{},function(d:Object):void
          {
-            AbyssCore104.send("user.abyss_skip",{},function(d:Object):void
-            {
-               AbyssCore104.closeTop();
-            });
+            AbyssCore104.continueRun();
          });
-      }
-      addButton("加入阵容池（" + selected.length + "）",c.can_skip ? lx + iw - 260 : lx + (iw - 220) * 0.5,bottomY,220,66,function():void
+      });
+      var picked:int = selected.length;
+      addButton(picked > 0 ? "加入阵容池（" + picked + " 名）" : "先点选英雄",lx + iw - 280,bottomY,230,66,function():void
       {
-         if(selected.length != count)
+         if(picked < 1 || picked > count)
          {
-            AbyssCore104.toast("请选择 " + count + " 名英雄");
+            AbyssCore104.toast("请选择 1～" + count + " 名英雄");
             return;
          }
          AbyssCore104.send("user.abyss_choose",{"heroes":selected.concat()},function(d:Object):void
          {
-            AbyssCore104.closeTop();
+            AbyssCore104.continueRun();
          });
-      },selected.length == count);
+      },picked >= 1 && picked <= count);
    }
 
    private function bindPick(card:Sprite, hero:Object, count:int) : void
@@ -1475,7 +1671,7 @@ class AbyssTeamPanel104 extends AbyssPanel104
       }
       y += 128;
       var count:int = filled();
-      addText(pending ? "上次战斗未结算，将按开战时的阵容继续" : "点击下方英雄上阵，再点一次下阵（" + count + "/5，至少3人覆盖三路）",lx + 20,y,iw - 40,26,17,pending ? AbyssCore104.COLOR_TITLE : AbyssCore104.COLOR_TEXT,"center");
+      addText(pending ? "上次战斗未结算，将按开战时的阵容继续" : "点击下方英雄上阵，再点一次下阵（" + count + "/5，至少上阵3人）",lx + 20,y,iw - 40,26,17,pending ? AbyssCore104.COLOR_TITLE : AbyssCore104.COLOR_TEXT,"center");
       y += 32;
       var ids:Array = AbyssCore104.poolIds();
       var cols:int = 5;
@@ -1491,27 +1687,29 @@ class AbyssTeamPanel104 extends AbyssPanel104
          var hero:Object = r.pool[hid];
          var c:Sprite = heroCard(String(hero.aid),hid,int(hero.slv),hx,hy,scale);
          addText("技能" + int(hero.slv) + "级",hx - 10,hy + 90 * scale,90 * scale + 20,22,14,int(hero.slv) >= 10 ? AbyssCore104.COLOR_TITLE : AbyssCore104.COLOR_DIM,"center");
-         if(slots.indexOf(hid) >= 0)
-         {
-            gray(c);
-            addFrame(hx - 3,hy - 3,90 * scale + 6,90 * scale + 6,AbyssCore104.COLOR_SELECT);
-         }
+         if(slots.indexOf(hid) >= 0) selectMark(hx - 5,hy - 5,90 * scale + 10,90 * scale + 10,"picked");
          if(!pending) bindPool(c,hid);
       }
       addButton(pending ? "继续战斗" : "开始战斗",lx + (iw - 220) * 0.5,by - 90,220,66,function():void
       {
-         if(slots[0] == null)
+         if(pending)
          {
-            AbyssCore104.toast("1号位是队长，不能为空");
+            AbyssCore104.startBattle(slots,pending);
             return;
          }
          if(filled() < 3)
          {
-            AbyssCore104.toast("至少上阵3人，三路每路至少1人");
+            AbyssCore104.toast("至少上阵3人");
             return;
          }
+         // Close gaps so the first hero is the leader; the native formation screen
+         // that follows checks lanes and positions.
+         var packed:Array = [];
+         for each(var sid:* in slots) if(sid) packed.push(sid);
+         while(packed.length < 5) packed.push(null);
+         slots = packed;
          AbyssCore104.startBattle(slots,pending);
-      },pending != null || (filled() >= 3 && slots[0] != null));
+      },pending != null || filled() >= 3);
    }
 
    private function filled() : int
@@ -1593,7 +1791,13 @@ class AbyssEnemyPanel104 extends AbyssPanel104
       var names:Array = ["上路","中路","下路"];
       var counts:Array = [0,0,0];
       for(var c:int = 0; c < 3; c++) addText(names[c],lx + 30 + c * colW,90,colW,30,22,AbyssCore104.COLOR_TITLE,"center");
-      for each(var e:* in enemies)
+      var ordered:Array = enemies.concat();
+      ordered.sort(function(a:Object, b:Object):int
+      {
+         if(a is String || b is String) return 0;
+         return int(a.line) - int(b.line) || Number(a.pos) - Number(b.pos);
+      });
+      for each(var e:* in ordered)
       {
          var aid:String = e is String ? String(e) : String(e.aid);
          var lane:int = e is String ? counts.indexOf(Math.min(counts[0],counts[1],counts[2])) : Math.max(0,Math.min(2,int(e.line)));
@@ -1601,7 +1805,7 @@ class AbyssEnemyPanel104 extends AbyssPanel104
          var x:Number = lx + 30 + lane * colW + (colW - 90) * 0.5;
          var y:Number = 130 + counts[lane] * 140;
          counts[lane]++;
-         var card:Sprite = heroCard(aid,AbyssCore104.family(aid),slv > 0 ? slv : 5,x,y,1,!(e is String) && int(e.leader) == 1);
+         var card:Sprite = heroCard(aid,AbyssCore104.family(aid),slv > 0 ? slv : 5,x,y,1,!(e is String) && int(e.leader) == 1,null,!(e is String) && int(e.limit_break) == 1);
          addText(AbyssCore104.heroName(aid),x - 30,y + 94,150,24,16,AbyssCore104.isOrange(aid) ? AbyssCore104.COLOR_ORANGE : AbyssCore104.COLOR_PURPLE,"center");
          bindInfo(card,aid,slv > 0 ? slv : 5);
       }
@@ -1636,7 +1840,7 @@ class AbyssRestPanel104 extends AbyssPanel104
       var tabW:Number = (iw - 90) / 2;
       var b1:LOL_Scale9Button = addButton("技能 5→10",lx + 30,90,tabW,60,function():void { option = "skill"; heroId = validFor(heroId) ? heroId : null; refresh(); });
       var b2:LOL_Scale9Button = addButton("升为橙卡",lx + 60 + tabW,90,tabW,60,function():void { option = "orange"; heroId = validFor(heroId) ? heroId : null; refresh(); });
-      addFrame((option == "skill" ? b1.x : b2.x) - 4,86,tabW + 8,68,AbyssCore104.COLOR_SELECT);
+      selectMark((option == "skill" ? b1.x : b2.x) - 6,84,tabW + 12,72,"current");
       addText("二选一，每个休息处只能使用一次",lx + 20,156,iw - 40,24,17,AbyssCore104.COLOR_DIM,"center");
       // Target -> result preview, laid out like the alchemy screen.
       var py:Number = 186;
@@ -1680,7 +1884,7 @@ class AbyssRestPanel104 extends AbyssPanel104
             addText(AbyssCore104.heroName(String(h.aid)),hx - 14,hy + 90 * scale,90 * scale + 28,22,14,AbyssCore104.COLOR_TEXT,"center");
             bindHero(card,hid);
          }
-         if(hid == heroId) addFrame(hx - 3,hy - 3,90 * scale + 6,90 * scale + 6,AbyssCore104.COLOR_SELECT);
+         if(hid == heroId) selectMark(hx - 5,hy - 5,90 * scale + 10,90 * scale + 10,"picked");
       }
       if(!any) addText("当前没有可进行此项提升的英雄，可切换选项或离开",lx + 20,by - 128,iw - 40,26,17,AbyssCore104.COLOR_RED,"center");
       var name:String = heroId && r.pool[heroId] ? AbyssCore104.heroName(String(r.pool[heroId].aid)) : "";
@@ -1740,20 +1944,55 @@ class AbyssPoolPanel104 extends AbyssPanel104
       var r:Object = AbyssCore104.run;
       if(!r) return;
       var ids:Array = AbyssCore104.poolIds();
-      addText(ids.length + "/" + AbyssCore104.poolCap() + " 人　只能加入，不能移出　点击头像查看技能",lx + 20,88,iw - 40,26,18,AbyssCore104.COLOR_TITLE,"center");
+      var cap:int = AbyssCore104.poolCap();
+      addText(ids.length + "/" + cap + " 人　只能加入，不能移出　点击头像查看技能",lx + 20,88,iw - 40,26,18,AbyssCore104.COLOR_TITLE,"center");
+      // Every pool place is drawn, so the empty ones show how much room is left.
       var cols:int = 5;
       var cellW:Number = (iw - 60) / cols;
-      for(var k:int = 0; k < ids.length; k++)
+      var rows:int = Math.ceil(Math.max(cap,ids.length) / cols);
+      var cellH:Number = Math.min(122,(by - 380 - 124) / Math.max(1,rows));
+      var scale:Number = Math.min(0.82,(cellH - 40) / 90);
+      for(var k:int = 0; k < Math.max(cap,ids.length); k++)
       {
+         var hx:Number = lx + 30 + (k % cols) * cellW + (cellW - 90 * scale) * 0.5;
+         var hy:Number = 124 + int(k / cols) * cellH;
+         if(k >= ids.length)
+         {
+            var slot:Sprite = emptyCard("",hx,hy,scale);
+            slot.alpha = 0.35;
+            slot.touchable = false;
+            continue;
+         }
          var hid:String = ids[k];
          var h:Object = r.pool[hid];
-         var hx:Number = lx + 30 + (k % cols) * cellW + (cellW - 90 * 0.82) * 0.5;
-         var hy:Number = 124 + int(k / cols) * 128;
-         var card:Sprite = heroCard(String(h.aid),hid,int(h.slv),hx,hy,0.82);
-         addText(AbyssCore104.heroName(String(h.aid)),hx - 16,hy + 76,106,20,14,AbyssCore104.isOrange(String(h.aid)) ? AbyssCore104.COLOR_ORANGE : AbyssCore104.COLOR_PURPLE,"center");
-         addText("技能" + int(h.slv) + "级" + (h.temporary ? "·本局" : ""),hx - 16,hy + 96,106,20,13,AbyssCore104.COLOR_DIM,"center");
+         var card:Sprite = heroCard(String(h.aid),hid,int(h.slv),hx,hy,scale);
+         addText(AbyssCore104.heroName(String(h.aid)),hx - 16,hy + 90 * scale - 4,90 * scale + 32,20,14,AbyssCore104.isOrange(String(h.aid)) ? AbyssCore104.COLOR_ORANGE : AbyssCore104.COLOR_PURPLE,"center");
+         addText("技能" + int(h.slv) + "级" + (h.temporary ? "·本局" : ""),hx - 16,hy + 90 * scale + 15,90 * scale + 32,20,13,AbyssCore104.COLOR_DIM,"center");
          bindInfo(card,String(h.aid),int(h.slv));
       }
+      buildBonds(124 + rows * cellH + 8);
+   }
+
+   // Bond summary under the pool rule: a bond works once all members are in the pool.
+   private function buildBonds(top:Number) : void
+   {
+      var boxH:Number = by - 40 - top;
+      if(boxH < 120) return;
+      addBox(lx + 25,top,iw - 50,boxH);
+      var list:Array = AbyssCore104.poolBonds();
+      var active:Array = [];
+      var near:Array = [];
+      for each(var b:Object in list)
+      {
+         if(b.active) active.push(b.name);
+         else if(b.mixed) near.push(b.name + "（需同为紫卡或同为橙卡）");
+         else if(b.missing.length <= 2) near.push(b.name + "（缺 " + b.missing.join("、") + "）");
+      }
+      addText("羁绊　阵容池中集齐全部成员即生效",lx + 45,top + 16,iw - 90,26,19,AbyssCore104.INK_NAME,"left");
+      var lines:Array = [];
+      lines.push("已生效（" + active.length + "）：" + (active.length ? active.join("、") : "暂无"));
+      lines.push("即将集齐：" + (near.length ? near.join("、") : "暂无"));
+      addText(lines.join("\n"),lx + 45,top + 48,iw - 90,boxH - 60,17,AbyssCore104.INK_TEXT,"left");
    }
 
    private function bindInfo(card:Sprite, aid:String, slv:int) : void
@@ -1769,14 +2008,50 @@ class AbyssCodexPanel104 extends AbyssPanel104
       return "卡池图鉴";
    }
 
+   // Every hero the mode can ever offer: all A_1*_5 plus orange-only skins, minus the
+   // server's excluded_families (placeholder/commentator heroes). Never keep a list here.
+   public static function catalogue() : Array
+   {
+      var excluded:Object = {};
+      for each(var ex:String in AbyssCore104.cfg().excluded_families) excluded[ex] = true;
+      var avatars:Object = GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar : {};
+      var result:Array = [];
+      for(var aid:String in avatars)
+      {
+         if(!/^A_1\d+_5$/.test(aid) || excluded[AbyssCore104.family(aid)]) continue;
+         result.push(aid);
+      }
+      for each(aid in AbyssCore104.cfg().skin_orange_only)
+      {
+         if(!excluded[AbyssCore104.family(aid)] && result.indexOf(aid) < 0) result.push(aid);
+      }
+      result.sort();
+      return result;
+   }
+
    override protected function build() : void
    {
       var u:Object = AbyssCore104.unlocked;
       var purple:Array = u.purple is Array ? u.purple as Array : [];
       var orange:Array = u.orange is Array ? u.orange as Array : [];
       var standalone:Array = u.standalone_orange is Array ? u.standalone_orange as Array : [];
-      addText("紫卡 " + purple.length + "　已开放橙卡 " + orange.length + "　皮肤橙卡 " + standalone.length,lx + 20,88,iw - 40,26,20,AbyssCore104.COLOR_TITLE,"center");
-      addText("紫卡：持有或曾获得即开放　橙卡：该英雄紫卡在本模式登场后开放",lx + 20,116,iw - 40,24,15,AbyssCore104.COLOR_DIM,"center");
+      var rows:Array = [];
+      for each(var aid:String in catalogue())
+      {
+         var fam:String = AbyssCore104.family(aid);
+         var orangeOnly:Boolean = AbyssCore104.isOrange(aid);
+         // state 0 = orange open, 1 = purple only, 2 = locked
+         var state:int = 2;
+         if(orangeOnly ? standalone.indexOf(aid) >= 0 : orange.indexOf(fam + "_6") >= 0) state = 0;
+         else if(!orangeOnly && purple.indexOf(aid) >= 0) state = 1;
+         var shown:String = state == 0 && !orangeOnly ? fam + "_6" : aid;
+         rows.push({"aid":shown,"state":state,"orangeOnly":orangeOnly});
+      }
+      rows.sortOn(["state","aid"]);
+      var counts:Array = [0,0,0];
+      for each(var row:Object in rows) counts[row.state]++;
+      addText("橙卡 " + counts[0] + "　紫卡 " + counts[1] + "　未解锁 " + counts[2],lx + 20,88,iw - 40,26,20,AbyssCore104.COLOR_TITLE,"center");
+      addText("点击卡牌查看技能与开放条件",lx + 20,116,iw - 40,24,15,AbyssCore104.COLOR_DIM,"center");
       var scroll:ScrollContainer = new ScrollContainer();
       scroll.layout = new VerticalLayout();
       scroll.setSize(iw - 40,by - 40 - 150);
@@ -1789,28 +2064,29 @@ class AbyssCodexPanel104 extends AbyssPanel104
       var cols:int = 6;
       var cellW:Number = (iw - 40) / cols;
       var scale:Number = 0.7;
-      var rows:Array = [];
-      for each(var aid:String in purple)
-      {
-         var fam:String = AbyssCore104.family(aid);
-         rows.push({"aid":aid,"orange":orange.indexOf(fam + "_6") >= 0,"standalone":false});
-      }
-      for each(aid in standalone) rows.push({"aid":aid,"orange":true,"standalone":true});
       for(var i:int = 0; i < rows.length; i++)
       {
-         var row:Object = rows[i];
+         row = rows[i];
          var x:Number = (i % cols) * cellW + (cellW - 90 * scale) * 0.5;
-         var y:Number = int(i / cols) * 112;
-         var card:Sprite = heroCard(row.orange && !row.standalone ? AbyssCore104.family(row.aid) + "_6" : String(row.aid),AbyssCore104.family(row.aid),5,x,y,scale,false,content);
-         addText(row.standalone ? "皮肤橙卡" : (row.orange ? "橙卡已开放" : "登场后开放橙卡"),x - 14,y + 66,90 * scale + 28,20,13,row.orange ? AbyssCore104.COLOR_ORANGE : AbyssCore104.COLOR_DIM,"center",content);
-         addText(AbyssCore104.heroName(String(row.aid)),x - 14,y + 84,90 * scale + 28,20,13,AbyssCore104.COLOR_TEXT,"center",content);
-         bindInfo(card,row.orange && !row.standalone ? AbyssCore104.family(row.aid) + "_6" : String(row.aid));
+         var y:Number = int(i / cols) * 82;
+         var card:Sprite = heroCard(String(row.aid),AbyssCore104.family(String(row.aid)),5,x,y,scale,false,content);
+         if(row.state == 2)
+         {
+            gray(card);
+            var lock:Image = GlobalFunction.createImage("UI_icon_lock_1_0000");
+            lock.x = x + int((90 * scale - lock.width) * 0.5);
+            lock.y = y + int((90 * scale - lock.height) * 0.5);
+            lock.touchable = false;
+            content.addChild(lock);
+         }
+         bindInfo(card,String(row.aid),int(row.state),Boolean(row.orangeOnly));
       }
    }
 
-   private function bindInfo(card:Sprite, aid:String) : void
+   private function bindInfo(card:Sprite, aid:String, state:int, orangeOnly:Boolean) : void
    {
-      onTap(card,function():void { AbyssCore104.showHeroInfo(aid,5); });
+      var note:String = state == 2 ? "开放条件：持有或曾获得该英雄后开放" : (state == 1 ? "本模式登场后开放橙卡" : (orangeOnly ? "皮肤橙卡：只出现在精英战后的选人中" : "橙卡已开放"));
+      onTap(card,function():void { AbyssCore104.showHeroInfo(aid,5,note); });
    }
 }
 
@@ -1863,7 +2139,7 @@ class AbyssConfirmPanel104 extends AbyssPanel104
          var safe:LOL_Scale9Button = addButton(safeLabel,lx + iw - 270,y,200,70,safeFn);
          // The safe choice is the default: mark it like the native highlighted button.
          safe.fontColor = 0x1A6F1A;
-         addFrame(safe.x - 4,safe.y - 4,208,78,AbyssCore104.COLOR_SELECT);
+         selectMark(safe.x - 6,safe.y - 6,212,82,"current");
       }
       else addButton(safeLabel,lx + (iw - 200) * 0.5,y,200,70,safeFn);
       if(mBtn_close) mBtn_close.visible = tapOutsideIsSafe;
@@ -1922,20 +2198,22 @@ class AbyssRelicView104
       icon.x = x + 12;
       icon.y = y + 18;
       parent.addChild(icon);
+      // Dark ink on the tan box (native equipment-list colours); ancient lines in deep teal.
       var mainAncient:Boolean = item.main && item.main.ancient;
-      add(parent,AbyssCore104.relicName(item) + (tag ? "　" + tag : ""),x + 116,y + 10,w - 132,28,22,mainAncient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE);
-      add(parent,item.main ? String(item.main.text) : "",x + 116,y + 40,w - 132,46,17,mainAncient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TEXT);
+      add(parent,AbyssCore104.relicName(item),x + 116,y + 10,w - 132,28,22,mainAncient ? AbyssCore104.INK_ANCIENT : AbyssCore104.INK_NAME);
+      if(tag) add(parent,tag,x + w - 236,y + 13,214,26,17,AbyssCore104.INK_GREEN,"right");
+      add(parent,item.main ? String(item.main.text) : "",x + 116,y + 40,w - 132,46,17,mainAncient ? AbyssCore104.INK_ANCIENT : AbyssCore104.INK_TEXT);
       var subs:Array = item.substats is Array ? item.substats as Array : [];
       for(var i:int = 0; i < subs.length; i++)
       {
-         add(parent,String(subs[i].text),x + 116 + i * ((w - 132) / 3),y + 98,(w - 132) / 3,28,18,subs[i].ancient ? AbyssCore104.COLOR_ANCIENT : 0xCCCCCC);
+         add(parent,String(subs[i].text),x + 116 + i * ((w - 132) / 3),y + 98,(w - 132) / 3,28,18,subs[i].ancient ? AbyssCore104.INK_ANCIENT : AbyssCore104.INK_TEXT);
       }
    }
 
-   public static function add(parent:Sprite, value:String, x:Number, y:Number, w:Number, h:Number, size:int, color:uint) : void
+   public static function add(parent:Sprite, value:String, x:Number, y:Number, w:Number, h:Number, size:int, color:uint, align:String = "left") : void
    {
       var tf:TextField = GlobalFunction.createTextField(w,h,value,"",size,color);
-      tf.hAlign = "left";
+      tf.hAlign = align;
       tf.vAlign = "top";
       tf.x = x;
       tf.y = y;
@@ -1968,63 +2246,92 @@ class AbyssResultPanel104 extends AbyssPanel104
       var newOrange:Array = [];
       if(orangeNow && AbyssCore104.orangeBefore)
       {
-         for each(var o:String in orangeNow) if(AbyssCore104.orangeBefore.indexOf(o) < 0) newOrange.push(AbyssCore104.heroName(o));
+         for each(var o:String in orangeNow) if(AbyssCore104.orangeBefore.indexOf(o) < 0) newOrange.push(o);
       }
-      unlockText.push("新开放橙卡：" + (newOrange.length ? newOrange.join("、") : "无"));
       if(r.status == "cleared" && int(acc.max_difficulty) > AbyssCore104.maxBefore) unlockText.push("已解锁难度 " + int(acc.max_difficulty));
       var decksNow:Array = acc.decks as Array;
       if(decksNow && AbyssCore104.decksBefore)
       {
-         for each(var d:String in decksNow) if(AbyssCore104.decksBefore.indexOf(d) < 0)
-         {
-            var info:Object = AbyssCore104.cfg().decks ? AbyssCore104.cfg().decks[d] : null;
-            unlockText.push("已解锁起始卡组：" + (info && info.name ? info.name : d));
-         }
+         for each(var d:String in decksNow) if(AbyssCore104.decksBefore.indexOf(d) < 0) unlockText.push("已解锁起始卡组：" + AbyssCore104.deckName(d));
       }
       if(r.status != "cleared") unlockText.push("未通关：不发放通关保底，不解锁下一难度");
-      addText(unlockText.join("\n"),lx + 40,y,iw - 80,unlockText.length * 26 + 6,18,AbyssCore104.COLOR_TEXT,"left");
-      y += unlockText.length * 26 + 12;
+      if(unlockText.length)
+      {
+         addText(unlockText.join("\n"),lx + 40,y,iw - 80,unlockText.length * 26 + 6,18,AbyssCore104.COLOR_TEXT,"left");
+         y += unlockText.length * 26 + 10;
+      }
+      var cols:int = 10;
+      var cellW:Number = (iw - 60) / cols;
+      // Newly opened orange cards as native hero cards with their names.
+      addText("新开放橙卡" + (newOrange.length ? "（" + newOrange.length + "）" : "：无"),lx + 40,y,iw - 80,26,20,AbyssCore104.COLOR_TITLE,"left");
+      y += 30;
+      if(newOrange.length)
+      {
+         var ocols:int = 6;
+         var ocellW:Number = (iw - 60) / ocols;
+         for(var n:int = 0; n < newOrange.length; n++)
+         {
+            var aid:String = String(newOrange[n]);
+            var ox:Number = lx + 30 + (n % ocols) * ocellW + (ocellW - 63) * 0.5;
+            var oy:Number = y + int(n / ocols) * 96;
+            heroCard(aid,AbyssCore104.family(aid),5,ox,oy,0.7);
+            addText(AbyssCore104.heroName(aid),ox - 20,oy + 64,103,22,14,AbyssCore104.COLOR_ORANGE,"center");
+         }
+         y += Math.ceil(newOrange.length / ocols) * 96 + 4;
+      }
       addText("阵容池",lx + 40,y,200,26,20,AbyssCore104.COLOR_TITLE,"left");
       y += 28;
       var ids:Array = AbyssCore104.poolIds();
-      var cols:int = 10;
-      var cellW:Number = (iw - 60) / cols;
       for(var k:int = 0; k < ids.length; k++)
       {
          var h:Object = r.pool[ids[k]];
          heroCard(String(h.aid),ids[k],int(h.slv),lx + 30 + (k % cols) * cellW,y + int(k / cols) * 60,0.58);
       }
       y += Math.max(1,Math.ceil(ids.length / cols)) * 60 + 8;
-      addText("本局获得的深渊遗物",lx + 40,y,300,26,20,AbyssCore104.COLOR_TITLE,"left");
-      y += 30;
       var rewards:Array = AbyssCore104.rewardsOf(null);
-      if(!rewards.length) addText("无",lx + 40,y,300,26,18,AbyssCore104.COLOR_DIM,"left");
-      var lines:Array = [];
-      for each(var row:Object in rewards)
+      addText("本局获得的深渊遗物" + (rewards.length ? "（" + rewards.length + "）" : "：无"),lx + 40,y,iw - 80,26,20,AbyssCore104.COLOR_TITLE,"left");
+      y += 32;
+      // Same relic cards as the relic list; scrolls when they do not fit.
+      if(rewards.length)
       {
-         var item:Object = AbyssCore104.relics[row.item_id];
-         if(item) lines.push(AbyssCore104.relicName(item) + (row.guaranteed ? "（通关保底）" : ""));
+         var scroll:ScrollContainer = new ScrollContainer();
+         scroll.layout = new VerticalLayout();
+         scroll.setSize(iw - 60,Math.max(150,by - 110 - y));
+         scroll.x = lx + 30;
+         scroll.y = y;
+         scroll.hasElasticEdges = false;
+         body.addChild(scroll);
+         var content:Sprite = new Sprite();
+         scroll.addChild(content);
+         var ry:Number = 0;
+         for each(var row:Object in rewards)
+         {
+            var item:Object = AbyssCore104.relics[row.item_id];
+            if(!item) continue;
+            AbyssRelicView104.draw(this,content,item,0,ry,iw - 60,row.guaranteed ? "通关保底" : "");
+            ry += 148;
+         }
       }
-      if(lines.length) addText(lines.join("\n"),lx + 40,y,iw - 80,Math.max(30,by - 110 - y),19,AbyssCore104.COLOR_ANCIENT,"left");
-      addButton("去装备",lx + 70,by - 90,190,66,function():void
-      {
-         AbyssCore104.openRelicBag(-1);
-      },rewards.length > 0);
+      // Relics are worn on the native hero equipment bar (7th slot).
+      addButton("去装备",lx + 70,by - 90,190,66,AbyssCore104.goEquip);
       addButton("返回",lx + iw - 260,by - 90,190,66,AbyssCore104.backToEntry);
    }
 }
 
 // ---------------------------------------------------------------- relics
 
-class AbyssRelicBagPanel104 extends AbyssPanel104
+// Relic chooser in the layout of the native PanelEquipInfoSelect / ItemEquipSelect rows
+// (those classes read my_equips/Equip config, which relics are not part of).
+//   slot >= 0        : 7th slot of that team position; row button 装备 / 卸下.
+//   mode "target"    : pick the reroll target; "material": pick the consumed relic.
+class AbyssRelicPickPanel104 extends AbyssPanel104
 {
    private var slot:int;
-   // Reroll picking: "target" or "material"; onPick(itemId) receives the choice.
    private var pickMode:String;
    private var onPick:Function;
    private var excludeId:String;
 
-   public function AbyssRelicBagPanel104(pickSlot:int, mode:String = null, picked:Function = null, exclude:String = null)
+   public function AbyssRelicPickPanel104(pickSlot:int, mode:String = null, picked:Function = null, exclude:String = null)
    {
       super();
       slot = pickSlot;
@@ -2037,7 +2344,12 @@ class AbyssRelicBagPanel104 extends AbyssPanel104
    {
       if(pickMode == "target") return "选择要重随的深渊遗物";
       if(pickMode == "material") return "选择消耗的深渊遗物";
-      return slot >= 0 ? "选择深渊遗物" : "深渊遗物";
+      return "选择深渊遗物";
+   }
+
+   override protected function panelHeight() : Number
+   {
+      return GlobalData.$center_height;
    }
 
    private function pickReason(id:String) : String
@@ -2051,74 +2363,145 @@ class AbyssRelicBagPanel104 extends AbyssPanel104
    override protected function build() : void
    {
       var items:Object = AbyssCore104.relics;
-      var ids:Array = [];
-      for(var id:String in items) ids.push(id);
-      ids.sort();
-      if(pickMode == "material") addText("消耗品会被销毁，必须未穿戴且不是目标本身",lx + 20,88,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
-      else if(pickMode == "target") addText("可选择已穿戴的深渊遗物，重随后仍在原位",lx + 20,88,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
-      else addText(slot >= 0 ? "穿戴到 " + AbyssCore104.positionName(slot) + "（第7格）" : "共 " + ids.length + " 件　每个阵位第7格可穿 1 件，在深渊回廊以外的玩法生效",lx + 20,88,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
+      var ids:Array = AbyssRelicRows104.sortedIds(slot);
+      var hint:String = pickMode == "material" ? "消耗品会被销毁，必须未穿戴且不是目标本身" : (pickMode == "target" ? "可选择已穿戴的深渊遗物，重随后仍在原位" : "穿戴到 " + AbyssCore104.positionName(slot) + "（第7格）");
+      addText(hint,lx + 20,84,iw - 40,26,17,AbyssCore104.COLOR_TITLE,"center");
       if(!ids.length)
       {
-         addText("暂无深渊遗物。在深渊回廊中击败 Boss 或通关可获得。",lx + 40,180,iw - 80,60,20,AbyssCore104.COLOR_DIM,"center");
+         addText("暂无深渊遗物。在深渊回廊中击败 Boss 或通关可获得。",lx + 40,200,iw - 80,60,20,AbyssCore104.COLOR_DIM,"center");
          return;
       }
-      var scroll:ScrollContainer = new ScrollContainer();
-      scroll.layout = new VerticalLayout();
-      scroll.setSize(iw - 40,by - 40 - 124);
-      scroll.x = lx + 20;
-      scroll.y = 120;
-      scroll.hasElasticEdges = false;
-      body.addChild(scroll);
-      var content:Sprite = new Sprite();
-      scroll.addChild(content);
-      for(var i:int = 0; i < ids.length; i++)
+      var self:AbyssRelicPickPanel104 = this;
+      AbyssRelicRows104.build(body,lx + 10,116,iw - 20,by - 40 - 116,ids,function(id:String):Object
       {
-         var item:Object = items[ids[i]];
-         var worn:int = AbyssCore104.relicSlotOf(ids[i]);
-         var holder:Sprite = new Sprite();
-         holder.y = i * 150;
-         content.addChild(holder);
-         var reason:String = pickReason(String(ids[i]));
-         AbyssRelicView104.draw(this,holder,item,0,0,iw - 40,reason ? reason : (worn >= 0 ? "已穿戴：" + (worn + 1) + "号位" : ""));
-         if(reason) holder.alpha = 0.45;
-         var hit:Quad = new Quad(iw - 40,140,0x000000);
-         hit.alpha = 0.01;
-         holder.addChild(hit);
-         bindItem(hit,String(ids[i]));
-      }
-   }
-
-   private function bindItem(hit:Quad, id:String) : void
-   {
-      onTap(hit,function():void
+         var worn:int = AbyssCore104.relicSlotOf(id);
+         if(pickMode)
+         {
+            var reason:String = pickReason(id);
+            return {"tag":reason ? reason : (worn >= 0 ? "已穿戴：" + (worn + 1) + "号位" : ""),"label":"选择","enabled":reason == null,"red":false};
+         }
+         if(worn == slot) return {"tag":"已穿戴：" + (worn + 1) + "号位","label":"卸下","enabled":true,"red":true};
+         return {"tag":worn >= 0 ? "已穿戴：" + (worn + 1) + "号位" : "","label":"装备","enabled":true,"red":false};
+      },function(id:String):void
       {
          if(pickMode)
          {
             var reason:String = pickReason(id);
-            if(reason)
-            {
-               AbyssCore104.toast(reason);
-               return;
-            }
+            if(reason) { AbyssCore104.toast(reason); return; }
             AbyssCore104.closeTop();
             if(onPick != null) onPick(id);
             return;
          }
-         AbyssCore104.open(new AbyssRelicDetailPanel104(id,slot));
+         if(AbyssCore104.relicSlotOf(id) == slot) AbyssCore104.unequipRelic(id,function():void { AbyssCore104.closeTop(); });
+         else AbyssCore104.equipRelic(id,slot,function():void { AbyssCore104.closeTop(); });
+      },function(id:String):void
+      {
+         AbyssCore104.open(new AbyssRelicInfoPanel104(id,pickMode ? -2 : slot));
       });
    }
 }
 
-class AbyssRelicDetailPanel104 extends AbyssPanel104
+// Shared list rows: native ItemEquipSelect geometry (580x105, UI_bg_9slice_0 body,
+// equipment frame on the left, dark name, two attribute lines, 84x45 native button).
+class AbyssRelicRows104
+{
+   public static function sortedIds(slot:int) : Array
+   {
+      var items:Object = AbyssCore104.relics;
+      var rows:Array = [];
+      for(var id:String in items)
+      {
+         var worn:int = AbyssCore104.relicSlotOf(id);
+         rows.push({"id":id,"key":worn == slot && slot >= 0 ? 0 : (worn >= 0 ? 1 : 2)});
+      }
+      rows.sortOn(["key","id"]);
+      var ids:Array = [];
+      for each(var row:Object in rows) ids.push(row.id);
+      return ids;
+   }
+
+   // state(id) -> {tag,label,enabled,red}; onButton(id); onInfo(id) when the row body is tapped.
+   public static function build(parent:Sprite, x:Number, y:Number, w:Number, h:Number, ids:Array, state:Function, onButton:Function, onInfo:Function) : ScrollContainer
+   {
+      var scroll:ScrollContainer = new ScrollContainer();
+      scroll.layout = new VerticalLayout();
+      scroll.setSize(w,h);
+      scroll.x = x;
+      scroll.y = y;
+      scroll.hasElasticEdges = false;
+      parent.addChild(scroll);
+      var content:Sprite = new Sprite();
+      scroll.addChild(content);
+      var items:Object = AbyssCore104.relics;
+      var rowW:Number = Math.min(580,w);
+      var left:Number = int((w - rowW) * 0.5);
+      for(var i:int = 0; i < ids.length; i++)
+      {
+         var row:Sprite = new Sprite();
+         row.x = left;
+         row.y = i * 110;
+         content.addChild(row);
+         drawRow(row,items[ids[i]],rowW,state(ids[i]),String(ids[i]),onButton,onInfo);
+      }
+      return scroll;
+   }
+
+   private static function drawRow(row:Sprite, item:Object, rowW:Number, st:Object, id:String, onButton:Function, onInfo:Function) : void
+   {
+      var bg:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",rowW - 105,95,new Rectangle(110,55,70,20));
+      bg.x = 108;
+      bg.y = 5;
+      row.addChild(bg);
+      var frame:ItemEquip = new ItemEquip();
+      frame.width = 100;
+      frame.data = {"id":null,"indexID_s":null,"status":-1,"isPVP":0,"lock":0,"lockdesc":0,"teamNum":0,"sympClip":false};
+      frame.touchable = false;
+      frame.y = 2;
+      row.addChild(frame);
+      var art:Sprite = AbyssRelicArt104.create(item,100);
+      art.y = 2;
+      art.touchable = false;
+      row.addChild(art);
+      var mainAncient:Boolean = item.main && item.main.ancient;
+      AbyssRelicView104.add(row,AbyssCore104.relicName(item),130,12,rowW - 260,28,20,mainAncient ? AbyssCore104.INK_ANCIENT : 0x111111);
+      if(st.tag) AbyssRelicView104.add(row,String(st.tag),rowW - 250,12,150,24,15,AbyssCore104.INK_GREEN,"right");
+      AbyssRelicView104.add(row,item.main ? String(item.main.text) : "",130,40,rowW - 240,40,15,mainAncient ? AbyssCore104.INK_ANCIENT : AbyssCore104.INK_TEXT);
+      var subs:Array = item.substats is Array ? item.substats as Array : [];
+      var parts:Array = [];
+      for each(var s:Object in subs) parts.push(String(s.text));
+      AbyssRelicView104.add(row,parts.join("　"),130,76,rowW - 240,22,15,AbyssCore104.INK_TEXT);
+      var hit:Quad = new Quad(rowW - 105,95,0x000000);
+      hit.alpha = 0.01;
+      hit.x = 0;
+      hit.y = 5;
+      row.addChild(hit);
+      hit.addEventListener("touch",function(e:TouchEvent):void
+      {
+         if(e.getTouch(hit,"ended") && onInfo != null) onInfo(id);
+      });
+      var btn:LOL_Scale9Button = new LOL_Scale9Button(String(st.label),84,45,st.red ? "UI_btn_smallFun_1_0000" : "UI_btn_enterGame_0_0000",true,false);
+      btn.x = rowW - 84 - 10;
+      btn.y = int((105 - 45 + 26) * 0.5);
+      btn.enabled = Boolean(st.enabled);
+      btn.addEventListener("triggered",function(e:Event):void { onButton(id); });
+      row.addChild(btn);
+   }
+}
+
+// Relic detail in the layout of the native equipment detail (frame + name at top,
+// UI_bg_9slice_0 body). slot >= 0: opened from that 7th slot (卸下 / 更换);
+// slot == -1: equipment management tab (wear to a position, take off, reroll);
+// slot == -2: read only (from a picker).
+class AbyssRelicInfoPanel104 extends AbyssPanel104
 {
    private var itemId:String;
    private var slot:int;
 
-   public function AbyssRelicDetailPanel104(id:String, pickSlot:int)
+   public function AbyssRelicInfoPanel104(id:String, fromSlot:int)
    {
       super();
       itemId = id;
-      slot = pickSlot;
+      slot = fromSlot;
    }
 
    override protected function panelTitle() : String
@@ -2128,7 +2511,7 @@ class AbyssRelicDetailPanel104 extends AbyssPanel104
 
    override protected function panelHeight() : Number
    {
-      return slot >= 0 ? 420 : 640;
+      return 470;
    }
 
    override protected function build() : void
@@ -2139,54 +2522,123 @@ class AbyssRelicDetailPanel104 extends AbyssPanel104
          addText("该深渊遗物已不存在",lx + 40,120,iw - 80,40,22,AbyssCore104.COLOR_DIM,"center");
          return;
       }
-      AbyssRelicView104.draw(this,body,item,lx + 30,90,iw - 60);
+      var frame:ItemEquip = new ItemEquip();
+      frame.width = 100;
+      frame.data = {"id":null,"indexID_s":null,"status":-1,"isPVP":0,"lock":0,"lockdesc":0,"teamNum":0,"sympClip":false};
+      frame.touchable = false;
+      frame.x = lx + 30;
+      frame.y = 96;
+      body.addChild(frame);
+      var art:Sprite = AbyssRelicArt104.create(item,100);
+      art.x = frame.x;
+      art.y = frame.y;
+      art.touchable = false;
+      body.addChild(art);
+      var mainAncient:Boolean = item.main && item.main.ancient;
+      addText(AbyssCore104.relicName(item),lx + 150,100,iw - 180,32,24,mainAncient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE);
       var worn:int = AbyssCore104.relicSlotOf(itemId);
-      addText(worn >= 0 ? "已穿戴：" + AbyssCore104.positionName(worn) : "未穿戴",lx + 30,240,iw - 60,26,19,worn >= 0 ? AbyssCore104.COLOR_GREEN : AbyssCore104.COLOR_DIM,"center");
+      addText(worn >= 0 ? "已穿戴：" + AbyssCore104.positionName(worn) : "未穿戴",lx + 150,136,iw - 180,26,18,worn >= 0 ? AbyssCore104.COLOR_GREEN : AbyssCore104.COLOR_DIM);
+      addText("不可强化、不可出售；在深渊回廊以外的玩法生效",lx + 150,164,iw - 180,24,15,AbyssCore104.COLOR_DIM);
+      var boxY:Number = 206;
+      var bg:DisplayObject = GlobalFunction.createScale9Image("UI_bg_9slice_0_0000",iw - 60,150,new Rectangle(110,55,70,20));
+      bg.x = lx + 30;
+      bg.y = boxY;
+      bg.touchable = false;
+      body.addChild(bg);
+      AbyssRelicView104.add(body,"主词条",lx + 50,boxY + 12,120,24,16,AbyssCore104.INK_NAME);
+      AbyssRelicView104.add(body,item.main ? String(item.main.text) : "",lx + 50,boxY + 36,iw - 100,48,17,mainAncient ? AbyssCore104.INK_ANCIENT : AbyssCore104.INK_TEXT);
+      AbyssRelicView104.add(body,"副词条",lx + 50,boxY + 88,120,24,16,AbyssCore104.INK_NAME);
+      var subs:Array = item.substats is Array ? item.substats as Array : [];
+      for(var i:int = 0; i < subs.length; i++)
+      {
+         AbyssRelicView104.add(body,String(subs[i].text),lx + 50 + i * ((iw - 100) / 3),boxY + 112,(iw - 100) / 3,26,17,subs[i].ancient ? AbyssCore104.INK_ANCIENT : AbyssCore104.INK_TEXT);
+      }
+      var bottomY:Number = by - 96;
       if(slot >= 0)
       {
-         if(worn == slot)
+         addButton("卸下",lx + 60,bottomY,200,66,function():void
          {
-            addButton("从" + (slot + 1) + "号位卸下",lx + (iw - 240) * 0.5,by - 96,240,66,function():void
-            {
-               AbyssCore104.unequipRelic(itemId,function():void { AbyssCore104.closeTop(); });
-            });
-         }
-         else
+            AbyssCore104.unequipRelic(itemId,function():void { AbyssCore104.closeTop(); });
+         },worn == slot);
+         addButton("更换",lx + iw - 260,bottomY,200,66,function():void
          {
-            addButton(worn >= 0 ? "改穿到" + (slot + 1) + "号位" : "穿戴到" + (slot + 1) + "号位",lx + 60,by - 96,220,66,function():void
-            {
-               AbyssCore104.equipRelic(itemId,slot,function():void { AbyssCore104.closeAll(); });
-            });
-            addButton("查看其他遗物",lx + iw - 280,by - 96,220,66,function():void
-            {
-               AbyssCore104.closeTop();
-               AbyssCore104.open(new AbyssRelicBagPanel104(slot));
-            });
-         }
-         return;
+            AbyssCore104.closeTop();
+            Starling.juggler.delayCall(function():void { AbyssCore104.open(new AbyssRelicPickPanel104(slot)); },AbyssCore104.REOPEN_DELAY);
+         });
       }
-      // Bag mode: choose a team position for the 7th slot.
-      addText("穿戴到阵位（第7格）",lx + 30,276,iw - 60,26,19,AbyssCore104.COLOR_TITLE,"center");
-      var bw:Number = (iw - 90) / 2;
-      for(var i:int = 0; i < 6; i++)
+      else if(slot == -1)
       {
-         bindEquip(addButton(AbyssCore104.positionName(i),lx + 30 + (i % 2) * (bw + 30),310 + int(i / 2) * 76,bw,64,null,worn != i),i);
-      }
-      if(worn >= 0)
-      {
-         addButton("卸下",lx + (iw - 200) * 0.5,by - 90,200,64,function():void
+         addButton("卸下",lx + 60,bottomY,200,66,function():void
          {
             AbyssCore104.unequipRelic(itemId,null);
-         });
+         },worn >= 0);
+         addButton("去重随",lx + iw - 260,bottomY,200,66,AbyssCore104.goReroll);
       }
    }
 
-   private function bindEquip(b:LOL_Scale9Button, index:int) : void
+}
+
+// Equipment management (PanelEquipBase) tab "深渊遗物": every relic as a native row.
+class AbyssRelicManageView104 extends Sprite
+{
+   private var viewH:Number;
+
+   public function AbyssRelicManageView104(height:Number)
    {
-      b.addEventListener("triggered",function(e:Event):void
+      super();
+      viewH = height;
+      addEventListener("addedToStage",onAdded);
+   }
+
+   private function onAdded(e:Event) : void
+   {
+      removeEventListener("addedToStage",onAdded);
+      addEventListener("removedFromStage",onRemoved);
+      GlobalData.$mEventDispatcher.addEventListener("abyss_relic_changed_104",onChanged);
+      AbyssCore104.send("user.abyss_relics",{},function(d:Object):void { draw(); });
+      draw();
+   }
+
+   private function onRemoved(e:Event) : void
+   {
+      removeEventListener("removedFromStage",onRemoved);
+      GlobalData.$mEventDispatcher.removeEventListener("abyss_relic_changed_104",onChanged);
+   }
+
+   private function onChanged(e:Event) : void
+   {
+      if(stage) draw();
+   }
+
+   private function draw() : void
+   {
+      removeChildren(0,-1,true);
+      var ids:Array = AbyssRelicRows104.sortedIds(-1);
+      var head:TextField = GlobalFunction.createTextField(GlobalData.$mStageWidth - 40,26,"共 " + ids.length + " 件　点开查看详情，可卸下或去重随","",17,AbyssCore104.COLOR_TITLE);
+      head.hAlign = "center";
+      head.x = 20;
+      head.touchable = false;
+      addChild(head);
+      if(!ids.length)
       {
-         AbyssCore104.equipRelic(itemId,index,function():void { AbyssCore104.toast("已穿戴到" + (index + 1) + "号位"); });
-      });
+         var none:TextField = GlobalFunction.createTextField(GlobalData.$mStageWidth - 80,60,"暂无深渊遗物。在副本 · 深渊回廊中击败 Boss 或通关可获得。","",20,AbyssCore104.COLOR_DIM);
+         none.hAlign = "center";
+         none.x = 40;
+         none.y = 80;
+         none.touchable = false;
+         addChild(none);
+         return;
+      }
+      AbyssRelicRows104.build(this,6,34,GlobalData.$mStageWidth - 12,viewH - 34,ids,function(id:String):Object
+      {
+         var worn:int = AbyssCore104.relicSlotOf(id);
+         return {"tag":worn >= 0 ? "已穿戴：" + (worn + 1) + "号位" : "","label":"详情","enabled":true,"red":false};
+      },openInfo,openInfo);
+   }
+
+   private function openInfo(id:String) : void
+   {
+      AbyssCore104.open(new AbyssRelicInfoPanel104(id,-1));
    }
 }
 
@@ -2226,7 +2678,7 @@ class AbyssRelicSlotView104
       holder.addChild(label);
       if(!item)
       {
-         var hint:TextField = GlobalFunction.createTextField(160,24,"在深渊回廊中获得","",15,AbyssCore104.COLOR_DIM);
+         var hint:TextField = GlobalFunction.createTextField(160,24,"副本 · 深渊回廊获得","",15,AbyssCore104.COLOR_DIM);
          hint.hAlign = "center";
          hint.x = -30;
          hint.y = 98;
@@ -2238,7 +2690,7 @@ class AbyssRelicSlotView104
       holder.addChild(hit);
       hit.addEventListener("touch",function(e:TouchEvent):void
       {
-         if(e.getTouch(hit,"ended")) PanelActivityExploration.openRelicSlot104(slot);
+         if(e.getTouch(hit,"ended")) AbyssCore104.openRelicSlot(slot);
       });
       return holder;
    }
@@ -2436,7 +2888,7 @@ class AbyssRerollView104 extends Sprite
 
    private function pickTarget() : void
    {
-      AbyssCore104.open(new AbyssRelicBagPanel104(-1,"target",function(id:String):void
+      AbyssCore104.open(new AbyssRelicPickPanel104(-1,"target",function(id:String):void
       {
          if(targetId != id) index = -1;
          targetId = id;
@@ -2452,7 +2904,7 @@ class AbyssRerollView104 extends Sprite
          AbyssCore104.toast("请先选择目标深渊遗物");
          return;
       }
-      AbyssCore104.open(new AbyssRelicBagPanel104(-1,"material",function(id:String):void
+      AbyssCore104.open(new AbyssRelicPickPanel104(-1,"material",function(id:String):void
       {
          materialId = id;
          draw();

@@ -17,6 +17,7 @@ package com.meng52.game.ui.map
    import com.meng52.game.module.map.GameMapTools;
    import com.meng52.game.ui.effect.BaseLayer;
    import com.meng52.game.ui.screen.PanelCenterPVP;
+   import com.meng52.game.ui.screen.PanelCenterPVE;
    import com.meng52.game.ui.effect.DisplayTools;
    import com.meng52.game.ui.element.HtmlTextField;
    import com.meng52.game.ui.element.LOL_Button;
@@ -388,6 +389,18 @@ package com.meng52.game.ui.map
          if(GameMap.currentMap && GameMap.currentMap.settlementPending)
          {
             GameMap.currentMap.retryBattleFinish();
+            return;
+         }
+         if(GameMap.currentMap && GameMap.currentMap.re && GameMap.currentMap.re.data.fight_kind == "abyss")
+         {
+            if(GlobalData.$abyss104) GlobalData.$abyss104.resume = true;
+            GlobalData.backFromExploration = false;
+            PanelCenterPVE.$abyssTab104 = true;
+            // Game.onSTAGE sends exploration mode directly to panel_maze.
+            // Leave that mode before restoring the Abyss tab through stage_ui.
+            GlobalData.$setPVE();
+            GlobalData.$mGameClassObject.mLayoutUICenter.mCurrPanel = "center_pve";
+            GlobalData.$mEventDispatcher.dispatchEventWith("stage_ui");
             return;
          }
          if(GameMap.currentMap && GameMap.currentMap.re && GameMap.currentMap.re.data.fight_kind=="formation")

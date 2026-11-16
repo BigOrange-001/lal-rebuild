@@ -13,6 +13,7 @@ package com.meng52.game.ui.screen
    import com.meng52.game.ui.element.ItemPVEmain;
    import com.meng52.game.ui.element.LOL_Button;
    import com.meng52.game.ui.element.LOL_TextField;
+   import com.meng52.game.ui.panel.PanelActivityExploration;
    import com.meng52.game.ui.stage.GuideTools;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
    import com.meng52.net.SendServiceAMFFun;
@@ -26,6 +27,8 @@ package com.meng52.game.ui.screen
    import feathers.layout.HorizontalLayout;
    import feathers.layout.TiledRowsLayout;
    import feathers.layout.VerticalLayout;
+   import flash.geom.Rectangle;
+   import starling.display.DisplayObject;
    import starling.display.DisplayObjectContainer;
    import starling.display.Image;
    import starling.display.MovieClip;
@@ -39,6 +42,18 @@ package com.meng52.game.ui.screen
       public static const PLOY_SHOW_LEVEL_D:int = 3;
       
       public static var $currData:Object;
+
+      // 4th tab "深渊回廊". Index 3 of the old code belongs to the hidden guild dungeon
+      // (status_pve_guild), so this tab never writes $tempPVE_type_id/$tempPVE_type and
+      // never reaches the list/battle code; it only shows the Abyss entry page.
+      public static const ABYSS_TAB_104:int = 3;
+
+      // Remembers the tab across center_pve rebuilds (e.g. back from an Abyss battle).
+      public static var $abyssTab104:Boolean = false;
+
+      private var mAbyss104:Sprite;
+
+      private var mAbyssHidden104:Array;
       
       private var rndAvatar:Avatar;
       
@@ -136,6 +151,9 @@ package com.meng52.game.ui.screen
          },{
             "label":GlobalLanguageStr.getLanguageStr(20029),
             "indexID":2
+         },{
+            "label":"深渊回廊",
+            "indexID":ABYSS_TAB_104
          }],tabBar_changeHandler,tabBar_CREATION_COMPLETE);
          mTabBar.y = 20;
          mImg3_info = getImg3_info();
@@ -162,33 +180,21 @@ package com.meng52.game.ui.screen
          mImg_right.x = 520;
          addChild(mImg_right);
          addChild(mImg_left);
-         var _loc2_:Number = 155;
-         var _loc3_:LOL_TextField = new LOL_TextField(GlobalLanguageStr.getLanguageStr(20475),150,35);
-         _loc3_.fontColor = 16777215;
-         _loc3_.fontSize = 22;
-         _loc3_.hAlign = "right";
-         _loc3_.shadowFilter();
-         _loc3_.x = 350;
-         _loc3_.y = mTabBar.y + 20;
-         _loc3_.touchable = false;
-         addChild(_loc3_);
          GlobalData.$tempTeamPower = GlobalFunction.getTeamPower(GlobalData.$tempTeam);
-         var _loc4_:LOL_TextField = new LOL_TextField(Tools.formateNum(GlobalData.$tempTeamPower),_loc2_,35);
-         _loc4_.fontColor = 16763904;
-         _loc4_.fontSize = 20;
-         _loc4_.hAlign = "left";
-         _loc4_.shadowFilter();
-         _loc4_.touchable = false;
-         _loc4_.x = _loc3_.x + _loc3_.width;
-         _loc4_.y = _loc3_.y + 2;
-         addChild(_loc4_);
          GlobalData.$mEventDispatcher.addEventListener("update_pve_combat_list",onUPDATE_PVE_COMBAT_LIST);
       }
       
       override public function tabBar_CREATION_COMPLETE(param1:*) : void
       {
+         var abyssBack:Boolean = $abyssTab104 || GlobalData.$abyss104 && GlobalData.$abyss104.resume;
          mTabBar.setChildStatus(1,GlobalFunction.checkGameFunIsOpenByType("status_pve_hard") < 0,tabBar_changeHandler_false);
          mTabBar.setChildStatus(2,GlobalFunction.checkGameFunIsOpenByType("status_pve_activities") < 0,tabBar_changeHandler_false);
+         if(abyssBack)
+         {
+            mTabBar.selectedIndex = ABYSS_TAB_104;
+            tabBar_changeHandler(null);
+            return;
+         }
          if(GlobalData.$tempPVE_type_id > 0)
          {
             mTabBar.selectedIndex = GlobalData.$tempPVE_type_id;
@@ -210,9 +216,43 @@ package com.meng52.game.ui.screen
             tabBar_changeHandler(null);
          }
       }
+
+      private function showAbyss104() : void
+      {
+         if(mAbyss104) return;
+         mAbyssHidden104 = [];
+         for(var i:int = 0; i < numChildren; i++)
+         {
+            var child:DisplayObject = getChildAt(i);
+            if(child == mTabBar || child == mImg_head || !child.visible) continue;
+            child.visible = false;
+            mAbyssHidden104.push(child);
+         }
+         var top:Number = mTabBar.y + 60;
+         var area:Rectangle = new Rectangle(0,top,GlobalData.$mStageWidth,Math.max(560,GlobalData.$center_height_curr - 121 - top));
+         mAbyss104 = PanelActivityExploration.createAbyssTab104(area);
+         addChild(mAbyss104);
+      }
+
+      private function hideAbyss104() : void
+      {
+         if(!mAbyss104) return;
+         mAbyss104.removeFromParent(true);
+         mAbyss104 = null;
+         for each(var child:DisplayObject in mAbyssHidden104) child.visible = true;
+         mAbyssHidden104 = null;
+      }
       
       override public function tabBar_changeHandler(param1:Event) : void
       {
+         if(mTabBar && mTabBar.selectedIndex == ABYSS_TAB_104)
+         {
+            $abyssTab104 = true;
+            showAbyss104();
+            return;
+         }
+         $abyssTab104 = false;
+         hideAbyss104();
          if(mTabBar)
          {
             GlobalData.$tempPVE_type_id = this.mTabBar.selectedIndex;
@@ -477,6 +517,7 @@ package com.meng52.game.ui.screen
       
       override public function update() : void
       {
+         if(mAbyss104) return;
          checkGuide();
          setList_h();
          addList_h();
@@ -500,6 +541,7 @@ package com.meng52.game.ui.screen
       
       public function activeUpdate() : void
       {
+         if(mAbyss104) return;
          checkGuide();
          setList_Active();
          addList_h();
@@ -516,6 +558,7 @@ package com.meng52.game.ui.screen
       
       public function updateList() : void
       {
+         if(mAbyss104) return;
          check_passAward();
          setList();
          addList();

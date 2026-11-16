@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import random
+import re
 from combat_math import level_stats, to_int
 
 from battle_engine import base_unit, validate_team_lane_coverage
@@ -26,6 +27,15 @@ TANK_FAMILIES = {f'A_{i}' for i in (1001,1007,1013,1020,1018,1077,1049,1085,1073
                                     1137,1138,1201,1204)}
 SUPPORT_FAMILIES = {f'A_{i}' for i in (1004,1006,1045,1094,1093,1139,1208,1228)}
 SUMMON_FAMILIES = {f'A_{i}' for i in (1014,1040,1103,1212,1218,1221,1311)}
+# Placeholder skill templates copied into unfinished heroes by the native data.
+PLACEHOLDER_SKILLS = re.compile(r'S_900[0-5]_\d+$')
+COMMENTATOR_FAMILIES = ('A_1903','A_1904','A_1905','A_1909')
+CHECK_IN_PLACEHOLDERS = ('A_190001',)
+MAP_VERSION = 2
+MAP_COLUMNS = 4
+ROUTE_LAYERS = 6
+REST_LAYER = ROUTE_LAYERS+1
+BOSS_LAYER = ROUTE_LAYERS+2
 
 
 def rng_for(seed, *domain):
@@ -37,8 +47,41 @@ def rules(cfg):
     return cfg.get('system_simple', {}).get('roguelite_abyss', {})
 
 
-def apply_abyss_config(document):
+def placeholder_families(cfg):
+    """Hero families whose native main/captain skill is a template placeholder.
+
+    Call on the unpatched native config: later overlays may rewrite skill ids,
+    but an unfinished hero stays unfinished for this mode until it is curated.
+    """
+    found = set()
+    for aid, avatar in cfg.get('avatar', {}).items():
+        if not re.match(r'A_1\d+_\d+$', aid) or not isinstance(avatar, dict):
+            continue
+        pl = avatar.get('pl') or []
+        if any(PLACEHOLDER_SKILLS.match(str(sid)) for sid in pl[10:12]):
+            found.add(aid.rsplit('_', 1)[0])
+    return found
+
+
+def excluded_families(cfg, native_placeholders=None):
+    if native_placeholders is None:
+        previous = cfg.get('system_simple', {}).get('roguelite_abyss', {})
+        native_placeholders = set(previous.get('excluded_families', [])) or placeholder_families(cfg)
+    return sorted(set(native_placeholders) | set(COMMENTATOR_FAMILIES) | set(CHECK_IN_PLACEHOLDERS))
+
+
+def family(aid):
+    return aid.rsplit('_', 1)[0]
+
+
+def is_excluded(aid, cfg):
+    return family(aid) in set(rules(cfg).get('excluded_families', ()))
+
+
+def apply_abyss_config(document, native_placeholders=None):
     cfg = document.get('cfg', document)
+    excluded = excluded_families(cfg, native_placeholders)
+    blocked = set(excluded)
     avatars = cfg.get('avatar', {})
     skins = set(cfg.get('system_simple', {}).get('skin_hero_ids', []))
     skin_families = {aid.rsplit('_', 1)[0] for aid in skins}
@@ -50,16 +93,21 @@ def apply_abyss_config(document):
     if len(set(chosen))!=25 or not set(chosen)<=set(eligible):
         raise ValueError('Abyss initial pool must contain 25 distinct eligible ordinary heroes')
     initial = sorted(chosen)
-    paired = [a for a in purple if a.rsplit('_',1)[0] in skin_families and a[:-1]+'6' in avatars]
-    orange_only = sorted(a for a in avatars if a.endswith('_6') and
-                         a.rsplit('_',1)[0] in skin_families and a[:-1]+'5' not in avatars)
+    if blocked & {family(a) for a in chosen}:
+        raise ValueError('Abyss initial pool contains an excluded hero family')
+    paired = [a for a in purple if family(a) in skin_families and a[:-1]+'6' in avatars
+              and family(a) not in blocked]
+    orange_only = sorted(a for a in avatars if a.endswith('_6') and family(a) not in blocked and
+                         family(a) in skin_families and a[:-1]+'5' not in avatars)
     cfg.setdefault('system_simple', {})['roguelite_abyss'] = {
-        'schema': 3, 'level': 99, 'orange_panel_ratio':1.4,
+        'schema': 4, 'map_version': MAP_VERSION, 'level': 99, 'orange_panel_ratio':1.4,
         'standalone_orange_panel_ratio':.7, 'skill_level': 5, 'pool_cap': 20,
         'eligible_ordinary_purple':eligible,
         'initial_purple': initial, 'skin_purple': paired, 'skin_orange_only': orange_only,
         'skin_families': sorted(skin_families),
-        'enemy_skin_orange': sorted(a for a in skins if a.endswith('_6') and a in avatars),
+        'excluded_families': excluded,
+        'enemy_skin_orange': sorted(a for a in skins if a.endswith('_6') and a in avatars
+                                    and family(a) not in blocked),
         'enemy_skin_counts': {'elite':[0,1,2], 'boss':[0,2,4]},
         'enemy_orange_counts': {'act1':1, 'act2':2, 'act3_early':3,
                                 'act3_late':4, 'boss':[2,3,5]},
@@ -81,6 +129,8 @@ def apply_abyss_config(document):
                 ([1018,1077,1045,1063,1082],[1049,1085,1094,1014,1040]),
                 ([1077,1085,1094,1099,1063],[1073,1090,1093,1098,1081])),1)},
         'ancient_chance': .07, 'ancient_multiplier':1.25,
+        'map_weights': {'normal':.55, 'elite':.25, 'rest':.20, 'elite_difficulty_10':.35},
+        'elite_limit_break_multiplier': 1.2,
     }
     return document
 
@@ -112,6 +162,7 @@ def normalize_account(profile, config):
 def unlocked_pool(profile, cfg):
     account = normalize_account(profile, cfg)
     plan = rules(cfg)
+    blocked = set(plan.get('excluded_families', ()))
     purple = set(plan['initial_purple'])
     for aid in account['obtained']:
         counterpart = aid.rsplit('_',1)[0]+'_5'
@@ -121,7 +172,8 @@ def unlocked_pool(profile, cfg):
     orange.update(a.rsplit('_',1)[0]+'_6' for a in account['appeared']
               if a.startswith('A_1') and a.rsplit('_',1)[0]+'_6' in cfg['avatar'])
     standalone = set(plan['skin_orange_only']).intersection(account['obtained'])
-    return sorted(purple), sorted(orange), sorted(standalone)
+    keep = lambda aids: sorted(a for a in aids if family(a) not in blocked)
+    return keep(purple), keep(orange), keep(standalone)
 
 
 def hero_record(aid, temporary=False):
@@ -154,7 +206,10 @@ def standard_team(cfg, heroes, formation, team=1, scale=1):
                 unit[key] = to_int(raw[stat]*ratio)
             unit['hp_max'] = unit['hp']
         result.append(unit)
-    aids = [u['aid'] for u in result]
+    # Player heroes are the whole run pool: collected allies activate bonds
+    # even while benched. Enemy bonds still use only their deployed lineup.
+    aids = ([hero['aid'] for hero in heroes.values()] if team == 1
+            else [unit['aid'] for unit in result])
     for unit in result:
         bonds = active_bonds(cfg, unit['aid'], aids)
         stats = {key:unit[key] for key in MAIN_STATS}
@@ -176,29 +231,162 @@ def standard_team(cfg, heroes, formation, team=1, scale=1):
     return result
 
 
-def generate_map(seed, difficulty, cfg):
-    rng = rng_for(seed, 'map')
-    nodes, previous = [], []
-    for act in range(1,4):
-        for layer in range(1,8):
-            if layer == 7: kinds = ['boss']
-            elif act == 1 and layer <= 3: kinds = ['weak'] * rng.randint(2,3)
+def _crosses(paths, layer, a, b):
+    """Edge a->b between layer-1 and layer crosses an existing path edge."""
+    for path in paths:
+        c, d = path[layer-1], path[layer]
+        if (c < a and d > b) or (c > a and d < b):
+            return True
+    return False
+
+
+def _route_paths(rng):
+    """Four non-crossing column walks over ROUTE_LAYERS rows of MAP_COLUMNS."""
+    paths = []
+    for index in range(4):
+        start = rng.randrange(MAP_COLUMNS)
+        while index == 1 and start == paths[0][0]:
+            start = rng.randrange(MAP_COLUMNS)
+        path = [start]
+        for layer in range(1, ROUTE_LAYERS):
+            col = path[-1]
+            for _ in range(12):
+                target = min(MAP_COLUMNS-1, max(0, col+rng.choice((-1, 0, 1))))
+                if not _crosses(paths, layer, col, target):
+                    break
             else:
-                rest_layer = 4 if act==1 else 2
-                elite_layers = (5,6) if difficulty==10 else (5,)
-                kind = 'rest' if layer==rest_layer else 'elite' if layer in elite_layers else 'normal'
-                kinds = [kind] * rng.randint(2,3)
-            current = []
-            for branch,kind in enumerate(kinds):
-                node = {'id':f'{act}-{layer}-{branch}', 'act':act, 'layer':layer,
-                        'type':kind, 'next':[], 'completed':False}
-                node['enemy_preview'] = (generate_enemy_preview(seed,difficulty,node,cfg)
-                                         if kind!='rest' else [])
-                nodes.append(node)
-                current.append(node)
-            for node in previous:
-                node['next'] = [n['id'] for n in current]
-            previous = current
+                target = col  # A straight step can never cross a one-column step.
+            path.append(target)
+        paths.append(path)
+    return paths
+
+
+def _route_graph(paths):
+    cells, edges = set(), set()
+    for path in paths:
+        for layer, col in enumerate(path, 1):
+            cells.add((layer, col))
+            if layer < ROUTE_LAYERS:
+                edges.add((layer, col, path[layer]))
+    nexts = {cell: sorted(b for l, a, b in edges if (l, a) == cell) for cell in cells}
+    return sorted(cells), nexts
+
+
+def _allowed_kinds(act, layer, difficulty):
+    if act == 1 and layer <= 3:
+        return ('weak',)
+    if act > 1 and layer == 1:
+        return ('normal',)
+    kinds = ['normal', 'elite']
+    if layer < ROUTE_LAYERS:
+        kinds.append('rest')
+    return tuple(kinds)
+
+
+def _assign_kinds(rng, act, difficulty, cells, nexts, weights):
+    parents = {}
+    for cell, targets in nexts.items():
+        for col in targets:
+            parents.setdefault((cell[0]+1, col), []).append(cell)
+    kinds = {}
+    for cell in cells:  # sorted by layer then column: parents are assigned first
+        layer = cell[0]
+        options = []
+        for kind in _allowed_kinds(act, layer, difficulty):
+            if kind in ('elite', 'rest') and any(kinds[p] == kind for p in parents.get(cell, ())):
+                continue
+            weight = weights[kind] if kind != 'weak' else 1
+            # Siblings reached from one parent should differ: that is the choice.
+            for parent in parents.get(cell, ()):
+                if any(kinds.get((layer, col)) == kind for col in nexts[parent] if col != cell[1]):
+                    weight *= .08
+            options.append((kind, weight))
+        if not options:
+            options = [('normal', 1)]
+        roll, total = rng.random()*sum(w for _, w in options), 0
+        for kind, weight in options:
+            total += weight
+            if roll < total:
+                break
+        kinds[cell] = kind
+    return kinds
+
+
+def _valid_act(act, cells, nexts, kinds, difficulty=1):
+    layers = {layer for layer, _ in cells}
+    if any(sum(1 for l, _ in cells if l == layer) < 2 for layer in layers):
+        return False
+    values = list(kinds.values())
+    if values.count('elite') < (2 if difficulty == 10 else 1) or 'rest' not in values:
+        return False
+    if difficulty >= 5:
+        # Design table: from difficulty 5 a route passes at most one route-layer rest.
+        most = {}
+        for cell in sorted(cells, reverse=True):
+            here = int(kinds[cell] == 'rest')
+            most[cell] = here + max([most[(cell[0]+1, col)] for col in nexts[cell]] or [0])
+        if max(most.values()) > 1:
+            return False
+    safe = {cell for cell in cells if cell[0] == ROUTE_LAYERS and kinds[cell] != 'elite'}
+    for layer in range(ROUTE_LAYERS-1, 0, -1):
+        safe |= {cell for cell in cells if cell[0] == layer and kinds[cell] != 'elite'
+                 and any((layer+1, col) in safe for col in nexts[cell])}
+    return any(cell[0] == 1 for cell in safe)
+
+
+def _fallback_act(act):
+    """Deterministic valid layout: two straight lanes plus two zig-zags."""
+    paths = [[0]*ROUTE_LAYERS, [3]*ROUTE_LAYERS, [1, 1, 0, 1, 1, 1], [2, 2, 3, 2, 2, 2]]
+    cells, nexts = _route_graph(paths)
+    layout = {1: 'normal', 2: 'normal', 3: 'normal', 4: 'rest', 5: 'elite', 6: 'normal'}
+    kinds = {}
+    for layer, col in cells:
+        kind = 'weak' if act == 1 and layer <= 3 else layout[layer]
+        if kind == 'elite' and col in (0, 1):
+            kind = 'normal'  # columns 0/1 stay elite-free
+        if kind == 'rest' and col in (2, 3):
+            kind = 'normal'
+        kinds[(layer, col)] = kind
+    return cells, nexts, kinds
+
+
+def generate_map(seed, difficulty, cfg):
+    """Slay-the-Spire style routes: 6 route layers, a fixed rest, then the boss."""
+    weights = dict(rules(cfg).get('map_weights') or
+                   {'normal':.55, 'elite':.25, 'rest':.20, 'elite_difficulty_10':.35})
+    if difficulty == 10:
+        weights['elite'] = weights.get('elite_difficulty_10', weights['elite'])
+    nodes, previous = [], []
+
+    def add(act, layer, col, kind):
+        node = {'id': f'{act}-{layer}-{0 if col is None else col}', 'act': act, 'layer': layer,
+                'col': col, 'type': kind, 'next': [], 'completed': False}
+        node['enemy_preview'] = (generate_enemy_preview(seed, difficulty, node, cfg)
+                                 if kind != 'rest' else [])
+        nodes.append(node)
+        return node
+
+    for act in range(1, 4):
+        for attempt in range(40):
+            rng = rng_for(seed, 'map', MAP_VERSION, act, attempt)
+            cells, nexts = _route_graph(_route_paths(rng))
+            kinds = _assign_kinds(rng, act, difficulty, cells, nexts, weights)
+            if _valid_act(act, cells, nexts, kinds, difficulty):
+                break
+        else:
+            cells, nexts, kinds = _fallback_act(act)
+        by_cell = {cell: add(act, cell[0], cell[1], kinds[cell]) for cell in cells}
+        for node in previous:
+            node['next'] = [by_cell[cell]['id'] for cell in cells if cell[0] == 1]
+        for cell, node in by_cell.items():
+            node['next'] = [by_cell[(cell[0]+1, col)]['id'] for col in nexts[cell]]
+        rest = add(act, REST_LAYER, None, 'rest')
+        boss = add(act, BOSS_LAYER, None, 'boss')
+        for cell, node in by_cell.items():
+            if cell[0] == ROUTE_LAYERS:
+                node['next'] = [rest['id']]
+        rest['next'] = [boss['id']]
+        previous = [boss]
     return nodes
 
 
@@ -231,8 +419,35 @@ def enemy_orange_count(node, cfg):
 def preview_from_units(units, cfg):
     return [{'aid':u['aid'],'quality':int(u['aid'].rsplit('_',1)[1]),
              'lv':u.get('lv',99),'slv':u.get('slv',5),'star':int(u['aid'].rsplit('_',1)[1]),
-             'line':u['line'],'pos':u['pos'],'leader':bool(u['leader']),'is_skin':is_skin(u['aid'],cfg)}
+             'line':u['line'],'pos':u['pos'],'leader':bool(u['leader']),'is_skin':is_skin(u['aid'],cfg),
+             'limit_break':int(u.get('limit_break',0) or 0)}
             for u in units]
+
+
+def _lane_counts(rng, count):
+    """Random split over three lanes, each lane holding one to three heroes."""
+    options = [(a, b, count-a-b) for a in range(1, 4) for b in range(1, 4) if 1 <= count-a-b <= 3]
+    if not options:
+        raise GameplayFault('AbyssUnavailable', '敌方人数无法分配到三路。')
+    return rng.choice(options)
+
+
+def _enemy_layout(rng, aids, cfg):
+    """Shuffle heroes into lanes; tanks stand in front, then small jitter."""
+    order = list(range(len(aids)))
+    rng.shuffle(order)
+    lanes, cursor = {}, 0
+    for line, size in enumerate(_lane_counts(rng, len(aids))):
+        lanes[line] = order[cursor:cursor+size]
+        cursor += size
+    line_length = cfg['system_simple']['battle'][1]
+    placement = {}
+    for line, members in lanes.items():
+        ranked = sorted(members, key=lambda i: (enemy_role(aids[i], cfg) != 'tank', rng.random()))
+        for rank, index in enumerate(ranked):
+            share = .15 + .18*rank + rng.uniform(-.02, .02)
+            placement[index] = (line, int(round(share*line_length)))
+    return placement
 
 
 def generate_enemy_preview(seed, difficulty, node, cfg):
@@ -249,12 +464,13 @@ def generate_enemy_preview(seed, difficulty, node, cfg):
         count = 3 if kind=='weak' else 5 if kind=='elite' else rng.randint(4,5)
         aids = rng.sample(plan['initial_purple'], count)
     aids=[a[:-1]+'5' for a in aids]
+    # Boss keeps its authored theme captain; other fights draw one at random.
+    leader = 0 if kind=='boss' else rng.randrange(len(aids))
     orange_count=enemy_orange_count(node,cfg)
-    if kind=='boss':
-        # Authored priority: captain, two carries, support, second tank.
-        orange_slots=[0,3,4,2,1][:orange_count]
-    elif kind=='elite':
-        orange_slots=[0]+rng.sample(list(range(1,len(aids))),orange_count-1)
+    boosted = None
+    if kind=='elite':
+        boosted = rng.choice([i for i in range(len(aids)) if i != leader])
+        orange_slots=[boosted]+rng.sample([i for i in range(len(aids)) if i != boosted],orange_count-1)
     else:
         orange_slots=rng.sample(list(range(len(aids))),orange_count)
     for slot in orange_slots:aids[slot]=aids[slot][:-1]+'6'
@@ -269,10 +485,12 @@ def generate_enemy_preview(seed, difficulty, node, cfg):
         used.remove(aids[slot].rsplit('_',1)[0])
         aids[slot]=replacement
         used.add(replacement.rsplit('_',1)[0])
-    line_length=cfg['system_simple']['battle'][1]
-    return [{'aid':aid,'quality':int(aid[-1]),'star':int(aid[-1]),'lv':99,'slv':5,
-             'line':i%3,'pos':(.15+.18*(i//3))*line_length,
-             'leader':i==0,'is_skin':is_skin(aid,cfg)} for i,aid in enumerate(aids)]
+    placement = _enemy_layout(rng, aids, cfg)
+    # The captain is listed first: standard_team() gives index 0 the captain skill.
+    order = [leader]+[i for i in range(len(aids)) if i != leader]
+    return [{'aid':aids[i],'quality':int(aids[i][-1]),'star':int(aids[i][-1]),'lv':99,'slv':5,
+             'line':placement[i][0],'pos':placement[i][1],'leader':i==leader,
+             'is_skin':is_skin(aids[i],cfg),'limit_break':int(i==boosted)} for i in order]
 
 
 def generate_enemies(seed, difficulty, node, cfg):
@@ -285,11 +503,23 @@ def generate_enemies(seed, difficulty, node, cfg):
     if kind in ('elite','boss'): multiplier *= rate[kind]
     if kind!='weak':
         multiplier *= plan['difficulties'][difficulty-1]['multiplier']
+    if preview and not preview[0].get('leader', True):
+        raise GameplayFault('AbyssUnavailable', '敌方阵容缺少队长。')
+    line_length = cfg['system_simple']['battle'][1]
     heroes = {str(i):hero_record(u['aid']) for i,u in enumerate(preview)}
-    units = standard_team(cfg, heroes, [[str(i),u['line'],.15+.18*(i//3)] for i,u in enumerate(preview)], 2, multiplier)
+    # Legacy previews stored float positions; both round to the same native pos.
+    formation = [[str(i),u['line'],min(1,max(0,u['pos']/line_length))] for i,u in enumerate(preview)]
+    units = standard_team(cfg, heroes, formation, 2, multiplier)
     if kind=='elite':
-        for key in MAIN_STATS: units[0][key] = int(units[0][key]*1.2)
-        units[0]['hp_max'] = units[0]['hp']
+        boosted = [i for i,u in enumerate(preview) if u.get('limit_break')]
+        # Old saves predate limit_break: their boosted hero was always slot 0.
+        for index in boosted or [0]:
+            unit = units[index]
+            for key in MAIN_STATS:
+                unit[key] = int(unit[key]*plan.get('elite_limit_break_multiplier',1.2))
+            unit['hp_max'] = unit['hp']
+            if boosted:
+                unit['limit_break'] = 1  # display only; stats come from the multiplier above
     return units
 
 
@@ -343,8 +573,9 @@ def candidates(profile, run, node, cfg):
     if not selected: return None
     rng.shuffle(selected)
     return {'node_id':node['id'], 'options':[hero_record(a) for a in selected],
+            # count is the maximum: any 1..count options may be taken, or skip.
             'count':min(policy['pick'],len(selected),20-len(run['pool'])),
-            'can_skip':node['type']!='weak'}
+            'can_skip':True}
 
 
 def public_run(run, profile, cfg):

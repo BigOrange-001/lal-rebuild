@@ -46,13 +46,15 @@ class EnemyBalanceTests(unittest.TestCase):
             for kind,node_factor in (('normal',1),('elite',1.3),('boss',1.6)):
                 for difficulty,difficulty_factor in enumerate(factors,1):
                     with self.subTest(act=act,kind=kind,difficulty=difficulty):
-                        node={'id':f'{act}-7-0','act':act,'type':kind}
+                        node={'id':f'{act}-8-0','act':act,'type':kind}
                         units=generate_enemies(20261116,difficulty,node,self.cfg)
                         factor=act_factor*node_factor*difficulty_factor
+                        boosted=[u for u in units if u.get('limit_break')]
+                        self.assertEqual(len(boosted),1 if kind=='elite' else 0)
                         for index,(unit,raw) in enumerate(zip(units,self.unscaled(units))):
                             for key in ('hp','ap','de_ph','de_ma'):
                                 expected=max(1,int(raw[key]*factor))
-                                if kind=='elite' and index==0:expected=int(expected*1.2)
+                                if unit.get('limit_break'):expected=int(expected*1.2)
                                 self.assertEqual(unit[key],expected)
                             self.assertEqual(unit['hp'],unit['hp_max'])
                         if kind=='boss':

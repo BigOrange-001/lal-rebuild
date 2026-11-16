@@ -36,7 +36,7 @@ class PreviewTests(unittest.TestCase):
         self.assertTrue(all('enemies' not in n for n in private['map']))
         for node in response['map']:
             self.assertNotIn('enemies',node)
-            self.assertTrue(all(set(u)=={'aid','quality','star','lv','slv','line','pos','leader','is_skin'} for u in node['enemy_preview']))
+            self.assertTrue(all(set(u)=={'aid','quality','star','lv','slv','line','pos','leader','is_skin','limit_break'} for u in node['enemy_preview']))
             self.assertEqual(len(node['enemy_preview']),0 if node['type']=='rest' else len(next(
                 n for n in private['map'] if n['id']==node['id'])['enemy_preview']))
         battle=self.combat(response)
@@ -60,10 +60,11 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(node['enemies'],expected)
 
     def test_rest_leave_without_a_hero_when_everyone_is_fully_upgraded(self):
-        self.start();before=self.jump('1-4-0',full_pool=True)
+        run=self.start();rest=next(n['id'] for n in run['map'] if n['type']=='rest')
+        before=self.jump(rest,full_pool=True)
         first=self.call('rest',option='leave',actionID='leave-rest')['abyss_run']
         self.assertEqual(first['pool'],before['pool'])
-        self.assertTrue(next(n for n in first['map'] if n['id']=='1-4-0')['completed'])
+        self.assertTrue(next(n for n in first['map'] if n['id']==rest)['completed'])
         self.assertTrue(first['available_nodes'])
         self.assertTrue(self.call('rest',option='leave',actionID='leave-rest')['replayed'])
         with self.assertRaises(GameplayFault):self.call('rest',option='leave')
@@ -73,7 +74,7 @@ class PreviewTests(unittest.TestCase):
     def test_first_two_boss_offers_are_saved_replayable_and_skippable_final_boss_has_none(self):
         self.start()
         for act in (1,2,3):
-            run=self.jump(f'{act}-7-0');battle=self.combat(run)
+            run=self.jump(f'{act}-8-0');battle=self.combat(run)
             response=self.finish(battle,actionID=f'boss-{act}')
             self.assertTrue(self.finish(battle,actionID=f'boss-{act}')['replayed'])
             run=response['abyss_run'];choice=run['pending_choice']
@@ -121,7 +122,7 @@ class PreviewTests(unittest.TestCase):
         self.assertFalse(first&third)
         for act in (2,3):
             for seed in range(40):
-                node={'id':f'{act}-7-0','act':act,'layer':7,'type':'boss'}
+                node={'id':f'{act}-8-0','act':act,'layer':8,'type':'boss'}
                 template=rng_for(seed,'enemy',node['id']).choice(plan['boss_decks'][str(act)])
                 preview=generate_enemy_preview(seed,1,node,self.cfg)
                 for base,unit in zip(template,preview):

@@ -3,6 +3,7 @@ package com.meng52.game.ui.screen
    import com.meng52.game.global.GlobalData;
    import com.meng52.game.global.GlobalFunction;
    import com.meng52.game.global.GlobalLanguageStr;
+   import com.meng52.game.ui.panel.PanelActivityExploration;
    import com.meng52.game.ui.panel.PanelEquipSelect;
    import com.meng52.game.ui.panel.PanelEquipSellSelect;
    import feathers.display.Scale3Image;
@@ -40,6 +41,12 @@ package com.meng52.game.ui.screen
       private var _panelMagic:PanelEquipSelect;
       
       private var _panelSell:PanelEquipSellSelect;
+
+      // 6th tab: Abyss relics (cannot be upgraded, washed, enchanted or sold, so they
+      // never enter the five native lists; this tab lists, wears and rerolls them).
+      private static const RELIC_TAB_104:int = 5;
+
+      private var _panelRelic104:Sprite;
       
       private var _show_id:String;
       
@@ -66,7 +73,11 @@ package com.meng52.game.ui.screen
          },{
             "label":GlobalLanguageStr.getLanguageStr(90191),
             "indexID":4
-         }],tabBar_Change,tabBar_CREATION_COMPLETE);
+         },{
+            "label":"深渊遗物",
+            "indexID":RELIC_TAB_104
+         }],tabBar_Change,tabBar_CREATION_COMPLETE,104);
+         // Six tabs: 6 x 104 fits the 640 stage (the default 117 only fits five).
          this.mTabBar.y = 17;
          // The shared function id is one-based; tab selection is zero-based.
          this.mTabBar.selectedIndex = GlobalData.$tempEquipFunId > 0 ? Math.min(4,GlobalData.$tempEquipFunId - 1) : 0;
@@ -123,8 +134,16 @@ package com.meng52.game.ui.screen
       
       private function tabBar_Change(param1:Event) : void
       {
-         GlobalData.$tempEquipFunId = this.mTabBar.selectedIndex + 1;
          clearPanel();
+         if(mTabBar.selectedIndex == RELIC_TAB_104)
+         {
+            // Keep $tempEquipFunId on a native list id (1..5) for the other screens.
+            _panelRelic104 = PanelActivityExploration.createRelicManageView104(GlobalData.$center_height_curr - 121 - 160);
+            _panelRelic104.y = mTabBar.y + 145;
+            addChild(_panelRelic104);
+            return;
+         }
+         GlobalData.$tempEquipFunId = this.mTabBar.selectedIndex + 1;
          switch(mTabBar.selectedIndex)
          {
             case 0:
@@ -171,6 +190,11 @@ package com.meng52.game.ui.screen
          {
             _panelSell.removeFromParent(true);
          }
+         if(_panelRelic104)
+         {
+            _panelRelic104.removeFromParent(true);
+         }
+         _panelRelic104 = null;
          _panelRise = null;
          _panelWash = null;
          _panelBook = null;

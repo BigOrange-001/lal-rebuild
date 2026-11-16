@@ -1715,9 +1715,26 @@ package com.meng52.game.ui.element
          }
       }
 
+      private function positionAvatarLock104() : void
+      {
+         // The relic is a Sprite after the six ItemEquip entries. Anchor the
+         // avatar lock to native equipment, not the last display-list child.
+         var anchor:ItemEquip = null;
+         for(var i:int = _euqipMain.numChildren - 1; i >= 0; i--)
+         {
+            var child:* = _euqipMain.getChildAt(i);
+            if(child is ItemEquip)
+            {
+               anchor = child as ItemEquip;
+               break;
+            }
+         }
+         _lockImg.x = anchor ? anchor.x - _lockImg.width : _width - 100;
+         _lockImg.y = _iconBg.y - _lockImg.height;
+      }
+
       public function update_Lock() : void
       {
-         var _loc1_:ItemEquip = null;
          if(_avatar && GlobalData.$userData.avatars[_avatar.id] != null && _isShowLock)
          {
             if(_lockImg)
@@ -1736,18 +1753,7 @@ package com.meng52.game.ui.element
                _lockImg = GlobalFunction.createButton_5("","UI_icon_lock_0_0000");
             }
             _lockImg.scaleX = _lockImg.scaleY = 0.8;
-            _loc1_ = null;
-            if(_euqipMain.numChildren != 0)
-            {
-               _loc1_ = _euqipMain.getChildAt(_euqipMain.numChildren - 1) as ItemEquip;
-               _lockImg.x = _loc1_.x - _lockImg.width;
-               _lockImg.y = _iconBg.y - _lockImg.height;
-            }
-            else
-            {
-               _lockImg.x = _width - 100;
-               _lockImg.y = _iconBg.y - _lockImg.height;
-            }
+            positionAvatarLock104();
             _lockImg.name = "_lockImg1";
             _lockImg.addEventListener("triggered",onTRIGGERED_lock);
             _uiMain.addChild(_lockImg);
@@ -1789,18 +1795,7 @@ package com.meng52.game.ui.element
             _lockImg = GlobalFunction.createButton_5("","UI_icon_lock_0_0000");
          }
          _lockImg.scaleX = _lockImg.scaleY = 0.8;
-         var _loc3_:ItemEquip = null;
-         if(_euqipMain.numChildren != 0)
-         {
-            _loc3_ = _euqipMain.getChildAt(_euqipMain.numChildren - 1) as ItemEquip;
-            _lockImg.x = _loc3_.x - _lockImg.width;
-            _lockImg.y = _iconBg.y - _lockImg.height;
-         }
-         else
-         {
-            _lockImg.x = _width - 100;
-            _lockImg.y = _iconBg.y - _lockImg.height;
-         }
+         positionAvatarLock104();
          GlobalFunction.changeLock(_avatar.id,_lock);
          if(GlobalData.$tempLockItem)
          {
@@ -2040,18 +2035,17 @@ package com.meng52.game.ui.element
          }
          if(_type == "show_type_team")
          {
-            // 7th slot (Abyss relic): same ItemEquip frame at 0.8, centred between the
-            // two columns under the hero art. RELIC_SLOT_OFFSET_104 moves it down if the
-            // emulator check shows it covering the figure.
+            // Keep the relic centred in the open space below the power text,
+            // anchored to the header so it stays above the hero art.
             var relicSlot:Sprite = PanelActivityExploration.createRelicSlotView104(_loc2_);
             relicSlot.scaleX = relicSlot.scaleY = 0.8;
             relicSlot.x = int((_width - 80) * 0.5);
-            relicSlot.y = _loc8_ + 2 * (_loc12_ + 75) + RELIC_SLOT_OFFSET_104;
+            relicSlot.y = _topXY.y + _topXY.height + RELIC_SLOT_TOP_GAP_104;
             _euqipMain.addChild(relicSlot);
          }
       }
 
-      private static const RELIC_SLOT_OFFSET_104:int = 40;
+      private static const RELIC_SLOT_TOP_GAP_104:int = 70;
 
       private function onType(param1:TouchEvent) : void
       {

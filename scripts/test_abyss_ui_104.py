@@ -69,7 +69,7 @@ send:(name,params,done)=>{calls.push({name,params});done({});},closeTop:()=>call
 function Sprite(){};function LOL_Scale9Button(){};
 const panel={option:'skill',heroId:null,lx:0,iw:640,by:700,
 addButton:(label,x,y,w,h,callback)=>{buttons.push({label,callback});return {x};},
-addText:noop,addFrame:noop,addBox:noop,gray:noop,refresh:noop,bindHero:noop,
+addText:noop,addFrame:noop,selectMark:noop,addBox:noop,gray:noop,refresh:noop,bindHero:noop,
 heroCard:(...args)=>{cards.push(args);return {};},bindInfo:noop};
 '''
         script+='panel.reasonFor='+method(rest,'reasonFor','h')+';\n'
@@ -88,6 +88,28 @@ panel.enemies=preview;cards.length=0;
         script+='''assert.equal(cards.length,1);assert.equal(cards[0][0],'A_1001_6');assert.equal(cards[0][2],5);
 assert.equal(cards[0][5],1);assert.equal(cards[0][6],true);
 console.log('Native UI method fixtures: preview precedence/hero rendering and rest leave passed.');'''
+        result=subprocess.run(['node'],input=script,capture_output=True,text=True,encoding='utf-8',cwd=ROOT)
+        self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
+
+    def test_pool_bonds_follow_pool_rule(self):
+        source=(ROOT/'client/src/abyss_ui_104.aspart').read_text('utf-8')
+        script='''const assert=require('node:assert/strict'),int=Math.trunc;
+const GlobalData={$mConfig_simple:{bonds_104:[
+ {name:'Trio',families:['A_1','A_2','A_3']},
+ {name:'Pair',families:['A_1','A_4']},
+ {name:'Mixed',families:['A_2','A_5']},
+ {name:'Far',families:['A_6','A_7','A_8','A_9']},
+ {name:'None',families:['A_10','A_11']}]}};
+const core={run:{pool:{A_1:{aid:'A_1_5'},A_2:{aid:'A_2_5'},A_3:{aid:'A_3_5'},A_5:{aid:'A_5_6'},A_6:{aid:'A_6_5'}}},
+family:aid=>aid.split('_').slice(0,2).join('_'),heroName:aid=>aid.split('_').slice(0,2).join('_')};
+'''
+        script+='core.poolBonds='+method(source,'poolBonds','')+';\n'
+        script+='''const list=core.poolBonds.call(core);const by=Object.fromEntries(list.map(b=>[b.name,b]));
+assert.equal(list[0].name,'Trio');assert(by.Trio.active);
+assert(!by.Pair.active);assert.deepEqual(by.Pair.missing,['A_4']);
+assert(!by.Mixed.active);assert(by.Mixed.mixed);
+assert.equal(by.Far.missing.length,3);assert(!('None' in by));
+console.log('pool bond rule fixtures passed');'''
         result=subprocess.run(['node'],input=script,capture_output=True,text=True,encoding='utf-8',cwd=ROOT)
         self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
 

@@ -42,7 +42,7 @@ def walkthrough(destination):
         return response
     try:
         call('query')
-        run = call('start',difficulty=1,deck='blade',seed=20261116)['abyss_run']
+        run = call('start',difficulty=1,deck='blade',seed=20261118)['abyss_run']
         lost = skipped = False
         while run['status']=='active':
             if run['pending_choice']:
@@ -80,7 +80,7 @@ def walkthrough(destination):
         call('abandon')
         for name, data in samples.items():
             (destination/(name+'.json')).write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n','utf-8')
-        summary = {'seed':20261116,'controlled_signs':True,'trace':trace,
+        summary = {'seed':20261118,'controlled_signs':True,'trace':trace,
                    'final_status':run['status'],'rewards':run['rewards']}
         (destination/'walkthrough.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n','utf-8')
         return summary

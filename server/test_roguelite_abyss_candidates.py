@@ -39,7 +39,7 @@ class CandidateTests(unittest.TestCase):
         p=self.profile(True,True)
         for seed in range(100):
             weak=self.draw('weak',1,seed,profile=p)
-            self.assertEqual((len(weak['options']),weak['count'],weak['can_skip']),(6,3,False))
+            self.assertEqual((len(weak['options']),weak['count'],weak['can_skip']),(6,3,True))
             self.assertTrue(all(h['quality']==5 and not is_skin(h['aid'],self.cfg) for h in weak['options']))
         self.assertEqual(len(self.draw('normal',2,profile=p)['options']),3)
         for act in (1,2):

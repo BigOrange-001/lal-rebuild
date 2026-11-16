@@ -49,18 +49,17 @@ class AbyssTests(unittest.TestCase):
         return self.call('finish',fight_id=battle['fight_id'],fight_kind='abyss',
                          metadata=battle['metadata'],sign=sign,**extra)
 
-    def test_map_seed_and_every_path_has_rest_elite_and_boss(self):
+    def test_map_seed_and_every_act_has_rest_elite_and_boss(self):
         for difficulty in (1,5,10):
             first = generate_map(17,difficulty,self.cfg)
             self.assertEqual(first,generate_map(17,difficulty,self.cfg))
             self.assertNotEqual(first,generate_map(18,difficulty,self.cfg))
             for act in range(1,4):
                 nodes = [n for n in first if n['act']==act]
-                layers = [{n['type'] for n in nodes if n['layer']==layer} for layer in range(1,8)]
-                self.assertIn({'rest'},layers)
-                self.assertGreaterEqual(layers.count({'elite'}),2 if difficulty==10 else 1)
-                self.assertEqual(layers[-1],{'boss'})
-                self.assertTrue(all(2<=len(n['next'])<=3 or n['type']=='boss' or n['layer']==6 for n in nodes if n['next']))
+                kinds = {n['type'] for n in nodes if n['layer']<=6}
+                self.assertIn('rest',kinds); self.assertIn('elite',kinds)
+                self.assertEqual([n['type'] for n in nodes if n['layer']==7],['rest'])
+                self.assertEqual([n['type'] for n in nodes if n['layer']==8],['boss'])
 
     def test_config_decks_unique_and_initial_pool_twenty_five(self):
         plan = rules(self.cfg)
@@ -182,7 +181,7 @@ class AbyssTests(unittest.TestCase):
             before = self.store.profile_raw(self.uid)
             with self.assertRaises(GameplayFault): self.call('combat',team=team)
             self.assertEqual(before,self.store.profile_raw(self.uid))
-        with self.assertRaises(GameplayFault): self.call('route',node_id='3-7-0')
+        with self.assertRaises(GameplayFault): self.call('route',node_id='3-8-0')
 
     def test_loss_preserves_enemy_map_pool_and_twenty_retries_then_terminal(self):
         run = self.enter(self.start())
@@ -210,15 +209,18 @@ class AbyssTests(unittest.TestCase):
         with self.assertRaises(GameplayFault): self.finish(battle)
         self.assertEqual(before,self.store.profile_raw(self.uid))
 
-    def test_pending_choice_blocks_route_and_weak_requires_three(self):
+    def test_pending_choice_blocks_route_and_weak_takes_up_to_three(self):
         run = self.enter(self.start()); battle = self.combat(run)
         result = self.finish(battle)['abyss_run']; choice = result['pending_choice']
-        self.assertEqual((len(choice['options']),choice['count']),(6,3))
-        with self.assertRaises(GameplayFault): self.call('skip')
+        self.assertEqual((len(choice['options']),choice['count'],choice['can_skip']),(6,3,True))
         with self.assertRaises(GameplayFault): self.call('route',node_id=result['available_nodes'][0])
-        selected = [h['id'] for h in choice['options'][:3]]
-        after = self.call('choose',heroes=selected)['abyss_run']
-        self.assertEqual(len(after['pool']),8)
+        ids = [h['id'] for h in choice['options']]
+        for bad in ([], ids[:4], [ids[0],ids[0]], ['missing']):
+            before = self.store.profile_raw(self.uid)
+            with self.assertRaises(GameplayFault): self.call('choose',heroes=bad)
+            self.assertEqual(before,self.store.profile_raw(self.uid))
+        after = self.call('choose',heroes=ids[:2])['abyss_run']
+        self.assertEqual(len(after['pool']),7)
         self.assertEqual(after['pending_choice'],None)
 
     def test_resume_saved_candidates_and_active_battle(self):
@@ -274,7 +276,7 @@ class AbyssTests(unittest.TestCase):
         p = self.store.profile_raw(self.uid)
         hero = next(iter(run['pool'].values()))
         p['abyss_account']['appeared']=[]
-        p['abyss_run']['current_node']='1-4-0'
+        p['abyss_run']['current_node']=next(n['id'] for n in p['abyss_run']['map'] if n['type']=='rest')
         self.db.execute('UPDATE players SET profile=? WHERE uid=?',(json.dumps(p),self.uid)); self.db.commit()
         after = self.call('rest',hero_id=hero['id'],option='orange')['abyss_run']
         self.assertEqual(after['pool'][hero['id']]['quality'],6)

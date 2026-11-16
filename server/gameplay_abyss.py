@@ -69,7 +69,7 @@ class GameplayAbyss:
             pool = {a.rsplit('_',1)[0]:hero_record(a,deck=='star' and i==0) for i,a in enumerate(aids)}
             nodes = generate_map(seed,difficulty,self.cfg)
             p['abyss_run'] = {'id':secrets.token_hex(12),'status':'active','seed':seed,
-                'rules_schema':plan['schema'],
+                'rules_schema':plan['schema'],'map_version':plan.get('map_version',1),
                 'difficulty':difficulty,'deck':deck,'map':nodes,'current_node':None,
                 'available_nodes':[n['id'] for n in nodes if n['act']==1 and n['layer']==1],
                 'pool':pool,'retries':plan['difficulties'][difficulty-1]['retries'],
@@ -91,14 +91,13 @@ class GameplayAbyss:
                 raise GameplayFault('AbyssNoChoice', '当前没有待选英雄。')
             selected = x.get('heroes')
             if method=='user.abyss_skip':
-                if not choice['can_skip']:
-                    raise GameplayFault('AbyssChoiceRequired', '请选满本次英雄。')
+                pass  # Every offer, weak 6-pick-up-to-3 included, may be skipped.
             else:
                 options = {hero['id']:hero for hero in choice['options']}
-                if (not isinstance(selected,list) or len(selected)!=choice['count'] or
+                if (not isinstance(selected,list) or not 1<=len(selected)<=choice['count'] or
                     any(not isinstance(a,str) or a not in options for a in selected) or
                     len(set(selected))!=len(selected) or len(run['pool'])+len(selected)>20):
-                    raise GameplayFault('AbyssInvalidChoice', '请选择指定数量的不同候选英雄。')
+                    raise GameplayFault('AbyssInvalidChoice', f"请选择1至{choice['count']}名不同的候选英雄。")
                 for hid in selected: run['pool'][hid] = copy.deepcopy(options[hid])
             run['pending_choice'] = None
             return {}

@@ -99,7 +99,6 @@ GAMEPLAY_ERROR_MESSAGES_ZH.update({
 })
 
 def gameplay_fault_message(error):
- # Faults marked detail carry a specific, already localized explanation.
  if getattr(error,'detail',False):return error.message
  return GAMEPLAY_ERROR_MESSAGES_ZH.get(error.code,error.message)
 
@@ -110,6 +109,8 @@ def load_game_config(path, now=None):
  if not isinstance(document,dict) or not isinstance(document.get('cfg'),dict):
   raise ValueError('Config file must contain {cfg_version, cfg: {...}, ...}')
  document=native_dates(document)
+ from roguelite_abyss import placeholder_families
+ abyss_placeholders=placeholder_families(document['cfg'])
  from combat_rules import apply_combat_rules
  apply_combat_rules(document)
  apply_recruit_exchange_config(document)
@@ -176,7 +177,7 @@ def load_game_config(path, now=None):
  from player_copy_104 import apply_player_copy_104
  apply_player_copy_104(document)
  from roguelite_abyss import apply_abyss_config
- apply_abyss_config(document)
+ apply_abyss_config(document,abyss_placeholders)
  from abyss_relics import apply_relic_config
  apply_relic_config(document)
  apply_check_in_rewards(document,int(game_day(now)[:4]))

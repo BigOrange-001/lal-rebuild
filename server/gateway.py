@@ -102,6 +102,10 @@ def gameplay_fault_message(error):
  if getattr(error,'detail',False):return error.message
  return GAMEPLAY_ERROR_MESSAGES_ZH.get(error.code,error.message)
 
+def config_version_with_digest(version, digest):
+ """Human version plus content digest, e.g. ``1.0.5#<sha256>``."""
+ return f"{version or ''}#{digest}"
+
 def load_game_config(path, now=None):
  """Load the shared post-overlay baseline for runtime and Mod authoring."""
  if now is None: now=int(time.time())
@@ -233,9 +237,11 @@ class Backend:
    if method=='sys.get_config':
     if self.config is None:
      raise RpcFault('MissingGameConfig','Game configuration is unavailable.')
-    apply_check_in_rewards(self.config,int(game_day(self.clock.now())[:4]))
+    self.mods.refresh_base_calendar()
     # Return all configured tables: client merges them into its cached object.
-    data=self.config
+    # cfg_version carries the content digest so user.login can skip resending
+    # an identical configuration (see ModService.config held_digest).
+    data={**self.config,'cfg_version':config_version_with_digest(self.config.get('cfg_version'),self.mods.base_digest)}
     if request.get('uid'):
      try:
       owner=self.players.authenticate(request)
@@ -269,7 +275,8 @@ class Backend:
       if owner is not None:
        self.mods.require_client(getattr(self.mods.context(owner[0]),'mod_resolved',None),request.get('client_capabilities'))
       data=self.players.login(name,row[2])
-      data['mod_config']=self.mods.config(data['uid'])
+      held=params.get('config_digest')
+      data['mod_config']=self.mods.config(data['uid'],held_digest=held if isinstance(held,str) else None)
      except GameplayFault as error:
       return {'method':method,'params':params,'return_code':1,'server_now':utc_datetime(self.clock.now()),
               'data':{'msg':gameplay_fault_message(error),'error_code':error.code}}

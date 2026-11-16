@@ -93,6 +93,12 @@ package com.meng52.game.ui.element
             btn_Exchange.enabled = false;
             btn_Exchange.touchable = true;
          }
+         else if(getScore() < Number(param1.needNum))
+         {
+            // Grey out when points are short; tapping still explains why.
+            btn_Exchange.enabled = false;
+            btn_Exchange.touchable = true;
+         }
          btn_Exchange.addEventListener("triggered",onTRIGGERED_Fight);
          this.addEventListener("touch",onTOUCH_ui);
       }
@@ -116,6 +122,12 @@ package com.meng52.game.ui.element
          }
          _loc4_.endTime = _loc5_ - _loc1_;
          return _loc4_;
+      }
+
+      private function getScore() : Number
+      {
+         var state:Object = GlobalData.$userData.attrs.lottery_activity;
+         return state && !isNaN(Number(state.score)) ? Number(state.score) : 0;
       }
 
       private function isPermanentSkinExchange() : Boolean

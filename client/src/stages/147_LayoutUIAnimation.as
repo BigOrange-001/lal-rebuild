@@ -821,6 +821,7 @@ package com.meng52.game.ui.stage
             else
             {
                _loc11_ = GameMapConfig.SCREEN_HEIGHT - m_infoPop.height / 2;
+               _loc11_ = Math.min(_loc11_,guideBottomLimit105(m_infoPop.height));
             }
             m_infoPop.y = _loc11_ - _loc4_ + 18;
             if(_loc7_)
@@ -2542,6 +2543,20 @@ package com.meng52.game.ui.stage
          jugglerG.purge();
          addEventListener("enterFrame",onEnterFrame);
          isPlay = true;
+      }
+
+      // Default guide tips sit at the screen bottom; on menu screens keep them
+      // above the bottom navigation bar instead of covering its buttons.
+      private static function guideBottomLimit105(popHeight:Number) : Number
+      {
+         var game:Game = GlobalData.$mGameClassObject;
+         var nav:DisplayObject = game ? game.mLayoutUIBottom : null;
+         if(nav == null || nav.parent == null || !nav.visible || nav.stage == null)
+         {
+            return Number.MAX_VALUE;
+         }
+         // Final centre is the base y + 18 after the slide-in tween.
+         return nav.getBounds(game).y - popHeight / 2 - 26;
       }
    }
 }

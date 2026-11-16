@@ -19,6 +19,8 @@ package com.meng52.game.module.map
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.Tools;
    import starling.animation.Tween;
+   import starling.display.DisplayObject;
+   import starling.events.Event;
 
    public class GameMap extends BaseModule
    {
@@ -264,6 +266,11 @@ package com.meng52.game.module.map
       public function getName() : String
       {
          var _loc3_:* = undefined;
+         if(GlobalData.$isExploration && GlobalData.$abyss104)
+         {
+            // Abyss fights borrow the arena map data; show the mode's own name.
+            return "深渊回廊";
+         }
          var _loc2_:String = gameMapData.name;
          var _loc1_:Boolean = GlobalData.$isPVE;
          if(_loc1_)
@@ -2041,12 +2048,35 @@ package com.meng52.game.module.map
       {
       }
 
+      // Abyss battles use standardized snapshots without team power, so the
+      // VS door hides its power plates (the first-hand sign stays).
+      private static function onAbyssDoorChild104(param1:Event) : void
+      {
+         var door:DoorLayer = param1.currentTarget as DoorLayer;
+         var child:DisplayObject = param1.target as DisplayObject;
+         if(door && child && (child == door.myPower || child == door.othersPower || child == door.myPowerShadow
+            || child == door.othersPowerShadow || child == door.myPowerBg || child == door.othersPowerBg))
+         {
+            child.visible = false;
+         }
+      }
+
+      private function watchAbyssDoorPower104(param1:DoorLayer) : void
+      {
+         param1.removeEventListener(Event.ADDED,onAbyssDoorChild104);
+         if(GlobalData.$isExploration && GlobalData.$abyss104)
+         {
+            param1.addEventListener(Event.ADDED,onAbyssDoorChild104);
+         }
+      }
+
       public function readyFight() : void
       {
          var _loc2_:Tween = null;
          LayoutUIAnimation.getOnlyExample().clearAnimationLayer();
          isClear = false;
          var _loc3_:GameMapLayer = GameMapLayer.gl;
+         watchAbyssDoorPower104(_loc3_.doorLayer);
          _loc3_.doorLayer.doorClose();
          _loc3_.mgLayer.touchable = false;
          SoundManager.getOnlyExample().setAllMusic(false);

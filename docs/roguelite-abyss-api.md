@@ -24,20 +24,30 @@ unlocked 包括 purple、orange、standalone_orange 三个 aid 列表。
 | --- | --- |
 | id/status | 字符串；status 为 active/cleared/failed/abandoned |
 | seed/difficulty/deck | 整数种子、1～10 难度、blade/flame/venom/summon/star |
-| map | 节点数组；节点有 id、act（1～3）、layer（1～7）、type（weak/normal/elite/rest/boss）、next（节点 id 数组）、completed |
+| map_version | 2＝路径地图（见下）。字段缺失＝旧局的 v1 分层地图，继续按旧图玩完 |
+| map | 节点数组；节点有 id、act（1～3）、layer、col、type（weak/normal/elite/rest/boss）、next（节点 id 数组，只列真实连线）、completed、enemy_preview |
 | current_node/available_nodes | 当前节点 id 或 null；现在可以选择的下一节点 id 数组 |
 | pool | 以英雄家族 id 为键；值有 id、aid（含品质）、quality（5/6）、lv=99、slv（5/10）、temporary、can_orange |
 | retries | 剩余重打次数；为 0 时仍可战斗，再失败才终止 |
-| pending_choice | null 或 {node_id,options（英雄对象数组）,count（必须选的人数）,can_skip} |
+| pending_choice | null 或 {node_id,options（英雄对象数组）,count（**最多**可选人数）,can_skip（现恒为 true）} |
 | battle | null 或完整已保存开战结果；用于重进继续战斗 |
 | rewards | 本局已获得奖励记录 |
 | attempt | 已结算战斗次数，仅用于持久化随机数域 |
 
-地图为 7 层/幕，每层 2～3 个候选节点，Boss 层单节点。前三层的所有路线都是弱敌；每条路线固定经过休息和精英层。
+### 路径地图（map_version 2，2026-11-16 起新开局）
+
+每幕：layer 1～6 为路线层（4 列网格，col 0～3），layer 7 为 Boss 前固定休息处，layer 8 为 Boss。
+休息处和 Boss 每幕各 1 个节点，col 为 null（前端居中），id 为 `{act}-7-0` / `{act}-8-0`；路线节点 id 为 `{act}-{layer}-{col}`。
+生成：按局种子从第 1 层随机起点走出 4 条路径（前两条起点不同），每步到下一层的 col-1/col/col+1，路径连线互不交叉；
+节点＝路径经过的格子，next＝路径实际走过的相邻对。每层 2～4 个节点，路线节点 1～3 条出边。第 6 层全部连到休息处，休息处连 Boss，Boss 连下一幕第 1 层全部节点（第 3 幕 Boss 的 next 为空）。
+类型：第 1 幕第 1～3 层全为弱敌；第 2、3 幕第 1 层全为普通战；其余按权重普通 55%／精英 25%／休息 20%（难度 10 精英 35%，配置 `roguelite_abyss.map_weights`）。
+约束：同一条边两端不同为精英、不同为休息；第 6 层不出休息；同一节点的不同出边尽量是不同类型；每幕路线层至少 1 个精英（难度 10 至少 2 个）和 1 个休息；
+至少有一条从第 1 层到第 6 层完全避开精英的路线；难度 5 起任一路线最多经过 1 个路线层休息处。不满足就换子种子重生成（40 次，超限用固定保底图）。
+所有节点类型开局即全部可见，前端不需要遮挡；敌方阵容预览仍建议只对可前往节点展开。
 第一位上阵者为队长，三路编号 0/1/2，每路至少一人。因此有效阵容实际至少 3 人，最多 5 人。
 星裔赠送皮肤只进入本局池，不写曾获得记录；其紫卡正常登场结算后仍开放橙卡阶段。
 初始25名普通英雄的紫/橙阶段均立即解锁；can_orange 不要求这些英雄先登场。其他持有/曾获得英雄仍须紫卡登场结算后解锁橙阶段。
-全部单位按99级、不突破；紫卡直接用自身紫卡配置原始四维。橙卡用同英雄99级紫卡四维×1.4，技能/被动取橙卡；仅橙皮肤用自身99级橙卡四维×0.7。原生羁绊随后按实际五人判定，不改主线配置。
+全部单位按99级、不突破；紫卡直接用自身紫卡配置原始四维。橙卡用同英雄99级紫卡四维×1.4，技能/被动取橙卡；仅橙皮肤用自身99级橙卡四维×0.7。玩家原生羁绊随后按本局阵容池全体成员判定，同品质集齐即可为相关出战英雄激活属性和技能变体；敌方仍按实际出战阵容判定。`orgin_team_a[*].bonds_104` 与技能、属性一起冻结到本场战斗及待结算记录；已有待结算战斗保持原快照，后续新战斗使用当前阵容池。主线配置不变。
 
 ## 方法
 
@@ -46,12 +56,12 @@ unlocked 包括 purple、orange、standalone_orange 三个 aid 列表。
 | 方法 | 用途与请求 | 是否改变玩法状态 | 成功样例 |
 | --- | --- | --- | --- |
 | user.abyss_query | 查询/续局 `{}` | 仅首次初始化永久记录；不推进节点 | [query.json](roguelite-abyss-api-samples/query.json) |
-| user.abyss_start | 开局 `{"difficulty":1,"deck":"blade","seed":20261116}`；seed 可省略由服务端随机 | 是；只可替换已终止局 | [start.json](roguelite-abyss-api-samples/start.json) |
+| user.abyss_start | 开局 `{"difficulty":1,"deck":"blade","seed":20261118}`；seed 可省略由服务端随机 | 是；只可替换已终止局 | [start.json](roguelite-abyss-api-samples/start.json) |
 | user.abyss_route | 选路线 `{"node_id":"1-1-0"}` | 是；只能在 available_nodes 中选 | [route.json](roguelite-abyss-api-samples/route.json) |
 | user.abyss_combat | 开战 `{"team":[["A_1001",0,0.2],["A_1007",1,0.2],["A_1004",2,0.2]]}` | 是；冻结双方快照及凭证 | [combat.json](roguelite-abyss-api-samples/combat.json) |
 | user.abyss_finish | 结算 `{fight_id,fight_kind:"abyss",metadata:{run_id,node_id},sign:1或2,teams:{team_a:[],team_b:[]}}` | 是；胜利推进、失败消耗次数，胜负均登记紫卡登场 | [finish.json](roguelite-abyss-api-samples/finish.json) |
-| user.abyss_choose | 选人 `{"heroes":["A_1022","A_1023","A_1024"]}`；传候选 id，必须选满 count | 是；只添加，不能删除 | [choose.json](roguelite-abyss-api-samples/choose.json) |
-| user.abyss_skip | 跳过选人 `{}`；弱敌不可跳 | 是 | [skip.json](roguelite-abyss-api-samples/skip.json) |
+| user.abyss_choose | 选人 `{"heroes":["A_1022","A_1023","A_1024"]}`；传候选 id，1～count 名不重复候选（弱敌最多 3 人，其余最多 1 人） | 是；只添加，不能删除 | [choose.json](roguelite-abyss-api-samples/choose.json) |
+| user.abyss_skip | 跳过选人 `{}`；所有选人（含弱敌）都可跳过 | 是 | [skip.json](roguelite-abyss-api-samples/skip.json) |
 | user.abyss_rest | 休息提升 `{"hero_id":"A_1001","option":"skill"}`；option 另可为 orange；传 {"option":"leave"} 不需hero_id，直接完成节点且不修改英雄 | 是；单节点只能一次 | [rest.json](roguelite-abyss-api-samples/rest.json) |
 | user.abyss_abandon | 放弃 `{}`；已掉落奖励保留，清理未结算战斗 | 是 | [abandon.json](roguelite-abyss-api-samples/abandon.json) |
 
@@ -71,7 +81,7 @@ teams 可省略；填写时只作诊断，单队至多30个对象，每个对象
 | AbyssRunActive | start：已有 active 局 |
 | AbyssDifficultyLocked / AbyssDeckLocked / AbyssInvalidSeed | start：未开放或格式错误的难度/卡组/种子 |
 | AbyssNoRun | 除 query/start：没有 active 局 |
-| AbyssNoChoice / AbyssChoiceRequired / AbyssInvalidChoice | choose/skip：没有候选、弱敌跳过、数量/候选/重复/容量无效 |
+| AbyssNoChoice / AbyssInvalidChoice | choose/skip：没有候选；选 0 人或超过 count、候选不存在、重复、超出池容量（AbyssChoiceRequired 已不再出现） |
 | AbyssChoicePending | route/combat/rest：尚未完成选人 |
 | AbyssNodePending / AbyssInvalidRoute | route：当前节点或战斗未完成 / 非法路线 |
 | AbyssInvalidNode | combat/rest：未选节点、已完成节点或类型不符 |
@@ -93,7 +103,7 @@ teams 可省略；填写时只作诊断，单队至多30个对象，每个对象
 
 1. 模式入口与难度/卡组选择：abyss_account.max_difficulty/decks 与配置 roguelite_abyss。
 2. 地图、续局与终止状态：abyss_run.map/current_node/available_nodes/status。
-3. 候选界面、弱敌6选3、普通3选1、精英5选1、前两幕Boss橙卡3选1、跳过：pending_choice。
+3. 候选界面、弱敌6选最多3、普通3选1、精英5选1、前两幕Boss橙卡3选1、跳过：pending_choice。
 4. 5人三路布阵、第一位队长、禁止删池成员：pool 与 combat.team。
 5. 战斗场景、凭证续战与结算：combat 返回快照、seed、metadata 和 fight_kind=abyss。
 6. 休息处技能提升/升橙：pool.slv/can_orange，rest.option。
@@ -160,7 +170,7 @@ A类小技能映射到配置中预生成变体（包含全部现有英雄/装备
 ## 校准与验收边界
 
 当前普通战系数为第1/2/3幕0.8/1.0/1.2；难度倍率依次为0.80、0.86、0.92、0.99、1.06、1.13、1.22、1.30、1.40、1.50，仅普通战、精英战和Boss使用。第1幕弱敌所有难度固定0.55，精英×1.3、Boss×1.6及重打次数保留。配置字段enemy_rates/difficulties是前端显示和新开局敌人快照的数值来源，不要写死旧表。
-开局只冻结节点enemy_preview（aid、quality/star、lv=99、slv=5、line、pos、leader、is_skin），不生成战斗面板。pos为原生战场坐标，line为0～2；休息节点为空数组。客户端只读显示。首次开战据此生成并保存完整快照，重打沿用；旧局已有enemies快照保留，缺预览时从旧快照投影。新版规则用于新开局。未运行本版胜率校准。
+开局只冻结节点enemy_preview（aid、quality/star、lv=99、slv=5、line、pos、leader、is_skin、limit_break），不生成战斗面板。pos为原生战场坐标，line为0～2；休息节点为空数组。客户端只读显示。首次开战据此生成并保存完整快照，重打沿用；旧局已有enemies快照保留，缺预览时从旧快照投影。新版规则用于新开局。未运行本版胜率校准。
 此前[离线报告](roguelite-abyss-calibration.md)中的40局流程与60场起始卡组普通战属于旧敌人参数的历史结果，不能当作本版验收。144场灵魂塔探针不涉及深渊敌人表；上述结果均不代表客户端/Android完成验收。
 
 ## 新版候选与敌方阵容（2026-11-16）
@@ -170,3 +180,20 @@ A类小技能映射到配置中预生成变体（包含全部现有英雄/装备
 敌方橙卡配额：第1幕弱敌0、精英及之后普通1、Boss2；第2幕普通/精英2、Boss3；第3幕1～3层普通/精英3，4～6层4，Boss5。皮肤计入配额；普通/弱敌不出皮肤，精英0/1/2、Boss0/2/4；Boss皮肤同定位替换，第3幕主题区别于第1幕。敌方皮肤不受玩家解锁限制。难度7起Boss额外成员仍保留。
 
 休息离开真实请求/响应：[rest_leave.json](roguelite-abyss-api-samples/rest_leave.json)。leave沿用原事务、actionID重放与节点检查；重复完成或非休息处报AbyssInvalidNode。
+
+## 玩法调整（2026-11-16，map_version 2 / rules schema 4）
+
+**敌方阵容随机化**（同一 rng(seed,'enemy',node_id)，重打一致；旧局已冻结的 enemy_preview 不变）：
+- 分路：随机一个三路每路 1～3 人的分配（3 人 1/1/1；4 人 2/1/1 的排列；5 人 2/2/1 或 3/1/1 的排列；6 人同理），英雄先打乱再填入。
+- 路内前后：tank 在前，其余在后，同类随机；pos 为原生坐标整数，范围约为战线长度的 13%～53%。
+- 队长：普通/弱敌/精英从全队均匀随机；Boss 保留手配主题队长（皮肤替换时可能换成同定位皮肤）。enemy_preview 第 0 位恒为队长。
+- 橙卡位：全部在全队随机，不再优先队长。精英的保底橙卡即“被强化者”，从非队长成员中随机；四维 ×1.2（`elite_limit_break_multiplier`）只加给它。
+- enemy_preview 新增 `limit_break`（0/1），被强化者为 1，开战快照的对应单位也带 `limit_break:1`。该字段**只用于显示**原生突破极限脉冲边框（前端不显示“突破极限”文字），属性只由倍率决定，没有走 base_unit 的 npc_limit_break。
+- 开战快照的 line/pos/leader 与 enemy_preview 完全一致（`preview_from_units(orgin_team_b)==enemy_preview`）。旧局缺 limit_break 时精英仍强化第 0 位，与旧行为相同。
+
+**卡池排除**：配置 `roguelite_abyss.excluded_families`（随配置下发客户端）列出永不进入本模式的英雄家族：
+- 规则 A：原生配置（加载补丁前的 full-config）中主技能或队长技为占位模板 S_9000～S_9005 的家族。补丁后来改写技能 id 的家族仍算未实装。S_9140/S_9150/S_9160 不是模板。
+- 规则 B：解说 A_1903/A_1904/A_1905/A_1909；规则 C：签到预览占位 A_190001。
+- 当前结果：A_1139、A_1140、A_1212、A_1224、A_1225、A_1227、A_1311、A_1903～A_1906、A_1908～A_1910、A_1997～A_1999、A_190001。
+- 过滤位置：unlocked 的 purple/orange/standalone_orange、skin_purple、skin_orange_only、enemy_skin_orange。已在进行中局池子里的不移除。
+- 客户端图鉴的“未解锁”名单＝全部 A_1*_5 与 skin_orange_only，减去 excluded_families，再减去 unlocked。

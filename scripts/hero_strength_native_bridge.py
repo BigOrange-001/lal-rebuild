@@ -163,6 +163,8 @@ class NativeSkinBattle(MeasuredBattle):
         if name == 'abilityControl': self.control(u,*a); return None
         if name == 'addBuff':
             self._add_buff(u,a[0],a[1],a[2] if len(a)>2 else 0,source=a[5] if len(a)>5 else u);return None
+        if name == 'addManualSkillDot':
+            return self._add_manual_skill_dot(u,*a)
         if name == 'removeBuff': self._remove_buff(u,a[0],consume=a[1] if len(a)>1 else False);return None
         if name == 'removeAllDebuff': self._remove_all_debuff(u);return None
         if name == 'injured': return self._injured(u,a[0],a[3],source=(a[6] if len(a)>6 else None) or a[4])

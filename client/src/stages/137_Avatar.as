@@ -1840,7 +1840,7 @@ package com.meng52.game.module.avatar
             {
                unit.addBuff("sunder",int(spec.debuff_rounds),Number(spec.sunder)/(1-Number(spec.sunder)),0,-1,this);
                unit.addBuff("weak",int(spec.debuff_rounds),Number(spec.weak)/(1-Number(spec.weak)),0,-1,this);
-               unit.addBuff("poison",int(spec.debuff_rounds),Tools.toInt(getDamage()*Number(spec.poison_ap)),0,-1,this);
+               unit.addManualSkillDot("annie_core_105_"+abilityIndex,"poison",Tools.toInt(getDamage()*Number(spec.poison_ap)),0,int(spec.debuff_rounds),this,6,true);
                if(spec.stun_enabled) unit.addBuff("stun",int(spec.control_rounds),0,0,-1,this);
                unit.addBuff("silence",int(spec.control_rounds),0,0,-1,this);
             }

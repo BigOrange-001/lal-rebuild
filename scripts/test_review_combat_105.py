@@ -15,7 +15,7 @@ def methods():
     names = ('s2Dispel', 'shieldValue104', 'removeIndependentShields104',
              'removeBuff', 'abilityDeath', 's2AnnieCore', 's2AnnieImmune',
              's2AnnieStatus', 's2Family', 'removeAllDebuff', 'abilityClearStates',
-             'skin2ClearDebuffs')
+             'skin2ClearDebuffs', 'addManualSkillDot')
     result = []
     for name in names:
         match = re.search(r'function '+name+r'\((.*?)\)\s*:\s*\w+\s*\{', source, re.S)
@@ -36,7 +36,8 @@ def methods():
 HARNESS = r'''
 const assert=require('node:assert/strict');
 const int=x=>Math.trunc(Number(x)||0),Tools={toInt:int};
-const Buff={LIST_BUFF:['shield','strong','armor','purify'],LIST_DEBUFF:['poison','stun','silence','sunder','weak']};
+function Buff(type,round,value){Object.assign(this,{type,round,value})}
+Buff.LIST_BUFF=['shield','strong','armor','purify'];Buff.LIST_DEBUFF=['poison','stun','silence','sunder','weak'];
 const GlobalData={$mConfig_avatar:{annie:{skin_revision_v2_104:1221},thief:{skin_revision_v2_104:1214}},
  $mConfig_skill:{passive:{annie_core_105:{cooldown:1,purify_rounds:1,debuff_rounds:2,sunder:.33,weak:.33,poison_ap:.5,control_rounds:1,stun_enabled:true}}}};
 let roster=[],skin2AnnieChainDepth=0,skin2AnnieChain=[];
@@ -45,9 +46,10 @@ const methods={};
 /*METHODS*/
 function actor(id,team=1){
  const u=Object.assign({__avatar:true,avatarData:{id},team,otherTeam:3-team,line:0,pos:100,
- hp:10000,skin2:{},buffs:{},abilityState:{},abilitySerial:4,manualOwnerActionSerial:2,
- skillB:{skillSetData:{id:'passive'}},manualSkillDots:{},ap:1000},methods);
+ hp:10000,skin2:{},buffs:{},abilityState:{},abilityIndex:roster.length+1,abilitySerial:4,manualOwnerActionSerial:2,
+ skillB:{skillSetData:{id:'passive'}},manualSkillDots:{},manualDotSerial:0,ap:1000},methods);
  u.abyssRemoveDots104=u.queueVitalBar104=u.abilityFeedback=u.fxPulse104=()=>{};
+ u.yasuoImmune104=()=>false;u.showBuff=()=>{};
  u.clearManualSkillDots=()=>{u.manualSkillDots={}};
  u.beginAbilityAttack=()=>({});u.endAbilityAttack=()=>{};u.getDamage=()=>u.ap;
  u.addBuff=(key,round,value=0)=>{u.buffs[key]={round,value,type:key}};
@@ -100,7 +102,7 @@ function spread(id,mode){
 for(const id of ['ally','annie'])for(const mode of ['immune','purify']){
  const {target,caster,state}=spread(id,mode);
  assert(!target.abilityState.malz_7,'blocked infection never enters status state');
- assert(!caster.buffs.poison,'blocked infection does not retaliate');
+ assert.equal(Object.keys(caster.manualSkillDots).length,0,'blocked infection does not retaliate');
  assert.equal(state.hops,0);
  if(mode==='purify')assert.equal(target.buffs.purify.value,1,'consume one native purify charge');
 }
@@ -108,14 +110,15 @@ for(const id of ['ally','annie'])for(const mode of ['immune','purify']){
  const {target,ally,caster,dead}=spread('annie','ready');
  assert(!target.abilityState.malz_7,'ready Annie cleanses the newly spread infection');
  assert(target.s2AnnieImmune()&&ally.s2AnnieImmune());
- assert(caster.buffs.poison&&caster.buffs.stun&&caster.buffs.silence);
+ assert(Object.keys(caster.manualSkillDots).length&&caster.buffs.stun&&caster.buffs.silence);
+ assert(!caster.buffs.poison);assert.equal(Object.values(caster.manualSkillDots)[0].hpMaxFraction,0);
  const next=target.skin2.annieCoreNext;dead.abilityDeath();
  assert.equal(target.skin2.annieCoreNext,next,'death is handled exactly once');
 }
 for(const [id,mode] of [['ally','normal'],['annie','cooldown']]){
  const {target,caster,state}=spread(id,mode);
  assert.equal(target.abilityState.malz_7,state);assert.equal(state.hops,1);
- assert.equal(state.until,target.abilitySerial+1);assert(!caster.buffs.poison);
+ assert.equal(state.until,target.abilitySerial+1);assert.equal(Object.keys(caster.manualSkillDots).length,0);
 }
 ''')
 

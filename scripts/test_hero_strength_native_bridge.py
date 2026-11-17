@@ -51,7 +51,7 @@ class NativeBridgeTests(unittest.TestCase):
         owner['skillB']=_native_skill_snapshot(self.cfg,sid,1)
         b._add_buff(owner,'stun',1,source=enemy)
         self.assertIsNone(b._buff(owner,'stun'))
-        self.assertIsNotNone(b._buff(enemy,'poison'))
+        self.assertTrue(enemy.get('_manual_dots'))
         b.control(enemy,ally,'root',1)
         self.assertFalse(b.state(ally).get('root'),'immunity rejects the control state as well as its Buff')
         self.assertFalse(b._js_contexts)
@@ -97,9 +97,35 @@ class NativeBridgeTests(unittest.TestCase):
                     entries=[v for k,v in b.state(annie).items() if isinstance(k,tuple) and isinstance(v,dict) and v.get('debuff')]
                     remaining=bool(entries or annie.get('_manual_dots') or annie.get('_relic_dots'))
                     self.assertEqual(remaining,mode=='cooldown')
-                    self.assertEqual(b._buff(enemy,'poison') is not None,mode=='ready')
+                    self.assertEqual(bool(enemy.get('_manual_dots')),mode=='ready')
                     self.assertFalse(b._js_contexts)
                     if mode=='purify':self.assertEqual(b._buff(annie,'purify').value,1)
+
+    def test_annie_poison_is_attack_only_two_ticks_and_independently_stackable(self):
+        for hp_max in (10000,1000000):
+            with self.subTest(hp_max=hp_max):
+                b=self.battle(1221);annie=b.a[0];enemy=b.b[0]
+                enemy['hp_max']=enemy['hp']=hp_max
+                b._add_buff(annie,'stun',1,source=enemy)
+                self.assertIsNone(b._buff(enemy,'poison'),'retaliation must not use native hp-based poison')
+                dots=enemy['_manual_dots']
+                self.assertEqual(len(dots),1)
+                dot=next(iter(dots.values()))
+                self.assertEqual((dot['apTick'],dot['hpMaxFraction'],dot['round']),(500,0,2))
+                # Keep the existing global damage coefficient and poison
+                # vulnerability: each layer must settle like a raw 500 DOT.
+                before=enemy['hp']
+                tick_damage=b._injured(enemy,500,6,source=annie,dot_kind='poison')
+                enemy['hp']=before
+                b._tick_manual_skill_dots(enemy)
+                self.assertEqual(before-enemy['hp'],tick_damage)
+                b.turn_start(annie);b.turn_start(annie)
+                b._add_buff(annie,'stun',1,source=enemy)
+                self.assertEqual(len(dots),2)
+                for damage in (2*tick_damage,tick_damage,0):
+                    before=enemy['hp'];b._tick_manual_skill_dots(enemy)
+                    self.assertEqual(before-enemy['hp'],damage)
+                self.assertFalse(dots)
 
     def test_native_rebirth_precedes_bless_and_is_not_counted_as_healing(self):
         b=self.battle(1216);bird=b.a[0];enemy=b.b[0]

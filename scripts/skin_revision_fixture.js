@@ -19,7 +19,14 @@ function unit(family=0,team=1,pos=1500){
  u.abilityFeedback=()=>{};u.abilityControl=(v,k,d,value=0)=>{if(v&&v.hp>0)v.addBuff(k,d,value)};
  u.shieldValue104=()=>Object.entries(u.buffs).reduce((sum,[key,buff])=>sum+(key==='shield'||key.startsWith('yasuoShield104_')?Math.max(0,buff.value):0),0);
  u.removeBuff=k=>{if(k==='shield')for(let key in u.buffs)if(key.startsWith('yasuoShield104_'))delete u.buffs[key];delete u.buffs[k]};
- u.removeAllDebuff=()=>{u.skin2ClearDebuffs();for(let k of Buff.LIST_DEBUFF)delete u.buffs[k]};
+ u.manualSkillDots={};u.manualDotSerial=0;
+ u.removeAllDebuff=()=>{u.skin2ClearDebuffs();u.manualSkillDots={};for(let k of Buff.LIST_DEBUFF)delete u.buffs[k]};
+ u.addManualSkillDot=(key,kind,apTick,hpMaxFraction,round,source,damageType,stack)=>{
+  if(u.s2AnnieImmune())return;
+  if(u.buffs.purify){u.removeBuff('purify');return;}
+  if(stack)key+=':layer:'+(++u.manualDotSerial);
+  u.manualSkillDots[key]={kind,apTick,hpMaxFraction,round,source,damageType};u.s2AnnieStatus(kind);
+ };
  u.addBuff=(k,d,value=0)=>{
   if(Buff.LIST_DEBUFF.includes(k)&&u.s2AnnieImmune())return;
   if(k==='purify')u.removeAllDebuff();
@@ -56,6 +63,7 @@ function fresh(f){roster=[];contexts=[];skin2Depth=0;skin2AnnieChainDepth=0;skin
 function cast(a,slot){let s=slot===0?a.skill0:a.skill1;beginAbilityAttack(a,'active');try{assert(a.executeSkin2(`skin2_${a.s2Family()}_${slot}`,s));}finally{endAbilityAttack();}}
 function turn(a){a.manualOwnerActionSerial++;a.skin2Event('turn_start',a,a,0,0)}
 let cases=0;
+const reactionPoison=u=>Object.values(u.manualSkillDots||{}).reduce((sum,dot)=>sum+dot.apTick,0);
 // Equipment-only Annie passive: accepted statuses trigger across lanes, even
 // while stunned/silenced. Resisted statuses, dead units and bare Annie do not.
 function equipCore(a){
@@ -64,7 +72,7 @@ function equipCore(a){
 }
 {
  let {a,b,c,ally}=fresh(1221);a.addBuff('stun',1);
- assert(!a.buffs.stun&&b.buffs.poison&&b.buffs.silence,'unbonded Annie has the full retaliation except stun');
+ assert(!a.buffs.stun&&reactionPoison(b)>0&&b.buffs.silence,'unbonded Annie has the full retaliation except stun');
  assert(!b.buffs.stun&&!c.buffs.stun,'stun requires the equipment bond');cases++;
 }
 {
@@ -74,26 +82,28 @@ function equipCore(a){
  a.addBuff('stun',1);
  assert(!a.buffs.stun&&!ally.buffs.curse&&!ally.buffs.poison,'cleanses all living friends across lanes');
  for(let enemy of [b,c]){
-  for(let key of ['sunder','weak','poison','stun','silence'])assert(enemy.buffs[key],key+' applies across lanes');
-  assert.equal(enemy.buffs.poison.value,500);
+  for(let key of ['sunder','weak','stun','silence'])assert(enemy.buffs[key],key+' applies across lanes');
+  assert.equal(reactionPoison(enemy),500);
+  assert(!enemy.buffs.poison,'retaliation uses AP-only layers without native poison');
+  for(let dot of Object.values(enemy.manualSkillDots))assert.equal(dot.hpMaxFraction,0);
   assert(Math.abs(1/(1+enemy.buffs.sunder.value)-.67)<1e-10);
  }
- assert(!dead.buffs.poison);assert.equal(contexts.length,0);
+ assert(!reactionPoison(dead));assert.equal(contexts.length,0);
  ally.addBuff('poison',2,100);ally.addBuff('silence',1);
  a.s2Mark(ally,'cold',1);
  assert(!ally.buffs.poison&&!ally.buffs.silence&&!ally.skin2.cold,'one-round immunity covers repeated statuses and marks');
  turn(a);a.addBuff('silence',1);
- assert(a.buffs.silence);assert.equal(b.buffs.poison.value,500,'cooldown 1 keeps one owner turn waiting');
+ assert(a.buffs.silence);assert.equal(reactionPoison(b),500,'cooldown 1 keeps one owner turn waiting');
  turn(a);a.addBuff('silence',1);
- assert(!a.buffs.silence);assert.equal(b.buffs.poison.value,1000,'a later ready trigger stacks poison');
+ assert(!a.buffs.silence);assert.equal(reactionPoison(b),1000,'a later ready trigger stacks poison');
  assert.equal(skin2AnnieChainDepth,0);assert.equal(skin2AnnieChain.length,0);cases++;
 }
 {
  let {a,b}=fresh(1221);equipCore(a);
  a.addBuff('purify',1);a.addBuff('stun',1);
- assert(!b.buffs.poison,'a resisted debuff is not an abnormal status received');
- a.addBuff('shield',2,100);assert(!b.buffs.poison,'positive buffs do not trigger');
- a.hp=0;a.addBuff('stun',1);assert(!b.buffs.poison,'dead Annie does not react');cases++;
+ assert(!reactionPoison(b),'a resisted debuff is not an abnormal status received');
+ a.addBuff('shield',2,100);assert(!reactionPoison(b),'positive buffs do not trigger');
+ a.hp=0;a.addBuff('stun',1);assert(!reactionPoison(b),'dead Annie does not react');cases++;
 }
 {
  let {a,b}=fresh(1221);equipCore(a);

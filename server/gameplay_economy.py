@@ -13,7 +13,8 @@ from mod_policy import (runtime as mod_runtime, new_heroes, effective_digest,
                         channel_enabled, hero_available, activity_categories)
 
 # Local test-gift denominations, in game currency (coin / 金砖).
-PACKS = {f"local_{amount}": amount for amount in (60, 120, 300, 680, 980, 1280, 3280, 6480, 10000)}
+PACKS = {f"local_{amount}": amount for amount in
+         (60, 120, 300, 680, 980, 1280, 3280, 6480, 10000, 20000, 50000, 100000)}
 MONTHLY_PACKS = {"coin98": 60, "coin99": 120, "coin100": 300}
 
 class GameplayEconomy:
@@ -32,6 +33,7 @@ class GameplayEconomy:
         "user.roulette", "user.roulette_lottery", "user.get_lottery_activity", "user.exchange_activity_avatar",
         "user.get_box_key", "user.box_key_gift", "user.box_key_exchange", "user.box_gift_record",
         "user.groupon_info", "user.groupon_buy", "user.groupon_close", "user.rank_lv",
+        "user.vip_daily_packs", "user.vip_daily_pack_buy",
     }
     def __init__(self, store, config):
         self.store, self.config = store, (config or {}).get("cfg", config or {})
@@ -67,6 +69,8 @@ class GameplayEconomy:
             "user.everyday_gift": self.everyday_gift,
             "user.vip_gift": self.vip_gift,
             "user.vip_gift_buy": self.vip_gift_buy,
+            "user.vip_daily_packs": self.vip_daily_packs,
+            "user.vip_daily_pack_buy": self.vip_daily_pack_buy,
             "user.full_energy": self.full_energy,
             "user.full_fragment_energy": self.full_fragment_energy,
             "user.expand_avatar_len": self.expand_avatar_len,
@@ -389,6 +393,81 @@ class GameplayEconomy:
         result["replayed"] = replayed
         return result
 
+    def _vip_daily_state(self, p):
+        from shop_balance_105 import daily_limit
+        packs = self._simple("vip_daily_packs_105", [])
+        records = p.setdefault("records", {})
+        state = records.get("vip_daily_packs")
+        today = game_day(self._now())
+        if not isinstance(state, dict) or state.get("day") != today:
+            state = {"day": today, "bought": {}}
+            records["vip_daily_packs"] = state
+        vip_lv = int(p.get("vip_lv", 0))
+        rows = []
+        for pack in packs if isinstance(packs, list) else []:
+            limit = daily_limit(pack, vip_lv)
+            bought = int(state["bought"].get(pack["id"], 0))
+            rows.append({"id": pack["id"], "name": pack["name"], "vip": pack["vip"],
+                         "price": pack["price"], "reward": copy.deepcopy(pack["reward"]),
+                         "limit": limit, "bought": bought, "left": max(0, limit - bought),
+                         "locked": vip_lv < pack["vip"]})
+        return state, rows
+
+    def vip_daily_packs(self, uid, params):
+        def mutate(p):
+            _, rows = self._vip_daily_state(p)
+            return p, {"packs": rows, "vip_lv": int(p.get("vip_lv", 0)), "coin": int(p.get("coin", 0))}
+        result, _ = self.store.atomic_update(uid, mutate, None)
+        return result
+
+    def _vip_pack_reward(self, reward):
+        """Resolve random entries into a concrete, grantable reward."""
+        pools = self._simple("vip_daily_pack_pools_105", {})
+        rng = random.SystemRandom()
+        result = {}
+        for key, value in reward.items():
+            if key == "random_orange_equip":
+                choices = list(pools.get("orange_equip", []))
+                if not choices: raise GameplayFault("InvalidConfig", "VIP equipment pool is empty")
+                for _ in range(int(value)):
+                    eid = rng.choice(choices)
+                    result.setdefault("equip", {})[eid] = result.get("equip", {}).get(eid, 0) + 1
+            elif key == "random_orange_soul":
+                choices = list(pools.get("orange_soul", []))
+                if not choices: raise GameplayFault("InvalidConfig", "VIP hero pool is empty")
+                result.setdefault("avatar_soul", {})[rng.choice(choices)] = int(value)
+            else:
+                result[key] = copy.deepcopy(value)
+        return result
+
+    def vip_daily_pack_buy(self, uid, params):
+        pack_id = params.get("pack_id")
+        if not isinstance(pack_id, str) or not pack_id:
+            raise GameplayFault("InvalidGift", "VIP daily pack is required")
+        key = self._op_key("user.vip_daily_pack_buy", params)
+        def mutate(p):
+            state, rows = self._vip_daily_state(p)
+            row = next((r for r in rows if r["id"] == pack_id), None)
+            if row is None: raise GameplayFault("UnknownGift", "VIP daily pack is not configured")
+            if row["locked"]: raise GameplayFault("VipLevelRequired", "This pack requires a higher VIP level")
+            if row["left"] <= 0: raise GameplayFault("DailyLimit", "Today's purchases of this pack are used up")
+            price = int(row["price"])
+            if int(p.get("coin", 0)) < price: raise GameplayFault("InsufficientCoin", "Not enough coin")
+            reward = self._vip_pack_reward(row["reward"])
+            p["coin"] = int(p.get("coin", 0)) - price
+            self._record_coin_spend(p, price)
+            grant_reward(p, reward, {"cfg": self.config})
+            state["bought"][pack_id] = int(state["bought"].get(pack_id, 0)) + 1
+            _, rows = self._vip_daily_state(p)
+            attrs = p.get("attrs", {})
+            return p, self._profile_result(p, packs=rows, granted=reward,
+                                           dust=attrs.get("dust", [0, 0, 0, 0]),
+                                           dn_stone=attrs.get("dn_stone", 0),
+                                           culture_book=attrs.get("culture_book", 0))
+        result, replayed = self.store.atomic_update(uid, mutate, key, {"pack_id": pack_id})
+        result["replayed"] = replayed
+        return result
+
     def _simple(self, key, default):
         return (self.config.get("system_simple") or {}).get(key, default)
 
@@ -692,8 +771,21 @@ class GameplayEconomy:
         if not offers: raise GameplayFault("ShopUnavailable", "Soul shop inventory is empty")
         cycle = int(old.get("refresh_seq", 0)) if isinstance(old, dict) else 0
         seed = int.from_bytes(hashlib.sha256(f"{uid}:{kind}:{cycle}".encode()).digest()[:8], "big")
-        rng = random.Random(seed); indices = list(range(len(offers))); rng.shuffle(indices)
-        chosen = indices[:min(6, len(indices))]
+        rng = random.Random(seed); indices = list(range(len(offers)))
+        weights = (self.config.get("mystery_shop_weights") or {}).get(kind)
+        if (isinstance(weights, list) and len(weights) == len(offers)
+                and offers is (self.config.get("mystery_shop_offers") or {}).get(kind)):
+            # Weighted draw of six distinct rows, so each tier keeps its mix.
+            chosen, pool = [], [(i, float(weights[i])) for i in indices if float(weights[i]) > 0]
+            while pool and len(chosen) < 6:
+                ticket = rng.random() * sum(weight for _, weight in pool)
+                for position, (index, weight) in enumerate(pool):
+                    ticket -= weight
+                    if ticket <= 0 or position == len(pool) - 1:
+                        chosen.append(index); pool.pop(position); break
+        else:
+            rng.shuffle(indices)
+            chosen = indices[:min(6, len(indices))]
         previous_time = int(old.get("t", 0)) if isinstance(old, dict) else 0
         return {"t": max(self._now() * 1000, previous_time + 1),
                 "mod_digest": effective_digest(self.config),

@@ -46,6 +46,11 @@
             android:exported="false"
             android:label="本地服务与存档" />
 
+        <activity
+            android:name=".GuildAiSettingsActivity"
+            android:exported="false"
+            android:label="公会 AI 对话" />
+
         <service
             android:name=".ServerService"
             android:exported="false"

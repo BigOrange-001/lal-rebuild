@@ -6,15 +6,20 @@ from gameplay_common import grant_reward, game_day
 from player_store import GameplayFault
 from battle_intents import create_intent, consume_intent
 from guild_companions import GuildCompanions
+from guild_world import GuildWorld
+from guild_llm import GuildLLM
+import guild_chat
 
 class GameplayGuildBoss:
     METHODS={
+      'user.chat_guild','user.chat_record',
       'user.association_is','user.get_association_list','user.add_association','user.find_association','user.join_association','user.exit_association','user.modify_association','user.over_association','user.association_setup','user.association_setup_content','user.get_guild_log','user.guild_contribute_exchange','user.guild_worship','user.member_worship','user.get_association_worship_gold_info','user.get_association_worship_gold','user.assocication_guild_shop_buy','user.guild_graduate_skill_append','user.guild_graduate_skill_up','user.guild_graduate_skill_change','user.get_associationboss','user.attack_associationboss','user.get_association_boss_ranks','user.association_reborn','user.get_zoneboss','user.enter_zoneboss','user.attack_zoneboss','user.reborn','user.super_reborn','user.buy_attack_number','user.inspire_association_race','user.assocication_sever_shop_info','user.assocication_sever_shop_buy','user.assocication_sever_shop_refresh','user.apply_member','user.calcel_member','user.get_apply_info','user.association_rank_index','user.show_war_data','user.get_war_rank','user.get_fight_result','user.get_reward_data'
     }
     def __init__(self,store,config):
         self.store=store; self.full=config if isinstance(config,dict) else {}; self.cfg=self.full.get('cfg',self.full)
         self.simple=self.cfg.get('association_simple',{}); self.rules=self.full.get('guild_boss_reconstruction',{})
         self.companions=GuildCompanions(store,self.full)
+        self.world=GuildWorld(store,self.full,self,self.companions,GuildLLM.for_store(store))
     def dispatch(self,uid,method,params):
         if method not in self.METHODS: raise GameplayFault('NotImplemented','Method not reconstructed: '+method)
         if not isinstance(params,dict): raise GameplayFault('InvalidRequest','Guild request must be an object')
@@ -22,7 +27,7 @@ class GameplayGuildBoss:
         if fn is None: raise GameplayFault('NotImplemented','Guild method not implemented: '+method)
         key=f'{method}:{params["actionID"]}' if isinstance(params.get('actionID'),str) and params['actionID'] else None
         def mutate(p):
-            self.companions.refresh(p)
+            self.world.advance(p)
             return fn(p,params)
         data,_=self.store.atomic_update(uid,mutate,key,params)
         return data
@@ -31,11 +36,11 @@ class GameplayGuildBoss:
     def _guild(self,p,create=False):
         guild=p.setdefault('association',{})
         if create and not guild.get('id'):
-            me=self._me(p); uid_text=str(me['uid']); uid_num=int(uid_text) if uid_text.isdigit() else sum(ord(ch) for ch in uid_text); gid=str(10000+(uid_num%80000))
-            members=[]
-            for i in range(6): members.append({'uid':f'npc-{gid}-{i+1}','zone':'local','name':['守望者','远征者','星火','小队长','旅人','影刃'][i],'lv':max(1,int(p.get('lv',1))-i),'vip_lv':0,'association_lv':3,'contribute':(6-i)*100,'power':10000*(6-i),'status':1,'worship_info':{'member_worship_count':0,'member_worship_user_list':[],'member_worship_day':game_day(self.store.clock.now())}})
-            members.insert(0,{**me,'association_lv':0,'contribute':int(p.get('attrs',{}).get('guild_contribute',0)),'status':1,'worship_info':{'member_worship_count':0,'member_worship_user_list':[],'member_worship_day':game_day(self.store.clock.now())}})
-            guild.update({'id':gid,'name':'本地守望者','icon':0,'level':1,'exp':0,'total_alive':0,'notice':'欢迎加入本地公会','created':int(self.store.clock.now()),'members':members,'guild_graduate_skill_list':[],'boss':{},'logs':[],'shop':{},'fund':0})
+            me=self._me(p); uid_text=str(me['uid']); uid_num=int(uid_text) if uid_text.isdigit() else sum(ord(ch) for ch in uid_text)
+            gid=self.world.free_player_guild_id(p,10000+(uid_num%80000))
+            # Founding AI members join through guild_world after creation.
+            members=[{**me,'association_lv':0,'contribute':int(p.get('attrs',{}).get('guild_contribute',0)),'status':1,'worship_info':{'member_worship_count':0,'member_worship_user_list':[],'member_worship_day':game_day(self.store.clock.now())}}]
+            guild.update({'id':gid,'name':'本地守望者','icon':0,'level':1,'exp':0,'total_alive':0,'notice':'欢迎加入本地公会','created':int(self.store.clock.now()),'members':members,'guild_graduate_skill_list':[],'boss':{},'logs':[],'shop':{},'fund':0,'applications':[],'join_type':1})
             attrs=p.setdefault('attrs',{}); attrs.setdefault('association_gold',0); attrs.setdefault('guild_graduate_skill',{}); attrs.update({'association_id':gid,'association_lv':0,'guild_contribute':int(attrs.get('guild_contribute',0))})
         return guild if guild.get('id') else None
     def _guild_response(self,p,flag=1,user_extra=None):
@@ -85,41 +90,13 @@ class GameplayGuildBoss:
             rows.append(member)
         g['members']=rows
         return rows
-    def _guild_suggestions(self, p=None):
-        """NPC guild cards in the exact shape consumed by ItemGuild.
+    def _guild_suggestions(self, p):
+        """AI guild cards in the exact shape consumed by ItemGuild.
 
         join_type follows the native button branches: 0 is closed, 1 requires
-        an application, and 2 is an open guild. These are local-only NPC guilds;
-        no request is attributed to a fabricated player.
+        an application, and 2 is an open guild.
         """
-        rows = []
-        applications = (p or {}).get("records", {}).get("guild_applications", {})
-        if not isinstance(applications, dict): applications = {}
-        guild_levels = self.simple.get("guild_level", {})
-        for i, name in enumerate(("晨星盟（NPC）", "远征者（NPC）", "青铜守卫（NPC）")):
-            guild_id = str(10001 + i)
-            level = i + 1
-            level_row = guild_levels.get(f"level_{level}", {}) if isinstance(guild_levels, dict) else {}
-            join_type = (1, 2, 0)[i]
-            application = applications.get(guild_id)
-            rows.append({
-                "id": guild_id,
-                "name": name,
-                "icon": i,
-                "level": level,
-                "member_count": 6 + i,
-                "max_member": int(level_row.get("max_member_length", 22 + 2 * (level - 1))),
-                "max_num": int(level_row.get("max_member_length", 22 + 2 * (level - 1))),
-                "member_num": 6 + i,
-                "total_alive": 10000 * (i + 1),
-                "content": "本地单人模拟公会，由NPC成员组成",
-                "notice": "本地单人模拟公会，由NPC成员组成",
-                "join_level_limit": 1,
-                "join_type": join_type,
-                "flag": int(isinstance(application, dict) and application.get("status") == "pending"),
-                "power": 100000 * (i + 1),
-            })
-        return rows
+        return self.world.guild_cards(p)
     def _daily_record(self,p,key):
         record=p.setdefault('records',{}).setdefault('guild_daily',{})
         if record.get('day')!=game_day(self.store.clock.now()): record.clear(); record['day']=game_day(self.store.clock.now())
@@ -134,7 +111,7 @@ class GameplayGuildBoss:
     def _association_is(self,p,x): return p,self._guild_response(p,1 if self._guild(p) else 0)
     def _get_association_list(self,p,x): return p,{'info':self._guild_suggestions(p)}
     def _find_association(self,p,x):
-        query=str(x.get('id','')); rows=[g for g in self._guild_suggestions(p) if g['id']==query]
+        query=str(x.get('id','')).strip(); rows=[g for g in self._guild_suggestions(p) if query and (g['id']==query or query in g['name'])]
         return p,{'info':rows}
     def _add_association(self,p,x):
         if self._guild(p): return p,{'res_code':-1,'user_dict':self._wallet(p)}
@@ -142,9 +119,11 @@ class GameplayGuildBoss:
         if not 2<=len(name)<=8 or any(c in name for c in '*\\/'): raise GameplayFault('InvalidGuildName','Guild name must contain 2 to 8 safe characters')
         resource='gold' if flag==0 else 'coin'
         if int(p.get(resource,0))<cost: raise GameplayFault('InsufficientResource','Not enough '+resource)
+        taken={card['name'] for card in self.world.guild_cards(p)}
+        if name in taken: raise GameplayFault('GuildNameTaken','Guild name is already used')
         p[resource]-=cost; g=self._guild(p,True); g['name']=name; g['icon']=int(x.get('icon',0))
-        self.companions.refresh(p)
         p.setdefault('records',{}).pop('guild_applications',None)
+        self.world.on_player_guild_created(p)
         return p,{'res_code':1,'user_dict':self._wallet(p)}
     def _join_association(self,p,x):
         # This RPC approves or rejects a local guild applicant.
@@ -166,8 +145,12 @@ class GameplayGuildBoss:
         if int(x.get('flag',-1)) == 0:
             applications.remove(match)
             guild['applications']=applications
-            p.setdefault('guild_companions',{}).setdefault('rejected',{})[uid]=int(self.store.clock.now())//3600
+            self.world.on_rejected(p,uid)
             return p,{'res_code':1,'association_info':{'association_application':len(applications)}}
+        agent=self.world.state(p)['agents'].get(uid)
+        if agent is None or agent.get('guild'):
+            applications.remove(match)
+            return p,{'res_code':-1,'association_info':{'association_application':len(applications)}}
         if int(x.get('flag',-1)) != 1:
             return p,{'res_code':-2}
         level_cfg=self.simple.get('guild_level',{}).get(f"level_{int(guild.get('level',1))}",{})
@@ -181,9 +164,14 @@ class GameplayGuildBoss:
         if uid not in incoming and uid not in social.get('friends',[]): incoming.append(uid)
         p.setdefault('guild_companions',{}).setdefault('friend_invites_sent',{})[uid]=True
         self._append_guild_log(guild,f"{bot['name']}加入公会")
+        world=self.world.state(p); self.world.reconcile(p,world)
+        self.world._maybe_say(p,agent,'join',self.world.now()//3600,self.world.now(),force=True)
         return p,{'res_code':1,'association_info':{'association_application':len(applications)},
                   'member_list':self._guild_member_rows(guild,p),'apply_list':copy.deepcopy(applications)}
-    def _exit_association(self,p,x):
+    def _exit_association(self,p,x,disband=False):
+        # Members stay in the AI world: a guild the player leaves keeps running
+        # under an AI leader unless the leader explicitly disbands it.
+        self.world.on_player_exit(p,disband=disband)
         p['association']={}; p.setdefault('attrs',{}).update({'association_id':'','association_lv':0})
         p.setdefault('records',{}).pop('guild_applications',None)
         # ItemGuildPanel only leaves its guild view on res_code == 1.
@@ -233,7 +221,10 @@ class GameplayGuildBoss:
         if 'content' in x:g['notice']=str(x['content'])[:100]
         return p,self._guild_response(p)
     def _association_setup_content(self,p,x): return self._association_setup(p,x)
-    def _over_association(self,p,x): return self._exit_association(p,x)
+    def _over_association(self,p,x):
+        guild=self._guild(p)
+        if guild and self.world._player_rank(p)!=0: return p,{'res_code':-2}
+        return self._exit_association(p,x,disband=True)
     def _get_guild_log(self,p,x):
         g=self._guild(p)
         if not g:return p,{'res_code':-1,'association_log':[],'logs':[],'info':[]}
@@ -541,13 +532,12 @@ class GameplayGuildBoss:
         if int(row['member_count']) >= int(row['max_member']):
             return p,{'res_code':-4,'user_dict':self._wallet(p)}
         if row['join_type']==2:
-            guild=self._guild(p,True)
-            guild.update({'id':guild_id,'name':row['name'],'icon':row['icon'],'level':int(row['level']),'notice':row['content']})
-            p.setdefault('attrs',{}).update({'association_id':guild_id,'association_lv':0})
-            p.setdefault('records',{}).pop('guild_applications',None)
-            return p,{'res_code':1,'join_flag':True,'user_dict':self._wallet(p),'association':copy.deepcopy(guild)}
+            # Open AI guilds admit the player as an ordinary member.
+            self.world.join_player(p,guild_id)
+            return p,{'res_code':1,'join_flag':True,'user_dict':self._wallet(p),'association':copy.deepcopy(self._guild(p))}
         applications=p.setdefault('records',{}).setdefault('guild_applications',{})
-        applications[guild_id]={'id':guild_id,'status':'pending','submitted_day':game_day(self.store.clock.now()),'npc':True}
+        applications[guild_id]={'id':guild_id,'status':'pending','submitted_day':game_day(self.store.clock.now()),
+                                'submitted_hour':int(self.store.clock.now())//3600,'npc':True}
         return p,{'res_code':1,'join_flag':False,'apply_list':copy.deepcopy(list(applications.values())),'user_dict':self._wallet(p)}
     def _calcel_member(self,p,x):
         guild_id=str(x.get('id',''))
@@ -568,7 +558,34 @@ class GameplayGuildBoss:
         self._update_guild_level(guild)
         rows=copy.deepcopy(guild.get('applications',[]))
         return p,{'res_code':1,'association_info':{'id':guild['id'],'name':guild['name'],'icon':guild['icon'],'level':guild['level'],'association_application':len(rows)},'num':len(rows),'member':rows,'apply_list':copy.deepcopy(rows),'info':copy.deepcopy(rows)}
-    def _association_rank_index(self,p,x): return p,{'info':self._guild_suggestions(p),'rank_list':self._guild_suggestions(p)}
+    def _association_rank_index(self,p,x):
+        rows=self.world.guild_cards(p,include_player=True)
+        for rank,row in enumerate(rows,1): row['rank']=rank
+        return p,{'info':rows,'rank_list':copy.deepcopy(rows)}
+    def _chat_rows(self,p):
+        """Rows in the shape LOL_ChatItem renders: t is seconds, zone must be a configured zone."""
+        g=self._guild(p)
+        if not g: return []
+        me=self._me(p); guild_chat.ensure_table(self.store.db)
+        members={str(m.get('uid')):m for m in g.get('members',[]) if isinstance(m,dict)}
+        rows=[]
+        for row in guild_chat.recent(self.store.db,me['uid'],g['id'],50):
+            member=members.get(row['uid'],{})
+            mine=row['uid']==me['uid']
+            rows.append({'method':'chat_guild','uid':row['uid'],'zone':me['zone'],'name':row['name'],
+                         'lv':int(member.get('lv',me['lv'] if mine else 1)),
+                         'vip_lv':me['vip_lv'] if mine else 0,'s':row['text'],'t':int(row['ts'])})
+        return rows
+    def _chat_guild(self,p,x):
+        if not self._guild(p): raise GameplayFault('NoGuild','Join a guild first')
+        text=guild_chat.clean_text(x.get('s'),guild_chat.MAX_PLAYER_TEXT)
+        if not text: raise GameplayFault('InvalidChat','Message is empty or contains unsupported characters')
+        self.world.player_said(p,text)
+        return p,{'res_code':1,'record':self._chat_rows(p)}
+    def _chat_record(self,p,x):
+        # Only the guild tab asks with channel=guild; other callers keep an empty record.
+        rows=self._chat_rows(p) if str(x.get('channel',''))=='guild' else []
+        return p,{'res_code':1,'record':rows}
     def _show_war_data(self,p,x): return p,{'data':{'open_status':0,'info':[]}}
     def _get_war_rank(self,p,x): return p,{'rank_list':[],'info':[]}
     def _get_fight_result(self,p,x): return p,{'res_code':0,'fight_result':[]}
@@ -615,14 +632,27 @@ class GameplayGuildBoss:
         state=p.setdefault('boss_state',{}).setdefault(kind,{})
         if state.get('day')!=game_day(self.store.clock.now()):
             stage=max(1,int(state.get('stage',1))); tpl=self._boss_template(kind,stage)
-            state.update({'day':game_day(self.store.clock.now()),'boss':{'id':tpl['id'],'name':tpl['name'],'max_hp':tpl['max_hp'],'current_hp':tpl['max_hp'],'kill_num':stage-1,'is_end':False,'add_time':{'$date':int(self.store.clock.now())}},'attack_log':{'attack_num':0,'attack_hp':0,'next_attack_time':{'$date':0},'enhance':0,'gifts':{}},'free_num':int(self.rules.get(kind,{}).get('attack',{}).get('free_per_day',3)),'vip_free_num':0,'rank_list':[],'report_list':[],'damage':0,'stage':stage})
+            state.update({'day':game_day(self.store.clock.now()),'boss':{'id':tpl['id'],'name':tpl['name'],'max_hp':tpl['max_hp'],'current_hp':tpl['max_hp'],'kill_num':stage-1,'is_end':False,'add_time':{'$date':int(self.store.clock.now())}},'attack_log':{'attack_num':0,'attack_hp':0,'next_attack_time':{'$date':0},'enhance':0,'gifts':{}},'free_num':int(self.rules.get(kind,{}).get('attack',{}).get('free_per_day',3)),'vip_free_num':0,'rank_list':[],'report_list':[],'damage':0,'stage':stage,'ai_ranks':{}})
         # Same-day profiles may have been created by an earlier server version.
         # Normalize fields consumed unconditionally by the native Boss panels.
         boss=state.setdefault('boss',{})
         log=state.setdefault('attack_log',{})
         log.setdefault('enhance',0); log.setdefault('gifts',{})
         log.setdefault('next_attack_time',{'$date':0})
+        if not isinstance(state.get('ai_ranks'),dict): state['ai_ranks']={}
         return state
+    def _rebuild_boss_ranks(self,p,state):
+        """Rank the player and guild AI members by today's total damage."""
+        me=self._me(p); rows=[]
+        if int(state.get('damage',0))>0:
+            rows.append({'uid':me['uid'],'name':me['name'],'damage':int(state['damage'])})
+        rows+=[{'uid':str(r['uid']),'name':str(r['name']),'damage':int(r['damage'])}
+               for r in state.get('ai_ranks',{}).values() if isinstance(r,dict) and int(r.get('damage',0))>0]
+        rows.sort(key=lambda r:-r['damage'])
+        for rank,row in enumerate(rows,1): row['rank']=rank
+        state['rank_list']=rows
+        state['player_uid']=me['uid']
+        return rows
     @staticmethod
     def _boss_payload(state):
         rank=copy.deepcopy(state['rank_list'])
@@ -686,7 +716,10 @@ class GameplayGuildBoss:
         power=0
         from gameplay_roster import GameplayRosterEquipment
         roster=GameplayRosterEquipment(self.store,self.full)
-        team=(p.get('team') or [[]])[0]
+        teams=p.get('team') or [[]]
+        try: team_index=int(p.get('attrs',{}).get('team_num',0))
+        except (TypeError,ValueError): team_index=0
+        team=teams[max(0,min(team_index,len(teams)-1))] if isinstance(teams,list) and teams else []
         for instance_id in team if isinstance(team,list) else []:
             if not instance_id: continue
             stats=roster.battle_attributes(p,str(instance_id))
@@ -733,7 +766,7 @@ class GameplayGuildBoss:
             state['attack_log']['gifts']=copy.deepcopy(guild_display_reward)
         state['damage']=int(state.get('damage',0))+damage
         state['player_uid']=str(self._me(p)['uid'])
-        state['rank_list']=[{'uid':self._me(p)['uid'],'name':self._me(p)['name'],'damage':state['damage'],'rank':1}]
+        self._rebuild_boss_ranks(p,state)
         state['report_list'].insert(0,{'type':'zb_kill' if state['boss']['is_end'] else 'zb_attack','data':{'uid':self._me(p)['uid'],'attack_hp':damage,'name':self._me(p)['name']}}); state['report_list']=state['report_list'][:10]
         if kind=='guild_boss':
             guild=self._guild(p)

@@ -90,8 +90,10 @@ def prepare(output: Path, check: bool = False) -> dict:
     modules = _iter_server_modules(REPO_ROOT / "server")
     # 1.0.2's upstream overlays read this data beside their Python module.
     # Copying only *.py produces an APK which cannot start its gateway.
+    # llm.json holds a player's own model key and must never ship in an APK.
     data_files = sorted(p for p in (REPO_ROOT / "server").glob("*.json")
-                        if p.is_file() and not p.name.startswith(EXCLUDED_PREFIXES))
+                        if p.is_file() and not p.name.startswith(EXCLUDED_PREFIXES)
+                        and p.name != "llm.json")
     config_dir = REPO_ROOT / CONFIG_RELATIVE
     if not config_dir.is_dir():
         raise PreparationError(f"configuration directory is missing: {config_dir}")

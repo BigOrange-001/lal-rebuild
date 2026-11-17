@@ -1,4 +1,4 @@
-"""Guild applications, hourly helper strength, and accepted friend contracts."""
+"""Guild AI applicants, helper strength, and accepted friend contracts."""
 import json
 import sqlite3
 import sys
@@ -37,12 +37,19 @@ class GuildCompanionTests(unittest.TestCase):
         return self.store.dispatch({"uid": self.uid, "sessionid": self.sessionid,
                                     "method": method, "params": params})
 
+    def applicant(self):
+        """Advance game hours until a persistent AI player applies to the guild."""
+        for _ in range(96):
+            rows = self.rpc("user.get_apply_info", {})["member"]
+            if rows:
+                return rows[0]
+            self.store.clock.advance(3600)
+        self.fail("no AI player applied within four game days")
+
     def test_authenticated_dispatch_to_real_battle_assist(self):
         guild = self.rpc("user.association_is", {})
         self.assertEqual(guild["association_info"]["leader_uid"], self.uid)
-        pending = self.rpc("user.get_apply_info", {})
-        self.assertEqual(pending["num"], 10)
-        bot = pending["member"][0]
+        bot = self.applicant()
         self.assertEqual(self.rpc("user.join_association", {"uid": bot["uid"],
                                                         "zone": bot["zone"], "flag": 1})["res_code"], 1)
         requested = self.rpc("user.get_friends", {})
@@ -53,8 +60,8 @@ class GuildCompanionTests(unittest.TestCase):
         self.assertIn(bot["uid"], {row["uid"] for row in self.rpc("user.online_user", {})})
         self.assertEqual(self.rpc("user.get", {"uid": bot["uid"]})["uid"], bot["uid"])
         self.assertEqual(card["avatar"]["limit_break"], 1)
-        self.assertIn(card["avatar"]["aid"], self.guild.companions.orange)
-        self.assertIn(card["avatar"]["aid"], self.guild.companions.skins)
+        agent = self.store.profile_raw(self.uid)["guild_world"]["agents"][bot["uid"]]
+        self.assertEqual(card["avatar"]["aid"], agent["pool"][0])
         saved = self.store.profile_raw(self.uid)["team"][0]
         team = [[iid, index % 3, .2 + index * .12] for index, iid in enumerate(saved[:5])]
         team.append([card["avatar"]["aid"], 0, .5, bot["uid"], 1])
@@ -70,42 +77,38 @@ class GuildCompanionTests(unittest.TestCase):
                 hero["lv"] = 30
             return profile, {}
         self.store.atomic_update(self.uid, strengthen)
-        self.store.clock.advance(3600)
-        self.rpc("user.association_is", {})
-        current = self.store.profile_raw(self.uid)
+        for _ in range(5):
+            self.store.clock.advance(86400)
+            self.rpc("user.association_is", {})
         refreshed = next(row for row in self.rpc("user.get_friends", {})["friends_list"]
                          if row["uid"] == bot["uid"])
         new_power = self.competition._team_power([refreshed["avatar"]])
-        target = self.guild.companions._player_power(current, self.competition) * .30
+        target = self.store.profile_raw(self.uid)["guild_world"]["agents"][bot["uid"]]["power"]
         self.assertGreater(new_power, old_power)
-        self.assertLessEqual(abs(new_power - target), max(5, target * .10))
+        self.assertLessEqual(abs(new_power - target), max(5, target * .06))
 
     def test_applicants_join_then_request_friend_and_assist_at_real_power(self):
+        bot = self.applicant()
         profile = self.store.profile_raw(self.uid)
         pending = self.guild.dispatch(self.uid, "user.get_apply_info", {})
-        self.assertEqual(pending["num"], 10)
-        self.assertEqual(pending["association_info"]["association_application"], 10)
-        self.assertEqual(len({row["uid"] for row in pending["member"]}), 10)
-        pool = set(self.guild.companions.orange)
-        self.assertTrue(pool)
+        self.assertEqual(pending["association_info"]["association_application"], pending["num"])
+        self.assertEqual(len({row["uid"] for row in pending["member"]}), pending["num"])
+        pool = set(self.guild.companions.orange) | set(self.guild.companions.skins)
         self.assertTrue(all(next(iter(row["avatars"])).split("|")[0] in pool
                             for row in profile["guild_companions"]["bots"]))
-        if self.guild.companions.skins:
-            first = profile["guild_companions"]["bots"][0]
-            self.assertIn(next(iter(first["avatars"])).split("|")[0], self.guild.companions.skins)
-        bot = pending["member"][0]
         with self.assertRaises(GameplayFault):
             self.social.lookup_assist(bot["uid"], profile)
         self.assertTrue(bot["uid"] not in self.social.by_uid)
         self.assertEqual(bot["zone"], "local")
-        self.assertEqual(bot["lv"], 125)
+        agent = profile["guild_world"]["agents"][bot["uid"]]
+        self.assertEqual(bot["lv"], agent["lv"])
         denied = self.guild.dispatch(self.uid, "user.join_association",
                                      {"uid": "unknown", "zone": "local", "flag": 1})
         self.assertLess(denied["res_code"], 0)
         joined = self.guild.dispatch(self.uid, "user.join_association",
                                      {"uid": bot["uid"], "zone": bot["zone"], "flag": 1})
         self.assertEqual(joined["res_code"], 1)
-        self.assertEqual(joined["association_info"]["association_application"], 9)
+        self.assertEqual(joined["association_info"]["association_application"], pending["num"] - 1)
         current = self.store.profile_raw(self.uid)
         self.assertEqual(current["attrs"]["association_lv"], 0)
         self.assertEqual(current["association"]["members"][0]["uid"], self.uid)
@@ -116,42 +119,28 @@ class GuildCompanionTests(unittest.TestCase):
         self.assertTrue(accepted["ok"])
         assist = self.social.lookup_assist(bot["uid"], self.store.profile_raw(self.uid))
         self.assertEqual(assist["avatar_id"].split("|")[0], assist["avatar"]["aid"])
-        self.assertEqual(assist["avatar"]["lv"], 125)
-        self.assertEqual(self.store.profile_raw(self.uid)["guild_companions"]["bots"][0]
-                         ["avatars"][assist["avatar_id"]]["limit_break"], 1)
+        self.assertEqual(assist["avatar"]["lv"], agent["lv"])
+        cached = next(row for row in self.store.profile_raw(self.uid)["guild_companions"]["bots"]
+                      if row["uid"] == bot["uid"])
+        self.assertEqual(cached["avatars"][assist["avatar_id"]]["limit_break"], 1)
         actual = self.competition._team_power([assist["avatar"]])
-        self.assertEqual(actual, current["guild_companions"]["bots"][0]["power"])
-        team_power = self.guild.companions._player_power(profile, self.competition)
-        self.assertLessEqual(abs(actual - team_power * 0.3), max(5, team_power * 0.03))
+        self.assertEqual(actual, cached["power"])
+        self.assertLessEqual(abs(actual - agent["power"]), max(5, agent["power"] * 0.03))
         self.guild.dispatch(self.uid, "user.exit_association", {})
         self.assertEqual(self.social.lookup_assist(bot["uid"], self.store.profile_raw(self.uid))["uid"],
                          bot["uid"])
 
-    def test_hourly_refresh_is_stable_then_updates_without_duplicate_applications(self):
-        before = self.store.profile_raw(self.uid)["guild_companions"]
-        self.guild.dispatch(self.uid, "user.get_apply_info", {})
-        self.assertEqual(self.store.profile_raw(self.uid)["guild_companions"], before)
-        def strengthen(profile):
-            for hero in profile["avatars"].values():
-                hero["lv"] = 30
-            return profile, {}
-        self.store.atomic_update(self.uid, strengthen)
-        self.store.clock.advance(3600)
-        self.guild.dispatch(self.uid, "user.association_is", {})
-        after = self.store.profile_raw(self.uid)["guild_companions"]
-        self.assertNotEqual(after["hour"], before["hour"])
-        self.assertGreater(after["bots"][0]["power"], before["bots"][0]["power"])
-        player_power = self.guild.companions._player_power(self.store.profile_raw(self.uid), self.competition)
-        self.assertLessEqual(abs(after["bots"][0]["power"] - player_power * .3),
-                             max(5, player_power * .03))
-        self.assertEqual([bot["uid"] for bot in after["bots"]],
-                         [bot["uid"] for bot in before["bots"]])
+    def test_applicants_are_persistent_and_unique(self):
+        first = self.applicant()
         rows = self.guild.dispatch(self.uid, "user.get_apply_info", {})["member"]
-        self.assertEqual(len(rows), 10)
-        self.assertEqual(len({row["uid"] for row in rows}), 10)
+        self.assertEqual(len(rows), len({row["uid"] for row in rows}))
+        self.store.clock.advance(3600)
+        later = self.guild.dispatch(self.uid, "user.get_apply_info", {})["member"]
+        same = next(row for row in later if row["uid"] == first["uid"])
+        self.assertEqual(same["name"], first["name"])
 
     def test_legacy_approved_bot_gets_one_invitation_after_dismissal(self):
-        bot = self.rpc("user.get_apply_info", {})["member"][0]
+        bot = self.applicant()
         self.assertEqual(self.rpc("user.join_association", {"uid": bot["uid"],
                                                          "zone": bot["zone"], "flag": 1})["res_code"], 1)
         def simulate_legacy(profile):
@@ -172,7 +161,7 @@ class GuildCompanionTests(unittest.TestCase):
                          self.rpc("user.get_friends", {})["apply_list"]})
 
     def test_full_friend_list_keeps_invitation_until_space_is_available(self):
-        bot = self.rpc("user.get_apply_info", {})["member"][0]
+        bot = self.applicant()
         def fill(profile):
             profile["attrs"]["friend_len"] = len(profile.get("social", {}).get("friends", []))
             return profile, {}

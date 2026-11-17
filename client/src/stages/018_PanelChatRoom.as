@@ -439,6 +439,48 @@ package com.meng52.game.ui.panel
             case 3:
                mTxt_input_info.text = GlobalLanguageStr.getStr(97987);
                set_msg_to_ScrollContainer(mTabBar.selectedIndex);
+               SendServiceAMFFun.send_user_chat_record(guild_record_backFun,{"channel":"guild"});
+         }
+      }
+
+      // Local mode has no chat socket: guild messages (including AI members')
+      // are pulled from the server and fed into the same packet buffer.
+      private static var _guildChatSeen:Object = {};
+
+      private function guild_record_backFun(param1:Object) : void
+      {
+         var _loc2_:Array = null;
+         var _loc3_:Object = null;
+         var _loc4_:String = null;
+         var _loc5_:int = 0;
+         var _loc6_:Boolean = false;
+         if(!param1 || !param1.data || !(param1.data.record is Array))
+         {
+            return;
+         }
+         if(SocketManager.getInstance().getMsg("chat_guild").length == 0)
+         {
+            _guildChatSeen = {};
+         }
+         _loc2_ = param1.data.record;
+         _loc2_.sortOn(["t"],[16]);
+         _loc5_ = 0;
+         while(_loc5_ < _loc2_.length)
+         {
+            _loc3_ = _loc2_[_loc5_];
+            _loc4_ = String(_loc3_.uid) + ":" + String(_loc3_.t) + ":" + String(_loc3_.s);
+            if(!_guildChatSeen.hasOwnProperty(_loc4_))
+            {
+               _guildChatSeen[_loc4_] = true;
+               SocketManager.getInstance().setMsg(_loc3_);
+               _loc6_ = true;
+            }
+            _loc5_++;
+         }
+         if(_loc6_ && mTabBar && mTabBar.selectedIndex == 3)
+         {
+            clearPanel();
+            set_msg_to_ScrollContainer(3);
          }
       }
       
@@ -820,6 +862,7 @@ package com.meng52.game.ui.panel
          var _loc2_:Number = SendAndSelect.$systemTimer_nowSecond * 1000;
          GlobalData.$pro_send_time_guild = (param1.server_now as Date).time;
          this.m_input.text = "";
+         guild_record_backFun(param1);
       }
       
       override public function tabBar_CREATION_COMPLETE(param1:*) : void

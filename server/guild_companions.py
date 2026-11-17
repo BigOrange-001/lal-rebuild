@@ -1,16 +1,17 @@
-"""Owner-scoped guild applicants whose native helper stats follow the player's team."""
+"""Assist/friend cards for the persistent guild AI players.
+
+The AI players themselves (identity, personality, growth, membership) live in
+``guild_world``. This module keeps the card cache in
+``profile['guild_companions']['bots']`` that the friend and assist flows in
+``gameplay_social`` read through ``find``, and builds those cards with real
+battle attributes solved to the agent's target power.
+"""
 from __future__ import annotations
 
 import hashlib
-import random
 import copy
 
-from bot_names import bot_name_for_uid
-from mod_policy import (runtime as mod_runtime, candidate_ids, policy_signature,
-                        hero_available, channel_enabled)
-
-
-COMPANION_COUNT = 10
+from mod_policy import (runtime as mod_runtime, candidate_ids, hero_available)
 
 
 class GuildCompanions:
@@ -61,27 +62,28 @@ class GuildCompanions:
             measured["team"][team_index] = [row[0] for row in rows]
         return competition._team_power(competition._own_team(measured, {"team_num": team_index, "team": rows}))
 
-    def _hero(self, owner, uid, hour, index, target_power, competition):
-        seed = int.from_bytes(hashlib.sha256(f"{owner}:{uid}:{hour}".encode()).digest()[:8], "big")
-        rng = random.Random(seed)
-        # Include the skin pool in ordinary draws and guarantee one skin among
-        # the ten candidates when the configured skin prototypes are present.
-        pool = self.skins if index == 0 and self.skins else self.orange
-        aid = rng.choice(pool)
-        instance = f"{aid}|{uid}"
-        hero = {"id": instance, "aid": instance, "tpl": aid, "lv": 125, "slv": 1,
-                "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0, "phase": 0,
-                "morph": 0, "limit_break": 1, "equips": [], "line": 0, "pos": 0.2}
-        bot = {"uid": uid, "name": bot_name_for_uid(uid), "zone": "local",
-               "lv": 125, "vip_lv": 0, "login_time": {"$date": hour * 3600},
-               "current_rank": index + 1, "team": [[instance, None, None, None, None, None]],
+    def _build(self, uid, name, aids, lv, target_power, competition):
+        """Serialize a helper whose captain card is solved to ``target_power``."""
+        heroes = {}
+        team = []
+        for slot, aid in enumerate(aids[:6]):
+            instance = f"{aid}|{uid}"
+            heroes[instance] = {"id": instance, "aid": instance, "tpl": aid, "lv": lv, "slv": 1,
+                                "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0, "phase": 0,
+                                "morph": 0, "limit_break": 1, "equips": [], "line": slot % 3,
+                                "pos": 0.2 + slot * 0.12}
+            team.append(instance)
+        captain = team[0]
+        bot = {"uid": uid, "name": name, "zone": "local",
+               "lv": lv, "vip_lv": 0, "login_time": {"$date": int(self.store.clock.now())},
+               "current_rank": 1, "team": [team + [None] * (6 - len(team))],
                "my_equips": {}, "as_equips": [[] for _ in range(6)],
                "attrs": {"team_num": 0, "friend_len": 30},
-               "records": {"help_suids": {}, "help_fuids": {}}, "avatars": {instance: hero}}
+               "records": {"help_suids": {}, "help_fuids": {}}, "avatars": heroes}
         from gameplay_roster import GameplayRosterEquipment
 
-        base = GameplayRosterEquipment(self.store, self.config).battle_attributes(bot, instance, scope="assist")
-        card = {**base, "aid": aid, "leader": 1, "isme": False, "buffs": {},
+        base = GameplayRosterEquipment(self.store, self.config).battle_attributes(bot, captain, scope="assist")
+        card = {**base, "aid": aids[0], "leader": 1, "isme": False, "buffs": {},
                 "line": 0, "pos": 0.2,
                 "new_4attrs": {key: int(base.get(key, 0)) for key in ("hit", "flee", "crit", "tough")}}
         keys = ("hp", "ap", "de_ph", "de_ma")
@@ -94,7 +96,7 @@ class GuildCompanions:
 
         # Native power is quadratic in the four primary battle attributes.
         # Solve against the actual serialized card instead of changing a display
-        # field. This also allows a level-125 NPC to assist a new player fairly.
+        # field, so the shown power is what the assist actually brings.
         target = max(0, int(round(target_power)))
         low, high = 0.0, 1.0
         while measured(high)[0] < target and high < 1024:
@@ -118,65 +120,37 @@ class GuildCompanions:
         bot["power"] = power
         return bot
 
+    def agent_bot(self, agent, competition):
+        owned = [aid for aid in agent["pool"][:max(1, int(agent.get("owned", 3)))] if aid in self.heroes]
+        if not owned:
+            owned = list(self.orange[:1])
+        return self._build(agent["uid"], agent["name"], owned, max(1, int(agent["lv"])),
+                           agent["power"], competition)
+
     def refresh(self, profile):
-        """Persist one generation per clock hour and keep accepted rows current."""
-        guild = profile.get("association")
-        guild = guild if isinstance(guild, dict) and guild.get("id") else {}
-        members = guild.get("members", [])
-        owner = str(profile.get("uid", ""))
-        is_chairman = any(str(row.get("uid")) == owner and int(row.get("association_lv", 3)) == 0
-                          for row in members if isinstance(row, dict))
-        if not is_chairman and not isinstance(profile.get("guild_companions"), dict):
+        """Deliver one friend invitation per companion the player approved.
+
+        Membership and growth are advanced by ``guild_world`` on guild RPCs;
+        this only backfills invitations for saves that predate them.
+        """
+        state = profile.get("guild_companions")
+        if not isinstance(state, dict):
             return []
-        state = profile.setdefault("guild_companions", {})
-        hour = int(self.store.clock.now()) // 3600
-        digest = policy_signature(self.config)
-        if state.get("hour") != hour or not isinstance(state.get("bots"), list) or state.get("mod_digest", "") != digest:
-            competition = self._competition()
-            target = self._player_power(profile, competition) * 0.30
-            state["bots"] = [self._hero(owner, self.uid(profile, i), hour, i, target, competition)
-                             for i in range(COMPANION_COUNT)] if self.orange else []
-            state["hour"] = hour
-            state["mod_digest"] = digest
-        bots = state["bots"]
+        bots = state.get("bots", []) if isinstance(state.get("bots"), list) else []
+        guild = profile.get("association")
+        members = guild.get("members", []) if isinstance(guild, dict) and guild.get("id") else []
         accepted = {str(member.get("uid")) for member in members if isinstance(member, dict)}
-        for member in members:
-            if not isinstance(member, dict):
-                continue
-            bot = next((row for row in bots if row["uid"] == str(member.get("uid"))), None)
-            if bot:
-                member.update({"name": bot["name"], "lv": bot["lv"], "power": bot["power"]})
-        # Older accepted companions may predate the friend invitation. Record
-        # delivery so dismissing a request does not cause it to reappear.
         sent = state.setdefault("friend_invites_sent", {})
         social = profile.setdefault("social", {})
         incoming = social.setdefault("incoming", [])
         friends = social.setdefault("friends", [])
         for bot in bots:
-            uid = bot["uid"]
+            uid = bot.get("uid")
             if uid not in accepted or sent.get(uid):
                 continue
             if uid not in friends and uid not in incoming:
                 incoming.append(uid)
             sent[uid] = True
-        if not is_chairman:
-            return bots
-        applications = guild.setdefault("applications", [])
-        if not isinstance(applications, list):
-            applications = []
-            guild["applications"] = applications
-        pending = {str(row.get("uid")) for row in applications if isinstance(row, dict)}
-        for row in applications:
-            if not isinstance(row, dict) or not row.get("guild_companion"):
-                continue
-            bot = next((item for item in bots if item["uid"] == str(row.get("uid"))), None)
-            if bot:
-                row.update({"name": bot["name"], "lv": bot["lv"], "power": bot["power"]})
-        rejected = state.setdefault("rejected", {})
-        for bot in bots:
-            if bot["uid"] in accepted or bot["uid"] in pending or rejected.get(bot["uid"]) == hour:
-                continue
-            applications.append(self.application(bot, int(self.store.clock.now())))
         return bots
 
     @staticmethod

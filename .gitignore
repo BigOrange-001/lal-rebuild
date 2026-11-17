@@ -22,3 +22,6 @@ __pycache__/
 /android-manager/build/
 /android-manager/app/build/
 /android-manager/local.properties
+
+# Player-supplied model key for the guild AI (see server/llm.example.json)
+llm.json

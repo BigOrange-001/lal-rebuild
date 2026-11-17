@@ -52,7 +52,7 @@ class AbyssRelicArt104
          var texture:Texture = Texture.fromTexture(atlas(),new Rectangle(((kind - 1) % 5) * 100,int((kind - 1) / 5) * 100,92,93));
          holder.addChild(new Image(texture));
       }
-      holder.addChild(Equip.createRainbowFrame104());
+      holder.addChild(Equip.createQualityFrame104(AbyssCore104.relicFrameQuality(item)));
       holder.scaleX = holder.scaleY = size / 92;
       return holder;
    }
@@ -80,7 +80,7 @@ CHUNKS].join("");
 }
 '''.replace('CHUNKS',chunks),'utf-8')
     (SOURCE/'manifest.json').write_text(json.dumps({'schema':1,'atlas':[512,512],'icon':[92,93],
-        'frame':'native Equip.createRainbowFrame104 (48 frames, 20 fps)',
+        'frame':'native Equip.createQualityFrame104: blue/purple/orange/red/rainbow for 0/1/2/3/4 ancient affixes',
         'argb_sha256':hashlib.sha256(argb).hexdigest(),'icons':metadata},ensure_ascii=False,indent=2)+'\n','utf-8')
     print(f'Packed 20 relic icons: {len(packed)} compressed bytes')
 

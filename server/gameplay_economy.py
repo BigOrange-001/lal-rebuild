@@ -335,6 +335,9 @@ class GameplayEconomy:
         except (TypeError, ValueError): raise GameplayFault("InvalidGift", "VIP gift index is required")
         key = self._op_key("user.vip_gift", params)
         def mutate(p):
+            if self._simple('vip_free_rewards_by_mail_105',False):
+                from vip_reward_mail import normalize_daily_reward
+                normalize_daily_reward(p,self._now())
             level = str(int(p.get("vip_lv", 0)))
             vip = self.config.get("vip", {}).get(level, {})
             gift_list = vip.get("gift", [])
@@ -357,6 +360,8 @@ class GameplayEconomy:
         if kind not in (0, 1): raise GameplayFault("InvalidGift", "VIP gift type is invalid")
         key = self._op_key("user.vip_gift_buy", params)
         def mutate(p):
+            if kind==0 and self._simple('vip_free_rewards_by_mail_105',False):
+                raise GameplayFault('VipRewardByMail','免费等级奖励已改为邮件发放，请前往邮件领取。')
             current_level = int(p.get("vip_lv", 0))
             if level < 1 or level > current_level:
                 raise GameplayFault("VipLevelRequired", "This VIP gift requires its VIP level")
@@ -379,10 +384,11 @@ class GameplayEconomy:
             if cost:
                 p["coin"] = int(p.get("coin", 0)) - cost
                 self._record_coin_spend(p, cost)
-            grant_reward(p, bundle["data"], self.config)
+            grant_reward(p, bundle["data"], self.config,allow_equipment_exclusive=kind==1)
             bought.append(level)
             attrs = p.setdefault("attrs", {})
             return p, self._profile_result(p,
+                packs=self._vip_daily_state(p)[1], vip_packs=self._vip_once_offers(p), granted=copy.deepcopy(bundle['data']),
                 vip_gift_buy=list(attrs.get("vip_gift_buy", [])),
                 vip_gift_buy2=list(attrs.get("vip_gift_buy2", [])),
                 attr_energy_extra=attrs.get("energy_extra", 0),
@@ -414,10 +420,28 @@ class GameplayEconomy:
                          "locked": vip_lv < pack["vip"]})
         return state, rows
 
+    def _vip_once_offers(self, p):
+        rows = []
+        vip_lv = int(p.get('vip_lv', 0))
+        attrs = p.get('attrs', {})
+        for level in range(1, 16):
+            vip = self.config.get('vip', {}).get(str(level), {})
+            for kind, field, bought_key in ((1,'gift_coin_buy','vip_gift_buy2'),):
+                bundle = vip.get(field)
+                if not isinstance(bundle,dict) or not bundle.get('data'): continue
+                pay = bundle.get('pay') or []
+                price = int(pay[1]) if kind == 1 and len(pay)>1 else 0
+                bought = level in attrs.get(bought_key, [])
+                rows.append({'id':f'vip-{level}-{kind}', 'kind':'vip_once', 'gift_type':kind,
+                    'name':f'VIP{level}'+('专属礼包' if kind else '等级奖励'), 'vip':level,
+                    'price':price, 'reward':copy.deepcopy(bundle['data']), 'limit':1,
+                    'bought':int(bought), 'left':int(not bought), 'locked':vip_lv<level})
+        return rows
+
     def vip_daily_packs(self, uid, params):
         def mutate(p):
             _, rows = self._vip_daily_state(p)
-            return p, {"packs": rows, "vip_lv": int(p.get("vip_lv", 0)), "coin": int(p.get("coin", 0))}
+            return p, {"packs": rows, "vip_packs":self._vip_once_offers(p), "vip_lv": int(p.get("vip_lv", 0)), "coin": int(p.get("coin", 0))}
         result, _ = self.store.atomic_update(uid, mutate, None)
         return result
 
@@ -437,6 +461,11 @@ class GameplayEconomy:
                 choices = list(pools.get("orange_soul", []))
                 if not choices: raise GameplayFault("InvalidConfig", "VIP hero pool is empty")
                 result.setdefault("avatar_soul", {})[rng.choice(choices)] = int(value)
+            elif key in ('random_orange_hero','random_skin_orange'):
+                skin = key=='random_skin_orange' or rng.randrange(10)==0
+                choices=list(pools.get('skin_orange' if skin else 'ordinary_orange',[]))
+                if not choices:raise GameplayFault('InvalidConfig','VIP hero pool is empty')
+                result['avatar']={rng.choice(choices):int(value)}
             else:
                 result[key] = copy.deepcopy(value)
         return result
@@ -461,7 +490,7 @@ class GameplayEconomy:
             state["bought"][pack_id] = int(state["bought"].get(pack_id, 0)) + 1
             _, rows = self._vip_daily_state(p)
             attrs = p.get("attrs", {})
-            return p, self._profile_result(p, packs=rows, granted=reward,
+            return p, self._profile_result(p, packs=rows, vip_packs=self._vip_once_offers(p), granted=reward,
                                            dust=attrs.get("dust", [0, 0, 0, 0]),
                                            dn_stone=attrs.get("dn_stone", 0),
                                            culture_book=attrs.get("culture_book", 0))
@@ -1104,38 +1133,51 @@ class GameplayEconomy:
         return result
 
     def recruit_exchange_info(self, uid, params):
-        """Today's medal exchange: 10 orange and 10 purple equipment, new each night."""
-        from daily_exchange_105 import daily_medal_offers
-        day, items = daily_medal_offers(self.config, self._now())
+        """Daily medal equipment and hero offers, split by kind in the client."""
+        from daily_exchange_105 import daily_medal_offers, daily_medal_hero_offers
+        now = self._now()
+        day, items = daily_medal_offers(self.config, now)
+        _, heroes = daily_medal_hero_offers(self.config, now)
         profile = self.store.profile(uid)
-        return {"day": day, "medal": int(profile.get("medal", 0)), "items": items}
+        return {"day": day, "medal": int(profile.get("medal", 0)), "items": items + heroes}
 
     def recruit_medal_exchange(self, uid, params):
-        from daily_exchange_105 import daily_medal_offers
+        from daily_exchange_105 import daily_medal_offers, daily_medal_hero_offers
         eid, requested_day = params.get("id"), params.get("day")
         if not isinstance(eid, str) or not isinstance(requested_day, str):
-            raise GameplayFault("InvalidExchange", "请选择今日兑换的装备")
+            raise GameplayFault("InvalidExchange", "请选择今日兑换的英雄或装备")
         key = self._op_key("user.recruit_medal_exchange", params)
         def mutate(profile):
-            day, items = daily_medal_offers(self.config, self._now())
+            now = self._now()
+            day = game_day(now)
             if requested_day != day:
                 raise GameplayFault("DailyRecruitExpired", "今日兑换列表已更新，请刷新后重试")
+            if eid.startswith('E_'):
+                _, items = daily_medal_offers(self.config, now)
+            elif eid.startswith('A_'):
+                _, items = daily_medal_hero_offers(self.config, now)
+            else:
+                items = []
             item = next((row for row in items if row["id"] == eid), None)
             if item is None:
-                raise GameplayFault("UnknownExchange", "该装备不在今日勋章兑换列表中")
+                raise GameplayFault("UnknownExchange", "该物品不在今日勋章兑换列表中")
             price = int(item["medal"])
             medal = profile.get("medal", 0)
             if type(medal) is not int or medal < price:
                 raise GameplayFault("InsufficientMedal", "勋章不足")
-            before = set(profile.get("my_equips", {}))
-            grant_reward(profile, {"items": [{"eid": eid, "num": 1}]}, {"cfg": self.config})
-            minted = {equip_id: copy.deepcopy(row) for equip_id, row in profile["my_equips"].items()
-                      if equip_id not in before}
+            kind = item['kind']
+            field = 'avatars' if kind == 'avatar' else 'my_equips'
+            before = set(profile.get(field, {}))
+            reward = {'avatar':{eid:1}} if kind == 'avatar' else {'items':[{'eid':eid,'num':1}]}
+            if kind == 'avatar':
+                ensure_reward(self.config, reward, 'acquisition.exchange.hero')
+            grant_reward(profile, reward, {"cfg": self.config})
+            minted = {iid:copy.deepcopy(row) for iid,row in profile[field].items() if iid not in before}
             if len(minted) != 1:
-                raise GameplayFault("InvalidReward", "兑换装备发放异常")
+                raise GameplayFault("InvalidReward", "兑换物品发放异常")
             profile["medal"] = medal - price
             return profile, self._economy_profile_response(
-                profile, equip=minted, id=eid, day=day, cost=price)
+                profile, **{kind:minted}, kind=kind, id=eid, day=day, cost=price)
         result, replayed = self.store.atomic_update(
             uid, mutate, key, {"id": eid, "day": requested_day})
         result["replayed"] = replayed

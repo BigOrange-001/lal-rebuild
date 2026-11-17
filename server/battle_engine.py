@@ -938,6 +938,14 @@ class ReferenceBattle:
 
     # ------------------------------------------------- manual side tables
 
+    def _status_immune(self, target):
+        """Optional native-runtime admission hook for non-Buff statuses."""
+        return False
+
+    def _status_received(self, target, kind):
+        """Called only after a non-Buff status has actually been applied."""
+        pass
+
     def _add_manual_skill_dot(self, target, key, kind, ap_tick, hp_max_fraction,
                               rounds, source, damage_type, stack):
         """137_Avatar.as:2392 addManualSkillDot.
@@ -945,7 +953,7 @@ class ReferenceBattle:
         Guards: non-empty key, a known kind, finite ap>=0, finite fraction>=0,
         rounds>=1. An armed purify absorbs the application and is consumed.
         """
-        if not key or kind not in ("poison", "burn", "bleed"):
+        if self._status_immune(target) or not key or kind not in ("poison", "burn", "bleed"):
             return False
         if not isinstance(ap_tick, (int, float)) or isinstance(ap_tick, bool) or not math.isfinite(float(ap_tick)) or float(ap_tick) < 0:
             return False
@@ -970,6 +978,7 @@ class ReferenceBattle:
         # Avatar.addManualSkillDot calls showBuff for presentation only; it
         # does not add a native damaging buff. Registering one here would
         # double-tick the DOT through the separate native burn/poison path.
+        self._status_received(target, kind)
         return True
 
     def _has_manual_dot_kind(self, unit, kind):

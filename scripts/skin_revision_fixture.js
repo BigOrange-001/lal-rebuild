@@ -1,8 +1,9 @@
 const assert=require('assert'),fs=require('fs');
 const data=/*RUNTIME_DATA*/;
 let skin2Depth=0,serial=0,contexts=[],roster=[];
+let skin2AnnieChainDepth=0,skin2AnnieChain=[];
 const int=x=>Math.trunc(Number(x)||0),Tools={toInt:int},GameMapConfig={LINE_POS:3001};
-const Buff={LIST_BUFF:['shield','strong','armor','steel','purify','bless','fleeup'],LIST_DEBUFF:['stun','silence','poison','curse','root']};
+const Buff={LIST_BUFF:['shield','strong','armor','steel','purify','bless','fleeup'],LIST_DEBUFF:['stun','silence','poison','curse','root','weak','sunder','burn','evil']};
 const GlobalData={$mConfig_skill:data.skill,$mConfig_avatar:{}};
 const GameMap={currentMap:{getAliveList:team=>roster.filter(u=>u.team===team&&u.hp>0),roundNum:1,winner:0,winnerList:[0,0,0],
  isEnd:(lane=-1)=>GameMap.currentMap.winner!==0||(lane>=0&&GameMap.currentMap.winnerList[lane]!==0)}};
@@ -16,8 +17,27 @@ function unit(family=0,team=1,pos=1500){
  u.getHpMax=()=>u.hpMax;u.heroSkillOutputRate104=()=>.8;
  u.beginAbilityAttack=beginAbilityAttack;u.endAbilityAttack=endAbilityAttack;u.currentAbilityAttack=currentAbilityAttack;
  u.abilityFeedback=()=>{};u.abilityControl=(v,k,d,value=0)=>{if(v&&v.hp>0)v.addBuff(k,d,value)};
- u.removeBuff=k=>delete u.buffs[k];u.removeAllDebuff=()=>{u.skin2ClearDebuffs();for(let k of Buff.LIST_DEBUFF)delete u.buffs[k]};
- u.addBuff=(k,d,value=0)=>{if(k==='purify')u.removeAllDebuff();if(Buff.LIST_DEBUFF.includes(k)&&u.buffs.purify){delete u.buffs.purify;return;}let old=u.buffs[k];u.buffs[k]={round:d,value:k==='shield'&&old?Math.max(old.value,value):value};};
+ u.shieldValue104=()=>Object.entries(u.buffs).reduce((sum,[key,buff])=>sum+(key==='shield'||key.startsWith('yasuoShield104_')?Math.max(0,buff.value):0),0);
+ u.removeBuff=k=>{if(k==='shield')for(let key in u.buffs)if(key.startsWith('yasuoShield104_'))delete u.buffs[key];delete u.buffs[k]};
+ u.manualSkillDots={};u.manualDotSerial=0;
+ u.removeAllDebuff=()=>{u.skin2ClearDebuffs();u.manualSkillDots={};for(let k of Buff.LIST_DEBUFF)delete u.buffs[k]};
+ u.addManualSkillDot=(key,kind,apTick,hpMaxFraction,round,source,damageType,stack)=>{
+  if(u.s2AnnieImmune())return;
+  if(u.buffs.purify){u.removeBuff('purify');return;}
+  if(stack)key+=':layer:'+(++u.manualDotSerial);
+  u.manualSkillDots[key]={kind,apTick,hpMaxFraction,round,source,damageType};u.s2AnnieStatus(kind);
+ };
+ u.addBuff=(k,d,value=0)=>{
+  if(Buff.LIST_DEBUFF.includes(k)&&u.s2AnnieImmune())return;
+  if(k==='purify')u.removeAllDebuff();
+  if(Buff.LIST_DEBUFF.includes(k)&&u.buffs.purify){delete u.buffs.purify;return;}
+  let old=u.buffs[k];
+  if(old&&['root','weak','sunder'].includes(k)&&value<old.value)return;
+  if(old&&['stun','silence','curse'].includes(k)&&d<old.round)return;
+  if(old&&['poison','burn'].includes(k))value=Math.trunc(old.value*old.round/d+value);
+  u.buffs[k]={round:d,value:k==='shield'&&old?Math.max(old.value,value):value};
+  u.s2AnnieStatus(k);
+ };
  u.abilityCandidates=(which,lane,position,range,max,heroOnly=false,order='nearest',excluded=[])=>{
   let a=roster.filter(v=>v.hp>0&&v.team===which&&v.line===lane&&Math.abs(v.pos-position)<=range&&!(excluded||[]).includes(v)&&(!heroOnly||!v.isManualSummonUnit));
   a.sort((a,b)=>order==='ratio'?a.hp/a.hpMax-b.hp/b.hpMax:order==='attack'?b.ap-a.ap:order==='farthest'?Math.abs(b.pos-position)-Math.abs(a.pos-position):Math.abs(a.pos-position)-Math.abs(b.pos-position));return max<0?a:a.slice(0,max)
@@ -39,10 +59,69 @@ function unit(family=0,team=1,pos=1500){
  if(def){[u.skill0,u.skill1,u.skillB]=def.skills.map(s=>({skills:structuredClone(s.skills),skillSetData:{id:s.skid,cooldown:s.pl[1]}}));}
  u.skin2Initialize();roster.push(u);return u;
 }
-function fresh(f){roster=[];contexts=[];skin2Depth=0;GameMap.currentMap.winner=0;GameMap.currentMap.winnerList=[0,0,0];let a=unit(f),b=unit(0,2,1400),c=unit(0,2,1300),ally=unit(0,1,1600);return {a,b,c,ally}}
+function fresh(f){roster=[];contexts=[];skin2Depth=0;skin2AnnieChainDepth=0;skin2AnnieChain=[];GameMap.currentMap.winner=0;GameMap.currentMap.winnerList=[0,0,0];let a=unit(f),b=unit(0,2,1400),c=unit(0,2,1300),ally=unit(0,1,1600);return {a,b,c,ally}}
 function cast(a,slot){let s=slot===0?a.skill0:a.skill1;beginAbilityAttack(a,'active');try{assert(a.executeSkin2(`skin2_${a.s2Family()}_${slot}`,s));}finally{endAbilityAttack();}}
 function turn(a){a.manualOwnerActionSerial++;a.skin2Event('turn_start',a,a,0,0)}
 let cases=0;
+const reactionPoison=u=>Object.values(u.manualSkillDots||{}).reduce((sum,dot)=>sum+dot.apTick,0);
+// Equipment-only Annie passive: accepted statuses trigger across lanes, even
+// while stunned/silenced. Resisted statuses, dead units and bare Annie do not.
+function equipCore(a){
+ let s=data.annie_core;
+ a.skillB={skills:structuredClone(s.skills),skillSetData:{id:s.skid,cooldown:s.pl[1]}};
+}
+{
+ let {a,b,c,ally}=fresh(1221);a.addBuff('stun',1);
+ assert(!a.buffs.stun&&reactionPoison(b)>0&&b.buffs.silence,'unbonded Annie has the full retaliation except stun');
+ assert(!b.buffs.stun&&!c.buffs.stun,'stun requires the equipment bond');cases++;
+}
+{
+ let {a,b,c,ally}=fresh(1221);equipCore(a);
+ let dead=unit(0,2);dead.hp=0;c.line=2;ally.line=1;
+ ally.addBuff('curse',2);ally.addBuff('poison',2,100);
+ a.addBuff('stun',1);
+ assert(!a.buffs.stun&&!ally.buffs.curse&&!ally.buffs.poison,'cleanses all living friends across lanes');
+ for(let enemy of [b,c]){
+  for(let key of ['sunder','weak','stun','silence'])assert(enemy.buffs[key],key+' applies across lanes');
+  assert.equal(reactionPoison(enemy),500);
+  assert(!enemy.buffs.poison,'retaliation uses AP-only layers without native poison');
+  for(let dot of Object.values(enemy.manualSkillDots))assert.equal(dot.hpMaxFraction,0);
+  assert(Math.abs(1/(1+enemy.buffs.sunder.value)-.67)<1e-10);
+ }
+ assert(!reactionPoison(dead));assert.equal(contexts.length,0);
+ ally.addBuff('poison',2,100);ally.addBuff('silence',1);
+ a.s2Mark(ally,'cold',1);
+ assert(!ally.buffs.poison&&!ally.buffs.silence&&!ally.skin2.cold,'one-round immunity covers repeated statuses and marks');
+ turn(a);a.addBuff('silence',1);
+ assert(a.buffs.silence);assert.equal(reactionPoison(b),500,'cooldown 1 keeps one owner turn waiting');
+ turn(a);a.addBuff('silence',1);
+ assert(!a.buffs.silence);assert.equal(reactionPoison(b),1000,'a later ready trigger stacks poison');
+ assert.equal(skin2AnnieChainDepth,0);assert.equal(skin2AnnieChain.length,0);cases++;
+}
+{
+ let {a,b}=fresh(1221);equipCore(a);
+ a.addBuff('purify',1);a.addBuff('stun',1);
+ assert(!reactionPoison(b),'a resisted debuff is not an abnormal status received');
+ a.addBuff('shield',2,100);assert(!reactionPoison(b),'positive buffs do not trigger');
+ a.hp=0;a.addBuff('stun',1);assert(!reactionPoison(b),'dead Annie does not react');cases++;
+}
+{
+ let {a,b}=fresh(1221);equipCore(a);
+ let other=unit(1221,2);other.line=2;equipCore(other);
+ a.addBuff('root',1);
+ assert(a.s2AnnieImmune()&&other.s2AnnieImmune(),'both sides can react once in the same chain');
+ assert.equal(skin2AnnieChainDepth,0);assert.equal(contexts.length,0,'opposing cores cannot recurse forever');cases++;
+}
+{
+ let {a,b}=fresh(1221);equipCore(a);cast(a,1);let pet=a.s2Pet();
+ for(let i=0;i<6;i++)pet.skin2Event('turn_end',pet,pet,0,0);
+ assert.equal(pet.skin2.bearGrowth,6,'core retains original pet growth');
+ a.addBuff('stun',1);let next=a.skin2.annieCoreNext;
+ cast(a,0);assert(pet.skin2.command,'core retains original attack command during the new passive cooldown');
+ beginAbilityAttack(b,'active');try{b.s2Hit(a,1);}finally{endAbilityAttack();}
+ assert(a.buffs.shield&&a.buffs.shield.value>0,'original bear shield remains active against active skill damage');
+ assert.equal(a.skin2.annieCoreNext,next,'original passive neither spends nor resets the added passive cooldown');cases++;
+}
 // A recorded lane may finish after Ekko transfers to a remaining fight.
 for(const finished of [0,1,2]){
  let {a,b,c}=fresh(1140);a.line=b.line=c.line=1;
@@ -82,7 +161,7 @@ for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fres
  let {a}=fresh(1210);cast(a,0);assert(a.buffs.shield);cast(a,0);cast(a,0);assert.equal(a.skin2.dance,0);cases++;
 }
 {
- let {a}=fresh(1221);cast(a,1);let pet=a.s2Pet();for(let i=0;i<10;i++)pet.skin2Event('turn_end',pet,pet,0,0);assert.equal(pet.skin2.bearGrowth,6);assert(Math.abs(pet.ap-a.ap*a.s2Value(a.skill1,'petPanel')*(1+6*a.s2Value(a.skillB,'petGrowth')))<1e-8,'bear panel and six growth stacks use configured values');cast(a,1);assert.strictEqual(a.s2Pet(),pet,'captain preserves raised summon');cases++;
+ let {a}=fresh(1221);cast(a,1);let pet=a.s2Pet();for(let i=0;i<10;i++)pet.skin2Event('turn_end',pet,pet,0,0);assert.equal(pet.skin2.bearGrowth,6);assert(Math.abs(pet.ap-a.ap*a.s2Value(a.skill1,'petPanel')*(1+6*a.s2AnnieCompanion('petGrowth')))<1e-8,'bear panel and six growth stacks use normal skill parameters');cast(a,1);assert.strictEqual(a.s2Pet(),pet,'captain preserves raised summon');cases++;
 }
 {
  let {a,b}=fresh(1216);a.hp=10;b.s2Hit(a,1);assert(a.skin2.eggUntil);assert.equal(a.hp,30000);assert(!a.skin2CanCast('skin2_1216_0'));turn(a);assert(a.skin2.eggUntil);turn(a);assert(!a.skin2.eggUntil);assert.equal(a.hp,40000);a.hp=1;b.s2Hit(a,1);assert.equal(a.hp,0,'rebirth only once');cases++;

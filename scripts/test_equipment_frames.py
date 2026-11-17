@@ -29,7 +29,7 @@ const GlobalData={$mConfig_simple:{equip_alchemy:{equip_al:1,star_lv:7}},$assetM
 const unit={symp:-1};
 '''
     methods={'getStar':'','getAddStar':'','getProStar':'','getAlchemyColor104':'',
-             'getAdvancedFrame104':'','getStep':'','addRainbowFrame104':'frame',
+             'getAdvancedFrame104':'','createQualityFrame104':'quality','getStep':'','addRainbowFrame104':'frame',
              'addAlchemyCorners104':'frame,phase,height','getRes':'param1=null,param2=1'}
     for name,args in methods.items():
         body=method_body(source,name).replace('for each(var area in areas)','for(var area of areas)')

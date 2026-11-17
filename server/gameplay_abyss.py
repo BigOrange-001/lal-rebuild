@@ -5,13 +5,14 @@ import secrets
 from battle_intents import create_intent, consume_intent
 from player_store import GameplayFault
 from roguelite_abyss import (rules, normalize_account, unlocked_pool, hero_record,
-    rng_for, generate_map, generate_enemies, standard_team, candidates, public_run)
+    rng_for, generate_map, generate_enemies, generate_enemy_preview, is_skin,
+    standard_team, candidates, public_run)
 
 
 class GameplayAbyss:
     METHODS = {'user.abyss_'+name for name in
                ('query','start','route','combat','finish','choose','skip','rest','abandon',
-                'relics','relic_equip','relic_unequip','relic_reroll')}
+                'refresh','relics','relic_equip','relic_unequip','relic_reroll')}
 
     def __init__(self, store, config):
         self.store, self.config = store, config
@@ -43,6 +44,19 @@ class GameplayAbyss:
         return {**data, 'replayed':replayed}
 
     def _mutate(self, p, method, x):
+        run = p.get('abyss_run')
+        if isinstance(run,dict) and run.get('status') == 'active':
+            battle=run.get('battle')
+            if battle and battle.get('expires',0)<self.store.clock.now():
+                p.setdefault('pending_battles',{}).setdefault('abyss',{}).pop(battle['fight_id'],None)
+                run['battle']=None
+            budget = rules(self.cfg)['difficulties'][run['difficulty']-1]['enemy_refreshes']
+            run.setdefault('enemy_refresh_total',budget)
+            run.setdefault('enemy_refreshes',budget)
+            for node in run['map']:
+                if not node['completed'] and not (run.get('battle') and node['id']==run['current_node']):
+                    self._update_enemy_rules(run,node)
+            run['rules_schema']=rules(self.cfg)['schema']
         if method.startswith('user.abyss_relic'):
             from abyss_relics import mutate_relic
             return mutate_relic(p,method,x,self.cfg)
@@ -66,14 +80,16 @@ class GameplayAbyss:
                 if not plan['skin_purple']:
                     raise GameplayFault('AbyssUnavailable', '星裔卡组暂无可用英雄。')
                 aids = [rng.choice(plan['skin_purple'])] + rng.sample(plan['initial_purple'],4)
-            pool = {a.rsplit('_',1)[0]:hero_record(a,deck=='star' and i==0) for i,a in enumerate(aids)}
+            pool = {a.rsplit('_',1)[0]:hero_record(a,deck=='star' and i==0,cfg=self.cfg) for i,a in enumerate(aids)}
             nodes = generate_map(seed,difficulty,self.cfg)
             p['abyss_run'] = {'id':secrets.token_hex(12),'status':'active','seed':seed,
                 'rules_schema':plan['schema'],'map_version':plan.get('map_version',1),
                 'difficulty':difficulty,'deck':deck,'map':nodes,'current_node':None,
                 'available_nodes':[n['id'] for n in nodes if n['act']==1 and n['layer']==1],
                 'pool':pool,'retries':plan['difficulties'][difficulty-1]['retries'],
-                'pending_choice':None,'battle':None,'rewards':[], 'attempt':0}
+                'pending_choice':None,'battle':None,'rewards':[], 'attempt':0,
+                'enemy_refresh_total':plan['difficulties'][difficulty-1]['enemy_refreshes'],
+                'enemy_refreshes':plan['difficulties'][difficulty-1]['enemy_refreshes']}
             p.setdefault('pending_battles', {}).pop('abyss',None)
             return {}
         run = p.get('abyss_run')
@@ -115,6 +131,25 @@ class GameplayAbyss:
             return {}
         if not node or node['completed']:
             raise GameplayFault('AbyssInvalidNode', '请先选择一个未完成节点。')
+        if method=='user.abyss_refresh':
+            if node['type']=='rest' or x.get('node_id')!=node['id']:
+                raise GameplayFault('AbyssInvalidNode','只能刷新当前战斗节点的敌人。')
+            if run['battle']:
+                raise GameplayFault('AbyssBattlePending','请先结算已开始的战斗。')
+            if run['enemy_refreshes']<=0:
+                raise GameplayFault('AbyssRefreshEmpty','本局敌方刷新次数已用完。')
+            previous = [u['aid'] for u in node['enemy_preview']]
+            start = node.get('enemy_roll',0)+1
+            for roll in range(start,start+32):
+                node['enemy_roll']=roll
+                preview=generate_enemy_preview(run['seed'],run['difficulty'],node,self.cfg)
+                if [u['aid'] for u in preview]!=previous: break
+            else:
+                raise GameplayFault('AbyssRefreshUnavailable','当前敌人没有其他可用阵容。')
+            node['enemy_preview']=preview
+            node.pop('enemies',None)
+            run['enemy_refreshes']-=1
+            return {}
         if method=='user.abyss_rest':
             if node['type']!='rest':
                 raise GameplayFault('AbyssInvalidNode', '当前节点不是休息处。')
@@ -126,8 +161,11 @@ class GameplayAbyss:
             hero = run['pool'].get(hid) if isinstance(hid,str) else None
             if not hero:
                 raise GameplayFault('AbyssUnknownHero', '该英雄不在本局阵容池中。')
-            if option=='skill' and hero['slv']==5:
-                hero['slv'] = 10
+            skin = is_skin(hero['aid'],self.cfg)
+            base_skill = rules(self.cfg)['skin_skill_level'] if skin else 5
+            max_skill = rules(self.cfg)['skin_skill_level_max'] if skin else 10
+            if option=='skill' and hero['slv']==base_skill:
+                hero['slv'] = max_skill
             elif (option=='orange' and hero['quality']==5 and
                   hero['aid'][:-1]+'6' in unlocked_pool(p,self.cfg)[1]):
                 hero.update(aid=hero['aid'][:-1]+'6',quality=6)
@@ -144,10 +182,15 @@ class GameplayAbyss:
                 if pending and pending['expires']>=self.store.clock.now():
                     raise GameplayFault('AbyssBattlePending', '请先结算当前战斗或继续已保存战斗。')
                 p.setdefault('pending_battles',{}).pop('abyss',None)
+                run['battle']=None
+                self._update_enemy_rules(run,node)
             formation = x.get('team')
             if not isinstance(formation,list) or not 1<=len(formation)<=5:
                 raise GameplayFault('InvalidFormation', '请选择1至5名英雄并覆盖三路。')
             own = standard_team(self.cfg,run['pool'],formation)
+            limit=rules(self.cfg)['player_skin_limits'][node['act']-1]
+            if sum(is_skin(unit['aid'],self.cfg) for unit in own)>limit:
+                raise GameplayFault('AbyssSkinLimit',f"第{node['act']}幕最多上阵{limit}名皮肤英雄。")
             if 'enemies' not in node:
                 node['enemies']=generate_enemies(run['seed'],run['difficulty'],node,self.cfg)
             metadata = {'run_id':run['id'],'node_id':node['id']}
@@ -163,9 +206,22 @@ class GameplayAbyss:
             return copy.deepcopy(run['battle'])
         raise GameplayFault('NotImplemented','未知深渊回廊请求。')
 
+    def _update_enemy_rules(self,run,node):
+        schema=rules(self.cfg)['schema']
+        if node.get('enemy_rules_schema')!=schema:
+            node['enemy_preview']=(generate_enemy_preview(run['seed'],run['difficulty'],node,self.cfg)
+                                   if node['type']!='rest' else [])
+            node.pop('enemies',None)
+            node['enemy_rules_schema']=schema
+
     def finish(self,p,run,x):
+        # Older clients submit every historical summon, including dead/replaced
+        # plants, soldiers and clones. These diagnostics are not a formation:
+        # a long fight can legitimately exceed 30 entries on either side.
+        # Keep a bounded legacy allowance; new clients send only the original
+        # combatants. Every submitted health value still goes through validation.
         intent = consume_intent(p,'abyss',x,metadata_keys=('run_id','node_id'),
-                                now=self.store.clock.now(),config=self.config)
+                                now=self.store.clock.now(),config=self.config,max_snapshot_units=4096)
         if (not run['battle'] or intent['fight_id']!=run['battle']['fight_id'] or
             intent['metadata']!={'run_id':run['id'],'node_id':run['current_node']}):
             raise GameplayFault('AbyssStaleBattle', '战斗与当前节点不匹配。')

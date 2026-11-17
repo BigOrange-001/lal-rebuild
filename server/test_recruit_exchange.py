@@ -81,13 +81,17 @@ class RecruitExchangeTest(unittest.TestCase):
 
     def test_daily_medal_equipment_purchase_cost_day_and_replay(self):
         from daily_exchange_105 import MEDAL_EQUIPMENT
+        from gateway import load_game_config
+        self.config=load_game_config(Path(__file__).resolve().parents[1]/'config/reconstruction/full-config.json')
+        self.economy=GameplayEconomy(self.store,self.config)
         self.seed(medal=200)
         info = self.economy.dispatch(self.uid, 'user.recruit_exchange_info', {})
-        qualities = [item['quality'] for item in info['items']]
+        items=[item for item in info['items'] if item['kind']=='equip']
+        qualities = [item['quality'] for item in items]
         self.assertEqual((qualities.count(6), qualities.count(5)), (10, 10))
-        self.assertEqual(len({item['id'] for item in info['items']}), 20)
+        self.assertEqual(len({item['id'] for item in items}), 20)
         prices = {int(q): price for q, _, price in MEDAL_EQUIPMENT}
-        item = info['items'][0]
+        item = items[0]
         self.assertEqual(item['medal'], prices[item['quality']])
         params = {'id': item['id'], 'day': info['day'], 'actionID': 'medal-once'}
         first = self.economy.dispatch(self.uid, 'user.recruit_medal_exchange', params)

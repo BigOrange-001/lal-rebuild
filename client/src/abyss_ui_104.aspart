@@ -47,13 +47,13 @@ class AbyssCore104
    public static const COLOR_GREEN:uint = 0x66DD66;
    public static const COLOR_PURPLE:uint = 0xCC77FF;
    public static const COLOR_ORANGE:uint = 0xFF9933;
-   // Ancient affixes: a cyan distinct from normal (white) and orange-quality text.
-   public static const COLOR_ANCIENT:uint = 0x3CF0E0;
+   // Ancient affixes use blue, distinct from normal and orange-quality text.
+   public static const COLOR_ANCIENT:uint = 0x4CA6FF;
    public static const COLOR_SELECT:uint = 0x33AAFF;
    // Text on the tan UI_bg_9slice_4 box, same values the native equipment lists use.
    public static const INK_NAME:uint = 0x990000;
    public static const INK_TEXT:uint = 0x4B2C1B;
-   public static const INK_ANCIENT:uint = 0x006E66;
+   public static const INK_ANCIENT:uint = 0x1663B8;
    public static const INK_GREEN:uint = 0x1A6F1A;
    // Selection mark: warm gold with a dark outline, the palette of native leader/VIP tags.
    public static const MARK_GOLD:uint = 0xFFD24A;
@@ -94,6 +94,12 @@ class AbyssCore104
    {
       var simple:Object = GlobalData.$mConfig_simple;
       return simple && simple.roguelite_abyss ? simple.roguelite_abyss : {};
+   }
+
+   public static function isSkin(aid:String) : Boolean
+   {
+      var families:Array = cfg().skin_families as Array;
+      return families && families.indexOf(family(aid)) >= 0;
    }
 
    public static function retriesTotal(difficulty:int) : int
@@ -208,6 +214,16 @@ class AbyssCore104
    public static function isOrange(aid:String) : Boolean
    {
       return aid.charAt(aid.length - 1) == "6";
+   }
+
+   public static function skillBase105(aid:String) : int
+   {
+      return isSkin(aid) ? (cfg().skin_skill_level ? int(cfg().skin_skill_level) : 3) : 5;
+   }
+
+   public static function skillMax105(aid:String) : int
+   {
+      return isSkin(aid) ? (cfg().skin_skill_level_max ? int(cfg().skin_skill_level_max) : 6) : 10;
    }
 
    // Display/battle-preview data for a standardized pool hero (no owned progression).
@@ -437,6 +453,17 @@ class AbyssCore104
    public static function startBattle(slots:Array, pending:Object) : void
    {
       var r:Object = run;
+      if(!pending)
+      {
+         var current:Object = node(r.current_node);
+         var skinCount:int = 0;
+         for each(var selected:* in slots) if(selected && r.pool[selected] && isSkin(String(r.pool[selected].aid))) skinCount++;
+         if(skinCount > (current ? int(current.act) : 1))
+         {
+            toast("已超过本幕皮肤英雄上阵上限，请先调整阵容");
+            return;
+         }
+      }
       var heroes:Object = {};
       for(var id:String in r.pool)
       {
@@ -575,9 +602,24 @@ class AbyssCore104
 
    public static function relicName(item:Object) : String
    {
-      var ancient:Boolean = item.main && item.main.ancient;
-      if(!ancient && item.substats) for each(var s:Object in item.substats) if(s.ancient) ancient = true;
-      return (ancient ? "*" : "") + String(item.name);
+      var prefix:String = "";
+      for(var i:int=0;i<relicAncientCount(item);i++) prefix += "*";
+      return prefix + String(item.name);
+   }
+
+   public static function relicAncientCount(item:Object) : int
+   {
+      if(!item) return 0;
+      var count:int = item.main && item.main.ancient ? 1 : 0;
+      var subs:Array = item.substats is Array ? item.substats as Array : [];
+      for(var i:int=0;i<Math.min(3,subs.length);i++) if(subs[i] && subs[i].ancient) ++count;
+      return count;
+   }
+
+   public static function relicFrameQuality(item:Object) : int
+   {
+      // No ancient affix: blue; then purple, orange, red, rainbow.
+      return 4 + relicAncientCount(item);
    }
 
    public static function positionName(slot:int) : String
@@ -1386,6 +1428,10 @@ class AbyssTeamPanel104 extends AbyssPanel104
       }
       else addText("敌方阵容：开战后显示",lx + 30,y,iw - 60,32,22,AbyssCore104.COLOR_DIM,"center");
       y += 40;
+      var skinLimit:int = n ? int(n.act) : 1;
+      addText("本幕皮肤英雄上限：" + skinLimit + "名",lx + 20,y,iw - 290,38,17,AbyssCore104.COLOR_TEXT,"center");
+      addButton("刷新敌人 " + int(r.enemy_refreshes) + "/" + int(r.enemy_refresh_total),lx + iw - 265,y,240,40,refreshEnemy105,!pending && int(r.enemy_refreshes) > 0);
+      y += 50;
       var slotW:Number = 90;
       var gap:Number = ((iw - 60) - slotW * 5) / 4;
       for(var i:int = 0; i < 5; i++)
@@ -1417,7 +1463,7 @@ class AbyssTeamPanel104 extends AbyssPanel104
          var hy:Number = y + int(k / cols) * cellH;
          var hero:Object = r.pool[hid];
          var c:Sprite = heroCard(String(hero.aid),hid,int(hero.slv),hx,hy,scale);
-         addText("技能" + int(hero.slv) + "级",hx - 10,hy + 90 * scale,90 * scale + 20,22,14,int(hero.slv) >= 10 ? AbyssCore104.COLOR_TITLE : AbyssCore104.COLOR_DIM,"center");
+         addText("技能" + int(hero.slv) + "级",hx - 10,hy + 90 * scale,90 * scale + 20,22,14,int(hero.slv) >= AbyssCore104.skillMax105(String(hero.aid)) ? AbyssCore104.COLOR_TITLE : AbyssCore104.COLOR_DIM,"center");
          if(slots.indexOf(hid) >= 0) selectMark(hx - 5,hy - 5,90 * scale + 10,90 * scale + 10,"picked");
          if(!pending) bindPool(c,hid);
       }
@@ -1450,6 +1496,25 @@ class AbyssTeamPanel104 extends AbyssPanel104
       return n;
    }
 
+   private function refreshEnemy105() : void
+   {
+      AbyssCore104.send("user.abyss_refresh",{"node_id":AbyssCore104.run.current_node},function(d:Object):void
+      {
+         pending = null;
+         refresh();
+      });
+   }
+
+   private function canAddSkin105(id:String) : Boolean
+   {
+      var r:Object = AbyssCore104.run;
+      if(!AbyssCore104.isSkin(String(r.pool[id].aid))) return true;
+      var n:Object = AbyssCore104.node(r.current_node);
+      var count:int = 0;
+      for each(var hid:* in slots) if(hid && AbyssCore104.isSkin(String(r.pool[hid].aid))) count++;
+      return count < (n ? int(n.act) : 1);
+   }
+
    private function bindSlot(card:Sprite, index:int) : void
    {
       if(pending) return;
@@ -1472,6 +1537,11 @@ class AbyssTeamPanel104 extends AbyssPanel104
             return;
          }
          var empty:int = slots.indexOf(null);
+         if(!canAddSkin105(id))
+         {
+            AbyssCore104.toast("已达到本幕皮肤英雄上阵上限");
+            return;
+         }
          if(empty < 0)
          {
             AbyssCore104.toast("最多上阵5人");
@@ -1532,13 +1602,13 @@ class AbyssEnemyPanel104 extends AbyssPanel104
       {
          var aid:String = e is String ? String(e) : String(e.aid);
          var lane:int = e is String ? counts.indexOf(Math.min(counts[0],counts[1],counts[2])) : Math.max(0,Math.min(2,int(e.line)));
-         var slv:int = e is String ? 5 : int(e.slv);
+         var slv:int = e is String ? AbyssCore104.skillBase105(aid) : int(e.slv);
          var x:Number = lx + 30 + lane * colW + (colW - 90) * 0.5;
          var y:Number = 130 + counts[lane] * 140;
          counts[lane]++;
-         var card:Sprite = heroCard(aid,AbyssCore104.family(aid),slv > 0 ? slv : 5,x,y,1,!(e is String) && int(e.leader) == 1,null,!(e is String) && int(e.limit_break) == 1);
+         var card:Sprite = heroCard(aid,AbyssCore104.family(aid),slv > 0 ? slv : AbyssCore104.skillBase105(aid),x,y,1,!(e is String) && int(e.leader) == 1,null,!(e is String) && int(e.limit_break) == 1);
          addText(AbyssCore104.heroName(aid),x - 30,y + 94,150,24,16,AbyssCore104.isOrange(aid) ? AbyssCore104.COLOR_ORANGE : AbyssCore104.COLOR_PURPLE,"center");
-         bindInfo(card,aid,slv > 0 ? slv : 5);
+         bindInfo(card,aid,slv > 0 ? slv : AbyssCore104.skillBase105(aid));
       }
       addText("点击头像查看技能",lx + 20,by - 50,iw - 40,26,17,AbyssCore104.COLOR_DIM,"center");
    }
@@ -1569,10 +1639,10 @@ class AbyssRestPanel104 extends AbyssPanel104
       var r:Object = AbyssCore104.run;
       if(!r) return;
       var tabW:Number = (iw - 90) / 2;
-      var b1:LOL_Scale9Button = addButton("技能 5→10",lx + 30,90,tabW,60,function():void { option = "skill"; heroId = validFor(heroId) ? heroId : null; refresh(); });
+      var b1:LOL_Scale9Button = addButton("提升技能",lx + 30,90,tabW,60,function():void { option = "skill"; heroId = validFor(heroId) ? heroId : null; refresh(); });
       var b2:LOL_Scale9Button = addButton("升为橙卡",lx + 60 + tabW,90,tabW,60,function():void { option = "orange"; heroId = validFor(heroId) ? heroId : null; refresh(); });
       selectMark((option == "skill" ? b1.x : b2.x) - 6,84,tabW + 12,72,"current");
-      addText("二选一，每个休息处只能使用一次",lx + 20,156,iw - 40,24,17,AbyssCore104.COLOR_DIM,"center");
+      addText("二选一，每处一次；皮肤技能3→6级，普通技能5→10级",lx + 20,156,iw - 40,24,17,AbyssCore104.COLOR_DIM,"center");
       // Target -> result preview, laid out like the alchemy screen.
       var py:Number = 186;
       addBox(lx + 25,py,iw - 50,170);
@@ -1581,12 +1651,12 @@ class AbyssRestPanel104 extends AbyssPanel104
          var hero:Object = r.pool[heroId];
          var aid:String = String(hero.aid);
          var resultAid:String = option == "orange" ? aid.substr(0,aid.length - 1) + "6" : aid;
-         var resultSlv:int = option == "skill" ? 10 : int(hero.slv);
+         var resultSlv:int = option == "skill" ? AbyssCore104.skillMax105(aid) : int(hero.slv);
          heroCard(aid,heroId,int(hero.slv),lx + 120,py + 30);
          addText("→",lx + (iw - 80) * 0.5,py + 52,80,50,40,AbyssCore104.COLOR_TITLE,"center");
          heroCard(resultAid,heroId,resultSlv,lx + iw - 210,py + 30);
          addText(option == "skill" ? "技能 " + int(hero.slv) + "级" : "紫卡",lx + 90,py + 126,150,24,16,AbyssCore104.COLOR_TEXT,"center");
-         addText(option == "skill" ? "技能 10级" : "橙卡（面板1.4倍，技能换为橙卡）",lx + iw - 300,py + 126,270,24,16,AbyssCore104.COLOR_ORANGE,"center");
+         addText(option == "skill" ? "技能 " + resultSlv + "级" : "橙卡（面板1.4倍，技能换为橙卡）",lx + iw - 300,py + 126,270,24,16,AbyssCore104.COLOR_ORANGE,"center");
       }
       else addText("在下方选择一名英雄",lx + 25,py + 70,iw - 50,30,22,AbyssCore104.COLOR_DIM,"center");
       var y:Number = py + 182;
@@ -1625,7 +1695,7 @@ class AbyssRestPanel104 extends AbyssPanel104
          AbyssCore104.send("user.abyss_rest",{"hero_id":heroId,"option":option},function(d:Object):void
          {
             AbyssCore104.closeTop();
-            AbyssCore104.toast(option == "skill" ? name + "技能升至10级" : name + "已升为橙卡");
+            AbyssCore104.toast(option == "skill" ? name + "技能升至" + resultSlv + "级" : name + "已升为橙卡");
          });
       },heroId != null);
       addButton("离开",lx + iw - 200,by - 90,170,66,function():void
@@ -1639,7 +1709,7 @@ class AbyssRestPanel104 extends AbyssPanel104
 
    private function reasonFor(h:Object) : String
    {
-      if(option == "skill") return int(h.slv) >= 10 ? "技能已满" : null;
+      if(option == "skill") return int(h.slv) >= AbyssCore104.skillMax105(String(h.aid)) ? "技能已满" : null;
       if(int(h.quality) >= 6) return "已是橙卡";
       if(!h.can_orange) return "本模式登场后可升";
       return null;
@@ -1929,7 +1999,7 @@ class AbyssRelicView104
       icon.x = x + 12;
       icon.y = y + 18;
       parent.addChild(icon);
-      // Dark ink on the tan box (native equipment-list colours); ancient lines in deep teal.
+      // Dark ink on the tan box; ancient main/name and affix lines use blue.
       var mainAncient:Boolean = item.main && item.main.ancient;
       add(parent,AbyssCore104.relicName(item),x + 116,y + 10,w - 132,28,22,mainAncient ? AbyssCore104.INK_ANCIENT : AbyssCore104.INK_NAME);
       if(tag) add(parent,tag,x + w - 236,y + 13,214,26,17,AbyssCore104.INK_GREEN,"right");
@@ -2392,7 +2462,7 @@ class AbyssRelicSlotView104
       if(item)
       {
          holder.addChild(AbyssRelicArt104.create(item,100));
-         var ancient:Boolean = AbyssCore104.relicName(item).charAt(0) == "*";
+         var ancient:Boolean = item.main && item.main.ancient;
          label = GlobalFunction.createTextField(96,60,AbyssCore104.relicName(item),"",18,ancient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE);
          label.y = 104;
          label.height = 44;
@@ -2513,7 +2583,7 @@ class AbyssRerollView104 extends Sprite
          area.addChild(art);
       }
       var name:String = item ? AbyssCore104.relicName(item) : empty;
-      txt(name,x - 30,y + (item ? 104 : 22),160,item ? 38 : 60,item ? 18 : 16,item ? (name.charAt(0) == "*" ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE) : AbyssCore104.COLOR_DIM,"center");
+      txt(name,x - 30,y + (item ? 104 : 22),160,item ? 38 : 60,item ? 18 : 16,item ? (item.main && item.main.ancient ? AbyssCore104.COLOR_ANCIENT : AbyssCore104.COLOR_TITLE) : AbyssCore104.COLOR_DIM,"center");
       txt(caption,x - 40,y - 28,180,24,17,AbyssCore104.COLOR_TEXT,"center");
    }
 

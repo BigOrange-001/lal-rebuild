@@ -18,6 +18,7 @@ class SkinRevisionTests(unittest.TestCase):
    if not aid.endswith('_6'):continue
    ordinary=[x for x in c['system_simple']['equipment_bonds_104'][aid] if x['kind']=='ordinary'];self.assertEqual(len(ordinary),2)
    for item in ordinary:
+    if item.get('passive_extra_105'):continue
     slot='skill' if item['slot']=='normal' else 'leader_skill';index=10 if slot=='skill' else 11
     ids={c['avatar'][aid]['pl'][index]}
     ids.update(x[slot] for x in c['system_simple']['bond_skill_variants_104'][aid].values() if slot in x)

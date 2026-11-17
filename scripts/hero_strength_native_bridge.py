@@ -12,6 +12,7 @@ from battle_engine import _to_int
 
 BOOT = r'''
 let skin2Depth=0;
+let skin2AnnieChainDepth=0,skin2AnnieChain=[];
 const int=x=>Math.trunc(Number(x)||0),Tools={toInt:int};
 const GameMapConfig={LINE_POS:3000};
 const Buff={LIST_BUFF:[],LIST_DEBUFF:[]};
@@ -53,7 +54,7 @@ const GameMap={currentMap:{getAliveList:team=>call(-1,'alive',[team]),isEnd:lane
 const currentAbilityAttack=()=>call(-1,'context');
 const beginAbilityAttack=(owner,kind)=>call(owner.__uid,'begin',[kind]);
 const endAbilityAttack=()=>call(-1,'end');
-function reset(){units.clear();skin2Depth=0;}
+function reset(){units.clear();skin2Depth=0;skin2AnnieChainDepth=0;skin2AnnieChain=[];}
 function invoke(id,name,args){let a=dec(JSON.parse(args));let r=unit(id)[name](...a);if(name==='executeSkin2'&&a[1].abilityCooldownOverride!==undefined)call(id,'cooldown',[a[1].abilityCooldownOverride]);return r;}
 '''
 
@@ -149,6 +150,7 @@ class NativeSkinBattle(MeasuredBattle):
         if name == 'focus': u['_ability_focus']=a[0];return None
         if name == 'getDamage': return self._get_damage(u)
         if name == 'getHpMax': return u['hp_max']
+        if name == 'shieldValue104': return self._buff_value(u,'shield')
         if name == 'getType': return self._get_type(u)
         if name == 'heroSkillOutputRate104': return self.hero_output_rate_104(u)
         if name == 'abilityFeedback': return None
@@ -161,6 +163,8 @@ class NativeSkinBattle(MeasuredBattle):
         if name == 'abilityControl': self.control(u,*a); return None
         if name == 'addBuff':
             self._add_buff(u,a[0],a[1],a[2] if len(a)>2 else 0,source=a[5] if len(a)>5 else u);return None
+        if name == 'addManualSkillDot':
+            return self._add_manual_skill_dot(u,*a)
         if name == 'removeBuff': self._remove_buff(u,a[0],consume=a[1] if len(a)>1 else False);return None
         if name == 'removeAllDebuff': self._remove_all_debuff(u);return None
         if name == 'injured': return self._injured(u,a[0],a[3],source=(a[6] if len(a)>6 else None) or a[4])
@@ -195,6 +199,30 @@ class NativeSkinBattle(MeasuredBattle):
     def _remove_all_debuff(self,u):
         if getattr(self,'_bridge_ready',False):self.invoke(u,'skin2ClearDebuffs')
         return super()._remove_all_debuff(u)
+
+    def _status_immune(self, target):
+        return bool(getattr(self,'_bridge_ready',False) and self.invoke(target,'s2AnnieImmune'))
+
+    def _status_received(self, target, kind):
+        if getattr(self,'_bridge_ready',False):self.invoke(target,'s2AnnieStatus',kind)
+
+    def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
+        from battle_engine import _DEBUFFS
+        ready = getattr(self, '_bridge_ready', False)
+        if ready and kind in _DEBUFFS and self.invoke(unit, 's2AnnieImmune'):
+            return
+        previous = unit.get('_buffs', {}).get(kind)
+        before_value = previous.value if previous else None
+        result = super()._add_buff(unit, kind, rounds, value, source, poison_hp_rate_104)
+        accepted = unit.get('_buffs', {}).get(kind)
+        if ready and accepted and (accepted is not previous or accepted.value != before_value):
+            self.invoke(unit, 's2AnnieStatus', kind)
+        return result
+
+    def control(self, owner, target, kind, duration, value=0):
+        if getattr(self, '_bridge_ready', False) and target is not None and self.invoke(target, 's2AnnieImmune'):
+            return
+        return super().control(owner, target, kind, duration, value)
 
     def turn_start(self,u):
         result=super().turn_start(u)

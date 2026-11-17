@@ -783,7 +783,11 @@ package com.meng52.game.module.avatar
 
       private function abilityMark(target:Avatar, kind:String, duration:int, scale:Number = 1) : void
       {
-         if(target && target.hp > 0) target.abilityState["mark_"+kind+"_"+abilityIndex] = {until:target.abilitySerial+duration,owner:this,debuff:true,scale:scale};
+         if(target && target.hp > 0 && !target.s2AnnieImmune())
+         {
+            target.abilityState["mark_"+kind+"_"+abilityIndex] = {until:target.abilitySerial+duration,owner:this,debuff:true,scale:scale};
+            target.s2AnnieStatus("mark");
+         }
       }
 
       private function abilityHit(target:Avatar, coefficient:Number, kind:int, effect:String, sharedTotal:Number = 0, visualSource:Avatar = null) : Boolean
@@ -838,6 +842,7 @@ package com.meng52.game.module.avatar
       private function abilityControl(target:Avatar, kind:String, duration:int, value:Number = 0) : void
       {
          if(!target || target.hp <= 0) return;
+         if(target.s2AnnieImmune()) return;
          if(target.abilityState.channel && ["stun","silence","root","pull","push"].indexOf(kind)>=0) return;
          if(kind == "root")
          {
@@ -981,7 +986,14 @@ package com.meng52.game.module.avatar
                if(owner)
                {
                   var next:Array = owner.abilityCandidates(team,line,pos,300,1,false,"nearest",[this]);
-                  if(next.length) { state.hops = 1; state.until = next[0].abilitySerial+1; next[0].abilityState[key] = state; }
+                  if(next.length)
+                  {
+                     var infected:Avatar = next[0];
+                     if(infected.s2AnnieImmune()) continue;
+                     if(infected.buffs.purify) {infected.removeBuff("purify",true); continue;}
+                     state.hops = 1; state.until = infected.abilitySerial+1; infected.abilityState[key] = state;
+                     infected.s2AnnieStatus("poison");
+                  }
                }
             }
          }
@@ -1779,6 +1791,66 @@ package com.meng52.game.module.avatar
       // Approved skin revision: state is owned by each combat incarnation.
       private var skin2:Object = {};
       private static var skin2Depth:int = 0;
+      private static var skin2AnnieChainDepth:int = 0;
+      private static var skin2AnnieChain:Array = [];
+
+      private function s2AnnieCore() : Object
+      {
+         if(s2Family()!=1221 || !skillB || !skillB.skillSetData) return null;
+         var row:Object=GlobalData.$mConfig_skill[skillB.skillSetData.id];
+         return row ? row.annie_core_105 : null;
+      }
+      private function s2AnnieImmune() : Boolean
+      {
+         return skin2.anniePurifyUntil!=null && manualOwnerActionSerial<int(skin2.anniePurifyUntil);
+      }
+      private function s2AnnieCompanion(key:String) : Number
+      {
+         if(!skill0 || !skill0.skillSetData) return 0;
+         var row:Object=GlobalData.$mConfig_skill[skill0.skillSetData.id];
+         var spec:Object=row ? row.annie_companion_105 : null;
+         if(!spec || !spec.keys || !spec.values) return 0;
+         var index:int=spec.keys.indexOf(key);
+         return index<0 ? 0 : Number(spec.values[index]);
+      }
+      private function s2AnnieStatus(kind:String) : void
+      {
+         var spec:Object=s2AnnieCore();
+         if(!spec || hp<=0 || !GameMap.currentMap) return;
+         if(Buff.LIST_DEBUFF.indexOf(kind)<0 && ["cold","wanted","charmed","exposed","airborne","contract","windmark","bleed","mark","bomb"].indexOf(kind)<0) return;
+         if(skin2.annieCoreNext!=null && manualOwnerActionSerial<int(skin2.annieCoreNext)) return;
+         if(skin2AnnieChainDepth==0) skin2AnnieChain=[];
+         if(skin2AnnieChain.indexOf(this)>=0) return;
+         skin2AnnieChain.push(this);++skin2AnnieChainDepth;
+         // Same owner-turn convention as SkillSet: cooldown 1 has one waiting
+         // turn, then becomes ready on the following turn. Original passive
+         // events do not read or spend this independent cooldown.
+         skin2.annieCoreNext=manualOwnerActionSerial+int(spec.cooldown)+1;
+         var context:Object=beginAbilityAttack(this,"passive");
+         try
+         {
+            var unit:Avatar;
+            for each(unit in GameMap.currentMap.getAliveList(team))
+            {
+               unit.removeAllDebuff();
+               unit.skin2.anniePurifyUntil=Math.max(Number(unit.skin2.anniePurifyUntil || 0),unit.manualOwnerActionSerial+int(spec.purify_rounds));
+            }
+            abilityFeedback("不讲道理","FX_S9150_PURIFY",10526975);
+            for each(unit in GameMap.currentMap.getAliveList(otherTeam))
+            {
+               unit.addBuff("sunder",int(spec.debuff_rounds),Number(spec.sunder)/(1-Number(spec.sunder)),0,-1,this);
+               unit.addBuff("weak",int(spec.debuff_rounds),Number(spec.weak)/(1-Number(spec.weak)),0,-1,this);
+               unit.addManualSkillDot("annie_core_105_"+abilityIndex,"poison",Tools.toInt(getDamage()*Number(spec.poison_ap)),0,int(spec.debuff_rounds),this,6,true);
+               if(spec.stun_enabled) unit.addBuff("stun",int(spec.control_rounds),0,0,-1,this);
+               unit.addBuff("silence",int(spec.control_rounds),0,0,-1,this);
+            }
+         }
+         finally
+         {
+            endAbilityAttack(context);--skin2AnnieChainDepth;
+            if(skin2AnnieChainDepth==0) skin2AnnieChain=[];
+         }
+      }
 
       private function s2Family() : int
       {
@@ -1827,8 +1899,13 @@ package com.meng52.game.module.avatar
       }
       private function s2Mark(target:Avatar, name:String, duration:int) : void
       {
+         if(target && target.s2AnnieImmune()) return;
          if(target && target.buffs.purify) {target.removeBuff("purify",true);return;}
-         if(target && target.hp > 0) {target.skin2[name] = {owner:this,skill:skin2.castSkill || skillB,expires:manualOwnerActionSerial+duration};fxPulse104(name,target);}
+         if(target && target.hp > 0)
+         {
+            {target.skin2[name] = {owner:this,skill:skin2.castSkill || skillB,expires:manualOwnerActionSerial+duration};fxPulse104(name,target);}
+            target.s2AnnieStatus(name);
+         }
       }
       private function s2ColdMoveFactor() : Number
       {
@@ -2203,7 +2280,7 @@ package com.meng52.game.module.avatar
                s2Retreat();
             }
             if(skin2.bearOwner && skin2.bearOwner.hp>0 && int(skin2.bearGrowth || 0)<6)
-            {fxPulse104("bear");skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth");hpMax+=int(Number(skin2.initialHp)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth"));hp+=int(Number(skin2.initialHp)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth"));}
+            {fxPulse104("bear");skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*skin2.bearOwner.s2AnnieCompanion("petGrowth");hpMax+=int(Number(skin2.initialHp)*skin2.bearOwner.s2AnnieCompanion("petGrowth"));hp+=int(Number(skin2.initialHp)*skin2.bearOwner.s2AnnieCompanion("petGrowth"));}
          }
          if(event=="damage_taken" && source && source.team!=team)
          {
@@ -2224,7 +2301,7 @@ package com.meng52.game.module.avatar
                   {fxPulse104(family==1206 ? "rings" : "time_rings",target);state.count=0;++state.triggers;s2Hit(target,s2Value(skillB,"hit"),family==1206 ? 3 : 2);if(family==1206)s2Heal(this,s2Value(skillB,"heal"));else s2Shield(this,s2Value(skillB,"shield"),1);}
                }
                if(skin2.command && skin2.bearOwner && skin2.bearOwner.hp>0)
-               {skin2.command=false;unit=skin2.bearOwner;unit.s2Hit(target,unit.s2Value(unit.skillB,"command"));if(skin2.commandSplash) {skin2.commandSplash=false;for each(var other:Avatar in unit.s2Lane()) if(other!==target) {unit.s2Hit(other,unit.s2Value(unit.skillB,"command"));break;}}}
+               {skin2.command=false;unit=skin2.bearOwner;unit.s2Hit(target,unit.s2AnnieCompanion("command"));if(skin2.commandSplash) {skin2.commandSplash=false;for each(var other:Avatar in unit.s2Lane()) if(other!==target) {unit.s2Hit(other,unit.s2AnnieCompanion("command"));break;}}}
                var context:Object=currentAbilityAttack();
                if(context && context.kind=="active") for each(unit in GameMap.currentMap.getAliveList(team)) if(unit!==this && unit.s2Family()==1213 && unit.skin2.ball===this) unit.s2ReturnBall(target);
             }
@@ -2265,7 +2342,7 @@ package com.meng52.game.module.avatar
             if(s2LiveMark(source,"exposed"))
             {unit=source.skin2.exposed.owner;delete source.skin2.exposed;unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);}
             if(family==1221 && s2Pet() && skin2.bearShieldTurn!=manualOwnerActionSerial)
-            {skin2.bearShieldTurn=manualOwnerActionSerial;s2Shield(this,s2Value(skillB,"shield"),1);}
+            {skin2.bearShieldTurn=manualOwnerActionSerial;s2Shield(this,s2AnnieCompanion("shield"),1);}
             if(family==1219 && skin2.windGuard && buffs.shield && source.range>300)
             {skin2.windGuard=false;removeBuff("shield");return 0;}
             for each(unit in GameMap.currentMap.getAliveList(team))
@@ -2947,8 +3024,10 @@ package com.meng52.game.module.avatar
                break;
             case "malzahar_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
+               if(target.s2AnnieImmune()) break;
                if(target.buffs.purify) {target.removeBuff("purify",true); break;}
                target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1)*scale*manualDamageMultiplier*heroSkillOutputRate104(),hops:0,debuff:true};
+               target.s2AnnieStatus("poison");
                break;
             case "malzahar_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",650)); if(!enemies.length) return false; target=enemies[0];
@@ -3001,7 +3080,11 @@ package com.meng52.game.module.avatar
                break;
             case "kaelthas_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={abyssRelicContext104:abyssCaptureContext104(this),owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
+               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify && !target.s2AnnieImmune())
+               {
+                  target.abilityState["bomb_"+abilityIndex]={abyssRelicContext104:abyssCaptureContext104(this),owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
+                  target.s2AnnieStatus("bomb");
+               }
                break;
             case "kaelthas_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",700)); if(!enemies.length) return false; primary=enemies[0];
@@ -5159,6 +5242,7 @@ package com.meng52.game.module.avatar
          var _loc1_:Object = null;
          var _loc2_:Buff = null;
          if(yasuoImmune104(param2)) return;
+         if(s2AnnieImmune()) return;
          if(!param1 || (param2 != "poison" && param2 != "burn" && param2 != "bleed") || !isFinite(param3) || param3 < 0 || !isFinite(param4) || param4 < 0 || param5 < 1) return;
          if(buffs && buffs["purify"])
          {
@@ -5176,6 +5260,7 @@ package com.meng52.game.module.avatar
          }
          manualSkillDots[param1] = _loc1_;
          showBuff(_loc2_);
+         s2AnnieStatus(param2);
       }
 
       public function hasManualDamageOverTime() : Boolean
@@ -5253,6 +5338,13 @@ package com.meng52.game.module.avatar
 
       protected function showBuff(param1:Buff) : void
       {
+         // Cleansing can run before this delayed visual callback. Only render
+         // a Buff still owned by the unit, including independent DOT visuals.
+         var active:Boolean = false;
+         for each(var current:Buff in buffs) if(current === param1) active = true;
+         if(!active && manualSkillDots)
+            for each(var dot:Object in manualSkillDots) if(dot && dot.visual === param1) active = true;
+         if(!active) return;
          if(!m_buff)
          {
             return;
@@ -5266,6 +5358,7 @@ package com.meng52.game.module.avatar
       public function addBuff(param1:String, param2:int, param3:Number = 0, param4:Number = 0, param5:int = -1, param6:Avatar = null) : void
       {
          if(yasuoImmune104(param1)) return;
+         if(s2AnnieImmune() && Buff.LIST_DEBUFF.indexOf(param1)>=0) return;
          if(abilityState.channel && ["stun","silence","root","pull","push"].indexOf(param1)>=0) return;
          var _loc8_:* = 0;
          var _loc13_:String = null;
@@ -5565,6 +5658,7 @@ package com.meng52.game.module.avatar
          }
          if(_loc9_ && _loc11_.type=="shield") queueVitalBar104(param4);
          if(param1=="stun" && hp>0 && buffs.stun) kaisaNotifyStun104(this);
+         if(_loc9_) s2AnnieStatus(param1);
 
       }
 
@@ -10019,6 +10113,7 @@ package com.meng52.game.module.avatar
             var dotName:String = kind == 10 ? "burn" : "poison";
             var dotAmount:int = int(source.abyssApWithTalent104() * Number(normal.value));
             if(yasuoImmune104(dotName)) return;
+            if(s2AnnieImmune()) return;
             if(buffs["purify"])
             {
                removeBuff("purify",true);
@@ -10031,6 +10126,7 @@ package com.meng52.game.module.avatar
             }
             kept.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2});
             abyssDots104 = kept;
+            s2AnnieStatus(dotName);
             abyssTrace104("normal_dot",source,this,{"kind":dotName,"amount":dotAmount,"duration":2});
          }
          else if(kind == 13 && Random.getRandom(1000000) < int(Number(normal.value) * 1000000))

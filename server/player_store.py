@@ -611,6 +611,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
     normalize_relic_slots(profile)
     normalize_daily_counters(profile,self.clock.now())
     updated,response=mutator(profile)
+    from vip_reward_mail import queue_level_rewards
+    queue_level_rewards(self.db,updated,self.config,self.clock.now())
     normalize_account(updated,self.config)
     normalize_relic_slots(updated)
     if not isinstance(updated,dict) or not isinstance(response,(dict,list,int,float,str,bool,type(None))):raise GameplayFault('InvalidMutation','Mutator must return a profile object and JSON response value')

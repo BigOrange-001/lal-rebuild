@@ -108,6 +108,10 @@ def ensure_available(config, aid):
 def channel_enabled(config, aid, channel):
     if not hero_available(config, aid):
         return False
+    if channel.startswith(('appearance.','acquisition.')):
+        from hero_catalog_105 import is_abandoned
+        if is_abandoned(config,base_aid(config,aid)):
+            return False
     row = hero_metadata(config, aid)
     channels = row.get("channels", {}) if isinstance(row, dict) else {}
     if channel in row.get("unavailableChannels", {}):

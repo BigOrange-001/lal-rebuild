@@ -162,6 +162,8 @@ def load_game_config(path, now=None):
  apply_skill_output_104(document)
  from skill_rank_growth_104 import apply_skill_rank_growth_104
  apply_skill_rank_growth_104(document)
+ from annie_reaction_105 import apply_annie_reaction
+ apply_annie_reaction(document)
  from dragonmancer_kaisa_104 import apply_dragonmancer_kaisa
  apply_dragonmancer_kaisa(document)
  from nightbringer_yasuo_104 import apply_nightbringer_yasuo
@@ -176,6 +178,8 @@ def load_game_config(path, now=None):
  apply_campaign_tower_difficulty_104(document)
  from player_copy_104 import apply_player_copy_104
  apply_player_copy_104(document)
+ from hero_catalog_105 import apply_hero_catalog
+ apply_hero_catalog(document)
  from roguelite_abyss import apply_abyss_config
  apply_abyss_config(document,abyss_placeholders)
  from abyss_relics import apply_relic_config
@@ -185,6 +189,8 @@ def load_game_config(path, now=None):
  apply_daily_reset_config(document)
  from shop_balance_105 import apply_shop_balance_105
  apply_shop_balance_105(document)
+ from guild_exchange_105 import apply_guild_exchange
+ apply_guild_exchange(document)
  from activity_windows_105 import apply_activity_windows_105
  apply_activity_windows_105(document,now)
  document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()

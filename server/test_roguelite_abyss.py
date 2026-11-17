@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from pyamf import remoting
+from battle_intents import validate_snapshots
 from gateway import Backend
 from player_store import GameplayFault, PlayerStore
 from roguelite_abyss import (apply_abyss_config, generate_map, hero_record,
@@ -94,9 +96,12 @@ class AbyssTests(unittest.TestCase):
             ratio = 1.4 if source==purple else .7
             raw = level_stats(self.cfg['avatar'][source],99,enforce_cap=False)
             for key,stat in zip(('hp','ap','de_ph','de_ma'),('health','attack','physical_defense','magic_defense')):
-                self.assertEqual(unit[key],to_int(raw[stat]*ratio),aid)
+                expected=to_int(raw[stat]*ratio)
+                if aid.rsplit('_',1)[0] in rules(self.cfg)['skin_families']:expected=int(expected*.66)
+                self.assertEqual(unit[key],expected,aid)
             pl = self.cfg['avatar'][aid]['pl']
-            self.assertEqual(unit['skill'],_native_skill_snapshot(self.cfg,pl[10],5))
+            level=3 if aid.rsplit('_',1)[0] in rules(self.cfg)['skin_families'] else 5
+            self.assertEqual(unit['skill'],_native_skill_snapshot(self.cfg,pl[10],level))
             self.assertEqual(unit['skillB'],_native_skill_snapshot(self.cfg,pl[13]))
             self.assertNotIn('limit_break',unit)
 
@@ -208,6 +213,64 @@ class AbyssTests(unittest.TestCase):
         self.assertEqual(caught.exception.code,'RequestKeyConflict')
         with self.assertRaises(GameplayFault): self.finish(battle)
         self.assertEqual(before,self.store.profile_raw(self.uid))
+
+    def test_legacy_summon_heavy_loss_settles_once_and_allows_new_formation_after_reload(self):
+        run = self.enter(self.start()); battle = self.combat(run)
+        teams = {name:copy.deepcopy(battle['orgin_'+name]) for name in ('team_a','team_b')}
+        for side in teams:
+            teams[side].extend({'aid':'A_2326_5','hp':-100,'hp_max':1000} for _ in range(80))
+        params = dict(fight_id=battle['fight_id'],fight_kind='abyss',metadata=battle['metadata'],
+                      sign=2,teams=teams,actionID='summon-heavy-loss')
+        # Exercise the native battle_finish route and AMF3 array/object types.
+        envelope = remoting.Envelope(amfVersion=3)
+        envelope['/1'] = remoting.Request('http_api',[
+            {**self.login,'method':'user.battle_finish','params':params}])
+        request = remoting.decode(remoting.encode(envelope,strict=True).getvalue())['/1'].body[0]
+        result = self.store.dispatch(request)
+        self.assertIsNone(result['abyss_run']['battle'])
+        self.assertEqual(result['abyss_run']['retries'],run['retries']-1)
+        self.assertEqual(result['abyss_run']['attempt'],1)
+        self.assertTrue(self.store.dispatch(request)['replayed'])
+        reloaded = PlayerStore(self.db,self.document)
+        query = reloaded.dispatch({**self.login,'method':'user.abyss_query','params':{'actionID':'after-loss-reload'}})
+        self.assertIsNone(query['abyss_run']['battle'])
+        self.assertFalse(self.store.profile_raw(self.uid)['pending_battles']['abyss'])
+        formation = [[hid,i%3,.7] for i,hid in enumerate(reversed(list(run['pool'])))]
+        next_battle = reloaded.dispatch({**self.login,'method':'user.abyss_combat',
+                                       'params':{'actionID':'changed-formation','team':formation}})
+        self.assertNotEqual(next_battle['fight_id'],battle['fight_id'])
+        self.assertEqual([u['aid'] for u in next_battle['orgin_team_a']],
+                         [run['pool'][row[0]]['aid'] for row in formation])
+
+    def test_legacy_summon_snapshots_keep_validation_and_terminal_loss(self):
+        run = self.enter(self.start()); battle = self.combat(run)
+        unit = {'aid':'A_2326_5','hp':-100,'hp_max':1000}
+        # The legacy allowance belongs to Abyss, not every gameplay mode.
+        validate_snapshots({'team_a':[unit]*30},{})
+        with self.assertRaises(GameplayFault):
+            validate_snapshots({'team_a':[unit]*31},{})
+        for invalid in ({}, [unit]*4097, [dict(unit,hp=float('nan'))],
+                        [dict(unit,hp_max=0)], [dict(unit,hp=1001)], [dict(unit,aid=None)]):
+            before = self.store.profile_raw(self.uid)
+            with self.subTest(invalid_type=type(invalid).__name__), self.assertRaises(GameplayFault):
+                self.finish(battle,2,teams={'team_a':invalid,'team_b':[]})
+            self.assertEqual(before,self.store.profile_raw(self.uid))
+        def last_retry(p):
+            p['abyss_run']['retries']=0
+            return p,{}
+        self.store.atomic_update(self.uid,last_retry)
+        result = self.finish(battle,2,teams={'team_a':[unit]*4096,'team_b':[]})
+        self.assertEqual(result['abyss_run']['status'],'failed')
+        self.assertEqual(result['abyss_run']['retries'],0)
+        self.assertIsNone(result['abyss_run']['battle'])
+
+    def test_legacy_summon_heavy_win_still_opens_choice(self):
+        battle = self.combat(self.enter(self.start()))
+        units = [{'aid':'A_2326_5','hp':100,'hp_max':1000} for _ in range(31)]
+        result = self.finish(battle,teams={'team_a':units,'team_b':units})['abyss_run']
+        self.assertIsNone(result['battle'])
+        self.assertIsNotNone(result['pending_choice'])
+        self.assertTrue(next(n for n in result['map'] if n['id']==result['current_node'])['completed'])
 
     def test_pending_choice_blocks_route_and_weak_takes_up_to_three(self):
         run = self.enter(self.start()); battle = self.combat(run)

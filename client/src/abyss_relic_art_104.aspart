@@ -13,7 +13,7 @@ class AbyssRelicArt104
          var texture:Texture = Texture.fromTexture(atlas(),new Rectangle(((kind - 1) % 5) * 100,int((kind - 1) / 5) * 100,92,93));
          holder.addChild(new Image(texture));
       }
-      holder.addChild(Equip.createRainbowFrame104());
+      holder.addChild(Equip.createQualityFrame104(AbyssCore104.relicFrameQuality(item)));
       holder.scaleX = holder.scaleY = size / 92;
       return holder;
    }

@@ -2346,14 +2346,24 @@ package com.meng52.game.module.map
          var survivors:int = 0;
          var request:Object = {};
          var self:GameMap = this;
-         while(i < team1List.length)
+         var snapshotCountA:int = team1List.length;
+         var snapshotCountB:int = team2List.length;
+         if(re.data.fight_kind == "abyss")
+         {
+            // initByOrgin puts the frozen roster first; addAvatar only appends
+            // summons. Keep original heroes (including dead ones and duplicate
+            // aids) without sending the unbounded history of replaced summons.
+            snapshotCountA = Math.min(snapshotCountA,re.data.orgin_team_a.length);
+            snapshotCountB = Math.min(snapshotCountB,re.data.orgin_team_b.length);
+         }
+         while(i < snapshotCountA)
          {
             snapshots.team_a.push(team1List[i].toDataObj());
             if(team1List[i].hp > 0) survivors++;
             i++;
          }
          i = 0;
-         while(i < team2List.length)
+         while(i < snapshotCountB)
          {
             snapshots.team_b.push(team2List[i].toDataObj());
             i++;

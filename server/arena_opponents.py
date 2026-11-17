@@ -12,6 +12,7 @@ import secrets
 
 from npc_cultivation import template_stars
 from bot_names import sample_bot_names
+from hero_catalog_105 import is_abandoned
 from mod_policy import runtime as mod_runtime, candidate_ids, policy_signature
 
 
@@ -48,7 +49,8 @@ def combat_config_signature(cfg: dict) -> str:
 def highest_rarity_heroes(cfg: dict) -> list[str]:
     """One highest configured A_1xxx color per hero family, including skins."""
     selected: dict[str, tuple[int, str]] = {}
-    candidates = [aid for aid in cfg.get("avatar", {}) if re.fullmatch(r"A_1\d{3}_[2-6]", aid)]
+    candidates = [aid for aid in cfg.get("avatar", {}) if re.fullmatch(r"A_1\d{3}_[2-6]", aid)
+                  and not is_abandoned(cfg,aid)]
     if mod_runtime(cfg):
         candidates = candidate_ids(cfg, candidates, "appearance.arena_enemy", include_new=True)
     for aid in candidates:

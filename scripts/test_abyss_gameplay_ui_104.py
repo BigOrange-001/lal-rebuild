@@ -31,6 +31,34 @@ const Starling={juggler:{delayCall:(f)=>f(),add:noop,removeTweens:noop}};
 
 
 class GameplayUITests(unittest.TestCase):
+    def test_skin_skill_limits_and_rest_validation_use_three_to_six(self):
+        rest=section('class AbyssRestPanel104','class AbyssPoolPanel104')
+        script=PRELUDE+'''const AbyssCore104={cfg:()=>({skin_skill_level:3,skin_skill_level_max:6}),isSkin:a=>a==='skin'};
+const panel={option:'skill'};
+'''
+        for name in ('skillBase105','skillMax105'):
+            script+='AbyssCore104.'+name+'='+method(PART,name,'aid')+';\n'
+        script+='panel.reasonFor='+method(rest,'reasonFor','h')+';\n'
+        script+='''assert.equal(AbyssCore104.skillBase105('skin'),3);assert.equal(AbyssCore104.skillMax105('skin'),6);
+assert.equal(AbyssCore104.skillBase105('normal'),5);assert.equal(AbyssCore104.skillMax105('normal'),10);
+assert.equal(panel.reasonFor({aid:'skin',slv:3}),null);assert.equal(panel.reasonFor({aid:'skin',slv:6}),'技能已满');
+assert.equal(panel.reasonFor({aid:'normal',slv:6}),null);assert.equal(panel.reasonFor({aid:'normal',slv:10}),'技能已满');'''
+        status,output=run(script);self.assertEqual(status,0,output)
+
+    def test_skin_selection_cap_and_refresh_command_use_current_node(self):
+        team=section('class AbyssTeamPanel104','class AbyssEnemyPanel104')
+        script=PRELUDE+'''const sent=[];
+const AbyssCore104={run:{current_node:'2-4-0',pool:{a:{aid:'skin-a'},b:{aid:'skin-b'},c:{aid:'normal'}}},
+isSkin:aid=>aid.startsWith('skin'),node:()=>({act:2}),send:(m,p,done)=>{sent.push([m,p]);done({});}};
+const panel={slots:['a','b',null,null,null],pending:{},refreshes:0,refresh:()=>panel.refreshes++};
+'''
+        script+='panel.canAdd='+method(team,'canAddSkin105','id')+';\n'
+        script+='panel.refreshEnemy='+method(team,'refreshEnemy105','')+';\n'
+        script+='''assert.equal(panel.canAdd('a'),false);assert.equal(panel.canAdd('c'),true);
+panel.slots[1]=null;assert.equal(panel.canAdd('b'),true);panel.refreshEnemy();
+assert.deepEqual(sent,[['user.abyss_refresh',{node_id:'2-4-0'}]]);assert.equal(panel.pending,null);assert.equal(panel.refreshes,1);'''
+        status,output=run(script);self.assertEqual(status,0,output)
+
     def test_choice_takes_one_to_count_and_always_offers_skip(self):
         choice = section('class AbyssChoicePanel104', 'class AbyssTeamPanel104')
         script = PRELUDE + '''const sent=[],buttons=[];let mapReturns=0;

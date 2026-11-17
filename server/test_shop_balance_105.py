@@ -12,7 +12,7 @@ from gameplay_economy import GameplayEconomy, PACKS
 from gameplay_roster import GameplayRosterEquipment
 from player_store import GameplayFault, PlayerStore
 from shop_balance_105 import (ADVANCED_ORANGE_PITY, GAMBLE_LADDER, RECHARGE_TIERS, VIP_DAILY_PACKS,
-                              daily_limit)
+                              daily_limit, VIP_PACK_PRICES)
 from vip_campaign import VIP_THRESHOLDS
 
 CONFIG_PATH = Path(__file__).resolve().parents[1] / "config/reconstruction/full-config.json"
@@ -85,6 +85,7 @@ class ShopBalanceTest(unittest.TestCase):
     def test_vip_daily_packs_limits_lock_and_reset(self):
         self._set(vip=7, coin=50_000)
         listed = self.eco.vip_daily_packs(self.uid, {})
+        self.assertEqual(len(listed['vip_packs']),15)
         rows = {row["id"]: row for row in listed["packs"]}
         self.assertTrue(rows["supreme"]["locked"])
         self.assertEqual(rows["culture"]["limit"], daily_limit(VIP_DAILY_PACKS[0], 7))
@@ -93,26 +94,45 @@ class ShopBalanceTest(unittest.TestCase):
         bought = self.eco.vip_daily_pack_buy(self.uid, {"pack_id": "equipment", "actionID": "e1"})
         self.assertEqual(len(bought["granted"]["equip"]), 1)
         self.assertNotIn("random_orange_equip", bought["granted"])
+        for n in range(1,rows['equipment']['limit']):
+            self.eco.vip_daily_pack_buy(self.uid,{'pack_id':'equipment','actionID':f'e-more-{n}'})
         with self.assertRaises(GameplayFault) as limit:
             self.eco.vip_daily_pack_buy(self.uid, {"pack_id": "equipment", "actionID": "e2"})
         self.assertEqual(limit.exception.code, "DailyLimit")
         self.clock.value += 86_400
         again = {row["id"]: row for row in self.eco.vip_daily_packs(self.uid, {})["packs"]}
         self.assertEqual(again["equipment"]["left"], again["equipment"]["limit"])
-        culture = self.store.profile_raw(self.uid)["attrs"].get("culture_book", 0)
+        heroes = len(self.store.profile_raw(self.uid)['avatars'])
         self.eco.vip_daily_pack_buy(self.uid, {"pack_id": "culture", "actionID": "c1"})
-        self.assertEqual(self.store.profile_raw(self.uid)["attrs"]["culture_book"], culture + 1500)
+        self.assertEqual(len(self.store.profile_raw(self.uid)['avatars']),heroes+50)
+
+    def test_combined_packs_show_locked_claimed_and_daily_rows(self):
+        self._set(vip=0,coin=100000)
+        result=self.eco.vip_daily_packs(self.uid,{})
+        self.assertEqual(len(result['packs']),6)
+        self.assertEqual(len(result['vip_packs']),15)
+        self.assertTrue(all(row['locked'] for row in result['vip_packs']+result['packs']))
+        self._set(vip=1,coin=100000)
+        with self.assertRaises(GameplayFault):
+            self.eco.vip_gift_buy(self.uid,{'vip_lv':1,'type':0,'actionID':'free-one'})
+        self.assertEqual(self.db.execute('SELECT COUNT(*) FROM gift_mail WHERE uid=?',(self.uid,)).fetchone()[0],1)
+        claimed=self.eco.vip_gift_buy(self.uid,{'vip_lv':1,'type':1,'actionID':'paid-one'})
+        row=next(r for r in claimed['vip_packs'] if r['id']=='vip-1-1')
+        self.assertEqual((row['left'],row['bought'],row['price']),(0,1,666))
+        self.assertEqual(len(claimed['packs']),6)
+        self.assertTrue(claimed['granted'])
+        self.assertTrue(self.eco.vip_gift_buy(self.uid,{'vip_lv':1,'type':1,'actionID':'paid-one'})['replayed'])
 
     def test_vip_one_time_packs_for_every_level(self):
         for level in range(1, 16):
             row = self.cfg["vip"][str(level)]
             self.assertTrue(row["gift_buy"]["data"])
-            self.assertEqual(row["gift_coin_buy"]["pay"][1], 600 * level)
+            self.assertEqual(row["gift_coin_buy"]["pay"][1], VIP_PACK_PRICES[level-1])
         self._set(vip=5, coin=10_000)
         heroes = len(self.store.profile_raw(self.uid)["avatars"])
         self.eco.vip_gift_buy(self.uid, {"vip_lv": 5, "type": 1, "actionID": "v5"})
         profile = self.store.profile_raw(self.uid)
-        self.assertEqual(profile["coin"], 10_000 - 3000)
+        self.assertEqual(profile["coin"], 10_000 - VIP_PACK_PRICES[4])
         self.assertEqual(len(profile["avatars"]), heroes + 1)
         with self.assertRaises(GameplayFault):
             self.eco.vip_gift_buy(self.uid, {"vip_lv": 5, "type": 1, "actionID": "v5-again"})

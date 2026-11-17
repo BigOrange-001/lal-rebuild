@@ -290,7 +290,7 @@
       "index": 48,
       "class": "com.meng52.game.ui.screen.PanelCenterPVP",
       "source": "client/src/stages/046_PanelCenterPVP.as",
-      "source_sha256": "70e3b91f58f9cdc684a7d75415cbbf1530a4bf4a13d6fe13e46d54ad4c4d2869"
+      "source_sha256": "2c1da99327b6e4721f476e82c7384caf47351975f3fadb3d41e3609972cb57a0"
     },
     {
       "index": 49,
@@ -362,7 +362,7 @@
       "index": 60,
       "class": "com.meng52.game.module.equip.Equip",
       "source": "client/src/stages/084_Equip.as",
-      "source_sha256": "e8c686ad181d1648458141de1e1b8a479fc21dbca6bfde3b0db070f0aa6d3a10"
+      "source_sha256": "19bd3a6478740cbb9c3ce280ba63ab2b271b9e3b6cce3e4954723c65a341be23"
     },
     {
       "index": 61,
@@ -566,7 +566,7 @@
       "index": 94,
       "class": "com.meng52.game.ui.element.ItemExchange",
       "source": "client/src/stages/092_ItemExchange.as",
-      "source_sha256": "b1ecc0c80e61f611c944592cbb2cb5ce77b6ac9982104c9a033c0f084c464fa9"
+      "source_sha256": "7454970cbd879be3d26926dba9251d2673a0e9b3fe15daf1e974f1edb2704ff3"
     },
     {
       "index": 95,
@@ -626,7 +626,7 @@
       "index": 104,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "c6c0b3047157167a0c975f9a5c7487060e4a1eccba9e27111251729d62c38812",
+      "source_sha256": "2d11ea01cc4b8c4b43387870811b30dc591da3d1f3470f1f5c33956df1bea6ee",
       "compiler": "air-mxmlc"
     },
     {
@@ -789,7 +789,7 @@
       "index": 131,
       "class": "com.meng52.game.ui.screen.PanelCenterShopVIP",
       "source": "client/src/stages/129_PanelCenterShopVIP.as",
-      "source_sha256": "ded386f4182db3e903b2bb7a5582956eb4b3ebaa6a8b04cca0bf67057b0098ef"
+      "source_sha256": "93583ceb8bba158420516f51d983b9f5ea59dcab71adb4a78f2e43494e539905"
     },
     {
       "index": 132,
@@ -843,7 +843,7 @@
       "index": 140,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "53bd470c7b5c3ac93e5c868473c11c8cb0b17f4f0a12034bae0c48b2557aa85e"
+      "source_sha256": "d4b38947a825d137dc813130f8669eb22971dbe2d725030461665dfa2e855a15"
     },
     {
       "index": 141,
@@ -939,7 +939,7 @@
       "index": 156,
       "class": "com.meng52.game.ui.screen.PanelExchange",
       "source": "client/src/stages/155_PanelExchange.as",
-      "source_sha256": "ab489fd41abdfe06f0b68ae465fd022f848eb36f9ff294f6ad89721af771fca6"
+      "source_sha256": "8b54f88f4fe0586b25940e417b9aa2d0b855bcec7ea53a704a85bbc83421a3ae"
     },
     {
       "index": 157,
@@ -1064,7 +1064,7 @@
       "index": 176,
       "class": "com.meng52.game.module.map.GameMap",
       "source": "client/src/stages/175_GameMap.as",
-      "source_sha256": "f051ae6415d4dda7fb9b7b98a9223098a756c7b4bb5dac58d380f16f85f85fa7"
+      "source_sha256": "9822e179f371e3d78879534c12989adef1b5aa589ef9f45cd116c7d2ca7a3142"
     },
     {
       "index": 177,

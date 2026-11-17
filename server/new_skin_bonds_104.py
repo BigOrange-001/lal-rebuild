@@ -29,6 +29,8 @@ def apply_new_skin_bonds_104(document):
         bond['minimum_quality'] = {family: 6 for family in bond['families']}
         definitions.append(bond)
     equipment = simple['equipment_bonds_104']
+    from equipment_rebinding_105 import rebind_new_skins, validate_bindings
+    rebind_new_skins(cfg,plan['equipment'])
     for aid, rows in plan['equipment'].items():
         if equipment.get(aid) or len(rows) != 2:
             raise ValueError('New skins need exactly two new equipment affinities')
@@ -49,6 +51,7 @@ def apply_new_skin_bonds_104(document):
     cfg['equipment_bonds_104']['heroes'] = len(equipment)
     cfg['equipment_bonds_104']['stats'] = sum(len(rows) for rows in plan['equipment'].values())
     simple['new_skin_bonds_104'] = plan['schema']
+    validate_bindings(cfg)
     return document
 
 

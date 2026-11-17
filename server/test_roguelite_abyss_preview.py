@@ -97,10 +97,10 @@ class PreviewTests(unittest.TestCase):
 
     def test_enemy_skin_and_orange_quotas_for_all_acts_layers_and_difficulties(self):
         scenarios=[(1,'weak',i,0,0) for i in (1,2,3)]
-        scenarios += [(1,'elite',5,1,0),(1,'normal',6,1,0),(1,'boss',7,2,0),
+        scenarios += [(1,'elite',5,1,0),(1,'normal',6,1,0),(1,'boss',7,2,1),
             (2,'normal',1,2,0),(2,'elite',5,2,1),(2,'boss',7,3,2),
-            (3,'normal',1,3,0),(3,'elite',3,3,2),(3,'normal',6,4,0),
-            (3,'elite',5,4,2),(3,'boss',7,5,4)]
+            (3,'normal',1,3,1),(3,'elite',3,3,2),(3,'normal',6,4,1),
+            (3,'elite',5,4,2),(3,'boss',7,5,3)]
         for difficulty in range(1,11):
             for act,kind,layer,oranges,skins in scenarios:
                 node={'id':f'{act}-{layer}-0','act':act,'layer':layer,'type':kind}

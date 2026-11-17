@@ -2,6 +2,7 @@
 
 * Medal exchange: 10 orange and 10 purple equipment, drawn from every
   ordinary equipment piece of that quality (no skill books, no exclusive gear).
+  A separate hero tab offers 2 eligible orange skins and 8 ordinary oranges.
 * Points exchange: 8 orange heroes, 6 from the permanent T2 skin list and 2
   ordinary orange heroes.
 
@@ -19,6 +20,8 @@ MEDAL_EQUIPMENT = (("6", 10, 80), ("5", 10, 30))   # quality, count, medal price
 EQUIPMENT_SLOTS = ("1", "3", "4", "5")              # weapon/armour slots; 6 = skill books
 INTEGRAL_SKINS = (6, 300)                           # count, points
 INTEGRAL_ORDINARY = (2, 200)
+MEDAL_HERO_SKINS = 2
+MEDAL_HERO_ORDINARY = 8
 
 
 def _rng(kind, day):
@@ -65,3 +68,21 @@ def daily_integral_offers(config, now):
                 if aid not in skins]
     rows += [[{"avatar": {aid: 1}}, ordinary_price] for aid in rng.sample(ordinary, ordinary_count)]
     return day, rows
+
+
+def daily_medal_hero_offers(config, now):
+    """Two eligible skin oranges and eight ordinary oranges per Shanghai day."""
+    from recruit_exchange import daily_orange_pool, MEDAL_PRICE
+    cfg = config.get('cfg', config)
+    day = game_day(now)
+    rng = _rng('medal-heroes', day)
+    channel = 'acquisition.exchange.hero'
+    skins = candidate_ids(config, cfg.get('ploy_system_simple', {}).get('extract_avatar', {})
+                          .get('permanent_exchange_hero_ids', []), channel)
+    skins = sorted({aid for aid in skins if aid in cfg.get('avatar', {}) and aid.endswith('_6')})
+    # Save-local policies can leave a smaller pool. Offer every eligible hero
+    # up to each daily limit, without duplicates or borrowing disabled heroes.
+    ordinary = daily_orange_pool(config, channel=channel, minimum=0)
+    selected = rng.sample(skins, min(len(skins), MEDAL_HERO_SKINS)) + rng.sample(ordinary, min(len(ordinary), MEDAL_HERO_ORDINARY))
+    return day, [{'kind':'avatar', 'id':aid, 'name':cfg['avatar'][aid]['name'],
+                  'quality':6, 'medal':MEDAL_PRICE} for aid in selected]

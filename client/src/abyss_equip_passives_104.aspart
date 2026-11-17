@@ -277,6 +277,7 @@
             var dotName:String = kind == 10 ? "burn" : "poison";
             var dotAmount:int = int(source.abyssApWithTalent104() * Number(normal.value));
             if(yasuoImmune104(dotName)) return;
+            if(s2AnnieImmune()) return;
             if(buffs["purify"])
             {
                removeBuff("purify",true);
@@ -289,6 +290,7 @@
             }
             kept.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2});
             abyssDots104 = kept;
+            s2AnnieStatus(dotName);
             abyssTrace104("normal_dot",source,this,{"kind":dotName,"amount":dotAmount,"duration":2});
          }
          else if(kind == 13 && Random.getRandom(1000000) < int(Number(normal.value) * 1000000))

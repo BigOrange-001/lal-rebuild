@@ -204,6 +204,7 @@ def after_damage(battle, source, target, health_damage, shield_damage, damage_ty
         # Dedicated DOT layers avoid poison's unrelated native hpMax term.
         dot = {'kind':'burn' if kind==10 else 'poison', 'source':source,
                'amount':int(battle._ap_with_talent(source)*affix['value']), 'left':2}
+        if battle._status_immune(target):return
         if getattr(battle,'yasuo_immune',lambda unit,kind:False)(target,dot['kind']):return
         if battle._buff(target,'purify'):
             # Match native debuff admission via the ordinary buff guard.
@@ -212,6 +213,7 @@ def after_damage(battle, source, target, health_damage, shield_damage, damage_ty
         rows = target.setdefault('_relic_dots',[])
         rows[:] = [d for d in rows if d['kind']!=dot['kind'] or d['source'] is not source]
         rows.append(dot)
+        battle._status_received(target,dot['kind'])
         trace(battle,'normal_dot',source,target,kind=dot['kind'],amount=dot['amount'],duration=2)
     elif kind==13 and battle.rng.get_random(1000000)<int(affix['value']*1000000):
         battle._add_buff(target,'stun',1,0,source=source)

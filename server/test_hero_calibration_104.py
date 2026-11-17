@@ -43,7 +43,7 @@ class CalibrationTests(unittest.TestCase):
                 rows=self.cfg['system_simple']['equipment_bonds_104'][aid]
                 ordinary=[r for r in rows if r['kind']=='ordinary']
                 for r in ordinary:
-                    sid=self.cfg['avatar'][aid]['pl'][10 if r['slot']=='normal' else 11]
+                    sid=self.cfg['avatar'][aid]['pl'][{'normal':10,'captain':11,'passive':13}[r['slot']]]
                     mapping=self.cfg['system_simple']['equipment_skill_variants_104'][aid][sid]
                     self.assertIn(r['equipment'],mapping)
 

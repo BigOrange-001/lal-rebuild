@@ -51,6 +51,10 @@ package com.meng52.game.ui.screen
    {
       
       public static var $tabBarSelectedIndex:int = 0;
+      // The transport coalesces get_rank_list while it is pending. Route that
+      // one reply to the current panel, rather than a disposed panel instance.
+      private static var arenaRankTarget105:PanelCenterPVP;
+      private var arenaRankRevision105:Number = -1;
       private var formationRows104:Array = [];
       private var raidRows105:Array = [];
       private var raidButton105:LOL_Scale9Button;
@@ -680,6 +684,7 @@ package com.meng52.game.ui.screen
       
       private function delPVPList() : void
       {
+         if(arenaRankTarget105 == this) arenaRankTarget105 = null;
          clearFormationControls104();
          clearArenaControls105();
          if(mBox_info)
@@ -849,7 +854,8 @@ package com.meng52.game.ui.screen
          var now:Number = SendAndSelect.$systemTimer_nowSecond;
          if(now - mChange_s < 2 || SendAndSelect.checkRepeat("user.refresh_pvp_opponents","")) return;
          mChange_s = now;
-         SendServiceAMFFun.send_user_refresh_pvp_opponents(re_get_rank_list,{
+         arenaRankTarget105 = this;
+         SendServiceAMFFun.send_user_refresh_pvp_opponents(receiveArenaRankList105,{
             "actionID":"arena-refresh-" + String(now) + "-" + String(Math.random())
          });
       }
@@ -865,7 +871,8 @@ package com.meng52.game.ui.screen
          }
          if(_loc3_ || param1)
          {
-            SendServiceAMFFun.send_user_get_rank_list(re_get_rank_list);
+            arenaRankTarget105 = this;
+            SendServiceAMFFun.send_user_get_rank_list(receiveArenaRankList105);
          }
          else
          {
@@ -873,9 +880,22 @@ package com.meng52.game.ui.screen
          }
       }
       
+      private static function receiveArenaRankList105(reply:Object) : void
+      {
+         var target:PanelCenterPVP = arenaRankTarget105;
+         if(target && target.stage) target.re_get_rank_list(reply);
+      }
+
       private function re_get_rank_list(param1:Object) : void
       {
-         if(this.stage == null) return;
+         if(this.stage == null || !param1 || int(param1.return_code) != 0 || !(param1.data is Array)) return;
+         if(param1.state_sync)
+         {
+            if(String(param1.state_sync.uid) != String(GlobalData.$userData.uid)) return;
+            var revision:Number = Number(param1.state_sync.revision);
+            if(revision < arenaRankRevision105) return;
+            arenaRankRevision105 = revision;
+         }
          if(param1.data[5])
          {
             if(!GlobalFunction.isVersionedProfileReceipt(param1))
@@ -888,7 +908,7 @@ package com.meng52.game.ui.screen
          {
             mTxt_pkTimes.text = (MainConfig.$isEnglish ? "Daily reward battles: " : "今日奖励场次：") + String(Math.min(10,Math.max(0,int(mPVP_list[6])))) + "/10";
          }
-         if(mTabBar.selectedIndex == 1)
+         if(mTabBar.selectedIndex == 1 && !mFun_status)
          {
             this.setList();
             this.addList();

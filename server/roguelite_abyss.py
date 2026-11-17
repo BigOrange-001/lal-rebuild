@@ -67,7 +67,8 @@ def excluded_families(cfg, native_placeholders=None):
     if native_placeholders is None:
         previous = cfg.get('system_simple', {}).get('roguelite_abyss', {})
         native_placeholders = set(previous.get('excluded_families', [])) or placeholder_families(cfg)
-    return sorted(set(native_placeholders) | set(COMMENTATOR_FAMILIES) | set(CHECK_IN_PLACEHOLDERS))
+    abandoned=cfg.get('system_simple',{}).get('abandoned_hero_families_105',[])
+    return sorted(set(native_placeholders) | set(COMMENTATOR_FAMILIES) | set(CHECK_IN_PLACEHOLDERS) | set(abandoned))
 
 
 def family(aid):
@@ -100,15 +101,17 @@ def apply_abyss_config(document, native_placeholders=None):
     orange_only = sorted(a for a in avatars if a.endswith('_6') and family(a) not in blocked and
                          family(a) in skin_families and a[:-1]+'5' not in avatars)
     cfg.setdefault('system_simple', {})['roguelite_abyss'] = {
-        'schema': 4, 'map_version': MAP_VERSION, 'level': 99, 'orange_panel_ratio':1.4,
+        'schema': 6, 'map_version': MAP_VERSION, 'level': 99, 'orange_panel_ratio':1.4,
         'standalone_orange_panel_ratio':.7, 'skill_level': 5, 'pool_cap': 20,
+        'skin_stat_multiplier': .66, 'skin_skill_level': 3, 'skin_skill_level_max': 6,
         'eligible_ordinary_purple':eligible,
         'initial_purple': initial, 'skin_purple': paired, 'skin_orange_only': orange_only,
         'skin_families': sorted(skin_families),
         'excluded_families': excluded,
         'enemy_skin_orange': sorted(a for a in skins if a.endswith('_6') and a in avatars
                                     and family(a) not in blocked),
-        'enemy_skin_counts': {'elite':[0,1,2], 'boss':[0,2,4]},
+        'enemy_skin_counts': {'normal':[0,0,1], 'elite':[0,1,2], 'boss':[1,2,3]},
+        'player_skin_limits':[1,2,3],
         'enemy_orange_counts': {'act1':1, 'act2':2, 'act3_early':3,
                                 'act3_late':4, 'boss':[2,3,5]},
         'candidate_policy': {
@@ -120,7 +123,8 @@ def apply_abyss_config(document, native_placeholders=None):
         'decks': {key: {'name':name, 'clear_required':clear,
                         'members':[f'A_{i}_5' for i in ids]}
                   for key,(name,clear,ids) in DECKS.items()},
-        'difficulties': [{'multiplier':m, 'retries':r} for m,r in DIFFICULTIES],
+        'difficulties': [{'multiplier':m, 'retries':r, 'enemy_refreshes':8-(i*4+4)//9}
+                         for i,(m,r) in enumerate(DIFFICULTIES)],
         'enemy_rates': {'weak':.55, 'normal':[.8,1,1.2], 'elite':1.3, 'boss':1.6},
         'boss_decks': {
             str(act): [[f'A_{i}_5' for i in ids] for ids in sets]
@@ -156,6 +160,16 @@ def normalize_account(profile, config):
     state['max_difficulty'] = min(10, max(state.get('cleared', [0]) or [0])+1)
     cleared = max(state['cleared'] or [0])
     state['decks'] = [key for key,(_,unlock,_) in DECKS.items() if cleared >= unlock]
+    run = profile.get('abyss_run')
+    if isinstance(run, dict) and run.get('status') == 'active' and rules(cfg).get('skin_families'):
+        records = list(run.get('pool', {}).values())
+        choice = run.get('pending_choice')
+        if isinstance(choice, dict):
+            records.extend(choice.get('options', []))
+        for hero in records:
+            if isinstance(hero, dict) and is_skin(hero.get('aid', ''), cfg):
+                hero['slv'] = skin_skill_level(hero.get('slv', 5), cfg)
+        # Pending battle/intents keep their frozen snapshots until settlement.
     return state
 
 
@@ -176,9 +190,16 @@ def unlocked_pool(profile, cfg):
     return keep(purple), keep(orange), keep(standalone)
 
 
-def hero_record(aid, temporary=False):
+def skin_skill_level(level, cfg):
+    plan = rules(cfg)
+    maximum = plan.get('skin_skill_level_max', 6)
+    return maximum if int(level) >= maximum else plan.get('skin_skill_level', 3)
+
+
+def hero_record(aid, temporary=False, cfg=None):
+    level = rules(cfg).get('skin_skill_level', 3) if cfg and is_skin(aid, cfg) else 5
     return {'id':aid.rsplit('_',1)[0], 'aid':aid, 'quality':int(aid[-1]),
-            'lv':99, 'slv':5, 'temporary':temporary}
+            'lv':99, 'slv':level, 'temporary':temporary}
 
 
 def standard_team(cfg, heroes, formation, team=1, scale=1):
@@ -195,7 +216,10 @@ def standard_team(cfg, heroes, formation, team=1, scale=1):
             raise GameplayFault('InvalidFormation', '布阵成员、路线或位置无效。')
         ids.add(hid)
         hero = heroes[hid]
-        unit = base_unit(cfg, hero['aid'],99,hero['slv'],line,pos,index==0,team,
+        level = hero['slv']
+        if is_skin(hero['aid'], cfg):
+            level = (rules(cfg).get('skin_skill_level', 3) if team == 2 else skin_skill_level(level, cfg))
+        unit = base_unit(cfg, hero['aid'],99,level,line,pos,index==0,team,
                          enforce_avatar_level_cap=False)
         if hero['aid'].endswith('_6'):
             purple = hero['aid'][:-1]+'5'
@@ -215,10 +239,13 @@ def standard_team(cfg, heroes, formation, team=1, scale=1):
         stats = {key:unit[key] for key in MAIN_STATS}
         stats.update(hit=0,flee=0,crit=0,tough=0)
         apply_stats(stats, unit['aid'], bonds)
+        skin_factor = rules(cfg).get('skin_stat_multiplier', 1) if is_skin(unit['aid'], cfg) else 1
         for key in MAIN_STATS:
-            unit[key] = max(1, int(stats[key]*scale))
+            panel = max(1, int(stats[key]*skin_factor)) if skin_factor != 1 else stats[key]
+            unit[key] = max(1, int(panel*scale))
         unit['hp_max'] = unit['hp']
-        unit['new_4attrs'] = {key:stats[key] for key in ('hit','flee','crit','tough')}
+        unit['new_4attrs'] = {key:int(stats[key]*skin_factor) if skin_factor != 1 else stats[key]
+                             for key in ('hit','flee','crit','tough')}
         for field,sid in skill_ids(cfg, unit['aid'], bonds).items():
             if field != 'leader_skill' or unit['leader']:
                 unit[field] = _native_skill_snapshot(cfg, sid, unit['slv'] if field=='skill' else 1)
@@ -363,6 +390,7 @@ def generate_map(seed, difficulty, cfg):
                 'col': col, 'type': kind, 'next': [], 'completed': False}
         node['enemy_preview'] = (generate_enemy_preview(seed, difficulty, node, cfg)
                                  if kind != 'rest' else [])
+        node['enemy_rules_schema'] = rules(cfg)['schema']
         nodes.append(node)
         return node
 
@@ -453,7 +481,8 @@ def _enemy_layout(rng, aids, cfg):
 def generate_enemy_preview(seed, difficulty, node, cfg):
     """Freeze identity/quality/formation only; never construct combat stats."""
     plan = rules(cfg)
-    rng = rng_for(seed, 'enemy', node['id'])
+    roll = node.get('enemy_roll', 0)
+    rng = rng_for(seed, 'enemy', node['id'], roll) if roll else rng_for(seed, 'enemy', node['id'])
     kind, act = node['type'], node['act']
     if kind == 'boss':
         aids = list(rng.choice(plan['boss_decks'][str(act)]))
@@ -488,7 +517,8 @@ def generate_enemy_preview(seed, difficulty, node, cfg):
     placement = _enemy_layout(rng, aids, cfg)
     # The captain is listed first: standard_team() gives index 0 the captain skill.
     order = [leader]+[i for i in range(len(aids)) if i != leader]
-    return [{'aid':aids[i],'quality':int(aids[i][-1]),'star':int(aids[i][-1]),'lv':99,'slv':5,
+    return [{'aid':aids[i],'quality':int(aids[i][-1]),'star':int(aids[i][-1]),'lv':99,
+             'slv':plan.get('skin_skill_level',3) if is_skin(aids[i],cfg) else 5,
              'line':placement[i][0],'pos':placement[i][1],'leader':i==leader,
              'is_skin':is_skin(aids[i],cfg),'limit_break':int(i==boosted)} for i in order]
 
@@ -506,7 +536,7 @@ def generate_enemies(seed, difficulty, node, cfg):
     if preview and not preview[0].get('leader', True):
         raise GameplayFault('AbyssUnavailable', '敌方阵容缺少队长。')
     line_length = cfg['system_simple']['battle'][1]
-    heroes = {str(i):hero_record(u['aid']) for i,u in enumerate(preview)}
+    heroes = {str(i):hero_record(u['aid'],cfg=cfg) for i,u in enumerate(preview)}
     # Legacy previews stored float positions; both round to the same native pos.
     formation = [[str(i),u['line'],min(1,max(0,u['pos']/line_length))] for i,u in enumerate(preview)]
     units = standard_team(cfg, heroes, formation, 2, multiplier)
@@ -572,7 +602,7 @@ def candidates(profile, run, node, cfg):
         selected.append(aid)
     if not selected: return None
     rng.shuffle(selected)
-    return {'node_id':node['id'], 'options':[hero_record(a) for a in selected],
+    return {'node_id':node['id'], 'options':[hero_record(a,cfg=cfg) for a in selected],
             # count is the maximum: any 1..count options may be taken, or skip.
             'count':min(policy['pick'],len(selected),20-len(run['pool'])),
             'can_skip':True}

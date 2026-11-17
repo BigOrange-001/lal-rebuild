@@ -63,6 +63,44 @@ class NativeBridgeTests(unittest.TestCase):
         self.assertIsNone(b._buff(owner,'stun'))
         self.assertFalse(b._js_contexts)
 
+    def test_annie_non_buff_status_paths_respect_immunity_and_retaliate(self):
+        for path in ('infection','spread','bleed','mark','bomb','relic'):
+            for mode in ('ready','immune','cooldown','purify'):
+                if path in ('mark','bomb') and mode=='purify':continue
+                with self.subTest(path=path,mode=mode):
+                    b=self.battle(1221);annie,ally=b.a;enemy=b.b[0]
+                    # Put Annie first in the ordinary caster's target order.
+                    ally['pos']=2600
+                    if mode=='immune':
+                        b.js.eval(f'unit({b.uid(annie)}).skin2.anniePurifyUntil=999')
+                    elif mode=='cooldown':
+                        b.js.eval(f'unit({b.uid(annie)}).skin2.annieCoreNext=999')
+                    elif mode=='purify':
+                        b._add_buff(annie,'purify',1,2)
+                    skill=dict(skid='TEST',pl=[0,0,700],skills=[['manual_ability','malzahar_n',1]])
+                    if path in ('infection','bomb'):
+                        with b.context(enemy,'active',skill):
+                            b.execute(enemy,'malzahar_n' if path=='infection' else 'kaelthas_n',1,skill)
+                    elif path=='spread':
+                        ally['hp']=0;ally['pos']=annie['pos']-100
+                        b.state(ally)[('malz',7)]={'owner':enemy,'hops':0,'ticks':2,'until':1,'tick_damage':100,'debuff':True}
+                        b.death(ally)
+                    elif path=='bleed':
+                        b._add_manual_skill_dot(annie,'bleed-test','bleed',100,0,2,enemy,6,False)
+                    elif path=='mark':
+                        b.mark(enemy,annie,'test',2)
+                    else:
+                        from unittest.mock import patch
+                        from abyss_equip_passives import after_damage
+                        with patch('abyss_equip_passives.active_normal',return_value={'affix':{'id':10,'value':.5},'hit':set()}):
+                            after_damage(b,enemy,annie,100,0,1,None)
+                    entries=[v for k,v in b.state(annie).items() if isinstance(k,tuple) and isinstance(v,dict) and v.get('debuff')]
+                    remaining=bool(entries or annie.get('_manual_dots') or annie.get('_relic_dots'))
+                    self.assertEqual(remaining,mode=='cooldown')
+                    self.assertEqual(b._buff(enemy,'poison') is not None,mode=='ready')
+                    self.assertFalse(b._js_contexts)
+                    if mode=='purify':self.assertEqual(b._buff(annie,'purify').value,1)
+
     def test_native_rebirth_precedes_bless_and_is_not_counted_as_healing(self):
         b=self.battle(1216);bird=b.a[0];enemy=b.b[0]
         b._add_buff(bird,'bless',1)

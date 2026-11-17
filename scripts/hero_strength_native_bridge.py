@@ -198,6 +198,12 @@ class NativeSkinBattle(MeasuredBattle):
         if getattr(self,'_bridge_ready',False):self.invoke(u,'skin2ClearDebuffs')
         return super()._remove_all_debuff(u)
 
+    def _status_immune(self, target):
+        return bool(getattr(self,'_bridge_ready',False) and self.invoke(target,'s2AnnieImmune'))
+
+    def _status_received(self, target, kind):
+        if getattr(self,'_bridge_ready',False):self.invoke(target,'s2AnnieStatus',kind)
+
     def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
         from battle_engine import _DEBUFFS
         ready = getattr(self, '_bridge_ready', False)

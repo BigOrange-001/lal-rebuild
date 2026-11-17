@@ -138,8 +138,9 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         return bool(entry and entry['until']>=self.state(target)['serial'])
 
     def mark(self, owner, target, mark, duration, scale=1):
-        if target.get('hp',0)>0:
+        if target.get('hp',0)>0 and not self._status_immune(target):
             self.state(target)[('mark',mark,self.state(owner)['index'])]=dict(until=self.state(target)['serial']+duration,owner=owner,debuff=True,scale=scale)
+            self._status_received(target,'mark')
 
     def marked_target(self, owner, mark, distance, order='nearest'):
         ctx=self._context(owner)
@@ -447,8 +448,11 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                 enemies=en(600)
                 if not enemies:return False
                 target=enemies[0]
-                if self._buff(target,'purify'):self._remove_buff(target,'purify',consume=True)
-                else:self.state(target)[('malz',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,ticks=3,tick_damage=self._get_damage(owner)*scale*damage*self.hero_output_rate_104(owner),hops=0,debuff=True)
+                if self._status_immune(target):pass
+                elif self._buff(target,'purify'):self._remove_buff(target,'purify',consume=True)
+                else:
+                    self.state(target)[('malz',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,ticks=3,tick_damage=self._get_damage(owner)*scale*damage*self.hero_output_rate_104(owner),hops=0,debuff=True)
+                    self._status_received(target,'poison')
             case 'malzahar_c':
                 enemies=en(650)
                 if not enemies:return False
@@ -506,8 +510,9 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                 enemies=en(600)
                 if not enemies:return False
                 target=enemies[0]
-                if hit(target,.8*scale,2) and target['hp']>0 and not self._buff(target,'purify'):
+                if hit(target,.8*scale,2) and target['hp']>0 and not self._buff(target,'purify') and not self._status_immune(target):
                     self.state(target)[('bomb',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,coefficient=self.equipment_part(skill,'bomb_burst',1.2)*scale,damage=damage,debuff=True)
+                    self._status_received(target,'bomb')
             case 'kaelthas_c':
                 enemies=en(700)
                 if not enemies:return False
@@ -894,8 +899,12 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                 state.pop(key,None);owner=entry['owner']
                 targets=self.candidates(owner,self._team_number(unit),unit['line'],unit['pos'],300,1,excluded=[unit])
                 if targets:
+                    if self._status_immune(targets[0]):continue
+                    if self._buff(targets[0],'purify'):
+                        self._remove_buff(targets[0],'purify',consume=True);continue
                     entry['hops']=1;entry['until']=self.state(targets[0])['serial']+1
                     self.state(targets[0])[key]=entry
+                    self._status_received(targets[0],'poison')
 
     def turn_start(self, owner):
         state=self.state(owner);state['serial']+=1;serial=state['serial']

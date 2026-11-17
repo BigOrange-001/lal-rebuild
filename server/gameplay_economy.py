@@ -1149,11 +1149,16 @@ class GameplayEconomy:
         key = self._op_key("user.recruit_medal_exchange", params)
         def mutate(profile):
             now = self._now()
-            day, items = daily_medal_offers(self.config, now)
+            day = game_day(now)
             if requested_day != day:
                 raise GameplayFault("DailyRecruitExpired", "今日兑换列表已更新，请刷新后重试")
-            _, heroes = daily_medal_hero_offers(self.config, now)
-            item = next((row for row in items + heroes if row["id"] == eid), None)
+            if eid.startswith('E_'):
+                _, items = daily_medal_offers(self.config, now)
+            elif eid.startswith('A_'):
+                _, items = daily_medal_hero_offers(self.config, now)
+            else:
+                items = []
+            item = next((row for row in items if row["id"] == eid), None)
             if item is None:
                 raise GameplayFault("UnknownExchange", "该物品不在今日勋章兑换列表中")
             price = int(item["medal"])

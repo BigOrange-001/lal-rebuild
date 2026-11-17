@@ -80,9 +80,9 @@ def daily_medal_hero_offers(config, now):
     skins = candidate_ids(config, cfg.get('ploy_system_simple', {}).get('extract_avatar', {})
                           .get('permanent_exchange_hero_ids', []), channel)
     skins = sorted({aid for aid in skins if aid in cfg.get('avatar', {}) and aid.endswith('_6')})
-    if len(skins) < MEDAL_HERO_SKINS:
-        raise ValueError('Fewer than two exchangeable orange skin heroes are configured')
-    ordinary = daily_orange_pool(config, channel=channel, minimum=MEDAL_HERO_ORDINARY)
-    selected = rng.sample(skins, MEDAL_HERO_SKINS) + rng.sample(ordinary, MEDAL_HERO_ORDINARY)
+    # Save-local policies can leave a smaller pool. Offer every eligible hero
+    # up to each daily limit, without duplicates or borrowing disabled heroes.
+    ordinary = daily_orange_pool(config, channel=channel, minimum=0)
+    selected = rng.sample(skins, min(len(skins), MEDAL_HERO_SKINS)) + rng.sample(ordinary, min(len(ordinary), MEDAL_HERO_ORDINARY))
     return day, [{'kind':'avatar', 'id':aid, 'name':cfg['avatar'][aid]['name'],
                   'quality':6, 'medal':MEDAL_PRICE} for aid in selected]

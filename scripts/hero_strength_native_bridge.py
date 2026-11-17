@@ -12,6 +12,7 @@ from battle_engine import _to_int
 
 BOOT = r'''
 let skin2Depth=0;
+let skin2AnnieChainDepth=0,skin2AnnieChain=[];
 const int=x=>Math.trunc(Number(x)||0),Tools={toInt:int};
 const GameMapConfig={LINE_POS:3000};
 const Buff={LIST_BUFF:[],LIST_DEBUFF:[]};
@@ -53,7 +54,7 @@ const GameMap={currentMap:{getAliveList:team=>call(-1,'alive',[team]),isEnd:lane
 const currentAbilityAttack=()=>call(-1,'context');
 const beginAbilityAttack=(owner,kind)=>call(owner.__uid,'begin',[kind]);
 const endAbilityAttack=()=>call(-1,'end');
-function reset(){units.clear();skin2Depth=0;}
+function reset(){units.clear();skin2Depth=0;skin2AnnieChainDepth=0;skin2AnnieChain=[];}
 function invoke(id,name,args){let a=dec(JSON.parse(args));let r=unit(id)[name](...a);if(name==='executeSkin2'&&a[1].abilityCooldownOverride!==undefined)call(id,'cooldown',[a[1].abilityCooldownOverride]);return r;}
 '''
 
@@ -195,6 +196,24 @@ class NativeSkinBattle(MeasuredBattle):
     def _remove_all_debuff(self,u):
         if getattr(self,'_bridge_ready',False):self.invoke(u,'skin2ClearDebuffs')
         return super()._remove_all_debuff(u)
+
+    def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
+        from battle_engine import _DEBUFFS
+        ready = getattr(self, '_bridge_ready', False)
+        if ready and kind in _DEBUFFS and self.invoke(unit, 's2AnnieImmune'):
+            return
+        previous = unit.get('_buffs', {}).get(kind)
+        before_value = previous.value if previous else None
+        result = super()._add_buff(unit, kind, rounds, value, source, poison_hp_rate_104)
+        accepted = unit.get('_buffs', {}).get(kind)
+        if ready and accepted and (accepted is not previous or accepted.value != before_value):
+            self.invoke(unit, 's2AnnieStatus', kind)
+        return result
+
+    def control(self, owner, target, kind, duration, value=0):
+        if getattr(self, '_bridge_ready', False) and target is not None and self.invoke(target, 's2AnnieImmune'):
+            return
+        return super().control(owner, target, kind, duration, value)
 
     def turn_start(self,u):
         result=super().turn_start(u)

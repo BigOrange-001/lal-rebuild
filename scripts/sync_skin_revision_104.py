@@ -18,10 +18,41 @@ s=s.replace('return skin2CanCast(kind);','return skin2CanCast(kind,sourceSkill);
 once('         var center:Avatar;\n         switch(kind)','         if(kind.indexOf("skin2_")==0) return skin2CanCast(kind,sourceSkill);\n         var center:Avatar;\n         switch(kind)')
 once('         if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;','         skin2Event(event,source,target,amount,overheal);\n         if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;')
 once('         initializingFightAttributes = false;','         initializingFightAttributes = false;\n         skin2Initialize();')
+once('''      protected function showBuff(param1:Buff) : void
+      {
+         if(!m_buff)''', '''      protected function showBuff(param1:Buff) : void
+      {
+         // Cleansing can run before this delayed visual callback. Only render
+         // a Buff still owned by the unit, including independent DOT visuals.
+         var active:Boolean = false;
+         for each(var current:Buff in buffs) if(current === param1) active = true;
+         if(!active && manualSkillDots)
+            for each(var dot:Object in manualSkillDots) if(dot && dot.visual === param1) active = true;
+         if(!active) return;
+         if(!m_buff)''')
+once('         if(yasuoImmune104(param1)) return;',
+     '         if(yasuoImmune104(param1)) return;\n         if(s2AnnieImmune() && Buff.LIST_DEBUFF.indexOf(param1)>=0) return;')
+once('         if(param1=="stun" && hp>0 && buffs.stun) kaisaNotifyStun104(this);',
+     '         if(param1=="stun" && hp>0 && buffs.stun) kaisaNotifyStun104(this);\n         if(_loc9_) s2AnnieStatus(param1);')
+once('         if(yasuoImmune104(param2)) return;',
+     '         if(yasuoImmune104(param2)) return;\n         if(s2AnnieImmune()) return;')
+once('         showBuff(_loc2_);\n      }\n\n      public function hasManualDamageOverTime()',
+     '         showBuff(_loc2_);\n         s2AnnieStatus(param2);\n      }\n\n      public function hasManualDamageOverTime()')
+once('         if(target.abilityState.channel && ["stun","silence","root","pull","push"].indexOf(kind)>=0) return;',
+     '         if(target.s2AnnieImmune()) return;\n         if(target.abilityState.channel && ["stun","silence","root","pull","push"].indexOf(kind)>=0) return;')
+once('         if(target && target.hp > 0) target.abilityState["mark_"+kind+"_"+abilityIndex] = {until:target.abilitySerial+duration,owner:this,debuff:true,scale:scale};',
+     '         if(target && target.hp > 0 && !target.s2AnnieImmune())\n         {\n            target.abilityState["mark_"+kind+"_"+abilityIndex] = {until:target.abilitySerial+duration,owner:this,debuff:true,scale:scale};\n            target.s2AnnieStatus("mark");\n         }')
+once('               if(target.buffs.purify) {target.removeBuff("purify",true); break;}',
+     '               if(target.s2AnnieImmune()) break;\n               if(target.buffs.purify) {target.removeBuff("purify",true); break;}')
+malz='               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1)*scale*manualDamageMultiplier*heroSkillOutputRate104(),hops:0,debuff:true};'
+once(malz,malz+'\n               target.s2AnnieStatus("poison");')
+bomb='               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={abyssRelicContext104:abyssCaptureContext104(this),owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};'
+once(bomb,bomb.replace('&& !target.buffs.purify)', '&& !target.buffs.purify && !target.s2AnnieImmune())').replace(') target.abilityState', ')\n               {\n                  target.abilityState')+'\n                  target.s2AnnieStatus("bomb");\n               }')
 once('         if(abilityTurnStart())\n         {','         if(abilityTurnStart())\n         {\n            if(skin2.eggUntil && hp > 0 && checkBuff()) dead();')
 once('         manualOwnerActionSerial = 0;','         manualOwnerActionSerial = 0;\n         skin2 = {};')
 once('         return hp <= 0;\n      }\n      public static function skillAreaRadius','         return hp <= 0 || Boolean(skin2.eggUntil);\n      }\n      public static function skillAreaRadius')
-once('            _loc9_ = buffs["shield"] as Buff;\n            if(_loc9_)','            param1 = int(skin2Incoming(param1,param7 || param5,param4));\n            _loc9_ = buffs["shield"] as Buff;\n            if(_loc9_)')
+if 'param1 = int(skin2Incoming(param1,param7 || param5,param4));' not in s:
+ once('            _loc9_ = buffs["shield"] as Buff;\n            if(_loc9_)','            param1 = int(skin2Incoming(param1,param7 || param5,param4));\n            _loc9_ = buffs["shield"] as Buff;\n            if(_loc9_)')
 once('            var bookHealer:Avatar = param7 || param5 || this;','            param1 = int(skin2Incoming(param1,param7 || param5,param4));\n            var bookHealer:Avatar = param7 || param5 || this;')
 once('         if(hp <= 0 && buffs["bless"])','         skin2Lethal();\n         if(hp <= 0 && buffs["bless"])')
 once('         var modKilled:Boolean = abilityHpBefore > 0 && hp <= 0;','         if(param4==6 && param7 && param7.s2Family()==1209 && modActualDamage>0) param7.skin2PoisonTick(this);\n         var modKilled:Boolean = abilityHpBefore > 0 && hp <= 0;')

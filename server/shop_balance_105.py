@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import copy
 import re
+import random
 
-SCHEMA = "shop-balance-105"
+SCHEMA = "shop-balance-105-v2"
 
 # ---------------------------------------------------------------- recharge
 # Coin amounts; the first number in pay_config is nominal yuan (coin / 10).
@@ -59,32 +60,34 @@ GAMBLE_LADDER = [[0, 0], [20, 30], [40, 65], [60, 100], [80, 140], [100, 200]]
 ADVANCED_ORANGE_PITY = 60
 
 # ------------------------------------------------------------- VIP packs
-# Daily packs: unlock VIP, coin price, base daily limit and reward. One more
-# purchase per day for every four VIP levels above the unlock level.
+# Daily packs: only books and equipment grow their caps with VIP level;
+# all remaining packs have two purchases per Shanghai day.
 VIP_DAILY_PACKS = (
-    {"id": "culture", "name": "培养补给", "vip": 1, "price": 300, "limit": 2,
-     "reward": {"culture_book": 1500, "gold": 20}},
-    {"id": "dust", "name": "粉尘补给", "vip": 3, "price": 400, "limit": 2,
-     "reward": {"attrs": {"dust": [300, 300, 300, 300]}, "dn_stone": 150}},
-    {"id": "dn_stone", "name": "德诺石补给", "vip": 5, "price": 600, "limit": 1,
-     "reward": {"dn_stone": 600, "culture_book": 1000}},
-    {"id": "equipment", "name": "装备补给", "vip": 7, "price": 3000, "limit": 1,
-     "reward": {"random_orange_equip": 1, "attrs": {"stardust": 200}}},
-    {"id": "hero", "name": "英雄补给", "vip": 9, "price": 2500, "limit": 1,
-     "reward": {"random_orange_soul": 80}},
-    {"id": "stardust", "name": "星辉补给", "vip": 12, "price": 2000, "limit": 1,
-     "reward": {"attrs": {"stardust": 1500}, "gold": 60}},
-    {"id": "supreme", "name": "至尊补给", "vip": 15, "price": 5000, "limit": 1,
-     "reward": {"culture_book": 6000, "dn_stone": 1500,
-                "attrs": {"dust": [1000, 1000, 1000, 1000]}, "gold": 200}},
+    {"id": "culture", "name": "经验书补给", "vip": 1, "price": 1000, "limit": 2,
+     "limit_step":4, "max_limit":5, "reward": {"avatar":{"A_6998_5":50}}},
+    {"id": "dust", "name": "粉尘补给", "vip": 3, "price": 1000, "limit": 2,
+     "reward": {"attrs": {"dust": [400, 400, 400, 400]}}},
+    {"id": "equipment", "name": "装备补给", "vip": 7, "price": 6666, "limit": 4,
+     "limit_step":2, "max_limit":8, "reward": {"random_orange_equip": 1}},
+    {"id": "hero", "name": "英雄补给", "vip": 9, "price": 8888, "limit": 2,
+     "reward": {"random_orange_hero":1}},
+    {"id": "stardust", "name": "星辉补给", "vip": 12, "price": 2000, "limit": 2,
+     "reward": {"attrs": {"stardust": 1000}}},
+    {"id": "supreme", "name": "至尊补给", "vip": 15, "price": 30000, "limit": 2,
+     "reward": {"random_skin_orange":1}},
 )
-MILESTONE_HERO_LEVELS = (5, 10, 15)
+VIP_PACK_PRICES = (666,1888,2888,3888,4888,6666,8888,10000,11888,12666,
+                   23333,26666,28888,32888,88888)
+VIP_DAILY_COINS = (100,250,450,800,1100,1400,1800,2400,3000,4000,
+                   5000,6500,8000,10000,15000)
 
 
 def daily_limit(pack, vip_lv):
     if vip_lv < pack["vip"]:
         return 0
-    return pack["limit"] + (vip_lv - pack["vip"]) // 4
+    step=pack.get('limit_step')
+    extra=(vip_lv-pack['vip'])//step if step else 0
+    return min(pack.get('max_limit',pack['limit']),pack['limit']+extra)
 
 
 def _quality(aid):
@@ -162,26 +165,40 @@ def _mystery(cfg, pools):
 
 
 def _vip(cfg, pools):
-    """Free and paid one-time packs for VIP1-15."""
-    heroes = pools["orange"]
+    """Mail free milestones; publish concrete, deterministic paid rewards."""
+    from recruit_exchange import daily_orange_pool
+    from daily_exchange_105 import equipment_pool
+    from gameplay_common import equipment_exclusive_ids
+    heroes = daily_orange_pool(cfg,minimum=5)
+    skins = sorted(aid for aid in cfg['system_simple'].get('skin_hero_ids',[])
+                   if aid.endswith('_6') and aid in cfg['avatar'])
+    ordinary_equips = equipment_pool(cfg,'6')
+    exclusives = sorted(eid for eid in equipment_exclusive_ids(cfg) if eid.endswith('_6'))
+    if len(skins)<5 or len(exclusives)<12 or not ordinary_equips:
+        raise ValueError('VIP hero or equipment reward pools are incomplete')
     for level in range(1, 16):
         row = cfg.get("vip", {}).get(str(level))
         if not isinstance(row, dict):
             continue
         free = {"coin": 100 * level, "culture_book": 300 * level, "dn_stone": 50 * level, "gold": 10 * level}
-        paid = {"culture_book": 1500 * level, "dn_stone": 300 * level,
-                "attrs": {"dust": [200 * level] * 4}, "gold": 30 * level}
-        if level in MILESTONE_HERO_LEVELS and heroes:
-            # A fixed, readable milestone hero per level (deterministic pick).
-            paid["avatar"] = {heroes[(level * 7) % len(heroes)]: 1}
-        price = 600 * level
+        rng=random.Random(f'vip-paid-105-v2:{level}')
+        hero_pool=heroes if level<=5 else skins
+        count=1 if level<=10 else 2 if level<15 else 5
+        paid={'avatar':{aid:1 for aid in rng.sample(hero_pool,count)}}
+        if level>=6:
+            equipment=ordinary_equips if level<=10 else exclusives
+            paid['equip']={eid:1 for eid in rng.sample(equipment,12 if level==15 else 1)}
+        price = VIP_PACK_PRICES[level-1]
+        row['gift']=[{'coin':VIP_DAILY_COINS[level-1]}]
         row["gift_buy"] = {"pay": [price // 2], "data": free}
         row["gift_coin_buy"] = {"pay": [price * 3, price, 1], "data": paid}
         row["gift_buy_limit"] = 1
     cfg.setdefault("system_simple", {})["vip_daily_packs_105"] = [
         {**copy.deepcopy(pack)} for pack in VIP_DAILY_PACKS]
     cfg["system_simple"]["vip_daily_pack_pools_105"] = {
-        "orange_equip": pools["orange_equip_open"], "orange_soul": pools["orange"]}
+        "orange_equip": ordinary_equips, "orange_soul": pools["orange"],
+        "ordinary_orange":heroes, "skin_orange":skins}
+    cfg['system_simple']['vip_free_rewards_by_mail_105']=True
 
 
 def _lottery(cfg):

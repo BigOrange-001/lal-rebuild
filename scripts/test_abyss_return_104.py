@@ -13,6 +13,42 @@ class AbyssReturnTests(unittest.TestCase):
         result = subprocess.run(['node'], input=script, capture_output=True, text=True, encoding='utf-8', cwd=ROOT)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_settlement_snapshots_exclude_accumulated_summons_only_in_abyss(self):
+        source = (ROOT / 'client/src/stages/175_GameMap.as').read_text('utf-8')
+        script = r'''
+const assert=require('node:assert/strict');
+let sent=[],ready=0;
+const GlobalData={$abyss104:{finish:null}};
+const GameMapLayer={gl:{uiLayer:{setCanReturn:()=>ready++}}};
+const SendServiceAMFFun={send_user_battle_finish:(done,request,key,method)=>sent.push({done,request,key,method})};
+function avatar(aid,hp){return {hp,toDataObj:()=>({aid,hp,hp_max:1000})};}
+const originalA=[avatar('hero-a',-300),avatar('hero-b',0),avatar('hero-c',0)];
+const originalB=[avatar('enemy-a',900),avatar('enemy-b',50),avatar('enemy-c',0)];
+// Same-id clones must also stay out of the original heroes' health snapshots.
+const summons=Array.from({length:80},()=>avatar('hero-a',-20));
+const panel={team1List:originalA.concat(summons),team2List:originalB.concat(summons),
+re:{data:{fight_id:'saved-fight',fight_kind:'abyss',metadata:{run_id:'run',node_id:'node'},
+orgin_team_a:originalA,orgin_team_b:originalB},params:{}},gameMapData:{id:'abyss'},diff:0,
+winner:2,settlementPending:true};
+'''
+        script += 'panel.submit=' + method(source, 'submitBattleFinish', '') + ';\n'
+        script += r'''
+panel.submit();
+assert.deepEqual(sent[0].request.teams.team_a,originalA.map(u=>u.toDataObj()));
+assert.deepEqual(sent[0].request.teams.team_b,originalB.map(u=>u.toDataObj()));
+assert.equal(panel.team1List.length,83);assert.equal(panel.team2List.length,83);
+assert.equal(panel.settlementPending,true);assert.equal(ready,0);
+panel.submit();assert.deepEqual(sent[1].request,sent[0].request);assert.equal(sent[1].key,sent[0].key);
+sent[1].done({return_code:0,data:{sign:2,abyss_run:{battle:null,retries:19}}});
+assert.equal(panel.settlementPending,false);assert.equal(ready,1);
+assert.equal(GlobalData.$abyss104.finish.sign,2);
+assert.equal(GlobalData.$abyss104.finish.abyss_run.battle,null);
+panel.re.data.fight_kind='exploration';panel.submit();
+assert.equal(sent[2].request.teams.team_a.length,83);
+assert.equal(sent[2].request.teams.team_b.length,83);
+'''
+        self.run_js(script)
+
     def test_battle_return_waits_for_receipt_then_leaves_exploration_mode(self):
         source = (ROOT / 'client/src/stages/163_UiLayer.as').read_text('utf-8')
         script = r'''

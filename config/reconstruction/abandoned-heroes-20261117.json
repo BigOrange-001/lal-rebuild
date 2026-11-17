@@ -1,0 +1,11 @@
+{
+  "schema": "hero-development-status-v1",
+  "decision_date": "2026-11-17",
+  "reason": "用户确认以下四名英雄归入废案，不再继续制作或用于新内容随机生成；保留原始定义以兼容历史存档与固定关卡。",
+  "abandoned": [
+    {"family": "A_1224", "name": "霜羽游侠"},
+    {"family": "A_1225", "name": "奥能行者"},
+    {"family": "A_1997", "name": "裁决卫士"},
+    {"family": "A_1999", "name": "反转剑士"}
+  ]
+}

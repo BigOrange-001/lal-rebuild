@@ -21,6 +21,7 @@ import random
 import re
 
 from battle_engine import serialize_player_team
+from hero_catalog_105 import is_abandoned
 from cultivation_rules import active as weighted_active, cap as weighted_cap, rules as weighted_rules
 from equipment_bonds_104 import equipment_slot
 from equipment_upgrade_cost import MAX_EQUIPMENT_LEVEL
@@ -82,7 +83,8 @@ class NpcCultivator:
     # ------------------------------------------------------------------ pools
     def family_forms(self, channel: str) -> dict[str, dict[int, str]]:
         """Every configured A_1xxx quality form, grouped by hero family."""
-        candidates = [aid for aid in self.heroes if re.fullmatch(r"A_1\d{3}_[2-6]", aid)]
+        candidates = [aid for aid in self.heroes if re.fullmatch(r"A_1\d{3}_[2-6]", aid)
+                      and not is_abandoned(self.cfg,aid)]
         if mod_runtime(self.cfg):
             candidates = candidate_ids(self.cfg, candidates, channel, include_new=True)
         forms: dict[str, dict[int, str]] = {}

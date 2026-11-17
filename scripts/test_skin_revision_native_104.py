@@ -50,7 +50,10 @@ def runtime_data():
   try:
    cfg=b.config['cfg']
    avatars={aid:dict(family=h['skin_revision_v2_104'],skills=[_native_skill_snapshot(cfg,h['pl'][slot],10 if slot==10 else 1) for slot in (10,11,13)]) for aid,h in cfg['avatar'].items() if aid.endswith('_6') and h.get('skin_revision_v2_104')}
-   _runtime_data=dict(avatar=avatars,skill=cfg['skill'])
+   from equipment_bonds_104 import equipped_bonds,skill_id
+   aid='A_1221_6';source=cfg['avatar'][aid]['pl'][13]
+   sid=skill_id(cfg,aid,source,equipped_bonds(cfg,aid,['E_4999_6']))
+   _runtime_data=dict(avatar=avatars,skill=cfg['skill'],annie_core=_native_skill_snapshot(cfg,sid,1))
   finally:b.clock.close();b.db.close()
  return _runtime_data
 

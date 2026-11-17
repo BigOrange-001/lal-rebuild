@@ -34,7 +34,8 @@ def create_intent(profile, kind, metadata, team_a, team_b, ttl=3600, now=None, *
     return {"fight_id": fight_id, "seed": seed}
 
 
-def consume_intent(profile, kind, params, metadata_keys=(), allowed_signs=(1, 2), now=None, *, config=None):
+def consume_intent(profile, kind, params, metadata_keys=(), allowed_signs=(1, 2), now=None, *, config=None,
+                   max_snapshot_units=30):
     """Validate and consume one intent in the same transaction as settlement."""
     if not isinstance(params, dict):
         raise GameplayFault("InvalidBattle", "Battle finish params must be an object")
@@ -64,16 +65,16 @@ def consume_intent(profile, kind, params, metadata_keys=(), allowed_signs=(1, 2)
     snapshots = params.get("teams", {})
     if not isinstance(snapshots, dict):
         raise GameplayFault("InvalidResult", "Team snapshots must be an object")
-    validate_snapshots(snapshots, intent)
+    validate_snapshots(snapshots, intent, max_units=max_snapshot_units)
     intents.pop(fight_id)
     return {**copy.deepcopy(intent), "sign": sign, "snapshots": copy.deepcopy(snapshots)}
 
 
-def validate_snapshots(snapshots, intent):
+def validate_snapshots(snapshots, intent, *, max_units=30):
     """Bound client diagnostics; snapshots are never treated as proof of victory."""
     for name, expected in (("team_a", intent.get("team_a", [])), ("team_b", intent.get("team_b", []))):
         values = snapshots.get(name, [])
-        if not isinstance(values, list) or len(values) > 30:
+        if not isinstance(values, list) or len(values) > max_units:
             raise GameplayFault("InvalidResult", "Invalid result team snapshot")
         for unit in values:
             if not isinstance(unit, dict) or not isinstance(unit.get("aid"), str):

@@ -5,7 +5,7 @@ import sqlite3
 import unittest
 from pathlib import Path
 
-from daily_exchange_105 import daily_integral_offers
+from daily_exchange_105 import daily_integral_offers, daily_medal_hero_offers
 from gameplay_economy import GameplayEconomy
 from gateway import load_game_config
 from mod_policy import ensure_reward
@@ -52,6 +52,32 @@ class DailyExchangeTests(unittest.TestCase):
                 self.assertEqual(replay["avatar"], first["avatar"])
                 self.assertEqual(replay["score"], first["score"])
                 self.assertEqual(self.store.profile_raw(self.uid), profile)
+
+    def test_medal_heroes_split_purchase_and_midnight_replay(self):
+        day, heroes=daily_medal_hero_offers(self.config,self.clock.now())
+        skin_ids=set(self.config['cfg']['ploy_system_simple']['extract_avatar']['permanent_exchange_hero_ids'])
+        self.assertEqual(len(heroes),10)
+        self.assertEqual(len({h['id'] for h in heroes}),10)
+        self.assertEqual(sum(h['id'] in skin_ids for h in heroes),2)
+        self.assertTrue(all(h['id'].endswith('_6') for h in heroes))
+        self.assertEqual((day,heroes),daily_medal_hero_offers(self.config,self.clock.now()))
+        self.store.atomic_update(self.uid,lambda p:(dict(p,medal=1000),{}))
+        info=self.economy.recruit_exchange_info(self.uid,{})
+        self.assertEqual(sum(i['kind']=='equip' for i in info['items']),20)
+        self.assertEqual(sum(i['kind']=='avatar' for i in info['items']),10)
+        for index,item in enumerate((heroes[0],heroes[-1])):
+            params={'id':item['id'],'day':day,'actionID':f'hero-medal-{index}'}
+            result=self.economy.recruit_medal_exchange(self.uid,params)
+            self.assertEqual(result['kind'],'avatar')
+            self.assertEqual(len(result['avatar']),1)
+            self.assertTrue(next(iter(result['avatar'].values()))['aid'].startswith(item['id']+'|'))
+        profile=self.store.profile_raw(self.uid)
+        self.clock.value+=86400
+        self.assertTrue(self.economy.recruit_medal_exchange(self.uid,params)['replayed'])
+        self.assertEqual(profile,self.store.profile_raw(self.uid))
+        with self.assertRaises(GameplayFault):
+            self.economy.recruit_medal_exchange(self.uid,{**params,'actionID':'new-stale-purchase'})
+        self.assertNotEqual(heroes,daily_medal_hero_offers(self.config,self.clock.now())[1])
 
     def test_new_purchase_from_yesterdays_list_is_rejected_atomically(self):
         day, _ = daily_integral_offers(self.config, self.clock.now())

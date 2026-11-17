@@ -277,11 +277,12 @@ package com.meng52.game.ui.element
          if(data["daily_recruit"] === true)
          {
             var chosenAid:String = String(data["id"]);
+            var chosenKind:String = String(data["indexID_s"]);
             mBtn_to.enabled = false;
             SendAndSelect.sendAndSelectService("user.recruit_medal_exchange",
                {"id":chosenAid,"day":String(data["day"]),"actionID":"medal-equip-"+chosenAid+"-"+new Date().time},function(result:Object):void
                {
-                  re_recruit_exchange(result,chosenAid);
+                  re_recruit_exchange(result,chosenAid,chosenKind);
                });
             return;
          }
@@ -293,7 +294,7 @@ package com.meng52.game.ui.element
          });
       }
 
-      private function re_recruit_exchange(result:Object, chosenAid:String) : void
+      private function re_recruit_exchange(result:Object, chosenAid:String, chosenKind:String) : void
       {
          if(stage == null)
          {
@@ -304,7 +305,7 @@ package com.meng52.game.ui.element
             mBtn_to.enabled = true;
          }
          if(result == null || int(result.return_code) != 0 || result.data == null ||
-            result.data.id != chosenAid || result.data.equip == null ||
+            result.data.id != chosenAid || result.data[chosenKind] == null ||
             (result.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(result.state_sync)))
          {
             return;
@@ -313,10 +314,11 @@ package com.meng52.game.ui.element
          {
             GlobalData.$userData.medal = result.data.medal;
             GlobalData.$userData.my_equips = result.data.my_equips;
+            if(result.data.avatars) GlobalData.$userData.avatars = result.data.avatars;
          }
          SoundManager.getOnlyExample().playSound("sound05");
-         var award:Object = GlobalFunction.getAwardByType("equip",chosenAid);
-         GlobalFunction.popAward("equip",GlobalLanguageStr.getLanguageStr(90062,award.msg),chosenAid,false);
+         var award:Object = GlobalFunction.getAwardByType(chosenKind,chosenAid);
+         GlobalFunction.popAward(chosenKind,GlobalLanguageStr.getLanguageStr(90062,award.msg),chosenAid,false);
          if(GlobalData.$mGameClassObject && GlobalData.$mGameClassObject.mLayoutUICenter &&
             GlobalData.$mGameClassObject.mLayoutUICenter.mPanelExchange &&
             GlobalData.$mGameClassObject.mLayoutUICenter.mPanelExchange.stage)

@@ -14,7 +14,7 @@ def method(source,name,params):
     body=method_body(source,name)
     body=re.sub(r'function\((.*?)\)',lambda m:'function('+re.sub(r':\w+','',m[1])+')',body)
     body=re.sub(r'([\w.]+) is Array',r'Array.isArray(\1)',body)
-    body=re.sub(r'(\w+) is String',r'typeof \1 === "string"',body)
+    body=re.sub(r'([\w.]+) is String',r'typeof \1 === "string"',body)
     while 'for each(' in body:
         a=body.index('for each(');b=balanced(body,a+8);left,right=body[a+9:b].split(' in ',1)
         body=body[:a]+'for ('+left+' of Object.values(('+right+') || {}))'+body[b+1:]
@@ -65,6 +65,7 @@ panel.mTabBar.selectedIndex=2;panel.change(null);assert.equal(added[0].kind,'rel
 const calls=[],buttons=[],cards=[],noop=()=>{};
 const AbyssCore104={run:{pool:{A_1001:{aid:'A_1001_6',quality:6,slv:10}}},
 poolIds:()=>['A_1001'],heroName:aid=>aid,family:aid=>aid,isOrange:aid=>aid.endsWith('_6'),
+skillMax105:()=>10,skillBase105:()=>5,
 send:(name,params,done)=>{calls.push({name,params});done({});},closeTop:()=>calls.push('map'),toast:noop};
 function Sprite(){};function LOL_Scale9Button(){};
 const panel={option:'skill',heroId:null,lx:0,iw:640,by:700,

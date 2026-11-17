@@ -59,6 +59,11 @@ def apply_part(row,effect):
     """Do not reinterpret an absent component as a different damage/heal effect.
     Hero-bond additions/scaling retain the original prefix; full rewrites do not.
     """
+    if effect.get('passive_extra_105'):
+        if row.get('skin_revision_v2_104') != 1221:return False
+        from equipment_rebinding_105 import annie_passive
+        annie_passive(row)
+        return True
     effect=part_for_skill(row,effect)
     if effect.get('review_source_104') and not row.get('calibration_104'):return False
     index=effect['index'];factor=1+effect['strength']
@@ -100,6 +105,8 @@ def apply_equipment_bonds_104(document):
     update_equipment_parts(cfg,plan)
     from skin_revision_104 import update_equipment
     update_equipment(cfg,plan)
+    from equipment_rebinding_105 import rebind_ordinary
+    rebind_ordinary(cfg,plan)
     families={f for b in simple['bonds_104'] for f in b['families']}
     eligible={a for a in cfg['avatar'] if a.endswith('_6') and a.rsplit('_',1)[0] in families}
     if set(plan['heroes'])!=eligible:raise ValueError('Equipment bonds must cover exactly the named orange hero catalogue')
@@ -113,10 +120,10 @@ def apply_equipment_bonds_104(document):
         definitions[aid]=[]
         for eid in eids:
             equip=cfg['equip'][eid]
-            if equip['quality'] not in (5,6) or eid in exclusive_ids or equip['type']==6:raise ValueError('Invalid ordinary affinity: '+eid)
+            if equip['quality'] not in (5,6) or equip['type']==6:raise ValueError('Invalid ordinary affinity: '+eid)
             effect=copy.deepcopy(next(r for r in design['affinities'] if r['equipment']==eid))
             definitions[aid].append(dict(effect,kind='ordinary',rate=0,
-                power_budget=.12 if equip['quality']==5 else .08,name=effect['skill_name']+'·'+effect['part']))
+                power_budget=effect.get('power_budget',.12 if equip['quality']==5 else .08),name=effect['skill_name']+'·'+effect['part']))
         if len({(r['slot'],str(r['index']),str(r['path'])) for r in definitions[aid]})!=2:
             raise ValueError('The two affinities must target different skill parts: '+aid)
     for design in plan['exclusive']:
@@ -150,7 +157,8 @@ def apply_equipment_bonds_104(document):
                             if not apply_part(row,effect):continue
                         else:append_effect(row,effect)
                         applied_effects.append(effect)
-                        row.setdefault('equipment_notes_104',[]).append('装备·'+effect['name']+'：'+effect['info'])
+                        if not effect.get('passive_extra_105'):
+                            row.setdefault('equipment_notes_104',[]).append('装备·'+effect['name']+'：'+effect['info'])
                     if not applied_effects:continue
                     extend_action_metadata(row)
                     sid='S_96'+str(int(hashlib.sha256(f'{aid}:{source}:{key}'.encode()).hexdigest()[:12],16))+'_6'

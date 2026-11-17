@@ -47,17 +47,27 @@ function Rectangle(x,y,width,height){Object.assign(this,{x,y,width,height});}
 function ByteArray(){this.values=[];this.writeByte=v=>this.values.push(v&255);this.uncompress=()=>this.raw=zlib.inflateSync(Buffer.from(this.values));this.clear=()=>{};}
 function BitmapData(width,height){this.setPixels=(r,bytes)=>assert.equal(bytes.raw.length,width*height*4);}
 const Texture={fromBitmapData:bitmap=>{uploads++;return {root:{uploadBitmapData:b=>{assert.equal(b,bitmap);restores++;}}};},fromTexture:(atlas,region)=>({atlas,region})};
-const Equip={createRainbowFrame104:()=>{frames++;return {nativeRainbow:true};}};
+const Equip={createQualityFrame104:quality=>{frames++;return {quality};}};
+const AbyssCore104={};
 const GlobalData={$assetManager:{getTexture:key=>cache[key],addTexture:(key,t)=>cache[key]=t}};
 '''
+        from test_abyss_ui_104 import method
+        ui=(ROOT/'client/src/abyss_ui_104.aspart').read_text('utf8')
+        script+='AbyssCore104.relicAncientCount='+method(ui,'relicAncientCount','item')+';\n'
+        script+='AbyssCore104.relicFrameQuality='+method(ui,'relicFrameQuality','item')+';\n'
         script+='const atlas='+translate('atlas','')+';\nconst create='+translate('create','item,size=92')+';\n'
         script+='''for(let id=1;id<=20;id++){
 const icon=create({relic_id:id},100);assert.equal(icon.children.length,3);
-assert(icon.children[2].nativeRainbow);assert.equal(icon.children[1].texture.region.x,((id-1)%5)*100);
+assert.equal(icon.children[2].quality,4);assert.equal(icon.children[1].texture.region.x,((id-1)%5)*100);
 assert.equal(icon.children[1].texture.region.y,Math.trunc((id-1)/5)*100);
 assert.equal(icon.scaleX,100/92);}
 assert.equal(uploads,1);assert.equal(frames,20);cache.__abyssRelicAtlas104.root.onRestore();assert.equal(restores,1);
-console.log('20 IDs share one icon texture, preserve native rainbow factory and restore GPU context.');'''
+for(let count=0;count<=4;count++){
+const item={relic_id:1,main:{ancient:count>0},substats:Array.from({length:3},(_,i)=>({ancient:i<count-1}))};
+assert.equal(create(item,92).children[2].quality,4+count);
+}
+assert.equal(uploads,1,'rarity changes reuse the original icon atlas');
+console.log('20 IDs share one restorable icon atlas; 0-4 ancient affixes select blue through rainbow frames.');'''
         result=subprocess.run(['node'],input=script,capture_output=True,text=True,encoding='utf-8',cwd=ROOT)
         self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
 

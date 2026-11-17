@@ -366,8 +366,9 @@ class GameplayGuildBoss:
         if not isinstance(rows,list) or not rows or not isinstance(rows[0],list) or len(rows[0])<2:
             raise GameplayFault('InvalidShopItem','Unknown guild shop item')
         reward,pay=rows[0][0],rows[0][1]
+        hero_exchange=index in self.simple.get('guild_shop',{}).get('hero_exchange_ids_105',[])
         bought=int(g.setdefault('shop',{}).get(index,0))
-        if bought>=1: raise GameplayFault('DailyLimit','This guild shop item has already been purchased')
+        if bought>=1 and not hero_exchange: raise GameplayFault('DailyLimit','This guild shop item has already been purchased')
         need_lv=int(rows[0][2]) if len(rows[0])>2 else 1
         if int(g.get('level',1))<need_lv: raise GameplayFault('GuildLevelRequired','Guild level too low')
         if not isinstance(reward,dict) or not isinstance(pay,dict) or len(pay)!=1:
@@ -381,7 +382,11 @@ class GameplayGuildBoss:
             if int(p.get(currency,0))<price: raise GameplayFault('InsufficientResource','Not enough '+currency)
             p[currency]=int(p.get(currency,0))-price
         else: raise GameplayFault('InvalidShopItem','Unsupported shop currency')
-        grant_reward(p,reward,self.full); g['shop'][index]=bought+1
+        if hero_exchange:
+            from mod_policy import ensure_reward
+            ensure_reward(self.full,reward,'acquisition.shop.guild')
+        grant_reward(p,reward,self.full)
+        if not hero_exchange:g['shop'][index]=bought+1
         self._append_guild_log(g,f"{self._me(p)['name']}购买了公会商店商品")
         return p,{'res_code':1,'association_gold':p.get('attrs',{}).get('association_gold',0),'gold':p.get('gold',0),'coin':p.get('coin',0),'lv':p.get('lv',1),'exp':p.get('exp',0),'vip_exp':p.get('vip_exp',0),'vip_lv':p.get('vip_lv',0),'attrs':p.get('attrs',{}),'avatars':p.get('avatars',{}),'my_equips':p.get('my_equips',{}),'guild_shop_info':[[str(k),v] for k,v in sorted(g.get('shop',{}).items())],**self._user_reward_fields(p)}
     def _guild_graduate_skill_append(self,p,x):

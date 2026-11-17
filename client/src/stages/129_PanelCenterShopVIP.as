@@ -439,11 +439,8 @@ package com.meng52.game.ui.screen
                "label":"特权",
                "indexID":2
             },{
-               "label":"VIP礼包",
+               "label":"礼包",
                "indexID":3
-            },{
-               "label":"每日礼包",
-               "indexID":4
             }];
          }
          else
@@ -458,7 +455,7 @@ package com.meng52.game.ui.screen
          }
          this.setTabBar(_loc3_,tabBar_changeHandler,tabBar_CREATION_COMPLETE);
          mTabBar.y = 20;
-         mTabBar.selectedIndex = $selectType;
+         mTabBar.selectedIndex = $selectType == 4 ? 3 : $selectType;
          mImg3_info = getImg3_info();
          mImg3_info.y = mTabBar.y + 55;
          addChild(mImg3_info);
@@ -632,58 +629,14 @@ package com.meng52.game.ui.screen
             _loc7_.paddingTop = -15;
             this.mList.layout = _loc7_;
          }
-         else if(this.mTabBar.selectedIndex == 4)
+         else if(this.mTabBar.selectedIndex == 3 || this.mTabBar.selectedIndex == 4)
          {
             delCasinoUI();
             delVIPInfoBox();
             setVIPUI();
             showDaily105();
          }
-         else if(this.mTabBar.selectedIndex == 3)
-         {
-            _loc9_ = GlobalData.$userData.attrs.vip_gift_buy as Array;
-            _loc11_ = GlobalData.$userData.attrs.vip_gift_buy2 as Array;
-            _loc2_ = getVipCoinBuyLv();
-            _loc15_ = GlobalFunction.getVipLv();
-            _loc4_ = GlobalFunction.geVipMaxLv();
-            _loc3_ = _loc15_ + GlobalData.$mConfig_simple.vip_gift_diff;
-            _loc3_ = _loc3_ > _loc4_ ? _loc4_ : _loc3_;
-            _loc6_ = 0;
-            _loc6_ = _loc3_;
-            while(_loc6_ > 0)
-            {
-               if(_loc11_.indexOf(_loc6_) < 0 && _loc6_ >= _loc2_)
-               {
-                  _loc1_ = GlobalFunction.getVipObj(_loc6_);
-                  _loc14_ = {};
-                  _loc14_["data_base"] = _loc1_.gift_coin_buy;
-                  _loc14_["id"] = _loc6_.toString();
-                  _loc14_["status"] = 1;
-                  _itemArr.unshift(_loc14_);
-               }
-               if(_loc9_.indexOf(_loc6_) < 0)
-               {
-                  _loc1_ = GlobalFunction.getVipObj(_loc6_);
-                  _loc14_ = {};
-                  _loc14_["data_base"] = _loc1_.gift_buy;
-                  _loc14_["id"] = _loc6_.toString();
-                  _loc14_["status"] = 0;
-                  _itemArr.unshift(_loc14_);
-               }
-               _loc6_--;
-            }
-            this.setListTimer(mList,_itemArr,ItemVIPShopping,false);
-            delVIPInfoBox();
-            setVIPUI();
-            mList.height = mListH = GlobalData.$center_height - 195;
-            if(_itemArr.length == 0)
-            {
-               mTxt_VipGiftEmpty = GlobalFunction.createTextField(600,60,GlobalLanguageStr.getLanguageStr(98136),"",28,16777215,true);
-               mTxt_VipGiftEmpty.x = int((GlobalData.$mStageWidth - mTxt_VipGiftEmpty.width) * 0.5);
-               mTxt_VipGiftEmpty.y = mList.y + int((mList.height - mTxt_VipGiftEmpty.height) * 0.5);
-               addChild(mTxt_VipGiftEmpty);
-            }
-         }
+
       }
       
       private function getVipCoinBuyLv() : int
@@ -1692,9 +1645,13 @@ package com.meng52.game.ui.screen
       private var dailyBox105:ScrollContainer;
       private var dailyModal105:Sprite;
       private var dailyPacks105:Array = [];
+      private static var dailyTarget105:PanelCenterShopVIP;
+      private var dailyLoading105:Boolean = false;
+      private var dailyRevision105:Number = -1;
 
       private function clearDaily105() : void
       {
+         if(dailyTarget105 == this) dailyTarget105 = null;
          closeDaily105();
          if(dailyBox105) dailyBox105.removeFromParent(true);
          dailyBox105=null;
@@ -1711,19 +1668,36 @@ package com.meng52.game.ui.screen
       {
          clearDaily105();
          if(mList) mList.visible=false;
-         SendAndSelect.sendAndSelectService("user.vip_daily_packs",{},function(reply:Object):void
+         dailyLoading105=true;
+         buildDaily105();
+         dailyTarget105=this;
+         SendAndSelect.sendAndSelectService("user.vip_daily_packs",{},receiveDaily105);
+      }
+
+      private static function receiveDaily105(reply:Object) : void
+      {
+         var target:PanelCenterShopVIP=dailyTarget105;
+         if(target && target.stage) target.updateDaily105(reply);
+      }
+
+      private function updateDaily105(reply:Object) : void
+      {
+         if(!stage || !mTabBar || (mTabBar.selectedIndex!=3 && mTabBar.selectedIndex!=4) || !reply || reply.return_code!=0 || !reply.data) return;
+         if(reply.state_sync)
          {
-            if(!stage || !mTabBar || mTabBar.selectedIndex!=4 || !reply || reply.return_code!=0) return;
-            dailyPacks105=reply.data.packs as Array;
-            if(dailyPacks105==null) dailyPacks105=[];
-            buildDaily105();
-         });
+            if(String(reply.state_sync.uid) != String(GlobalData.$userData.uid) || Number(reply.state_sync.revision) < dailyRevision105) return;
+            dailyRevision105=Number(reply.state_sync.revision);
+         }
+         dailyLoading105=false;
+         dailyPacks105=reply.data.packs is Array ? (reply.data.packs as Array).concat() : [];
+         if(reply.data.vip_packs is Array) dailyPacks105=dailyPacks105.concat(reply.data.vip_packs);
+         buildDaily105();
       }
 
       private static function rewardText105(reward:Object) : String
       {
          var names:Object={culture_book:"培养书",dn_stone:"德诺石",gold:"金币",coin:"金砖",medal:"勋章",
-            dust:"各色粉尘",stardust:"星辉",equip:"橙色装备",avatar_soul:"橙卡魂魄",random_orange_equip:"随机橙装",random_orange_soul:"随机橙卡魂魄"};
+            dust:"各色粉尘",stardust:"星辉",equip:"橙色装备",avatar_soul:"橙卡魂魄",random_orange_equip:"随机橙装",random_orange_soul:"随机橙卡魂魄",random_orange_hero:"随机橙卡（10%皮肤橙）",random_skin_orange:"随机皮肤橙卡"};
          var parts:Array=[];
          for(var key:String in reward)
          {
@@ -1733,6 +1707,15 @@ package com.meng52.game.ui.screen
                {
                   var value:* = reward.attrs[attr];
                   parts.push((names[attr]?names[attr]:attr)+"×"+(value is Array?value[0]:value));
+               }
+            }
+            else if(key=="avatar" || key=="equip" || key=="avatar_soul" || key=="equip_soul")
+            {
+               var definitions:Object=(key=="avatar" || key=="avatar_soul")?GlobalData.$mConfig_avatar:GlobalData.$mConfig_equip;
+               for(var id:String in reward[key])
+               {
+                  var definition:Object=definitions ? definitions[id] : null;
+                  parts.push((definition && definition.name ? String(definition.name) : id)+(key.indexOf("_soul")>=0?"魂魄":"")+"×"+int(reward[key][id]));
                }
             }
             else if(reward[key] is Number || reward[key] is int) parts.push((names[key]?names[key]:key)+"×"+reward[key]);
@@ -1759,29 +1742,44 @@ package com.meng52.game.ui.screen
          dailyBox105.height=Math.max(200,GlobalData.$center_height-195);
          addChild(dailyBox105);
          var header:Sprite=new Sprite();
-         GlobalFunction.uiText("每日礼包按 VIP 等级解锁，每天 0 点刷新次数；VIP 越高，每天可买次数越多。",17,16777215,"left",width-20,48,header,10,0);
+         GlobalFunction.uiText(dailyLoading105 ? "正在加载礼包…" : "免费等级奖励通过邮件发放；专属礼包每档一次，每日补给每天 0 点刷新次数。",17,16777215,"left",width-20,48,header,10,0);
          dailyBox105.addChild(header);
          for each(var pack:Object in dailyPacks105) dailyBox105.addChild(dailyRow105(pack,width));
+      }
+
+      private static function giftIcon105(pack:Object) : String
+      {
+         return "UI_bg_gift_0_0000";
       }
 
       private function dailyRow105(pack:Object, width:Number) : Sprite
       {
          var row:Sprite=new Sprite();
-         var bg:Scale9Image=GlobalFunction.createScale9Image("UI_pvp_bg_1_0000",width,108,new Rectangle(30,30,50,50));
+         var rewardText:String=rewardText105(pack.reward);
+         var textWidth:Number=width-288;
+         var rewardHeight:Number=Math.max(46,Math.ceil(rewardText.length/Math.max(10,int(textWidth/17)))*23);
+         var rowHeight:Number=Math.max(108,rewardHeight+68);
+         var bg:Scale9Image=GlobalFunction.createScale9Image("UI_pvp_bg_1_0000",width,rowHeight,new Rectangle(30,30,50,50));
          row.addChild(bg);
+         var giftIcon:Image=GlobalFunction.createImage(giftIcon105(pack));
+         var iconScale:Number=Math.min(1,76/Math.max(giftIcon.width,giftIcon.height));
+         giftIcon.scaleX=giftIcon.scaleY=iconScale;
+         giftIcon.x=16+(76-giftIcon.width)*0.5;
+         giftIcon.y=(rowHeight-giftIcon.height)*0.5;
+         giftIcon.touchable=false;
+         row.addChild(giftIcon);
          var locked:Boolean=pack.locked==true;
          var buttonWidth:Number=150;
-         var textWidth:Number=width-buttonWidth-50;
-         GlobalFunction.uiText(String(pack.name),22,GlobalFunction.UI_RED,"left",textWidth,30,row,20,8);
-         GlobalFunction.uiText(rewardText105(pack.reward),17,GlobalFunction.UI_BROWN,"left",textWidth,46,row,20,38);
-         var status:String=locked?"VIP"+int(pack.vip)+" 解锁":"今日剩余 "+int(pack.left)+"/"+int(pack.limit);
-         GlobalFunction.uiText(status,16,GlobalFunction.UI_MUTED,"left",textWidth,24,row,20,80);
-         var label:String=locked?"未解锁":(int(pack.left)>0?int(pack.price)+"金砖":"已售罄");
+         GlobalFunction.uiText(String(pack.name),22,GlobalFunction.UI_RED,"left",textWidth,30,row,108,8);
+         GlobalFunction.uiText(rewardText,17,GlobalFunction.UI_BROWN,"left",textWidth,rewardHeight,row,108,38);
+         var status:String=locked?"VIP"+int(pack.vip)+" 解锁":(pack.kind=="vip_once" ? (int(pack.left)>0?"一次性奖励":"已领取") : "今日剩余 "+int(pack.left)+"/"+int(pack.limit));
+         GlobalFunction.uiText(status,16,GlobalFunction.UI_MUTED,"left",textWidth,24,row,108,rowHeight-28);
+         var label:String=locked?"未解锁":(int(pack.left)>0?(int(pack.price)>0?int(pack.price)+"金砖":"领取"):(pack.kind=="vip_once"?"已领取":"已售罄"));
          var button:LOL_Scale9Button=GlobalFunction.uiButton(label,buttonWidth,56,locked||int(pack.left)<=0?"normal":"primary",row,
-            width-buttonWidth-18,26,function():void
+            width-buttonWidth-18,(rowHeight-56)/2,function():void
             {
                if(locked) {GlobalFunction.popToast("VIP"+int(pack.vip)+" 才能购买这个礼包","info");return;}
-               if(int(pack.left)<=0) {GlobalFunction.popToast("今天的购买次数已用完","info");return;}
+               if(int(pack.left)<=0) {GlobalFunction.popToast(pack.kind=="vip_once"?"该奖励已领取":"今天的购买次数已用完","info");return;}
                confirmDaily105(pack);
             });
          if(locked||int(pack.left)<=0) button.alpha=0.6;
@@ -1791,13 +1789,16 @@ package com.meng52.game.ui.screen
       private function confirmDaily105(pack:Object) : void
       {
          closeDaily105();
-         var modal:Object=GlobalFunction.uiModal(this,"购买"+pack.name,560,300);
+         var verb:String=int(pack.price)>0?"购买":"领取";
+         var detail:String=rewardText105(pack.reward);
+         var height:Number=Math.min(GlobalData.$mStageHeight-160,Math.max(300,200+Math.ceil(detail.length/24)*25));
+         var modal:Object=GlobalFunction.uiModal(this,verb+pack.name,560,height);
          dailyModal105=modal.root as Sprite;
          var box:Sprite=modal.box as Sprite;
-         GlobalFunction.uiText("花费 "+int(pack.price)+" 金砖，获得：\n"+rewardText105(pack.reward),19,GlobalFunction.UI_BROWN,"left",480,110,box,40,76);
+         GlobalFunction.uiText((int(pack.price)>0?"花费 "+int(pack.price)+" 金砖，获得：\n":"免费领取：\n")+detail,19,GlobalFunction.UI_BROWN,"left",480,height-170,box,40,76);
          var cancel:LOL_Scale9Button=GlobalFunction.uiButton("取消",150,60,"normal",box,0,0,closeDaily105);
-         var ok:LOL_Scale9Button=GlobalFunction.uiButton("购买",170,60,"primary",box,0,0,function():void {buyDaily105(pack);});
-         GlobalFunction.uiRow([cancel,ok],30,530,214,24,"center");
+         var ok:LOL_Scale9Button=GlobalFunction.uiButton(verb,170,60,"primary",box,0,0,function():void {buyDaily105(pack);});
+         GlobalFunction.uiRow([cancel,ok],30,530,height-86,24,"center");
       }
 
       private function buyDaily105(pack:Object) : void
@@ -1805,14 +1806,13 @@ package com.meng52.game.ui.screen
          closeDaily105();
          if(int(GlobalData.$userData.coin)<int(pack.price)) {GlobalFunction.popToast("金砖不足","info");return;}
          var action:String="vip-daily-"+pack.id+"-"+new Date().time+"-"+Math.random();
-         SendAndSelect.sendAndSelectService("user.vip_daily_pack_buy",{pack_id:pack.id,actionID:action},function(reply:Object):void
+         var method:String=pack.kind=="vip_once"?"user.vip_gift_buy":"user.vip_daily_pack_buy";
+         var params:Object=pack.kind=="vip_once"?{vip_lv:int(pack.vip),type:int(pack.gift_type),actionID:action}:{pack_id:pack.id,actionID:action};
+         SendAndSelect.sendAndSelectService(method,params,function(reply:Object):void
          {
             if(!reply || reply.return_code!=0) return;
             GlobalFunction.popToast("购买成功："+rewardText105(reply.data.granted),"success");
-            if(!stage || !mTabBar || mTabBar.selectedIndex!=4) return;
-            dailyPacks105=reply.data.packs as Array;
-            if(dailyPacks105==null) dailyPacks105=[];
-            buildDaily105();
+            updateDaily105(reply);
          });
       }
       // END VIP DAILY PACKS 105

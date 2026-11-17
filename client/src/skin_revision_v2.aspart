@@ -5,6 +5,66 @@
       // Approved skin revision: state is owned by each combat incarnation.
       private var skin2:Object = {};
       private static var skin2Depth:int = 0;
+      private static var skin2AnnieChainDepth:int = 0;
+      private static var skin2AnnieChain:Array = [];
+
+      private function s2AnnieCore() : Object
+      {
+         if(s2Family()!=1221 || !skillB || !skillB.skillSetData) return null;
+         var row:Object=GlobalData.$mConfig_skill[skillB.skillSetData.id];
+         return row ? row.annie_core_105 : null;
+      }
+      private function s2AnnieImmune() : Boolean
+      {
+         return skin2.anniePurifyUntil!=null && manualOwnerActionSerial<int(skin2.anniePurifyUntil);
+      }
+      private function s2AnnieCompanion(key:String) : Number
+      {
+         if(!skill0 || !skill0.skillSetData) return 0;
+         var row:Object=GlobalData.$mConfig_skill[skill0.skillSetData.id];
+         var spec:Object=row ? row.annie_companion_105 : null;
+         if(!spec || !spec.keys || !spec.values) return 0;
+         var index:int=spec.keys.indexOf(key);
+         return index<0 ? 0 : Number(spec.values[index]);
+      }
+      private function s2AnnieStatus(kind:String) : void
+      {
+         var spec:Object=s2AnnieCore();
+         if(!spec || hp<=0 || !GameMap.currentMap) return;
+         if(Buff.LIST_DEBUFF.indexOf(kind)<0 && ["cold","wanted","charmed","exposed","airborne","contract","windmark","bleed","mark","bomb"].indexOf(kind)<0) return;
+         if(skin2.annieCoreNext!=null && manualOwnerActionSerial<int(skin2.annieCoreNext)) return;
+         if(skin2AnnieChainDepth==0) skin2AnnieChain=[];
+         if(skin2AnnieChain.indexOf(this)>=0) return;
+         skin2AnnieChain.push(this);++skin2AnnieChainDepth;
+         // Same owner-turn convention as SkillSet: cooldown 1 has one waiting
+         // turn, then becomes ready on the following turn. Original passive
+         // events do not read or spend this independent cooldown.
+         skin2.annieCoreNext=manualOwnerActionSerial+int(spec.cooldown)+1;
+         var context:Object=beginAbilityAttack(this,"passive");
+         try
+         {
+            var unit:Avatar;
+            for each(unit in GameMap.currentMap.getAliveList(team))
+            {
+               unit.removeAllDebuff();
+               unit.skin2.anniePurifyUntil=Math.max(Number(unit.skin2.anniePurifyUntil || 0),unit.manualOwnerActionSerial+int(spec.purify_rounds));
+            }
+            abilityFeedback("不讲道理","FX_S9150_PURIFY",10526975);
+            for each(unit in GameMap.currentMap.getAliveList(otherTeam))
+            {
+               unit.addBuff("sunder",int(spec.debuff_rounds),Number(spec.sunder)/(1-Number(spec.sunder)),0,-1,this);
+               unit.addBuff("weak",int(spec.debuff_rounds),Number(spec.weak)/(1-Number(spec.weak)),0,-1,this);
+               unit.addBuff("poison",int(spec.debuff_rounds),Tools.toInt(getDamage()*Number(spec.poison_ap)),0,-1,this);
+               if(spec.stun_enabled) unit.addBuff("stun",int(spec.control_rounds),0,0,-1,this);
+               unit.addBuff("silence",int(spec.control_rounds),0,0,-1,this);
+            }
+         }
+         finally
+         {
+            endAbilityAttack(context);--skin2AnnieChainDepth;
+            if(skin2AnnieChainDepth==0) skin2AnnieChain=[];
+         }
+      }
 
       private function s2Family() : int
       {
@@ -53,8 +113,13 @@
       }
       private function s2Mark(target:Avatar, name:String, duration:int) : void
       {
+         if(target && target.s2AnnieImmune()) return;
          if(target && target.buffs.purify) {target.removeBuff("purify",true);return;}
-         if(target && target.hp > 0) target.skin2[name] = {owner:this,skill:skin2.castSkill || skillB,expires:manualOwnerActionSerial+duration};
+         if(target && target.hp > 0)
+         {
+            target.skin2[name] = {owner:this,skill:skin2.castSkill || skillB,expires:manualOwnerActionSerial+duration};
+            target.s2AnnieStatus(name);
+         }
       }
       private function s2ColdMoveFactor() : Number
       {
@@ -425,7 +490,7 @@
                s2Retreat();
             }
             if(skin2.bearOwner && skin2.bearOwner.hp>0 && int(skin2.bearGrowth || 0)<6)
-            {skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth");hpMax+=int(Number(skin2.initialHp)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth"));hp+=int(Number(skin2.initialHp)*skin2.bearOwner.s2Value(skin2.bearOwner.skillB,"petGrowth"));}
+            {skin2.bearGrowth=int(skin2.bearGrowth || 0)+1;ap+=Number(skin2.initialAttack)*skin2.bearOwner.s2AnnieCompanion("petGrowth");hpMax+=int(Number(skin2.initialHp)*skin2.bearOwner.s2AnnieCompanion("petGrowth"));hp+=int(Number(skin2.initialHp)*skin2.bearOwner.s2AnnieCompanion("petGrowth"));}
          }
          if(event=="damage_taken" && source && source.team!=team)
          {
@@ -446,7 +511,7 @@
                   {state.count=0;++state.triggers;s2Hit(target,s2Value(skillB,"hit"),family==1206 ? 3 : 2);if(family==1206)s2Heal(this,s2Value(skillB,"heal"));else s2Shield(this,s2Value(skillB,"shield"),1);}
                }
                if(skin2.command && skin2.bearOwner && skin2.bearOwner.hp>0)
-               {skin2.command=false;unit=skin2.bearOwner;unit.s2Hit(target,unit.s2Value(unit.skillB,"command"));if(skin2.commandSplash) {skin2.commandSplash=false;for each(var other:Avatar in unit.s2Lane()) if(other!==target) {unit.s2Hit(other,unit.s2Value(unit.skillB,"command"));break;}}}
+               {skin2.command=false;unit=skin2.bearOwner;unit.s2Hit(target,unit.s2AnnieCompanion("command"));if(skin2.commandSplash) {skin2.commandSplash=false;for each(var other:Avatar in unit.s2Lane()) if(other!==target) {unit.s2Hit(other,unit.s2AnnieCompanion("command"));break;}}}
                var context:Object=currentAbilityAttack();
                if(context && context.kind=="active") for each(unit in GameMap.currentMap.getAliveList(team)) if(unit!==this && unit.s2Family()==1213 && unit.skin2.ball===this) unit.s2ReturnBall(target);
             }
@@ -487,7 +552,7 @@
             if(s2LiveMark(source,"exposed"))
             {unit=source.skin2.exposed.owner;delete source.skin2.exposed;unit.s2Shield(this,unit.s2Value(unit.skillB,"shield"),1);}
             if(family==1221 && s2Pet() && skin2.bearShieldTurn!=manualOwnerActionSerial)
-            {skin2.bearShieldTurn=manualOwnerActionSerial;s2Shield(this,s2Value(skillB,"shield"),1);}
+            {skin2.bearShieldTurn=manualOwnerActionSerial;s2Shield(this,s2AnnieCompanion("shield"),1);}
             if(family==1219 && skin2.windGuard && buffs.shield && source.range>300)
             {skin2.windGuard=false;removeBuff("shield");return 0;}
             for each(unit in GameMap.currentMap.getAliveList(team))

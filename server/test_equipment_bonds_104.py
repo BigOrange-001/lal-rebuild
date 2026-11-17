@@ -22,6 +22,13 @@ class EquipmentBonds104Tests(unittest.TestCase):
                 'my_equips':{str(i):{'eid':e,'lv':1} for i,e in enumerate(eids)},
                 'as_equips':[[str(i) for i in range(len(eids))]],'attrs':{'team_num':0,'dn':{}}},iid
 
+    def ordinary_ids(self,aid):
+        return [r['equipment'] for r in self.cfg['system_simple']['equipment_bonds_104'][aid] if r['kind']=='ordinary']
+
+    def migrated_id(self,aid,previous):
+        return next(r['equipment'] for r in self.cfg['system_simple']['equipment_bonds_104'][aid]
+                    if r.get('previous_equipment_105',r['equipment'])==previous)
+
     def test_complete_catalogue_two_ordinary_distinct_slots_and_exclusive_coverage(self):
         definitions=self.cfg['system_simple']['equipment_bonds_104']
         eligible={a for a in self.cfg['avatar'] if a.endswith('_6') and a.rsplit('_',1)[0] in {f for b in self.cfg['system_simple']['bonds_104'] for f in b['families']}}
@@ -39,14 +46,17 @@ class EquipmentBonds104Tests(unittest.TestCase):
             self.assertEqual(len({(r['slot'],str(r['index']),str(r['path'])) for r in ordinary}),2)
             self.assertEqual(len({self.cfg['equip'][r['equipment']]['slot'] for r in ordinary}),2)
             for row in ordinary:
-                e=self.cfg['equip'][row['equipment']];self.assertNotIn(e['id'],exclusive)
-                self.assertEqual(row['power_budget'],.12 if e['quality']==5 else .08);counts[e['quality']]+=1
+                e=self.cfg['equip'][row['equipment']]
+                if not row.get('passive_extra_105'):
+                    old=self.cfg['equip'][row['previous_equipment_105']]
+                    self.assertEqual(row['power_budget'],.12 if old['quality']==5 else .08)
+                counts[e['quality']]+=1
             found.update(r['equipment'] for r in rows if r['kind']=='exclusive')
             self.assertFalse(equipped_bonds(self.cfg,aid[:-1]+'5',[r['equipment'] for r in rows]))
-        self.assertEqual(found,exclusive);self.assertGreater(counts[5],counts[6])
+        self.assertEqual(found,exclusive);self.assertEqual(sum(counts.values()),250)
 
     def test_personal_equipment_duplicates_unwear_and_helpers(self):
-        aid='A_1137_6';eids=['E_1002_5','E_3003_5'];profile,iid=self.profile(aid,eids)
+        aid='A_1137_6';eids=self.ordinary_ids(aid);profile,iid=self.profile(aid,eids)
         rows=profile_equipment_bonds(self.cfg,profile,iid)
         self.assertEqual(output_rate(self.cfg,aid,eids),1)
         self.assertEqual(equipped_bonds(self.cfg,aid,eids*2),rows)
@@ -62,7 +72,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
 
     def test_output_growth_scaling_buffs_timing_and_global_pass_once(self):
         aid='A_1134_6';base=self.cfg['avatar'][aid]['pl'][10]
-        rows=equipped_bonds(self.cfg,aid,['E_1002_5','E_5004_5'])
+        rows=equipped_bonds(self.cfg,aid,self.ordinary_ids(aid))
         sid=skill_id(self.cfg,aid,base,rows)
         for level in (1,10):
             before=_native_skill_snapshot(self.cfg,base,level);after=_native_skill_snapshot(self.cfg,sid,level)
@@ -73,7 +83,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
         self.assertAlmostEqual(self.cfg['skill'][sid]['hero_output_rate_104'],.8)
 
     def test_defensive_affinity_changes_only_captain_and_preserves_base_actions(self):
-        aid='A_1137_6';rows=equipped_bonds(self.cfg,aid,['E_3003_5'])
+        aid='A_1137_6';rows=equipped_bonds(self.cfg,aid,['E_3009_6'])
         normal,captain=self.cfg['avatar'][aid]['pl'][10:12]
         self.assertEqual(skill_id(self.cfg,aid,normal,rows),normal)
         changed=self.cfg['skill'][skill_id(self.cfg,aid,captain,rows)]
@@ -86,7 +96,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
         from skill_balance_overlay import _get,_set
         for aid,rows in self.cfg['system_simple']['equipment_bonds_104'].items():
             for row in rows:
-                if row['kind']!='ordinary':continue
+                if row['kind']!='ordinary' or row.get('passive_extra_105'):continue
                 slot={'normal':10,'captain':11,'passive':13}[row['slot']]
                 source=self.cfg['avatar'][aid]['pl'][slot]
                 result=skill_id(self.cfg,aid,source,[row])
@@ -114,6 +124,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
     def test_damage_sequence_budget_matches_actual_coefficient_sum(self):
         # Single-target, both boomerang passes / all five projectiles land.
         for aid,eid,slot in [('A_1078_6','E_1004_5',10),('A_1222_6','E_5002_5',11)]:
+            eid=self.migrated_id(aid,eid)
             source=self.cfg['avatar'][aid]['pl'][slot]
             rows=equipped_bonds(self.cfg,aid,[eid])
             after=self.cfg['skill'][skill_id(self.cfg,aid,source,rows)]
@@ -126,7 +137,7 @@ class EquipmentBonds104Tests(unittest.TestCase):
     def test_component_weights_recover_whole_skill_budget_including_reworks(self):
         for rows in self.cfg['system_simple']['equipment_bonds_104'].values():
             for effect in rows:
-                if effect['kind']!='ordinary':continue
+                if effect['kind']!='ordinary' or effect.get('passive_extra_105'):continue
                 for target in [effect,*effect['reworks'].values()]:
                     achieved=target['benefit_share']*((1+target['strength'])**target['benefit_curve']-1)
                     self.assertAlmostEqual(achieved,effect['power_budget'],places=9)

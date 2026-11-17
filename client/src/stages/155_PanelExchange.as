@@ -24,7 +24,8 @@ package com.meng52.game.ui.screen
 
       private var _icon_bg:LOL_IconText;
 
-      private var mRecruitRequest:int = 0;
+      private static var recruitTarget105:PanelExchange;
+      private var recruitRevision105:Number = -1;
 
       public function PanelExchange()
       {
@@ -88,7 +89,7 @@ package com.meng52.game.ui.screen
 
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
-         mRecruitRequest++;
+         if(recruitTarget105 == this) recruitTarget105 = null;
          GlobalData.$mStarling.juggler.removeTweens(this);
          if(mTxt_medalNum)
          {
@@ -160,7 +161,7 @@ package com.meng52.game.ui.screen
 
       override public function addList() : void
       {
-         if(this.mTabBar && this.mTabBar.selectedIndex == 0)
+         if(this.mTabBar && (this.mTabBar.selectedIndex == 0 || this.mTabBar.selectedIndex == 1))
          {
             loadDailyRecruit();
             return;
@@ -305,32 +306,48 @@ package com.meng52.game.ui.screen
 
       private function loadDailyRecruit() : void
       {
-         var request:int = ++mRecruitRequest;
          updateInfo();
-         SendAndSelect.sendAndSelectService("user.recruit_exchange_info",{},function(result:Object):void
-         {
-            if(request != mRecruitRequest || stage == null || mTabBar == null || mTabBar.selectedIndex != 0)
+         recruitTarget105 = this;
+         SendAndSelect.sendAndSelectService("user.recruit_exchange_info",{},receiveDailyRecruit105);
+      }
+
+      private static function receiveDailyRecruit105(result:Object) : void
+      {
+         var target:PanelExchange = recruitTarget105;
+         if(target && target.stage) target.showDailyRecruit105(result);
+      }
+
+      private function showDailyRecruit105(result:Object) : void
+      {
+            if(stage == null || mTabBar == null || (mTabBar.selectedIndex != 0 && mTabBar.selectedIndex != 1))
             {
                return;
             }
             if(result == null || int(result.return_code) != 0 || result.data == null ||
-               !(result.data.items is Array) || result.data.day == null ||
-               (result.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(result.state_sync)))
+               !(result.data.items is Array) || result.data.day == null)
             {
                return;
             }
-            // Daily medal exchange: 10 orange and 10 purple equipment, new every night.
+            // Unrelated profile updates may already have a newer revision.
+            // Offer lists remain valid; only reject older offer receipts or a
+            // receipt belonging to a different account.
+            if(result.state_sync)
+            {
+               if(String(result.state_sync.uid) != String(GlobalData.$userData.uid) || Number(result.state_sync.revision) < recruitRevision105) return;
+               recruitRevision105 = Number(result.state_sync.revision);
+            }
+            var kind:String = mTabBar.selectedIndex == 0 ? "avatar" : "equip";
             var rows:Array = [];
             var items:Array = result.data.items as Array;
             for(var i:int = 0; i < items.length; i++)
             {
                var item:Object = items[i];
-               if(item == null || !(item.id is String) || int(item.medal) <= 0 ||
-                  GlobalData.$mConfig_equip[item.id] == null)
+               if(item == null || item.kind != kind || !(item.id is String) || int(item.medal) <= 0 ||
+                  (kind == "equip" ? GlobalData.$mConfig_equip[item.id] == null : GlobalData.$mConfig_avatar[item.id] == null))
                {
                   continue;
                }
-               rows.push({"status":false,"indexID_s":"equip","id":item.id,
+               rows.push({"status":kind == "avatar","indexID_s":kind,"id":item.id,
                           "medal":int(item.medal),"medal_old":0,"daily_recruit":true,
                           "day":String(result.data.day),"sort_3":0});
             }
@@ -341,7 +358,6 @@ package com.meng52.game.ui.screen
             mList.dataProvider = new ListCollection();
             setListTimer(mList,rows,ItemExchange,false);
             GuideMaster.getOnlyExample().checkGuide("M8_1");
-         });
       }
 
       private function checkAvatarExchange() : Object

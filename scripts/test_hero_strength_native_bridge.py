@@ -43,6 +43,26 @@ class NativeBridgeTests(unittest.TestCase):
             self.assertTrue(b.execute(owner,'skin2_1140_0',1,owner['skill']))
         self.assertEqual(b.b[0]['hp'],0)
 
+    def test_annie_core_accepted_status_and_independent_cooldown(self):
+        from equipment_bonds_104 import equipped_bonds, skill_id
+        b=self.battle(1221);owner=b.a[0];ally=b.a[1];enemy=b.b[0]
+        source=self.cfg['avatar']['A_1221_6']['pl'][13]
+        sid=skill_id(self.cfg,'A_1221_6',source,equipped_bonds(self.cfg,'A_1221_6',['E_4999_6']))
+        owner['skillB']=_native_skill_snapshot(self.cfg,sid,1)
+        b._add_buff(owner,'stun',1,source=enemy)
+        self.assertIsNone(b._buff(owner,'stun'))
+        self.assertIsNotNone(b._buff(enemy,'poison'))
+        b.control(enemy,ally,'root',1)
+        self.assertFalse(b.state(ally).get('root'),'immunity rejects the control state as well as its Buff')
+        self.assertFalse(b._js_contexts)
+        b.turn_start(owner)
+        b._add_buff(owner,'silence',1,source=enemy)
+        self.assertIsNotNone(b._buff(owner,'silence'),'one owner turn remains on cooldown')
+        b.turn_start(owner)
+        b._add_buff(owner,'stun',1,source=enemy)
+        self.assertIsNone(b._buff(owner,'stun'))
+        self.assertFalse(b._js_contexts)
+
     def test_native_rebirth_precedes_bless_and_is_not_counted_as_healing(self):
         b=self.battle(1216);bird=b.a[0];enemy=b.b[0]
         b._add_buff(bird,'bless',1)
@@ -97,7 +117,9 @@ class NativeBridgeTests(unittest.TestCase):
         self.assertEqual(set(pools['mixed']),set(pools['skin'])|set(pools['ordinary']))
         self.assertNotIn('A_190001_5',pools['mixed'])
         self.assertTrue(all('序号' not in x['name'] for x in heroes))
-        self.assertEqual({k:len(v) for k,v in pools.items()},{'mixed':134,'ordinary':97,'skin':37})
+        self.assertEqual({k:len(v) for k,v in pools.items()},{'mixed':130,'ordinary':93,'skin':37})
+        for aid in ('A_1224_6','A_1225_6','A_1997_6','A_1999_6'):
+            self.assertNotIn(aid,pools['mixed'])
         self.assertFalse({'A_1903','A_1904','A_1905','A_1909'} & {aid.rsplit('_',1)[0] for aid in pools['mixed']})
 
     def test_damage_receipt_keeps_settled_and_actual_damage_through_native_bridge(self):

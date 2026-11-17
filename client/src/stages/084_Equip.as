@@ -198,6 +198,17 @@ package com.meng52.game.module.equip
             if(star==7 && phase>0) addAlchemyCorners104(frame,phase,92);
             return frame;
          }
+         return createQualityFrame104(star);
+      }
+
+      // Shared border factory: preserve the illustration and use the same
+      // native quality borders as ordinary equipment, including animated rainbow.
+      public static function createQualityFrame104(quality:int) : Sprite
+      {
+         var star:int = Math.max(1,Math.min(8,quality));
+         var frame:Sprite = new Sprite();
+         if(star>=8) {addRainbowFrame104(frame);return frame;}
+         if(star==7) {frame.addChild(GlobalFunction.createImage("UI_equip_box_0005"));return frame;}
          // The native quality icons also change the weapon artwork. Copy only
          // their border, keeping this equipment's original illustration intact.
          var texture:Texture = GlobalFunction.getTexture("EQ_1001_"+star+"0000");

@@ -46,6 +46,9 @@ def normalize_daily_counters(profile, now):
         records['help_suids']={}
         records['help_fuids']={}
     records['shared_daily_day']=today
+    if records.get('vip_daily_reward_day') is not None and records['vip_daily_reward_day']!=today:
+        records['vip_gift']=[]
+        records['vip_daily_reward_day']=today
     attempts=records.get('daily_stage_attempts')
     if not isinstance(attempts,dict):
         # Legacy counts also prove prior wins/first clears. Copy, never erase

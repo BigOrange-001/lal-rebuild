@@ -46,6 +46,15 @@ once('               if(target.buffs.purify) {target.removeBuff("purify",true); 
      '               if(target.s2AnnieImmune()) break;\n               if(target.buffs.purify) {target.removeBuff("purify",true); break;}')
 malz='               target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1)*scale*manualDamageMultiplier*heroSkillOutputRate104(),hops:0,debuff:true};'
 once(malz,malz+'\n               target.s2AnnieStatus("poison");')
+once('                  if(next.length) { state.hops = 1; state.until = next[0].abilitySerial+1; next[0].abilityState[key] = state; }',
+     '''                  if(next.length)
+                  {
+                     var infected:Avatar = next[0];
+                     if(infected.s2AnnieImmune()) continue;
+                     if(infected.buffs.purify) {infected.removeBuff("purify",true); continue;}
+                     state.hops = 1; state.until = infected.abilitySerial+1; infected.abilityState[key] = state;
+                     infected.s2AnnieStatus("poison");
+                  }''')
 bomb='               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify) target.abilityState["bomb_"+abilityIndex]={abyssRelicContext104:abyssCaptureContext104(this),owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};'
 once(bomb,bomb.replace('&& !target.buffs.purify)', '&& !target.buffs.purify && !target.s2AnnieImmune())').replace(') target.abilityState', ')\n               {\n                  target.abilityState')+'\n                  target.s2AnnieStatus("bomb");\n               }')
 once('         if(abilityTurnStart())\n         {','         if(abilityTurnStart())\n         {\n            if(skin2.eggUntil && hp > 0 && checkBuff()) dead();')

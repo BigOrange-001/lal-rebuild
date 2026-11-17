@@ -143,7 +143,7 @@ CATEGORIES = {
                   "server/test_anchor_104.py", "server/test_review_104.py",
                   "scripts/test_hero_*.py", "scripts/test_skin_*.py", "scripts/test_nightbringer_yasuo_*.py",
                   "scripts/test_dragonmancer_kaisa_native.py", "scripts/test_soraka_targets_104.py",
-                  "scripts/test_newyear_annie_104.py", "scripts/test_teemo_combat.py",
+                  "scripts/test_newyear_annie_104.py", "scripts/test_teemo_combat.py", "scripts/test_review_combat_105.py",
                   "server/test_orange_four_stat_buff_overlay.py", "server/test_player_copy_104.py"],
     },
     "pve": {

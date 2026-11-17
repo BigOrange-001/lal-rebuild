@@ -986,7 +986,14 @@ package com.meng52.game.module.avatar
                if(owner)
                {
                   var next:Array = owner.abilityCandidates(team,line,pos,300,1,false,"nearest",[this]);
-                  if(next.length) { state.hops = 1; state.until = next[0].abilitySerial+1; next[0].abilityState[key] = state; }
+                  if(next.length)
+                  {
+                     var infected:Avatar = next[0];
+                     if(infected.s2AnnieImmune()) continue;
+                     if(infected.buffs.purify) {infected.removeBuff("purify",true); continue;}
+                     state.hops = 1; state.until = infected.abilitySerial+1; infected.abilityState[key] = state;
+                     infected.s2AnnieStatus("poison");
+                  }
                }
             }
          }
@@ -1933,10 +1940,11 @@ package com.meng52.game.module.avatar
          if(!target || target.hp <= 0) return 0;
          var count:int = 0; var stolen:Number = 0; var keys:Array=[];
          for(var key:String in target.buffs) if(Buff.LIST_BUFF.indexOf(key)>=0) keys.push(key);
+         if(target.shieldValue104()>0 && keys.indexOf("shield")<0) keys.push("shield");
          keys.sort();
          for each(key in keys)
          {
-            if(key == "shield") stolen = Number(target.buffs[key].value);
+            if(key == "shield") stolen = target.shieldValue104();
             target.removeBuff(key); ++count; if(!all) break;
          }
          if(count)fxPulse104("cleanse",target);

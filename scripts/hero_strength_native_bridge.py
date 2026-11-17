@@ -150,6 +150,7 @@ class NativeSkinBattle(MeasuredBattle):
         if name == 'focus': u['_ability_focus']=a[0];return None
         if name == 'getDamage': return self._get_damage(u)
         if name == 'getHpMax': return u['hp_max']
+        if name == 'shieldValue104': return self._buff_value(u,'shield')
         if name == 'getType': return self._get_type(u)
         if name == 'heroSkillOutputRate104': return self.hero_output_rate_104(u)
         if name == 'abilityFeedback': return None

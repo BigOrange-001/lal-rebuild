@@ -17,7 +17,9 @@ function unit(family=0,team=1,pos=1500){
  u.getHpMax=()=>u.hpMax;u.heroSkillOutputRate104=()=>.8;
  u.beginAbilityAttack=beginAbilityAttack;u.endAbilityAttack=endAbilityAttack;u.currentAbilityAttack=currentAbilityAttack;
  u.abilityFeedback=()=>{};u.abilityControl=(v,k,d,value=0)=>{if(v&&v.hp>0)v.addBuff(k,d,value)};
- u.removeBuff=k=>delete u.buffs[k];u.removeAllDebuff=()=>{u.skin2ClearDebuffs();for(let k of Buff.LIST_DEBUFF)delete u.buffs[k]};
+ u.shieldValue104=()=>Object.entries(u.buffs).reduce((sum,[key,buff])=>sum+(key==='shield'||key.startsWith('yasuoShield104_')?Math.max(0,buff.value):0),0);
+ u.removeBuff=k=>{if(k==='shield')for(let key in u.buffs)if(key.startsWith('yasuoShield104_'))delete u.buffs[key];delete u.buffs[k]};
+ u.removeAllDebuff=()=>{u.skin2ClearDebuffs();for(let k of Buff.LIST_DEBUFF)delete u.buffs[k]};
  u.addBuff=(k,d,value=0)=>{
   if(Buff.LIST_DEBUFF.includes(k)&&u.s2AnnieImmune())return;
   if(k==='purify')u.removeAllDebuff();

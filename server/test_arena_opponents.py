@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from arena_opponents import combat_config_signature, highest_rarity_heroes
+from arena_opponents import combat_config_signature
 from bot_names import BOT_NAMES
 from battle_engine import _native_skill_snapshot
 from gameplay_competition import GameplayCompetition
@@ -40,13 +40,7 @@ class ArenaOpponentsTest(unittest.TestCase):
         return [[iid, slot % 3, .2 if slot < 3 else .1]
                 for slot, iid in enumerate(iid for iid in saved if iid)]
 
-    def test_king_batch_uses_highest_hero_forms_and_real_power(self):
-        pool = highest_rarity_heroes(self.config["cfg"])
-        self.assertGreaterEqual(len(pool), 100)
-        blocked = set(self.config["cfg"]["system_simple"]["skin_acquisition_blocked_heroes"])
-        self.assertTrue(set(pool) & blocked)
-        forms = {aid.rsplit("_", 1)[0]: aid for aid in pool}
-        self.assertEqual(len(forms), len(pool))
+    def test_king_batch_uses_real_cultivation_and_real_power(self):
         listed = self.comp.dispatch(self.uid, "user.get_rank_list", {})
         rows = listed[2]
         self.assertEqual([row[0] for row in rows], list(range(2, 11)))
@@ -62,16 +56,29 @@ class ArenaOpponentsTest(unittest.TestCase):
             self.assertNotIn("r", bot["uid"])
             self.assertEqual(len(row[3]), 5)
             self.assertEqual({unit["line"] for unit in bot["units"]}, {0, 1, 2})
+            self.assertTrue(all(unit["isme"] is False for unit in bot["units"]))
+            self.assertEqual({unit["pos"] for unit in bot["units"]}, {300, 600})
             aids = [unit["aid"] for unit in bot["units"]]
-            self.assertEqual(len(set(aids)), 5)
-            self.assertTrue(all(forms[aid.rsplit("_", 1)[0]] == aid for aid in aids))
+            self.assertEqual(len({aid.rsplit("_", 1)[0] for aid in aids}), 5)
             actual = self.comp._team_power(bot["units"])
             powers.append(actual)
             self.assertEqual(actual, bot["power"])
-            target = batch["source_power"] * (1.25 - .75 * index / 8)
-            # Power 1.5 produces small integer totals for starter teams.
-            # A half-point rounded target must not fail a percentage-only bound.
-            self.assertLessEqual(abs(actual - target), max(1, target * .015))
+            # Stats are the roster serializer's output for a rebuilt NPC
+            # profile, never a scaled copy of another team.
+            recipe = bot["recipe"]
+            lines = recipe["lines"] + [0] * (6 - len(recipe["lines"]))
+            rebuilt = self.comp.cultivator.build(recipe["aids"], batch["template"], recipe["progress"],
+                                                 recipe["seed"], uid=bot["uid"], name=bot["name"],
+                                                 lines=lines)
+            rebuilt_units = self.comp.cultivator.units(rebuilt, scope="arenaEnemy", lines=lines)
+            self.assertEqual([unit["aid"] for unit in rebuilt_units], aids)
+            self.assertEqual(self.comp._team_power(rebuilt_units), actual)
+            # Heroes keep the player's lineup quality (or one step below
+            # when a level-1 team at that quality is already too strong).
+            own_stars = [int(unit["aid"].rsplit("_", 1)[1]) for unit in
+                         self.comp._current_arena_team(self.store.profile_raw(self.uid))]
+            self.assertTrue(all(min(own_stars) - 2 <= int(aid.rsplit("_", 1)[1]) <= max(own_stars)
+                                for aid in aids))
             preview = self.comp.dispatch(self.uid, "user.get_battle_users",
                                          {"users": [[bot["uid"]]]})
             self.assertEqual(preview[bot["uid"]]["data"], row[3])
@@ -169,7 +176,7 @@ class ArenaOpponentsTest(unittest.TestCase):
         old_batch = self.store.profile_raw(self.uid)["records"]["pvp_opponents"]
 
         def legacy(profile):
-            profile["records"]["pvp_opponents"].pop("power_order_schema", None)
+            profile["records"]["pvp_opponents"]["power_order_schema"] = "real-cultivation-v1"
             return profile, {}
 
         self.store.atomic_update(self.uid, legacy)

@@ -1,4 +1,4 @@
-"""Generate a persistent nine-opponent local arena batch from real snapshots."""
+"""Generate a persistent nine-opponent local arena batch from real cultivation."""
 from __future__ import annotations
 
 import copy
@@ -10,13 +10,13 @@ import random
 import re
 import secrets
 
-from battle_engine import serialize_stage_team
+from npc_cultivation import template_stars
 from bot_names import sample_bot_names
 from mod_policy import runtime as mod_runtime, candidate_ids, policy_signature
 
 
 STAT_KEYS = ("hp", "ap", "de_ph", "de_ma")
-POWER_ORDER_SCHEMA = "rank-ascending-power-descending-v1"
+POWER_ORDER_SCHEMA = "real-cultivation-v2"
 COMBAT_CONFIG_TABLES = ("avatar", "skill", "equip", "talent", "system_simple")
 
 
@@ -74,36 +74,48 @@ def opponent_ranks(player_rank: int) -> list[int]:
     return sorted(choices)
 
 
-def _scaled_units(base: list[dict], factor: float) -> list[dict]:
-    result = copy.deepcopy(base)
-    for unit, original in zip(result, base):
-        for key in STAT_KEYS:
-            unit[key] = max(1, round(int(original[key]) * factor))
-        unit["hp_max"] = unit["hp"]
-    return result
+def bot_lines(rng: random.Random, size: int = 5) -> list[int]:
+    """A lane per slot that always covers all three lanes."""
+    lines = [0, 1, 2] + [rng.randrange(3) for _ in range(max(0, size - 3))]
+    rng.shuffle(lines)
+    return lines[:size]
 
 
-def _fit_units(base: list[dict], target: int, power_fn) -> tuple[list[dict], int]:
-    low, high = 0.0, 1.0
-    while power_fn(_scaled_units(base, high)) < target and high < 4096:
-        high *= 2
-    if power_fn(_scaled_units(base, high)) < target:
-        raise ValueError("arena opponent power target is unreachable")
-    for _ in range(28):
-        mid = (low + high) / 2
-        if power_fn(_scaled_units(base, mid)) < target:
-            low = mid
-        else:
-            high = mid
-    candidates = (_scaled_units(base, low), _scaled_units(base, high))
-    return min(((units, power_fn(units)) for units in candidates),
-               key=lambda result: abs(result[1] - target))
+def team_rows(units: list[dict]) -> list[list]:
+    """Compact ``[aid, lv, slv, line, pos, leader]`` rows kept for history."""
+    return [[unit["aid"], int(unit.get("lv", 1)), int(unit.get("slv", 1)), int(unit.get("line", 0)),
+             float(unit.get("pos", 0)), int(bool(unit.get("leader")))] for unit in units]
 
 
-def generate_opponents(cfg: dict, owner_uid: str, generation: int, player_rank: int,
-                       own_units: list[dict], power_fn, *, combat_signature: str) -> dict:
-    pool = highest_rarity_heroes(cfg)
-    own_power = power_fn(own_units)
+def fit_bot(cultivator, template: dict, forms: dict, rng: random.Random, target: int, power_fn,
+            *, uid: str, name: str, seed: int, aids=None, lines=None) -> dict:
+    """Build one opponent whose stats come from real cultivation.
+
+    Heroes match the player's lineup quality slot by slot. When even level-1
+    heroes at that quality are stronger than the target, one lower quality is
+    tried, so a new account is not met by a lineup it cannot answer.
+    """
+    stars = template_stars(template)
+    bonds: list[str] = []
+    best = None
+    for drop in range(0, 3):
+        wanted = [max(2, star - drop) for star in stars]
+        picked, picked_bonds = (aids, []) if aids else cultivator.pick_team(rng, forms, wanted)
+        slot_lines = lines or bot_lines(rng, len(picked))
+        result = cultivator.fit(picked, template, target, power_fn, seed, uid=uid, name=name,
+                                scope="arenaEnemy", lines=slot_lines + [0] * (6 - len(slot_lines)))
+        result.update(aids=picked, bonds=picked_bonds, lines=slot_lines)
+        if best is None or abs(result["power"] - target) < abs(best["power"] - target):
+            best = result
+        if aids or result["power"] <= target * 1.05:
+            break
+    if not math.isfinite(best["power"]) or best["power"] < 1:
+        raise ValueError("arena generated invalid enemy power")
+    return best
+
+
+def generate_opponents(cultivator, profile: dict, owner_uid: str, generation: int, player_rank: int,
+                       own_power: int, power_fn, *, combat_signature: str) -> dict:
     if own_power < 1:
         raise ValueError("current arena team has no battle power")
     if type(generation) is not int or generation < 1:
@@ -112,34 +124,38 @@ def generate_opponents(cfg: dict, owner_uid: str, generation: int, player_rank: 
     rng = random.Random(int.from_bytes(hashlib.sha256(
         f"{owner_uid}:{generation}:{nonce}".encode()).digest(), "big"))
     owner_hex = hashlib.sha256(str(owner_uid).encode()).hexdigest()[:14]
-    levels = [int(unit.get("lv", 1)) for unit in own_units]
-    skills = [int(unit.get("slv", 1)) for unit in own_units]
-    level = max(1, min(99, round(sum(levels) / len(levels))))
-    skill = max(1, min(10, round(sum(skills) / len(skills))))
-    bots = []
+    template = cultivator.template(profile)
+    forms = cultivator.family_forms("appearance.arena_enemy")
     ranks = opponent_ranks(player_rank)
     names = sample_bot_names(rng, len(ranks))
+    bots = []
     for index, rank in enumerate(ranks):
-        aids = rng.sample(pool, 5)
-        team = [[aid, level, skill, slot % 3, .12 if slot < 3 else .02,
-                 int(slot == 0)] for slot, aid in enumerate(aids)]
-        base = serialize_stage_team(cfg, team, team=2, scope="arenaEnemy")
         # Lower rank numbers are stronger. Keep the generated UID and rank in
         # their original order; only the target strength descends down the list.
         ratio = .5 + .75 * (len(ranks) - 1 - index) / (len(ranks) - 1)
         target = max(1, round(own_power * ratio))
-        units, actual = _fit_units(base, target, power_fn)
-        if not math.isfinite(actual) or actual < 1:
-            raise ValueError("arena generated invalid enemy power")
         # ItemPVP treats *any* UID containing 'r' as a configured robot and
         # replaces its compact roster with pvp_robot. Hex IDs use the supplied
         # compact snapshots instead, including skin heroes.
         bot_uid = f"n{owner_hex}_{generation}_{index}"
-        bots.append({"uid": bot_uid, "rank": rank,
-                     "name": names[index], "lv": level,
-                     "team": team, "units": units, "power": actual,
-                     "target_power": target})
+        seed = rng.getrandbits(48)
+        built = fit_bot(cultivator, template, forms, rng, target, power_fn,
+                        uid=bot_uid, name=names[index], seed=seed)
+        units = built["units"]
+        bots.append({"uid": bot_uid, "rank": rank, "name": names[index],
+                     "lv": max(int(unit.get("lv", 1)) for unit in units),
+                     "team": team_rows(units), "units": units, "power": built["power"],
+                     "target_power": target, "bonds": built["bonds"],
+                     "recipe": {"aids": built["aids"], "lines": built["lines"],
+                                "progress": built["progress"], "seed": seed}})
+    # Real cultivation moves in whole steps, so neighbouring targets can land
+    # out of order. Stronger teams always take the better ranks.
+    order = sorted(range(len(bots)), key=lambda i: -bots[i]["power"])
+    ordered = [dict(bots[i]) for i in order]
+    for slot, bot in enumerate(ordered):
+        bot["rank"] = ranks[slot]
+        bot["uid"] = f"n{owner_hex}_{generation}_{slot}"
     return {"generation": generation, "player_rank": player_rank, "nonce": nonce,
             "power_order_schema": POWER_ORDER_SCHEMA,
             "combat_config_sha256": combat_signature,
-            "source_power": own_power, "bots": bots}
+            "source_power": own_power, "template": template, "bots": ordered}

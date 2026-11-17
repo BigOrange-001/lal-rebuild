@@ -8,7 +8,7 @@
       "index": 1,
       "class": "com.meng52.game.global.GlobalData",
       "source": "client/src/stages/001_GlobalData.as",
-      "source_sha256": "5e9c5711c7a4c4bc085b1f644eb936f65e163e9ede46d9e828b5a356482bbb3c"
+      "source_sha256": "596ab0ec28db50e1b8c2f023514673c9807c7fbb4433b0b10664aa718236c513"
     },
     {
       "index": 2,
@@ -290,13 +290,13 @@
       "index": 48,
       "class": "com.meng52.game.ui.screen.PanelCenterPVP",
       "source": "client/src/stages/046_PanelCenterPVP.as",
-      "source_sha256": "a7fffbdb56b1c888a67337beb078d783b946f3193acd0bc4420caf999253fa82"
+      "source_sha256": "70e3b91f58f9cdc684a7d75415cbbf1530a4bf4a13d6fe13e46d54ad4c4d2869"
     },
     {
       "index": 49,
       "class": "com.meng52.game.ui.element.ItemPVP",
       "source": "client/src/stages/047_ItemPVP.as",
-      "source_sha256": "4bbea1d6edea37107e17e7d493702617a5de5d8713f283e94cbdc2c8e5e2da23"
+      "source_sha256": "fe8a662400a2651e885ffeb5d9920d9c12b625cc056bd2a3098a627dabb5b64d"
     },
     {
       "index": 50,
@@ -1064,7 +1064,7 @@
       "index": 176,
       "class": "com.meng52.game.module.map.GameMap",
       "source": "client/src/stages/175_GameMap.as",
-      "source_sha256": "ceb1920fbaaab43b2d3cb0be0d8003db8865690cfbe7f66481bba65bcc567362"
+      "source_sha256": "f051ae6415d4dda7fb9b7b98a9223098a756c7b4bb5dac58d380f16f85f85fa7"
     },
     {
       "index": 177,
@@ -1088,7 +1088,7 @@
       "index": 180,
       "source": "client/src/stages/180_PanelPVEembattle.as",
       "class": "com.meng52.game.ui.panel.PanelPVEembattle",
-      "source_sha256": "36d52ea911ae14392835bf3b4411ea5162587be89d7f51d5a6f271e7d4ee6610"
+      "source_sha256": "3be48d8114bbc2e0d847f1b74150299b4627df79bc98718de2b4c0497a8444e6"
     },
     {
       "index": 181,

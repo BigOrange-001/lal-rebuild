@@ -37,6 +37,7 @@ package com.meng52.game.global
    public class GlobalData
    {
       public static var $formationShare104:Object = {};
+      public static var $arenaRaid105:Object = {};
       // Non-null only while an Abyss Corridor battle is being prepared or fought.
       // Fields: heroes (pool id -> display data), team (slot order), node_id,
       // pending (saved combat result to resume), finish (last finish reply), resume.

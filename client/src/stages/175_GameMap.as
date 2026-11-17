@@ -1437,7 +1437,15 @@ package com.meng52.game.module.map
          {
             GlobalData.$isFightReplay = false;
             _team.pop();
-            if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="challenge")
+            if(GlobalData.$arenaRaid105 && GlobalData.$arenaRaid105.id)
+            {
+               // Top-ten raid defense: an ordinary arena battle, settled by the raid.
+               _obj.raid_id=GlobalData.$arenaRaid105.id;
+               _obj.actionID="arena-raid-"+_obj.raid_id+"-"+new Date().time+"-"+Math.random();
+               GlobalData.$arenaRaid105={};
+               SendAndSelect.sendAndSelectService("user.pk_combat_raid",_obj,reSend);
+            }
+            else if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode=="challenge")
             {
                _obj.formation_id=GlobalData.$formationShare104.id;
                SendAndSelect.sendAndSelectService("user.pk_combat_formation",_obj,reSend);

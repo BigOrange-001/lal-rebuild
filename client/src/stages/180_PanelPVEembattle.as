@@ -704,6 +704,7 @@ package com.meng52.game.ui.panel
 
       override public function onTRIGGERED(param1:Event) : void
       {
+         GlobalData.$arenaRaid105={};
          if(GlobalData.$formationShare104 && GlobalData.$formationShare104.mode)
          {
             GlobalData.$formationShare104={};

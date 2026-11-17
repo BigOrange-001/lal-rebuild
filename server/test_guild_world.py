@@ -1,5 +1,6 @@
 """Persistent guild AI players: migration, growth, membership, boss share and LLM plans."""
 import json
+import datetime
 import sqlite3
 import sys
 import unittest
@@ -9,9 +10,23 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import guild_chat
+from game_calendar import game_day
 from gameplay_guild_boss import GameplayGuildBoss
 from guild_llm import GuildLLM, parse_events
 from player_store import PlayerStore
+
+
+class FakeClock:
+    def __init__(self):
+        self.value = int(datetime.datetime.fromisoformat("2026-11-17T12:00:00+08:00").timestamp())
+
+    def now(self):
+        return self.value
+
+    def advance(self, seconds):
+        before = self.value
+        self.value += seconds
+        return before, self.value
 
 
 class GuildWorldBase(unittest.TestCase):
@@ -23,7 +38,7 @@ class GuildWorldBase(unittest.TestCase):
     def setUp(self):
         self.db = sqlite3.connect(":memory:", check_same_thread=False)
         self.addCleanup(self.db.close)
-        self.store = PlayerStore(self.db, self.config)
+        self.store = PlayerStore(self.db, self.config, clock=FakeClock())
         self.uid = self.store.login("guild-world-test")["uid"]
         self.guild = next(h for h in self.store.gameplay_handlers if isinstance(h, GameplayGuildBoss))
         self.world = self.guild.world
@@ -131,7 +146,16 @@ class GuildWorldTests(GuildWorldBase):
 
     def test_ai_members_donate_worship_and_leave_kill_to_player(self):
         self.create_guild()
-        self.hours(72, approve=True)
+        # A noon start spans four calendar dates over 72 hours. Check each
+        # day's awards instead of assuming the interval covers three dates.
+        awarded_by_day = {}
+        previous_gold = self.profile()["attrs"].get("association_worship_gold", 0)
+        for _ in range(72):
+            self.hours(1, approve=True)
+            gold = self.profile()["attrs"].get("association_worship_gold", 0)
+            day = game_day(self.store.clock.now())
+            awarded_by_day[day] = awarded_by_day.get(day, 0) + gold - previous_gold
+            previous_gold = gold
         profile = self.profile()
         guild = profile["association"]
         self.assertGreater(len(guild["members"]), 4)
@@ -146,8 +170,14 @@ class GuildWorldTests(GuildWorldBase):
         if state.get("ai_ranks"):
             ranks = [row["damage"] for row in state["rank_list"]]
             self.assertEqual(ranks, sorted(ranks, reverse=True))
-        worship_cap = 5 * self.world.settings["worship_gold_per_ai"] * 3
-        self.assertLessEqual(profile["attrs"].get("association_worship_gold", 0), worship_cap)
+        self.assertEqual(len(awarded_by_day), 4)
+        worship_cap = (self.world.settings["worship_gold_daily_ai_limit"] *
+                       self.world.settings["worship_gold_per_ai"])
+        self.assertGreater(sum(awarded_by_day.values()), 0)
+        for day, awarded in awarded_by_day.items():
+            with self.subTest(day=day):
+                self.assertGreaterEqual(awarded, 0)
+                self.assertLessEqual(awarded, worship_cap)
 
     def test_rejected_and_kicked_ai_players_remember_and_stay_away(self):
         self.create_guild()

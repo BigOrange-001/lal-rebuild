@@ -69,10 +69,23 @@ class SkinAcquisition104Tests(unittest.TestCase):
         self.assertTrue(all(r[1] == 300 and list(r[0]['avatar'].values()) == [1]
                             for r in extract['exchange']))
 
-    def test_all_sixteen_exchanges_grant_one_card_at_300(self):
-        self.seed(lambda p: p['attrs'].update(lottery_activity={'score': 4800}, avatar_len=100))
-        for index, row in enumerate(self.cfg['ploy_system_simple']['extract_avatar']['exchange']):
-            params = {'index': index, 'actionID': 'purchase-' + str(index)}
+    def test_daily_points_exchange_offers_six_t2_skins_and_two_ordinary(self):
+        from daily_exchange_105 import daily_integral_offers
+        day, rows = daily_integral_offers(self.document, self.store.clock.now())
+        t2 = {aid for aid, tier in self.tiers.items() if tier == 'T2'}
+        skins = [next(iter(r[0]['avatar'])) for r in rows if r[1] == 300]
+        ordinary = [next(iter(r[0]['avatar'])) for r in rows if r[1] == 200]
+        self.assertEqual((len(skins), len(ordinary)), (6, 2))
+        self.assertTrue(set(skins) <= t2)
+        self.assertFalse(set(ordinary) & set(self.tiers))
+        info = self.economy.integral_exchange_info(self.uid, {})
+        self.assertEqual((info['day'], info['rows']), (day, rows))
+        self.seed(lambda p: p['attrs'].update(lottery_activity={'score': 2200}, avatar_len=100))
+        with self.assertRaises(GameplayFault) as stale:
+            self.economy.exchange_activity_avatar(self.uid, {'index': 0, 'day': '2000-01-01', 'actionID': 'stale'})
+        self.assertEqual(stale.exception.code, 'DailyExchangeExpired')
+        for index, row in enumerate(rows):
+            params = {'index': index, 'day': day, 'actionID': 'purchase-' + str(index)}
             result = self.economy.exchange_activity_avatar(self.uid, params)
             self.assertEqual([h['aid'].split('|')[0] for h in result['avatar'].values()], list(row[0]['avatar']))
             replay = self.economy.exchange_activity_avatar(self.uid, params)

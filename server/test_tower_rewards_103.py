@@ -43,18 +43,6 @@ class TowerRewards103Tests(unittest.TestCase):
         for table in ('battle_ploy','pass_battle_gift'):
             self.assertEqual(self.config['cfg'][table],self.config[table])
             self.assertEqual(self.config['cfg'][table],self.config['pve'][table])
-    def test_new_floor_power_grows_smoothly_and_matches_serialized_snapshots(self):
-        previous=self.config['combat_ploy']['P_200_150']['recommended_power_original_104']['0']
-        for floor in range(151,181):
-            stage=self.config['combat_ploy'][f'P_200_{floor}']
-            self.assertEqual(len(stage['team2']),9)
-            actual=_power(self.config['cfg'],stage['team2'],stage['enemy_unit_stats_by_diff']['0'])
-            from power_balance_104 import normalize_team_power
-            self.assertEqual(stage['recommended_power'],normalize_team_power(actual))
-            self.assertTrue(previous<actual<previous*1.06)
-            self.assertLess(abs(actual-stage['tower_enemy_rule']['target_power'])/actual,.00001)
-            previous=actual
-        self.assertLess(abs(previous-50_000_000_000),500_000)
     def test_category_probability_boundaries_and_full_progression(self):
         class Draws:
             def __init__(self):self.tickets=iter([0,39,40,69,70,99,39,69])

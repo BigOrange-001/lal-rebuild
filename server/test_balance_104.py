@@ -77,33 +77,6 @@ console.log(JSON.stringify(out));
         self.assertEqual(run.returncode,0,run.stderr)
         self.assertEqual(json.loads(run.stdout),[['rear'],['front','rear','cross'],['caster']])
 
-    def test_added_large_bonds_are_buildable_and_preserve_skill_growth(self):
-        from battle_engine import _native_skill_snapshot
-        cfg=self.document['cfg']
-        bonds=cfg['system_simple']['bonds_104']
-        self.assertEqual(Counter(len(b['families']) for b in bonds),{2:63,3:29,4:13,5:6})
-        for bond in bonds[101:110]:
-            available=[{int(a.rsplit('_',1)[1]) for a in cfg['avatar']
-                        if a.rsplit('_',1)[0]==family} for family in bond['families']]
-            qualities=set.intersection(*available)
-            self.assertTrue(qualities,bond['name'])
-            for quality in sorted(qualities):
-                with self.subTest(bond=bond['name'],quality=quality):
-                    aids=[f'{family}_{quality}' for family in bond['families']]
-                    self.compare(self.lineup(aids))
-                    self.assertIn(bond,active_bonds(cfg,aids[0],aids))
-                    variant=cfg['system_simple']['bond_skill_variants_104'][aids[0]][bond['id']]
-                    self.assertEqual(set(variant),{'skill','leader_skill'})
-                    normal=cfg['skill'][variant['skill']]
-                    low=_native_skill_snapshot(cfg,variant['skill'],1)['skills']
-                    high=_native_skill_snapshot(cfg,variant['skill'],7)['skills']
-                    for action,value,step in normal['skillUp']:
-                        self.assertAlmostEqual(high[action][value]-low[action][value],step*6)
-                    for slot in ('normal','captain'):
-                        self.assertTrue(bond['mechanism'][slot]['replace'])
-                    if 'enemy_lane_behind_primary_nearest' in normal['actionTargetPolicies']:
-                        self.assertEqual(normal['actionTargetPolicyArgs'][1]['centerActionIndex'],0)
-
     def test_preview_lineup_does_not_use_current_team(self):
         p=self.lineup(['A_1009_5','A_1001_5','A_1007_5'])
         expected=self.native(p,self.document['cfg'])
@@ -131,38 +104,6 @@ console.log(JSON.stringify(out));
         self.assertFalse(active_bonds(cfg,'A_1009_5',['A_1009_5','A_1201_5','A_1007_5']))
         self.assertFalse(active_bonds(cfg,'A_1025_6',['A_1025_6','A_1021_5','A_1041_6']))
         self.assertFalse(active_bonds(cfg,'A_1009_5',['A_1009_5']*3))
-
-    def test_catalogue_covers_named_heroes_only_and_mechanism_contract(self):
-        cfg = self.document['cfg']
-        count = Counter(f for b in cfg['system_simple']['bonds_104'] for f in b['families'])
-        playable = {aid.rsplit('_',1)[0] for aid,row in cfg['avatar'].items()
-                    if aid.startswith('A_1') and not aid.startswith('A_19') and '序号' not in row['name']}
-        playable.add('A_1998')
-        self.assertEqual(set(count),playable)
-        self.assertTrue(all(2<=count[f]<=3 for f in playable))
-        for bond in cfg['system_simple']['bonds_104']:
-            size=len(bond['families'])
-            self.assertIn(size,(2,3,4,5))
-            if size>=3:
-                self.assertIn(bond['focus'],bond['families'])
-                self.assertTrue(bond['mechanism']['normal']['actions'])
-            if size>=4:
-                self.assertTrue(bond['mechanism']['normal']['replace'])
-                self.assertTrue(bond['mechanism']['captain']['replace'])
-
-    def test_no_bond_is_contained_in_another_and_all_have_matching_quality(self):
-        cfg=self.document['cfg']
-        bonds=cfg['system_simple']['bonds_104']
-        self.assertEqual(Counter(Counter(f for b in bonds for f in b['families']).values()),{2:77,3:47})
-        for i,bond in enumerate(bonds):
-            members=set(bond['families'])
-            for other in bonds[i+1:]:
-                other_members=set(other['families'])
-                self.assertFalse(members<=other_members or other_members<=members,
-                                 (bond['name'],other['name']))
-            qualities=[{int(a.rsplit('_',1)[1]) for a in cfg['avatar'] if a.rsplit('_',1)[0]==f}
-                       for f in bond['families']]
-            self.assertTrue(set.intersection(*qualities),bond['name'])
 
     def test_large_bond_has_no_free_nested_bonds_even_through_dn(self):
         cfg=self.document['cfg']

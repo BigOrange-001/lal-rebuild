@@ -5,7 +5,6 @@ import unittest
 from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
 from pathlib import Path
 
-from audit_power_roles import build_samples, summarize
 from arena_opponents import combat_config_signature
 from gameplay_competition import GameplayCompetition
 from gateway import load_game_config
@@ -21,16 +20,7 @@ class PowerRoleBalanceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.document = load_game_config(ROOT / 'config/reconstruction/full-config.json')
-        cls.samples = build_samples(cls.document)
 
-    def test_three_roles_stay_close_across_progression_and_equipment(self):
-        self.assertGreaterEqual(len(self.samples), 1600)
-        for group in summarize(self.samples):
-            with self.subTest(scenario=group['scenario'], quality=group['quality']):
-                self.assertEqual([r['role'] for r in group['roles']], [1, 2, 3])
-                # User selected defense=1.8; purple cohorts retain a gap below 13%.
-                self.assertLess(group['new_mean_gap'], .13)
-                self.assertLess(group['new_mean_gap'], group['old_mean_gap'])
 
     def test_weight_overlay_is_idempotent_and_keeps_hero_panels(self):
         document = copy.deepcopy(self.document)

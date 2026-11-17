@@ -7,7 +7,7 @@ from player_store import GameplayFault, native_dates
 from vip_campaign import credit_vip_gift, normalize_vip_profile
 from spending_budget import ORDINARY_TIERS,LIMIT_MESSAGE,charge_spending,normalize_spending,public_spending
 from check_in_rewards import apply_check_in_rewards,check_in_coin,orange_bonus_count,random_orange_aid
-from recruit_exchange import MEDAL_PRICE, SKIN_SOUL_IDS, daily_orange_list
+from recruit_exchange import SKIN_SOUL_IDS
 from mod_policy import (runtime as mod_runtime, new_heroes, effective_digest,
                         reward_allowed, ensure_reward, ensure_channel,
                         channel_enabled, hero_available, activity_categories)
@@ -28,7 +28,7 @@ class GameplayEconomy:
         "user.mystery_shop_info", "user.mystery_shop_buy", "user.mystery_shop_refresh_by_coin",
         "user.gamble", "user.get_gamble_reports", "user.fund",
         "user.get_pay_gift", "user.get_spend_fixed_gift", "user.get_pass_battle_gift", "user.get_consume_ranks",
-        "user.medal_exchange", "user.recruit_exchange_info", "user.recruit_medal_exchange", "user.get_reward_by_code", "user.exchange_key",
+        "user.medal_exchange", "user.recruit_exchange_info", "user.recruit_medal_exchange", "user.integral_exchange_info", "user.get_reward_by_code", "user.exchange_key",
         "user.welfare_reward_info", "user.welfare_buy_dust", "user.welfare_get_reward",
         "user.roulette", "user.roulette_lottery", "user.get_lottery_activity", "user.exchange_activity_avatar",
         "user.get_box_key", "user.box_key_gift", "user.box_key_exchange", "user.box_gift_record",
@@ -91,6 +91,7 @@ class GameplayEconomy:
             "user.medal_exchange": self.medal_exchange,
             "user.recruit_exchange_info": self.recruit_exchange_info,
             "user.recruit_medal_exchange": self.recruit_medal_exchange,
+            "user.integral_exchange_info": self.integral_exchange_info,
             "user.get_reward_by_code": self.get_reward_by_code,
             "user.exchange_key": self.exchange_key,
             "user.welfare_reward_info": self.welfare_reward_info,
@@ -1103,46 +1104,51 @@ class GameplayEconomy:
         return result
 
     def recruit_exchange_info(self, uid, params):
-        day, aids = daily_orange_list(self.config, self._now())
+        """Today's medal exchange: 10 orange and 10 purple equipment, new each night."""
+        from daily_exchange_105 import daily_medal_offers
+        day, items = daily_medal_offers(self.config, self._now())
         profile = self.store.profile(uid)
-        return {"day": day, "medal": int(profile.get("medal", 0)), "cost": MEDAL_PRICE,
-                "heroes": [{"aid": aid, "name": self.config["avatar"][aid]["name"],
-                            "medal": MEDAL_PRICE} for aid in aids]}
+        return {"day": day, "medal": int(profile.get("medal", 0)), "items": items}
 
     def recruit_medal_exchange(self, uid, params):
-        aid, requested_day = params.get("aid"), params.get("day")
-        if not isinstance(aid, str) or not isinstance(requested_day, str):
-            raise GameplayFault("InvalidExchange", "请选择今日招募英雄")
+        from daily_exchange_105 import daily_medal_offers
+        eid, requested_day = params.get("id"), params.get("day")
+        if not isinstance(eid, str) or not isinstance(requested_day, str):
+            raise GameplayFault("InvalidExchange", "请选择今日兑换的装备")
         key = self._op_key("user.recruit_medal_exchange", params)
         def mutate(profile):
-            day, aids = daily_orange_list(self.config, self._now())
+            day, items = daily_medal_offers(self.config, self._now())
             if requested_day != day:
-                raise GameplayFault("DailyRecruitExpired", "今日招募列表已更新，请刷新后重试")
-            if aid not in aids:
-                raise GameplayFault("UnknownExchange", "该英雄不在今日勋章兑换列表中")
+                raise GameplayFault("DailyRecruitExpired", "今日兑换列表已更新，请刷新后重试")
+            item = next((row for row in items if row["id"] == eid), None)
+            if item is None:
+                raise GameplayFault("UnknownExchange", "该装备不在今日勋章兑换列表中")
+            price = int(item["medal"])
             medal = profile.get("medal", 0)
-            if type(medal) is not int or medal < MEDAL_PRICE:
+            if type(medal) is not int or medal < price:
                 raise GameplayFault("InsufficientMedal", "勋章不足")
-            attrs = profile.get("attrs", {})
-            avatars = profile.get("avatars", {})
-            capacity = attrs.get("avatar_len", 0) if isinstance(attrs, dict) else 0
-            if type(capacity) is not int or capacity < 0 or not isinstance(avatars, dict):
-                raise GameplayFault("InvalidProfile", "英雄背包数据异常")
-            if len(avatars) >= capacity:
-                raise GameplayFault("AvatarCapacity", "英雄背包已满")
-            before = set(avatars)
-            grant_reward(profile, {"heroes": [{"aid": aid, "num": 1}]}, {"cfg": self.config})
-            minted = {instance_id: copy.deepcopy(row) for instance_id, row in profile["avatars"].items()
-                      if instance_id not in before}
+            before = set(profile.get("my_equips", {}))
+            grant_reward(profile, {"items": [{"eid": eid, "num": 1}]}, {"cfg": self.config})
+            minted = {equip_id: copy.deepcopy(row) for equip_id, row in profile["my_equips"].items()
+                      if equip_id not in before}
             if len(minted) != 1:
-                raise GameplayFault("InvalidReward", "招募英雄发放异常")
-            profile["medal"] = medal - MEDAL_PRICE
+                raise GameplayFault("InvalidReward", "兑换装备发放异常")
+            profile["medal"] = medal - price
             return profile, self._economy_profile_response(
-                profile, avatar=minted, aid=aid, day=day, cost=MEDAL_PRICE)
+                profile, equip=minted, id=eid, day=day, cost=price)
         result, replayed = self.store.atomic_update(
-            uid, mutate, key, {"aid": aid, "day": requested_day})
+            uid, mutate, key, {"id": eid, "day": requested_day})
         result["replayed"] = replayed
         return result
+
+    def integral_exchange_info(self, uid, params):
+        """Today's points exchange: 6 skin and 2 ordinary orange heroes."""
+        from daily_exchange_105 import daily_integral_offers
+        day, rows = daily_integral_offers(self.config, self._now())
+        profile = self.store.profile(uid)
+        state = profile.get("attrs", {}).get("lottery_activity", {})
+        score = int(state.get("score", 0)) if isinstance(state, dict) else 0
+        return {"day": day, "rows": rows, "score": score}
 
     def _redeem(self, uid, params, method):
         raw = params.get("code", params.get("key", "")); code = str(raw).strip().upper()
@@ -1455,15 +1461,22 @@ class GameplayEconomy:
             return self._exchange_timed_avatar(uid, params)
         try: index=int(params.get("index"))
         except (TypeError,ValueError): raise GameplayFault("InvalidExchange", "Activity exchange index is invalid")
-        rows=((self.config.get("ploy_system_simple") or {}).get("extract_avatar") or {}).get("exchange",[])
-        if not isinstance(rows,list) or not 0<=index<len(rows): raise GameplayFault("UnknownExchange", "Activity exchange is not configured")
-        row=rows[index]
-        if not isinstance(row,list) or len(row)<2 or not isinstance(row[0],dict):
-            raise GameplayFault("InvalidExchange", "Activity exchange row does not match the client schema")
-        reward=copy.deepcopy(row[0]);need=int(row[1]);key=self._op_key("user.exchange_activity_avatar",params)
-        if mod_runtime(self.config):
-            ensure_reward(self.config, reward, "acquisition.exchange.activity")
+        from daily_exchange_105 import daily_integral_offers
+        requested_day=params.get("day")
+        key=self._op_key("user.exchange_activity_avatar",params)
         def mutate(p):
+            # Look up the rotating offer only for new operations. A retry
+            # after midnight must replay its original receipt first.
+            day,rows=daily_integral_offers(self.config,self._now())
+            if requested_day is not None and requested_day!=day:
+                raise GameplayFault("DailyExchangeExpired", "今日积分兑换已更新，请刷新后重试")
+            if not 0<=index<len(rows): raise GameplayFault("UnknownExchange", "Activity exchange is not configured")
+            row=rows[index]
+            if not isinstance(row,list) or len(row)<2 or not isinstance(row[0],dict):
+                raise GameplayFault("InvalidExchange", "Activity exchange row does not match the client schema")
+            reward=copy.deepcopy(row[0]);need=int(row[1])
+            if mod_runtime(self.config):
+                ensure_reward(self.config, reward, "acquisition.exchange.activity")
             attrs=p.setdefault("attrs",{}); state=attrs.setdefault("lottery_activity",{"score":0})
             if not isinstance(state,dict): state={"score":0};attrs["lottery_activity"]=state
             if int(state.get("score",0))<need: raise GameplayFault("ActivityScoreLow", "Not enough activity points")
@@ -1487,7 +1500,7 @@ class GameplayEconomy:
             out={"score":state["score"],"avatar":avatar}
             if "avatar_soul" in reward: out["avatar_soul"]=copy.deepcopy(reward["avatar_soul"])
             return p,out
-        result,replayed=self.store.atomic_update(uid,mutate,key,{"index":index})
+        result,replayed=self.store.atomic_update(uid,mutate,key,{"index":index,"day":requested_day})
         result["replayed"]=replayed;return result
 
     def _exchange_timed_avatar(self, uid, params):

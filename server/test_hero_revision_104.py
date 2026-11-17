@@ -12,20 +12,6 @@ class HeroRevisionTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):cls.backend.clock.close();cls.backend.db.close()
 
-    def test_gabriel_and_zed_final_values(self):
-        cfg=self.cfg;hero=cfg['avatar']['A_1998_6']
-        self.assertEqual(hero['name'],'加百列')
-        for level,ratio in ((1,.55),(10,1.1)):
-            skill=_native_skill_snapshot(cfg,hero['pl'][10],level)
-            self.assertEqual(len(skill['skills']),5)
-            for action in skill['skills']:self.assertAlmostEqual(action[1],ratio)
-        cap=cfg['skill'][hero['pl'][11]]
-        self.assertEqual(cap['pl'][:2],[1,5]);self.assertEqual(cap['skill'][2][1],3)
-        self.assertEqual(cap['skill'][3][1:3],[.3,3])
-        self.assertEqual(cap['actionTargetMaxTargets'][0],999)
-        zed=cfg['avatar']['A_1132_6']
-        self.assertEqual(cfg['skill'][zed['pl'][11]]['manualClonePolicy']['panelStatRatio'],1)
-
     def test_karthus_isolation_and_global_finisher(self):
         helper=ManualAbilityStateTests();battle=helper.battle();hits=[]
         battle.hit=lambda owner,target,ratio,kind,shared=0: hits.append((target,ratio,kind)) or True

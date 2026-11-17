@@ -314,24 +314,24 @@ package com.meng52.game.ui.screen
                return;
             }
             if(result == null || int(result.return_code) != 0 || result.data == null ||
-               !(result.data.heroes is Array) || result.data.day == null ||
-               result.data.heroes.length != 20 ||
+               !(result.data.items is Array) || result.data.day == null ||
                (result.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(result.state_sync)))
             {
                return;
             }
+            // Daily medal exchange: 10 orange and 10 purple equipment, new every night.
             var rows:Array = [];
-            var heroes:Array = result.data.heroes as Array;
-            for(var i:int = 0; i < heroes.length; i++)
+            var items:Array = result.data.items as Array;
+            for(var i:int = 0; i < items.length; i++)
             {
-               var hero:Object = heroes[i];
-               if(hero == null || !(hero.aid is String) || int(hero.medal) != 80 ||
-                  GlobalData.$mConfig_avatar[hero.aid] == null)
+               var item:Object = items[i];
+               if(item == null || !(item.id is String) || int(item.medal) <= 0 ||
+                  GlobalData.$mConfig_equip[item.id] == null)
                {
-                  return;
+                  continue;
                }
-               rows.push({"status":true,"indexID_s":"avatar","id":hero.aid,
-                          "medal":80,"medal_old":0,"daily_recruit":true,
+               rows.push({"status":false,"indexID_s":"equip","id":item.id,
+                          "medal":int(item.medal),"medal_old":0,"daily_recruit":true,
                           "day":String(result.data.day),"sort_3":0});
             }
             if(mList == null)

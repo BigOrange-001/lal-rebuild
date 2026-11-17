@@ -423,7 +423,12 @@ class ModServiceTests(unittest.TestCase):
         first = self.rpc(self.a, "user.mods_reclaim_equipment", {"heroId": iid}, action="reclaim-once")
         self.assertEqual(first["recovered"], [owned_id])
         self.assertEqual(first["affectedSlots"], [0, 1])
-        self.assertEqual(first["as_equips"][:2], [[None, "external|1"], [None]])
+        # Slots are padded to seven entries (relic slot); compare the occupied part.
+        trimmed = [list(row) for row in first["as_equips"][:2]]
+        for row in trimmed:
+            while len(row) > 1 and row[-1] is None:
+                row.pop()
+        self.assertEqual(trimmed, [[None, "external|1"], [None]])
         self.assertEqual(self.backend.players.profile_raw(self.a["uid"])["my_equips"], before)
         self.assertEqual(self.rpc(self.a, "user.mods_reclaim_equipment", {"heroId": iid}, action="reclaim-once"), first)
 
@@ -626,6 +631,7 @@ class ModServiceTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as error:
             urllib.request.urlopen(request)
         self.assertEqual(error.exception.code, 401)
+        error.exception.close()
         request.add_header("X-Lal-Uid", self.a["uid"])
         request.add_header("X-Lal-Session", self.a["sessionid"])
         with urllib.request.urlopen(request) as response:
@@ -640,6 +646,7 @@ class ModServiceTests(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as error:
             urllib.request.urlopen(base + "/mods/assets/" + "0" * 64 + "/%2e%2e/registry.json")
         self.assertEqual(error.exception.code, 404)
+        error.exception.close()
 
 
 if __name__ == "__main__":

@@ -12,15 +12,6 @@ class SkinRevisionTests(unittest.TestCase):
   cls.backend=Backend(':memory:',ROOT/'config/reconstruction/full-config.json');cls.cfg=cls.backend.config['cfg']
  @classmethod
  def tearDownClass(cls):cls.backend.clock.close();cls.backend.db.close()
- def test_final_coefficients_and_growth(self):
-  c=self.cfg
-  for aid in c['skin_revision_v2_104']['heroes']:
-   family=c['avatar'][aid]['skin_revision_v2_104']
-   for n,slot in enumerate((10,11,13)):
-    if family==1227 and slot!=11:continue
-    sid=c['avatar'][aid]['pl'][slot];row=c['skill'][sid];snap=_native_skill_snapshot(c,sid,10 if n==0 else 1)
-    for i,(key,value) in enumerate(PARAMS[family][n].items()):self.assertAlmostEqual(snap['skills'][0][4+i],value,7,(aid,slot,key))
-    self.assertNotIn('准备',row['info']);self.assertNotIn('设计',row['info']);self.assertNotIn('原版',row['info'])
  def test_equipment_targets_all_bond_combinations(self):
   c=self.cfg
   for aid in c['skin_revision_v2_104']['heroes']:

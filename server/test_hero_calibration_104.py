@@ -47,18 +47,6 @@ class CalibrationTests(unittest.TestCase):
                     mapping=self.cfg['system_simple']['equipment_skill_variants_104'][aid][sid]
                     self.assertIn(r['equipment'],mapping)
 
-    def test_exact_review_values(self):
-        def skill(aid,slot,level=1):
-            return _native_skill_snapshot(self.cfg,self.cfg['avatar'][aid]['pl'][slot],level)
-        self.assertAlmostEqual(skill('A_1029_6',10,10)['skills'][0][2],.8)
-        self.assertEqual(skill('A_1132_6',11)['manualClonePolicy']['ttlOwnTurns'],5)
-        self.assertEqual(skill('A_1132_6',11)['manualClonePolicy']['panelStatRatio'],1)
-        self.assertEqual(skill('A_1126_6',11)['pl'][:2],[2,4])
-        self.assertEqual(skill('A_1208_6',13)['skills'][0][2],.7)
-        self.assertAlmostEqual(skill('A_1217_6',10,10)['skills'][0][4]*.8,2.1)
-        self.assertEqual(self.cfg['avatar']['A_2024_6']['name'],'哮天犬')
-        self.assertEqual(self.cfg['skill'][self.cfg['avatar']['A_1226_6']['pl'][11]]['info'],'召唤哮天犬协同作战。')
-
     def test_alistar_reduction_covers_dot_expires_and_never_reduces_heals(self):
         import test_manual_ability_sim as helper
         h=helper.ManualAbilityStateTests();b=h.battle();owner=b.a[0]

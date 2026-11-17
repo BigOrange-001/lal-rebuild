@@ -18,7 +18,7 @@ SKIN_SOUL_IDS = ("A_1226_6", "A_1310_6")
 _ORDINARY_ORANGE = re.compile(r"A_1[01]\d{2}_6\Z")
 
 
-def daily_orange_pool(config):
+def daily_orange_pool(config, *, channel="acquisition.exchange.hero", minimum=DAILY_CARD_COUNT):
     """Use authored playable heroes, never cosmetic, NPC, or placeholder rows."""
     cfg = config.get("cfg", config)
     avatar = cfg.get("avatar", {})
@@ -30,9 +30,9 @@ def daily_orange_pool(config):
                   and isinstance(row, dict) and row.get("name")
                   and not str(row["name"]).startswith("橙阶"))
     if mod_runtime(config):
-        pool = sorted(candidate_ids(config, pool, "acquisition.exchange.hero", include_new=True, quality=6))
-    if len(pool) < DAILY_CARD_COUNT:
-        raise ValueError("Fewer than twenty ordinary orange heroes are configured")
+        pool = sorted(candidate_ids(config, pool, channel, include_new=True, quality=6))
+    if len(pool) < minimum:
+        raise ValueError(f"Fewer than {minimum} ordinary orange heroes are configured")
     return pool
 
 

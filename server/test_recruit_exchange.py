@@ -1,4 +1,4 @@
-"""Daily medal recruitment and the two explicitly approved skin-soul offers."""
+"""Daily medal equipment exchange and the recruit config overlay."""
 import copy
 import datetime
 import json
@@ -66,27 +66,6 @@ class RecruitExchangeTest(unittest.TestCase):
                           909, 37.10204081632653, 794, 32.40816326530612])
         self.assertEqual(cfg['ploy_system_simple']['extract_avatar']['exchange'],
                          [[{'avatar_soul': {aid: 40}}, 100] for aid in SKIN_SOUL_IDS])
-        self.seed(attrs={**self.store.profile(self.uid)['attrs'],
-                         'lottery_activity': {'score': 1600}, 'avatar_len': 100})
-        for index, aid in enumerate(SKIN_SOUL_IDS):
-            for i in range(8):
-                self.economy.dispatch(self.uid, 'user.exchange_activity_avatar',
-                                      {'index': index, 'actionID': f'skin-points-{index}-{i}'})
-        profile = self.store.profile(self.uid)
-        for aid in SKIN_SOUL_IDS:
-            self.assertEqual(profile['avatar_soul'][aid], 320)
-            self.assertEqual(profile['attrs']['tower_skin_soul_credit'][aid], 320)
-        self.assertEqual(profile['attrs']['lottery_activity']['score'], 0)
-        for aid in SKIN_SOUL_IDS:
-            composed = self.roster.dispatch(self.uid, 'user.soul_exchange_avatar',
-                                            {'aid': aid, 'num': 1, 'actionID': 'skin-compose-' + aid})
-            self.assertEqual(len(composed['new_avatars']), 1)
-        profile = self.store.profile(self.uid)
-        for aid in SKIN_SOUL_IDS:
-            self.assertEqual(profile['avatar_soul'][aid], 0)
-            self.assertEqual(profile['attrs']['tower_skin_soul_credit'][aid], 320)
-            grant_reward(profile, {'heroes': [{'aid': aid, 'num': 1}]}, self.config)
-
     def test_rejected_fake_form_is_removed_from_an_older_overlay(self):
         document = copy.deepcopy(self.config)
         cfg = document['cfg']
@@ -100,73 +79,43 @@ class RecruitExchangeTest(unittest.TestCase):
         self.assertNotIn('A_1009_6', cfg['system_simple']['skin_acquisition_blocked_heroes'])
         self.assertNotIn('A_1009_6', str(cfg['ploy_system_simple']['extract_avatar']['exchange']))
 
-    def test_medal_purchase_cost_capacity_day_and_replay(self):
-        self.seed(medal=160)
+    def test_daily_medal_equipment_purchase_cost_day_and_replay(self):
+        from daily_exchange_105 import MEDAL_EQUIPMENT
+        self.seed(medal=200)
         info = self.economy.dispatch(self.uid, 'user.recruit_exchange_info', {})
-        self.assertEqual(info['cost'], MEDAL_PRICE)
-        self.assertEqual(len(info['heroes']), 20)
-        aid = info['heroes'][0]['aid']
-        with self.assertRaises(GameplayFault) as legacy:
-            self.economy.dispatch(self.uid, 'user.medal_exchange',
-                                  {'exch_type': 'avatar', 'exch_id': aid,
-                                   'need_medal': 20, 'actionID': 'legacy-discount'})
-        self.assertEqual(legacy.exception.code, 'DailyRecruitRequired')
-        self.assertEqual(self.store.profile(self.uid)['medal'], 160)
-        params = {'aid': aid, 'day': info['day'], 'actionID': 'recruit-once'}
+        qualities = [item['quality'] for item in info['items']]
+        self.assertEqual((qualities.count(6), qualities.count(5)), (10, 10))
+        self.assertEqual(len({item['id'] for item in info['items']}), 20)
+        prices = {int(q): price for q, _, price in MEDAL_EQUIPMENT}
+        item = info['items'][0]
+        self.assertEqual(item['medal'], prices[item['quality']])
+        params = {'id': item['id'], 'day': info['day'], 'actionID': 'medal-once'}
         first = self.economy.dispatch(self.uid, 'user.recruit_medal_exchange', params)
-        self.assertEqual((first['medal'], first['aid'], len(first['avatar'])), (80, aid, 1))
-        self.assertFalse(first['replayed'])
+        self.assertEqual((first['medal'], first['id'], len(first['equip'])), (200 - item['medal'], item['id'], 1))
+        self.assertEqual(next(iter(first['equip'].values()))['eid'], item['id'])
         replay = self.economy.dispatch(self.uid, 'user.recruit_medal_exchange', params)
         self.assertTrue(replay['replayed'])
-        self.assertEqual(replay['avatar'], first['avatar'])
-        self.assertEqual(self.store.profile(self.uid)['medal'], 80)
-        with self.assertRaises(GameplayFault) as reused:
-            self.economy.dispatch(self.uid, 'user.recruit_medal_exchange',
-                                  {**params, 'aid': info['heroes'][1]['aid']})
-        self.assertEqual(reused.exception.code, 'RequestKeyConflict')
-        for invalid in ({'aid': 'A_1009_6', 'day': info['day'], 'actionID': 'skin'},
-                        {'aid': aid, 'day': '2000-01-01', 'actionID': 'stale'}):
+        self.assertEqual(self.store.profile(self.uid)['medal'], 200 - item['medal'])
+        for invalid in ({'id': 'E_9999_6', 'day': info['day'], 'actionID': 'unknown'},
+                        {'id': item['id'], 'day': '2000-01-01', 'actionID': 'stale'}):
             with self.assertRaises(GameplayFault):
                 self.economy.dispatch(self.uid, 'user.recruit_medal_exchange', invalid)
-        profile = self.store.profile(self.uid)
-        self.assertEqual(profile['medal'], 80)
-        profile['attrs']['avatar_len'] = len(profile['avatars'])
-        self.seed(attrs=profile['attrs'])
-        with self.assertRaises(GameplayFault) as full:
-            self.economy.dispatch(self.uid, 'user.recruit_medal_exchange',
-                                  {'aid': aid, 'day': info['day'], 'actionID': 'full'})
-        self.assertEqual(full.exception.code, 'AvatarCapacity')
-        profile = self.store.profile(self.uid)
-        profile['attrs']['avatar_len'] += 1
-        self.seed(attrs=profile['attrs'], medal=79)
+        self.seed(medal=item['medal'] - 1)
         with self.assertRaises(GameplayFault) as low:
             self.economy.dispatch(self.uid, 'user.recruit_medal_exchange',
-                                  {'aid': aid, 'day': info['day'], 'actionID': 'low'})
+                                  {'id': item['id'], 'day': info['day'], 'actionID': 'low'})
         self.assertEqual(low.exception.code, 'InsufficientMedal')
-        self.assertEqual(self.store.profile(self.uid)['medal'], 79)
 
-    def test_only_two_point_offers_and_insufficient_points_are_atomic(self):
-        self.seed(attrs={**self.store.profile(self.uid)['attrs'],
-                         'lottery_activity': {'score': 100}})
-        before = self.store.profile_raw(self.uid)
-        with self.assertRaises(GameplayFault) as unavailable:
-            self.economy.dispatch(self.uid, 'user.exchange_activity_avatar',
-                                  {'index': 2, 'actionID': 'unverified-offer'})
-        self.assertEqual(unavailable.exception.code, 'UnknownExchange')
-        self.assertEqual(self.store.profile_raw(self.uid), before)
-        result = self.economy.dispatch(self.uid, 'user.exchange_activity_avatar',
-                                       {'index': 0, 'actionID': 'erlang-points'})
-        self.assertEqual((result['score'], result['avatar_soul']),
-                         (0, {'A_1226_6': 40}))
-        self.assertEqual(self.store.profile(self.uid)['attrs']['tower_skin_soul_credit']['A_1226_6'], 40)
-        replay = self.economy.dispatch(self.uid, 'user.exchange_activity_avatar',
-                                       {'index': 0, 'actionID': 'erlang-points'})
-        self.assertTrue(replay['replayed'])
-        with self.assertRaises(GameplayFault) as low:
-            self.economy.dispatch(self.uid, 'user.exchange_activity_avatar',
-                                  {'index': 0, 'actionID': 'no-points'})
-        self.assertEqual(low.exception.code, 'ActivityScoreLow')
-        self.assertEqual(self.store.profile(self.uid)['avatar_soul'].get('A_1226_6', 0), 40)
+    def test_medal_equipment_rotates_at_shanghai_midnight(self):
+        from daily_exchange_105 import daily_medal_offers
+        before = datetime.datetime(2026, 10, 16, 15, 59, 59, tzinfo=datetime.timezone.utc).timestamp()
+        day, items = daily_medal_offers(self.config, before)
+        next_day, next_items = daily_medal_offers(self.config, before + 1)
+        self.assertEqual((day, next_day), ('2026-10-16', '2026-10-17'))
+        self.assertNotEqual([i['id'] for i in items], [i['id'] for i in next_items])
+        exclusive = set(self.config['cfg']['system_simple'].get('equipment_roll_policy', {}).get('exclusive_ids', []))
+        self.assertFalse({i['id'] for i in items} & exclusive)
+        self.assertTrue(all(i['id'].split('_')[1][0] in '1345' for i in items))
 
     def test_upstream_snapshot_has_all_config_changes_and_preserves_unrelated_fields(self):
         root = Path(__file__).resolve().parents[1]

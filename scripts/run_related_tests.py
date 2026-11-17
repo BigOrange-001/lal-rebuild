@@ -48,12 +48,13 @@ CATEGORIES = {
     "platform": {
         "sources": ["server/game_clock.py", "server/game_calendar.py", "server/ledger_codec.py",
                     "server/config_fingerprint.py", "server/activity_windows_105.py",
-                    "scripts/build_client.py", "scripts/prepare_android_runtime.py", "android-manager/**"],
+                    "scripts/build_client.py", "scripts/prepare_android_runtime.py", "scripts/run_related_tests.py", "android-manager/**"],
         "tests": ["server/test_game_clock.py", "server/test_daily_midnight_reset.py",
                   "server/test_ledger_codec.py", "server/test_activity_windows_105.py",
                   "scripts/test_compressed_saves.py", "scripts/test_save_retention.py",
                   "scripts/test_build_version.py", "scripts/test_daily_reset_client.py",
-                  "scripts/test_air_release_payload.py", "scripts/test_android_els_compat.py"],
+                  "scripts/test_air_release_payload.py", "scripts/test_android_els_compat.py",
+                  "scripts/test_run_related_tests.py"],
     },
     "arena": {
         "sources": ["server/gameplay_competition.py", "server/arena_*.py", "server/formation_share.py",
@@ -72,7 +73,7 @@ CATEGORIES = {
     "guild": {
         "sources": ["server/gameplay_guild_boss.py", "server/guild_*.py", "server/help_pages.py",
                     "client/src/stages/*Guild*.as", "client/src/stages/*PanelChatRoom.as"],
-        "tests": ["server/test_guild_*.py"],
+        "tests": ["server/test_guild_*.py", "scripts/test_guild_chat_polling_client.py"],
     },
     "economy": {
         "sources": ["server/gameplay_economy.py", "server/shop_balance_105.py", "server/daily_exchange_105.py",
@@ -85,10 +86,11 @@ CATEGORIES = {
         "tests": ["server/test_spending_budget.py", "server/test_vip_campaign.py", "server/test_recruit_exchange.py",
                   "server/test_skin_acquisition_104.py", "server/test_check_in_rewards.py",
                   "server/test_adventure_tasks.py", "server/test_zhuabao.py", "server/test_summon_pools.py",
-                  "server/test_energy_purchase.py", "server/test_shop_balance_105.py",
+                  "server/test_energy_purchase.py", "server/test_shop_balance_105.py", "server/test_daily_exchange_105.py",
                   "server/test_pass_battle_gift.py", "server/test_summon_panel_103.py",
                   "server/test_tower_skin_exchange.py", "scripts/test_adventure_client.py",
-                  "scripts/test_energy_purchase_client.py", "scripts/test_summon_panel_103_client.py"],
+                  "scripts/test_energy_purchase_client.py", "scripts/test_summon_panel_103_client.py",
+                  "scripts/test_vip_pack_rewards_client.py"],
     },
     "equipment": {
         "sources": ["server/equipment_*.py", "server/halo_progression.py", "server/inventory_locks.py",
@@ -105,6 +107,7 @@ CATEGORIES = {
                   "server/test_captain_*.py", "server/test_roster_sale_promotion.py", "server/test_growth_overhaul.py",
                   "server/test_orange_ascension_104.py", "server/test_zongzi_binding_104.py",
                   "server/test_stat_power_103.py", "server/test_newzone_power.py", "server/test_balance_104.py",
+                  "server/test_power_role_balance.py",
                   "scripts/test_team_presets_client.py", "scripts/test_roster_magic_103_client.py"],
     },
     "combat": {
@@ -187,6 +190,8 @@ def rel(path):
 def changed_files(base):
     def git(*args):
         out = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+        if out.returncode:
+            raise subprocess.CalledProcessError(out.returncode, ["git", *args], out.stdout, out.stderr)
         return [line for line in out.stdout.splitlines() if line.strip()]
     files = set(git("diff", "--name-only", base)) | set(git("diff", "--name-only", "--cached", base))
     files |= set(git("ls-files", "--others", "--exclude-standard"))
@@ -270,10 +275,16 @@ def main():
     args = parser.parse_args()
     tests = all_tests()
     if args.list:
+        covered = set()
         for name, category in CATEGORIES.items():
+            covered |= expand(category['tests'], tests)
             print(f"{name}: {len(expand(category['tests'], tests))} tests")
             for test in sorted(expand(category["tests"], tests)):
                 print("   ", test)
+        missing = sorted(set(tests) - covered)
+        if missing:
+            print("Uncategorized test modules:\n  " + "\n  ".join(missing), file=sys.stderr)
+            return 1
         return 0
     if args.category:
         unknown = set(args.category) - set(CATEGORIES)
@@ -282,7 +293,10 @@ def main():
         selected = sorted(set().union(*(expand(CATEGORIES[c]["tests"], tests) for c in args.category)))
         reasons = {}
     else:
-        paths = [rel(p) for p in args.paths] or changed_files(args.base)
+        try:
+            paths = [rel(p) for p in args.paths] or changed_files(args.base)
+        except subprocess.CalledProcessError as error:
+            parser.error("Cannot read Git changes: " + error.stderr.strip())
         if not paths:
             print("No changed files.")
             return 0

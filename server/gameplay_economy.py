@@ -1462,18 +1462,21 @@ class GameplayEconomy:
         try: index=int(params.get("index"))
         except (TypeError,ValueError): raise GameplayFault("InvalidExchange", "Activity exchange index is invalid")
         from daily_exchange_105 import daily_integral_offers
-        day,rows=daily_integral_offers(self.config,self._now())
         requested_day=params.get("day")
-        if requested_day is not None and requested_day!=day:
-            raise GameplayFault("DailyExchangeExpired", "今日积分兑换已更新，请刷新后重试")
-        if not 0<=index<len(rows): raise GameplayFault("UnknownExchange", "Activity exchange is not configured")
-        row=rows[index]
-        if not isinstance(row,list) or len(row)<2 or not isinstance(row[0],dict):
-            raise GameplayFault("InvalidExchange", "Activity exchange row does not match the client schema")
-        reward=copy.deepcopy(row[0]);need=int(row[1]);key=self._op_key("user.exchange_activity_avatar",params)
-        if mod_runtime(self.config):
-            ensure_reward(self.config, reward, "acquisition.exchange.activity")
+        key=self._op_key("user.exchange_activity_avatar",params)
         def mutate(p):
+            # Look up the rotating offer only for new operations. A retry
+            # after midnight must replay its original receipt first.
+            day,rows=daily_integral_offers(self.config,self._now())
+            if requested_day is not None and requested_day!=day:
+                raise GameplayFault("DailyExchangeExpired", "今日积分兑换已更新，请刷新后重试")
+            if not 0<=index<len(rows): raise GameplayFault("UnknownExchange", "Activity exchange is not configured")
+            row=rows[index]
+            if not isinstance(row,list) or len(row)<2 or not isinstance(row[0],dict):
+                raise GameplayFault("InvalidExchange", "Activity exchange row does not match the client schema")
+            reward=copy.deepcopy(row[0]);need=int(row[1])
+            if mod_runtime(self.config):
+                ensure_reward(self.config, reward, "acquisition.exchange.activity")
             attrs=p.setdefault("attrs",{}); state=attrs.setdefault("lottery_activity",{"score":0})
             if not isinstance(state,dict): state={"score":0};attrs["lottery_activity"]=state
             if int(state.get("score",0))<need: raise GameplayFault("ActivityScoreLow", "Not enough activity points")
@@ -1497,7 +1500,7 @@ class GameplayEconomy:
             out={"score":state["score"],"avatar":avatar}
             if "avatar_soul" in reward: out["avatar_soul"]=copy.deepcopy(reward["avatar_soul"])
             return p,out
-        result,replayed=self.store.atomic_update(uid,mutate,key,{"index":index,"day":day})
+        result,replayed=self.store.atomic_update(uid,mutate,key,{"index":index,"day":requested_day})
         result["replayed"]=replayed;return result
 
     def _exchange_timed_avatar(self, uid, params):

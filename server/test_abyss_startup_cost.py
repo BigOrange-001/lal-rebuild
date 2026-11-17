@@ -9,6 +9,16 @@ from native_skill_snapshot import _native_skill_snapshot
 
 
 class RelicConfigurationCostTests(unittest.TestCase):
+    def test_missing_normal_skills_do_not_break_other_relic_variants(self):
+        doc = self.document()
+        doc['cfg']['avatar']['A_1002_5'] = {'pl': [0] * 10 + [None]}
+        doc['cfg']['avatar']['A_1003_5'] = {'pl': [0] * 10 + ['']}
+        apply_relic_config(doc)
+        source = 'S_1001_5'
+        sid = variant_id(source, 20, False)
+        self.assertEqual(doc['cfg']['skill'][sid]['relic_source_skill'], source)
+        self.assertEqual(doc['cfg']['skill'][sid]['skill'], doc['cfg']['skill'][source]['skill'])
+
     def document(self):
         source='S_1001_5'
         return {'cfg':{'avatar':{'A_1001_5':{'pl':[0]*10+[source]}},

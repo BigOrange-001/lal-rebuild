@@ -13,6 +13,7 @@ import hashlib
 import random
 
 from gameplay_common import game_day, equipment_exclusive_ids
+from mod_policy import candidate_ids
 
 MEDAL_EQUIPMENT = (("6", 10, 80), ("5", 10, 30))   # quality, count, medal price
 EQUIPMENT_SLOTS = ("1", "3", "4", "5")              # weapon/armour slots; 6 = skill books
@@ -53,12 +54,14 @@ def daily_integral_offers(config, now):
     rng = _rng("points-orange", day)
     cfg = config.get("cfg", config)
     extract = cfg.get("ploy_system_simple", {}).get("extract_avatar", {})
-    skins = [aid for aid in extract.get("permanent_exchange_hero_ids", []) if aid in cfg.get("avatar", {})]
+    channel = "acquisition.exchange.activity"
+    skins = candidate_ids(config, extract.get("permanent_exchange_hero_ids", []), channel)
     skin_count, skin_price = INTEGRAL_SKINS
     ordinary_count, ordinary_price = INTEGRAL_ORDINARY
     if len(skins) < skin_count:
         raise ValueError("Fewer than six permanent skin heroes are configured for the points exchange")
     rows = [[{"avatar": {aid: 1}}, skin_price] for aid in rng.sample(sorted(skins), skin_count)]
-    ordinary = [aid for aid in daily_orange_pool(config) if aid not in skins]
+    ordinary = [aid for aid in daily_orange_pool(config, channel=channel, minimum=ordinary_count)
+                if aid not in skins]
     rows += [[{"avatar": {aid: 1}}, ordinary_price] for aid in rng.sample(ordinary, ordinary_count)]
     return day, rows

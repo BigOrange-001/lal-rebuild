@@ -357,6 +357,7 @@ package com.meng52.game.ui.element
          var _loc3_:Object = null;
          var _loc5_:int = 0;
          GlobalData.$formationShare104={};
+         GlobalData.$arenaRaid105={};
          if(mBtn_pk.alpha < 1)
          {
             GlobalFunction.popAlert("",GlobalLanguageStr.getLanguageStr(20362));

@@ -8,6 +8,7 @@ package com.meng52.game.ui.screen
    import com.meng52.game.global.GlobalTextStyle;
    import com.meng52.game.module.guide.GuideMaster;
    import com.meng52.game.module.map.GameMap;
+   import com.meng52.game.module.avatar.Avatar;
    import com.meng52.game.ui.element.ItemFragment;
    import com.meng52.game.ui.element.ItemPVP;
    import com.meng52.game.ui.element.ItemPVPMsg;
@@ -51,6 +52,10 @@ package com.meng52.game.ui.screen
       
       public static var $tabBarSelectedIndex:int = 0;
       private var formationRows104:Array = [];
+      private var raidRows105:Array = [];
+      private var raidButton105:LOL_Scale9Button;
+      private var arenaHelp105:LOL_Scale9Button;
+      private var raidModal105:Sprite;
       private var shareExport104:LOL_Scale9Button;
       private var shareImport104:LOL_Scale9Button;
       private var shareModal104:Sprite;
@@ -195,7 +200,7 @@ package com.meng52.game.ui.screen
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
-         closeFormationCode104();clearFormationControls104();
+         closeFormationCode104();clearFormationControls104();clearArenaControls105();
          GlobalData.$mEventDispatcher.removeEventListener("formation_library_changed",loadFormations104);
          GlobalData.$mEventDispatcher.removeEventListener("formation_action",onFormationAction104);
          GlobalData.$mStarling.juggler.removeTweens(this);
@@ -676,6 +681,7 @@ package com.meng52.game.ui.screen
       private function delPVPList() : void
       {
          clearFormationControls104();
+         clearArenaControls105();
          if(mBox_info)
          {
             if(mBox_info.isFlattened)
@@ -797,6 +803,7 @@ package com.meng52.game.ui.screen
             mBtn_change.addEventListener("triggered",changeOpponents);
             addChild(mBtn_change);
          }
+         if(this.mTabBar.selectedIndex == 1 && !GlobalFunction.checkIsFirstPVP()) addArenaControls105();
          if(mBox_info)
          {
             mBox_info.flatten();
@@ -823,6 +830,7 @@ package com.meng52.game.ui.screen
       {
          mFun_status = !mFun_status;
          if(mBtn_change) mBtn_change.visible = !mFun_status;
+         layoutArenaControls105();
          if(mFun_status)
          {
             mBtn_re.text = GlobalLanguageStr.getLanguageStr(98124);
@@ -885,6 +893,8 @@ package com.meng52.game.ui.screen
             this.setList();
             this.addList();
             if(shareModal104) addChild(shareModal104);
+            if(raidModal105) addChild(raidModal105);
+            loadRaids105();
          }
       }
       
@@ -2356,6 +2366,149 @@ package com.meng52.game.ui.screen
          formationButton104("取消",200,62,false,box,320,200,closeFormationCode104);
       }
       // END FORMATION PANEL 104
+      // BEGIN ARENA RAIDS 105
+      // Arena tab: rules dialog, top-ten raid notices and the defense entry.
+      private static var shownRaids105:Object = {};
+      private static var seenRaidLog105:String = null;
+
+      private function clearArenaControls105() : void
+      {
+         closeRaid105();
+         if(raidButton105) raidButton105.removeFromParent(true);
+         if(arenaHelp105) arenaHelp105.removeFromParent(true);
+         raidButton105=null;arenaHelp105=null;raidRows105=[];
+      }
+
+      private function closeRaid105(event:Event = null) : void
+      {
+         if(raidModal105) raidModal105.removeFromParent(true);
+         raidModal105=null;
+      }
+
+      /** Header row of the arena tab: every button is laid out by uiRow so none overlap. */
+      private function addArenaControls105() : void
+      {
+         if(raidButton105) raidButton105.removeFromParent(true);
+         if(arenaHelp105) arenaHelp105.removeFromParent(true);
+         raidButton105=GlobalFunction.uiButton("对手来袭",135,70,"primary",this,0,0,function():void
+         {
+            if(raidRows105 && raidRows105.length) showRaid105(raidRows105[0]);
+         });
+         raidButton105.visible=raidRows105!=null && raidRows105.length>0;
+         arenaHelp105=GlobalFunction.uiButton("玩法说明",135,70,"normal",this,0,0,showArenaHelp105);
+         layoutArenaControls105();
+      }
+
+      private function layoutArenaControls105() : void
+      {
+         if(!mBg_list || !mBtn_re) return;
+         var left:Number=mTxt_pkTimes ? mTxt_pkTimes.x+200 : mBg_list.x+200;
+         var right:Number=mBg_list.x+mBg_list.width-3;
+         GlobalFunction.uiRow([raidButton105,arenaHelp105,mBtn_change,mBtn_re],left,right,mBg_list.y-70,10,"right");
+         var first:Number=right;
+         for each(var item:LOL_Scale9Button in [raidButton105,arenaHelp105,mBtn_change,mBtn_re])
+            if(item && item.visible) first=Math.min(first,item.x);
+         if(mTxt_pkTimes) mTxt_pkTimes.width=Math.max(120,first-mTxt_pkTimes.x-8);
+      }
+
+      private function loadRaids105() : void
+      {
+         if(!stage || !mTabBar || mTabBar.selectedIndex!=1) return;
+         SendAndSelect.sendAndSelectService("user.get_arena_raids",{},function(reply:Object):void
+         {
+            if(!stage || !mTabBar || mTabBar.selectedIndex!=1 || !reply || reply.return_code!=0) return;
+            raidRows105=reply.data.raids as Array;
+            if(raidRows105==null) raidRows105=[];
+            if(raidButton105)
+            {
+               raidButton105.text=raidRows105.length>1?"对手来袭 "+raidRows105.length:"对手来袭";
+               raidButton105.visible=raidRows105.length>0;
+               layoutArenaControls105();
+            }
+            var log:Array=reply.data.log as Array;
+            if(log && log.length)
+            {
+               var last:Object=log[0];
+               var key:String=last.name+"|"+last.result+"|"+last.old_rank+"|"+last.new_rank+"|"+last.attempt;
+               if(seenRaidLog105!=null && key!=seenRaidLog105)
+               {
+                  if(last.result=="defended") GlobalFunction.popToast("防守成功：击退 "+last.name+"，保住第"+int(last.new_rank)+"名","success");
+                  else if(last.result=="lost") GlobalFunction.popToast("防守失败："+last.name+" 夺走名次，你降至第"+int(last.new_rank)+"名","info");
+               }
+               seenRaidLog105=key;
+            }
+            else if(seenRaidLog105==null) seenRaidLog105="";
+            if(raidRows105.length && !raidModal105 && !shareModal104 && !shownRaids105[raidRows105[0].raid_id])
+            {
+               shownRaids105[raidRows105[0].raid_id]=true;
+               showRaid105(raidRows105[0]);
+            }
+         });
+      }
+
+      private function showRaid105(row:Object) : void
+      {
+         closeRaid105();
+         var width:Number=600;var height:Number=470;
+         var modal:Object=GlobalFunction.uiModal(this,"对手来袭",width,height);
+         raidModal105=modal.root as Sprite;
+         var box:Sprite=modal.box as Sprite;
+         var myRank:int=mPVP_list && mPVP_list.length ? int(mPVP_list[0]) : 0;
+         var title:String=row.name+" · 第"+int(row.rank)+"名 · 战力 "+int(row.power);
+         GlobalFunction.uiText(title,22,GlobalFunction.UI_RED,"center",width-60,32,box,30,72);
+         var note:String=int(row.attempt)>0?"上次被你击退，这次换了站位再来":"想夺走你的名次";
+         GlobalFunction.uiText(note,18,GlobalFunction.UI_MUTED,"center",width-60,26,box,30,104);
+         var heroes:Array=row.data_base as Array;
+         if(heroes && heroes.length)
+         {
+            var lineup:Sprite=new Sprite();
+            var count:int=Math.min(5,heroes.length);
+            for(var i:int=0;i<count;i++)
+            {
+               var unit:Array=heroes[i] as Array;
+               var avatar:Avatar=new Avatar(unit[0],{lv:unit[1],slv:unit[2],hp:unit[3],ap:unit[4],de_ph:unit[5],de_ma:unit[6],phase:unit[7],morph:unit[11]});
+               var art:Sprite=avatar.getAvatarRes();
+               art.pivotY=90;art.scaleX=art.scaleY=i==0?0.6:0.52;art.x=i*92;
+               lineup.addChildAt(art,0);
+            }
+            lineup.x=int((width-(count-1)*92)/2);lineup.y=232;
+            lineup.touchable=false;box.addChild(lineup);lineup.flatten();
+         }
+         var rules:String="迎战胜利：保住第"+myRank+"名。\n迎战失败：与对方交换名次，降到第"+int(row.rank)+"名。\n不占用今日奖励场次；24小时内不迎战，对方会放弃。";
+         GlobalFunction.uiText(rules,18,GlobalFunction.UI_BROWN,"left",width-80,90,box,40,272);
+         var later:LOL_Scale9Button=GlobalFunction.uiButton("稍后",150,62,"normal",box,0,0,closeRaid105);
+         var fight:LOL_Scale9Button=GlobalFunction.uiButton("迎战",170,62,"primary",box,0,0,function():void {startRaid105(row);});
+         GlobalFunction.uiRow([later,fight],30,width-30,height-86,24,"center");
+      }
+
+      private function startRaid105(row:Object) : void
+      {
+         closeRaid105();
+         GlobalData.$formationShare104={};
+         GlobalData.$arenaRaid105={id:row.raid_id};
+         GlobalData.$pvp_rival={id:row.uid,name:row.name,indexID_s:int(row.rank),lv:int(row.lv),is_enemy:-1,
+            data_base:row.data_base,status:0,loser:0,mark:0,numberIndex:GlobalFunction.check_pvp_list_title(int(row.rank))};
+         GlobalData.$pvp_Embattle=row.name;
+         GlobalData.$mGameClassObject.mLayoutUICenter.showPanel("center_pvp_embattle",false,true);
+      }
+
+      private function showArenaHelp105() : void
+      {
+         closeRaid105();
+         var width:Number=600;var height:Number=500;
+         var modal:Object=GlobalFunction.uiModal(this,"竞技场玩法",width,height);
+         raidModal105=modal.root as Sprite;
+         var box:Sprite=modal.box as Sprite;
+         var lines:String="· 挑战排名比你高的对手，胜利后与对方交换名次。\n"+
+            "· 每天前10场（胜负都算）各发一份印记；每日排名奖励按前一天的名次发到邮件。\n"+
+            "· 对手的英雄都是真实培养的：等级、装备、天赋、羁绊和你用同一套规则。\n"+
+            "· 进入前十后，排名靠后的对手会不时来袭。迎战失败会交换名次，不占奖励场次。\n"+
+            "· “换一批”刷新对手；“战报”查看并回放最近的战斗。";
+         GlobalFunction.uiText(lines,19,GlobalFunction.UI_BROWN,"left",width-80,330,box,40,76);
+         var ok:LOL_Scale9Button=GlobalFunction.uiButton("知道了",170,62,"primary",box,0,0,closeRaid105);
+         GlobalFunction.uiRow([ok],30,width-30,height-86,24,"center");
+      }
+      // END ARENA RAIDS 105
 
    }
 }

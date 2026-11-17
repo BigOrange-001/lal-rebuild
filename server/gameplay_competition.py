@@ -12,13 +12,14 @@ from solo_progression import arena_equipment
 from arena_opponents import POWER_ORDER_SCHEMA, combat_config_signature, generate_opponents
 from arena_rewards import DAILY_RANK_MARK, DAILY_PAID_BATTLES, DAILY_BATTLE_MARK
 from formation_share import FormationLibrary, METHODS as FORMATION_METHODS
+from arena_raids import ArenaRaids, METHODS as RAID_METHODS
 from mod_policy import (runtime as mod_runtime, candidate_ids, channel_enabled,
                         effective_digest)
 
 class GameplayCompetition:
     METHODS={"user.get_rank_list","user.refresh_pvp_opponents","user.get_fragment_users","user.get_battle_users","user.get_my_fragments","user.pk_combat_pvp","user.pk_combat_fragment","user.battle_finish","user.get_combat_playback"}
     DAILY_RANK_MARK=DAILY_RANK_MARK
-    METHODS=METHODS | FORMATION_METHODS
+    METHODS=METHODS | FORMATION_METHODS | RAID_METHODS
     DAILY_PAID_BATTLES=DAILY_PAID_BATTLES
     DAILY_BATTLE_MARK=DAILY_BATTLE_MARK
     def __init__(self,store,full_config):
@@ -26,6 +27,7 @@ class GameplayCompetition:
         self.full_config=full_config if isinstance(full_config,dict) else {}
         self.cfg=self.full_config.get("cfg",self.full_config)
         self.formations=FormationLibrary(self)
+        self.raids=ArenaRaids(self)
         path=Path(__file__).resolve().parents[1]/"config/reconstruction/competition-config.json"
         self.side=json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         roster_path=Path(__file__).resolve().parents[1]/"config/reconstruction/roster-config.json"
@@ -40,6 +42,13 @@ class GameplayCompetition:
             self.fragment_bots = self._filtered_bots(self.fragment_bots, "appearance.fragment_enemy")
             self.pvp_bots = self._filtered_bots(self.pvp_bots, "appearance.arena_enemy")
 
+    @property
+    def cultivator(self):
+        """Shared NPC builder; stats come from real cultivation, not scaling."""
+        if getattr(self,"_cultivator",None) is None:
+            from npc_cultivation import NpcCultivator
+            self._cultivator=NpcCultivator(self.store,self.full_config)
+        return self._cultivator
     def _filtered_bots(self, bots, channel):
         pool = candidate_ids(self.cfg, [], channel, include_new=True)
         result = []
@@ -98,6 +107,8 @@ class GameplayCompetition:
         if method=="user.get_my_fragments": return self._my_fragments(uid)
         if method=="user.pk_combat_pvp": return self._start_pvp(uid,params)
         if method=="user.pk_combat_fragment": return self._start_fragment(uid,params)
+        if method=="user.get_arena_raids": return self.raids.list(uid)
+        if method=="user.pk_combat_raid": return self.raids.start(uid,params)
         if method=="user.battle_finish": return self._finish(uid,params)
         if method=="user.get_combat_playback": return self._get_combat_playback(uid,params)
         self._fail("NotImplemented",method)
@@ -452,7 +463,8 @@ class GameplayCompetition:
         old_generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
         generation=old_generation+1 if refresh or old_generation else 1
         own=self._current_arena_team(profile)
-        batch=generate_opponents(self.cfg,str(uid),generation,self._rank(profile),own,self._team_power,
+        batch=generate_opponents(self.cultivator,profile,str(uid),generation,self._rank(profile),
+                                 self._team_power(own),self._team_power,
                                  combat_signature=combat_signature)
         records["pvp_opponents"]=batch
         records["pvp_opponent_generation"]=generation
@@ -460,6 +472,7 @@ class GameplayCompetition:
     def _rank_list(self,uid):
         def change(profile):
             self._ensure_opponents(profile,uid)
+            self.raids.tick(profile,uid)
             return profile,self._rank_payload(uid,profile)
         return self.store.atomic_update(uid,change)[0]
     def _rank_payload(self,uid,p):
@@ -694,24 +707,32 @@ class GameplayCompetition:
             intent=consume_intent(p,kind,params,metadata_keys=("target_uid","rank","eid","fragment_index","team_num"),now=self.store.clock.now(),config=self.cfg)
             sign=intent["sign"]; metadata=intent["metadata"]; now=self.store.clock.now()
             records=p.setdefault("records",{}); attrs=p.setdefault("attrs",{})
+            raid_result=None
             if kind=="pvp":
-                rank=self._rank(p); old_count=int(attrs.get("pvp_count",0)); win=sign==1
-                if win:
-                    target=int(metadata.get("rank",0))
-                    if old_count == 0 or target == 0:
-                        newrank=int(self.rules.get("pvp_first_win_rank", max(1,rank-50)))
-                    else:
-                        newrank=max(1,min(rank,target))
-                else: newrank=rank
-                attrs["pvp_count"]=old_count+1; attrs["pvp_rank"]=newrank; records["current_rank"]=newrank
-                rank_days=records.setdefault("local_pvp_rank_days",{})
-                if not isinstance(rank_days,dict): rank_days={}; records["local_pvp_rank_days"]=rank_days
-                played_day=game_day(now)
-                prior=rank_days.get(played_day,{})
-                count=int(prior.get("count",0))+1 if isinstance(prior,dict) else 1
-                rank_days[played_day]={"played":True,"rank":newrank,"count":count}
-                cutoff=(datetime.date.fromisoformat(played_day)-datetime.timedelta(days=90)).isoformat()
-                records["local_pvp_rank_days"]={d:v for d,v in rank_days.items() if isinstance(d,str) and d>=cutoff}
+                if metadata.get("raid_id"):
+                    # Defense battles keep the daily allowance and rank-up
+                    # rules out of play: only the raid outcome changes rank.
+                    rank=self._rank(p); win=sign==1
+                    newrank,raid_result=self.raids.finish(p,uid,intent,sign,metadata,now)
+                    count=None
+                else:
+                    rank=self._rank(p); old_count=int(attrs.get("pvp_count",0)); win=sign==1
+                    if win:
+                        target=int(metadata.get("rank",0))
+                        if old_count == 0 or target == 0:
+                            newrank=int(self.rules.get("pvp_first_win_rank", max(1,rank-50)))
+                        else:
+                            newrank=max(1,min(rank,target))
+                    else: newrank=rank
+                    attrs["pvp_count"]=old_count+1; attrs["pvp_rank"]=newrank; records["current_rank"]=newrank
+                    rank_days=records.setdefault("local_pvp_rank_days",{})
+                    if not isinstance(rank_days,dict): rank_days={}; records["local_pvp_rank_days"]=rank_days
+                    played_day=game_day(now)
+                    prior=rank_days.get(played_day,{})
+                    count=int(prior.get("count",0))+1 if isinstance(prior,dict) else 1
+                    rank_days[played_day]={"played":True,"rank":newrank,"count":count}
+                    cutoff=(datetime.date.fromisoformat(played_day)-datetime.timedelta(days=90)).isoformat()
+                    records["local_pvp_rank_days"]={d:v for d,v in rank_days.items() if isinstance(d,str) and d>=cutoff}
                 key="pvp_history_win" if win else "pvp_history_loss"
                 bot=self._bot(str(metadata["target_uid"]),profile=p)
                 opponent_name=str(metadata.get("opponent_name") or
@@ -719,7 +740,8 @@ class GameplayCompetition:
                 opponent_lv=int(metadata.get("opponent_lv") or (bot.get("lv",1) if bot else 1))
                 history_row=[max(1,int(metadata.get("rank",0))),str(metadata["target_uid"]),
                              opponent_name,self._compact(intent["team_b"]),opponent_lv]
-                records[key]=([history_row]+list(records.get(key,[])))[:20]
+                if raid_result is None:
+                    records[key]=([history_row]+list(records.get(key,[])))[:20]
                 # Keep only the initial, server-issued intent snapshots. The
                 # submitted ending snapshots are validation diagnostics and
                 # must never become a replay's starting team.
@@ -748,7 +770,8 @@ class GameplayCompetition:
                         "orgin_team_a":copy.deepcopy(intent["team_a"]),
                         "orgin_team_b":copy.deepcopy(intent["team_b"]),
                         "users":{"user_a":[str(uid),int(rank),str(p.get("name","玩家"))],
-                                 "user_b":[str(metadata["target_uid"]),int(metadata.get("rank",0)),opponent_name]},
+                                 "user_b":[str(metadata["target_uid"]),int(metadata.get("rank",0)),
+                                           ("防守 · "+opponent_name) if raid_result else opponent_name]},
                         "my_pr_power":report_my_power,
                         "pr_power":report_enemy_power,
                         "def_th":report_def_th,
@@ -761,11 +784,11 @@ class GameplayCompetition:
                 # rank mail. Every consumed fight counts, including a loss;
                 # repeated or extra fights cannot mint more than 60,000 mark
                 # in one Shanghai calendar day.
-                mark=self.DAILY_BATTLE_MARK if count<=self.DAILY_PAID_BATTLES else 0
+                mark=self.DAILY_BATTLE_MARK if count is not None and count<=self.DAILY_PAID_BATTLES else 0
                 gold=int(rewards.get("pvp_gold_win",100) if win else rewards.get("pvp_gold_loss",20)); exp=int(rewards.get("pvp_exp_win",10) if win else rewards.get("pvp_exp_loss",5))
                 grant_reward(p,{"mark":mark,"gold":gold,"exp":exp},self.full_config)
                 poke_data={"gift_list":[{"gold":gold},{"gold":gold},{"gold":gold}],"poke_gift_index":0,"user_gift":{"gold":gold}}
-                data={"sign":sign,"fight_kind":kind,"records":records,"attrs":attrs,"gold":p.get("gold",0),"coin":p.get("coin",0),"score":p.get("score",0),"mark":p.get("mark",0),"medal":p.get("medal",0),"exp":p.get("exp",0),"lv":p.get("lv",1),"poke_data":poke_data,"get_avatars":{},"get_equips":{},"win_gift":{},"current_rank":newrank}
+                data={"sign":sign,"fight_kind":kind,"records":records,"attrs":attrs,"gold":p.get("gold",0),"coin":p.get("coin",0),"score":p.get("score",0),"mark":p.get("mark",0),"medal":p.get("medal",0),"exp":p.get("exp",0),"lv":p.get("lv",1),"poke_data":poke_data,"get_avatars":{},"get_equips":{},"win_gift":{},"current_rank":newrank,"arena_raid":raid_result}
             else:
                 win=sign==1; eid=metadata["eid"]; idx=int(metadata["fragment_index"]); frag=self._fragment_state(p); slots=frag.setdefault(eid,[0]*max(1,int(eid.rsplit("_",1)[-1])))
                 get_fragment=bool(win and eid not in equipment_exclusive_ids(self.full_config) and slots[idx]<=0)

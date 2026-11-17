@@ -28,9 +28,11 @@ const getters={getHpMax:'param1=-1,param2=-1,param3=false',getDamage:'param1=-1,
  inheritSummonPanel:'owner,apRatio,hpRatio=-1,dePhRatio=-1,deMaRatio=-1,secondaryRatio=-1'};
 function Avatar(id){
  Object.assign(this,{id,lv:99,hpMax:999999,hp:7,ap:888888,dePh:777777,deMa:666666,
- hit:0,flee:0,crit:0,tough:0,team:1,otherTeam:2,buffs:{},abilityState:{},abilityEntryAttack:0,
+ hit:0,flee:0,crit:0,tough:0,yasuoCritBonus104:0,team:1,otherTeam:2,buffs:{},abilityState:{},abilityEntryAttack:0,
  initializingFightAttributes:false,summonStatSnapshot:false,manualAttackRangeOverride:NaN,
- getManualBattleStack:()=>0,getManualTimedStack:()=>0,goFight:noop,addBuff:noop,dead:noop,deadFast:noop});
+ getManualBattleStack:()=>0,getManualTimedStack:()=>0,goFight:noop,addBuff:noop,dead:noop,deadFast:noop,
+ // Outside the abyss mode the relic hook returns the panel unchanged.
+ abyssSummonPanel104:panel=>panel});
  attach(this,input.avatar,getters);
  attach(this,input.avatar,{checkTalent:'param1,param2=false'});
  this.isValidSummonMultiplier=Avatar.isValidSummonMultiplier;

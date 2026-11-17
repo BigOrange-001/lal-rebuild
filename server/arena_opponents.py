@@ -16,7 +16,7 @@ from mod_policy import runtime as mod_runtime, candidate_ids, policy_signature
 
 
 STAT_KEYS = ("hp", "ap", "de_ph", "de_ma")
-POWER_ORDER_SCHEMA = "real-cultivation-v1"
+POWER_ORDER_SCHEMA = "real-cultivation-v2"
 COMBAT_CONFIG_TABLES = ("avatar", "skill", "equip", "talent", "system_simple")
 
 

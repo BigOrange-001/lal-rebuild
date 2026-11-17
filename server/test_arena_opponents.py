@@ -56,6 +56,8 @@ class ArenaOpponentsTest(unittest.TestCase):
             self.assertNotIn("r", bot["uid"])
             self.assertEqual(len(row[3]), 5)
             self.assertEqual({unit["line"] for unit in bot["units"]}, {0, 1, 2})
+            self.assertTrue(all(unit["isme"] is False for unit in bot["units"]))
+            self.assertEqual({unit["pos"] for unit in bot["units"]}, {300, 600})
             aids = [unit["aid"] for unit in bot["units"]]
             self.assertEqual(len({aid.rsplit("_", 1)[0] for aid in aids}), 5)
             actual = self.comp._team_power(bot["units"])
@@ -174,7 +176,7 @@ class ArenaOpponentsTest(unittest.TestCase):
         old_batch = self.store.profile_raw(self.uid)["records"]["pvp_opponents"]
 
         def legacy(profile):
-            profile["records"]["pvp_opponents"].pop("power_order_schema", None)
+            profile["records"]["pvp_opponents"]["power_order_schema"] = "real-cultivation-v1"
             return profile, {}
 
         self.store.atomic_update(self.uid, legacy)

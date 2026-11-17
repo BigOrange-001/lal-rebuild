@@ -740,7 +740,7 @@ class GameplayCompetition:
                 opponent_lv=int(metadata.get("opponent_lv") or (bot.get("lv",1) if bot else 1))
                 history_row=[max(1,int(metadata.get("rank",0))),str(metadata["target_uid"]),
                              opponent_name,self._compact(intent["team_b"]),opponent_lv]
-                if raid_result is None:
+                if not metadata.get("raid_id"):
                     records[key]=([history_row]+list(records.get(key,[])))[:20]
                 # Keep only the initial, server-issued intent snapshots. The
                 # submitted ending snapshots are validation diagnostics and
@@ -771,7 +771,7 @@ class GameplayCompetition:
                         "orgin_team_b":copy.deepcopy(intent["team_b"]),
                         "users":{"user_a":[str(uid),int(rank),str(p.get("name","玩家"))],
                                  "user_b":[str(metadata["target_uid"]),int(metadata.get("rank",0)),
-                                           ("防守 · "+opponent_name) if raid_result else opponent_name]},
+                                           ("防守 · "+opponent_name) if metadata.get("raid_id") else opponent_name]},
                         "my_pr_power":report_my_power,
                         "pr_power":report_enemy_power,
                         "def_th":report_def_th,

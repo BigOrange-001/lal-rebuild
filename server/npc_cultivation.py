@@ -303,7 +303,16 @@ class NpcCultivator:
         def attributes(owner, iid):
             return self.roster.battle_attributes(owner, iid, scope=scope)
 
-        return serialize_player_team(self.cfg, profile, 0, submitted, attributes)
+        units = serialize_player_team(self.cfg, profile, 0, submitted, attributes)
+        if scope == "arenaEnemy":
+            # Keep the player's full stat calculation, then place opponents
+            # on team 2 in native battlefield coordinates.
+            battle = self.simple.get("battle", [])
+            line_pos = int(battle[1]) if isinstance(battle, list) and len(battle) > 1 else 3000
+            for unit in units:
+                unit["isme"] = False
+                unit["pos"] = line_pos - unit["pos"]
+        return units
 
     def fit(self, aids, template, target_power, power_fn, seed, *, uid, name, scope, lines=None):
         """Find the cultivation progress whose real power is closest to target."""

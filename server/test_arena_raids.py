@@ -1,5 +1,6 @@
 """Top-ten arena raids: queueing, client-fought defense, rank swap and retries."""
 import json
+import datetime
 import sqlite3
 import sys
 import unittest
@@ -10,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from arena_raids import (MAX_QUEUED_RAIDS, PREPARED_POWER, RAID_TTL_SECONDS, RAID_WINDOW_SECONDS,
                          RETRY_DELAY_SECONDS)
 from gameplay_competition import GameplayCompetition
+from game_calendar import game_day
 from player_store import GameplayFault, PlayerStore
 
 
@@ -64,7 +66,12 @@ class ArenaRaidsTest(unittest.TestCase):
             "team": self._team(), "actionID": action + "-start"})
         self.assertEqual(started["fight_kind"], "pvp")
         self.assertTrue(started["arena_raid"])
-        return started, self.comp.dispatch(self.uid, "user.battle_finish", {
+        self.assertTrue(all(unit["isme"] is False for unit in started["orgin_team_b"]))
+        self.assertEqual({unit["pos"] for unit in started["orgin_team_b"]}, {300, 600})
+        return started, self._settle(started, sign, action)
+
+    def _settle(self, started, sign, action):
+        return self.comp.dispatch(self.uid, "user.battle_finish", {
             "fight_kind": "pvp", "fight_id": started["fight_id"], "sign": sign,
             "metadata": started["metadata"],
             "teams": {"team_a": started["orgin_team_a"], "team_b": started["orgin_team_b"]},
@@ -99,6 +106,47 @@ class ArenaRaidsTest(unittest.TestCase):
         self.assertEqual(report["cpb_id"], started["fight_id"])
         self.assertTrue(report["users"]["user_b"][2].startswith("防守 · "))
         self.assertNotIn(raid["uid"], [row[1] for row in profile["records"].get("pvp_history_loss", [])])
+        self.assertNotIn(game_day(self.clock.now()), profile["records"].get("local_pvp_rank_days", {}))
+
+    def test_lost_defense_updates_daily_rank_without_changing_participation(self):
+        raid = self._wait_for_raid()["raids"][0]
+        today = game_day(self.clock.now())
+        yesterday = (datetime.date.fromisoformat(today) - datetime.timedelta(days=1)).isoformat()
+        previous = {"played": True, "rank": 2, "count": 4}
+
+        def participated(profile):
+            profile["records"]["local_pvp_rank_days"] = {
+                yesterday: previous, today: {"played": True, "rank": 3, "count": 2}}
+            return profile, {}
+        self.store.atomic_update(self.uid, participated)
+        self._fight(raid, 2, "daily-rank-loss")
+        days = self.store.profile_raw(self.uid)["records"]["local_pvp_rank_days"]
+        self.assertEqual(days[today], {"played": True, "rank": raid["rank"], "count": 2})
+        self.assertEqual(days[yesterday], previous)
+        tomorrow = (datetime.date.fromisoformat(today) + datetime.timedelta(days=1)).isoformat()
+        settlement = self.comp.settle_daily_rank(self.uid, tomorrow)
+        self.assertTrue(settlement["participated"])
+        self.assertEqual(settlement["rank"], raid["rank"])
+
+    def test_defense_expiring_during_battle_is_harmless_with_or_without_poll(self):
+        for poll in (False, True):
+            with self.subTest(poll=poll):
+                raid = self._wait_for_raid()["raids"][0]
+                queued = self.store.profile_raw(self.uid)["records"]["arena_raids"]["queue"]
+                self.clock.value = next(r["expires"] for r in queued if r["id"] == raid["raid_id"]) - 1
+                started = self.comp.dispatch(self.uid, "user.pk_combat_raid", {
+                    "raid_id": raid["raid_id"], "team": self._team(), "actionID": f"expiry-{poll}-start"})
+                count = self.store.profile_raw(self.uid)["attrs"]["pvp_count"]
+                self.clock.value += 1
+                if poll:
+                    self.comp.dispatch(self.uid, "user.get_arena_raids", {})
+                result = self._settle(started, 2, f"expiry-{poll}")
+                self.assertIsNone(result["arena_raid"])
+                self.assertEqual(result["current_rank"], 3)
+                profile = self.store.profile_raw(self.uid)
+                self.assertEqual(profile["attrs"]["pvp_count"], count)
+                self.assertNotIn(raid["raid_id"], [r["id"] for r in profile["records"]["arena_raids"]["queue"]])
+                self.assertNotIn(raid["uid"], [r[1] for r in profile["records"].get("pvp_history_loss", [])])
 
     def test_defended_raid_keeps_rank_and_may_return_with_new_lanes(self):
         raid = self._wait_for_raid()["raids"][0]

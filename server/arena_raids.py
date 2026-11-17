@@ -20,6 +20,7 @@ import random
 import secrets
 
 from arena_opponents import bot_lines, fit_bot
+from game_calendar import game_day
 from npc_cultivation import stable_seed
 from player_store import GameplayFault
 
@@ -182,12 +183,16 @@ class ArenaRaids:
                                         request_payload=params if params.get("actionID") else None)[0]
 
     # ---------------------------------------------------------- settlement
-    def _swap(self, profile, raid):
+    def _swap(self, profile, raid, now):
         attrs = profile.setdefault("attrs", {})
         records = profile.setdefault("records", {})
         new_rank = max(self.comp._rank(profile), int(raid["rank"]))
         attrs["pvp_rank"] = new_rank
         records["current_rank"] = new_rank
+        days = records.get("local_pvp_rank_days")
+        entry = days.get(game_day(now)) if isinstance(days, dict) else None
+        if isinstance(entry, dict) and entry.get("played") is True:
+            entry["rank"] = new_rank
 
     @staticmethod
     def _log(state, raid, result, old_rank, new_rank):
@@ -203,6 +208,8 @@ class ArenaRaids:
             # The raid expired while the battle was running: no rank change.
             return self.comp._rank(profile), None
         state["queue"].remove(raid)
+        if raid.get("expires", 0) <= now:
+            return self.comp._rank(profile), None
         old = self.comp._rank(profile)
         if sign == 1:
             self._log(state, raid, "defended", old, old)
@@ -216,6 +223,6 @@ class ArenaRaids:
                 state["retries"].append({"attacker_uid": raid["attacker_uid"], "attempt": attempt,
                                          "lines": lines, "ready_at": now + RETRY_DELAY_SECONDS})
             return old, "defended"
-        self._swap(profile, raid)
+        self._swap(profile, raid, now)
         self._log(state, raid, "lost", old, self.comp._rank(profile))
         return self.comp._rank(profile), "lost"

@@ -185,6 +185,8 @@ def load_game_config(path, now=None):
  apply_daily_reset_config(document)
  from shop_balance_105 import apply_shop_balance_105
  apply_shop_balance_105(document)
+ from activity_windows_105 import apply_activity_windows_105
+ apply_activity_windows_105(document,now)
  document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
  return document
 

@@ -566,7 +566,7 @@
       "index": 94,
       "class": "com.meng52.game.ui.element.ItemExchange",
       "source": "client/src/stages/092_ItemExchange.as",
-      "source_sha256": "51f3f5cfda90b3926cd674ed0da8be6c5d6bf2d4106811a308d06d78347b10c7"
+      "source_sha256": "b1ecc0c80e61f611c944592cbb2cb5ce77b6ac9982104c9a033c0f084c464fa9"
     },
     {
       "index": 95,
@@ -596,7 +596,7 @@
       "index": 99,
       "class": "com.meng52.game.ui.element.ItemInteGralExchange",
       "source": "client/src/stages/097_ItemInteGralExchange.as",
-      "source_sha256": "b914c2b7eff2484699cef9bc86740fc7b4dfad808b628a4119ed7b6c5b1c1f68"
+      "source_sha256": "5498154c6a9dc6a22a64743253d15058d5ce729e501bc4e87bf34e31849454a7"
     },
     {
       "index": 100,
@@ -801,7 +801,7 @@
       "index": 133,
       "class": "com.meng52.game.ui.panel.PanelInteGralExchange",
       "source": "client/src/stages/131_PanelInteGralExchange.as",
-      "source_sha256": "413b5de453f7bee779093e030a1ff6e173b80884c82d48dc3043db524078e670"
+      "source_sha256": "6e8b9568ecfa6969dc1b6fef6f7271eff49dfb84b66f6e2b9a41a65e167fd6fa"
     },
     {
       "index": 134,
@@ -939,7 +939,7 @@
       "index": 156,
       "class": "com.meng52.game.ui.screen.PanelExchange",
       "source": "client/src/stages/155_PanelExchange.as",
-      "source_sha256": "7a45c323b877a880d7bb4438d6c754180516ca2bb29c0fc7c442f60599de0d70"
+      "source_sha256": "ab489fd41abdfe06f0b68ae465fd022f848eb36f9ff294f6ad89721af771fca6"
     },
     {
       "index": 157,

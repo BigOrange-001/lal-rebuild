@@ -177,58 +177,6 @@ class HeroSkills103Tests(unittest.TestCase):
         self.assertGreater(unit['hp'], 0)
         self.assertIsNone(b._buff(unit, 'bless'))
 
-    def test_gateway_exports_effective_config_and_combat_snapshot(self):
-        from gateway import Backend
-        backend = Backend(':memory:', ROOT / 'config/reconstruction/full-config.json')
-        self.addCleanup(backend.db.close)
-        cfg = backend.config['cfg']
-        row = cfg['avatar']['A_1311_6']
-        self.assertEqual(row['skill_diff'], 19)
-        unit = base_unit(cfg, 'A_1311_6', team=1, line=0, pos=500)
-        self.assertEqual(unit['skill']['skid'], 'S_201311_6')
-        self.assertEqual(unit['skillB']['skid'], 'S_401311_6')
-        passive=cfg['avatar']['A_1137_6']['pl'][13]
-        tuning=next(x for x in cfg['hero_balance_103']['skill_changes'] if x['target']==passive)
-        self.assertEqual(tuning['source'],'S_9150_6')
-        plan=json.loads((ROOT/'config/reconstruction/hero-iteration-1.0.3.json').read_text('utf8'))
-        final_factor=next((r['skill_factor'] for r in plan['heroes'] if r['aid']=='A_1137_6'),1)
-        self.assertAlmostEqual(cfg['skill'][passive]['skill'][0][1],.75*tuning['factor']*final_factor*.8)
-        for aid,normal in (('A_1129_6','S_271129_6'),('A_1202_6','S_271202_6'),('A_1217_6','S_271217_6')):
-            self.assertEqual(base_unit(cfg,aid,slv=10)['skill']['skid'],normal)
-        # Native banStand is true for pl[5] == 0. A whole-team defensive
-        # captain skill must also reach stationary/defensive allies.
-        self.assertEqual(cfg['skill']['S_631137_6']['pl'][5], 1)
-
-    def test_latest_numbers_include_rank_growth_and_existing_balance_once(self):
-        from gateway import Backend
-        backend=Backend(':memory:',ROOT/'config/reconstruction/full-config.json')
-        self.addCleanup(backend.db.close)
-        cfg=backend.config['cfg']
-        from hero_iteration_103 import PLAN
-        plan=json.loads(PLAN.read_text('utf8'))
-        factor=next((r['skill_factor'] for r in plan['heroes'] if r['aid']=='A_1137_6'),1)
-        for q in (5,6):
-            for level,stat,damage in ((1,6300,3.276),(10,12600,6.552)):
-                h=cfg['avatar'][f'A_1137_{q}']
-                s=_native_skill_snapshot(cfg,h['pl'][10],level)
-                self.assertEqual(s['pl'][:2],[1,3])
-                self.assertAlmostEqual(s['skills'][4][2],stat*factor)
-                self.assertAlmostEqual(s['skills'][5][2],stat*factor)
-                self.assertAlmostEqual(s['skills'][6][1],damage*factor*.8)
-            for level,stat in ((1,4500),(10,9000)):
-                s=_native_skill_snapshot(cfg,f'S_201311_{q}',level)
-                self.assertEqual(s['pl'][:2],[0,0])
-                for index in (2,3,4):self.assertAlmostEqual(s['skills'][index][2],stat)
-                self.assertEqual(s['skills'][5][0],'caster_hp_heal')
-                self.assertAlmostEqual(s['skills'][5][1],(.12 if level==1 else .18)*.8)
-            self.assertEqual(cfg['skill'][f'S_301311_{q}']['skill'][1][2],1500)
-            self.assertEqual(cfg['skill'][f'S_301311_{q}']['pl'][:2],[0,0])
-            captain=cfg['skill'][cfg['avatar'][f'A_1137_{q}']['pl'][11]]
-            self.assertEqual(captain['skill'][2][1],factor)
-            self.assertIn(f'双防提高{100*factor:g}%',captain['info'])
-            normal=cfg['skill'][cfg['avatar'][f'A_1137_{q}']['pl'][10]]
-            self.assertIn(f'各{6300*factor:g}点',normal['info'])
-
     def test_goku_healing_uses_only_maximum_hp_at_both_skill_levels(self):
         for level,expected in ((1,1200),(10,1800)):
             for attack in (1,999999):

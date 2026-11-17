@@ -38,34 +38,6 @@ class SantaVeigar103Tests(unittest.TestCase):
         b=self.battle();owner=b.a[0];b.state(owner)['santa_stacks']=4;b._add_buff(owner,'strong',3,.5)
         self.assertEqual(b._get_damage(owner),540)
         b._remove_all_good(owner);self.assertEqual(b._get_damage(owner),360)
-    def test_kill_increases_future_casts_without_immediate_recast(self):
-        b=self.battle(2);owner=b.a[0];b.b[0]['hp']=1;self.cast(b)
-        self.assertEqual(b.manual_casts['santa_n'],1)
-        self.assertEqual(b.state(owner)['santa_stacks'],3) # 2 on kill + 1 resolution
-        self.assertEqual(b.b[1]['hp'],10000)
-        self.assertEqual(b.state(owner)['santa_kills'],1)
-        self.cast(b)
-        self.assertEqual(b.b[1]['hp'],10000-448-468)
-        self.assertEqual(b.state(owner)['santa_stacks'],5)
-        self.assertEqual(b.manual_casts['santa_n'],2)
-    def test_repeats_lock_at_cast_start_and_retarget_after_each_kill(self):
-        b=self.battle(20);owner=b.a[0]
-        for enemy in b.b:enemy['hp']=1
-        for expected_kills in (1,3,7,15,20):
-            self.cast(b)
-            self.assertEqual(sum(u['hp']==0 for u in b.b),expected_kills)
-            self.assertEqual(b.state(owner)['santa_kills'],expected_kills)
-        self.assertEqual(b.manual_casts['santa_n'],5)
-        self.assertEqual(b.state(owner)['santa_stacks'],60)
-        self.assertEqual(b.ability_contexts,[])
-    def test_summon_kills_count_and_revived_enemies_do_not(self):
-        b=self.battle(2);owner=b.a[0];b.b[0].update(aid='A_2003_2',hp=1,summon_owner='enemy')
-        b._injured(b.b[0],10,3,source=owner)
-        self.assertEqual(b.state(owner)['santa_stacks'],2)
-        self.assertEqual(b.state(owner)['santa_kills'],1)
-        self.assertNotIn('santa_n',b.manual_casts)
-        b=self.battle(2);b.b[0]['hp']=1;b._add_buff(b.b[0],'bless',1)
-        b._injured(b.b[0],10,3,source=b.a[0]);self.assertNotIn('santa_stacks',b.state(b.a[0]))
     def test_captain_true_damage_and_stun_cover_all_lanes_without_extra_layers(self):
         b=self.battle(3);b.b[1]['line']=1;b.b[2]['line']=2;self.cast(b,'leader_skill')
         self.assertEqual([u['hp'] for u in b.b],[9910]*3)

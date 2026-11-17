@@ -165,7 +165,7 @@ package com.meng52.game.ui.element
          }
          if(_loc2_ >= data.needNum)
          {
-            SendServiceAMFFun.send_user_exchange_activity_avatar(onRe,{"index":data.index});
+            SendServiceAMFFun.send_user_exchange_activity_avatar(onRe,{"index":data.index,"day":data.day});
          }
          else
          {

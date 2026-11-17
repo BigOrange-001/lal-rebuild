@@ -52,11 +52,11 @@ function Avatar(id){this.setEquips=()=>{};this.setDestinyAndDN=()=>{};this.initF
     def test_popup_status_and_escaped_colored_content(self):
         body=method_body((ROOT/'client/src/stages/143_LOL_DetailAvatar.as').read_text('utf8'),'bondInfoHtml104')
         body=re.sub(r'for each\(var (\w+) in ([^)]+)\)',r'for(var \1 of \2)',body)
-        script='const GlobalConfig={FONT_0:"font"};function show(entry){'+body+'};console.log(JSON.stringify([true,false].map(isOK=>show({isOK,info:"组合：甲、乙\\n技能：护盾提高20.0%"}))));'
+        script='const GlobalConfig={FONT_0:"font"},SkillSet={polishInfo104:s=>s};function show(entry){'+body+'};console.log(JSON.stringify([true,false].map(isOK=>show({isOK,info:"组合：甲、乙\\n技能：护盾提高20.0%"}))));'
         active,inactive=self.run_js(script)
         self.assertIn('#167431',active);self.assertIn('已激活',active)
-        self.assertIn('#777777',inactive);self.assertIn('未激活',inactive)
-        for color in ('#63350D','#55306B','#9C3028'):self.assertIn(color,active)
+        self.assertIn('#6F5E4B',inactive);self.assertIn('未激活',inactive)
+        for color in ('#8C4513','#55306B','#9C3028'):self.assertIn(color,active)
     def test_equipment_reverse_lookup_includes_ordinary_and_exclusive(self):
         body=method_body((ROOT/'client/src/stages/174_LOL_DetailEquip.as').read_text('utf8'),'equipmentBondInfo104')
         body=re.sub(r'for each\(var (\w+) in ([^)]+)\)',r'for(var \1 of \2)',body)

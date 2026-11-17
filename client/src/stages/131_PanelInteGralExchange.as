@@ -177,9 +177,25 @@ package com.meng52.game.ui.panel
       
       override public function addList() : void
       {
+         SendAndSelect.sendAndSelectService("user.integral_exchange_info",{},function(reply:Object):void
+         {
+            if(stage == null || reply == null || int(reply.return_code) != 0 || reply.data == null ||
+               !(reply.data.rows is Array))
+            {
+               return;
+            }
+            addDailyList(reply.data.rows as Array,String(reply.data.day));
+         });
+      }
+
+      // Points exchange: 6 skin and 2 ordinary orange heroes, new every night.
+      private function addDailyList(_loc2_:Array, day:String) : void
+      {
          var _loc5_:* = 0;
          var _loc3_:Object = null;
-         var _loc2_:Array = GlobalData.$mConfig.ploy_system_simple.extract_avatar.exchange;
+         if(mList) mList.dataProvider = new ListCollection();
+         if(_txt_coin) _txt_coin.removeFromParent(true);
+         if(txt_Hint) txt_Hint.removeFromParent(true);
          _itemArr = [];
          _loc5_ = 0;
          while(_loc5_ < _loc2_.length)
@@ -196,6 +212,7 @@ package com.meng52.game.ui.panel
             }
             _loc3_.needNum = _loc2_[_loc5_][1];
             _loc3_.index = _loc5_;
+            _loc3_.day = day;
             _itemArr.push(_loc3_);
             _loc5_++;
          }
@@ -210,7 +227,7 @@ package com.meng52.game.ui.panel
          this.addChild(_txt_coin);
          _txt_coin.y = this.mPageNum.y + _txt_coin.height / 4;
          _txt_coin.x = this.mPageNum.x + 100;
-         txt_Hint = GlobalTextStyle.getTextField("300积分兑换1张T2皮肤橙卡",18,16764006,"right",380,35);
+         txt_Hint = GlobalTextStyle.getTextField("每晚0点轮换：皮肤橙卡300 · 普通橙卡200",18,16764006,"right",380,35);
          txt_Hint.x = _txt_coin.x + 90;
          txt_Hint.y = _txt_coin.y - 15;
          addChild(txt_Hint);

@@ -175,7 +175,8 @@ def ensure_relic_skill_variants(document):
     for mapping in simple.get('equipment_skill_variants_104',{}).values():
         for source,variants in mapping.items():
             if source in sources: sources.update(variants.values())
-    for source in sorted(sources):
+    # Mod heroes may have no normal skill (pl[10] is None); only real skill IDs get variants.
+    for source in sorted(s for s in sources if isinstance(s, str) and s):
         if source not in cfg['skill']: continue
         for kind in A_TYPES:
             for ancient in (False,True):

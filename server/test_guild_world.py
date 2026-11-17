@@ -408,7 +408,9 @@ class GuildLLMTests(GuildWorldBase):
         transport, calls = self.fake(json.dumps({"events": []}))
         self.enable(transport, send_player_messages=False)
         self.call("user.chat_guild", {"s": "这句话不发给模型"})
+        self.hours(7)
         self.world.llm.drain()
+        self.assertTrue(calls)  # Exercise periodic planning as well as replies.
         self.assertFalse(any("这句话不发给模型" in json.dumps(c["body"], ensure_ascii=False) for c in calls))
 
     def test_anthropic_protocol_is_one_setting_away(self):

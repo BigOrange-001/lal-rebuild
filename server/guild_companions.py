@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import copy
 
-from mod_policy import (runtime as mod_runtime, candidate_ids, hero_available)
+from mod_policy import (runtime as mod_runtime, candidate_ids, hero_available, policy_signature)
 
 
 class GuildCompanions:
@@ -20,6 +20,7 @@ class GuildCompanions:
         self.config = config if isinstance(config, dict) else {}
         self.cfg = self.config.get("cfg", self.config)
         self.heroes = self.cfg.get("avatar", {})
+        self.policy_signature = policy_signature(self.config)
         blocked = self.cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", [])
         self.skins = sorted(aid for aid in blocked if aid in self.heroes and aid.startswith("A_1") and aid.endswith("_6"))
         self.orange = sorted(aid for aid in self.heroes if aid.startswith("A_1") and aid.endswith("_6"))
@@ -120,10 +121,14 @@ class GuildCompanions:
         bot["power"] = power
         return bot
 
+    def available_pool(self, agent):
+        return (candidate_ids(self.config, agent["pool"], "appearance.assist_bot") or self.orange[:1])
+
+    def agent_key(self, agent):
+        return [agent["lv"], agent["owned"], self.available_pool(agent), self.policy_signature]
+
     def agent_bot(self, agent, competition):
-        owned = [aid for aid in agent["pool"][:max(1, int(agent.get("owned", 3)))] if aid in self.heroes]
-        if not owned:
-            owned = list(self.orange[:1])
+        owned = self.available_pool(agent)[:max(1, int(agent.get("owned", 3)))]
         return self._build(agent["uid"], agent["name"], owned, max(1, int(agent["lv"])),
                            agent["power"], competition)
 
@@ -165,8 +170,16 @@ class GuildCompanions:
                 "worship_info": {"member_worship_count": 0,
                                  "member_worship_user_list": [], "member_worship_day": day}}
 
-    @staticmethod
-    def find(profile, uid):
+    def find(self, profile, uid):
         state = profile.get("guild_companions", {})
         bots = state.get("bots", []) if isinstance(state, dict) else []
-        return next((bot for bot in bots if isinstance(bot, dict) and bot.get("uid") == str(uid)), None)
+        bot = next((bot for bot in bots if isinstance(bot, dict) and bot.get("uid") == str(uid)), None)
+        agent = profile.get("guild_world", {}).get("agents", {}).get(str(uid))
+        if bot and agent and bot.get("agent_key") != self.agent_key(agent):
+            if not self.available_pool(agent):
+                return None
+            replacement = self.agent_bot(agent, self._competition())
+            replacement["agent_key"] = self.agent_key(agent)
+            bots[bots.index(bot)] = replacement
+            bot = replacement
+        return bot

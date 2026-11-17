@@ -436,7 +436,15 @@ package com.meng52.game.ui.element
          var _loc3_:* = null;
          var _loc5_:Object = null;
          var _loc2_:Object = null;
-         var _loc1_:Object = param1;
+         var _loc1_:Object = Tools.clone(param1);
+         if(_loc1_.attrs)
+         {
+            for(var attr:String in _loc1_.attrs)
+            {
+               _loc1_[attr] = _loc1_.attrs[attr];
+            }
+            delete _loc1_.attrs;
+         }
          var _loc4_:String = "";
          for(var _loc7_:Object in _loc1_)
          {

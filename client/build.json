@@ -50,7 +50,7 @@
       "index": 8,
       "class": "com.meng52.game.ui.panel.PanelShopCoin",
       "source": "client/src/stages/008_PanelShopCoin.as",
-      "source_sha256": "ab53ed2b8619f582fd760f3252136b35d345d087e5c2cc76d57fec85a6d97f47"
+      "source_sha256": "964cafd3b94c2be8da0211dde7cde42091c7a7ca8667cf3dc2dd24cf1bd42345"
     },
     {
       "index": 9,
@@ -614,7 +614,7 @@
       "index": 102,
       "class": "com.meng52.game.ui.element.ItemVIPShopping",
       "source": "client/src/stages/100_ItemVIPShopping.as",
-      "source_sha256": "bfd2ea2740e702a6a0cb2497be40458dffa7e68ba13cbccdee30e0b928b3f95a"
+      "source_sha256": "8475f254e7fc3c7f0a803c3a42d80f7d5316fac6e66cd46c36426d62e0079fac"
     },
     {
       "index": 103,
@@ -789,7 +789,7 @@
       "index": 131,
       "class": "com.meng52.game.ui.screen.PanelCenterShopVIP",
       "source": "client/src/stages/129_PanelCenterShopVIP.as",
-      "source_sha256": "cb675424636d59b47183a3bba28e09f08746f40da7a2bf4b2d7d588e3b4bc035"
+      "source_sha256": "ded386f4182db3e903b2bb7a5582956eb4b3ebaa6a8b04cca0bf67057b0098ef"
     },
     {
       "index": 132,

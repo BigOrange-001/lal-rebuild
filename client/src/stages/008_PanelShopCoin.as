@@ -424,7 +424,7 @@ package com.meng52.game.ui.panel
                }
                if(_loc4_.length > 0)
                {
-                  _loc4_.sortOn("indexID_s");
+                  _loc4_.sortOn("indexID_s",16);
                   mItemArrTemp = _loc4_;
                   mList.removeEventListener("scroll",onSCROLL);
                   delVIPInfoBox();

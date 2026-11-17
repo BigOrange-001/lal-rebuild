@@ -1396,8 +1396,18 @@ class GameplayRosterEquipment:
             if kind == "coin": p["medal"] = p.get("medal", 0) + max(0, int(wager_cfg[medal_index]))
             if self.summon_pools is not None:
                 pool = "advanced" if kind == "coin" else "normal"
-                new = [self._new_hero(p, self.summon_pools.draw(pool, self.rng))
-                       for _ in range(times)]
+                pity = int(self.simple.get("advanced_orange_pity_105", 0) or 0) if pool == "advanced" else 0
+                records = p.setdefault("records", {})
+                new = []
+                for _ in range(times):
+                    aid = self.summon_pools.draw(pool, self.rng)
+                    if pity:
+                        # Orange pity: the Nth advanced draw without an orange is one.
+                        since = int(records.get("advanced_orange_pity", 0)) + 1
+                        if not aid.endswith("_6") and since >= pity:
+                            aid = self.summon_pools.draw_quality(pool, "orange", self.rng)[0]
+                        records["advanced_orange_pity"] = 0 if aid.endswith("_6") else since
+                    new.append(self._new_hero(p, aid))
                 # The calibrated quality distribution replaces the old forced-purple pity.
                 if kind == "coin":
                     attrs["wager_coin_1_count"] = 0

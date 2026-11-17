@@ -183,6 +183,8 @@ def load_game_config(path, now=None):
  apply_check_in_rewards(document,int(game_day(now)[:4]))
  from game_calendar import apply_daily_reset_config
  apply_daily_reset_config(document)
+ from shop_balance_105 import apply_shop_balance_105
+ apply_shop_balance_105(document)
  document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
  return document
 

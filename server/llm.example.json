@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "protocol": "openai",
+  "base_url": "https://api.deepseek.com",
+  "model": "deepseek-chat",
+  "api_key": "",
+  "timeout_seconds": 30,
+  "json_mode": true,
+  "max_calls_per_hour": 10,
+  "max_calls_per_day": 30,
+  "max_tokens_per_day": 60000,
+  "reply_cooldown_seconds": 600,
+  "send_player_messages": true,
+  "system_prompt_extra": ""
+}

@@ -116,6 +116,11 @@ public class HomeActivity extends Activity implements ServiceConnection {
                 ManagerStrings.home_manager_desc,
                 view -> startActivity(new Intent(this, MainActivity.class))));
 
+        root.addView(entry(
+                "公会 AI 对话",
+                "可选：填写自己的大模型密钥，让公会成员用模型聊天",
+                view -> startActivity(new Intent(this, GuildAiSettingsActivity.class))));
+
         TextView note = Ui.meta(this, ManagerStrings.footer_note);
         Ui.topMargin(note, 24f, this);
         root.addView(note);

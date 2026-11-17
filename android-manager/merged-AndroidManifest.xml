@@ -128,6 +128,12 @@
             android:label="本地服务与存档"
             android:theme="@android:style/Theme.Material.NoActionBar" />
 
+        <activity
+            android:name="com.lal.rebuild.manager.GuildAiSettingsActivity"
+            android:exported="false"
+            android:label="公会 AI 对话"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+
         <service
             android:name="com.lal.rebuild.manager.ServerService"
             android:exported="false"

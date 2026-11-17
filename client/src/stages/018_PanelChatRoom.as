@@ -16,6 +16,8 @@ package com.meng52.game.ui.panel
    import feathers.display.Scale9Image;
    import feathers.layout.VerticalLayout;
    import flash.geom.Rectangle;
+   import flash.events.TimerEvent;
+   import flash.utils.Timer;
    import starling.display.DisplayObject;
    import starling.display.DisplayObjectContainer;
    import starling.display.Sprite;
@@ -87,6 +89,7 @@ package com.meng52.game.ui.panel
          level = _loc2_.user_level_limit;
          lvAllZone = GlobalData.$mConfig_simple.start_lv[21];
          initUI();
+         startGuildChatPolling105();
       }
       
       public function chatIcon(param1:Boolean = true) : void
@@ -419,6 +422,8 @@ package com.meng52.game.ui.panel
       
       private function tabBar_Change(param1:Event) : void
       {
+         guildChatGeneration105++;
+         guildChatBusy105 = false;
          GlobalData.$tempChatRoomIndex = this.mTabBar.selectedIndex;
          clearPanel();
          switch(mTabBar.selectedIndex)
@@ -439,6 +444,86 @@ package com.meng52.game.ui.panel
             case 3:
                mTxt_input_info.text = GlobalLanguageStr.getStr(97987);
                set_msg_to_ScrollContainer(mTabBar.selectedIndex);
+               pollGuildChat105();
+         }
+      }
+
+      // Local mode has no chat socket: guild messages (including AI members')
+      // are pulled from the server and fed into the same packet buffer.
+      private static var _guildChatSeen:Object = {};
+      private var guildChatTimer105:Timer;
+      private var guildChatBusy105:Boolean = false;
+      private var guildChatGeneration105:int = 0;
+
+      private function startGuildChatPolling105() : void
+      {
+         stopGuildChatPolling105();
+         guildChatTimer105 = new Timer(3000);
+         guildChatTimer105.addEventListener(TimerEvent.TIMER,pollGuildChat105);
+         guildChatTimer105.start();
+         pollGuildChat105();
+      }
+
+      private function stopGuildChatPolling105() : void
+      {
+         guildChatGeneration105++;
+         guildChatBusy105 = false;
+         if(guildChatTimer105)
+         {
+            guildChatTimer105.stop();
+            guildChatTimer105.removeEventListener(TimerEvent.TIMER,pollGuildChat105);
+            guildChatTimer105 = null;
+         }
+      }
+
+      private function pollGuildChat105(event:TimerEvent = null) : void
+      {
+         if(!stage || !mTabBar || mTabBar.selectedIndex != 3 || guildChatBusy105) return;
+         guildChatBusy105 = true;
+         var generation:int = guildChatGeneration105;
+         SendServiceAMFFun.send_user_chat_record(function(reply:Object):void
+         {
+            if(generation != guildChatGeneration105) return;
+            guildChatBusy105 = false;
+            if(!stage || !mTabBar || mTabBar.selectedIndex != 3) return;
+            guild_record_backFun(reply);
+         },{"channel":"guild"});
+      }
+
+      private function guild_record_backFun(param1:Object) : void
+      {
+         var _loc2_:Array = null;
+         var _loc3_:Object = null;
+         var _loc4_:String = null;
+         var _loc5_:int = 0;
+         var _loc6_:Boolean = false;
+         if(!param1 || !param1.data || !(param1.data.record is Array))
+         {
+            return;
+         }
+         if(SocketManager.getInstance().getMsg("chat_guild").length == 0)
+         {
+            _guildChatSeen = {};
+         }
+         _loc2_ = param1.data.record;
+         _loc2_.sortOn(["t"],[16]);
+         _loc5_ = 0;
+         while(_loc5_ < _loc2_.length)
+         {
+            _loc3_ = _loc2_[_loc5_];
+            _loc4_ = String(_loc3_.uid) + ":" + String(_loc3_.t) + ":" + String(_loc3_.s);
+            if(!_guildChatSeen.hasOwnProperty(_loc4_))
+            {
+               _guildChatSeen[_loc4_] = true;
+               SocketManager.getInstance().setMsg(_loc3_);
+               _loc6_ = true;
+            }
+            _loc5_++;
+         }
+         if(_loc6_ && mTabBar && mTabBar.selectedIndex == 3)
+         {
+            clearPanel();
+            set_msg_to_ScrollContainer(3);
          }
       }
       
@@ -820,6 +905,7 @@ package com.meng52.game.ui.panel
          var _loc2_:Number = SendAndSelect.$systemTimer_nowSecond * 1000;
          GlobalData.$pro_send_time_guild = (param1.server_now as Date).time;
          this.m_input.text = "";
+         guild_record_backFun(param1);
       }
       
       override public function tabBar_CREATION_COMPLETE(param1:*) : void
@@ -921,6 +1007,7 @@ package com.meng52.game.ui.panel
       
       override public function onREMOVED_FROM_STAGE(param1:Event) : void
       {
+         stopGuildChatPolling105();
          GlobalData.$tempChatRoomIndex = 0;
          GlobalData.$chatBtnTouchable = true;
          GlobalData.$mGameClassObject.mLayoutUITop.visible = true;

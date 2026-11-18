@@ -16,6 +16,8 @@ import copy
 import re
 import random
 
+from hero_workshop import is_test_hero
+
 SCHEMA = "shop-balance-105-v2"
 
 # ---------------------------------------------------------------- recharge
@@ -119,7 +121,7 @@ def _pools(cfg):
         "orange_rows": orange_rows,
         "orange_equip_open": [eid for eid in orange_equip if eid not in exclusive],
         "purple_equip": purple_equip,
-        "skins": [aid for aid in skins if aid in cfg["avatar"]],
+        "skins": [aid for aid in skins if aid in cfg["avatar"] and not is_test_hero(cfg, aid)],
     }
 
 
@@ -171,7 +173,7 @@ def _vip(cfg, pools):
     from gameplay_common import equipment_exclusive_ids
     heroes = daily_orange_pool(cfg,minimum=5)
     skins = sorted(aid for aid in cfg['system_simple'].get('skin_hero_ids',[])
-                   if aid.endswith('_6') and aid in cfg['avatar'])
+                   if aid.endswith('_6') and aid in cfg['avatar'] and not is_test_hero(cfg, aid))
     ordinary_equips = equipment_pool(cfg,'6')
     exclusives = sorted(eid for eid in equipment_exclusive_ids(cfg) if eid.endswith('_6'))
     if len(skins)<5 or len(exclusives)<12 or not ordinary_equips:

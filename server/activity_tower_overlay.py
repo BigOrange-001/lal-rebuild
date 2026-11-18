@@ -65,9 +65,11 @@ def _chapter(cid, name, count, index):
 
 
 def _pool(cfg, star, skin=None):
+    from hero_workshop import is_test_hero
     blocked = set(cfg.get("system_simple", {}).get("skin_hero_ids", [])) | set(cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", []))
     return sorted(aid for aid in cfg["avatar"]
                   if aid.startswith("A_1") and aid.rsplit("_", 1)[-1] == str(star)
+                  and not is_test_hero(cfg, aid)
                   and (skin is None or (aid in blocked) == skin))
 
 

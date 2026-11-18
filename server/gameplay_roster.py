@@ -14,6 +14,7 @@ from gameplay_common import (grant_reward, ensure_hero_acquirable, skin_acquisit
 from mod_policy import (runtime as mod_runtime, ensure_available, hero_available,
                         channel_enabled, ensure_channel, draw_categories, definition_id, hero_metadata)
 from pve_modes import exploration_stages
+from hero_workshop import ensure_regular_hero, is_test_hero
 from equipment_magic import (
     stat_bonus as magic_stat_bonus, symp_bonuses as magic_symp_bonuses,
     upgrade_cost as magic_upgrade_cost, main_stat_multiplier as magic_main_stat_multiplier,
@@ -1132,8 +1133,9 @@ class GameplayRosterEquipment:
             base = hero.get("aid", hid).split("|")[0]
             cfg = self.heroes.get(base, {})
             gain += max(0, int((cfg.get("tl") or [0] * 8)[7]))
-            souls = p.setdefault("avatar_soul", {})
-            souls[base] = souls.get(base, 0) + 1
+            if not is_test_hero(self.full_config, base):
+                souls = p.setdefault("avatar_soul", {})
+                souls[base] = souls.get(base, 0) + 1
         p["gold"] = p.get("gold", 0) + gain
         # The native response data itself is the new gold balance.
         return p["gold"]
@@ -1364,9 +1366,12 @@ class GameplayRosterEquipment:
                 if mod_runtime(self.full_config):
                     active = draw_categories(self.full_config, categories, kind)
                 else:
-                    active = [row for row in categories if isinstance(row, dict) and row.get("ids")
-                              and int(row.get("weight", 0)) > 0
-                              and all(aid in self.heroes for aid in row["ids"])]
+                    active = [
+                        {**row, "ids": [aid for aid in row["ids"] if not is_test_hero(self.full_config, aid)]}
+                        for row in categories if isinstance(row, dict) and row.get("ids")
+                        and int(row.get("weight", 0)) > 0 and all(aid in self.heroes for aid in row["ids"])
+                    ]
+                    active = [row for row in active if row["ids"]]
                 if not active:
                     self._fail("InvalidConfig", f"No valid {kind} draw pool")
                 if kind == "coin" and not any(row.get("category") == "purple_hero" for row in active):
@@ -1684,7 +1689,9 @@ class GameplayRosterEquipment:
             for hid in keys:
                 hero = p["avatars"].pop(hid); base = hero.get("aid", hid).split("|")[0]
                 cfg = self.heroes.get(base, {}); gain += max(0, int((cfg.get("tl") or [0]*8)[7]))
-                p.setdefault("avatar_soul", {})[base] = p.setdefault("avatar_soul", {}).get(base, 0) + 1
+                if not is_test_hero(self.full_config, base):
+                    souls = p.setdefault("avatar_soul", {})
+                    souls[base] = souls.get(base, 0) + 1
             p["gold"] = p.get("gold", 0) + gain
             return {"avatars": p["avatars"], "avatar_soul": p["avatar_soul"], "gold": p["gold"]}
         if m == "user.avatar_culture":
@@ -1890,6 +1897,7 @@ class GameplayRosterEquipment:
             if len(avatars) + count > cap:
                 self._fail("RosterFull", "Hero roster is full")
 
+            ensure_regular_hero(self.full_config, aid)
             restricted_skin = aid in skin_acquisition_blocked_ids(self.full_config)
             credits = attrs.get("tower_skin_soul_credit", {}) if isinstance(attrs, dict) else {}
             if restricted_skin:

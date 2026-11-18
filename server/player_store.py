@@ -157,8 +157,9 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   start_gifts=self.config.get('cfg',{}).get('everyday_gifts',{}).get('start_lv',{}) if self.config else {}
   starter_culture_book=start_gifts.get('culture_book',0) if isinstance(start_gifts,dict) else 0
   if type(starter_culture_book) is not int or starter_culture_book<0:starter_culture_book=0
-  roster=[a for a in available if a.startswith('A_1') and a.endswith('_3') and a not in blocked_skin][:5]
-  if not roster:roster=[a for a in available if a not in blocked_skin][:5]
+  from hero_workshop import is_test_hero
+  eligible=[a for a in available if a not in blocked_skin and not is_test_hero(self.config,a)]
+  roster=[a for a in eligible if a.startswith('A_1') and a.endswith('_3')][:5] or eligible[:5]
   avatars={a+'|'+str(i):{'id':a+'|'+str(i),'aid':a+'|'+str(i),'lv':1,'slv':1,'exp':0,'hp':0,'ap':0,'de_ph':0,'de_ma':0,'phase':0,'morph':0,'love_exp':0,'equips':[]} for i,a in enumerate(roster)}
   attrs={'avatar_len':self._default_avatar_capacity(len(avatars)),'friend_len':30,'login_total':0,'pay_money':0,'pay_total':0,'pay_count':0,'pay_first':0,'pay_first_gift':0,'spend_total':0,'spend_rank':{'fixed_gift':[]},'check_in':{'m':int(game_day(now)[5:7]),'n':0,'had_check':[0,0],'day':0,'count':0,'month_key':game_day(now)[:7]},'sign_in':{'k':1,'n':0,'t':None},'team_num':0,'gamble_index':0,'roulette':self._default_roulette_state(),'fund':{'key':'1','money':10,'last_time':None},'fund_add_time':{'$date':now},'energy_extra':0,'fragment_energy_extra':0,'fragment_energy':{'$date':now-12*1800},'guild_contribute':0,'association_id':'','dust':[0,0,0,0],'dn_stone':0,'box_key':0,'culture_book':starter_culture_book,'sp':[0]*self._talent_color_count(),'pvp_rank':99999,'pvp_count':0,'rank_lv':[],'dn':{},'morph':{'chance':0},'lottery_activity':self._default_lottery_state(),'vip_time':{'$date':0},'expedition':{},'culture':{},'guild_id':'','gift':{},'wager':{},'wager_coin_1_count':0,'love':{}}
   records={'guide':{},'current_rank':99999,'energy_times':0,'check_in':{},'pvp':{},'login':{},'combat':{},'battle':{},'gift':{},'task':{},'expedition':{},'pay':{},'ploy':{},'help_suids':{},'help_fuids':{},'exploration_times':{'day':game_day(now),'refresh_count':3,'refresh_buy':0,'relive_buy':0,'mode_buy':0,'vip_relive':1}}
@@ -687,6 +688,8 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
     return isinstance(value,dict) and bool(value) and len(value)<=512 and all(isinstance(aid,str) and aid in avatars and type(amount) is int and 1<=amount<=100 for aid,amount in value.items()) and sum(value.values())<=1000
    return key in allowed and type(value) is int and 1<=value<=100000000
   if not isinstance(gifts,dict) or not gifts or any(not valid_gift(k,v) for k,v in gifts.items()):raise GameplayFault('InvalidGift','Unsupported resource, equipment ID, or invalid quantity')
+  from hero_workshop import ensure_regular_hero
+  for aid in gifts.get('avatar',{}):ensure_regular_hero(self.config,aid)
   if not allow_skin and isinstance(gifts.get('avatar'),dict):
    from gameplay_common import skin_acquisition_blocked_ids
    if set(gifts['avatar']) & skin_acquisition_blocked_ids(self.config):

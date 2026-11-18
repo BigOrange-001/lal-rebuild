@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 import re
 from game_calendar import LOCAL_TZ, game_day
+from hero_workshop import ensure_regular_hero, is_workshop_offer
 from player_store import GameplayFault
 
 CURRENCIES = {"gold", "coin", "score", "medal", "mark"}
@@ -68,10 +69,11 @@ def skin_acquisition_blocked_ids(config=None):
     return frozenset(ids)
 
 def ensure_hero_acquirable(aid, config=None, *, allow_skin=False):
-    """Reject a newly minted skin hero unless a trusted internal caller opts in."""
+    """Check workshop exclusivity and skin restrictions before creating a hero instance."""
     from mod_policy import runtime, ensure_available
     if runtime(config):
         ensure_available(config, aid)
+    ensure_regular_hero(config, aid)
     if allow_skin:
         return
     if aid in skin_acquisition_blocked_ids(config):
@@ -111,12 +113,19 @@ def equipment_exclusive_ids(config=None):
         raise GameplayFault("InvalidConfig", "Equipment exclusive policy has an invalid ID list")
     return frozenset(ids)
 
-def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipment_exclusive=False):
+def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipment_exclusive=False,
+                 test_hero_claim=None):
     """Apply positive currency/attribute rewards to a profile inside atomic_update."""
     if not isinstance(reward, dict):
         raise GameplayFault("InvalidReward", "Reward must be an object")
+    from mod_policy import runtime, ensure_reward, reward_hero_ids
+    if test_hero_claim is None:
+        for aid in reward_hero_ids(reward):
+            ensure_regular_hero(config, aid)
+    elif (reward != {"heroes": [{"aid": test_hero_claim, "num": 1}]}
+          or not is_workshop_offer(config, test_hero_claim)):
+        raise GameplayFault("InvalidReward", "Invalid test hero claim reward")
     cfg = config.get("cfg", config) if isinstance(config, dict) else {}
-    from mod_policy import runtime, ensure_reward
     if runtime(config):
         # Saved rewards remain claimable when a source channel is disabled;
         # missing definitions freeze the claim without discarding its record.

@@ -21,6 +21,7 @@ package com.meng52.game.ui.screen
    import com.meng52.utils.StarlingTools;
    import com.meng52.utils.Tools;
    import feathers.controls.List;
+   import feathers.controls.ScrollContainer;
    import feathers.data.ListCollection;
    import feathers.display.Scale9Image;
    import feathers.layout.TiledRowsLayout;
@@ -84,6 +85,12 @@ package com.meng52.game.ui.screen
       private var quad:Quad;
       
       private var _spRule:Sprite;
+
+      private static const WORKSHOP_TAB:int = 3;
+
+      private var _tabButtonWidth:int;
+
+      private var _workshopList:ScrollContainer;
       
       public function PanelCenterSoul()
       {
@@ -153,6 +160,8 @@ package com.meng52.game.ui.screen
          _configShop = GlobalData.$mConfig.mystery_shop;
          mImg_head = getImg_headBg(-60);
          addChild(mImg_head);
+         _tabButtonWidth = Math.min(MainConfig.$isEnglish ? 200 : 158,
+            Math.floor((GlobalData.$mStageWidth - 36) / 4));
          setTabBar([{
             "label":GlobalLanguageStr.getLanguageStr(90578),
             "IndexID":0
@@ -162,7 +171,10 @@ package com.meng52.game.ui.screen
          },{
             "label":GlobalLanguageStr.getLanguageStr(97507),
             "IndexID":2
-         }],tab_Change,tab_Complete,MainConfig.$isEnglish ? 200 : 158);
+         },{
+            "label":MainConfig.$isEnglish ? "Test Heroes" : "测试英雄",
+            "IndexID":WORKSHOP_TAB
+         }],tab_Change,tab_Complete,_tabButtonWidth);
          mTabBar.y = 20;
          mImg3_info = getImg3_info();
          mImg3_info.y = mTabBar.y + 55;
@@ -181,7 +193,7 @@ package com.meng52.game.ui.screen
       {
          var _loc3_:Object = null;
          var _loc2_:Object = null;
-         if(_data)
+         if(_data && mTabBar && mTabBar.selectedIndex == 0)
          {
             _data.b = param1.data.b;
             _loc3_ = {"data":_data};
@@ -206,6 +218,7 @@ package com.meng52.game.ui.screen
       {
          currSoulIndex = -1;
          TimeManager.instance().unregister("PANEL_CENTERSOUL");
+         clearWorkshop();
          GlobalData.$mEventDispatcher.removeEventListener("update_soulshop_list",UPDATE_SOULSHOP_LIST);
          GlobalData.$mEventDispatcher.removeEventListener("update_equipsoul_list",UPDATE_EQUIPSOUL_LIST);
          GlobalData.$mEventDispatcher.removeEventListener("update_avatarsoul_list",UPDATE_AVATARSOUL_LIST);
@@ -266,7 +279,7 @@ package com.meng52.game.ui.screen
       private function get_Info(param1:Object) : void
       {
          var _responseType:String = param1 && param1.params ? String(param1.params.s_type) : "";
-         if(!this.stage || !mRadioBar)
+         if(!this.stage || !mTabBar || mTabBar.selectedIndex != 0 || !mRadioBar)
          {
             return;
          }
@@ -320,8 +333,132 @@ package com.meng52.game.ui.screen
       
       override public function update() : void
       {
+         if(isWorkshopOpen())
+         {
+            if(!_workshopList)
+            {
+               openWorkshop();
+            }
+            return;
+         }
+         clearWorkshop();
          this.setList();
          this.addList();
+      }
+
+      private function isWorkshopOpen() : Boolean
+      {
+         return this.stage != null && mTabBar != null && mTabBar.selectedIndex == WORKSHOP_TAB;
+      }
+
+      private function clearWorkshop() : void
+      {
+         if(_workshopList)
+         {
+            _workshopList.removeFromParent(true);
+            _workshopList = null;
+            delTips();
+         }
+      }
+
+      private function openWorkshop() : void
+      {
+         delList();
+         delTips();
+         TimeManager.instance().unregister("PANEL_CENTERSOUL");
+         if(_sp) _sp.visible = false;
+         if(mRadioBar) mRadioBar.visible = false;
+         _spRule.visible = false;
+         mImg3_info.height = 39;
+         requestWorkshopHeroes();
+      }
+
+      private function requestWorkshopHeroes() : void
+      {
+         SendAndSelect.sendAndSelectService("user.test_hero_workshop_info",{},receiveWorkshopHeroes);
+      }
+
+      private function receiveWorkshopHeroes(response:Object) : void
+      {
+         if(!isWorkshopOpen() || !response.data || !(response.data.heroes is Array))
+         {
+            return;
+         }
+         var scrollPosition:Number = _workshopList ? _workshopList.verticalScrollPosition : 0;
+         clearWorkshop();
+         var heroes:Array = response.data.heroes as Array;
+         var width:Number = Math.min(620,GlobalData.$mStageWidth - 28);
+         var layout:VerticalLayout = new VerticalLayout();
+         layout.gap = 8;
+         layout.paddingBottom = 16;
+         _workshopList = new ScrollContainer();
+         _workshopList.layout = layout;
+         _workshopList.width = width;
+         _workshopList.height = GlobalData.$center_height - 142;
+         _workshopList.x = (GlobalData.$mStageWidth - width) / 2;
+         _workshopList.y = 128;
+         addChild(_workshopList);
+         if(heroes.length == 0)
+         {
+            setTips(MainConfig.$isEnglish ? "No test heroes available" : "暂无可领取的测试英雄");
+            return;
+         }
+         for each(var hero:Object in heroes)
+         {
+            _workshopList.addChild(createWorkshopHeroRow(hero,width - 12));
+         }
+         _workshopList.validate();
+         _workshopList.verticalScrollPosition = scrollPosition;
+      }
+
+      private function createWorkshopHeroRow(hero:Object, width:Number) : Sprite
+      {
+         var row:Sprite = new Sprite();
+         var aid:String = String(hero.aid);
+         var reward:Object = {};
+         reward[aid] = 1;
+         row.addChild(GlobalFunction.createScale9Image("UI_pvp_bg_1_0000",width,108,new Rectangle(30,30,50,50)));
+         var icon:DisplayObject = GlobalFunction.getAwardByType("avatar",reward,false,null,"",false,0.75,_workshopList).ui;
+         icon.x = 16;
+         icon.y = (108 - icon.height) / 2;
+         row.addChild(icon);
+         GlobalFunction.uiText(String(hero.name),24,GlobalFunction.UI_BROWN,"left",width - 260,72,row,104,18);
+         var claims:Array = GlobalData.$userData.records.test_hero_claims as Array;
+         var claimed:Boolean = hero.claimed === true || (claims != null && claims.indexOf(aid) >= 0);
+         if(claimed)
+         {
+            GlobalFunction.uiText(MainConfig.$isEnglish ? "Claimed" : "已领取",20,GlobalFunction.UI_MUTED,
+               "center",124,48,row,width - 142,30);
+         }
+         else
+         {
+            GlobalFunction.uiButton(MainConfig.$isEnglish ? "Claim Free" : "免费领取",124,48,"primary",row,
+               width - 142,30,function():void { claimWorkshopHero(aid,String(hero.name)); });
+         }
+         return row;
+      }
+
+      private function claimWorkshopHero(aid:String, name:String) : void
+      {
+         if(!isWorkshopOpen() || !_workshopList || _workshopList.isScrolling)
+         {
+            return;
+         }
+         SendAndSelect.sendAndSelectService("user.test_hero_workshop_claim",{"aid":aid},function(response:Object):void
+         {
+            if(!response.data || !GlobalFunction.isVersionedProfileReceipt(response))
+            {
+               return;
+            }
+            if(response.data.granted)
+            {
+               GlobalFunction.popToast((MainConfig.$isEnglish ? "Claimed " : "已领取 ") + name,"success");
+            }
+            if(isWorkshopOpen())
+            {
+               requestWorkshopHeroes();
+            }
+         });
       }
       
       private function tab_Complete(param1:Event) : void
@@ -751,9 +888,12 @@ package com.meng52.game.ui.screen
       
       private function radioBar_Complete(param1:Event) : void
       {
-         SendServiceAMFFun.send_user_mystery_shop_info(get_Info,{"s_type":_configSet[_radioIndex]});
+         if(mTabBar && mTabBar.selectedIndex == 0)
+         {
+            SendServiceAMFFun.send_user_mystery_shop_info(get_Info,{"s_type":_configSet[_radioIndex]});
+         }
       }
-      
+
       private function radioBar_Change(param1:Event) : void
       {
          update_Shop();
@@ -761,6 +901,10 @@ package com.meng52.game.ui.screen
       
       private function update_Shop() : void
       {
+         if(!mTabBar || mTabBar.selectedIndex != 0)
+         {
+            return;
+         }
          var _loc1_:int = int(mRadioBar ? mRadioBar.selectedIndex : 0);
          _radioIndex = _loc1_;
          if(_loc1_ == 0)
@@ -784,7 +928,7 @@ package com.meng52.game.ui.screen
             if(mAvatarIcon == null)
             {
                mAvatarIcon = GlobalFunction.getTagPopTip(1,false);
-               mAvatarIcon.x = MainConfig.$isEnglish ? 380 : 295;
+               mAvatarIcon.x = _tabButtonWidth * 2 - 20;
                mAvatarIcon.y = 18;
                addChild(mAvatarIcon);
             }
@@ -803,7 +947,7 @@ package com.meng52.game.ui.screen
             if(mEquipIcon == null)
             {
                mEquipIcon = GlobalFunction.getTagPopTip(1,false);
-               mEquipIcon.x = MainConfig.$isEnglish ? 578 : 455;
+               mEquipIcon.x = _tabButtonWidth * 3 - 18;
                mEquipIcon.y = 18;
                addChild(mEquipIcon);
             }

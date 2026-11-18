@@ -114,14 +114,16 @@ def equipment_exclusive_ids(config=None):
     return frozenset(ids)
 
 def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipment_exclusive=False,
-                 test_hero_claim=None):
+                 test_hero_claim=None, allow_test_hero_mail=False):
     """Apply positive currency/attribute rewards to a profile inside atomic_update."""
     if not isinstance(reward, dict):
         raise GameplayFault("InvalidReward", "Reward must be an object")
     from mod_policy import runtime, ensure_reward, reward_hero_ids
     if test_hero_claim is None:
+        hero_mail = allow_test_hero_mail and set(reward) in ({"avatar"}, {"heroes"})
         for aid in reward_hero_ids(reward):
-            ensure_regular_hero(config, aid)
+            if not (hero_mail and is_workshop_offer(config, aid)):
+                ensure_regular_hero(config, aid)
     elif (reward != {"heroes": [{"aid": test_hero_claim, "num": 1}]}
           or not is_workshop_offer(config, test_hero_claim)):
         raise GameplayFault("InvalidReward", "Invalid test hero claim reward")
@@ -255,7 +257,9 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
             attrs = profile.setdefault("attrs", {}); attrs["dn_stone"] = int(attrs.get("dn_stone", 0)) + value
         elif key == "avatar":
             if not isinstance(value, dict): raise GameplayFault("InvalidReward", "Avatar reward must map ids to counts")
-            grant_reward(profile, {"heroes":[{"aid":str(aid),"num":int(amount)} for aid,amount in value.items()]}, config, allow_skin=allow_skin, allow_equipment_exclusive=allow_equipment_exclusive)
+            grant_reward(profile, {"heroes": [{"aid": str(aid), "num": int(amount)} for aid, amount in value.items()]},
+                         config, allow_skin=allow_skin, allow_equipment_exclusive=allow_equipment_exclusive,
+                         allow_test_hero_mail=allow_test_hero_mail)
         elif key == "equip":
             if not isinstance(value, dict): raise GameplayFault("InvalidReward", "Equipment reward must map ids to counts")
             grant_reward(profile, {"items":[{"eid":str(eid),"num":int(amount)} for eid,amount in value.items()]}, config, allow_skin=allow_skin, allow_equipment_exclusive=allow_equipment_exclusive)

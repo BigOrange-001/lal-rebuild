@@ -12,7 +12,12 @@ def is_test_hero(config, aid):
 
 def ensure_regular_hero(config, aid):
     if is_test_hero(config, aid):
-        raise GameplayFault("TestHeroWorkshopOnly", "测试英雄只能在神秘商店的「测试英雄」页领取。")
+        raise GameplayFault("TestHeroWorkshopOnly", "测试英雄仅可通过神秘商店的「测试英雄」页或管理邮件领取。")
+
+
+def has_test_hero_units(config, units):
+    return any(isinstance(unit, dict) and is_test_hero(config, unit.get("base_aid") or unit.get("aid"))
+               for unit in (units or ()))
 
 
 def contains_test_hero(config, reward):
@@ -41,6 +46,12 @@ def claimed_test_heroes(profile, config):
     claimed.update(base_aid(config, hero.get("aid", iid))
                    for iid, hero in profile.get("avatars", {}).items() if isinstance(hero, dict))
     return claimed
+
+
+def record_test_hero_claim(profile, aid):
+    claims = profile.setdefault("records", {}).setdefault("test_hero_claims", [])
+    if aid not in claims:
+        claims.append(aid)
 
 
 def workshop_rows(profile, config):

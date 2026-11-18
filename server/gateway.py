@@ -479,7 +479,7 @@ def _console_loop(service):
     gifts=json.loads(gifts_text)
     if not isinstance(gifts,dict): raise ValueError('gifts must be a JSON object')
     with service.backend.lock:
-     mail_id=service.backend.players.send_mail(account,title,gifts,request_id,allow_skin=True)
+     mail_id=service.backend.players.send_mail(account,title,gifts,request_id,allow_skin=True,allow_test_hero=True)
     print(json.dumps({'mail_id':mail_id,'account':account,'request_id':request_id,'title':title,'gifts':gifts},ensure_ascii=False),flush=True)
    except (ValueError,GameplayFault,sqlite3.Error) as error:
     code=f' ({error.code})' if isinstance(error,GameplayFault) else ''

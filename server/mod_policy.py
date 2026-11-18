@@ -112,7 +112,7 @@ def channel_enabled(config, aid, channel):
         from hero_catalog_105 import is_abandoned
         from hero_workshop import is_test_hero
         if (is_abandoned(config,base_aid(config,aid))
-                or (channel.startswith("acquisition.") and is_test_hero(config, aid))):
+                or ((channel.startswith("acquisition.") or channel.endswith("_enemy")) and is_test_hero(config, aid))):
             return False
     row = hero_metadata(config, aid)
     channels = row.get("channels", {}) if isinstance(row, dict) else {}

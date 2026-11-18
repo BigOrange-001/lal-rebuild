@@ -9,7 +9,7 @@ from spending_budget import ORDINARY_TIERS,LIMIT_MESSAGE,charge_spending,normali
 from check_in_rewards import apply_check_in_rewards,check_in_coin,orange_bonus_count,random_orange_aid
 from recruit_exchange import SKIN_SOUL_IDS
 from hero_workshop import (claimed_test_heroes, contains_test_hero, ensure_regular_hero,
-                           is_test_hero, is_workshop_offer, workshop_rows)
+                           is_test_hero, is_workshop_offer, record_test_hero_claim, workshop_rows)
 from mod_policy import (runtime as mod_runtime, new_heroes, effective_digest,
                         reward_allowed, ensure_reward, ensure_channel,
                         channel_enabled, hero_available, activity_categories)
@@ -794,9 +794,7 @@ class GameplayEconomy:
             if granted:
                 grant_reward(profile, {"heroes": [{"aid": aid, "num": 1}]}, self.config,
                              test_hero_claim=aid)
-            claims = profile.setdefault("records", {}).setdefault("test_hero_claims", [])
-            if aid not in claims:
-                claims.append(aid)
+            record_test_hero_claim(profile, aid)
             return profile, {"aid": aid, "granted": granted}
 
         result, _ = self.store.atomic_update(uid, mutate, key, {"aid": aid})

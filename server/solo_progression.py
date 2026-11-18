@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from pve_formation import stagger_lane_offsets
 from mod_policy import runtime as mod_runtime, candidate_ids, policy_signature, hero_available
 from player_store import GameplayFault
+from hero_workshop import is_test_hero
 
 
 def arena_equipment(config: dict, bot: dict, units: list[dict]) -> list[dict]:
@@ -80,7 +81,8 @@ def exploration_encounter(config: dict, profile: dict, state: dict, stage: int, 
     star = max(2, min(6, int(baseline["star"]) - (1 if stage <= 4 else 0)))
     candidates = []
     for family in families:
-        members = [aid for aid in avatars if aid.rsplit("_", 1)[0] == family]
+        members = [aid for aid in avatars if aid.rsplit("_", 1)[0] == family
+                   and not is_test_hero(config, aid)]
         if mod_runtime(config):
             members = candidate_ids(config, members, "appearance.exploration_enemy")
         if members:
@@ -91,7 +93,10 @@ def exploration_encounter(config: dict, profile: dict, state: dict, stage: int, 
     if len(selected) < 3:
         if mod_runtime(config):
             raise GameplayFault("ModPoolEmpty", "探索随机敌人至少需要三个合法英雄家族")
-        selected = [row[0] for row in template["team2"]][:3]
+        template_heroes = [row[0] for row in template["team2"]]
+        selected = [aid for aid in template_heroes if not is_test_hero(config, aid)][:3]
+        if len(selected) < min(3, len(template_heroes)):
+            raise GameplayFault("ExplorationEnemyPoolEmpty", "探索随机敌人候选不足。")
     team = [[aid, level, 4, 0, 0.08 + i * 0.12, int(i == 0)] for i, aid in enumerate(selected)]
     # Refreshed exploration maps are generated at runtime rather than read
     # from the published stage table. Apply the same per-lane placement policy

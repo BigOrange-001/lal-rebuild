@@ -13,6 +13,7 @@ from arena_opponents import POWER_ORDER_SCHEMA, combat_config_signature, generat
 from arena_rewards import DAILY_RANK_MARK, DAILY_PAID_BATTLES, DAILY_BATTLE_MARK
 from formation_share import FormationLibrary, METHODS as FORMATION_METHODS
 from arena_raids import ArenaRaids, METHODS as RAID_METHODS
+from hero_workshop import has_test_hero_units, is_test_hero
 from mod_policy import (runtime as mod_runtime, candidate_ids, channel_enabled,
                         effective_digest)
 
@@ -36,11 +37,8 @@ class GameplayCompetition:
         self.heroes=self.cfg.get("avatar",self.roster.get("heroes",{}))
         self.equipment=self.cfg.get("equip") or self.roster.get("equipment",{})
         self.rules=self.side.get("rules",{})
-        self.pvp_bots=self.side.get("pvp_bots",[])
-        self.fragment_bots=self.side.get("fragment_bots",[])
-        if mod_runtime(self.cfg):
-            self.fragment_bots = self._filtered_bots(self.fragment_bots, "appearance.fragment_enemy")
-            self.pvp_bots = self._filtered_bots(self.pvp_bots, "appearance.arena_enemy")
+        self.pvp_bots = self._filtered_bots(self.side.get("pvp_bots", []), "appearance.arena_enemy")
+        self.fragment_bots = self._filtered_bots(self.side.get("fragment_bots", []), "appearance.fragment_enemy")
 
     @property
     def cultivator(self):
@@ -49,10 +47,17 @@ class GameplayCompetition:
             from npc_cultivation import NpcCultivator
             self._cultivator=NpcCultivator(self.store,self.full_config)
         return self._cultivator
+    def _team_contains_test_hero(self, team):
+        return any(isinstance(row, list) and row and is_test_hero(self.cfg, row[0]) for row in team)
+
     def _filtered_bots(self, bots, channel):
+        has_mods = bool(mod_runtime(self.cfg))
         pool = candidate_ids(self.cfg, [], channel, include_new=True)
         result = []
         for index, original in enumerate(bots):
+            if not has_mods and not self._team_contains_test_hero(original.get("team", [])):
+                result.append(original)
+                continue
             bot = copy.deepcopy(original)
             entries = [row for row in bot.get("team", []) if isinstance(row, list) and row
                        and channel_enabled(self.cfg, row[0], channel)]
@@ -207,6 +212,8 @@ class GameplayCompetition:
     def _bot_units(self,bot, *, fragment=False):
         fragment = fragment or any(row.get("uid") == (bot or {}).get("uid") for row in self.fragment_bots)
         if bot and isinstance(bot.get("units"),list):
+            if has_test_hero_units(self.cfg, bot["units"]):
+                self._fail("InvalidOpponent", "缓存对手包含测试英雄，请刷新对手。")
             if mod_runtime(self.cfg):
                 channel = "appearance.fragment_enemy" if fragment else "appearance.arena_enemy"
                 for unit in bot["units"]:
@@ -214,7 +221,8 @@ class GameplayCompetition:
                         self._fail("ModOpponentUnavailable", "缓存对手已被当前 Mod 策略排除，请重新生成对手")
             return copy.deepcopy(bot["units"])
         team=bot.get("team",[]) if bot else []
-        if mod_runtime(self.cfg) and (bot or {}).get("mod_policy_digest") != effective_digest(self.cfg):
+        if (self._team_contains_test_hero(team)
+                or (mod_runtime(self.cfg) and (bot or {}).get("mod_policy_digest") != effective_digest(self.cfg))):
             filtered = self._filtered_bots([bot] if bot else [], "appearance.fragment_enemy" if fragment else "appearance.arena_enemy")
             if not filtered:
                 self._fail("ModPoolEmpty", "对手没有足够的合法英雄")
@@ -458,7 +466,10 @@ class GameplayCompetition:
         if (not refresh and isinstance(batch,dict) and batch.get("player_rank")==self._rank(profile)
                 and batch.get("power_order_schema")==POWER_ORDER_SCHEMA
                 and batch.get("combat_config_sha256")==combat_signature
-                and isinstance(batch.get("bots"),list) and len(batch["bots"])==(10 if self._rank(profile)>100 else 9)):
+                and isinstance(batch.get("bots"),list) and len(batch["bots"])==(10 if self._rank(profile)>100 else 9)
+                and not any(has_test_hero_units(self.cfg, bot.get("units", []))
+                            or self._team_contains_test_hero(bot.get("team", []))
+                            for bot in batch["bots"] if isinstance(bot, dict))):
             return batch
         old_generation=max(0,int(records.get("pvp_opponent_generation",0) or 0))
         generation=old_generation+1 if refresh or old_generation else 1

@@ -37,7 +37,7 @@ class PlayerStore:
   db.executescript('''CREATE TABLE IF NOT EXISTS players(uid TEXT PRIMARY KEY,account TEXT UNIQUE NOT NULL,profile TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,uid TEXT NOT NULL,expires INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS operation_ledger(uid TEXT NOT NULL,operation_key TEXT NOT NULL,payload_hash TEXT NOT NULL,result TEXT NOT NULL,created INTEGER NOT NULL,PRIMARY KEY(uid,operation_key));
-CREATE TABLE IF NOT EXISTS gift_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,uid TEXT NOT NULL,title TEXT NOT NULL,gifts TEXT NOT NULL,created INTEGER NOT NULL,claimed INTEGER NOT NULL DEFAULT 0,request_key TEXT UNIQUE NOT NULL,read_at INTEGER NOT NULL DEFAULT 0,allow_skin INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS gift_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,uid TEXT NOT NULL,title TEXT NOT NULL,gifts TEXT NOT NULL,created INTEGER NOT NULL,claimed INTEGER NOT NULL DEFAULT 0,request_key TEXT UNIQUE NOT NULL,read_at INTEGER NOT NULL DEFAULT 0,allow_skin INTEGER NOT NULL DEFAULT 0,allow_test_hero INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS player_state_revision(uid TEXT PRIMARY KEY,revision INTEGER NOT NULL CHECK(revision>=0));
 CREATE TABLE IF NOT EXISTS formation_library(uid TEXT NOT NULL,id TEXT NOT NULL,payload TEXT NOT NULL,created INTEGER NOT NULL,PRIMARY KEY(uid,id));
 INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM players;''')
@@ -47,9 +47,12 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   self.mod_service=None
   self._mod_uid=None
   self.configure_handlers(config)
-  if 'read_at' not in {row[1] for row in db.execute('PRAGMA table_info(gift_mail)')}:
+  mail_columns={row[1] for row in db.execute('PRAGMA table_info(gift_mail)')}
+  if 'allow_test_hero' not in mail_columns:
+   db.execute('ALTER TABLE gift_mail ADD COLUMN allow_test_hero INTEGER NOT NULL DEFAULT 0');db.commit()
+  if 'read_at' not in mail_columns:
    db.execute('ALTER TABLE gift_mail ADD COLUMN read_at INTEGER NOT NULL DEFAULT 0');db.commit()
-  if 'allow_skin' not in {row[1] for row in db.execute('PRAGMA table_info(gift_mail)')}:
+  if 'allow_skin' not in mail_columns:
    db.execute('ALTER TABLE gift_mail ADD COLUMN allow_skin INTEGER NOT NULL DEFAULT 0')
    # Older administration tools could attach heroes to mail.
    # Preserve that path for old unclaimed mail containing
@@ -664,16 +667,18 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    state['key']['num']+=value
   else:raise GameplayFault('InvalidGift','Invalid box/key mail quantity')
   attrs['box_key']=state
- def send_mail(self,account,title,gifts,request_key,*,allow_skin=False):
+ def send_mail(self,account,title,gifts,request_key,*,allow_skin=False,allow_test_hero=False):
   if self.mod_service is not None and self._mod_uid is None:
    owner=self.db.execute('SELECT uid FROM players WHERE account=?',(account,)).fetchone()
    if owner:
     context=self.context_for(owner[0])
-    if context is not self:return context.send_mail(account,title,gifts,request_key,allow_skin=allow_skin)
+    if context is not self:
+     return context.send_mail(account,title,gifts,request_key,allow_skin=allow_skin,allow_test_hero=allow_test_hero)
   allowed={'gold','coin','score','medal','mark','dust','dn_stone','box_key','culture_book','sp'}
   if not isinstance(title,str) or not 1<=len(title)<=120:raise GameplayFault('InvalidTitle','Title must be 1 to 120 characters')
   if not isinstance(request_key,str) or not 1<=len(request_key)<=128:raise GameplayFault('InvalidRequestKey','Request key required')
   if type(allow_skin) is not bool:raise GameplayFault('InvalidGift','Skin mail override must be boolean')
+  if type(allow_test_hero) is not bool:raise GameplayFault('InvalidGift','Test hero mail override must be boolean')
   def valid_gift(key,value):
    if key=='box_key':return (isinstance(value,dict) and bool(value) and all(kind in {'box','key'} and type(amount) is int and 1<=amount<=100000000 for kind,amount in value.items())) or (type(value) is int and 1<=value<=100000000)
    if key=='sp':
@@ -688,8 +693,13 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
     return isinstance(value,dict) and bool(value) and len(value)<=512 and all(isinstance(aid,str) and aid in avatars and type(amount) is int and 1<=amount<=100 for aid,amount in value.items()) and sum(value.values())<=1000
    return key in allowed and type(value) is int and 1<=value<=100000000
   if not isinstance(gifts,dict) or not gifts or any(not valid_gift(k,v) for k,v in gifts.items()):raise GameplayFault('InvalidGift','Unsupported resource, equipment ID, or invalid quantity')
-  from hero_workshop import ensure_regular_hero
-  for aid in gifts.get('avatar',{}):ensure_regular_hero(self.config,aid)
+  from hero_workshop import ensure_regular_hero,is_workshop_offer
+  test_hero_mail=False
+  for aid in gifts.get('avatar',{}):
+   if allow_test_hero and is_workshop_offer(self.config,aid):
+    test_hero_mail=True
+   else:
+    ensure_regular_hero(self.config,aid)
   if not allow_skin and isinstance(gifts.get('avatar'),dict):
    from gameplay_common import skin_acquisition_blocked_ids
    if set(gifts['avatar']) & skin_acquisition_blocked_ids(self.config):
@@ -698,13 +708,15 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   if not row:raise GameplayFault('UnknownPlayer','Account has no player yet')
   self.db.execute('BEGIN IMMEDIATE')
   try:
-   existing=self.db.execute('SELECT id,uid,title,gifts,allow_skin FROM gift_mail WHERE request_key=?',(request_key,)).fetchone()
+   existing=self.db.execute('SELECT id,uid,title,gifts,allow_skin,allow_test_hero FROM gift_mail WHERE request_key=?',(request_key,)).fetchone()
    payload=json.dumps(gifts,sort_keys=True)
    if existing:
-    if existing[1:]!=(row[0],title,payload,int(allow_skin)):raise GameplayFault('RequestKeyConflict','Request key was used for different mail')
+    if existing[1:]!=(row[0],title,payload,int(allow_skin),int(test_hero_mail)):
+     raise GameplayFault('RequestKeyConflict','Request key was used for different mail')
     mail_id=existing[0]
    else:
-    mail_id=self.db.execute('INSERT INTO gift_mail(uid,title,gifts,created,request_key,allow_skin) VALUES(?,?,?,?,?,?)',(row[0],title,payload,self.clock.now(),request_key,int(allow_skin))).lastrowid
+    mail_id=self.db.execute('INSERT INTO gift_mail(uid,title,gifts,created,request_key,allow_skin,allow_test_hero) VALUES(?,?,?,?,?,?,?)',
+                            (row[0],title,payload,self.clock.now(),request_key,int(allow_skin),int(test_hero_mail))).lastrowid
    self.db.commit();return str(mail_id)
   except Exception:self.db.rollback();raise
  def mails(self,uid):
@@ -735,7 +747,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
  def claim(self,uid,mail_id):
   self.db.execute('BEGIN IMMEDIATE')
   try:
-   row=self.db.execute('SELECT gifts,claimed,allow_skin FROM gift_mail WHERE id=? AND uid=?',(str(mail_id),uid)).fetchone()
+   row=self.db.execute('SELECT gifts,claimed,allow_skin,allow_test_hero FROM gift_mail WHERE id=? AND uid=?',(str(mail_id),uid)).fetchone()
    if not row:raise GameplayFault('UnknownMail','Mail not found for this player')
    p=json.loads(self.db.execute('SELECT profile FROM players WHERE uid=?',(uid,)).fetchone()[0])
    if not row[1]:
@@ -745,7 +757,11 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
      # Reuse the native hero-grant path: it validates every configured aid,
      # checks aggregate capacity before mutating, and creates aid|instance ids.
      from gameplay_common import grant_reward
-     grant_reward(p,{'avatar':avatar_rewards},self.config,allow_skin=bool(row[2]))
+     grant_reward(p,{'avatar':avatar_rewards},self.config,allow_skin=bool(row[2]),allow_test_hero_mail=bool(row[3]))
+     if row[3]:
+      from hero_workshop import is_test_hero,record_test_hero_claim
+      for aid in avatar_rewards:
+       if is_test_hero(self.config,aid):record_test_hero_claim(p,aid)
     equipment_rewards=mail_gifts.get('equip',{})
     if equipment_rewards:
      available_equipment=(self.config.get('cfg',self.config).get('equip',{}) if isinstance(self.config,dict) else {})

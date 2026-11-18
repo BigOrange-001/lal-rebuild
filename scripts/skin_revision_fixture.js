@@ -10,8 +10,8 @@ const GameMap={currentMap:{getAliveList:team=>roster.filter(u=>u.team===team&&u.
 const currentAbilityAttack=()=>contexts.at(-1),beginAbilityAttack=(owner,kind)=>{let c={owner,kind,damage:0,hitSerial:0};contexts.push(c);return c},endAbilityAttack=()=>contexts.pop();
 const methods={};
 /*METHODS*/
-function unit(family=0,team=1,pos=1500){
- const aid=`A_${family}_6`,def=data.avatar[aid];GlobalData.$mConfig_avatar[aid]={skin_revision_v2_104:family};
+function unit(family=0,team=1,pos=1500,quality=6){
+ const aid=`A_${family}_${quality}`,def=data.avatar[aid];GlobalData.$mConfig_avatar[aid]={skin_revision_v2_104:def ? def.family : 0};
  let u=Object.assign({skin2:{},abilityState:{},avatarData:{id:aid},abilityIndex:++serial,hp:100000,hpMax:100000,ap:1000,team,otherTeam:3-team,pos,line:0,range:300,buffs:{},manualOwnerActionSerial:1,isManualSummonUnit:false},methods);
  u.getDamage=()=>u.ap;u.getType=()=>u.isManualSummonUnit?2:1;
  u.getHpMax=()=>u.hpMax;u.heroSkillOutputRate104=()=>.8;
@@ -59,7 +59,7 @@ function unit(family=0,team=1,pos=1500){
  if(def){[u.skill0,u.skill1,u.skillB]=def.skills.map(s=>({skills:structuredClone(s.skills),skillSetData:{id:s.skid,cooldown:s.pl[1]}}));}
  u.skin2Initialize();roster.push(u);return u;
 }
-function fresh(f){roster=[];contexts=[];skin2Depth=0;skin2AnnieChainDepth=0;skin2AnnieChain=[];GameMap.currentMap.winner=0;GameMap.currentMap.winnerList=[0,0,0];let a=unit(f),b=unit(0,2,1400),c=unit(0,2,1300),ally=unit(0,1,1600);return {a,b,c,ally}}
+function fresh(f,quality=6){roster=[];contexts=[];skin2Depth=0;skin2AnnieChainDepth=0;skin2AnnieChain=[];GameMap.currentMap.winner=0;GameMap.currentMap.winnerList=[0,0,0];let a=unit(f,1,1500,quality),b=unit(0,2,1400),c=unit(0,2,1300),ally=unit(0,1,1600);return {a,b,c,ally}}
 function cast(a,slot){let s=slot===0?a.skill0:a.skill1;beginAbilityAttack(a,'active');try{assert(a.executeSkin2(`skin2_${a.s2Family()}_${slot}`,s));}finally{endAbilityAttack();}}
 function turn(a){a.manualOwnerActionSerial++;a.skin2Event('turn_start',a,a,0,0)}
 let cases=0;
@@ -149,9 +149,9 @@ for(const recordLane of [0,-1,3]){
 {
  let {a,b}=fresh(1140);cast(a,1);assert.equal(a.line,0);assert.equal(a.pos,1500);assert(b.hp<100000);assert(a.skin2.phase);cases++;
 }
-for(let aid of Object.keys(data.avatar)){let f=+aid.split('_')[1];let {a,b}=fresh(f);if(f!==1227)cast(a,0);if(f===1219){a.s2Mark(b,'airborne',2);b.addBuff('stun',1)}cast(a,1);assert(Number.isFinite(a.hp));cases++;}
-{
- let {a,b}=fresh(1140);a.hp=70000;a.skin2.record={line:0,pos:1500,lost:0};cast(a,0);assert.equal(b.skin2['rings_'+a.abilityIndex].count,2);turn(a);cast(a,0);assert(a.buffs.shield);assert(b.hp<94400,'three-ring bonus executes');
+for(let aid of Object.keys(data.avatar)){let [,f,q]=aid.split('_');f=+f;let {a,b}=fresh(f,+q);if(f!==1227)cast(a,0);if(f===1219){a.s2Mark(b,'airborne',2);b.addBuff('stun',1)}cast(a,1);assert(Number.isFinite(a.hp));cases++;}
+for(let quality of [5,6]){
+ let {a,b}=fresh(1140,quality);assert.equal(a.s2Family(),1140);a.hp=70000;a.skin2.record={line:0,pos:1500,lost:0};cast(a,0);assert.equal(b.skin2['rings_'+a.abilityIndex].count,2);turn(a);cast(a,0);assert(a.buffs.shield);assert(b.hp<94400,'three-ring bonus executes');
  a.removeBuff('shield');a.skin2.lost=20000;a.hp=50000;cast(a,1);assert.equal(a.hp,50000+Math.trunc(20000*a.s2Value(a.skill1,'rewind')),'rewind heals actual recorded loss');assert(a.skin2.phase);cases++;
 }
 {

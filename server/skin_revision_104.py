@@ -34,9 +34,11 @@ def apply_skin_revision_104(document):
  changed=[]
  for aid,h in cfg['avatar'].items():
   family=int(aid.split('_')[1]);quality=int(aid.rsplit('_',1)[1])
-  if family not in PARAMS or family==1140 and quality!=6:continue
+  if family not in PARAMS or family==1140 and quality not in (5,6):continue
   if family==1140:
-   h['name']='艾克';h['hero_category_104']='skin'
+   h['name']='艾克'
+  if family==1140 and quality==6:
+   h['hero_category_104']='skin'
    # Existing skin assassin panel, preserving Ekko's art, speed and range.
    h['pl'][:8]=copy.deepcopy(cfg['avatar']['A_1223_6']['pl'][:8])
    skins=cfg['system_simple'].setdefault('skin_hero_ids',[])

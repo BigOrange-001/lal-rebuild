@@ -3,7 +3,7 @@ from pathlib import Path
 from gateway import Backend
 from native_skill_snapshot import _native_skill_snapshot
 from equipment_bonds_104 import apply_part
-from skin_revision_104 import PARAMS
+from skin_revision_104 import PARAMS, apply_skin_revision_104
 
 ROOT=Path(__file__).resolve().parents[1]
 class SkinRevisionTests(unittest.TestCase):
@@ -31,6 +31,33 @@ class SkinRevisionTests(unittest.TestCase):
   for pool in ['advanced','vip']:
    cards=c['summon_calibration']['pools'][pool]['qualities']['orange']['cards'];self.assertEqual(sum(x['id']=='A_1140_6' for x in cards),1)
   bonds=[x for x in c['system_simple']['bonds_104'] if 'A_1140' in x['families']];self.assertEqual(len(bonds),2)
+ def test_purple_ekko_has_same_ranked_kit_as_orange(self):
+  c=self.cfg;purple=c['avatar']['A_1140_5'];orange=c['avatar']['A_1140_6']
+  self.assertEqual(purple['name'],'艾克')
+  self.assertEqual(purple['skin_revision_v2_104'],1140)
+  self.assertEqual(purple['skill_diff'],orange['skill_diff'])
+  for slot in (10,11,13):
+   psid,osid=purple['pl'][slot],orange['pl'][slot]
+   self.assertNotEqual(psid,osid)
+   prow,orow=c['skill'][psid],c['skill'][osid]
+   for field in ('name','pl','skin_v2_keys','info','rankInfoTemplate'):
+    self.assertEqual(prow[field],orow[field],(slot,field))
+   for rank in (1,10):
+    p,o=(_native_skill_snapshot(c,sid,rank) for sid in (psid,osid))
+    self.assertEqual(p['skills'],o['skills'],(slot,rank))
+ def test_purple_ekko_keeps_purple_panel_art_and_acquisition(self):
+  document=json.loads((ROOT/'config/reconstruction/full-config.json').read_text('utf8'))
+  c=document['cfg'];before=copy.deepcopy(c['avatar']['A_1140_5'])
+  apply_skin_revision_104(document)
+  purple=c['avatar']['A_1140_5']
+  for field in ('id','res','tl','skillup','love'):
+   self.assertEqual(purple[field],before[field],field)
+  self.assertEqual(purple['pl'][:10],before['pl'][:10])
+  self.assertEqual(purple['pl'][12],before['pl'][12])
+  self.assertNotIn('A_1140_5',c['system_simple']['skin_hero_ids'])
+  self.assertNotIn('hero_category_104',purple)
+  once=copy.deepcopy(document);apply_skin_revision_104(document)
+  self.assertEqual(document,once)
  def test_focused_bonds_describe_new_skills(self):
   c=self.cfg
   for bond in c['system_simple']['bonds_104']:

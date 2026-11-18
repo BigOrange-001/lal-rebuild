@@ -1597,7 +1597,7 @@ class AbyssChoicePanel104 extends AbyssPanel104
          var extra:Array = [];
          for each(var sid:String in selected) extra.push(sid);
          var lines:Array = [AbyssCore104.heroName(String(focus.aid)) + (AbyssCore104.isOrange(String(focus.aid)) ? "（橙卡）" : "（紫卡）")].concat(AbyssCore104.heroInfoLines(String(focus.aid),int(focus.slv),extra));
-         addText(lines.join("\n"),lx + 45,infoY + 14,iw - 90,infoH - 24,17,AbyssCore104.COLOR_TEXT,"left");
+         addText(lines.join("\n"),lx + 45,infoY + 14,iw - 90,infoH - 24,17,AbyssCore104.INK_TEXT,"left");
       }
       var bottomY:Number = by - 90;
       // Every offer may be skipped (server rule since map_version 2, legacy saves too).
@@ -1922,12 +1922,12 @@ class AbyssRestPanel104 extends AbyssPanel104
          var resultAid:String = option == "orange" ? aid.substr(0,aid.length - 1) + "6" : aid;
          var resultSlv:int = option == "skill" ? AbyssCore104.skillMax105(aid) : int(hero.slv);
          heroCard(aid,heroId,int(hero.slv),lx + 120,py + 30);
-         addText("→",lx + (iw - 80) * 0.5,py + 52,80,50,40,AbyssCore104.COLOR_TITLE,"center");
+         addText("→",lx + (iw - 80) * 0.5,py + 52,80,50,40,AbyssCore104.INK_NAME,"center");
          heroCard(resultAid,heroId,resultSlv,lx + iw - 210,py + 30);
-         addText(option == "skill" ? "技能 " + int(hero.slv) + "级" : "紫卡",lx + 90,py + 126,150,24,16,AbyssCore104.COLOR_TEXT,"center");
-         addText(option == "skill" ? "技能 " + resultSlv + "级" : "橙卡（面板1.4倍，技能换为橙卡）",lx + iw - 300,py + 126,270,24,16,AbyssCore104.COLOR_ORANGE,"center");
+         addText(option == "skill" ? "技能 " + int(hero.slv) + "级" : "紫卡",lx + 90,py + 126,150,24,16,AbyssCore104.INK_TEXT,"center");
+         addText(option == "skill" ? "技能 " + resultSlv + "级" : "橙卡（面板1.4倍，技能换为橙卡）",lx + iw - 300,py + 126,270,24,16,AbyssCore104.INK_NAME,"center");
       }
-      else addText("在下方选择一名英雄",lx + 25,py + 70,iw - 50,30,22,AbyssCore104.COLOR_DIM,"center");
+      else addText("在下方选择一名英雄",lx + 25,py + 70,iw - 50,30,22,AbyssCore104.INK_TEXT,"center");
       var y:Number = py + 182;
       var ids:Array = AbyssCore104.poolIds();
       var cols:int = 5;

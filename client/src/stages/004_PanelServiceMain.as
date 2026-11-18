@@ -1371,6 +1371,10 @@ package com.meng52.game.ui.screen
             {
                _loc1_["ios_token"] = GlobalData.$notificationsIOS_token;
             }
+            if(_loc1_)
+            {
+               _loc1_.config_digest = GlobalFunction.heldConfigDigest105();
+            }
             GlobalLocalStore.$login_SendData = _loc1_;
             SendServiceAMFFun.send_user_login(re_user_login,_loc1_);
          }

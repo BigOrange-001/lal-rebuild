@@ -133,6 +133,40 @@ class ModServiceTests(unittest.TestCase):
         self.assertIsNot(self.backend.players.context_for(self.a["uid"]), self.backend.players)
         self.assertIs(self.backend.players.context_for(self.b["uid"]), self.backend.players)
 
+    def test_login_reuses_client_config_only_when_digest_matches(self):
+        shared = self.backend.call({"method": "sys.get_config", "params": {"actionID": "cfg-digest"}})["data"]
+        version = shared["cfg_version"]
+        self.assertTrue(version.endswith("#" + self.backend.mods.base_digest), version)
+        self.assertNotIn("#", self.backend.config["cfg_version"])
+
+        def login(name, digest, action):
+            params = {"pf": "local", "session_key": name, "sessionid": "test-password", "actionID": action}
+            if digest is not None:
+                params["config_digest"] = digest
+            reply = self.backend.call({"method": "user.login", "params": params})
+            self.assertEqual(reply["return_code"], 0, reply)
+            return reply["data"]["mod_config"]
+
+        full = login("A", None, "digest-none")
+        reused = login("A", version, "digest-base")
+        self.assertNotIn("cfg", reused)
+        self.assertNotIn("config", reused)
+        self.assertTrue(reused["cfg_reuse"])
+        self.assertEqual(reused["digest"], full["digest"])
+        self.assertEqual(reused["mod_runtime"], full["mod_runtime"])
+        self.assertEqual(set(reused["cfg_keys"]), set(full["cfg"]))
+        self.assertIn("cfg", login("A", version + "x", "digest-stale"))
+
+        meta = self.install()
+        self.activate(self.a, [self.selection(meta)])
+        modded = login("A", version, "digest-modded-base")
+        self.assertIn("cfg", modded)
+        self.assertNotEqual(modded["digest"], full["digest"])
+        again = login("A", modded["digest"], "digest-modded-held")
+        self.assertTrue(again["cfg_reuse"])
+        self.assertEqual(again["mod_runtime"], modded["mod_runtime"])
+        self.assertIn("cfg", login("B", modded["digest"], "digest-other-save"))
+
     def test_calendar_rollover_refreshes_cached_and_remembered_mod_saves(self):
         def epoch(year, month=2, day=28):
             return int(datetime.datetime(year, month, day, 4, tzinfo=datetime.timezone.utc).timestamp())

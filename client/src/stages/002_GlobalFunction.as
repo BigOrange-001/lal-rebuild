@@ -65,6 +65,7 @@ package com.meng52.game.global
    import flash.net.URLRequest;
    import flash.net.navigateToURL;
    import flash.utils.ByteArray;
+   import flash.utils.Dictionary;
    import flash.utils.Timer;
    import flash.utils.getDefinitionByName;
    import starling.animation.Juggler;
@@ -6492,6 +6493,11 @@ package com.meng52.game.global
          }
          if(param1 != null)
          {
+            if(heldConfigDigests105[GlobalData.$mConfig] != null)
+            {
+               // A table overlay invalidates the digest of this authenticated snapshot.
+               heldConfigDigests105[GlobalData.$mConfig] = "";
+            }
             for(var _loc2_:Object in param1)
             {
                GlobalData.$mConfig[_loc2_.toString()] = param1[_loc2_];
@@ -6499,9 +6505,41 @@ package com.meng52.game.global
          }
       }
       
+      // Digest of each configuration object this client received in full.
+      private static var heldConfigDigests105:Dictionary = new Dictionary(true);
+
+      // Digest of GlobalData.$mConfig, sent with user.login so the server can
+      // skip resending an identical (~12 MB) configuration. The pre-login
+      // table from sys.get_config is described by its "version#digest".
+      public static function heldConfigDigest105() : String
+      {
+         var held:Object = GlobalData.$mConfig;
+         if(held == null) return "";
+         if(heldConfigDigests105[held] != null) return String(heldConfigDigests105[held]);
+         return SendAndSelect.$cfgVersion == null ? "" : String(SendAndSelect.$cfgVersion);
+      }
+
+      private static function reuseHeldConfig105(envelope:Object) : Object
+      {
+         var held:Object = GlobalData.$mConfig;
+         if(envelope.cfg_reuse != true || held == null || !(envelope.cfg_keys is Array)) return null;
+         var mine:String = heldConfigDigest105();
+         if(mine.substr(mine.lastIndexOf("#") + 1) != String(envelope.digest)) return null;
+         // Reuse the tables without modifying the previous configuration object.
+         var cfg:Object = {};
+         for each(var name:String in envelope.cfg_keys)
+         {
+            if(!held.hasOwnProperty(name)) return null;
+            cfg[name] = held[name];
+         }
+         return cfg;
+      }
+
       public static function applyModConfig(envelope:Object) : Boolean
       {
-         if(envelope == null || envelope.cfg == null || envelope.uid == null || envelope.digest == null) return false;
+         if(envelope == null || envelope.uid == null || envelope.digest == null) return false;
+         if(envelope.cfg == null) envelope.cfg = reuseHeldConfig105(envelope);
+         if(envelope.cfg == null) return false;
          var cfg:Object = envelope.cfg;
          if(cfg.avatar == null || cfg.skill == null || cfg.effect == null || cfg.system_simple == null) return false;
          // This is a complete authenticated configuration, never merged into
@@ -6536,6 +6574,7 @@ package com.meng52.game.global
          SkillSetManager.clear();
          EffectManager.clear();
          EquipManager.clear();
+         heldConfigDigests105[cfg] = String(envelope.digest);
          return true;
       }
 

@@ -105,13 +105,38 @@ oldNormal:unit.mModSelections[0].channels.normal,enabled:value.enabled,version:v
 
     def test_configuration_replaces_previous_save_and_clears_parsed_managers(self):
         script = '''const unit={},GlobalData={$mConfig:{avatar:{old:{}}},$mConfig_avatar:{old:{}}};
-let resets=0;const manager={clear(){resets++;}};
+let resets=0;const manager={clear(){resets++;}};const heldConfigDigests105={};
 const AvatarManager=manager,SkillSetManager=manager,EffectManager=manager,EquipManager=manager;
 '''
         script += install('045_GlobalFunction.as', 'applyModConfig', 'envelope')
         script += '''const ok=unit.applyModConfig({uid:'B',digest:'d',cfg:{avatar:{base:{}},skill:{},effect:{},system_simple:{}}});
 console.log(JSON.stringify({ok,keys:Object.keys(GlobalData.$mConfig_avatar),resets}));'''
         self.assertEqual(self.run_js(script), {'ok': True, 'keys': ['base'], 'resets': 4})
+
+    def test_login_config_reuses_exact_tables_and_rejects_incomplete_copies(self):
+        script = """const SendAndSelect={$cfgVersion:'1.0.5#server'},unit={};
+const source={avatar:{ok:{}},skill:{},effect:{},system_simple:{},stale:{}};
+const GlobalData={$mConfig:source};
+const digests=new WeakMap(),heldConfigDigests105=new Proxy({},{
+  get(_obj,key){return digests.get(GlobalData.$mConfig);},
+  set(_obj,key,value){digests.set(GlobalData.$mConfig,value);return true;}
+});
+const manager={clear(){}},AvatarManager=manager,EquipManager=manager,SkillSetManager=manager,EffectManager=manager;
+"""
+        for name, params in [('formateConfig','param1'),('heldConfigDigest105',''),
+                             ('reuseHeldConfig105','envelope'),('applyModConfig','envelope')]:
+            script += install('045_GlobalFunction.as', name, params)
+        script += """const keys=['avatar','skill','effect','system_simple'];
+const apply=(digest,cfg_keys=keys)=>unit.applyModConfig({uid:'u',digest,cfg_reuse:true,cfg_keys});
+const mismatch=apply('other');
+const missing=apply('server',[...keys,'missing']);
+const reused=apply('server');
+const keptTable=GlobalData.$mConfig.avatar===source.avatar;
+const clean=!('stale' in GlobalData.$mConfig) && ('stale' in source);
+unit.formateConfig({skill:{new:{}}});
+console.log(JSON.stringify([mismatch,missing,reused,keptTable,clean,unit.heldConfigDigest105()]));
+"""
+        self.assertEqual(self.run_js(script), [False, False, True, True, True, ''])
 
     def test_scoped_alias_preserves_identity_channels_and_instance_suffix(self):
         script = '''const unit={$modRuntime:{aliasBaseIds:{A_160001_5:'A_1001_5'},

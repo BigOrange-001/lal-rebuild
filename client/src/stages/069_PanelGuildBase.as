@@ -432,7 +432,7 @@ package com.meng52.game.ui.screen
             "label":GlobalLanguageStr.getLanguageStr(90749),
             "indexID":3
          },{
-            "label":GlobalLanguageStr.getLanguageStr(90776),
+            "label":"公会技能", // 90776「公会技能研究」6字会撑出屏幕
             "indexID":4
          }],tabBar_Change,tabBar_CREATION_COMPLETE,128,60,null,true);
          this.mTabBar.y = 17;

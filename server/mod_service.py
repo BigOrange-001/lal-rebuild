@@ -237,14 +237,34 @@ class ModService:
                 self._contexts.popitem(last=False)
             return context
 
-    def config(self, uid):
+    @property
+    def base_digest(self):
+        return self._base_digest
+
+    def refresh_base_calendar(self):
+        self._refresh_base_calendar()
+
+    def config(self, uid, held_digest=None):
+        """Login/config envelope for ``uid``.
+
+        ``held_digest`` names the configuration the client already holds
+        (``version#digest`` or a bare digest). When it equals the effective
+        digest the tables are not copied or resent; the client reuses its own.
+        """
         _, state = self.state(uid)
         context = self.context(uid)
-        document = copy.deepcopy(context.config or self.base)
-        document.pop("mod_roster", None)
-        runtime = document.get("cfg", {}).get("mod_runtime", {})
+        source = context.config or self.base
         value = getattr(context, "mod_resolved", None)
         effective_digest = value.digest if value is not None else self._base_digest
+        if isinstance(held_digest, str) and held_digest.rsplit("#", 1)[-1] == effective_digest:
+            cfg = source.get("cfg", {})
+            runtime = copy.deepcopy(cfg.get("mod_runtime", {}))
+            return {"uid": str(uid), "revision": state["revision"], "digest": effective_digest,
+                    "cfg_reuse": True, "cfg_keys": sorted(k for k in cfg if k != "mod_roster"),
+                    "mod_runtime": runtime, "assets": runtime.get("assets", [])}
+        document = copy.deepcopy(source)
+        document.pop("mod_roster", None)
+        runtime = document.get("cfg", {}).get("mod_runtime", {})
         return {"uid": str(uid), "revision": state["revision"], "digest": effective_digest,
                 "cfg": document.get("cfg", {}), "config": document, "mod_runtime": runtime,
                 "assets": runtime.get("assets", [])}

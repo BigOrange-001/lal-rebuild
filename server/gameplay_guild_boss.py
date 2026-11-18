@@ -10,6 +10,9 @@ from guild_world import GuildWorld
 from guild_llm import GuildLLM
 import guild_chat
 
+# Guild boss HP per stage (stages 1-5).
+GUILD_BOSS_HP=(200_000,400_000,600_000,800_000,1_000_000)
+
 class GameplayGuildBoss:
     METHODS={
       'user.chat_guild','user.chat_record',
@@ -597,7 +600,13 @@ class GameplayGuildBoss:
     def _get_reward_data(self,p,x): return p,{'res_code':0,'reward':[]}
     def _boss_template(self,kind,stage):
         table=self.rules.get(kind,{}) if isinstance(self.rules,dict) else {}; rows=table.get('bosses',[])
-        return copy.deepcopy(rows[(max(1,int(stage))-1)%len(rows)]) if rows else {'id':1,'name':'模拟Boss','max_hp':1000000,'ap':1000,'defense':0,'reward':{'gold':1000}}
+        tpl=copy.deepcopy(rows[(max(1,int(stage))-1)%len(rows)]) if rows else {'id':1,'name':'模拟Boss','max_hp':1000000,'ap':1000,'defense':0,'reward':{'gold':1000}}
+        if kind=='guild_boss':
+            # One hit (cap 30,000) used to kill stage 1 (20,000 HP). Each stage now
+            # needs a day's attacks: AI members can bring it to 30%, the player
+            # finishes it with up to 8 attacks.
+            tpl['max_hp']=GUILD_BOSS_HP[(max(1,int(stage))-1)%len(GUILD_BOSS_HP)]
+        return tpl
     def _now(self): return int(self.store.clock.now())
     def _boss_window_open(self,kind,now=None):
         """Use the same local-time, minute-based windows as the original panels."""
@@ -732,7 +741,11 @@ class GameplayGuildBoss:
         rules=self.rules.get(kind,{ }).get('attack',{})
         raw_damage=max(1,int(rules.get('base_damage',1200)+power*rules.get('damage_per_power',.35)))
         enhance=max(0,int(state['attack_log'].get('enhance',0)))
-        damage=max(1,min(int(rules.get('damage_cap',250000)),int(raw_damage*(100+enhance)/100)))
+        cap=int(rules.get('damage_cap',250000))
+        if kind=='guild_boss' and int(state['boss']['max_hp'])==GUILD_BOSS_HP[-1]:
+            # Eight attacks must cover the 300,000 HP left after guild AI help.
+            cap=max(cap,40_000)
+        damage=max(1,min(cap,int(raw_damage*(100+enhance)/100)))
         damage=min(damage,int(state['boss']['current_hp'])); state['boss']['current_hp']-=damage; state['attack_log']['attack_num']=int(x.get('attack_num',state['attack_log']['attack_num']))+1
         state['attack_log']['attack_hp']=damage; state['attack_log']['next_attack_time']={'$date':now+int(rules.get('cooldown_seconds',30))}; state['free_num']-=1
         kill_gifts=None; guild_display_reward={}; guild_flourishing=0

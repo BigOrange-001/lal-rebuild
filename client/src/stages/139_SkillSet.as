@@ -954,7 +954,7 @@ package com.meng52.game.module.skill
             {
                value = Number(step[7]);
                if(step[8] == "shield") value += int(avatar.getDamage()*Number(step[5])+avatar.getHpMax()*Number(step[6])+eventValue);
-               unit.addBuff(step[8] == "timed_bless" ? "bless" : String(step[8]),int(step[9]),step[8] == "timed_bless" ? 1 : value);
+               unit.addBuff(step[8] == "timed_bless" ? "bless" : String(step[8]),int(step[9]),step[8] == "timed_bless" ? 1 : value,0,-1,step[8] == "shield" && Avatar.ratioDamage104() ? avatar : null);
             }
             else if(kind == "push") unit.addBuff("push",1,Number(step[10]));
             else if(kind == "move")
@@ -1208,7 +1208,7 @@ package com.meng52.game.module.skill
                   var bookShieldBase:Number = avatar.getDamage();
                   for each(var bookShieldTarget:Avatar in bookShieldTargets)
                   {
-                     bookShieldTarget.addBuff("shield",int(_loc20_[2]),Tools.toInt(bookShieldBase * Number(_loc20_[1])));
+                     bookShieldTarget.addBuff("shield",int(_loc20_[2]),Tools.toInt(bookShieldBase * Number(_loc20_[1])),0,-1,Avatar.ratioDamage104() ? avatar : null);
                      queueDirectActionEffect(String(_loc20_[3]),bookShieldTarget);
                   }
                   GameMap.actionDelay += 0.15 * bookShieldTargets.length;
@@ -1241,7 +1241,7 @@ package com.meng52.game.module.skill
                      {
                         var hpShieldTarget:Avatar = hpShieldTargets[hpShieldIndex];
                         var hpShieldBase:Number = _loc20_[0] == "target_hp_shield" ? hpShieldTarget.getHpMax() : avatar.getHpMax();
-                        hpShieldTarget.addBuff("shield",int(_loc20_[2]),int(hpShieldBase * Number(_loc20_[1])));
+                        hpShieldTarget.addBuff("shield",int(_loc20_[2]),int(hpShieldBase * Number(_loc20_[1])),0,-1,Avatar.ratioDamage104() ? avatar : null);
                         queueDirectActionEffect(String(_loc20_[3]),hpShieldTarget);
                         hpShieldIndex++;
                      }
@@ -1932,7 +1932,7 @@ package com.meng52.game.module.skill
                   if(_loc1_ && _loc1_.hp > 0 && (_loc20_.length == 7 || _loc20_.length == 9 && isFinite(Number(_loc20_[6])) && Number(_loc20_[6]) >= 0 && Number(_loc20_[6]) < 1 && int(_loc20_[7]) > 0) && isFinite(Number(_loc20_[1])) && Number(_loc20_[1]) > 0 && Number(_loc20_[1]) <= 1 && int(_loc20_[2]) > 0 && isFinite(Number(_loc20_[3])) && Number(_loc20_[3]) >= 0 && int(_loc20_[4]) >= 0 && int(_loc20_[4]) < _loc14_ && (int(_loc20_[5]) == 1 || int(_loc20_[5]) == 2 || int(_loc20_[5]) == 3))
                   {
                      priorShield = avatar.buffs["shield"];
-                     avatar.addBuff("shield",int(_loc20_[2]),int(avatar.getHpMax() * Number(_loc20_[1])));
+                     avatar.addBuff("shield",int(_loc20_[2]),int(avatar.getHpMax() * Number(_loc20_[1])),0,-1,Avatar.ratioDamage104() ? avatar : null);
                      appliedShield = avatar.buffs["shield"];
                      if(appliedShield && appliedShield !== priorShield && appliedShield.value > 0)
                      {
@@ -2592,7 +2592,7 @@ package com.meng52.game.module.skill
        private function getActiveRecoveryMultiplier() : Number
        {
           var effectiveHit:Number = Tools.toInt(avatar.getHit() * (1 + avatar.checkTalent(4)));
-          return (1 + 0.5 * effectiveHit / (effectiveHit + 3000)) * avatar.getRecoveryTalentMultiplier();
+          return (Avatar.ratioDamage104() ? 1 : 1 + 0.5 * effectiveHit / (effectiveHit + 3000)) * avatar.getRecoveryTalentMultiplier();
        }
 
        private function actionShareGroupFor(param1:int) : Array

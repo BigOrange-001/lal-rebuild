@@ -10,6 +10,7 @@ const GameMap={actionDelay:0,currentMap:{isEnd:()=>false}};
 function Buff(type,round,value=0){Object.assign(this,{type,round,value,displayObject:null})}
 function beginAbilityAttack(owner,kind){const ctx={owner,kind};contexts.push(ctx);return ctx}
 function endAbilityAttack(ctx){assert.equal(contexts.pop(),ctx);if(afterHit&&ctx.kind==='active')afterHit(ctx)}
+const precisionRecovery105=()=>1; // This fixture uses zero precision.
 const methods={};
 /*METHODS*/
 function skill(sid,rank=1){const row=data.skills[sid],actions=structuredClone(row.skill);for(const [a,p,g]of row.skillUp||[])actions[a][p]+=g*(rank-1);return {skills:actions,getNativeSetting:()=>1}}

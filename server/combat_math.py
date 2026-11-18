@@ -11,8 +11,49 @@ def chance(first,second,base,cap,denominator,slope=100):
  if denominator<=0 or first<0 or second<0:raise ValueError('invalid probability parameters')
  return to_int(min(cap,max(0,base+slope*(first-second)/(first+second+denominator))))
 
-def miss_chance(hit,flee,attack,rules=None):return chance(flee,hit,attack[4],attack[6],attack[9],rules.get('miss_slope',40) if ratio_enabled(rules) else 100)
-def crit_chance(critical,toughness,attack,rules=None):return chance(critical,toughness,attack[5],attack[7],attack[11],rules.get('crit_slope',60) if ratio_enabled(rules) else 100)
+def stat_growth(points):
+    """Logarithmic growth, normalized to one at 100,000 effective points."""
+    return math.log1p(max(0, points) / 10000) / math.log(11)
+
+
+def opposed_power(advantage):
+    return 1 + 0.6 * stat_growth(advantage)
+
+
+def precision_recovery(hit):
+    return 1 + 0.5 * stat_growth(hit)
+
+
+def opposed_crit_chance(delta):
+    """Percentage. The transition matches value, slope and curvature at both ends."""
+    if delta <= 0:
+        return 15 * (1 - delta / 10000) ** (-math.log(3) / math.log(11))
+    if delta >= 20000:
+        return 60 - 45 / (2 * opposed_power(delta) - 1)
+    # Quintic Hermite interpolant on [0, 20000], in probability units.
+    t = delta / 20000
+    return 100 * (0.15 + t * (0.13744707299739786 + t * (0.20041939924923793
+        + t * (-0.113881973159351 + t * (-0.18760058259473933 + t * 0.12325384349962887)))))
+
+
+def miss_chance(hit, flee, attack, rules=None):
+    if ratio_enabled(rules):
+        return 100 * -math.expm1(-math.log(5) * math.log1p(max(0, flee-hit) / 4000) / math.log(26))
+    return chance(flee, hit, attack[4], attack[6], attack[9])
+
+
+def crit_chance(critical, toughness, attack, rules=None):
+    if ratio_enabled(rules):
+        return opposed_crit_chance(critical - toughness)
+    return chance(critical, toughness, attack[5], attack[7], attack[11])
+
+
+def roll_percent(rng, percent, rules):
+    if not ratio_enabled(rules):
+        return rng.get_random(100) < percent
+    # Retain the original seed's percent bucket and use its next digits for fractions.
+    draw = rng.get_random(10000)
+    return (draw % 100) * 100 + draw // 100 < math.floor(percent * 100 + 0.5)
 
 
 def ratio_reduction(defense,base_attack,exponent=1.5,midpoint=0.7,cap=0.9):
@@ -28,7 +69,8 @@ def defense_damage(amount,defense,base_attack,minimum=0.1,rules=None):
   reduction=ratio_reduction(defense,base_attack,rules.get('reduction_exponent',1.5),rules.get('defense_attack_midpoint',0.7),1-minimum)
   return to_int(amount*(1-reduction))
  return to_int(max(amount*minimum,amount-to_int(defense)))
-def critical_multiplier(critical,attack):
+def critical_multiplier(critical,attack,toughness=0,rules=None):
+ if ratio_enabled(rules):return 2 * opposed_power(critical - toughness)
  return attack[3]+critical*attack[16]/(critical+attack[12])
 
 def damage_before_final(raw,sign_attacker,sign_defender,damage_type,physical_defense,magic_defense,attack,extra_rate=1,*,base_attack=1,rules=None):
@@ -41,11 +83,12 @@ def damage_before_final(raw,sign_attacker,sign_defender,damage_type,physical_def
  elif damage_type in (0,5):amount=0
  return to_int(to_int(amount)*extra_rate)
 
-def settle_damage(amount,critical_rate,toughness,shield,attack,talent_rate=0):
+def settle_damage(amount,critical_rate,toughness,shield,attack,talent_rate=0,*,critical=0,rules=None):
  # Avatar.injured: two rounding stages, toughness, talent, then shield.
  if min(amount,toughness,shield)<0:raise ValueError('negative combat input')
  value=to_int(to_int(amount*critical_rate)*attack[21])
- value=to_int(value/(1+toughness*attack[15]/(toughness+attack[13])))
+ divisor=opposed_power(toughness-critical) if ratio_enabled(rules) else 1+toughness*attack[15]/(toughness+attack[13])
+ value=to_int(value/divisor)
  value=to_int(value+value*talent_rate)
  absorbed=min(shield,value)
  return {'health_damage':value-absorbed,'shield_left':shield-absorbed,'absorbed':absorbed}

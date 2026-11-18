@@ -161,13 +161,13 @@
          if(source!==this || hp<=0 || !target || target.team==team) return;
          if(event=="hit" && yasuoVampRounds104>=0 && amount>0)
             // Use actual HP damage directly, bypassing AP/precision heal scaling.
-            injured(Tools.toInt(amount),1,null,4,this,false,this);
+            injured(Tools.toInt(amount),1,null,4,this,false,this,null,"",false,true);
          if(event!="crit" || !yasuoPassive104()) return;
          // Each entry is an ordinary shield Buff with its own native timer.
          // It never replaces or refreshes another entry, including allied shields.
          if(buffs.curse) return;
          if(buffs.evil) {removeBuff("evil",true);return;}
-         var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier());
+         var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier()*precisionRecovery105(this));
          if(amountShield<=0) return;
          var shield:Buff=new Buff("shield",2,amountShield);
          shield.source=this;

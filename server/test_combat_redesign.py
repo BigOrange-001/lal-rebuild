@@ -81,24 +81,44 @@ class CombatRedesignTests(unittest.TestCase):
         self.assertEqual(b._native_damage(a,t,1,1),330)
         self.assertEqual(b._native_damage(a,t,1,2),487)
 
-    def test_probability_parameters_and_fixed_critical(self):
-        cfg=candidate_config(config());attack=attack_parameters(cfg);rules=cfg['combat_rules']
-        self.assertEqual(miss_chance(3000,6000,attack,rules),18)
-        self.assertEqual(crit_chance(6000,3000,attack,rules),30)
-        self.assertEqual(miss_chance(0,10**9,attack,rules),35)
-        self.assertEqual(crit_chance(10**9,0,attack,rules),60)
-        self.assertEqual(miss_chance(10**9,0,attack,rules),0)
-        self.assertEqual(critical_multiplier(10**9,attack),2)
+    def test_opposed_chances_and_multipliers(self):
+        cfg = candidate_config(config())
+        attack, rules = attack_parameters(cfg), cfg['combat_rules']
+        for delta, expected in [(-200000,3.7179826),(-100000,5),(-10000,10.918734),
+                                (0,15),(10000,24.671979),(20000,30.963776),(100000,39.545455)]:
+            for offset in (0,16660):
+                self.assertAlmostEqual(crit_chance(offset+max(0,delta),offset+max(0,-delta),attack,rules),expected,places=5)
+        for junction in (0,20000):
+            points = [crit_chance(30000+junction+d,30000,attack,rules) for d in (-1,0,1)]
+            self.assertAlmostEqual(points[1]-points[0],points[2]-points[1],delta=0.000001)
+        for delta, expected in [(0,0),(4000,28.993699),(100000,80),(200000,85.661864)]:
+            self.assertAlmostEqual(miss_chance(16660,16660+delta,attack,rules),expected,places=5)
+        self.assertEqual(miss_chance(90000,0,attack,rules),0)
+        self.assertAlmostEqual(critical_multiplier(116660,attack,16660,rules),3.2)
         self.assertEqual(chance(6000,3000,20,60,3000),45)
 
-    def test_toughness_removed_global_and_shield_preserved(self):
-        attack=attack_parameters(candidate_config(config()))
-        self.assertEqual(settle_damage(1000,2,100000,100,attack),dict(health_damage=1220,shield_left=0,absorbed=100))
+    def test_opposed_toughness_applies_once(self):
         b,a,t=self.battle(SkillCompleteBattle)
         t['new_4attrs']['tough']=100000
-        self.assertEqual(b._native_damage(a,t,1,1),330)
-        self.assertEqual(b._injured(t,1000,6,a,dot_kind='burn'),660)
+        self.assertEqual(b._native_damage(a,t,1,1),206)
+        self.assertEqual(b._injured(t,1000,6,a,dot_kind='burn'),412)
+        self.assertEqual(b._injured(t,1000,3,a,derived=True),1000)
+        self.assertEqual(settle_damage(1000,2,100000,100,b._attack,rules=b._combat_rules)['health_damage'],725)
+        a['new_4attrs']['crit']=100000
         self.assertEqual(b._injured(t,1000,6,a,dot_kind='poison'),660)
+
+    def test_caster_precision_scales_heal_and_shield_once(self):
+        b,a,t=self.battle(SkillCompleteBattle)
+        a['new_4attrs']['hit']=100000
+        t['hp']=1000
+        b._injured(t,1000,4,a)
+        self.assertEqual(t['hp'],2500)
+        b._injured(t,1000,4,a,fixed_recovery=True)
+        self.assertEqual(t['hp'],3500)
+        b._add_buff(t,'shield',2,1000,source=a)
+        self.assertEqual(b._buff_value(t,'shield'),1500)
+        b.heal(a,t,1)
+        self.assertEqual(t['hp'],3500+16500)
 
     def test_candidate_copy_leaves_live_configuration_untouched(self):
         cfg=config();before=copy.deepcopy(cfg);candidate=candidate_config(cfg)

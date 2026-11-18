@@ -1,6 +1,8 @@
 """Reference execution of compiler-owned effect-sequence-v1 rows."""
 from __future__ import annotations
 
+from combat_rules import ratio_enabled
+
 
 def condition_ready(battle,unit,skill):
     condition=skill.get('modCondition') or {}
@@ -83,7 +85,8 @@ def execute(battle,owner,enemies,allies,skill,action,index,context):
         elif kind=='buff':
             value=action[7]
             if action[8]=='shield':value=int(battle._get_damage(owner)*action[5]+owner['hp_max']*action[6]+value+event_value)
-            battle._add_buff(unit,'bless' if action[8]=='timed_bless' else action[8],action[9],1 if action[8]=='timed_bless' else value)
+            battle._add_buff(unit,'bless' if action[8]=='timed_bless' else action[8],action[9],1 if action[8]=='timed_bless' else value,
+                             source=owner if action[8]=='shield' and ratio_enabled(battle._combat_rules) else None)
         elif kind=='push':battle._check_move(unit,False,int(action[10]),forced=True)
         elif kind=='move':
             distance=max(0,abs(unit['pos']-owner['pos'])-40)

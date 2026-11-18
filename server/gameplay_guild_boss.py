@@ -741,7 +741,11 @@ class GameplayGuildBoss:
         rules=self.rules.get(kind,{ }).get('attack',{})
         raw_damage=max(1,int(rules.get('base_damage',1200)+power*rules.get('damage_per_power',.35)))
         enhance=max(0,int(state['attack_log'].get('enhance',0)))
-        damage=max(1,min(int(rules.get('damage_cap',250000)),int(raw_damage*(100+enhance)/100)))
+        cap=int(rules.get('damage_cap',250000))
+        if kind=='guild_boss' and int(state['boss']['max_hp'])==GUILD_BOSS_HP[-1]:
+            # Eight attacks must cover the 300,000 HP left after guild AI help.
+            cap=max(cap,40_000)
+        damage=max(1,min(cap,int(raw_damage*(100+enhance)/100)))
         damage=min(damage,int(state['boss']['current_hp'])); state['boss']['current_hp']-=damage; state['attack_log']['attack_num']=int(x.get('attack_num',state['attack_log']['attack_num']))+1
         state['attack_log']['attack_hp']=damage; state['attack_log']['next_attack_time']={'$date':now+int(rules.get('cooldown_seconds',30))}; state['free_num']-=1
         kill_gifts=None; guild_display_reward={}; guild_flourishing=0

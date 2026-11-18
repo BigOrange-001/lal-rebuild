@@ -46,9 +46,9 @@ class TrainingBattle(NativeSkinBattle):
         try:yield
         finally:self.channels.pop()
 
-    def _injured(self,target,amount,damage_type=0,source=None,dot_kind=None,receipt=None):
+    def _injured(self,target,amount,damage_type=0,source=None,dot_kind=None,receipt=None,**settlement):
         if not self.is_dummy(target) or damage_type in (0,4,5) or amount<=0:
-            return super()._injured(target,amount,damage_type,source,dot_kind,receipt)
+            return super()._injured(target,amount,damage_type,source,dot_kind,receipt,**settlement)
         # Reserve HP only while the native settlement runs. Its finite hp_max
         # is never changed. This prevents overkill clipping and false deaths;
         # event callbacks see full reference HP, as does the next skill action.
@@ -56,8 +56,8 @@ class TrainingBattle(NativeSkinBattle):
         target['hp']=max(previous,target['hp_max'])+abs(int(amount))*100+1
         try:
             if dot_kind:
-                with self.channel('dot'):return super()._injured(target,amount,damage_type,source,dot_kind,receipt)
-            return super()._injured(target,amount,damage_type,source,dot_kind,receipt)
+                with self.channel('dot'):return super()._injured(target,amount,damage_type,source,dot_kind,receipt,**settlement)
+            return super()._injured(target,amount,damage_type,source,dot_kind,receipt,**settlement)
         finally:target['hp']=previous
 
     def _emit_mod_event(self,owner,event,source=None,target=None,amount=0,overheal=0):

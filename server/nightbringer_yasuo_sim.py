@@ -105,13 +105,13 @@ class YasuoBattleMixin:
             return
         if event == 'hit' and owner.get('_yasuo_vamp_rounds', -1) >= 0 and amount > 0:
             # Settled HP damage is already the heal amount; no precision formula.
-            self._injured(owner, _to_int(amount), 4, source=owner)
+            self._injured(owner, _to_int(amount), 4, source=owner, fixed_recovery=True)
         if event != 'crit' or not self.yasuo_passive(owner) or self._buff(owner, 'curse'):
             return
         if self._buff(owner, 'evil'):
             self._remove_buff(owner, 'evil', consume=True)
             return
-        amount = _to_int(owner['hp_max']*.05 + self._get_damage(owner)*.25)
+        amount = _to_int((owner['hp_max']*.05 + self._get_damage(owner)*.25) * self._precision_recovery(owner))
         owner['_yasuo_shield_serial'] = owner.get('_yasuo_shield_serial', 0) + 1
         owner.setdefault('_buffs', {})['yasuoShield104_'+str(owner['_yasuo_shield_serial'])] = _Buff('shield', 2, amount, owner)
 
@@ -127,6 +127,6 @@ class YasuoBattleMixin:
                 ctx['derived_yasuo'] = True
                 self._event('yasuo_crit_true', owner, target, amount=amount)
                 # Already-settled base: no second global output/crit/armor pass.
-                self._injured(target, _to_int(amount*(1+self._talent(target,16))), 3, source=owner)
+                self._injured(target, _to_int(amount*(1+self._talent(target,16))), 3, source=owner, derived=True)
         finally:
             owner['_yasuo_crit_busy'] = False

@@ -7,7 +7,8 @@ offline tuning. It does not claim bit-for-bit ActionScript parity.
 import copy
 import math
 from contextlib import nullcontext
-from combat_math import level_stats, defense_damage, damage_before_final, to_int
+from combat_math import (level_stats, defense_damage, damage_before_final, to_int, opposed_power,
+                         precision_recovery, roll_percent, crit_chance, miss_chance, critical_multiplier)
 from combat_rules import attack_parameters, ratio_enabled
 from combat_rng import CombatRandom
 from mod_policy import (runtime as mod_runtime, definition_id, base_aid,
@@ -380,6 +381,8 @@ class ReferenceBattle:
         from abyss_equip_passives import amplify_shield
         casts = getattr(self,'_equip_casts',[])
         shield_source = source or (casts[-1]['owner'] if casts else None)
+        if kind == "shield" and ratio_enabled(self._combat_rules):
+            value = to_int(value * self._precision_recovery(shield_source or unit))
         value = amplify_shield(shield_source,kind,value)
         kind = str(kind)
         container = unit.setdefault("_buffs", {})
@@ -605,6 +608,35 @@ class ReferenceBattle:
     def _get_tough(self, unit):
         return self._stat_buff(unit, "tough")
 
+    def _effective_secondary(self, unit, getter, talent):
+        if unit is None:
+            return 0
+        return max(0, to_int(getter(unit) * (1 + self._talent(unit, talent))))
+
+    def _precision_recovery(self, source):
+        if not ratio_enabled(self._combat_rules):
+            return 1.0
+        return precision_recovery(self._effective_secondary(source, self._get_hit, 4))
+
+    def _roll_attack(self, attacker, target):
+        """Zero means evaded. Otherwise return the hit's critical multiplier."""
+        rules, attack = self._combat_rules, self._attack
+        if ratio_enabled(rules):
+            hit = self._effective_secondary(attacker, self._get_hit, 4)
+            flee = self._effective_secondary(target, self._get_flee, 5)
+            critical = self._effective_secondary(attacker, self._get_crit, 6)
+            tough = self._effective_secondary(target, self._get_tough, 7)
+        else:
+            hit, flee = max(0, self._get_hit(attacker)), max(0, self._get_flee(target))
+            critical, tough = max(0, self._get_crit(attacker)), max(0, self._get_tough(target))
+        if (target.get('tpl') or [0, 0])[1] != 3 and roll_percent(self.rng, miss_chance(hit, flee, attack, rules), rules):
+            self._emit_mod_event(attacker, 'miss', attacker, target)
+            self._emit_mod_event(target, 'dodge', attacker, target)
+            return 0
+        if roll_percent(self.rng, crit_chance(critical, tough, attack, rules), rules):
+            return critical_multiplier(critical, attack, tough, rules)
+        return 1
+
     # ---------------------------------------------------------------- damage
 
     @staticmethod
@@ -640,10 +672,10 @@ class ReferenceBattle:
         on_event(self,owner,event)
         return result
 
-    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
+    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None, fixed_recovery=False, derived=False):
         before=int(target.get('hp',0));shield_before=self._buff_value(target,'shield');had_shield=shield_before>0
         revived_before = target.get('_equip_revived',False)
-        result=self._injured_base(target,amount,damage_type,source,dot_kind,receipt=receipt)
+        result=self._injured_base(target,amount,damage_type,source,dot_kind,receipt=receipt,fixed_recovery=fixed_recovery,derived=derived)
         actual=max(0,before-max(0,int(target.get('hp',0)))) if damage_type!=4 else 0
         if not revived_before and target.get('_equip_revived'):actual=max(0,before)
         if before>0 and damage_type not in (0,4,5):
@@ -668,7 +700,7 @@ class ReferenceBattle:
     def _damage_modifiers_104(self, target, amount, damage_type, source):
         return amount
 
-    def _injured_base(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
+    def _injured_base(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None, fixed_recovery=False, derived=False):
         """injured (137_Avatar.as:5545): the shield pool absorbs before HP.
 
         Returns the HP actually lost. ``damage_type`` 4 heals and 5/0 applies
@@ -679,6 +711,8 @@ class ReferenceBattle:
             if target.get("hp", 0) <= 0:
                 return 0
             from abyss_equip_passives import amplify_healing
+            if not fixed_recovery and getattr(self, "_equip_origin", None) != "relic_lifesteal":
+                amount = to_int(amount * self._precision_recovery(source or target))
             amount = amplify_healing(source or target,amount)
             amount = _to_int(amount * (1 + self._book_bonus(source if source is not None else target, 'healing')))
             if self._has_manual_dot_kind(target, "burn"):
@@ -702,8 +736,14 @@ class ReferenceBattle:
             attack = self._attack
             if len(attack) > 21:
                 amount = _to_int(amount * float(attack[21]))
-                tough = max(0, self._get_tough(target))
-                amount = _to_int(amount / (1 + tough * float(attack[15]) / (tough + float(attack[13]))))
+                if not ratio_enabled(self._combat_rules):
+                    tough = max(0, self._get_tough(target))
+                    amount = _to_int(amount / (1 + tough * float(attack[15]) / (tough + float(attack[13]))))
+        if ratio_enabled(self._combat_rules) and not derived and getattr(self, "_equip_origin", None) != "relic_reflect":
+            tough = self._effective_secondary(target, self._get_tough, 7)
+            critical = self._effective_secondary(source, self._get_crit, 6)
+            amount = to_int(amount / opposed_power(tough - critical))
+        if dot_kind:
             amount = _to_int(amount * (1 + self._talent(target, 16)))
         if self._has_manual_dot_kind(target, 'poison'):
             amount = _to_int(amount * 1.2)
@@ -776,7 +816,10 @@ class ReferenceBattle:
         else:
             dealt = amount
         if ratio_enabled(self._combat_rules):
-            dealt = self._final_direct_damage(dealt, target)
+            critical = self._roll_attack(source, target) if source is not None and damage_type in (1, 2, 3) else 1
+            if not critical:
+                return 0
+            dealt = self._final_direct_damage(dealt, target, critical)
         return self._injured(target, dealt, damage_type, source=source)
 
     def _final_direct_damage(self, amount, target, critical=1):
@@ -784,6 +827,8 @@ class ReferenceBattle:
         if len(attack) <= 21:
             return amount
         amount = to_int(to_int(amount * critical) * attack[21])
+        if ratio_enabled(self._combat_rules):
+            return amount  # Opposed toughness is applied once at the recipient.
         tough = max(0, self._get_tough(target))
         return to_int(amount / (1 + tough * attack[15] / (tough + attack[13])))
 
@@ -810,7 +855,10 @@ class ReferenceBattle:
                     self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),
                     self._attack,base_attack=attacker.get('ap',0),rules=self._combat_rules)
                 dealt += damage_before_final(raw*fraction,sign_a,sign_b,3,0,0,self._attack)
-            return self._injured(target, self._final_direct_damage(dealt, target), damage_type, source=attacker)
+            critical = self._roll_attack(attacker, target)
+            if not critical:
+                return 0
+            return self._injured(target, self._final_direct_damage(dealt, target, critical), damage_type, source=attacker)
         if damage_type == 1:
             base = max(1, _to_int(self._get_damage(attacker) * float(multiplier)))
             defense = self._defense_against(attacker,target,1)
@@ -1698,7 +1746,7 @@ class ReferenceBattle:
             self._injured(target, amount, damage_type=4, source=attacker)
 
     def _act_caster_hp_heal(self, attacker, enemies, allies, skill, action, index, context):
-        """A fixed fraction of caster max HP, with no AP or precision term."""
+        """Base the heal on caster max HP; the recipient settlement applies recovery bonuses."""
         if len(action)<3 or not math.isfinite(float(action[1])) or float(action[1])<=0:
             return
         amount=_to_int(int(attacker.get('hp_max',0))*float(action[1]))
@@ -1803,7 +1851,7 @@ class ReferenceBattle:
             return
         recipients, _ = self._hp_shield_targets(attacker, skill, per_target_base=False,index=index)
         for ally in recipients:
-            self._add_buff(ally, "shield", rounds, _to_int(int(attacker.get("hp_max", 0)) * ratio))
+            self._add_buff(ally, "shield", rounds, _to_int(int(attacker.get("hp_max", 0)) * ratio), source=attacker if ratio_enabled(self._combat_rules) else None)
 
     def _act_caster_hp_shield(self, attacker, enemies, allies, skill, action, index, context):
         self._act_hp_shield(attacker, enemies, allies, skill, action, index, context)
@@ -1818,7 +1866,7 @@ class ReferenceBattle:
             return
         recipients, _ = self._hp_shield_targets(attacker, skill, per_target_base=True,index=index)
         for ally in recipients:
-            self._add_buff(ally, "shield", rounds, _to_int(int(ally.get("hp_max", 0)) * ratio))
+            self._add_buff(ally, "shield", rounds, _to_int(int(ally.get("hp_max", 0)) * ratio), source=attacker if ratio_enabled(self._combat_rules) else None)
 
     def _act_shield(self, attacker, enemies, allies, skill, action, index, context):
         """shield (139_SkillSet.as:1920).
@@ -1844,13 +1892,13 @@ class ReferenceBattle:
                                              candidates=list(attacker.get("_team", [])),
                                              ban_stand=False)
         for ally in recipients:
-            self._add_buff(ally, "shield", rounds, max(0, amount))
+            self._add_buff(ally, "shield", rounds, max(0, amount), source=attacker if ratio_enabled(self._combat_rules) else None)
 
     def _act_caster_ap_shield(self, attacker, enemies, allies, skill, action, index, context):
         recipients = self._ally_buff_targets(attacker, allies, skill.get("pl") or [], skill=skill, index=index)
         amount = _to_int(max(0, self._get_damage(attacker)) * float(action[1]))
         for target in recipients:
-            self._add_buff(target, "shield", int(action[2]), amount)
+            self._add_buff(target, "shield", int(action[2]), amount, source=attacker if ratio_enabled(self._combat_rules) else None)
 
     def _add_book_burn(self, target, total, rounds, source):
         total = max(0, _to_int(total))
@@ -1889,7 +1937,7 @@ class ReferenceBattle:
                                          candidates=list(attacker.get("_team", [])),
                                          ban_stand=False)
         for ally in recipients:
-            self._add_buff(ally, "shield", rounds, max(1, composite))
+            self._add_buff(ally, "shield", rounds, max(1, composite), source=attacker if ratio_enabled(self._combat_rules) else None)
 
     def _act_shield_followup(self, attacker, enemies, allies, skill, action, index, context):
         """shield_followup (139_SkillSet.as:1558): shield self, then strike."""
@@ -1905,7 +1953,7 @@ class ReferenceBattle:
         if damage_type not in (1, 2, 3) or source_index < 0 or source_index >= index:
             return
         amount = _to_int(int(attacker.get("hp_max", 0)) * ratio)
-        self._add_buff(attacker, "shield", rounds, amount)
+        self._add_buff(attacker, "shield", rounds, amount, source=attacker if ratio_enabled(self._combat_rules) else None)
         victim = context["targets"].get(source_index)
         if victim is None or int(victim.get("hp", 0)) <= 0:
             return
@@ -1955,7 +2003,7 @@ class ReferenceBattle:
         base += int(attacker.get("hp_max", 0)) * 0.1
         amount = _to_int(base * float(coefficient))
         hit = _to_int(self._get_hit(attacker) * (1.0 + self._talent(attacker, 4)))
-        if hit > 0:
+        if hit > 0 and not ratio_enabled(self._combat_rules):
             amount = _to_int(amount * (1 + 0.5 * hit / (hit + 3000)))
         return amount
 

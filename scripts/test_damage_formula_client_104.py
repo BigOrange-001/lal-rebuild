@@ -5,7 +5,7 @@ import subprocess
 import unittest
 
 from test_vital_bar_104 import method
-from combat_math import damage_before_final
+from combat_math import damage_before_final, opposed_crit_chance, precision_recovery, miss_chance, opposed_power
 from combat_rules import attack_parameters, candidate_config, legacy_config
 from test_combat_redesign import config
 
@@ -29,6 +29,7 @@ DAMAGE_CHOICE_KEY104:'damage-pref',MIN_DAMAGE_RATE:.1,SIGN_DAMAGE_RATE:1.5};
     script += 'const GlobalData={$mConfig_simple:{attack:'+json.dumps(config()['system_simple']['attack'])+'},$mConfig:{combat_rules:'+json.dumps(data)+'}};'
     script += 'methods.DEFAULT_DAMAGE_RULES104='+json.dumps(data)+';'
     names = ['useLegacyDamage104','setLegacyDamage104','beginDamageRules104','ratioDamage104',
+             'statGrowth105','opposedPower105','opposedCritChance105','opposedMissChance105','rollPercent105','precisionRecovery105',
              'damageRuleNumber104','damageAttack104','defenseDamage104','trueSkillCoefficient104']
     for name in names:
         script += 'methods.'+name+'=('+method(PART,name)+').bind(methods);'
@@ -92,7 +93,7 @@ console.log('Native config writes remain supported without changing the selected
         self.run_js(runtime()+'const rows='+json.dumps(rows)+';'+'''
 for(const [legacy,raw,ap,defense,kind,sign,share,expected] of rows){
  methods.setLegacyDamage104(legacy);methods.beginDamageRules104();
- let a={ap,id:1,avatarData:{signType:1}},b={id:2,avatarData:{signType:sign},checkTalent:()=>0,getDePh:()=>defense,getDeMa:()=>defense,getDefenseAgainst:()=>defense};
+ let a={abyssConversion104:()=>0,ap,id:1,avatarData:{signType:1}},b={id:2,avatarData:{signType:sign},checkTalent:()=>0,getDePh:()=>defense,getDeMa:()=>defense,getDefenseAgainst:()=>defense};
  assert.equal(methods.countDamage(a,b,raw,kind,share)[0],expected,JSON.stringify({legacy,raw,ap,defense,kind,sign,share}));
 }
 methods.setLegacyDamage104(false);methods.beginDamageRules104();assert.equal(methods.trueSkillCoefficient104(),1.6);
@@ -100,16 +101,33 @@ methods.setLegacyDamage104(true);methods.beginDamageRules104();assert.equal(meth
 console.log(rows.length+' native damage cases match the Python ratio/legacy models');
 ''')
 
-    def test_native_probabilities_and_fixed_critical(self):
+    def test_native_probabilities_and_legacy_fallback(self):
         self.run_js(runtime()+'''
 let a={id:1,checkTalent:()=>0,getCrit:()=>6000,getHit:()=>3000,emitModEvent(){}},b={id:2,buffs:{},checkTalent:()=>0,getTough:()=>3000,getFlee:()=>6000,getEffectiveActionType:()=>1,emitModEvent(){}};
-methods.beginDamageRules104();roll=29;assert.equal(methods.checkCrit(a,b),2);roll=30;assert.equal(methods.checkCrit(a,b),1);
-roll=17;assert(methods.checkMiss(a,b));roll=18;assert(!methods.checkMiss(a,b));
+b.abyssOnDodge104=()=>{};
+methods.beginDamageRules104();
+roll=0;assert(Math.abs(methods.checkCrit(a,b)-2*methods.opposedPower105(3000))<1e-10);
+roll=99;assert.equal(methods.checkCrit(a,b),1);
+roll=24;assert(methods.checkMiss(a,b));roll=1624;assert(!methods.checkMiss(a,b));
 methods.setLegacyDamage104(true);methods.beginDamageRules104();roll=30;assert(Math.abs(methods.checkCrit(a,b)-(2+6000*.5/9000))<1e-8);
 roll=44;assert(methods.checkMiss(a,b));roll=45;assert(!methods.checkMiss(a,b));
 console.log('Actual client crit/miss boundaries and legacy critical multiplier passed');
 ''')
 
+
+    def test_curves_match_server_on_both_sides_of_each_join(self):
+        rules = candidate_config(config())['combat_rules']
+        rows = [[d,opposed_crit_chance(d),miss_chance(0,max(0,d),[],rules),
+                 opposed_power(d),precision_recovery(d)] for d in
+                (-200000,-100000,-1,0,1,4000,10000,19999,20000,20001,100000,200000)]
+        self.run_js(runtime()+'const rows='+json.dumps(rows)+';'+'''
+for(const [delta,crit,miss,power,recovery] of rows){
+ const caster={getHit:()=>Math.max(0,delta),checkTalent:()=>0};
+ for(const [actual,expected] of [[methods.opposedCritChance105(delta),crit],
+    [methods.opposedMissChance105(delta),miss],[methods.opposedPower105(delta),power],
+    [methods.precisionRecovery105(caster),recovery]]) assert(Math.abs(actual-expected)<1e-9);
+}
+''')
 
 if __name__=='__main__':
     unittest.main()

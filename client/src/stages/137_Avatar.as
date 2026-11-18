@@ -836,7 +836,7 @@ package com.meng52.game.module.avatar
       {
          if(!target || target.hp <= 0) return;
          coefficient *= purpleBondMultiplier()*heroSkillOutputRate104();
-         target.addBuff("shield",duration,Tools.toInt((healthOnly ? getHpMax() : getDamage()+0.1*getHpMax())*coefficient));
+         target.addBuff("shield",duration,Tools.toInt((healthOnly ? getHpMax() : getDamage()+0.1*getHpMax())*coefficient),0,-1,ratioDamage104() ? this : null);
       }
 
       private function abilityControl(target:Avatar, kind:String, duration:int, value:Number = 0) : void
@@ -1566,13 +1566,13 @@ package com.meng52.game.module.avatar
          if(source!==this || hp<=0 || !target || target.team==team) return;
          if(event=="hit" && yasuoVampRounds104>=0 && amount>0)
             // Use actual HP damage directly, bypassing AP/precision heal scaling.
-            injured(Tools.toInt(amount),1,null,4,this,false,this);
+            injured(Tools.toInt(amount),1,null,4,this,false,this,null,"",false,true);
          if(event!="crit" || !yasuoPassive104()) return;
          // Each entry is an ordinary shield Buff with its own native timer.
          // It never replaces or refreshes another entry, including allied shields.
          if(buffs.curse) return;
          if(buffs.evil) {removeBuff("evil",true);return;}
-         var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier());
+         var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier()*precisionRecovery105(this));
          if(amountShield<=0) return;
          var shield:Buff=new Buff("shield",2,amountShield);
          shield.source=this;
@@ -4017,6 +4017,45 @@ package com.meng52.game.module.avatar
          return attack;
       }
 
+      private static function statGrowth105(points:Number) : Number
+      {
+         return Math.log(1 + Math.max(0,points)/10000) / Math.log(11);
+      }
+
+      private static function opposedPower105(advantage:Number) : Number
+      {
+         return 1 + 0.6 * statGrowth105(advantage);
+      }
+
+      private static function opposedCritChance105(delta:Number) : Number
+      {
+         if(delta <= 0) return 15 * Math.pow(1-delta/10000,-Math.log(3)/Math.log(11));
+         if(delta >= 20000) return 60 - 45 / (2 * opposedPower105(delta) - 1);
+         // Quintic matching the value, slope and curvature at 0 and +20000.
+         var t:Number = delta/20000;
+         return 100 * (0.15 + t * (0.13744707299739786 + t * (0.20041939924923793
+             + t * (-0.113881973159351 + t * (-0.18760058259473933 + t * 0.12325384349962887)))));
+      }
+
+      private static function opposedMissChance105(delta:Number) : Number
+      {
+         return 100 * (1 - Math.pow(1 + Math.max(0,delta)/4000,-Math.log(5)/Math.log(26)));
+      }
+
+      private static function rollPercent105(percent:Number) : Boolean
+      {
+         // Keep the native percent bucket while resolving fractional percentages in one draw.
+         var draw:int = Random.getRandom(10000);
+         return (draw % 100)*100 + int(draw/100) < Math.round(percent*100);
+      }
+
+      private static function precisionRecovery105(caster:Avatar) : Number
+      {
+         if(!ratioDamage104() || !caster) return 1;
+         var hit:Number = Tools.toInt(caster.getHit()*(1+caster.checkTalent(4)));
+         return 1 + 0.5 * statGrowth105(hit);
+      }
+
       private static function defenseDamage104(amount:Number, defense:Number, baseAttack:Number) : Number
       {
          if(!ratioDamage104()) return Math.max(amount*MIN_DAMAGE_RATE,amount-defense);
@@ -4093,12 +4132,14 @@ package com.meng52.game.module.avatar
          var _loc8_:int = Tools.toInt(param2.getTough() + param2.getTough() * param2.checkTalent(7));
          trace("oldCrit" + param1.getCrit() + "|||||||||||||||newCrit" + _loc5_);
          trace("oldTough" + param2.getTough() + "|||||||||||||||newTough" + param2.getTough());
-         var _loc4_:int = Tools.toInt(Math.min(_loc6_[7],Math.max(0,_loc6_[5] + (ratioDamage104() ? damageRuleNumber104("crit_slope") : 100) * (_loc5_ - _loc8_) / (_loc5_ + _loc8_ + _loc6_[11]))));
+         var delta:Number = ratioDamage104() ? Math.max(0,_loc5_) - Math.max(0,_loc8_) : Number(_loc5_) - _loc8_;
+         var _loc4_:Number = ratioDamage104() ? opposedCritChance105(delta) :
+             Tools.toInt(Math.min(_loc6_[7],Math.max(0,_loc6_[5]+100*delta/(_loc5_+_loc8_+_loc6_[11]))));
          GameMapTools.gameTrace("暴击判定",param1.id,param2.id);
-         var _loc3_:Boolean = Random.getRandom() < _loc4_;
+         var _loc3_:Boolean = ratioDamage104() ? rollPercent105(_loc4_) : Random.getRandom() < _loc4_;
          if(_loc3_)
          {
-            _loc7_ = _loc6_[3] + _loc5_ * _loc6_[16] / (_loc5_ + _loc6_[12]);
+            _loc7_ = ratioDamage104() ? 2 * opposedPower105(delta) : _loc6_[3] + _loc5_ * _loc6_[16] / (_loc5_ + _loc6_[12]);
             GameMapTools.gameTrace("暴击倍数",_loc7_);
             return _loc7_;
          }
@@ -5369,6 +5410,7 @@ package com.meng52.game.module.avatar
          var manualEffect:Number = sourceContext ? Number(sourceContext.manualEffectMultiplier) : 1;
          if(!isFinite(manualEffect) || manualEffect <= 0) manualEffect = 1;
          if(param3 != 0 && param1 != "summon" && !(param1 == "shield" && abyssOrigin104 == "relic_shield")) param3 *= manualEffect;
+         if(param1 == "shield" && ratioDamage104()) param3 = Tools.toInt(param3 * precisionRecovery105(source || this));
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);
          var _loc11_:Buff = new Buff(param1,param2,param3);
@@ -7978,9 +8020,11 @@ package com.meng52.game.module.avatar
          var _loc9_:* = damageAttack104();
          var _loc7_:int = Tools.toInt(param1.getHit() + param1.getHit() * param1.checkTalent(4));
          var _loc6_:int = Tools.toInt(param2.getFlee() + param2.getFlee() * param2.checkTalent(5));
-         var _loc5_:int = Tools.toInt(Math.min(_loc9_[6],Math.max(0,_loc9_[4] + (ratioDamage104() ? damageRuleNumber104("miss_slope") : 100) * (_loc6_ - _loc7_) / (_loc6_ + _loc7_ + _loc9_[9]))));
+         var delta:Number = ratioDamage104() ? Math.max(0,_loc6_) - Math.max(0,_loc7_) : Number(_loc6_) - _loc7_;
+         var _loc5_:Number = ratioDamage104() ? opposedMissChance105(delta) :
+             Tools.toInt(Math.min(_loc9_[6],Math.max(0,_loc9_[4]+100*delta/(_loc6_+_loc7_+_loc9_[9]))));
          GameMapTools.gameTrace("闪避判定",param1.id,param2.id);
-         var _loc4_:Boolean = Random.getRandom() < _loc5_;
+         var _loc4_:Boolean = ratioDamage104() ? rollPercent105(_loc5_) : Random.getRandom() < _loc5_;
          var _loc8_:GameMapLayer = GameMapLayer.gl;
          if(_loc4_)
          {
@@ -8187,7 +8231,7 @@ package com.meng52.game.module.avatar
           if(param2 == 4)
           {
              var recoveryHit:Number = Tools.toInt(getHit() * (1 + checkTalent(4)));
-             var recoveryU:Number = 1 + 0.5 * recoveryHit / (recoveryHit + 3000);
+             var recoveryU:Number = ratioDamage104() ? 1 : 1 + 0.5 * recoveryHit / (recoveryHit + 3000);
              _loc14_ = Tools.toInt(_loc14_ * recoveryU * getRecoveryTalentMultiplier() * activeManualEffectMultiplier());
           }
          trace(this.id + "|||||||||||||oldDamage" + getDamage() + "*" + _loc16_ + "|||||||" + getDamage() * _loc16_ + "|||||||||||" + param3 + "|||||||||||newDamage" + _loc14_);
@@ -8708,7 +8752,7 @@ package com.meng52.game.module.avatar
          return Tools.toInt(Math.max(0,Number(amount)-spent/factor));
       }
 
-      public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "", derivedDamage104:Boolean = false) : int
+      public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "", derivedDamage104:Boolean = false, fixedRecovery105:Boolean = false) : int
       {
          var settledCriticalDamage104:Number=0;
          var abilityHpBefore:int = hp;
@@ -8809,6 +8853,7 @@ package com.meng52.game.module.avatar
          {
             param1 = int(skin2Incoming(param1,param7 || param5,param4));
             var bookHealer:Avatar = param7 || param5 || this;
+            if(!fixedRecovery105 && abyssOrigin104 != "relic_lifesteal" && ratioDamage104()) param1 = Tools.toInt(param1 * precisionRecovery105(bookHealer));
             param1 = int(bookHealer.abyssAmplifyHeal104(param1));
             param1 = Tools.toInt(param1 * (1 + bookHealer.getBookCombatBonus("healing")));
             if(hasManualDotKind("burn"))
@@ -8827,7 +8872,13 @@ package com.meng52.game.module.avatar
          {
             if(!derivedDamage104) param1 = Tools.toInt(Tools.toInt(param1 * param2) * _loc24_[21]);
             _loc13_ = Tools.toInt(getTough() * (1 + checkTalent(7)));
-            _loc18_ = 1 + _loc13_ * _loc24_[15] / (_loc13_ + _loc24_[13]);
+            if(ratioDamage104())
+            {
+               var damageSource:Avatar = param7 || param5;
+               var critical:Number = damageSource ? Tools.toInt(damageSource.getCrit()*(1+damageSource.checkTalent(6))) : 0;
+               _loc18_ = abyssOrigin104 == "relic_reflect" ? 1 : opposedPower105(Math.max(0,_loc13_) - Math.max(0,critical));
+            }
+            else _loc18_ = 1 + _loc13_ * _loc24_[15] / (_loc13_ + _loc24_[13]);
             GameMapTools.gameTrace("減傷" + _loc18_,"原傷害" + param1,"新傷害" + Tools.toInt(param1 / _loc18_));
             if(!derivedDamage104) param1 = Tools.toInt(param1 / _loc18_);
             trace("最终伤害算减伤之前" + param1);

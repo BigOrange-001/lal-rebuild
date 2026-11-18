@@ -11,8 +11,8 @@ from contextlib import contextmanager
 from battle_engine import ReferenceBattle, _to_int
 from dragonmancer_kaisa_sim import KaisaBattleMixin
 from nightbringer_yasuo_sim import YasuoBattleMixin
-from combat_math import (miss_chance, crit_chance, critical_multiplier,
-                         damage_before_final, to_int)
+from combat_math import damage_before_final, to_int
+from combat_rules import ratio_enabled
 
 
 KINDS = frozenset(f'{hero}_{slot}' for hero in (
@@ -176,7 +176,7 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
             ctx=self._context(owner);factor=ctx['effect_factor'] if ctx else 1
             amount=_to_int((self._get_hp(owner) if health else self._get_damage(owner)+self._get_hp(owner)*.1)*coefficient*self.hero_output_rate_104(owner))
             self._event('shield',owner,target,amount=amount,duration=duration)
-            self._add_buff(target,'shield',duration,amount)
+            self._add_buff(target,'shield',duration,amount,source=owner if ratio_enabled(self._combat_rules) else None)
 
     @staticmethod
     def _get_hp(owner):return owner.get('hp_max',1)
@@ -629,8 +629,9 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                         attack=self._attack
                         if len(attack)>21:
                             amount=_to_int(amount*float(attack[21]))
-                            tough=max(0,self._get_tough(victim))
-                            amount=_to_int(amount/(1+tough*float(attack[15])/(tough+float(attack[13]))))
+                            if not ratio_enabled(self._combat_rules):
+                                tough=max(0,self._get_tough(victim))
+                                amount=_to_int(amount/(1+tough*float(attack[15])/(tough+float(attack[13]))))
                         amount=_to_int(amount*(1+self._talent(victim,16)))
                         self._event('nurse_retribution',target,victim,amount=amount)
                         self._injured(victim,amount,3,source=target)
@@ -760,7 +761,7 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         for key,value in list(state.items()):
             if isinstance(value,dict) and value.get('debuff') is False:state.pop(key,None)
 
-    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None):
+    def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None, fixed_recovery=False, derived=False):
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
         relic_reflect=getattr(self,'_equip_origin',None)=='relic_reflect'
@@ -769,7 +770,7 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')
-        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt)
+        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt,fixed_recovery=fixed_recovery,derived=derived)
         taken=max(0,before-max(0,target.get('hp',0)))+max(0,shield_before-self._buff_value(target,'shield'))
         grey=state.get('grey')
         if grey and taken>0 and damage_type!=4:
@@ -789,16 +790,10 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         if not attack:
             self._ability_last_hit=True
             return super()._native_damage(attacker,target,multiplier*share,damage_type)
-        hit=max(0,self._get_hit(attacker));flee=max(0,self._get_flee(target))
-        action_type=(target.get('tpl') or [0,0])[1]
-        if action_type!=3 and self.rng.get_random(100)<miss_chance(hit,flee,attack,self._combat_rules):
-            self._ability_last_hit=False
-            self._emit_mod_event(attacker,'miss',attacker,target)
-            self._emit_mod_event(target,'dodge',attacker,target)
+        crit = self._roll_attack(attacker, target)
+        self._ability_last_hit = bool(crit)
+        if not crit:
             return 0
-        self._ability_last_hit=True
-        critical=max(0,self._get_crit(attacker));tough=max(0,self._get_tough(target))
-        crit=critical_multiplier(critical,attack) if self.rng.get_random(100)<crit_chance(critical,tough,attack,self._combat_rules) else 1
         ctx=self._context(attacker)
         if ctx and ctx.get('cat_capture') and crit>1:ctx['cat_crits']+=1
         row_a=self._config.get('avatar',{}).get(attacker.get('aid'),{});row_b=self._config.get('avatar',{}).get(target.get('aid'),{})

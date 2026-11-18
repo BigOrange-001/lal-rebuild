@@ -11,6 +11,7 @@ import re
 
 from player_store import GameplayFault
 from gameplay_common import ensure_hero_acquirable
+from hero_workshop import is_test_hero
 from mod_policy import runtime as mod_runtime, candidate_ids
 
 _HERO_AID = re.compile(r"A_1\d{3}_(\d+)")
@@ -31,6 +32,8 @@ def roll_campaign_hero_drop(config: dict, stage: dict, stage_id: str,
     candidates = by_diff.get(str(difficulty), [])
     if not isinstance(candidates, list):
         raise GameplayFault("InvalidHeroDropPolicy", "Campaign hero drop candidates are malformed")
+    candidates = [row for row in candidates if not isinstance(row, dict)
+                  or not is_test_hero(config, row.get("aid"))]
     if not candidates:
         return None
 

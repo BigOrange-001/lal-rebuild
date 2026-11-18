@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from player_store import GameplayFault
+from hero_workshop import ensure_regular_hero, is_test_hero
 
 QUALITY_IDS = {"white": 2, "green": 3, "blue": 4, "purple": 5, "orange": 6}
 POOL_KEYS = ("normal", "advanced", "vip")
@@ -97,7 +98,9 @@ class SummonPools:
                             or not aid.endswith("_" + str(quality_id))):
                         raise GameplayFault("InvalidConfig", f"Invalid or duplicate summon hero: {aid}")
                     seen.add(aid)
-                    cards.append((aid, _number(card.get("weight"), "card weight")))
+                    weight = _number(card.get("weight"), "card weight")
+                    if hero.get("test_hero") is not True:
+                        cards.append((aid, weight))
                 self._cards[pool, quality] = _weighted(cards)
                 if probability > 0 and not self._cards[pool, quality][1]:
                     raise GameplayFault("InvalidConfig", f"Empty active summon pool: {pool}/{quality}")
@@ -126,6 +129,7 @@ class SummonPools:
                     for aid, meta in metadata.items():
                         if (meta.get("kind") == "new" and meta.get("available") is True
                                 and meta.get("channels", {}).get(channel) is True
+                                and not is_test_hero(cfg, aid)
                                 and meta.get("quality") == QUALITY_IDS[quality]
                                 and aid not in existing):
                             row["cards"].append({"id": aid, "weight": 1})
@@ -167,6 +171,7 @@ def confirm_custom_hero(document, aid, *, confirmed, pools=POOL_KEYS):
     hero = cfg.get("avatar", {}).get(aid)
     if not isinstance(hero, dict):
         raise GameplayFault("UnknownHero", "Custom summon hero is unavailable")
+    ensure_regular_hero(cfg, aid)
     quality = next((q for q, value in QUALITY_IDS.items() if aid.endswith("_" + str(value))), None)
     if quality is None or any(pool not in POOL_KEYS for pool in pools):
         raise GameplayFault("InvalidConfig", "Invalid custom summon quality or pool")

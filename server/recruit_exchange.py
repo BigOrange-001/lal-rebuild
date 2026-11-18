@@ -8,6 +8,7 @@ import re
 from gameplay_common import game_day
 from upstream_hero_config import apply_upstream_hero_config
 from mod_policy import runtime as mod_runtime, candidate_ids
+from hero_workshop import is_test_hero
 
 
 MEDAL_PRICE = 80
@@ -26,7 +27,7 @@ def daily_orange_pool(config, *, channel="acquisition.exchange.hero", minimum=DA
     if not isinstance(avatar, dict):
         raise ValueError("Avatar definitions are unavailable")
     pool = sorted(aid for aid, row in avatar.items()
-                  if _ORDINARY_ORANGE.fullmatch(aid) and aid not in blocked
+                  if _ORDINARY_ORANGE.fullmatch(aid) and aid not in blocked and not is_test_hero(config, aid)
                   and isinstance(row, dict) and row.get("name")
                   and not str(row["name"]).startswith("橙阶"))
     if mod_runtime(config):

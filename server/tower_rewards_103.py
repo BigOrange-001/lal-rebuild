@@ -4,6 +4,7 @@ import copy
 import random
 import re
 from player_store import GameplayFault
+from hero_workshop import is_test_hero
 from summon_pools import SummonPools,QUALITY_IDS
 from mod_policy import base_aid,hero_available,hero_metadata,new_heroes
 
@@ -22,7 +23,7 @@ def _enemy_pools(cfg):
                 if re.fullmatch(r'A_1\d{3}_[56]',base_aid(cfg,aid))}
     candidates.update(new_heroes(cfg))
     for aid in sorted(candidates):
-        if not hero_available(cfg,aid):continue
+        if not hero_available(cfg,aid) or is_test_hero(cfg,aid):continue
         if (hero_metadata(cfg,aid).get('unitType','hero')!='hero'
                 or cfg['avatar'][aid].get('modUnitType','hero')!='hero'):continue
         if aid.endswith('_6'):pools['skin_orange' if aid in skins else 'orange'].append(aid)

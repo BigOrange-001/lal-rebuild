@@ -21,6 +21,7 @@ import secrets
 
 from arena_opponents import bot_lines, fit_bot
 from game_calendar import game_day
+from hero_workshop import has_test_hero_units, is_test_hero
 from npc_cultivation import stable_seed
 from player_store import GameplayFault
 
@@ -60,7 +61,8 @@ class ArenaRaids:
     def _prepare(self, profile, uid, bot, batch, attempt, *, lines=None):
         """Rebuild the attacker from its recipe at a prepared strength."""
         recipe = bot.get("recipe") or {}
-        if not recipe.get("aids"):
+        aids = recipe.get("aids")
+        if not aids or any(is_test_hero(self.comp.cfg, aid) for aid in aids):
             return None
         own_power = self.comp._team_power(self.comp._current_arena_team(profile))
         seed = stable_seed(uid, bot["uid"], "raid", attempt, self._now() // RAID_WINDOW_SECONDS)
@@ -68,7 +70,7 @@ class ArenaRaids:
         target = round(own_power * rng.uniform(*PREPARED_POWER))
         lanes = lines or recipe.get("lines")
         built = fit_bot(self.comp.cultivator, batch["template"], {}, rng, target, self.comp._team_power,
-                        uid=bot["uid"], name=bot["name"], seed=seed, aids=list(recipe["aids"]),
+                        uid=bot["uid"], name=bot["name"], seed=seed, aids=list(aids),
                         lines=list(lanes))
         return {"id": "raid_" + secrets.token_hex(8), "attacker_uid": bot["uid"], "name": bot["name"],
                 "rank": int(bot["rank"]), "lv": int(bot.get("lv", 1)), "units": built["units"],
@@ -89,6 +91,7 @@ class ArenaRaids:
         # Raids only target a top-ten holder, from NPCs still listed below.
         state["queue"] = [raid for raid in state["queue"] if isinstance(raid, dict)
                           and raid.get("expires", 0) > now and rank <= RAID_TOP_RANK
+                          and not has_test_hero_units(self.comp.cfg, raid.get("units", []))
                           and raid.get("attacker_uid") in current
                           and int(current[raid["attacker_uid"]]["rank"]) > rank]
         if rank > RAID_TOP_RANK or not isinstance(batch, dict) or not batch.get("template"):

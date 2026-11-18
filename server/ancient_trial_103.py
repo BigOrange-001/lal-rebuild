@@ -1,6 +1,7 @@
 """Extend the authored ancient trial through tier 15, preserving tiers 1..10."""
 import copy,math,random,re
 from ancient_trial_overlay import _base_stats,EQUIPMENT_TYPES
+from hero_workshop import is_test_hero
 from campaign_workbook_overlay import _fit_power
 from gameplay_common import equipment_exclusive_ids
 
@@ -11,7 +12,7 @@ def _extended_team(cfg,template,tier):
     blocked=set(cfg['system_simple'].get('skin_hero_ids',[]))
     blocked.update(cfg['system_simple'].get('skin_acquisition_blocked_heroes',[]))
     candidates=sorted(aid for aid in cfg['avatar']
-                      if re.fullmatch(r'A_1\d{3}_6',aid) and aid not in blocked)
+                      if re.fullmatch(r'A_1\d{3}_6',aid) and aid not in blocked and not is_test_hero(cfg,aid))
     if len(candidates)<10:raise ValueError('Ancient trial requires ten ordinary orange heroes')
     previous=next(row[0] for row in template if row[5]==1)
     start=candidates.index(previous) if previous in candidates else 0

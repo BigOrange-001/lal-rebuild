@@ -11,6 +11,7 @@ from battle_engine import base_unit, validate_team_lane_coverage
 from bonds_104 import active_bonds, apply_stats, skill_ids
 from native_skill_snapshot import _native_skill_snapshot
 from player_store import GameplayFault
+from hero_workshop import has_test_hero_units, is_test_hero
 
 
 DECKS = {
@@ -484,14 +485,31 @@ def generate_enemy_preview(seed, difficulty, node, cfg):
     roll = node.get('enemy_roll', 0)
     rng = rng_for(seed, 'enemy', node['id'], roll) if roll else rng_for(seed, 'enemy', node['id'])
     kind, act = node['type'], node['act']
+
+    def eligible(aid):
+        return not (is_test_hero(cfg, aid[:-1]+'5') or is_test_hero(cfg, aid[:-1]+'6'))
+
+    ordinary = [aid for aid in plan['initial_purple'] if eligible(aid)]
     if kind == 'boss':
         aids = list(rng.choice(plan['boss_decks'][str(act)]))
+        for i, aid in enumerate(aids):
+            if not eligible(aid):
+                candidates = [a for a in ordinary if family(a) not in {family(b) for b in aids}]
+                if not candidates:
+                    raise GameplayFault('AbyssUnavailable', '深渊敌方首领阵容候选不足。')
+                same_role = [a for a in candidates if enemy_role(a,cfg) == enemy_role(aid,cfg)]
+                aids[i] = rng.choice(same_role or candidates)
         if difficulty >= 7:
-            used={a.rsplit('_',1)[0] for a in aids}
-            aids.append(rng.choice([a for a in plan['initial_purple'] if a.rsplit('_',1)[0] not in used]))
+            used = {family(a) for a in aids}
+            candidates = [a for a in ordinary if family(a) not in used]
+            if not candidates:
+                raise GameplayFault('AbyssUnavailable', '深渊敌方首领阵容候选不足。')
+            aids.append(rng.choice(candidates))
     else:
         count = 3 if kind=='weak' else 5 if kind=='elite' else rng.randint(4,5)
-        aids = rng.sample(plan['initial_purple'], count)
+        if len(ordinary) < count:
+            raise GameplayFault('AbyssUnavailable', '深渊随机敌人候选不足。')
+        aids = rng.sample(ordinary, count)
     aids=[a[:-1]+'5' for a in aids]
     # Boss keeps its authored theme captain; other fights draw one at random.
     leader = 0 if kind=='boss' else rng.randrange(len(aids))
@@ -505,8 +523,9 @@ def generate_enemy_preview(seed, difficulty, node, cfg):
     for slot in orange_slots:aids[slot]=aids[slot][:-1]+'6'
     skin_count=plan['enemy_skin_counts'].get(kind,[0,0,0])[act-1]
     used={a.rsplit('_',1)[0] for a in aids}
+    enemy_skins = [a for a in plan['enemy_skin_orange'] if not is_test_hero(cfg, a)]
     for slot in rng.sample(orange_slots,skin_count):
-        possible=[a for a in plan['enemy_skin_orange'] if a.rsplit('_',1)[0] not in used
+        possible=[a for a in enemy_skins if a.rsplit('_',1)[0] not in used
                   and (kind!='boss' or enemy_role(a,cfg)==enemy_role(aids[slot],cfg))]
         if not possible:
             raise GameplayFault('AbyssUnavailable','敌方皮肤阵容配置不完整。')
@@ -527,7 +546,8 @@ def generate_enemies(seed, difficulty, node, cfg):
     plan=rules(cfg)
     kind,act=node['type'],node['act']
     preview=node.get('enemy_preview')
-    if preview is None:preview=generate_enemy_preview(seed,difficulty,node,cfg)
+    if preview is None or has_test_hero_units(cfg, preview):
+        preview=generate_enemy_preview(seed,difficulty,node,cfg)
     rate=plan['enemy_rates']
     multiplier = rate['weak'] if kind=='weak' else rate['normal'][act-1]
     if kind in ('elite','boss'): multiplier *= rate[kind]

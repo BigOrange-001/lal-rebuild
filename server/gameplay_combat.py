@@ -1,5 +1,6 @@
 """Original-client-compatible battle setup and single-player progression RPCs."""
 from __future__ import annotations
+from hero_workshop import is_test_hero
 from ancient_trial_drop import roll_ancient_trial_drop,roll_ancient_exclusive_drop
 
 import copy, datetime, hashlib, math, random, secrets, time
@@ -234,7 +235,7 @@ class GameplayCombat:
                     if not is_activity:
                         groups = {}
                         for row in stage.get("hero_drop_candidates_by_diff", {}).get(str(diff), []):
-                            if isinstance(row, dict):
+                            if isinstance(row, dict) and not is_test_hero(self.config, row.get("aid")):
                                 groups.setdefault(row.get("star"), []).append(row.get("aid"))
                         for quality, ids in groups.items():
                             if not candidate_ids(self.config, ids, "acquisition.drop.campaign", include_new=True, quality=quality):
@@ -531,6 +532,8 @@ class GameplayCombat:
                     candidates = stage.get("soul_candidates", [])
                     if mod_runtime(self.config):
                         candidates = band_candidates(self.config, candidates, "acquisition.drop.tower_soul")
+                    if isinstance(candidates, list):
+                        candidates = [aid for aid in candidates if not is_test_hero(self.config, aid)]
                     if not isinstance(candidates, list) or not candidates or any(aid not in self.config.get("avatar", {}) for aid in candidates):
                         raise GameplayFault("InvalidStage", "Tower soul pool is invalid")
                     tower_soul = self._reward_rng(uid, fight_id, pending, "tower-soul").choice(candidates)
@@ -539,6 +542,8 @@ class GameplayCombat:
                         heroes = stage.get("tower_hero_candidates", [])
                         if mod_runtime(self.config):
                             heroes = candidate_ids(self.config, heroes, "acquisition.drop.tower_hero", include_new=True, quality=6)
+                        if isinstance(heroes, list):
+                            heroes = [aid for aid in heroes if not is_test_hero(self.config, aid)]
                         if (not isinstance(heroes, list) or not heroes
                                 or any(aid not in self.config.get("avatar", {})
                                        or not aid.startswith("A_1") or not aid.endswith("_6") for aid in heroes)):

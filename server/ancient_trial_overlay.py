@@ -50,11 +50,12 @@ def _equipment_pools(cfg: dict) -> dict[int, list[str]]:
 
 
 def _enemy_team(cfg: dict, tier: int) -> list[list]:
+    from hero_workshop import is_test_hero
     star = HERO_STARS[tier - 1]
     blocked = set(cfg.get("system_simple", {}).get("skin_hero_ids", [])) | set(cfg.get("system_simple", {}).get("skin_acquisition_blocked_heroes", []))
     candidates = sorted(aid for aid in cfg.get("avatar", {})
                         if aid.startswith("A_1") and aid.endswith(f"_{star}")
-                        and aid not in blocked)
+                        and aid not in blocked and not is_test_hero(cfg, aid))
     if len(candidates) < 10:
         raise ValueError(f"ancient trial tier {tier} needs ten ordinary star-{star} heroes")
     start = (tier * 13) % len(candidates)

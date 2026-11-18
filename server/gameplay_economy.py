@@ -8,6 +8,8 @@ from vip_campaign import credit_vip_gift, normalize_vip_profile
 from spending_budget import ORDINARY_TIERS,LIMIT_MESSAGE,charge_spending,normalize_spending,public_spending
 from check_in_rewards import apply_check_in_rewards,check_in_coin,orange_bonus_count,random_orange_aid
 from recruit_exchange import SKIN_SOUL_IDS
+from hero_workshop import (claimed_test_heroes, contains_test_hero, ensure_regular_hero,
+                           is_test_hero, is_workshop_offer, record_test_hero_claim, workshop_rows)
 from mod_policy import (runtime as mod_runtime, new_heroes, effective_digest,
                         reward_allowed, ensure_reward, ensure_channel,
                         channel_enabled, hero_available, activity_categories)
@@ -26,6 +28,7 @@ class GameplayEconomy:
         "user.full_fragment_energy", "user.expand_avatar_len", "user.expand_friend_len",
         "user.change_name", "user.sign_in", "user.sign_reward",
         "user.mystery_shop_info", "user.mystery_shop_buy", "user.mystery_shop_refresh_by_coin",
+        "user.test_hero_workshop_info", "user.test_hero_workshop_claim",
         "user.gamble", "user.get_gamble_reports", "user.fund",
         "user.get_pay_gift", "user.get_spend_fixed_gift", "user.get_pass_battle_gift", "user.get_consume_ranks",
         "user.medal_exchange", "user.recruit_exchange_info", "user.recruit_medal_exchange", "user.integral_exchange_info", "user.get_reward_by_code", "user.exchange_key",
@@ -80,6 +83,8 @@ class GameplayEconomy:
             "user.sign_reward": self.sign_reward,
             "user.mystery_shop_info": self.mystery_shop_info,
             "user.mystery_shop_buy": self.mystery_shop_buy,
+            "user.test_hero_workshop_info": self.test_hero_workshop_info,
+            "user.test_hero_workshop_claim": self.test_hero_workshop_claim,
             "user.mystery_shop_refresh_by_coin": self.mystery_shop_refresh_by_coin,
             "user.gamble": self.gamble,
             "user.get_gamble_reports": self.get_gamble_reports,
@@ -458,12 +463,13 @@ class GameplayEconomy:
                     eid = rng.choice(choices)
                     result.setdefault("equip", {})[eid] = result.get("equip", {}).get(eid, 0) + 1
             elif key == "random_orange_soul":
-                choices = list(pools.get("orange_soul", []))
+                choices = [aid for aid in pools.get("orange_soul", []) if not is_test_hero(self.config, aid)]
                 if not choices: raise GameplayFault("InvalidConfig", "VIP hero pool is empty")
                 result.setdefault("avatar_soul", {})[rng.choice(choices)] = int(value)
             elif key in ('random_orange_hero','random_skin_orange'):
                 skin = key=='random_skin_orange' or rng.randrange(10)==0
-                choices=list(pools.get('skin_orange' if skin else 'ordinary_orange',[]))
+                choices = [aid for aid in pools.get("skin_orange" if skin else "ordinary_orange", [])
+                           if not is_test_hero(self.config, aid)]
                 if not choices:raise GameplayFault('InvalidConfig','VIP hero pool is empty')
                 result['avatar']={rng.choice(choices):int(value)}
             else:
@@ -774,6 +780,26 @@ class GameplayEconomy:
         result["replayed"] = replayed
         return result
 
+    def test_hero_workshop_info(self, uid, params):
+        return {"heroes": workshop_rows(self.store.profile_raw(uid), self.config)}
+
+    def test_hero_workshop_claim(self, uid, params):
+        aid = params.get("aid")
+        if not is_workshop_offer(self.config, aid):
+            raise GameplayFault("TestHeroUnavailable", "这名测试英雄当前无法领取。")
+        key = self._op_key("user.test_hero_workshop_claim", params)
+
+        def mutate(profile):
+            granted = aid not in claimed_test_heroes(profile, self.config)
+            if granted:
+                grant_reward(profile, {"heroes": [{"aid": aid, "num": 1}]}, self.config,
+                             test_hero_claim=aid)
+            record_test_hero_claim(profile, aid)
+            return profile, {"aid": aid, "granted": granted}
+
+        result, _ = self.store.atomic_update(uid, mutate, key, {"aid": aid})
+        return result
+
     def _shop_type(self, params):
         kind = params.get("s_type")
         if kind not in {"normal", "advanced", "super"}: raise GameplayFault("InvalidShop", "Unknown soul shop type")
@@ -801,7 +827,10 @@ class GameplayEconomy:
         if not offers: raise GameplayFault("ShopUnavailable", "Soul shop inventory is empty")
         cycle = int(old.get("refresh_seq", 0)) if isinstance(old, dict) else 0
         seed = int.from_bytes(hashlib.sha256(f"{uid}:{kind}:{cycle}".encode()).digest()[:8], "big")
-        rng = random.Random(seed); indices = list(range(len(offers)))
+        rng = random.Random(seed)
+        indices = [i for i, row in enumerate(offers) if not contains_test_hero(self.config, row[0])]
+        if not indices:
+            raise GameplayFault("ShopUnavailable", "Soul shop inventory is empty")
         weights = (self.config.get("mystery_shop_weights") or {}).get(kind)
         if (isinstance(weights, list) and len(weights) == len(offers)
                 and offers is (self.config.get("mystery_shop_offers") or {}).get(kind)):
@@ -828,10 +857,12 @@ class GameplayEconomy:
             ensure_reward(self.config, data)
         if kind in {"avatar_soul", "equip_soul"}:
             if not isinstance(amount, dict) or len(amount) != 1: raise GameplayFault("InvalidReward", "Soul reward must name exactly one item")
+            item_id, count = next(iter(amount.items()))
+            if type(count) is not int or count <= 0: raise GameplayFault("InvalidReward", "Soul reward quantity must be positive")
+            if kind == "avatar_soul":
+                ensure_regular_hero(self.config, item_id)
             target = p.setdefault(kind, {})
-            for item_id, count in amount.items():
-                if type(count) is not int or count <= 0: raise GameplayFault("InvalidReward", "Soul reward quantity must be positive")
-                target[str(item_id)] = int(target.get(str(item_id), 0)) + count
+            target[str(item_id)] = int(target.get(str(item_id), 0)) + count
         elif kind == "avatar":
             grant_reward(p, {"heroes": [{"aid": k, "num": int(v)} for k,v in amount.items()]}, {"cfg": self.config})
         elif kind == "equip":
@@ -852,7 +883,9 @@ class GameplayEconomy:
         interval = max(1, int(cfg.get("refresh_interval", 120))) * 60
         if not isinstance(sheet, dict) or self._now() * 1000 - int(sheet.get("t", 0)) >= interval * 1000:
             sheet = self._fresh_shop_sheet(uid, kind, sheet); shops[kind] = sheet
-        elif sheet.get("mod_digest", "") != effective_digest(self.config):
+        elif (sheet.get("mod_digest", "") != effective_digest(self.config)
+              or any(contains_test_hero(self.config, row[0]) for row in sheet.get("items", [])
+                     if isinstance(row, list) and row)):
             # Narrow an already offered sheet without rerolling unbought stock
             # or resetting the paid refresh/purchase ledger.
             surviving = [(i, row) for i, row in enumerate(sheet.get("items", []))
@@ -1417,7 +1450,8 @@ class GameplayEconomy:
                 if not isinstance(row,dict) or row.get("kind") not in {"avatar","avatar_soul"}: continue
                 aid=row.get("aid"); weight=row.get("weight",0)
                 if not isinstance(aid,str) or aid not in avatar_defs or aid in blocked or type(weight) is not int or weight<=0: continue
-                if mod_runtime(self.config) and not channel_enabled(self.config, aid, "acquisition.summon.activity"):
+                if is_test_hero(self.config, aid) or (mod_runtime(self.config)
+                        and not channel_enabled(self.config, aid, "acquisition.summon.activity")):
                     continue
                 valid.append((row,weight));weight_total+=weight
             mod_groups = None

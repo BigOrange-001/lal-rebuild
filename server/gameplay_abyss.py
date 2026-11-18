@@ -3,6 +3,7 @@ import copy
 import secrets
 
 from battle_intents import create_intent, consume_intent
+from hero_workshop import has_test_hero_units
 from player_store import GameplayFault
 from roguelite_abyss import (rules, normalize_account, unlocked_pool, hero_record,
     rng_for, generate_map, generate_enemies, generate_enemy_preview, is_skin,
@@ -208,7 +209,9 @@ class GameplayAbyss:
 
     def _update_enemy_rules(self,run,node):
         schema=rules(self.cfg)['schema']
-        if node.get('enemy_rules_schema')!=schema:
+        if (node.get('enemy_rules_schema')!=schema
+                or has_test_hero_units(self.cfg, node.get('enemy_preview', []))
+                or has_test_hero_units(self.cfg, node.get('enemies', []))):
             node['enemy_preview']=(generate_enemy_preview(run['seed'],run['difficulty'],node,self.cfg)
                                    if node['type']!='rest' else [])
             node.pop('enemies',None)

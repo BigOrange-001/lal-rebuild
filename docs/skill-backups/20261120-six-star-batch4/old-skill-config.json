@@ -1,0 +1,3526 @@
+{
+  "baselineCommit": "af7e0dfe43182bee0b157d6c7ff2f4d36db09426",
+  "originalBalanceCommit": "7c8ca7aaea0fae3a7e8861ab16a342b83ad48f9a",
+  "heroIds": [
+    "A_1053_6",
+    "A_1054_6",
+    "A_1056_6",
+    "A_1060_6",
+    "A_1078_6",
+    "A_1086_6",
+    "A_1098_6",
+    "A_1103_6",
+    "A_1114_6",
+    "A_1127_6",
+    "A_1203_6",
+    "A_1205_6",
+    "A_1211_6"
+  ],
+  "slotNames": {
+    "10": "小技能",
+    "11": "队长技",
+    "13": "被动"
+  },
+  "sourceSha256": {
+    "client/build.json": "36856a77a0497dead35231a750f11837c6cb339d70119defdee49395898d1365",
+    "client/src/combat_rules_104.aspart": "1d8911194eb1fdefcae048bc7ffadb2c81b946e57d0556257c4682eea083ad59",
+    "client/src/stages/137_Avatar.as": "4d83f1095a56ba42000b351baa5a52415fd095b8d0ea956fad0390173128c868",
+    "client/src/stages/139_SkillSet.as": "cbb4793b026503e07774a78a7eb0e82877ef574ef0e0b0215e446617858311de",
+    "server/battle_engine.py": "a60f6538733f69d2a7b61767573d8dde39e6786ff05081cec9f64cc1f58aa3fd",
+    "server/manual_ability_sim.py": "fb9b9e26f2936115ab30e6539788c2d49308b133d55562d6241f846e8b072d49",
+    "server/six_star_balance_105.py": "1a5441b39ff3fee8963cd5e9207dd27403cbc3a5065087ba8362dccc2202ef10",
+    "server/six_star_battle_105.py": "0d79c10d641acb1e287516910748444e5a83eb4fc71a3962c7e80e43d85c4f68",
+    "server/equipment_rebinding_105.py": "64fea892ef0f8350b107509b0e7e0fa25ae1c29b82f85c7c9d544810ab6fd254",
+    "server/gateway.py": "8b364bfe3818e740a3d98ba9b57bd186b08fd9b2c959f664f2df92917eff904b",
+    "server/orange_ascension_104.py": "ef18ffc406064f091f1d0c6c725a43dc297a92847facf2ce3c18b209ae0ae36b",
+    "server/native_skill_snapshot.py": "8b55a5db3c4d006baecddad8a499d657271a4cf2f3d26e33296740968041baa0",
+    "server/skill_output_104.py": "b622194b18b8ea31ae384e991babef5bf8bce712019611cdadf97028e2558aea",
+    "server/skill_rank_growth_104.py": "e6d39c0e9f27f78a31115defd346147aa200ab1b6721cd4605a568ecb780e00b"
+  },
+  "avatars": {
+    "A_1053_6": {
+      "id": "A_1053_6",
+      "name": "格雷福斯",
+      "res": "A_1053_6",
+      "tl": [
+        1,
+        4,
+        1,
+        45,
+        99,
+        1,
+        150,
+        120,
+        [],
+        110,
+        1
+      ],
+      "pl": [
+        11722.4309211135,
+        478.4665682087,
+        3062.6574998145,
+        125.0064285639,
+        807.43808124,
+        32.9566563771,
+        1112.470245264,
+        45.4069487863,
+        250,
+        522,
+        "S_621053_6",
+        "S_631053_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "射手",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1054_6": {
+      "id": "A_1054_6",
+      "name": "希瓦娜",
+      "res": "A_1054_6",
+      "tl": [
+        2,
+        1,
+        1,
+        55,
+        99,
+        1,
+        150,
+        120,
+        [],
+        113,
+        1
+      ],
+      "pl": [
+        16483.54674328,
+        672.7978262563,
+        950.22687416,
+        38.7847703739,
+        752.22346768,
+        30.7029986808,
+        765.48685376,
+        31.244361378,
+        350,
+        350,
+        "S_621054_6",
+        "S_631054_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "重装战士",
+      "stat_profile": 2
+    },
+    "A_1056_6": {
+      "id": "A_1056_6",
+      "name": "锐雯",
+      "res": "A_1056_6",
+      "tl": [
+        1,
+        1,
+        1,
+        45,
+        99,
+        1,
+        150,
+        120,
+        [],
+        115,
+        1
+      ],
+      "pl": [
+        9171.4532354704,
+        374.3450300192,
+        2121.5559030736,
+        86.5941184928,
+        754.283771248,
+        30.787092704,
+        897.703924936,
+        36.640976528,
+        250,
+        750,
+        "S_641056_6",
+        "S_651056_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1060_6": {
+      "id": "A_1060_6",
+      "name": "拉克丝",
+      "res": "A_1060_6",
+      "tl": [
+        2,
+        2,
+        2,
+        55,
+        99,
+        1,
+        150,
+        120,
+        [],
+        118,
+        1
+      ],
+      "pl": [
+        9359.92650621,
+        382.03781658,
+        1519.65016728,
+        62.02653744,
+        600.72465369,
+        24.51937362,
+        735.71895789,
+        30.02934522,
+        350,
+        750,
+        "S_621060_6",
+        "S_631060_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1078_6": {
+      "id": "A_1078_6",
+      "name": "希维尔",
+      "res": "A_1078_6",
+      "tl": [
+        2,
+        4,
+        1,
+        55,
+        99,
+        1,
+        150,
+        120,
+        [],
+        136,
+        1
+      ],
+      "pl": [
+        14060.60504664,
+        573.9022468016,
+        2066.1520056,
+        84.3327349224,
+        1032.09678384,
+        42.1263993404,
+        820.58548848,
+        33.4932852441,
+        350,
+        700,
+        "S_621078_6",
+        "S_631078_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "射手",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1086_6": {
+      "id": "A_1086_6",
+      "name": "黛安娜",
+      "res": "A_1086_6",
+      "tl": [
+        1,
+        1,
+        2,
+        45,
+        99,
+        1,
+        150,
+        120,
+        [],
+        154,
+        1
+      ],
+      "pl": [
+        11013.003310365,
+        449.5103391986,
+        3093.591542265,
+        126.2690425414,
+        1062.387947565,
+        43.36277337,
+        972.23902398,
+        39.6832254686,
+        250,
+        750,
+        "S_641086_6",
+        "S_651086_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1098_6": {
+      "id": "A_1098_6",
+      "name": "卡尔萨斯",
+      "res": "A_1098_6",
+      "tl": [
+        1,
+        2,
+        2,
+        45,
+        99,
+        1,
+        150,
+        120,
+        [],
+        170,
+        1
+      ],
+      "pl": [
+        9427.7498066604,
+        384.8061145575,
+        2641.0637101824,
+        107.7985187829,
+        992.629519452,
+        40.5154905899,
+        929.0566176444,
+        37.9206782712,
+        250,
+        750,
+        "S_104109810_6",
+        "S_104109811_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1103_6": {
+      "id": "A_1103_6",
+      "name": "马尔扎哈",
+      "res": "A_1103_6",
+      "tl": [
+        3,
+        4,
+        2,
+        50,
+        99,
+        1,
+        150,
+        120,
+        [],
+        177,
+        1
+      ],
+      "pl": [
+        17497.8425559234,
+        714.1976553438,
+        2925.0610161739,
+        119.3902455581,
+        1260.5649868761,
+        51.4516321174,
+        1055.4730644082,
+        43.0805332412,
+        245,
+        800,
+        "S_91040004_6",
+        "S_91040006_6",
+        "E_008",
+        null
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true,
+      "builtin_pack_104": "nine",
+      "hero_category_104": "skin",
+      "acquisition_tier_104": "T1"
+    },
+    "A_1114_6": {
+      "id": "A_1114_6",
+      "name": "敖兴",
+      "res": "A_1114_6",
+      "tl": [
+        2,
+        1,
+        2,
+        55,
+        99,
+        1,
+        150,
+        120,
+        [],
+        195,
+        1
+      ],
+      "pl": [
+        14895.083990696,
+        607.9626118651,
+        1878.0509280624,
+        76.6551399209,
+        692.395375672,
+        28.2610357417,
+        1208.5446557184,
+        49.3283532946,
+        350,
+        700,
+        "S_641114_6",
+        "S_651114_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1127_6": {
+      "id": "A_1127_6",
+      "name": "乐芙兰",
+      "res": "A_1127_6",
+      "tl": [
+        3,
+        4,
+        2,
+        50,
+        99,
+        1,
+        150,
+        120,
+        [],
+        213,
+        1
+      ],
+      "pl": [
+        11887.1238275895,
+        485.1887276567,
+        1781.8304442225,
+        72.7277732336,
+        696.5826570465,
+        28.4319451856,
+        709.5022735605,
+        28.9592764719,
+        245,
+        700,
+        "S_621127_6",
+        "S_631127_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true
+    },
+    "A_1203_6": {
+      "id": "A_1203_6",
+      "name": "恶魔男爵瑞兹",
+      "res": "A_1203_6",
+      "tl": [
+        1,
+        2,
+        2,
+        45,
+        99,
+        1,
+        150,
+        120,
+        [],
+        249,
+        1
+      ],
+      "pl": [
+        14710.4701636176,
+        600.427353617,
+        2036.7855975896,
+        83.1341060241,
+        979.8533097787,
+        39.994012644,
+        1092.8320857985,
+        44.6053912571,
+        250,
+        750,
+        "S_985120310_6",
+        "S_985120311_6",
+        "E_008",
+        "S_985120313_6"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "skill_diff": 20,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true,
+      "skin_revision_v2_104": 1203,
+      "acquisition_tier_104": "T1"
+    },
+    "A_1205_6": {
+      "id": "A_1205_6",
+      "name": "茂凯",
+      "res": "A_1205_6",
+      "tl": [
+        3,
+        1,
+        2,
+        50,
+        99,
+        1,
+        150,
+        120,
+        [],
+        254,
+        1
+      ],
+      "pl": [
+        27506.299389184,
+        1122.7060975177,
+        1072.1795087808,
+        43.7624289298,
+        764.3259864576,
+        31.1969790391,
+        547.2951507968,
+        22.3385775835,
+        245,
+        350,
+        "S_641205_6",
+        "S_651205_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "生命坦克",
+      "stat_profile": 2
+    },
+    "A_1211_6": {
+      "id": "A_1211_6",
+      "name": "沙漠治安官凯瑟琳",
+      "res": "A_1211_6",
+      "tl": [
+        3,
+        4,
+        1,
+        50,
+        99,
+        1,
+        150,
+        120,
+        [],
+        267,
+        1
+      ],
+      "pl": [
+        12819.5747887188,
+        523.2479505599,
+        2591.7095703232,
+        105.7840640948,
+        601.909822085,
+        24.5677478402,
+        837.5197830235,
+        34.1844809397,
+        245,
+        800,
+        "S_985121110_6",
+        "S_985121111_6",
+        "E_008",
+        "S_985121113_6"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "skill_diff": 20,
+      "role": "射手",
+      "stat_profile": 1,
+      "ranged_skill": true,
+      "skin_revision_v2_104": 1211,
+      "acquisition_tier_104": "T1"
+    }
+  },
+  "referencedSummonAvatars": {
+    "A_2904002_5": {
+      "id": "A_2904002_5",
+      "name": "虚灵",
+      "res": "A_2013_5",
+      "tl": [
+        1,
+        2,
+        3,
+        0,
+        1,
+        1,
+        0,
+        0,
+        [],
+        0,
+        1
+      ],
+      "pl": [
+        2323,
+        279,
+        739,
+        89,
+        224,
+        27,
+        428,
+        51,
+        400,
+        600,
+        "S_91040005_5",
+        null,
+        "E_008",
+        null
+      ],
+      "modUnitType": "summon",
+      "builtin_pack_104": "nine",
+      "info": "仅供战斗召唤；实际战斗面板按召唤技能指定比例继承。",
+      "skill_diff": 0
+    },
+    "A_1127_6": {
+      "id": "A_1127_6",
+      "name": "乐芙兰",
+      "res": "A_1127_6",
+      "tl": [
+        3,
+        4,
+        2,
+        50,
+        99,
+        1,
+        150,
+        120,
+        [],
+        213,
+        1
+      ],
+      "pl": [
+        11887.1238275895,
+        485.1887276567,
+        1781.8304442225,
+        72.7277732336,
+        696.5826570465,
+        28.4319451856,
+        709.5022735605,
+        28.9592764719,
+        245,
+        700,
+        "S_621127_6",
+        "S_631127_6",
+        "E_008"
+      ],
+      "skillup": 600,
+      "love": 600,
+      "role": "大法师",
+      "stat_profile": 1,
+      "ranged_skill": true
+    }
+  },
+  "skills": {
+    "S_621053_6": {
+      "id": "S_621053_6",
+      "name": "霰弹轰击",
+      "info": "为自身施加持续到战斗结束的6.76757%双抗和攻击力 并对目标及附近小范围敌人造成30.7108%倍率的AOE物理伤害 为自身附加少量持续5回合的暴击  本分路内不受施法距离限制。",
+      "res": "S_205053_6",
+      "pl": [
+        1,
+        3,
+        600,
+        0,
+        3,
+        0
+      ],
+      "skill": [
+        [
+          "strong",
+          0.07997598745000001,
+          99,
+          "FX60_STRONG"
+        ],
+        [
+          "steel",
+          0.1599519758,
+          99,
+          "FX60_STEEL"
+        ],
+        [
+          "damage",
+          0.3071077928,
+          1,
+          "FX_A_1053_PHYSICAL"
+        ],
+        [
+          "stat_flat",
+          "crit",
+          2399.27963057295,
+          5,
+          "FX60_STRONG"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          1,
+          0.008886220827777779
+        ],
+        [
+          1,
+          1,
+          0.017772441755555556
+        ],
+        [
+          2,
+          1,
+          0.03412308808888889
+        ],
+        [
+          3,
+          2,
+          266.58662561921665
+        ]
+      ],
+      "skillUpPaths": [],
+      "actionTargetPolicies": [
+        "ally_self",
+        "ally_self",
+        "enemy_lane_around_primary_300",
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1,
+        3,
+        1
+      ],
+      "actionTargetGroups": [
+        null,
+        null,
+        "area",
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "damageShareGroups": [],
+      "rankInfoTemplate": "为自身施加持续到战斗结束的{rank:0:1}双抗和攻击力 并对目标及附近小范围敌人造成{rank:2:1}倍率的AOE物理伤害 为自身附加少量持续5回合的暴击  本分路内不受施法距离限制。",
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.07997598745000001,
+            0.15995197490000002
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            0.1599519758,
+            0.3199039516
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            0.3071077928,
+            0.6142155856
+          ],
+          [
+            3,
+            [
+              2
+            ],
+            2399.27963057295,
+            4798.5592611459
+          ]
+        ]
+      }
+    },
+    "S_631053_6": {
+      "id": "S_631053_6",
+      "name": "终极爆弹",
+      "info": "队长技能：先为自身增加47.9856%力量，持续1回合，然后对当前目标造成368.5294%面板物理伤害，对其后方300范围内距离主目标最近的最多2名其他敌人各造成245.6862%面板物理伤害；随后向己方后退300码，为自身增加119.964%护甲，持续2回合。 本分路内不受施法距离限制。",
+      "res": "S_305053_6",
+      "pl": [
+        2,
+        3,
+        750,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "strong",
+          0.4798559261,
+          1,
+          "FX60_STRONG"
+        ],
+        [
+          "damage",
+          3.6852935126,
+          1,
+          "FX_A_1053_PHYSICAL"
+        ],
+        [
+          "damage",
+          2.4568623417,
+          1,
+          "FX_A_1053_PHYSICAL"
+        ],
+        [
+          "move_self",
+          300,
+          "FX60_GAREN_DASH"
+        ],
+        [
+          "armor",
+          1.1996398153,
+          2,
+          "FX60_STRONG"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          1,
+          0.053317325122222224
+        ],
+        [
+          1,
+          1,
+          0.40947705695555553
+        ],
+        [
+          2,
+          1,
+          0.27298470463333335
+        ],
+        [
+          4,
+          1,
+          0.13329331281111112
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self",
+        "enemy_lane_frontmost",
+        "enemy_lane_behind_primary_nearest",
+        "ally_self",
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1,
+        2,
+        1,
+        1
+      ],
+      "actionTargetGroups": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null,
+        {
+          "radius": 300,
+          "sortBy": "nearest",
+          "centerActionIndex": 1,
+          "distinctFromActionIndices": [
+            1
+          ]
+        },
+        null,
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.4798559261,
+            0.9597118522
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            3.6852935126,
+            7.3705870252
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            2.4568623417,
+            4.9137246834
+          ],
+          [
+            4,
+            [
+              1
+            ],
+            1.1996398153,
+            2.3992796306
+          ]
+        ]
+      }
+    },
+    "S_621054_6": {
+      "id": "S_621054_6",
+      "name": "龙裔挥击",
+      "info": "普通技能：近战，对当前目标造成57.7933%面板物理伤害2次，再对该目标及其附近200范围内最多3名敌人施加烧伤，持续3回合；为自身增加51.6012%双抗，持续2回合。\n灼伤每次结算115.5866%攻击力，持续3次自身行动。持续伤害无视物防和魔防。灼伤期间受到治疗降低40%。",
+      "res": "S_202054_6",
+      "pl": [
+        1,
+        3,
+        300,
+        0,
+        3,
+        0
+      ],
+      "skill": [
+        [
+          "damage",
+          0.5779332316,
+          1,
+          "FX_A_1054_PHYSICAL"
+        ],
+        [
+          "damage",
+          0.5779332316,
+          1,
+          "FX_A_1054_PHYSICAL"
+        ],
+        [
+          "manual_dot",
+          "burn",
+          1.1558664632,
+          0.0,
+          3,
+          2,
+          "A1054-N-burn",
+          "FX60_SILENCE"
+        ],
+        [
+          "steel",
+          0.5160118140000001,
+          2,
+          "FX60_STEEL"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          1,
+          0.06421480351111111
+        ],
+        [
+          1,
+          1,
+          0.06421480351111111
+        ],
+        [
+          2,
+          2,
+          0.12842960702222223
+        ],
+        [
+          2,
+          3,
+          0.0
+        ],
+        [
+          3,
+          1,
+          0.05733464600000001
+        ]
+      ],
+      "skillUpPaths": [],
+      "actionTargetPolicies": [
+        null,
+        null,
+        "enemy_lane_around_primary_300",
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1,
+        3,
+        1
+      ],
+      "actionTargetGroups": [
+        "primary",
+        "primary",
+        "area",
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null,
+        {
+          "radius": 200,
+          "sortBy": "nearest",
+          "centerActionIndex": 0
+        },
+        null
+      ],
+      "damageShareGroups": [
+        [
+          0,
+          1
+        ]
+      ],
+      "rankInfoTemplate": "普通技能：近战，对当前目标造成{rank:0:1}面板物理伤害2次，再对该目标及其附近200范围内最多3名敌人施加烧伤，持续3回合；为自身增加{rank:3:1}双抗，持续2回合。\n灼伤每次结算{rank:2:2}攻击力，持续3次自身行动。持续伤害无视物防和魔防。灼伤期间受到治疗降低40%。",
+      "dotRule": true,
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.5779332316,
+            1.1558664632
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            0.5779332316,
+            1.1558664632
+          ],
+          [
+            2,
+            [
+              2
+            ],
+            1.1558664632,
+            2.3117329264
+          ],
+          [
+            2,
+            [
+              3
+            ],
+            0.0,
+            0.0
+          ],
+          [
+            3,
+            [
+              1
+            ],
+            0.5160118140000001,
+            1.0320236280000001
+          ]
+        ]
+      }
+    },
+    "S_631054_6": {
+      "id": "S_631054_6",
+      "name": "烈焰吐息",
+      "info": "队长技能：先净化自身，获得生命上限129.003%的护盾，并提高38.7009%力量和129.003%双抗，护盾与属性增益均持续3回合。随后突进至当前目标处，对目标及其附近350范围内最多3名敌人造成222.9171%面板魔法伤害，向敌方方向击退200码。 释放距离：1500。",
+      "res": "S_302054_6",
+      "pl": [
+        3,
+        3,
+        1500,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "purify",
+          1,
+          "FX60_PURIFY"
+        ],
+        [
+          "hp_shield",
+          1.032023628,
+          3,
+          "FX60_STRONG"
+        ],
+        [
+          "strong",
+          0.3870088605,
+          3,
+          "FX60_STRONG"
+        ],
+        [
+          "steel",
+          1.290029535,
+          3,
+          "FX60_STEEL"
+        ],
+        [
+          "move_to_target_lane",
+          "enemy_lane_frontmost",
+          0,
+          125,
+          "FX60_GAREN_DASH"
+        ],
+        [
+          "damage",
+          2.2291710365,
+          2,
+          "FX_A_1054_MAGIC"
+        ],
+        [
+          "push_aoe",
+          350,
+          200,
+          "FX60_GAREN_DASH"
+        ]
+      ],
+      "skillUp": [
+        [
+          1,
+          1,
+          0.11466929199999999
+        ],
+        [
+          2,
+          1,
+          0.0430009845
+        ],
+        [
+          3,
+          1,
+          0.143336615
+        ],
+        [
+          5,
+          1,
+          0.24768567072222222
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self",
+        "ally_self",
+        "ally_self",
+        "ally_self",
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        4,
+        4
+      ],
+      "actionTargetGroups": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        "dragon",
+        "dragon"
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "radius": 350,
+          "sortBy": "nearest",
+          "centerActionIndex": 4
+        },
+        {
+          "radius": 350,
+          "sortBy": "nearest",
+          "centerActionIndex": 4
+        }
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            1,
+            [
+              1
+            ],
+            1.032023628,
+            2.064047256
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            0.3870088605,
+            0.774017721
+          ],
+          [
+            3,
+            [
+              1
+            ],
+            1.290029535,
+            2.58005907
+          ],
+          [
+            5,
+            [
+              1
+            ],
+            2.2291710365,
+            4.458342073
+          ]
+        ]
+      }
+    },
+    "S_641056_6": {
+      "id": "S_641056_6",
+      "name": "折翼之舞",
+      "res": "S_22551056_6",
+      "info": "每次突进至1500范围内的当前目标处，对其及附近280范围内最多2名敌人造成物理伤害。三次正常施放依次为56.55468074%、56.55468074%、98.97074326%，随后回到第一式。第二式为自身提供53.0200435%攻击力＋5.30202514%自身生命上限的护盾，持续2回合；第三式命中后眩晕1回合。 本分路内不受施法距离限制。",
+      "pl": [
+        0,
+        0,
+        1500,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "riven_n",
+          2.0,
+          "FX_A_1056_PHYSICAL"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "rankInfoTemplate": "每次突进至1500范围内的当前目标处，对其及附近280范围内最多2名敌人造成物理伤害。三次正常施放依次为{scale:0.0:56.5546945954}、{scale:0.0:56.5546945954}、{scale:0.0:98.9707155419}，随后回到第一式。第二式为自身提供{scale:0.0:53.0200261831}攻击力＋{scale:0.0:5.3020026183}自身生命上限的护盾，持续2回合；第三式命中后眩晕1回合。 本分路内不受施法距离限制。",
+      "manualDamageMultiplier": 0.44183355152627507,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 0.5522919394078438,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 0.5,
+      "rankManualDisplay104": true,
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          0.5,
+          0.05555555555555555
+        ],
+        "manualDamageMultiplier": [
+          0.44183355152627507,
+          0.04909261683625279
+        ],
+        "manualEffectMultiplier": [
+          0.5522919394078438,
+          0.06136577104531598
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": []
+      }
+    },
+    "S_651056_6": {
+      "id": "S_651056_6",
+      "name": "放逐之锋",
+      "res": "S_32551056_6",
+      "info": "先为自身提供57.99066176%力量，持续2回合；对自身前方700范围内最多3名敌人各造成169.6641115%—271.46250911%物理伤害，倍率随各目标已损失生命比例线性增加。随后将下一次普通技能设为第三式。 本分路内不受施法距离限制。",
+      "pl": [
+        2,
+        2,
+        700,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "riven_c",
+          1.0,
+          "FX_A_1056_PHYSICAL"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "manualDamageMultiplier": 1.325500654578825,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 1.6568758182235315,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 1,
+      "rankManualDisplay104": true,
+      "rankInfoTemplate": "先为自身提供{linear:57.99066176}力量，持续2回合；对自身前方700范围内最多3名敌人各造成{linear:169.6641115}—{linear:271.46250911}物理伤害，倍率随各目标已损失生命比例线性增加。随后将下一次普通技能设为第三式。 本分路内不受施法距离限制。",
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          1,
+          0.1111111111111111
+        ],
+        "manualDamageMultiplier": [
+          1.325500654578825,
+          0.14727785050875833
+        ],
+        "manualEffectMultiplier": [
+          1.6568758182235315,
+          0.18409731313594793
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": []
+      }
+    },
+    "S_621060_6": {
+      "id": "S_621060_6",
+      "name": "光束折射",
+      "info": "普通技能：远程，对当前目标及其后方距离其最近的另一名本分路敌人各造成136.661%面板魔法伤害并眩晕1回合；为本分路生命比例最低的友军提供自身攻击面板213.533%的护盾，友方目标可以是自身。没有第二名合法敌人时，只攻击主目标一次。 本分路内不受施法距离限制。",
+      "res": "S_203060_6",
+      "pl": [
+        1,
+        3,
+        600,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "damage",
+          0.922002091,
+          2,
+          "FX_A_1060_MAGIC"
+        ],
+        [
+          "stun",
+          0.0,
+          2,
+          1,
+          "FX60_STUN"
+        ],
+        [
+          "damage",
+          0.922002091,
+          2,
+          "FX_A_1060_MAGIC"
+        ],
+        [
+          "stun",
+          0.0,
+          2,
+          1,
+          "FX60_STUN"
+        ],
+        [
+          "shield",
+          1.44062826675,
+          2,
+          "FX60_SHIELD"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          1,
+          0.10244467677777777
+        ],
+        [
+          1,
+          1,
+          0.0
+        ],
+        [
+          2,
+          1,
+          0.10244467677777777
+        ],
+        [
+          3,
+          1,
+          0.0
+        ],
+        [
+          4,
+          1,
+          0.16006980741666668
+        ]
+      ],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost",
+        "enemy_lane_behind_primary_nearest",
+        "enemy_lane_frontmost",
+        "ally_lane_lowest_hp_ratio_any"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "actionTargetGroups": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        0,
+        null,
+        2,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null,
+        {
+          "centerActionIndex": 0,
+          "sortBy": "nearest",
+          "distinctFromActionIndices": [
+            0
+          ]
+        },
+        null,
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "rankInfoTemplate": "普通技能：远程，对当前目标及其后方距离其最近的另一名本分路敌人各造成{rank:0:1}面板魔法伤害并眩晕1回合；为本分路生命比例最低的友军提供自身攻击面板{rank:4:1}的护盾，友方目标可以是自身。没有第二名合法敌人时，只攻击主目标一次。 本分路内不受施法距离限制。",
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.922002091,
+            1.844004182
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            0.0,
+            0.0
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            0.922002091,
+            1.844004182
+          ],
+          [
+            3,
+            [
+              1
+            ],
+            0.0,
+            0.0
+          ],
+          [
+            4,
+            [
+              1
+            ],
+            1.44062826675,
+            2.8812565335
+          ]
+        ]
+      }
+    },
+    "S_631060_6": {
+      "id": "S_631060_6",
+      "name": "终极闪光",
+      "info": "队长技能：先为自身施加大量精准，持续1回合，再对本分路自身前方900范围内距离自己最近的最多4名敌人各造成449.476%面板魔法伤害；为本分路所有友军提供大量精准和韧性。 本分路内不受施法距离限制。",
+      "res": "S_303060_6",
+      "pl": [
+        2,
+        3,
+        3000,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "stat_flat",
+          "hit",
+          135058.9000170706,
+          1,
+          "FX_S9140_HIT"
+        ],
+        [
+          "damage",
+          4.4947601926,
+          2,
+          "FX_A_1060_MAGIC"
+        ],
+        [
+          "stat_flat",
+          "hit",
+          135058.9000170706,
+          2,
+          "FX_S9140_HIT"
+        ],
+        [
+          "stat_flat",
+          "tough",
+          13505.8900017071,
+          2,
+          "FX_S9140_FLEE"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          2,
+          15006.544446341179
+        ],
+        [
+          1,
+          1,
+          0.4994177991777778
+        ],
+        [
+          2,
+          2,
+          15006.544446341179
+        ],
+        [
+          3,
+          2,
+          1500.6544446341222
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_self",
+        "enemy_lane_frontmost",
+        "ally_lane_all",
+        "ally_lane_all"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        4,
+        -1,
+        -1
+      ],
+      "actionTargetGroups": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        {
+          "radius": 900,
+          "sortBy": "nearest",
+          "forwardOnly": true
+        },
+        null,
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            0,
+            [
+              2
+            ],
+            135058.9000170706,
+            270117.8000341412
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            4.4947601926,
+            8.9895203852
+          ],
+          [
+            2,
+            [
+              2
+            ],
+            135058.9000170706,
+            270117.8000341412
+          ],
+          [
+            3,
+            [
+              2
+            ],
+            13505.8900017071,
+            27011.7800034142
+          ]
+        ]
+      }
+    },
+    "S_621078_6": {
+      "id": "S_621078_6",
+      "name": "回旋刃",
+      "info": "普通技能：对本分路自身前方600范围内距离自己最近的最多3名敌人，去程造成76.524%面板物理伤害，返程再造成57.393%面板物理伤害。两段在一次释放内完成并锁定同一批目标；阵亡目标跳过，不补选。 本分路内不受施法距离限制。",
+      "res": "S_203078_6",
+      "pl": [
+        1,
+        2,
+        600,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "damage",
+          0.7652404585,
+          1,
+          "FX_A_1078_PHYSICAL"
+        ],
+        [
+          "damage",
+          0.5739303438500001,
+          1,
+          "FX_A_1078_PHYSICAL"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          1,
+          0.08502671761111111
+        ],
+        [
+          1,
+          1,
+          0.06377003820555556
+        ]
+      ],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        3,
+        3
+      ],
+      "actionTargetGroups": [
+        "boomerang",
+        "boomerang"
+      ],
+      "actionTargetLocks": [
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        {
+          "radius": 600,
+          "sortBy": "nearest",
+          "forwardOnly": true
+        },
+        {
+          "forwardOnly": true
+        }
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [
+        [
+          0,
+          1
+        ]
+      ],
+      "rankInfoTemplate": "普通技能：对本分路自身前方600范围内距离自己最近的最多3名敌人，去程造成{rank:0:1}面板物理伤害，返程再造成{rank:1:1}面板物理伤害。两段在一次释放内完成并锁定同一批目标；阵亡目标跳过，不补选。 本分路内不受施法距离限制。",
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.7652404585,
+            1.530480917
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            0.5739303438500001,
+            1.1478606877000002
+          ]
+        ]
+      }
+    },
+    "S_631078_6": {
+      "id": "S_631078_6",
+      "name": "弹射刃雨",
+      "info": "为本路友方英雄提供65.3892%力量和净化，持续2回合；自身获得224.1915%护盾。锁定本路主目标，连续进行3次95.6551%物理攻击。每次攻击独立判定弹射：从上一名受击者向560范围内另一名敌人传递，最多弹射3次，依次造成83.6982%、71.7413%、59.7844%物理伤害；优先尚未命中的目标，只有两个目标时可A→B→A→B。主目标阵亡后停止后续主攻击，附近无其他目标时只停止该次弹射。 本分路内不受施法距离限制。",
+      "res": "S_303078_6",
+      "pl": [
+        2,
+        3,
+        3000,
+        0,
+        0,
+        0
+      ],
+      "skill": [
+        [
+          "strong",
+          0.6538919934,
+          2,
+          "FX_S9160_STRONG"
+        ],
+        [
+          "purify",
+          2,
+          "FX_S9140_PURIFY"
+        ],
+        [
+          "shield",
+          2.2419154058,
+          2,
+          "FX_S9160_SHIELD"
+        ],
+        [
+          "ricochet_bursts",
+          3,
+          [
+            0.9565505732,
+            0.8369817515,
+            0.7174129298,
+            0.5978441082
+          ],
+          400,
+          1,
+          "FX_A_1078_PHYSICAL"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          1,
+          0.07265466593333333
+        ],
+        [
+          2,
+          1,
+          0.24910171175555554
+        ]
+      ],
+      "skillUpPaths": [
+        [
+          3,
+          [
+            2,
+            0
+          ],
+          0.10628339702222223
+        ],
+        [
+          3,
+          [
+            2,
+            1
+          ],
+          0.09299797238888889
+        ],
+        [
+          3,
+          [
+            2,
+            2
+          ],
+          0.07971254775555556
+        ],
+        [
+          3,
+          [
+            2,
+            3
+          ],
+          0.06642712313333334
+        ]
+      ],
+      "actionTargetPolicies": [
+        "ally_lane_all",
+        "ally_lane_all",
+        "ally_self",
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        -1,
+        -1,
+        1,
+        1
+      ],
+      "actionTargetGroups": [
+        "ally_all",
+        "ally_all",
+        null,
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        {
+          "heroOnly": true
+        },
+        {
+          "heroOnly": true
+        },
+        null,
+        null
+      ],
+      "damageShareGroups": [],
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.6538919934,
+            1.3077839868
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            2.2419154058,
+            4.4838308116
+          ],
+          [
+            3,
+            [
+              2,
+              0
+            ],
+            0.9565505732,
+            1.9131011464
+          ],
+          [
+            3,
+            [
+              2,
+              1
+            ],
+            0.8369817515,
+            1.673963503
+          ],
+          [
+            3,
+            [
+              2,
+              2
+            ],
+            0.7174129298,
+            1.4348258596
+          ],
+          [
+            3,
+            [
+              2,
+              3
+            ],
+            0.5978441082,
+            1.1956882164
+          ]
+        ]
+      }
+    },
+    "S_641086_6": {
+      "id": "S_641086_6",
+      "name": "新月打击",
+      "res": "S_22551086_6",
+      "info": "对本分路的当前目标及其附近350范围内最多3名敌人各造成89.90573594%魔法伤害，命中后施加自身专属的月光标记，持续目标3回合。 本分路内不受施法距离限制。",
+      "pl": [
+        1,
+        3,
+        600,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "diana_n",
+          2.0,
+          "FX_A_1086_MAGIC"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "rankInfoTemplate": "对本分路的当前目标及其附近350范围内最多3名敌人各造成{scale:0.0:89.9057359363}魔法伤害，命中后施加自身专属的月光标记，持续目标3回合。 本分路内不受施法距离限制。",
+      "manualDamageMultiplier": 0.56191084960185,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 0.7023885620023125,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 0.5,
+      "rankManualDisplay104": true,
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          0.5,
+          0.05555555555555555
+        ],
+        "manualDamageMultiplier": [
+          0.56191084960185,
+          0.06243453884465
+        ],
+        "manualEffectMultiplier": [
+          0.7023885620023125,
+          0.0780431735558125
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": []
+      }
+    },
+    "S_651086_6": {
+      "id": "S_651086_6",
+      "name": "月神降临",
+      "res": "S_32551086_6",
+      "info": "在本分路内优先选择自身月光标记目标，突进至其处，将附近420范围内最多3名敌人向自己拉近150码并造成242.74548702%魔法伤害。其中带有自己月光的目标，伤害提高至364.1182799%，命中后消耗月光；最后为自身提供168.57327956%攻击力＋16.85728847%自身生命上限的护盾，持续2回合。 本分路内不受施法距离限制。",
+      "pl": [
+        2,
+        2,
+        1500,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "diana_c",
+          1.0,
+          "FX_A_1086_MAGIC"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "manualDamageMultiplier": 1.68573254880555,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 2.1071656860069377,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 1,
+      "rankManualDisplay104": true,
+      "rankInfoTemplate": "在本分路内优先选择自身月光标记目标，突进至其处，将附近420范围内最多3名敌人向自己拉近150码并造成{linear:242.74548702}魔法伤害。其中带有自己月光的目标，伤害提高至{linear:364.1182799}，命中后消耗月光；最后为自身提供{linear:168.57327956}攻击力＋{linear:16.85728847}自身生命上限的护盾，持续2回合。 本分路内不受施法距离限制。",
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          1,
+          0.1111111111111111
+        ],
+        "manualDamageMultiplier": [
+          1.68573254880555,
+          0.18730361653395
+        ],
+        "manualEffectMultiplier": [
+          2.1071656860069377,
+          0.23412952066743753
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": []
+      }
+    },
+    "S_104109810_6": {
+      "id": "S_104109810_6",
+      "name": "荒芜",
+      "res": "S_9004_6",
+      "info": "对本路目标及其200范围内最多3名敌人造成77.284641%攻击魔法伤害；范围内只有一名敌人时，伤害翻倍。",
+      "skillUp": [],
+      "pl": [
+        1,
+        2,
+        600,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "karthus_n",
+          2.0,
+          "FX_A_1098_MAGIC"
+        ]
+      ],
+      "rankInfoTemplate": "对本路目标及其200范围内最多3名敌人造成{scale:0.0:77.284641}攻击魔法伤害；范围内只有一名敌人时，伤害翻倍。",
+      "manualDamageMultiplier": 0.55203315,
+      "manualEffectMultiplier": 0.55203315,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 0.5,
+      "rankManualDisplay104": true,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          0.5,
+          0.05555555555555555
+        ],
+        "manualDamageMultiplier": [
+          0.55203315,
+          0.06133701666666666
+        ],
+        "manualEffectMultiplier": [
+          0.55203315,
+          0.06133701666666666
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": []
+      }
+    },
+    "S_104109811_6": {
+      "id": "S_104109811_6",
+      "name": "安魂曲",
+      "res": "S_9005_6",
+      "info": "对全场敌人造成242.894586%攻击魔法伤害，生命低于40%的目标额外受到40%伤害。",
+      "skillUp": [],
+      "pl": [
+        2,
+        4,
+        9999,
+        0,
+        -1,
+        0
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "karthus_c",
+          1,
+          "FX_A_1098_MAGIC"
+        ]
+      ],
+      "manualDamageMultiplier": 1.1040663,
+      "manualEffectMultiplier": 1.1040663,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 1,
+      "rankManualDisplay104": true,
+      "rankInfoTemplate": "对全场敌人造成{linear:242.894586}攻击魔法伤害，生命低于40%的目标额外受到40%伤害。",
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          1,
+          0.1111111111111111
+        ],
+        "manualDamageMultiplier": [
+          1.1040663,
+          0.12267403333333332
+        ],
+        "manualEffectMultiplier": [
+          1.1040663,
+          0.12267403333333332
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": []
+      }
+    },
+    "S_91040004_6": {
+      "actionTargetGroups": [
+        null,
+        null,
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        null
+      ],
+      "actionTargetMaxTargets": [
+        100000,
+        1,
+        1
+      ],
+      "actionTargetPolicies": [
+        "enemy_lane_all",
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        {
+          "effectRange": 9999
+        },
+        {
+          "effectRange": 9999
+        }
+      ],
+      "damageShareGroups": [],
+      "pl": [
+        0,
+        1,
+        10000,
+        0,
+        0,
+        0
+      ],
+      "rankInfoTemplate": "对本分路所有敌人施加灼烧，每次结算{rank:0:1}施加时攻击，持续{flat:0:2}回合。\n虚空压制：小技能追加即时魔法伤害和沉默，召唤时获得生命护盾。",
+      "res": "S_201221_5",
+      "skillUp": [
+        [
+          0,
+          1,
+          0.06906095549444445
+        ],
+        [
+          1,
+          1,
+          0.03884678746666667
+        ],
+        [
+          2,
+          1,
+          0.0
+        ]
+      ],
+      "skillUpPaths": [],
+      "id": "S_91040004_6",
+      "name": "虚无烈焰",
+      "info": "对本分路所有敌人施加灼烧，每次结算62.1549%施加时攻击，持续4回合。\n虚空压制：小技能追加即时魔法伤害和沉默，召唤时获得生命护盾。",
+      "skill": [
+        [
+          "burn",
+          0.6215485994500001,
+          4,
+          "FX_S9160_POISON"
+        ],
+        [
+          "damage",
+          0.3496210872,
+          2,
+          "FX60_MAGIC"
+        ],
+        [
+          "silence",
+          0.0,
+          1,
+          1,
+          "FX60_WEAK"
+        ]
+      ],
+      "builtin_native_source_104": "S_201221_5",
+      "modPassiveTrigger": 0,
+      "builtin_pack_104": "nine",
+      "builtin_skill_key_104": "malzahar_normal",
+      "balance_mechanism_104": "虚空压制：小技能追加即时魔法伤害和沉默，召唤时获得生命护盾。",
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.6215485994500001,
+            1.2430971989000001
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            0.3496210872,
+            0.6992421744
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            0.0,
+            0.0
+          ]
+        ]
+      }
+    },
+    "S_91040006_6": {
+      "id": "S_91040006_6",
+      "name": "虚空召唤",
+      "info": "在本分路召唤1个虚灵，继承召唤瞬间40%战斗面板，存活3次自身行动，同时最多16个。\n虚空压制：小技能追加即时魔法伤害和沉默，召唤时获得生命护盾。",
+      "res": "S_91040006_6",
+      "pl": [
+        0,
+        1,
+        0,
+        0,
+        -1,
+        1
+      ],
+      "skill": [
+        [
+          "mod_step",
+          "summon",
+          "self",
+          -1,
+          0,
+          0,
+          0,
+          0,
+          "shield",
+          1,
+          0,
+          "A_2904002_5",
+          0.582701812,
+          3,
+          16,
+          false,
+          3,
+          ""
+        ],
+        [
+          "caster_hp_shield",
+          0.0699242174,
+          2,
+          "FX60_SHIELD"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          5,
+          0.0
+        ],
+        [
+          0,
+          6,
+          0.0
+        ],
+        [
+          0,
+          7,
+          0.0
+        ],
+        [
+          0,
+          12,
+          0.06474464577777778
+        ],
+        [
+          1,
+          1,
+          0.007769357488888889
+        ]
+      ],
+      "modMaxLevel": 1,
+      "modEffectSequence": 1,
+      "modCondition": {
+        "kind": "ready"
+      },
+      "modPassiveTrigger": 20,
+      "rankInfoTemplate": "在本分路召唤1个虚灵，继承召唤瞬间{rank:0:12}战斗面板，存活{flat:0:13}次自身行动，同时最多{flat:0:14}个。\n虚空压制：小技能追加即时魔法伤害和沉默，召唤时获得生命护盾。",
+      "builtin_pack_104": "nine",
+      "builtin_skill_key_104": "malzahar_captain",
+      "actionTargetPolicies": [
+        null,
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1
+      ],
+      "actionTargetLocks": [
+        null,
+        null
+      ],
+      "actionTargetGroups": [
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null
+      ],
+      "balance_mechanism_104": "虚空压制：小技能追加即时魔法伤害和沉默，召唤时获得生命护盾。",
+      "hero_output_rate_104": 0.8,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            0,
+            [
+              5
+            ],
+            0,
+            0
+          ],
+          [
+            0,
+            [
+              6
+            ],
+            0,
+            0
+          ],
+          [
+            0,
+            [
+              7
+            ],
+            0,
+            0
+          ],
+          [
+            0,
+            [
+              12
+            ],
+            0.582701812,
+            1.165403624
+          ],
+          [
+            1,
+            [
+              1
+            ],
+            0.0699242174,
+            0.1398484348
+          ]
+        ]
+      }
+    },
+    "S_641114_6": {
+      "id": "S_641114_6",
+      "name": "连锁闪电",
+      "res": "S_9000_6",
+      "info": "对本分路的当前目标造成129.34221066%魔法伤害，再依次弹向上一个目标300范围内最近、且本次尚未命中的另一名敌人，最多弹射两次，每次92.38726946%魔法伤害。本次至少命中一名敌方英雄时，获得一层风暴电荷，最多储存3层。 本分路内不受施法距离限制。",
+      "pl": [
+        0,
+        2,
+        600,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "aoxing_n",
+          2.0,
+          "FX_A_1114_MAGIC"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "rankInfoTemplate": "对本分路的当前目标造成{scale:0.0:129.3421772444}魔法伤害，再依次弹向上一个目标300范围内最近、且本次尚未命中的另一名敌人，最多弹射两次，每次{scale:0.0:92.3872694603}魔法伤害。本次至少命中一名敌方英雄时，获得一层风暴电荷，最多储存3层。 本分路内不受施法距离限制。",
+      "manualDamageMultiplier": 0.5774204341269,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 0.721775542658625,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 0.5,
+      "rankManualDisplay104": true,
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          0.5,
+          0.05555555555555555
+        ],
+        "manualDamageMultiplier": [
+          0.5774204341269,
+          0.0641578260141
+        ],
+        "manualEffectMultiplier": [
+          0.721775542658625,
+          0.080197282517625
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": []
+      }
+    },
+    "S_651114_6": {
+      "id": "S_651114_6",
+      "name": "风暴降临",
+      "res": "S_9001_6",
+      "info": "选择存活敌方英雄最多的分路，对该分路最多4名敌人各造成249.44564425%魔法伤害；每消耗一层风暴电荷，各目标倍率增加40个百分点，最多达到415.74271257%。消耗3层时，对本次选中目标中最靠前的两名英雄额外眩晕1回合。电荷在施放开始时全部消耗。",
+      "pl": [
+        2,
+        2,
+        3001,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "aoxing_c",
+          1.0,
+          "FX_A_1114_MAGIC"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "manualDamageMultiplier": 1.7322613023807,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 2.1653266279758747,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 1,
+      "rankManualDisplay104": true,
+      "rankInfoTemplate": "选择存活敌方英雄最多的分路，对该分路最多4名敌人各造成{linear:249.44564425}魔法伤害；每消耗一层风暴电荷，各目标倍率增加40个百分点，最多达到{linear:415.74271257}。消耗3层时，对本次选中目标中最靠前的两名英雄额外眩晕1回合。电荷在施放开始时全部消耗。",
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          1,
+          0.1111111111111111
+        ],
+        "manualDamageMultiplier": [
+          1.7322613023807,
+          0.1924734780423
+        ],
+        "manualEffectMultiplier": [
+          2.1653266279758747,
+          0.24059184755287497
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": []
+      }
+    },
+    "S_621127_6": {
+      "id": "S_621127_6",
+      "name": "幻影魔弹",
+      "info": "普通技能：对本分路内的当前目标造成59.2307%面板魔法伤害，随后突进至目标面前再造成76.1537%面板魔法伤害，并在第二段命中后沉默1回合；最后向己方后退250码。 本分路内不受施法距离限制。",
+      "res": "S_205127_6",
+      "pl": [
+        1,
+        3,
+        1500,
+        0,
+        1,
+        0
+      ],
+      "skill": [
+        [
+          "damage",
+          0.5923069228,
+          2,
+          "FX_A_1127_MAGIC"
+        ],
+        [
+          "move_to_target_lane",
+          "enemy_lane_frontmost",
+          0,
+          0,
+          "FX_S9002_DASH"
+        ],
+        [
+          "damage",
+          0.76153747225,
+          2,
+          "FX_A_1127_MAGIC"
+        ],
+        [
+          "silence",
+          0.0,
+          2,
+          1,
+          "FX60_SILENCE"
+        ],
+        [
+          "move_self",
+          250,
+          "FX_S9002_DASH"
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          1,
+          0.06581188031111111
+        ],
+        [
+          2,
+          1,
+          0.08461527469444445
+        ],
+        [
+          3,
+          1,
+          0.0
+        ]
+      ],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost",
+        null
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "actionTargetGroups": [
+        "leblanc_primary",
+        "leblanc_primary",
+        "leblanc_primary",
+        "leblanc_primary",
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        0,
+        0,
+        0,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "damageShareGroups": [
+        [
+          0,
+          2
+        ]
+      ],
+      "skillUpPaths": [],
+      "rankInfoTemplate": "普通技能：对本分路内的当前目标造成{rank:0:1}面板魔法伤害，随后突进至目标面前再造成{rank:2:1}面板魔法伤害，并在第二段命中后沉默1回合；最后向己方后退250码。 本分路内不受施法距离限制。",
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              1
+            ],
+            0.5923069228,
+            1.1846138456
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            0.76153747225,
+            1.5230749445
+          ],
+          [
+            3,
+            [
+              1
+            ],
+            0.0,
+            0.0
+          ]
+        ]
+      }
+    },
+    "S_631127_6": {
+      "id": "S_631127_6",
+      "name": "幻影锁链",
+      "info": "队长技能：突进至本分路内的当前目标面前，对目标及其附近250范围内最多3名敌人连续造成152.3075%面板魔法伤害2次，在目标面前留下一个面板与自身相同但是没有技能的分身，随后向己方后退400码，并为自身增加7434.94点闪避，持续2回合。 本分路内不受施法距离限制。",
+      "res": "S_305127_6",
+      "pl": [
+        3,
+        3,
+        1500,
+        0,
+        3,
+        0
+      ],
+      "skill": [
+        [
+          "move_to_target_lane",
+          "enemy_lane_frontmost",
+          0,
+          0,
+          "FX_S9002_DASH"
+        ],
+        [
+          "locked_combo_group",
+          4,
+          2,
+          1.5230749445,
+          2,
+          0.0,
+          "FX_A_1127_MAGIC"
+        ],
+        [
+          "summon",
+          1.0,
+          "A_1127_6",
+          3,
+          "SUMMON_EFF"
+        ],
+        [
+          "move_self",
+          400,
+          "FX_S9002_DASH"
+        ],
+        [
+          "stat_flat",
+          "flee",
+          7932.6820026909,
+          2,
+          "FX_S9140_FLEE"
+        ]
+      ],
+      "skillUp": [
+        [
+          1,
+          3,
+          0.1692305493888889
+        ],
+        [
+          1,
+          5,
+          0.0
+        ],
+        [
+          2,
+          1,
+          0.1111111111111111
+        ],
+        [
+          4,
+          2,
+          881.4091114101
+        ]
+      ],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost",
+        "enemy_lane_around_primary_300",
+        "enemy_lane_frontmost",
+        "ally_self",
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        4,
+        1,
+        1,
+        1
+      ],
+      "actionTargetGroups": [
+        "leblanc_target",
+        "leblanc_area",
+        null,
+        null,
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        null,
+        0,
+        null,
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        {
+          "centerActionIndex": 0,
+          "laneFilter": "same_as_center",
+          "radius": 250,
+          "sortBy": "nearest"
+        },
+        {
+          "centerActionIndex": 0,
+          "useLastPosition": true
+        },
+        null,
+        null
+      ],
+      "manualSummonPolicy": {
+        "skillId": "S_631127_6",
+        "unitId": "A_1127_6",
+        "familyKey": "manual-1127-clone",
+        "maxAlive": 1,
+        "apRatio": 1.0,
+        "hpRatio": 1.0,
+        "dePhRatio": 1.0,
+        "deMaRatio": 1.0,
+        "attackRange": 0,
+        "clearSkills": true,
+        "actionType": 1,
+        "replaceOldest": true,
+        "ttlOwnerTurns": 3
+      },
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "captainSummonMultiplier": 1.9831705006727252,
+      "rankInfoTemplate": "队长技能：突进至本分路内的当前目标面前，对目标及其附近250范围内最多3名敌人连续造成152.3075%面板魔法伤害2次，在目标面前留下一个面板与自身相同但是没有技能的分身，随后向己方后退400码，并为自身增加{flat:4:2}点闪避，持续2回合。 本分路内不受施法距离限制。",
+      "hero_output_rate_104": 0.8,
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            1,
+            [
+              3
+            ],
+            1.5230749445,
+            3.046149889
+          ],
+          [
+            1,
+            [
+              5
+            ],
+            0.0,
+            0.0
+          ],
+          [
+            2,
+            [
+              1
+            ],
+            1.0,
+            2.0
+          ],
+          [
+            4,
+            [
+              2
+            ],
+            7932.6820026909,
+            15865.3640053818
+          ]
+        ]
+      }
+    },
+    "S_985120310_6": {
+      "id": "S_985120310_6",
+      "name": "血契烙印",
+      "res": "S_201203_6",
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "skin2_1203_0",
+          1,
+          "FX60_MAGIC",
+          1.1666777428500001,
+          0.53030806485
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          4,
+          0.12963086031666668
+        ],
+        [
+          0,
+          5,
+          0.05892311831666667
+        ]
+      ],
+      "info": "诅咒本路前排2回合，造成116.7%攻击魔伤；若目标在施放前已被本人诅咒，额外恢复自身53.0%攻击生命。",
+      "rankInfoTemplate": "诅咒本路前排2回合，造成{rank:0:4}攻击魔伤；若目标在施放前已被本人诅咒，额外恢复自身{rank:0:5}攻击生命。",
+      "calibration_104": true,
+      "skin_revision_v2_104": 1203,
+      "skin_v2_keys": [
+        "hit",
+        "heal"
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "hero_output_rate_104": 0.8,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              4
+            ],
+            1.1666777428500001,
+            2.3333554857000003
+          ],
+          [
+            0,
+            [
+              5
+            ],
+            0.53030806485,
+            1.0606161297
+          ]
+        ]
+      }
+    },
+    "S_985120311_6": {
+      "id": "S_985120311_6",
+      "name": "地狱领地",
+      "res": "S_301203_6",
+      "pl": [
+        2,
+        4,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "skin2_1203_1",
+          1,
+          "FX60_MAGIC",
+          3.818218068,
+          0.1590924195
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          4,
+          0.424246452
+        ],
+        [
+          0,
+          5,
+          0.0176769355
+        ]
+      ],
+      "info": "对本路敌人造成381.8%攻击魔伤并诅咒2回合；自己获得当前最大生命15%的护盾2回合。",
+      "rankInfoTemplate": "对本路敌人造成{rank:0:4}攻击魔伤并诅咒2回合；自己获得当前最大生命{rank:0:5}的护盾2回合。",
+      "calibration_104": true,
+      "skin_revision_v2_104": 1203,
+      "skin_v2_keys": [
+        "hit",
+        "hpShield"
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "hero_output_rate_104": 0.8,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            0,
+            [
+              4
+            ],
+            3.818218068,
+            7.636436136
+          ],
+          [
+            0,
+            [
+              5
+            ],
+            0.1590924195,
+            0.318184839
+          ]
+        ]
+      }
+    },
+    "S_985120313_6": {
+      "id": "S_985120313_6",
+      "name": "男爵之躯",
+      "res": "S_401203_6",
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "skin2_1203_2",
+          1,
+          "FX60_MAGIC",
+          0.04,
+          0.05
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          4,
+          0.0044444444444444444
+        ],
+        [
+          0,
+          5,
+          0.005555555555555556
+        ]
+      ],
+      "info": "每次自身行动开始，本路仍有本人诅咒的敌方英雄存活时，永久增加入场攻击的4%、入场最大生命的5%，本场最多增加40%攻击、50%生命；生命上限增加时补充相同生命。只按自身行动判断一次，敌人数量不加速，获得的成长不被大招消耗。",
+      "rankInfoTemplate": "每次自身行动开始，本路仍有本人诅咒的敌方英雄存活时，永久增加入场攻击的{rank:0:4}、入场最大生命的{rank:0:5}，本场最多叠加10次；生命上限增加时补充相同生命。只按自身行动判断一次，敌人数量不加速，获得的成长不被大招消耗。",
+      "calibration_104": true,
+      "skin_revision_v2_104": 1203,
+      "skin_v2_keys": [
+        "attackGrowth",
+        "hpGrowth"
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "hero_output_rate_104": 0.8,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 13,
+        "magnitudes": [
+          [
+            0,
+            [
+              4
+            ],
+            0.04,
+            0.08
+          ],
+          [
+            0,
+            [
+              5
+            ],
+            0.05,
+            0.1
+          ]
+        ]
+      }
+    },
+    "S_641205_6": {
+      "id": "S_641205_6",
+      "name": "扭曲突刺",
+      "res": "S_2061205_6",
+      "info": "突进至1500范围内的当前目标面前，造成189.25633591%魔法伤害并根缚1回合；自身获得树液状态，持续2回合。期间下一次承受敌方英雄主动技能的有效生命伤害，且整次技能结束后仍存活时，回复94.62816796%攻击力＋9.46279832%自身生命上限的生命，随后消耗树液。 释放距离：1500。",
+      "pl": [
+        0,
+        2,
+        1500,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "maokai_n",
+          2.0,
+          "FX_A_1205_MAGIC"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "rankInfoTemplate": "突进至1500范围内的当前目标面前，造成{scale:0.0:189.2563359158}魔法伤害并根缚1回合；自身获得树液状态，持续2回合。期间下一次承受敌方英雄主动技能的有效生命伤害，且整次技能结束后仍存活时，回复{scale:0.0:94.6281679579}攻击力＋{scale:0.0:9.4628167958}自身生命上限的生命，随后消耗树液。 释放距离：1500。",
+      "manualDamageMultiplier": 1.18285209947352,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 0.9857100828946,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 0.5,
+      "rankManualDisplay104": true,
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          0.5,
+          0.05555555555555555
+        ],
+        "manualDamageMultiplier": [
+          1.18285209947352,
+          0.13142801105261334
+        ],
+        "manualEffectMultiplier": [
+          0.9857100828946,
+          0.10952334254384445
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": []
+      }
+    },
+    "S_651205_6": {
+      "id": "S_651205_6",
+      "name": "自然之握",
+      "res": "S_3061205_6",
+      "info": "对自身前方700范围内最多3名敌人各造成510.99212545%魔法伤害并根缚2回合；为自身提供生命上限47.31408398%的护盾，持续2回合。",
+      "pl": [
+        1,
+        2,
+        700,
+        0,
+        0,
+        1
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "maokai_c",
+          1.0,
+          "FX_A_1205_MAGIC"
+        ]
+      ],
+      "skillUp": [],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "actionTargetGroups": [
+        null
+      ],
+      "actionTargetLocks": [
+        null
+      ],
+      "actionTargetPolicyArgs": [
+        null
+      ],
+      "skillUpPaths": [],
+      "damageShareGroups": [],
+      "manualDamageMultiplier": 3.54855629842056,
+      "manualDefenseBuffMultiplier": 2.0,
+      "manualEffectMultiplier": 2.9571302486838005,
+      "hero_output_rate_104": 0.8,
+      "manualFixedScale104": 1,
+      "rankManualDisplay104": true,
+      "rankInfoTemplate": "对自身前方700范围内最多3名敌人各造成{linear:510.99212545}魔法伤害并根缚2回合；为自身提供生命上限{linear:47.31408398}的护盾，持续2回合。",
+      "rankSettingGrowth104": {
+        "manualFixedScale104": [
+          1,
+          0.1111111111111111
+        ],
+        "manualDamageMultiplier": [
+          3.54855629842056,
+          0.39428403315784
+        ],
+        "manualEffectMultiplier": [
+          2.9571302486838005,
+          0.32857002763153337
+        ]
+      },
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": []
+      }
+    },
+    "S_985121110_6": {
+      "id": "S_985121110_6",
+      "name": "通缉射击",
+      "res": "S_201211_6",
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "skin2_1211_0",
+          1,
+          "FX60_MAGIC",
+          1.11167984225,
+          0.125
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          4,
+          0.12351998247222223
+        ],
+        [
+          0,
+          5,
+          0.013888888888888888
+        ]
+      ],
+      "info": "攻击本路攻击最高敌人，造成111.2%攻击物伤并使其暴露1回合。暴露期间本人对其的技能伤害无视25%物防；此标记不叠层。",
+      "rankInfoTemplate": "攻击本路攻击最高敌人，造成{rank:0:4}攻击物伤并使其暴露1回合。暴露期间本人对其的技能伤害无视{rank:0:5}物防；此标记不叠层。",
+      "calibration_104": true,
+      "skin_revision_v2_104": 1211,
+      "skin_v2_keys": [
+        "hit",
+        "penetration"
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "hero_output_rate_104": 0.8,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 10,
+        "magnitudes": [
+          [
+            0,
+            [
+              4
+            ],
+            1.11167984225,
+            2.2233596845
+          ],
+          [
+            0,
+            [
+              5
+            ],
+            0.125,
+            0.25
+          ]
+        ]
+      }
+    },
+    "S_985121111_6": {
+      "id": "S_985121111_6",
+      "name": "落日处决",
+      "res": "S_301211_6",
+      "pl": [
+        1,
+        3,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "skin2_1211_1",
+          1,
+          "FX60_MAGIC",
+          5.161370695
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          4,
+          0.5734856327777778
+        ]
+      ],
+      "info": "狙击全场暴露目标中生命比例最低者，造成516.1%攻击物伤；没有暴露目标时，选择本路生命比例最低者。",
+      "rankInfoTemplate": "狙击全场暴露目标中生命比例最低者，造成{rank:0:4}攻击物伤；没有暴露目标时，选择本路生命比例最低者。",
+      "calibration_104": true,
+      "skin_revision_v2_104": 1211,
+      "skin_v2_keys": [
+        "hit"
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "hero_output_rate_104": 0.8,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 11,
+        "magnitudes": [
+          [
+            0,
+            [
+              4
+            ],
+            5.161370695,
+            10.32274139
+          ]
+        ]
+      }
+    },
+    "S_985121113_6": {
+      "id": "S_985121113_6",
+      "name": "伏击阵地",
+      "res": "S_401211_6",
+      "pl": [
+        0,
+        0,
+        3001,
+        0,
+        0,
+        0
+      ],
+      "skill": [
+        [
+          "manual_ability",
+          "skin2_1211_2",
+          1,
+          "FX60_MAGIC",
+          1.746925466
+        ]
+      ],
+      "skillUp": [
+        [
+          0,
+          4,
+          0.19410282955555555
+        ]
+      ],
+      "info": "每次本人小技能完成，在自身前方放置一枚捕兽夹，最多一枚；敌方英雄主动位移进入自身300范围，或原已在范围内并开始行动时触发，定身1回合，并遭到一次174.7%攻击爆头。处决击杀英雄时，大招剩余冷却减少1回合，每次施放最多一次。",
+      "rankInfoTemplate": "每次本人小技能完成，在自身前方放置一枚捕兽夹，最多一枚；敌方英雄主动位移进入自身300范围，或原已在范围内并开始行动时触发，定身1回合，并遭到一次{rank:0:4}攻击爆头。处决击杀英雄时，大招剩余冷却减少1回合，每次施放最多一次。",
+      "calibration_104": true,
+      "skin_revision_v2_104": 1211,
+      "skin_v2_keys": [
+        "hit"
+      ],
+      "actionTargetPolicies": [
+        "ally_self"
+      ],
+      "actionTargetMaxTargets": [
+        1
+      ],
+      "hero_output_rate_104": 0.8,
+      "skillUpPaths": [],
+      "rankSettingGrowth104": {},
+      "rankGrowth104": {
+        "schema": "hero-linear-rank-104-v1",
+        "slot": 13,
+        "magnitudes": [
+          [
+            0,
+            [
+              4
+            ],
+            1.746925466,
+            3.493850932
+          ]
+        ]
+      }
+    },
+    "S_91040005_5": {
+      "actionTargetGroups": [
+        null,
+        null
+      ],
+      "actionTargetLocks": [
+        null,
+        0
+      ],
+      "actionTargetMaxTargets": [
+        1,
+        1
+      ],
+      "actionTargetPolicies": [
+        "enemy_lane_frontmost",
+        "enemy_lane_frontmost"
+      ],
+      "actionTargetPolicyArgs": [
+        null,
+        null
+      ],
+      "damageShareGroups": [],
+      "dotRule": true,
+      "pl": [
+        0,
+        0,
+        600,
+        0,
+        0,
+        0
+      ],
+      "rankInfoTemplate": "对本分路当前敌人施加{rank:0:1}攻击灼烧{flat:0:2}回合，造成{rank:1:1}攻击魔法伤害并施加{rank:1:3}攻击中毒{flat:1:4}回合。",
+      "res": "S_201209_4",
+      "skillUp": null,
+      "skillUpPaths": [],
+      "id": "S_91040005_5",
+      "name": "虚灵：灼烧与中毒",
+      "info": "对本分路当前敌人施加42.6667%攻击灼烧4回合，造成5.3333%攻击魔法伤害并施加106.6667%攻击中毒3回合。",
+      "skill": [
+        [
+          "burn",
+          0.4266666666,
+          4,
+          "FX_S9160_POISON"
+        ],
+        [
+          "poison",
+          0.0533333334,
+          2,
+          1.0666666666,
+          3,
+          "FX_S9140_POISON"
+        ]
+      ],
+      "builtin_native_source_104": "S_201209_4",
+      "modPassiveTrigger": 0,
+      "builtin_pack_104": "nine",
+      "builtin_skill_key_104": "voidling_normal",
+      "hero_output_rate_104": 0.8
+    }
+  }
+}

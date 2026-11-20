@@ -13,7 +13,8 @@ ROOT=Path(__file__).resolve().parents[1]
 class AnnieReactionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        with patch('annie_reaction_105.apply_annie_reaction',lambda d:d):
+        with patch('annie_reaction_105.apply_annie_reaction',lambda d:d), \
+             patch('hero_passive_quality_105.restrict_low_star_passives'):
             cls.before=load_game_config(ROOT/'config/reconstruction/full-config.json')['cfg']
         cls.cfg=load_game_config(ROOT/'config/reconstruction/full-config.json')['cfg']
 
@@ -44,7 +45,10 @@ class AnnieReactionTests(unittest.TestCase):
                 self.assertEqual(row['annie_companion_105']['keys'],old['skin_v2_keys'])
                 self.assertIn('提伯斯每完成',row['info'])
                 self.assertIn('受到敌方主动伤害',row['rankInfoTemplate'])
-                self.assertNotIn('提伯斯每完成',c['skill'][c['avatar'][aid]['pl'][13]]['info'])
+                if quality == 6:
+                    self.assertNotIn('提伯斯每完成',c['skill'][c['avatar'][aid]['pl'][13]]['info'])
+                else:
+                    self.assertIsNone(c['avatar'][aid]['pl'][13])
                 for level in (1,10):
                     before=_native_skill_snapshot(self.before,sid,level)
                     after=_native_skill_snapshot(c,sid,level)

@@ -203,15 +203,15 @@ def build_static_config(path):
 
 
 def load_game_config(path, now=None, *, prepared_metadata=None):
- """Load the shared baseline, then apply the current game calendar."""
+ """Build authoring inputs from source, or load verified runtime tables and their metadata."""
  from prepared_config import read_prepared
  if now is None: now=int(time.time())
- prepared=read_prepared(path)
+ prepared=read_prepared(path) if prepared_metadata is not None else None
  if prepared is None:
   document=build_static_config(path)
  else:
   document=prepared['document']
-  if prepared_metadata is not None:prepared_metadata['arena']=prepared['arena']
+  prepared_metadata['arena']=prepared['arena']
  apply_check_in_rewards(document,int(game_day(now)[:4]))
  from activity_windows_105 import apply_activity_windows_105
  apply_activity_windows_105(document,now)

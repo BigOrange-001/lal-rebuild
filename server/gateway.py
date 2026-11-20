@@ -190,6 +190,8 @@ def load_game_config(path, now=None):
  apply_abyss_config(document,abyss_placeholders)
  from abyss_relics import apply_relic_config
  apply_relic_config(document)
+ from attack_range_105 import apply_attack_ranges
+ apply_attack_ranges(document)
  apply_check_in_rewards(document,int(game_day(now)[:4]))
  from game_calendar import apply_daily_reset_config
  apply_daily_reset_config(document)

@@ -2160,7 +2160,7 @@ package com.meng52.game.module.avatar
             var unit:Avatar = new Avatar(GlobalData.modDefinitionId(clone ? avatarData.id : aid,"summoned"),{lv:lv,slv:1});
             unit.goFight(team,line,0,false);
             if(!unit.inheritSummonPanel(this,ratio)) return;
-            unit.speed = 220; unit.range = 125; unit.skill0 = null; unit.skill1 = null; unit.skill2 = null; unit.skillB = null;
+            unit.speed = 220; unit.range = 350; unit.skill0 = null; unit.skill1 = null; unit.skill2 = null; unit.skillB = null;
             unit.manualActionTypeOverride = 1;
             unit.addBuff("summon",turns);
             if(clone) unit.addBuff("taunt",1);
@@ -7977,8 +7977,11 @@ package com.meng52.game.module.avatar
          var _loc3_:int = 0;
          var _loc2_:* = null;
          if(GameMap.currentMap && !initializingFightAttributes && hpMax && skillB && sixBatchKayleStage105()>0) return 3000;
-         if(isFinite(manualAttackRangeOverride) && manualAttackRangeOverride > 0) return int(manualAttackRangeOverride);
-         if(hpMax)
+         if(isFinite(manualAttackRangeOverride) && manualAttackRangeOverride > 0)
+         {
+            _loc3_ = int(manualAttackRangeOverride);
+         }
+         else if(hpMax)
          {
             _loc3_ = range;
          }
@@ -7992,6 +7995,12 @@ package com.meng52.game.module.avatar
                   _loc3_ += _loc2_.getRange();
                }
             }
+         }
+         // Front lines cannot move closer than MIN_SPACE_POS. Apply the
+         // summon floor after policy overrides and keep zero-range units inert.
+         if(_loc3_ > 0 && this.isManualSummonUnit && !abilityState.sixBatchSand105)
+         {
+            return Math.max(_loc3_,350,GameMapConfig.MIN_SPACE_POS);
          }
          return _loc3_;
       }

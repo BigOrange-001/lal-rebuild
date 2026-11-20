@@ -17,7 +17,7 @@ NODE = shutil.which('node')
 
 
 def method_body(source, name):
-    signature = re.search(r'function\s+' + re.escape(name) + r'\s*\([^)]*\)\s*:\s*(?:\w+|\*)\s*\{', source)
+    signature = re.search(r'function\s+' + re.escape(name) + r'\s*\([^)]*\)\s*:\s*(?:Vector\.<\w+>|\w+|\*)\s*\{', source)
     if signature is None:
         raise ValueError(f'Missing Avatar method: {name}')
     start = signature.end()
@@ -82,7 +82,7 @@ const unit = {
   avatarData: {skill_diff: 18}, buffs: options.guarded ? {stun: {}} : {},
   skill0: null, skill1: null, skill2: null, skillB: passive,
   fightRes: {parent: null},
-  advanceManualOwnerAction: noop, getScale() { return 1; },
+  advanceManualOwnerAction: noop, kaisaTryCaptain104: noop, getScale() { return 1; },
   emitModEvent: noop,
   refreshIcon: noop, getTeamHp: noop, abilityTurnStart() { return false; },
   checkBuff() { return false; }, getEffectiveActionType() { return 2; },

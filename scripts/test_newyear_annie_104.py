@@ -62,6 +62,17 @@ class NewYearAnnieTests(unittest.TestCase):
         self.assertIsNone(pet['leader_skill'])
         self.assertIsNone(pet['skillB'])
         self.assertAlmostEqual(pet['hp_max'],int(owner['hp_max']*.77))
+
+        # Test legal formation distances: the summon cannot overlap the enemy.
+        enemy=battle.b[0]
+        enemy['hp']=enemy['hp_max']
+        self.assertEqual(abs(pet['pos']-enemy['pos']),battle._MIN_SPACE_POS)
+        self.assertEqual(battle._get_range(pet),350)
+        before=enemy['hp']
+        with patch.object(battle,'_roll_attack',return_value=1):
+            battle._run_unit_turn(pet,{1:battle.a,2:battle.b},1)
+        self.assertLess(enemy['hp'],before)
+
         self.assertIs(cast(),pet)
         pet['hp']=0
         new=cast()

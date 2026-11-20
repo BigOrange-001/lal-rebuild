@@ -61,7 +61,10 @@ class SummonPanelTests(unittest.TestCase):
         context={'targets':{}}
         action=next(a for a in skill['skills'] if a[0]=='summon')
         battle._act_summon(owner,[],battle.a,skill,action,0,context)
-        self.assertEqual(context['targets'][0]['ap'],int(int(1788*action[1])*skill['captainSummonMultiplier']))
+        bear=context['targets'][0]
+        self.assertEqual(bear['ap'],int(int(1788*action[1])*skill['captainSummonMultiplier']))
+        self.assertEqual(battle._get_range(bear),350)
+        self.assertIsNone(bear['skill'])
         clone=_native_skill_snapshot(self.config,'S_631132_5')
         battle._act_clone_normal(owner,[],battle.a,clone,clone['skills'][0],0,context)
         self.assertEqual(context['targets'][0]['ap'],2145)

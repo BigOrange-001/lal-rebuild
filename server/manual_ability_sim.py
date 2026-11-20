@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 from contextlib import contextmanager
 
+from attack_range_105 import MIN_ATTACK_RANGE
 from battle_engine import ReferenceBattle, _to_int
 from dragonmancer_kaisa_sim import KaisaBattleMixin
 from nightbringer_yasuo_sim import YasuoBattleMixin
@@ -203,12 +204,13 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         state=self.state(owner)
         for old in state.get('summons_'+key,[]):old['hp']=0;self.death(old)
         units=[]
+        team=self._team_number(owner)
         for i in range(count):
             unit=self._spawn_summon(owner,owner['aid'] if clone else aid,ratio,turns)
             if unit is None:raise ValueError(f'Missing manual summon template: {aid}')
-            unit['skill']=unit['leader_skill']=unit['skillB']=None
-            unit.update(speed=220,range=125,manualActionTypeOverride=1)
-            unit['pos']=max(0,min(self._LINE_POS,owner['pos']+(-1 if self._team_number(owner)==1 else 1)*(125+100*i)))
+            unit.update(skill=None,leader_skill=None,book_skill=None,skillB=None)
+            unit.update(speed=220,range=MIN_ATTACK_RANGE,manualActionTypeOverride=1)
+            unit['pos']=self._get_final_pos(team,unit['line'],owner['pos']+(-1 if team==1 else 1)*(125+100*i))
             if clone:self._add_buff(unit,'taunt',1,0)
             if focus:unit['_ability_focus']=focus
             self.state(unit);units.append(unit)
@@ -945,14 +947,23 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         if self._buff(attacker,'stun'):return True
         enemies=self.opponents(attacker)
         if not enemies:return False
+        summoned=self._buff(attacker,'summon') is not None
+        nearby_enemies=enemies
+        if summoned:
+            nearby_enemies=[u for u in enemies if u['line']==attacker['line']]
+            if not nearby_enemies:return True
         focus=attacker.get('_ability_focus')
         if self.kaisa_is(attacker) and not self.kaisa_lane(attacker,attacker['line']):return True
         if self.yasuo_is(attacker) and not self.yasuo_lane(attacker):return True
-        target=focus if focus and focus.get('hp',0)>0 else min(enemies,key=lambda u:(u['line']!=attacker['line'],abs(u['pos']-attacker['pos']),self.state(u)['index']))
+        if not summoned and focus and focus.get('hp',0)>0:
+            target=focus
+        else:
+            target=min(nearby_enemies,key=lambda u:(u['line']!=attacker['line'],
+                                                    abs(u['pos']-attacker['pos']),self.state(u)['index']))
         # Close into the actual native attack/cast range before trying melee
         # abilities. The old study attacked across the map without moving.
         if target['line']!=attacker['line']:self._reline(attacker,target['line'],attacker['pos'])
-        action_type=(attacker.get('tpl') or [0,1])[1]
+        action_type=self._get_action_type(attacker)
         if abs(target['pos']-attacker['pos'])>self._get_range(attacker) and action_type!=3:
             self._check_move(attacker,True)
         acted=False
@@ -960,6 +971,16 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
             for slot,cd in (('book_skill','_skill_cd_book'),('skill','_skill_cd')):
                 acted=self._use_skill_slot(attacker,enemies,slot,cd) or acted
         if attacker.get('leader'):acted=self._use_skill_slot(attacker,enemies,'leader_skill','_skill_cd_leader') or acted
-        if not acted and target.get('hp',0)>0 and abs(target['pos']-attacker['pos'])<=self._get_range(attacker):
-            self._basic_attack(attacker,target)
+        if not acted:
+            reach=self._get_range(attacker)
+            if summoned:
+                targets=self._find_aim_list(attacker,enemies,reach)
+                if targets:
+                    target=min(targets,key=lambda u:(u is not focus,abs(u['pos']-attacker['pos']),
+                                                     self.state(u)['index']))
+                    self._basic_attack(attacker,target)
+                    if target is focus:
+                        attacker.pop('_ability_focus',None)
+            elif target.get('hp',0)>0 and abs(target['pos']-attacker['pos'])<=reach:
+                self._basic_attack(attacker,target)
         return True

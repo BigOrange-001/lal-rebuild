@@ -7,6 +7,7 @@ offline tuning. It does not claim bit-for-bit ActionScript parity.
 import copy
 import math
 from contextlib import nullcontext
+from attack_range_105 import MIN_ATTACK_RANGE
 from combat_math import (level_stats, defense_damage, damage_before_final, to_int, opposed_power,
                          precision_recovery, roll_percent, crit_chance, miss_chance, critical_multiplier)
 from combat_rules import attack_parameters, ratio_enabled
@@ -629,7 +630,7 @@ class ReferenceBattle:
         else:
             hit, flee = max(0, self._get_hit(attacker)), max(0, self._get_flee(target))
             critical, tough = max(0, self._get_crit(attacker)), max(0, self._get_tough(target))
-        if (target.get('tpl') or [0, 0])[1] != 3 and roll_percent(self.rng, miss_chance(hit, flee, attack, rules), rules):
+        if self._get_action_type(target) != 3 and roll_percent(self.rng, miss_chance(hit, flee, attack, rules), rules):
             self._emit_mod_event(attacker, 'miss', attacker, target)
             self._emit_mod_event(target, 'dodge', attacker, target)
             return 0
@@ -1180,8 +1181,22 @@ class ReferenceBattle:
             return False
         return base_aid(self._config, unit.get("aid", "")).find("A_1041_") != 0
 
+    @staticmethod
+    def _get_action_type(unit):
+        override = unit.get("manualActionTypeOverride")
+        if override in (1, 2, 3, 4):
+            return override
+        tpl = unit.get("tpl") or ()
+        return tpl[1] if len(tpl) > 1 else 1
+
     def _get_range(self, unit):
-        """137_Avatar.as:3497 getRange(false)."""
+        """Effective normal attack reach, matching Avatar.getRange(false)."""
+        reach = self._get_raw_attack_range(unit)
+        if reach > 0 and self._buff(unit, "summon") is not None:
+            return max(reach, MIN_ATTACK_RANGE, self._MIN_SPACE_POS)
+        return reach
+
+    def _get_raw_attack_range(self, unit):
         override = unit.get("manual_attack_range")
         if isinstance(override, (int, float)) and not isinstance(override, bool) \
                 and math.isfinite(float(override)) and float(override) > 0:
@@ -1329,9 +1344,7 @@ class ReferenceBattle:
         for unit in alive:
             if line_filter != -1 and int(unit.get("line", -1)) != line_filter:
                 continue
-            # Avatar.getEffectiveActionType() is serialized as tpl[1].  tpl[0]
-            # is the role/action category and must not control banStand.
-            if ban_stand and int(unit.get("tpl", [0, 0, 0, 0, 0])[1] if unit.get("tpl") else 0) == 3:
+            if ban_stand and self._get_action_type(unit) == 3:
                 continue
             if abs(_to_int(unit.get("pos", 0)) - apos) <= reach:
                 out.append(unit)
@@ -2620,7 +2633,9 @@ class ReferenceBattle:
             return
         ratios = None
         policy = skill.get("manualSummonPolicy")
-        if isinstance(policy, dict) and policy.get("skillId") == skill_id and policy.get("unitId") == aid:
+        if not isinstance(policy, dict) or policy.get("skillId") != skill_id or policy.get("unitId") != aid:
+            policy = None
+        if policy:
             base_ratio = policy.get("apRatio")
             if not isinstance(base_ratio, (int, float)) or not math.isfinite(base_ratio) or base_ratio <= 0:
                 return
@@ -2634,6 +2649,13 @@ class ReferenceBattle:
                                    ap_factor=self._summon_ap_factor(skill_id),
                                    stat_ratios=ratios, extra_multiplier=extra)
         if clone is not None:
+            if policy:
+                if policy.get("clearSkills") is True:
+                    clone.update(skill=None, leader_skill=None, book_skill=None, skillB=None)
+                if policy.get("actionType") in (1, 2, 4):
+                    clone["manualActionTypeOverride"] = policy["actionType"]
+                if isinstance(policy.get("attackRange"), (int, float)) and policy["attackRange"] > 0:
+                    clone["manual_attack_range"] = policy["attackRange"]
             context["targets"][index] = clone
 
     @staticmethod
@@ -3274,9 +3296,21 @@ class ReferenceBattle:
         if attacker.get("leader"):
             acted = self._use_skill_slot(attacker, enemies, "leader_skill", "_skill_cd_leader") or acted
         if not acted:
+            summoned = self._buff(attacker, "summon") is not None
+            reach = self._get_range(attacker) if summoned else None
+            if summoned:
+                enemies = [unit for unit in enemies if unit["hp"] > 0 and
+                           (reach > self._LINE_POS or unit.get("line") == attacker.get("line"))]
+                if not enemies:
+                    return True
             target = min(enemies, key=lambda x: (x.get("line") != attacker.get("line"),
                                                   abs(float(x.get("pos", 0)) - float(attacker.get("pos", 0))),
                                                   x["hp"]))
+            if summoned:
+                if abs(target["pos"] - attacker["pos"]) > reach and self._get_action_type(attacker) != 3:
+                    self._check_move(attacker, True)
+                if reach <= 0 or abs(target["pos"] - attacker["pos"]) > reach:
+                    return True
             if self.rng.get_random(100) < 80:
                 self._basic_attack(attacker, target)
         return True

@@ -6,6 +6,7 @@ import sys
 import unittest
 
 from test_avatar_passive import NODE, ROOT, method_body
+from test_summon_panel_103_client import translated
 
 sys.path.insert(0, str(ROOT / 'server'))
 from battle_engine import ReferenceBattle
@@ -26,7 +27,8 @@ const context=vm.createContext({Math,Number,Tween,
 for(const unit of units){
  Object.assign(unit,{abilityState:{},formationOwner:null,offset:0,rangeMoveEndsAt:0,
   fightRes:{parent:{setFirst:noop}},
-  getSpeed(){return this.speed;},getScale(){return 1;},resBounce:noop});
+  getSpeed(){return this.speed;},getScale(){return 1;},resBounce:noop,
+  s2LiveMark:()=>false,skin2Moved:noop});
  for(const [name,body] of Object.entries(input.methods)){
   const params=name==='checkMove'?'param1,param2=0,param3=null,param4=-1,param5=false,param6=null':'targetPos';
   unit[name]=vm.runInContext('(function('+params+'){with(this){'+body+'\n}})',context);
@@ -38,6 +40,42 @@ for(const op of input.ops){
  else {context.GameMap.currentAvatar=units[op.unit];units[op.unit].checkMove(op.forward,op.distance||0,null,-1,!!op.forced);}
 }
 process.stdout.write(JSON.stringify(units.map(u=>u.pos)));
+'''
+
+
+ATTACK_HARNESS = r'''
+const methods=JSON.parse(require('node:fs').readFileSync(0,'utf8'));
+const GameMapConfig={MIN_SPACE_POS:200,LINE_POS:3000}, int=Math.trunc;
+const attach=(obj,name,params='')=>obj[name]=eval('(function('+params+'){with(this){'+methods[name]+'}})');
+const map={alive1List:[],alive2List:[]};
+attach(map,'getForwardPos','param1,param2');
+attach(map,'getFinalPos','param1,param2,param3');
+const result=[];
+for (const team of [1,2]) {
+    const direction=team===1?1:-1;
+    const enemy={line:1,pos:1500,hp:100};
+    map.alive1List=team===1?[]:[enemy];
+    map.alive2List=team===2?[]:[enemy];
+    const actor={line:1,pos:map.getFinalPos(team,1,enemy.pos),hpMax:100,
+                 range:125,manualAttackRangeOverride:NaN,isManualSummonUnit:true};
+    attach(actor,'getRange','param1=false');
+    attach(actor,'findAimList','param1,param2=null,param3=-1,param4=false');
+    const hits=(reach=-1)=>actor.findAimList([enemy],null,reach).length;
+    const closest=[Math.abs(actor.pos-enemy.pos),hits(),hits(125)];
+    actor.pos=enemy.pos+350*direction;
+    actor.manualAttackRangeOverride=175;
+    const at350=hits();
+    actor.pos+=direction;
+    const outside=hits();
+    actor.manualAttackRangeOverride=600;
+    const ranged=hits();
+    enemy.line=2;
+    const crossLane=hits();
+    actor.range=0;
+    actor.manualAttackRangeOverride=NaN;
+    result.push([...closest,at350,outside,ranged,crossLane,actor.getRange()]);
+}
+process.stdout.write(JSON.stringify(result));
 '''
 
 
@@ -94,6 +132,16 @@ class ClientSummonFormationTests(FormationScenarios, unittest.TestCase):
                                 capture_output=True, text=True, encoding='utf-8', timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
+
+    def test_summon_attack_range_respects_front_line_spacing(self):
+        avatar = (ROOT / 'client/src/stages/137_Avatar.as').read_text(encoding='utf-8')
+        game_map = (ROOT / 'client/src/stages/175_GameMap.as').read_text(encoding='utf-8')
+        methods = {name: method_body(game_map, name) for name in ('getForwardPos', 'getFinalPos')}
+        methods.update({name: translated(avatar, name) for name in ('getRange', 'findAimList')})
+        result = subprocess.run([NODE, '-e', ATTACK_HARNESS], input=json.dumps(methods),
+                                capture_output=True, text=True, encoding='utf-8', timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), [[200, 1, 0, 1, 0, 1, 0, 0]] * 2)
 
 
 class ServerSummonFormationTests(FormationScenarios, unittest.TestCase):

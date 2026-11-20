@@ -316,17 +316,18 @@ final class SaveStore {
         return bytes;
     }
 
-    String storageSummary() {
-        long managed = liveBytes(), other = 0;
+    String storageSummary(List<Save> saves) {
+        long live = liveBytes();
+        long managed = live, other = 0;
         int automatic = 0;
-        for (Save save : list()) {
+        for (Save save : saves) {
             if (save.isLive()) continue;
             if (KIND_AUTO.equals(save.kind)) { managed += save.bytes; automatic++; }
             else other += save.bytes;
         }
         return "当前进度＋自动备份：" + formatBytes(managed) + " / 10 MB（" + automatic + "/5份）\n"
                 + "手动及导入存档：" + formatBytes(other) + "，由你管理"
-                + (liveBytes() > STORAGE_LIMIT ? "\n当前进度已超限，自动备份暂停；进度继续保留。" : "");
+                + (live > STORAGE_LIMIT ? "\n当前进度已超限，自动备份暂停；进度继续保留。" : "");
     }
 
     private static String saveStem(String name) {

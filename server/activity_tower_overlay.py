@@ -12,7 +12,7 @@ import math
 from pathlib import Path
 
 from battle_engine import serialize_stage_team
-from campaign_workbook_overlay import _fit_power, _native_snapshot_power
+from campaign_workbook_overlay import _fit_power
 
 TOWER_CHAPTER = "P_200"
 MATERIALS = (

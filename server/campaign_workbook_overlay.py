@@ -101,8 +101,10 @@ def _group(rows: list[dict]) -> dict[tuple[str, str], list[dict]]:
     return dict(grouped)
 
 
-def _native_snapshot_power(cfg: dict, units: list[dict]) -> int:
-    """The same Avatar.getPower terms used by GameplayCompetition._team_power."""
+def _power_terms(cfg, units, rows):
+    """Precompute native power factors that do not vary with scaled main stats."""
+    if len(units) != len(rows):
+        raise ValueError("power snapshot does not match enemy roster length")
     power = cfg["system_simple"].get("power", [])
     if not isinstance(power, list) or len(power) < 13:
         power = [1e-8, .5, 2, .625, .625, 1000, .1, .1, .5, .01, 2, .1, .1]
@@ -125,19 +127,29 @@ def _native_snapshot_power(cfg: dict, units: list[dict]) -> int:
             return star * .5
         return star * .1 + level * .1
 
-    total = 0
-    for unit in units:
+    terms = []
+    for unit, row in zip(units, rows):
+        if unit["aid"] != row["aid"]:
+            raise ValueError("power snapshot does not match enemy roster order")
         tpl = unit.get("tpl", [])
-        attrs = unit.get("new_4attrs", {})
-        weighted = (unit["hp_max"] * float(power[1]) + unit["ap"] * float(power[2])
-                    + unit["de_ph"] * float(power[3]) + unit["de_ma"] * float(power[4]))
-        substats = sum(float(attrs.get(key, 0)) for key in ("hit", "flee", "crit", "tough"))
+        substats = sum(float(int(row.get(key, 0))) for key in ("hit", "flee", "crit", "tough"))
         skill = (1 + skill_factor(unit.get("skill"), level=unit.get("slv", 1))
                  + skill_factor(unit.get("leader_skill"), super_skill=True)
                  + skill_factor(unit.get("book_skill"), book=True)
                  + skill_factor(unit.get("skillB")))
         factor = 1 + math.pow(max(0, substats), 1 / float(power[10])) * float(power[9])
-        value = (weighted ** 2) * skill * (float(power[5]) + tpl[3] + tpl[4]) * factor * float(power[0])
+        terms.append((skill, float(power[5]) + tpl[3] + tpl[4], factor))
+    return tuple(float(v) for v in power[:5]), terms
+
+
+def _row_power(rows, coefficients, terms):
+    scale, hp, ap, de_ph, de_ma = coefficients
+    total = 0
+    for row, (skill, speed, factor) in zip(rows, terms):
+        weighted = (int(row["hp"]) * hp + int(row["ap"]) * ap
+                    + int(row["de_ph"]) * de_ph + int(row["de_ma"]) * de_ma)
+        # Preserve the original floating-point operation order before flooring.
+        value = (weighted ** 2) * skill * speed * factor * scale
         if math.isfinite(value) and value > 0:
             total += math.floor(value)
     return int(total)
@@ -145,45 +157,43 @@ def _native_snapshot_power(cfg: dict, units: list[dict]) -> int:
 
 def _power(cfg: dict, team: list[list], rows: list[dict]) -> int:
     units = serialize_stage_team(cfg, team, team=2)
-    if len(units) != len(rows):
-        raise ValueError("power snapshot does not match enemy roster length")
-    for unit, row in zip(units, rows):
-        if unit["aid"] != row["aid"]:
-            raise ValueError("power snapshot does not match enemy roster order")
-        for key in STAT_KEYS:
-            unit[key] = int(row[key])
-        unit["hp_max"] = unit["hp"]
-        unit["new_4attrs"] = {key: int(row.get(key, 0)) for key in ("hit", "flee", "crit", "tough")}
-    return _native_snapshot_power(cfg, units)
-
-
-def _scaled_rows(base: list[dict], factor: float, locked: set[int]) -> list[dict]:
-    output = copy.deepcopy(base)
-    for index, row in enumerate(output):
-        if index in locked:
-            continue
-        for key in STAT_KEYS:
-            row[key] = max(1, round(base[index][key] * factor))
-    return output
+    return _row_power(rows, *_power_terms(cfg, units, rows))
 
 
 def _fit_power(cfg: dict, team: list[list], base: list[dict], target: int,
                locked: set[int] | None = None) -> tuple[list[dict], int]:
     locked = locked or set()
+    # Skills, equipment and formation are constant throughout this search.
+    # Keep all writable snapshots private to this encounter.
+    units = serialize_stage_team(cfg, team, team=2)
+    coefficients, terms = _power_terms(cfg, units, base)
+    rows = copy.deepcopy(base)
+    adjustable = [(source, rows[i]) for i, source in enumerate(base) if i not in locked]
+
+    def power_at(scale):
+        for source, row in adjustable:
+            for key in STAT_KEYS:
+                row[key] = max(1, round(source[key] * scale))
+        return _row_power(rows, coefficients, terms)
+
     low, high = 0.001, 1.0
-    while _power(cfg, team, _scaled_rows(base, high, locked)) < target and high < 1024:
+    high_power = power_at(high)
+    while high_power < target and high < 1024:
         high *= 2
-    if _power(cfg, team, _scaled_rows(base, high, locked)) < target:
+        high_power = power_at(high)
+    if high_power < target:
         raise ValueError("cannot reach campaign power target within stat scale bound")
+    low_power = power_at(low)
     for _ in range(28):
         mid = (low + high) / 2
-        if _power(cfg, team, _scaled_rows(base, mid, locked)) < target:
-            low = mid
+        mid_power = power_at(mid)
+        if mid_power < target:
+            low, low_power = mid, mid_power
         else:
-            high = mid
-    candidates = [_scaled_rows(base, value, locked) for value in (low, high)]
-    return min(((rows, _power(cfg, team, rows)) for rows in candidates),
-               key=lambda item: abs(item[1] - target))
+            high, high_power = mid, mid_power
+    closest = low if abs(low_power - target) <= abs(high_power - target) else high
+    actual = power_at(closest)
+    return rows, actual
 
 
 def _target(chapter: int, stage_no: int, final_no: int, orange_reference: int) -> int:

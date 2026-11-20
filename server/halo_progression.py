@@ -15,9 +15,9 @@ HALO_CURVE = {
 }
 
 
-def apply_halo_progression(document: dict) -> dict:
-    """Return a configured copy; rerunning produces the same document value."""
-    result = copy.deepcopy(document)
+def apply_halo_progression(document: dict, *, in_place=False) -> dict:
+    """Return a configured copy, or update the loader's private document."""
+    result = document if in_place else copy.deepcopy(document)
     simple = result["cfg"]["system_simple"]
     equipwash = simple["equipwash"]
     if len(equipwash) < 6 or int(equipwash[5]) != len(HALO_CURVE["rank_weights"]):

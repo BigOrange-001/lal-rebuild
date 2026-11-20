@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Keeps the bundled server running in the foreground so the companion client
@@ -356,12 +357,16 @@ public class ServerService extends Service implements PythonBridge.Events {
     @Override
     public void onLogLine(String line) {
         appendLog(line);
-        main.removeCallbacks(consoleUpdate);
-        main.postDelayed(consoleUpdate, 100);
+        if (consoleUpdatePending.compareAndSet(false, true)) {
+            main.postDelayed(consoleUpdate, 100);
+        }
     }
 
-    private final Runnable consoleUpdate = () -> sendBroadcast(
-            new Intent(ACTION_STATE).setPackage(getPackageName()));
+    private final AtomicBoolean consoleUpdatePending = new AtomicBoolean();
+    private final Runnable consoleUpdate = () -> {
+        consoleUpdatePending.set(false);
+        sendBroadcast(new Intent(ACTION_STATE).setPackage(getPackageName()));
+    };
 
     @Override
     public void onStopped(String error) {
@@ -455,9 +460,6 @@ public class ServerService extends Service implements PythonBridge.Events {
     private void captureAsync(String kind) {
         submit(kind.equals(SaveStore.KIND_AUTO) ? "自动存档" : "存档", () -> {
             SaveStore.Save saved = saves.capture(kind, bridge);
-            if (SaveStore.KIND_AUTO.equals(kind)) {
-                saves.prune();
-            }
             Log.i(TAG, saved == null ? "自动备份已按容量上限跳过" : "Saved " + saved.file.getName());
         });
     }

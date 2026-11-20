@@ -36,7 +36,7 @@ def legacy_first_bonus_from_receipts(rows):
     return None
 
 
-def normalize_vip_profile(profile, legacy_first_bonus_coin=None):
+def normalize_vip_profile(profile, legacy_first_bonus_coin=None, *, legacy_receipts=()):
     """Migrate the old base/10 VIP EXP once, then project the native fields.
 
     Old saves stored the base gift total in tenths.  A receipt in the
@@ -55,6 +55,8 @@ def normalize_vip_profile(profile, legacy_first_bonus_coin=None):
             if type(value) is int and value >= 0:
                 candidates.append(value * multiplier)
         base_total = max(candidates, default=0)
+        if legacy_first_bonus_coin is None:
+            legacy_first_bonus_coin = legacy_first_bonus_from_receipts(legacy_receipts)
         first_bonus = (legacy_first_bonus_coin if type(legacy_first_bonus_coin) is int
                        and legacy_first_bonus_coin > 0 else 0)
         attrs["vip_gift_total_coin"] = base_total + first_bonus

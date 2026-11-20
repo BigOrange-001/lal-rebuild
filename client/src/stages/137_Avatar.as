@@ -63,6 +63,29 @@ package com.meng52.game.module.avatar
       }
       // END NEW SKIN BONDS 104
 
+      private static var bondDefinitionSource104:Array;
+      private static var bondFamilies104:Object;
+
+      private static function familyBondDefinitions104(definitions:Array, family:String) : Array
+      {
+         if(definitions !== bondDefinitionSource104)
+         {
+            bondDefinitionSource104 = definitions;
+            bondFamilies104 = {};
+         }
+         var rows:Array = bondFamilies104[family] as Array;
+         if(rows == null)
+         {
+            rows = [];
+            for each(var definition:Object in definitions)
+            {
+               if(definition.families.indexOf(family) >= 0) rows.push(definition);
+            }
+            bondFamilies104[family] = rows;
+         }
+         return rows;
+      }
+
       public function getBondRows104() : Array
       {
          var definitions:Array = GlobalData.$mConfig_simple.bonds_104 as Array;
@@ -71,6 +94,8 @@ package com.meng52.game.module.avatar
          var aid:String = String(avatarData.id);
          var parts:Array = aid.split("_");
          var family:String = parts[0]+"_"+parts[1];
+         var candidates:Array = familyBondDefinitions104(definitions,family);
+         if(candidates.length == 0) return result;
          var quality:int = int(parts[2]);
          var roster:Object = GlobalData.$userData;
          var aids:Array = [];
@@ -99,9 +124,8 @@ package com.meng52.game.module.avatar
                }
             }
          }
-         for each(var bond:Object in definitions)
+         for each(var bond:Object in candidates)
          {
-            if(bond.families.indexOf(family)<0) continue;
             if(snapshot != null)
             {
                if(snapshot.indexOf(String(bond.id))>=0) result.push(bond);

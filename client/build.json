@@ -20,7 +20,7 @@
       "index": 3,
       "class": "com.meng52.net.SendAndSelect",
       "source": "client/src/stages/003_SendAndSelect.as",
-      "source_sha256": "dd4c57db3432647f07ce8c915ccbd39ffffc6bd1e8a25af2c7583e07d8511df6"
+      "source_sha256": "e201cb21bcfc89a1acb0f324a5c4f93b3423edab2197e4d7069690cf955d1cf5"
     },
     {
       "index": 4,
@@ -783,7 +783,7 @@
       "index": 130,
       "class": "com.meng52.game.ui.screen.PanelCenterSoul",
       "source": "client/src/stages/128_PanelCenterSoul.as",
-      "source_sha256": "3c1b10ab5b5d071fe1188c88450af9eefb7ef2c91a62c4c0d6ee63a484cb4b54"
+      "source_sha256": "71b9f0e2b8dbaa047d99bc42fd7c6c5ac4b69df5375ce70d977f8876365a12c2"
     },
     {
       "index": 131,
@@ -831,7 +831,7 @@
       "index": 138,
       "class": "MainLLOL",
       "source": "client/src/stages/136_MainLLOL.as",
-      "source_sha256": "2999b911632fe206b145abc51a58dbb817cfff6adf8a853377ae813b3c073493"
+      "source_sha256": "b40dc02131ca0cf1705d3e2018a670c68acf9a42b20007fd637e7f1ec217cf4b"
     },
     {
       "index": 139,
@@ -843,7 +843,7 @@
       "index": 140,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "c8f59c46b5dede2057ebec6670dbd4e334ff0c8d105c8fad302514be3423a272"
+      "source_sha256": "4d83f1095a56ba42000b351baa5a52415fd095b8d0ea956fad0390173128c868"
     },
     {
       "index": 141,

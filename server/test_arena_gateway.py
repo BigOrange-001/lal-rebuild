@@ -61,6 +61,17 @@ class ArenaGatewayTests(unittest.TestCase):
         self.assertNotEqual([row[1] for row in refreshed[2]], [row[1] for row in initial[2]])
         self.assertEqual(rpc('user.refresh_pvp_opponents', 'refresh')[2], refreshed[2])
         self.assertEqual(rpc('user.get_rank_list', 'rank-list-after-refresh')[2], refreshed[2])
+        owner = {'uid': login['uid'], 'sessionid': login['sessionid']}
+        request = dict(owner, method='user.get', params={'actionID': 'read-self'})
+        full = backend.call(request)
+        compact = backend.call(dict(request, client_capabilities=['profile.omit-arena-opponents.v1']))
+        self.assertEqual(full['state_sync']['revision'], compact['state_sync']['revision'])
+        for original, projected in ((full['data'], compact['data']),
+                                    (full['state_sync']['profile'], compact['state_sync']['profile'])):
+            batch = original['records'].pop('pvp_opponents')
+            self.assertEqual(len(batch['bots']), 10)
+            self.assertEqual(original, projected)
+        self.assertEqual(backend.players.profile_raw(login['uid'])['records']['pvp_opponents'], batch)
 
 
 if __name__ == '__main__':

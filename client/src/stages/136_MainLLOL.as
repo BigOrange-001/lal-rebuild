@@ -528,7 +528,7 @@ package
          }
          else
          {
-            setTimeout(checkOtherLogo,3000);
+            setTimeout(checkOtherLogo,GlobalLocalStore.$pf_type_curr == "local" ? 0 : 3000);
          }
       }
       

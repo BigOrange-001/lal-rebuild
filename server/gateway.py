@@ -1,6 +1,6 @@
 """Local AMF3 compatibility gateway. Missing gameplay data is an explicit fault."""
 from __future__ import annotations
-import argparse,datetime,hashlib,hmac,json,pathlib,secrets,shlex,sqlite3,sys,threading,time
+import argparse,datetime,gzip,hashlib,hmac,json,pathlib,secrets,shlex,sqlite3,sys,threading,time
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from urllib.parse import urlsplit,unquote
 ROOT=pathlib.Path(__file__).resolve().parents[1]
@@ -8,7 +8,8 @@ PROJECT_VERSION=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
 if not PROJECT_VERSION:
  raise RuntimeError('VERSION must contain a project version')
 from pyamf import remoting
-from player_store import PlayerStore,GameplayFault,native_dates
+from amf_response import ResponseContext
+from player_store import PlayerStore,GameplayFault,native_dates,_decode_date
 from game_clock import GameClock,utc_datetime,duration_seconds
 from gameplay_common import game_day
 from check_in_rewards import apply_check_in_rewards
@@ -106,13 +107,11 @@ def config_version_with_digest(version, digest):
  """Human version plus content digest, e.g. ``1.0.5#<sha256>``."""
  return f"{version or ''}#{digest}"
 
-def load_game_config(path, now=None):
- """Load the shared post-overlay baseline for runtime and Mod authoring."""
- if now is None: now=int(time.time())
- document=json.loads(pathlib.Path(path).read_text(encoding='utf-8-sig'))
+def build_static_config(path):
+ """Build the date-independent game tables from their authored inputs."""
+ document=json.loads(pathlib.Path(path).read_text(encoding='utf-8-sig'),object_hook=_decode_date)
  if not isinstance(document,dict) or not isinstance(document.get('cfg'),dict):
   raise ValueError('Config file must contain {cfg_version, cfg: {...}, ...}')
- document=native_dates(document)
  from roguelite_abyss import placeholder_families
  abyss_placeholders=placeholder_families(document['cfg'])
  from combat_rules import apply_combat_rules
@@ -124,7 +123,7 @@ def load_game_config(path, now=None):
  apply_upstream_skill_priority(document)
  apply_battle_status_effects(document)
  apply_summon_panel_config(document)
- document=apply_halo_progression(document)
+ apply_halo_progression(document,in_place=True)
  from skill_books import apply_equipment_calibration
  apply_equipment_calibration(document)
  apply_hero_skills_103(document)
@@ -192,17 +191,30 @@ def load_game_config(path, now=None):
  apply_relic_config(document)
  from attack_range_105 import apply_attack_ranges
  apply_attack_ranges(document)
- apply_check_in_rewards(document,int(game_day(now)[:4]))
  from game_calendar import apply_daily_reset_config
  apply_daily_reset_config(document)
  from shop_balance_105 import apply_shop_balance_105
  apply_shop_balance_105(document)
  from guild_exchange_105 import apply_guild_exchange
  apply_guild_exchange(document)
- from activity_windows_105 import apply_activity_windows_105
- apply_activity_windows_105(document,now)
  from hero_passive_quality_105 import restrict_low_star_passives
  restrict_low_star_passives(document)
+ return document
+
+
+def load_game_config(path, now=None, *, prepared_metadata=None):
+ """Load the shared baseline, then apply the current game calendar."""
+ from prepared_config import read_prepared
+ if now is None: now=int(time.time())
+ prepared=read_prepared(path)
+ if prepared is None:
+  document=build_static_config(path)
+ else:
+  document=prepared['document']
+  if prepared_metadata is not None:prepared_metadata['arena']=prepared['arena']
+ apply_check_in_rewards(document,int(game_day(now)[:4]))
+ from activity_windows_105 import apply_activity_windows_105
+ apply_activity_windows_105(document,now)
  document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
  return document
 
@@ -219,9 +231,15 @@ class Backend:
   if 'spending_tier' not in {row[1] for row in self.db.execute('PRAGMA table_info(accounts)')}:
    self.db.execute("ALTER TABLE accounts ADD COLUMN spending_tier TEXT NOT NULL DEFAULT 'small'")
   self.db.commit()
-  self.config=load_game_config(config,self.clock.now()) if config else None
+  prepared_metadata={}
+  self.config=load_game_config(config,self.clock.now(),prepared_metadata=prepared_metadata) if config else None
   self.players=PlayerStore(self.db,self.config,self.clock)
   self.players.lock=self.lock
+  if 'arena' in prepared_metadata:
+   from gameplay_competition import GameplayCompetition
+   for handler in self.players.gameplay_handlers:
+    if isinstance(handler,GameplayCompetition):
+     handler._combat_signature=prepared_metadata['arena']
   from mod_service import ModService
   default_mods=ROOT/'mods' if database_path==':memory:' else pathlib.Path(database_path).expanduser().resolve().parent/'mods'
   self.mods=ModService(self.players,self.config,mods_root if mods_root is not None else default_mods)
@@ -235,11 +253,16 @@ class Backend:
   data={}
   with self.lock:
    # Retries reuse params.actionID in SendAndSelect.reSend. Keep guest creation idempotent.
-   retry_key=(method,params['actionID'],hashlib.sha256(json.dumps(params,sort_keys=True,default=str).encode()).digest())
    now=time.monotonic()
-   self.retry_cache={k:v for k,v in self.retry_cache.items() if now-v[0]<600}
-   cached=self.retry_cache.get(retry_key)
-   if cached is not None: return cached[1]
+   while self.retry_cache:
+    oldest=next(iter(self.retry_cache))
+    if now-self.retry_cache[oldest][0]<600:break
+    del self.retry_cache[oldest]
+   registration=method in ('user.register','user.default_register')
+   if registration:
+    retry_key=(method,params['actionID'],hashlib.sha256(json.dumps(params,sort_keys=True,default=str).encode()).digest())
+    cached=self.retry_cache.get(retry_key)
+    if cached is not None:return cached[1]
    if method=='sys.get_config':
     if self.config is None:
      raise RpcFault('MissingGameConfig','Game configuration is unavailable.')
@@ -302,8 +325,17 @@ class Backend:
     elif method not in ('user.register','user.llogin','user.default_register'):
      try:state_uid=self.players.authenticate(request)
      except GameplayFault:state_uid=None
-    if state_uid is not None:reply['state_sync']=self.players.state_snapshot(state_uid)
-   if method in ('user.register','user.default_register'):
+    if state_uid is not None:
+     snapshot=self.players.state_snapshot(state_uid)
+     capabilities=request.get('client_capabilities')
+     if isinstance(capabilities,list) and 'profile.omit-arena-opponents.v1' in capabilities:
+      # Rank lists and battle starts supply their own opponent views. Only
+      # remove server NPC recipes from detached client profile projections.
+      omit_arena_opponents(snapshot['profile'])
+      if method in ('user.login','user.get','user.init_user','user.get_gift_msg') and isinstance(data,dict) and data.get('uid')==state_uid:
+       omit_arena_opponents(data)
+     reply['state_sync']=snapshot
+   if registration:
     if len(self.retry_cache)>=1000: self.retry_cache.pop(next(iter(self.retry_cache)))
     self.retry_cache[retry_key]=(time.monotonic(),reply)
    return reply
@@ -322,7 +354,13 @@ class Backend:
    except RpcFault as error:
     print('RPC fault',error.code,'message='+str(error.message)[:240],_safe_rpc_diagnostic(request),flush=True)
     outgoing[response_uri]=remoting.Response({'code':error.code,'description':error.message,'actions':[]},status=remoting.STATUS_ERROR)
-  return remoting.encode(outgoing,strict=True).getvalue()
+  context=ResponseContext() if outgoing.amfVersion==3 else None
+  return remoting.encode(outgoing,strict=True,context=context).getvalue()
+
+def omit_arena_opponents(profile):
+ records=profile.get('records')
+ if isinstance(records,dict):
+  records.pop('pvp_opponents',None)
 
 def _safe_rpc_diagnostic(request):
  if not isinstance(request,dict): return "request=non-object"
@@ -354,6 +392,11 @@ class Handler(BaseHTTPRequestHandler):
  def version_string(self): return self.server_version
  def send_body(self,status,body,content_type):
   self.send_response(status); self.send_header('Content-Type',content_type)
+  if content_type=='application/x-amf' and len(body)>=65536:
+   self.send_header('Vary','Accept-Encoding')
+   if accepts_gzip(self.headers.get('Accept-Encoding','')):
+    body=gzip.compress(body,compresslevel=1,mtime=0)
+    self.send_header('Content-Encoding','gzip')
   self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
  def do_GET(self):
   path=urlsplit(self.path).path
@@ -428,6 +471,19 @@ class Handler(BaseHTTPRequestHandler):
    print('Rejected AMF request:',type(error).__name__,file=sys.stderr)
    self.send_body(400,b'Malformed AMF request','text/plain'); return
   self.send_body(200,body,'application/x-amf')
+
+def accepts_gzip(header):
+ """Compress large replies only for clients explicitly accepting gzip."""
+ for item in header.lower().split(','):
+  coding,*options=item.split(';')
+  if coding.strip()!='gzip':continue
+  for option in options:
+   name,_,value=option.partition('=')
+   if name.strip()=='q':
+    try:return 0<float(value)<=1
+    except ValueError:return False
+  return True
+ return False
 
 def make_server(host,port,backend):
  service=ThreadingHTTPServer((host,port),Handler)

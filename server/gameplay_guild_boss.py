@@ -729,7 +729,7 @@ class GameplayGuildBoss:
         if isinstance(ready,int) and ready>now: raise GameplayFault('BossCooldown','Boss attack is on cooldown')
         power=0
         from gameplay_roster import GameplayRosterEquipment
-        roster=GameplayRosterEquipment(self.store,self.full)
+        roster=GameplayRosterEquipment.for_config(self.store,self.full)
         teams=p.get('team') or [[]]
         try: team_index=int(p.get('attrs',{}).get('team_num',0))
         except (TypeError,ValueError): team_index=0

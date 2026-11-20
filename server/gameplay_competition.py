@@ -2,6 +2,7 @@
 from __future__ import annotations
 import copy, hashlib, json, math, time
 import datetime
+from functools import cached_property
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from player_store import GameplayFault
@@ -178,7 +179,7 @@ class GameplayCompetition:
         }
     def _attr(self,profile,iid):
         from gameplay_roster import GameplayRosterEquipment
-        return GameplayRosterEquipment(self.store,self.full_config).battle_attributes(profile,iid)
+        return GameplayRosterEquipment.for_config(self.store,self.full_config).battle_attributes(profile,iid)
     def _own_team(self,p,params):
         try:
             return serialize_player_team(self.cfg,p,params.get("team_num",0),params.get("team",[]),self._attr)
@@ -459,10 +460,15 @@ class GameplayCompetition:
         submitted=[[iid,slot%3,.2 if slot<3 else .1] if iid else None
                    for slot,iid in enumerate(saved[:6])]
         return self._own_team(profile,{"team_num":team_num,"team":submitted})
+    @cached_property
+    def _combat_signature(self):
+        # Each configuration (including a resolved Mod set) gets a new handler.
+        return combat_config_signature(self.cfg)
+
     def _ensure_opponents(self,profile,uid,*,refresh=False):
         records=profile.setdefault("records",{})
         batch=records.get("pvp_opponents")
-        combat_signature=combat_config_signature(self.cfg)
+        combat_signature=self._combat_signature
         if (not refresh and isinstance(batch,dict) and batch.get("player_rank")==self._rank(profile)
                 and batch.get("power_order_schema")==POWER_ORDER_SCHEMA
                 and batch.get("combat_config_sha256")==combat_signature

@@ -259,7 +259,7 @@ public class MainActivity extends Activity implements SaveAdapter.Actions, Servi
         if (service == null || savesList == null) return;
         List<SaveStore.Save> saves = service.store().list();
         adapter.submit(saves);
-        if (storageSummary != null) storageSummary.setText(service.store().storageSummary());
+        if (storageSummary != null) storageSummary.setText(service.store().storageSummary(saves));
         savesEmpty.setVisibility(saves.isEmpty() ? View.VISIBLE : View.GONE);
     }
 

@@ -3867,11 +3867,15 @@ package com.meng52.game.module.avatar
                   if(s2Hit(target,s2Value(skill,"hit"),1)) abilityControl(target,"silence",1);
                   s2Shield(this,s2Value(skill,"shield"));break;
                case 1203:
+                  var baronLane:Boolean=Boolean(row.sixStarNextBaronLane105);
                   for each(unit in (row.sixStarNextBaronLane105 ? targets : [target]))
                   {
-                     var cursed:Boolean=unit.buffs.curse && s2LiveMark(unit,"contract") && unit.skin2.contract.owner===this;
+                     var curse:Buff=unit.buffs.curse as Buff;
+                     var cursed:Boolean=curse && (baronLane ? curse.source===this :
+                        s2LiveMark(unit,"contract") && unit.skin2.contract.owner===this);
                      abilityControl(unit,"curse",2);if(unit.buffs.curse) s2Mark(unit,"contract",2);
-                     s2Hit(unit,s2Value(skill,"hit"));if(cursed) s2Heal(this,s2Value(skill,"heal"));
+                     var curseHit:Boolean=s2Hit(unit,s2Value(skill,"hit"));
+                     if(cursed && (!baronLane || curseHit)) s2Heal(this,s2Value(skill,"heal"));
                   }
                   break;
                case 1204:

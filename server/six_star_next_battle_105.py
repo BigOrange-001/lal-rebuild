@@ -171,14 +171,15 @@ class SixStarNextBattle:
                 state['next_baron_drain'] = state['serial']+1
                 for target in foes:
                     self._native_damage(owner, target, a[4], 2)
-                    self.control(owner, target, 'curse', 2)
+                    if target['hp'] > 0:
+                        self._add_buff(target, 'curse', 2, source=owner)
                 self._add_buff(owner, 'shield', 2, owner['hp_max']*a[5], source=owner)
             else:
                 for target in foes:
                     cursed = self._buff(target, 'curse')
-                    self.control(owner, target, 'curse', 2)
+                    self._add_buff(target, 'curse', 2, source=owner)
                     self._native_damage(owner, target, a[4], 2)
-                    if cursed:
+                    if cursed and cursed.source is owner and self._ability_last_hit:
                         self.six_next_heal(owner, self._get_damage(owner)*a[5])
             return bool(foes)
         elif kind == 'six_next_maokai_n':

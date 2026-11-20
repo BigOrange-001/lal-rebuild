@@ -151,6 +151,18 @@ class NextSixStarTests(TestCase):
         self.assertEqual(sum(u['hp']>0 for u in battle.a[1:]),3)
         self.assertTrue(all(u['skill'] and not u['skillB'] for u in clones))
 
+    def test_baron_heals_only_from_hitting_an_existing_own_curse(self):
+        for prior, landed in (('none', True), ('ally', True), ('own', False), ('own', True)):
+            with self.subTest(prior=prior, landed=landed):
+                battle, owner, foes = self.arena(1203, [(0,1500,100000)], [(0,1850,100000)])
+                owner['hp'] = 50000
+                if prior != 'none':
+                    source = owner if prior == 'own' else battle.a[1]
+                    battle._add_buff(foes[0], 'curse', 3, source=source)
+                battle._roll_attack = lambda *args, **kwargs: int(landed)
+                self.assertTrue(self.fixture.cast(battle,owner))
+                self.assertEqual(owner['hp'] > 50000, prior == 'own' and landed)
+
     def test_baron_only_grows_for_same_lane_and_maokai_and_caitlyn_endpoints(self):
         battle, owner, foes = self.arena(1203)
         self.assertTrue(self.fixture.cast(battle,owner))

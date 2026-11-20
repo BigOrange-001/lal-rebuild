@@ -10,4 +10,11 @@
 
 客户端技能执行源码位于 `client/src/stages/137_Avatar.as` 和 `client/src/stages/139_SkillSet.as`。服务端原技能处理位于 `server/manual_ability_sim.py`、`server/six_star_battle_105.py` 和 `server/six_star_balance_105.py`，其余归档文件对应配置加载、装备绑定和技能成长。
 
-需要回退本批时，从最新主分支创建回退分支并运行 `git revert 7c8ca7aaea0fae3a7e8861ab16a342b83ad48f9a`。备份是独立提交，可以保留。若之后还有平衡配置改动，处理冲突时保留后续改动，并运行 `python server/prepared_config.py` 重新生成配置快照。
+需要回退本批时，从最新主分支建回退分支，先反向应用审核修复，再反向应用平衡改动。备份文件由独立提交保存。
+
+```bash
+git revert 83cab5eb13e983cd69c520d7527768dae2b54dac
+git revert 7c8ca7a
+```
+
+若之后还有平衡配置改动，解决冲突时保留后续改动，并运行 `python server/prepared_config.py` 重新生成配置快照。

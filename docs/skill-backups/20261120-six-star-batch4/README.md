@@ -13,6 +13,7 @@
 需要回退本批时，从最新主分支建回退分支，先反向应用审核修复，再反向应用平衡改动。备份文件由独立提交保存。
 
 ```bash
+git revert d15ececd6237c83871ef84f83237a0c341675ced
 git revert 83cab5eb13e983cd69c520d7527768dae2b54dac
 git revert 7c8ca7a
 ```

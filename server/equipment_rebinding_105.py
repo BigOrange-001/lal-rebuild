@@ -30,6 +30,53 @@ def rebind_ordinary(cfg, plan):
                           info=design['annie_core']['info'], strength=0, power_budget=.20)
 
 
+def rebind_six_star_components(cfg, plan):
+    if not cfg.get('six_star_balance_105'):
+        return
+    # Keep the original item's relative strength when its skill component
+    # survives the rewrite. A removed component has no coefficient to boost.
+    changes = {
+        'A_1005_6': [None, None],
+        'A_1007_6': [(), None],
+        'A_1011_6': [('火刀每回合的点燃伤害', 0, 4, ['manual_ability']), None],
+        'A_1013_6': [(), ('无护盾时的应急屏障', 0, 6, ['mod_step'])],
+        'A_1017_6': [('跃至前排后的长矛重击', 2, 1, ['damage', 'move_to_target_lane', 'damage', 'stun', 'caster_hp_shield']),
+                     ('贯日长矛的生命护盾', 4, 1, ['damage', 'move_to_target_lane', 'damage', 'stun', 'caster_hp_shield'])],
+        'A_1018_6': [None, ('舍身佑护的生命护盾', 0, 4, ['manual_ability'])],
+        'A_1019_6': [('回旋斧直接命中伤害', 2, 1, ['pull_group', 'sunder_percent', 'damage', 'heal_missing_hp_per_hero']), None],
+        'A_1023_6': [('飞叶回收段伤害', 0, 5, ['manual_ability']), ()],
+        'A_1025_6': [('让子弹飞的狙击伤害', 0, 4, ['manual_ability']),
+                     ('绳网命中的魔法伤害', 0, 4, ['manual_ability'])],
+        'A_1033_6': [('魅影猎袭对低血量目标的魔法伤害', 0, 4, ['manual_ability']), ()],
+        'A_1036_6': [('毒蛛猎杀的低血量增伤', 0, 6, ['manual_ability']), ()],
+        'A_1115_6': [('鱼骨头对周围次要目标的溅射伤害', 0, 5, ['manual_ability']),
+                     ('飞弹已损生命附加伤害系数', 0, 5, ['manual_ability'])],
+        'A_1119_6': [(), None],
+        'A_1123_6': [('回力标真实伤害', 0, 1, ['true_damage', 'weak_percent', 'curse']), ()],
+        'A_1125_6': [('爆破弹对周围次要目标的溅射伤害', 0, 5, ['manual_ability']),
+                     ('地狱火炮中心真伤', 0, 4, ['manual_ability'])],
+        'A_1214_6': [None, ('万能选牌的魔法伤害', 0, 4, ['manual_ability'])],
+        'A_1130_6': [None, ('决斗突刺的溢出护盾', 0, 6, ['manual_ability'])],
+        'A_1131_6': [('潮汐涌泉的治疗', 0, 4, ['manual_ability']), None],
+        'A_1133_6': [None, ('灵魂镣铐到期伤害', 0, 5, ['manual_ability'])],
+    }
+    for aid, replacements in changes.items():
+        for effect, change in zip(plan['heroes'][aid]['affinities'], replacements):
+            if change is None:
+                effect['six_star_component_removed'] = True
+                effect['power_budget'] = 0
+                effect['info'] = '六星技能改版后已移除此组件，这项羁绊不再提供技能加成。'
+            elif change:
+                part, index, position, signature = change
+                effect.update(part=part, index=index, path=[position], signature=signature,
+                              info=f'仅提高{part}{effect["strength"]:.2%}。')
+                # Existing explicit full-rework mappings still select their
+                # own components. They never inherit the replacement index.
+                if signature == ['manual_ability']:
+                    effect['six_star_native_component'] = True
+                    effect.pop('manual_kind',None)
+
+
 def rebind_new_skins(cfg, equipment):
     design = load_plan()
     for aid, replacements in design['stats'].items():

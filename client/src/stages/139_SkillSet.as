@@ -319,6 +319,12 @@ package com.meng52.game.module.skill
          var manualRankDisplay:Number = row.rankManualDisplay104 ? (1+(Math.max(1,Math.min(10,lv))-1)/9)/(row.rankGrowth104.slot==10 ? 2 : 1) : 1;
          var textRank:Number = 1+(Math.max(1,Math.min(10,lv))-1)/9;
          var rankText:String = String(row.rankInfoTemplate).replace(/\{linear:([0-9.]+)\}/g,function(...matches):String {return (Math.round(Number(matches[1])*textRank*100)/100).toString()+"%";});
+         rankText = rankText.replace(/\{rankSum:(\d+):(\d+):(\d+)\}/g,function(...matches):String
+         {
+            var action:Array=actions[int(matches[1])];
+            var total:Number=Number(action[int(matches[2])])+Number(action[int(matches[3])]);
+            return (Math.round(total*10000)/100).toString()+"%";
+         });
          return rankText.replace(/\{rank:(\d+):([0-9.]+)\}|\{scale:([0-9.]+):([0-9.]+)\}|\{flat:(\d+):([0-9.]+)\}/g,function(...parts):String
          {
             var value:*;
@@ -716,6 +722,9 @@ package com.meng52.game.module.skill
       private function hasCastTargets() : Boolean
       {
          if(!avatar || (avatar.hp <= 0 && (!modEventContext || modEventContext.event != "death")) || !GameMap.currentMap || !skills || skills.length == 0) return false;
+         var row105:Object=GlobalData.$mConfig_skill[skillSetData.id];
+         if(row105 && (row105.sixStarShenTeleport105 || row105.sixStarAdvance105 ||
+            row105.sixStarTurret105 && skills[0][0]=="summon_turret" && skills[1] && skills[1][0]=="damage")) return true;
          if(isModEffectSequence())
          {
             if(!modConditionReady()) return false;
@@ -903,15 +912,25 @@ package com.meng52.game.module.skill
             unit = new Avatar(GlobalData.modDefinitionId(String(step[11]),"summoned"),{"lv":avatar.lv,"slv":1});
             unit.statisticsOwner104 = avatar;
             unit.goFight(avatar.team,avatar.line,0,false);
-            unit.ap = Math.max(1,int(avatar.getDamage()*ratio));
-            unit.hpMax = Math.max(1,int(avatar.getHpMax()*ratio));
-            unit.hp = unit.hpMax;
-            unit.dePh = Math.max(0,int(avatar.getDePh()*ratio));
-            unit.deMa = Math.max(0,int(avatar.getDeMa()*ratio));
-            unit.hit = Math.max(0,int(avatar.getHit()*ratio));
-            unit.flee = Math.max(0,int(avatar.getFlee()*ratio));
-            unit.crit = Math.max(0,int(avatar.getCrit()*ratio));
-            unit.tough = Math.max(0,int(avatar.getTough()*ratio));
+            var summonSkill105:Object=GlobalData.$mConfig_skill[skillSetData.id];
+            var isSixStarTurret:Boolean=summonSkill105 && summonSkill105.sixStarTurret105;
+            if(isSixStarTurret)
+            {
+               if(!unit.inheritSummonPanel(avatar,ratio)) return false;
+               unit.sixStarConfigureTurret105();
+            }
+            else
+            {
+               unit.ap = Math.max(1,int(avatar.getDamage()*ratio));
+               unit.hpMax = Math.max(1,int(avatar.getHpMax()*ratio));
+               unit.hp = unit.hpMax;
+               unit.dePh = Math.max(0,int(avatar.getDePh()*ratio));
+               unit.deMa = Math.max(0,int(avatar.getDeMa()*ratio));
+               unit.hit = Math.max(0,int(avatar.getHit()*ratio));
+               unit.flee = Math.max(0,int(avatar.getFlee()*ratio));
+               unit.crit = Math.max(0,int(avatar.getCrit()*ratio));
+               unit.tough = Math.max(0,int(avatar.getTough()*ratio));
+            }
             unit.addBuff("summon",int(step[13]));
             while(retained.length >= int(step[14]))
             {
@@ -1036,6 +1055,7 @@ package com.meng52.game.module.skill
          var previousNativeSettings:Object = activeNativeSettings;
          var wholeAttack:Object = Avatar.beginAbilityAttack(avatar,"active");
          wholeAttack.skill = this;
+         avatar.sixStarSkillBegin105(wholeAttack,this);
          modStepAnchors = [];
          abilityHasCast = true;
          abilityCooldownOverride = -1;
@@ -1063,6 +1083,11 @@ package com.meng52.game.module.skill
          var summonApFactor:Number = 0;
          var _loc19_:SkillSetData = skillSetData;
          var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         if(captainRow && captainRow.sixStarAdvance105)
+         {
+            var front105:int = avatar.team==1 ? 0 : GameMapConfig.LINE_POS;
+            avatar.reline(avatar.line,front105,0,GameMap.actionDelay,0);
+         }
          var captainSummonMultiplier:Number = captainRow ? Number(captainRow.captainSummonMultiplier) : 1;
          if(!isFinite(captainSummonMultiplier) || captainSummonMultiplier <= 0) captainSummonMultiplier = 1;
          var _loc24_:int = getCastRange();
@@ -1080,6 +1105,7 @@ package com.meng52.game.module.skill
          var targetGroups:Object = {};
          currentActionTargets = actionTargets;
          currentTargetGroups = targetGroups;
+         if(captainRow && captainRow.sixStarZedRandom105) actionTargets[0]=avatar.sixStarPickRandom105(getCastRange(),_loc2_);
          var aliveEnemyBefore:int = 0;
          var recastUsed:Boolean = false;
          var priorShield:Object = null;
@@ -1174,7 +1200,8 @@ package com.meng52.game.module.skill
                case "manual_ability":
                   var abilityBeforePosition:int = avatar.pos;
                   var abilityBeforeLane:int = avatar.line;
-                  avatar.executeAbility(String(_loc20_[1]),Number(_loc20_[2]),String(_loc20_[3]),this);
+                  var compoundCast105:Boolean=avatar.executeAbility(String(_loc20_[1]),Number(_loc20_[2]),String(_loc20_[3]),this);
+                  if(String(_loc20_[1]).indexOf("six_")==0) _loc4_ = _loc4_ || compoundCast105;
                   _loc4_ = _loc4_ || avatar.pos != abilityBeforePosition || avatar.line != abilityBeforeLane;
                   break;
                case "damage":
@@ -1756,7 +1783,13 @@ package com.meng52.game.module.skill
                   }
                   break;
                case "move_to_ally":
-                  _loc3_ = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
+                  if(captainRow && captainRow.sixStarShenTeleport105)
+                  {
+                     _loc3_=new Vector.<Avatar>();
+                     var teleportTarget105:Avatar=avatar.sixStarShenTarget105();
+                     if(teleportTarget105) _loc3_.push(teleportTarget105);
+                  }
+                  else _loc3_ = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
                   if(_loc3_.length > 0 && _loc20_.length >= 2)
                   {
                      var selectedAlly:Avatar = _loc3_[0];
@@ -2102,6 +2135,12 @@ package com.meng52.game.module.skill
                   }
                   break;
                case "stun":
+                  if(captainRow && captainRow.sixStarLaneStun105 && _loc14_==2)
+                  {
+                     for each(var stunned105:Avatar in _loc26_.getAliveList(avatar.otherTeam))
+                        if(stunned105.hp>0 && stunned105.line==avatar.line) stunned105.addBuff("stun",int(_loc20_[3]));
+                     break;
+                  }
                   _loc3_ = _loc26_.getAliveList(avatar.otherTeam) as Vector.<Avatar>;
                   _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
                   var stunActionTotal:Number = _loc3_.length > 0 ? damageShareTotal(_loc14_,Number(_loc20_[1]),_loc3_[0],preCastDotTargets,preCastBurnTargets) : Number(_loc20_[1]);
@@ -2349,7 +2388,13 @@ package com.meng52.game.module.skill
                      _loc3_ = applyActionTargetLinks(applyActionTargetPolicy(_loc3_,_loc14_),_loc14_,actionTargets,targetGroups);
                      _loc3_ = avatar.findAimList(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_);
                   }
-                  if(_loc3_.length > 0)
+                  if(_loc3_.length > 0 && captainRow && captainRow.sixStarExactHeal105 && _loc20_.length==4)
+                  {
+                     var exactHeal105:int=int(avatar.getDamage()*Number(_loc20_[1])+avatar.getHpMax()*Number(_loc20_[2]));
+                     for(var patientIndex105:int=0;patientIndex105<Math.min(2,_loc3_.length);++patientIndex105)
+                        _loc3_[patientIndex105].injured(exactHeal105,1,DisplayTools.getAttrs(String(_loc20_[3])),4,avatar,false,avatar);
+                  }
+                  else if(_loc3_.length > 0)
                   {
                       avatar.attackAimList(_loc3_,4,_loc20_[1],getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],_loc2_);
                      GameMap.actionDelay += 0.5;
@@ -2572,7 +2617,11 @@ package com.meng52.game.module.skill
             activeNativeAction = previousNativeAction;
             activeNativeSettings = previousNativeSettings;
             Avatar.endAbilityAttack(wholeAttack);
-            if(modCastCompleted && avatar && this !== avatar.skillB) avatar.emitModEvent("skill_cast",avatar,avatar);
+            if(modCastCompleted && avatar && this !== avatar.skillB)
+            {
+               avatar.sixStarSkillFinished105(wholeAttack,this);
+               avatar.emitModEvent("skill_cast",avatar,avatar);
+            }
             if(abilityCooldownOverride >= 0) m_cooldownNum = abilityCooldownOverride;
          }
       }
@@ -2789,6 +2838,9 @@ package com.meng52.game.module.skill
          var _loc1_:Vector.<Avatar> = null;
          var _loc2_:String = getActionPolicy(param1);
          if(!avatar || !GameMap.currentMap) return new Vector.<Avatar>();
+         var row105:Object=GlobalData.$mConfig_skill[skillSetData.id];
+         if(param4 && row105 && row105.sixStarShenTeleport105 && param1>=4 && param1<=6)
+            return applyActionTargetPolicy(null,param1);
          _loc1_ = GameMap.currentMap.getAliveList(param4 ? avatar.team : avatar.otherTeam) as Vector.<Avatar>;
          _loc1_ = applyActionTargetLinks(applyActionTargetPolicy(_loc1_,param1),param1,param2,param3);
          if(hasActionCenter(param1)) return _loc1_;
@@ -3000,6 +3052,8 @@ package com.meng52.game.module.skill
 
       public function getCastRange() : int
       {
+         var row105:Object=skillSetData.id && GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         if(avatar && row105 && row105.sixStarTahmRange105) return avatar.getRange();
          var distance:int = Math.abs(skillSetData.range);
          var rangeAction:Array = getNativeAction() || (skills && skills.length ? skills[0] as Array : null);
          if(avatar && rangeAction && rangeAction[0] == "manual_ability" && rangeAction[1] == "jayce_n") return avatar.abilityState.form && avatar.abilityState.form.hammer ? 1500 : GameMapConfig.LINE_POS;
@@ -3141,6 +3195,21 @@ package com.meng52.game.module.skill
 
       private function applyActionTargetPolicy(param1:Vector.<Avatar>, param2:int, param3:String = null) : Vector.<Avatar>
       {
+         var shenRow105:Object=skillSetData.id && GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         if(shenRow105 && shenRow105.sixStarZedRandom105 && param2<2 && !preparingCast)
+         {
+            var chosen105:Vector.<Avatar> = new Vector.<Avatar>();
+            var target105:Avatar=currentActionTargets ? currentActionTargets[0] as Avatar : null;
+            if(target105 && target105.hp>0 && target105.line==avatar.line) chosen105.push(target105);
+            return chosen105;
+         }
+         if(shenRow105 && shenRow105.sixStarShenTeleport105 && param2>=4 && param2<=6)
+         {
+            var recipient105:Vector.<Avatar> =new Vector.<Avatar>();
+            var shenAlly105:Avatar=currentActionTargets && currentActionTargets.length ? currentActionTargets[0] as Avatar : null;
+            if(shenAlly105 && shenAlly105!==avatar && shenAlly105.hp>0) recipient105.push(shenAlly105);
+            return recipient105;
+         }
          var _loc6_:int = 0;
          var _loc4_:Vector.<Avatar> = new Vector.<Avatar>();
          var _loc5_:String = getActionPolicy(param2,param3);
@@ -3565,6 +3634,8 @@ package com.meng52.game.module.skill
          turret.skillB = null;
          turret.manualActionTypeOverride = 1;
          turret.addBuff("summon",int(param1[3]));
+         var turretSkill105:Object=GlobalData.$mConfig_skill[skillSetData.id];
+         if(turretSkill105 && turretSkill105.sixStarTurret105) turret.sixStarConfigureTurret105();
          turretFx = DisplayTools.getAttrs(String(param1[10]));
          if(!turretFx) turretFx = DisplayTools.getAttrs("SUMMON_EFF");
          if(turretFx)
@@ -3674,16 +3745,22 @@ package com.meng52.game.module.skill
          }
          var summonDefinition:String = String(param1[2]);
          if(skillSetData.modNativeSource && (getMechanismId().indexOf("1127_") >= 0 || getMechanismId().indexOf("1128_") >= 0)) summonDefinition = String(avatar.avatarData.id);
-         _loc2_ = new Avatar(GlobalData.modDefinitionId(summonDefinition,"summoned"),{"lv":Math.max(1,Tools.toInt(_loc8_ * avatar.lv)),"slv":1});
+         var batchSand:Boolean=Boolean(getNativeSetting("sixStarBatchSand105",false));
+         var batchClone:Boolean=Boolean(getNativeSetting("sixStarBatchShacoClone105",false));
+         var summonLevel:int=batchSand || batchClone ? avatar.lv : Math.max(1,Tools.toInt(_loc8_ * avatar.lv));
+         _loc2_ = new Avatar(GlobalData.modDefinitionId(summonDefinition,"summoned"),{"lv":summonLevel,"slv":1});
          _loc2_.goFight(avatar.team,summonLine,0,false);
          if(!_loc2_.inheritSummonPanel(avatar,_loc8_,summonHpRatio,summonDePhRatio,summonDeMaRatio,_loc8_)) return;
+         if(batchSand || batchClone) _loc2_.sixBatchConfigureSummon105(batchSand,batchClone);
          if(_loc1_.clearSkills === true)
          {
-            _loc2_.skill0 = null;
+            if(!batchClone) _loc2_.skill0 = null;
             _loc2_.skill1 = null;
             _loc2_.skill2 = null;
             _loc2_.skillB = null;
          }
+         var plantSkill:String=getNativeSetting("sixStarReactionPlant105") as String;
+         if(plantSkill && plantSkill.length) _loc2_.sixReactionConfigurePlant105(plantSkill);
          if(typeof _loc1_.actionType == "number" && (_loc1_.actionType == 1 || _loc1_.actionType == 2 || _loc1_.actionType == 4)) _loc2_.manualActionTypeOverride = int(_loc1_.actionType);
          if(Number(_loc1_.attackRange) > 0) _loc2_.manualAttackRangeOverride = Number(_loc1_.attackRange);
          var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;

@@ -65,6 +65,7 @@ def apply_part(row,effect):
         annie_passive(row)
         return True
     effect=part_for_skill(row,effect)
+    if effect.get('six_star_component_removed') and row.get('name') not in effect.get('reworks',{}):return False
     if effect.get('review_source_104') and not row.get('calibration_104'):return False
     index=effect['index'];factor=1+effect['strength']
     if isinstance(index,str):
@@ -74,6 +75,8 @@ def apply_part(row,effect):
     signature=effect['signature']
     if [a[0] for a in row['skill'][:len(signature)]]!=signature:return False
     action=row['skill'][index];path=tuple(effect['path'])
+    if effect.get('six_star_native_component') and action[0]=='manual_ability' and not str(action[1]).startswith('six_'):
+        return False
     value=_get(action,path)
     if type(value) not in (float,int) or value<=0:raise ValueError('Equipment component changed: '+effect['part'])
     # Update a printed coefficient only when no untouched value shares it.
@@ -105,8 +108,9 @@ def apply_equipment_bonds_104(document):
     update_equipment_parts(cfg,plan)
     from skin_revision_104 import update_equipment
     update_equipment(cfg,plan)
-    from equipment_rebinding_105 import rebind_ordinary
+    from equipment_rebinding_105 import rebind_ordinary, rebind_six_star_components
     rebind_ordinary(cfg,plan)
+    rebind_six_star_components(cfg,plan)
     families={f for b in simple['bonds_104'] for f in b['families']}
     eligible={a for a in cfg['avatar'] if a.endswith('_6') and a.rsplit('_',1)[0] in families}
     if set(plan['heroes'])!=eligible:raise ValueError('Equipment bonds must cover exactly the named orange hero catalogue')

@@ -713,10 +713,1276 @@ package com.meng52.game.module.avatar
          if(!record) { record = {target:this,damage:0}; context.targets.push(record); }
          record.damage += actual;
          context.damage += actual;
+         if(damageType==1) context.sixPhysicalHp105=Number(context.sixPhysicalHp105 || 0)+actual;
          ++context.hitSerial;
          if(context.hits.indexOf(this) < 0) context.hits.push(this);
          if(hp <= 0 && getType() == 1 && !isManualSummonUnit && context.kills.indexOf(this) < 0) context.kills.push(this);
       }
+
+      private static const SIX_IRELIA_IMMUNITIES:Array = ["weak","silence","sunder","curse","stun"];
+
+      private function sixFollowupPassive105(kind:String) : Array
+      {
+         var passive:Array=sixStarPassive105();
+         return passive && passive[1]=="six_"+kind+"_p" ? passive : null;
+      }
+
+      private function sixFollowupAlly105(excludeSelf:Boolean) : Avatar
+      {
+         var best:Avatar=null;
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(team))
+         {
+            if(!unit || unit.hp<=0 || unit.line!=line || excludeSelf && unit===this) continue;
+            if(!best || unit.getDamage()>best.getDamage()) best=unit;
+         }
+         return best;
+      }
+
+      public function sixStarPickRandom105(distance:int, banStand:Boolean) : Avatar
+      {
+         var pool:Array=[];
+         for each(var foe:Avatar in sixStarLane105(distance))
+            if(!banStand || foe.getEffectiveActionType()!=3) pool.push(foe);
+         return pool.length ? pool[(Random.getRandom(pool.length)+pool.length)%pool.length] as Avatar : null;
+      }
+
+      private function sixFollowupHit105(target:Avatar, ratio:Number, kind:int, effect:String) : Boolean
+      {
+         var attack:Object=currentAbilityAttack();
+         var before:int=attack ? int(attack.hitSerial) : 0;
+         sixStarHit105(target,ratio,kind,effect);
+         return attack && int(attack.hitSerial)>before;
+      }
+
+      private function sixFollowupHeal105(target:Avatar, amount:Number, fixed:Boolean = false) : void
+      {
+         if(target && target.hp>0 && amount>0)
+            target.injured(int(amount),1,DisplayTools.getAttrs("FX60_HEAL"),4,this,false,this,null,"",false,fixed);
+      }
+
+      private function sixFollowupExecute105(kind:String, effect:String, sourceSkill:SkillSet) : Boolean
+      {
+         var action:Array=sourceSkill.getNativeAction();
+         var target:Avatar;
+         var foe:Avatar;
+         var ally:Avatar;
+         var anchor:int;
+         var attack:Object=currentAbilityAttack();
+         if(kind=="six_nami_n")
+         {
+            ally=sixFollowupAlly105(true);
+            if(!ally) return false;
+            ally.abilityState.sixNamiBless105={source:this,left:3,ratio:Number(action[5]),weak:Number(action[6]),debuff:false};
+            sixFollowupHeal105(ally,getDamage()*Number(action[4]));
+            return true;
+         }
+         var foes:Array=sixStarLane105(Math.abs(sourceSkill.getCastRange()),kind!="six_lee_c");
+         if(!foes.length) return false;
+         target=foes[0] as Avatar;
+         switch(kind)
+         {
+            case "six_irelia_c":
+               anchor=target.pos;
+               var group:Array=[];
+               for each(foe in foes) if(Math.abs(foe.pos-anchor)<=700) group.push(foe);
+               for each(foe in group)
+                  if(sixFollowupHit105(foe,Number(action[4]),2,"FX_A_1024_MAGIC"))
+                     abilityControl(foe,"sunder",2,sixFollowupDebuff105(Number(action[5])));
+               var prior:Number=Number(attack.sixPhysicalHp105 || 0);
+               for each(foe in group) sixFollowupHit105(foe,Number(action[6]),1,effect);
+               if(hp>0)
+               {
+                  for each(var name:String in SIX_IRELIA_IMMUNITIES) removeBuff(name);
+                  abilityState.sixIreliaImmune105={until:abilitySerial+2,debuff:false};
+                  sixFollowupHeal105(this,(Number(attack.sixPhysicalHp105 || 0)-prior)*Number(action[7]));
+               }
+               break;
+            case "six_lee_c":
+               anchor=target.pos;
+               var end:int=GameMap.currentMap.getFinalPos(target.team,target.line,anchor+(target.team==1 ? 800 : -800));
+               sixFollowupHit105(target,Number(action[4]),1,effect);
+               if(target.hp>0)
+               {
+                  abilityControl(target,"stun",1);
+                  target.checkMove(false,800,this,-1,true);
+                  end=target.pos;
+               }
+               for each(foe in sixStarLane105())
+                  if(foe!==target && foe.pos>=Math.min(anchor,end) && foe.pos<=Math.max(anchor,end))
+                     sixFollowupHit105(foe,Number(action[5]),1,effect);
+               addBuff("purify",1);
+               break;
+            case "six_fiora_n":
+               if(!abilityDash(target)) return false;
+               abilityState.sixFioraCasts105=int(abilityState.sixFioraCasts105)+1;
+               attack.sixForceCrit105=int(abilityState.sixFioraCasts105)%2==0 && sixFollowupPassive105("fiora")!=null;
+               attack.sixFioraTrue105=Number(action[5]);
+               try { sixFollowupHit105(target,Number(action[4]),1,effect); }
+               finally { delete attack.sixFioraTrue105; delete attack.sixForceCrit105; }
+               addBuff("purify",1);
+               attack.sixFioraOverflow105=Number(action[6]);
+               try { sixFollowupHeal105(this,Number(attack.damage)); }
+               finally { delete attack.sixFioraOverflow105; }
+               break;
+            case "six_fiora_c":
+               for(var strike:int=0;strike<5 && hp>0;++strike)
+               {
+                  foes=sixStarLane105();
+                  if(!foes.length) break;
+                  target=foes[(Random.getRandom(foes.length)+foes.length)%foes.length] as Avatar;
+                  anchor=target.pos;
+                  sixFollowupHit105(target,Number(action[4]),1,effect);
+                  for each(foe in foes)
+                     if(foe!==target && Math.abs(foe.pos-anchor)<=300)
+                        sixFollowupHit105(foe,Number(action[4])*Number(action[5]),1,effect);
+               }
+               if(hp>0 && Number(attack.damage)>0)
+                  addBuff("shield",2,int(Number(attack.damage)*Number(action[6])));
+               break;
+            case "six_morgana_n":
+               if(sixFollowupHit105(target,Number(action[4]),2,effect)) abilityControl(target,"stun",2);
+               sixFollowupHeal105(this,Number(attack.damage));
+               ally=sixFollowupAlly105(false);
+               if(ally) ally.addBuff("purify",2);
+               break;
+            case "six_morgana_c":
+               sixFollowupUnlink105();
+               abilityState.sixMorganaLinks105={targets:foes,turns:3,damage:Number(action[5]),effect:effect};
+               for each(foe in foes)
+               {
+                  if(!foe.abilityState.sixMorganaSources105) foe.abilityState.sixMorganaSources105={};
+                  foe.abilityState.sixMorganaSources105[abilityIndex]={source:this,ratio:Number(action[4])};
+               }
+               break;
+            default:
+               return false;
+         }
+         return true;
+      }
+
+      private function sixFollowupUnlink105() : void
+      {
+         var link:Object=abilityState.sixMorganaLinks105;
+         if(!link) return;
+         for each(var foe:Avatar in link.targets)
+            if(foe.abilityState.sixMorganaSources105) delete foe.abilityState.sixMorganaSources105[abilityIndex];
+         delete abilityState.sixMorganaLinks105;
+      }
+
+      private function sixFollowupTurn105() : void
+      {
+         var grey:Number=Number(abilityState.sixTahmGrey105 || 0);
+         if(grey>0)
+         {
+            delete abilityState.sixTahmGrey105;
+            var tahm:Array=sixFollowupPassive105("tahm");
+            if(tahm) sixFollowupHeal105(this,grey*Number(tahm[4]));
+         }
+         var link:Object=abilityState.sixMorganaLinks105;
+         if(link && --link.turns<=0)
+         {
+            sixFollowupUnlink105();
+            var attack:Object=beginAbilityAttack(this,"active");
+            try
+            {
+               for each(var foe:Avatar in link.targets)
+                  if(sixFollowupHit105(foe,Number(link.damage),2,String(link.effect))) abilityControl(foe,"stun",1);
+            }
+            finally { endAbilityAttack(attack); }
+         }
+         if(skillB)
+         {
+            var row:Object=GlobalData.$mConfig_skill[skillB.skillSetData.id];
+            if(row && row.sixStarPolarGrowth105)
+            {
+               abilityState.sixPolarTurns105=int(abilityState.sixPolarTurns105)+1;
+               abilityState.sixPolarGrowth105=Number(row.sixStarPolarGrowth105);
+            }
+         }
+      }
+
+      private function sixFollowupEvent105(event:String, source:Avatar, target:Avatar, overheal:Number) : void
+      {
+         if(hp<=0) return;
+         var attack:Object=currentAbilityAttack();
+         if(event=="healed" && source===this && attack && attack.owner===this && attack.sixFioraOverflow105 && overheal>0)
+            addBuff("shield",2,int(overheal*Number(attack.sixFioraOverflow105)));
+         if(event=="basic_attack" && target && abilityState.sixLeeArmed105)
+         {
+            var lee:Array=sixFollowupPassive105("lee");
+            delete abilityState.sixLeeArmed105;
+            if(!lee) return;
+            var pulse:Object=beginAbilityAttack(this,"response");
+            try
+            {
+               for each(var foe:Avatar in abilityCandidates(otherTeam,target.line,target.pos,400,-1))
+                  if(sixFollowupHit105(foe,Number(lee[4]),2,"FX60_MAGIC"))
+                     abilityControl(foe,"weak",1,sixFollowupDebuff105(Number(lee[5])));
+            }
+            finally { endAbilityAttack(pulse); }
+         }
+      }
+
+      private static function sixFollowupDebuff105(ratio:Number) : Number
+      {
+         ratio=Math.max(0,Math.min(.95,ratio));
+         return ratio/(1-ratio);
+      }
+
+      private function sixFollowupIncoming105(amount:int, source:Avatar, kind:int, dotKind:String) : int
+      {
+         if(kind!=1 && kind!=2 && kind!=3 && kind!=6 && kind!=7 && kind!=8) return amount;
+         var multiplier:Number=1;
+         var amp:Number=0;
+         if(!dotKind && kind!=6 && kind!=7 && abilityState.sixMorganaSources105)
+         {
+            for each(var link:Object in abilityState.sixMorganaSources105)
+               if(link.source.hp>0) amp=Math.max(amp,Number(link.ratio));
+         }
+         if(source && source.team!=team && source.line==line)
+         {
+            var passive:Array=source.sixFollowupPassive105("irelia");
+            if(passive)
+            {
+               var friends:int=0;
+               for each(var unit:Avatar in GameMap.currentMap.getAliveList(source.team))
+                  if(unit && unit.hp>0 && unit.line==line) ++friends;
+               multiplier+=Math.max(0,source.sixStarLane105().length-friends)*Number(passive[4]);
+            }
+         }
+         return Tools.toInt(amount*multiplier*(1+amp));
+      }
+
+      private function sixFollowupAfterHit105(target:Avatar, attack:Object, taken:Number) : void
+      {
+         if(!attack || attack.owner!==this || taken<=0 || attack.sixDerived105 ||
+            (attack.kind!="active" && attack.kind!="basic") || attack.skill && attack.skill===skillB) return;
+         if(attack.sixNamiWave105 && target.hp>0 && target.getType()==1 && !target.isManualSummonUnit && !target.s2AnnieImmune())
+         {
+            if(target.buffs["purify"]) target.removeBuff("purify",true);
+            else target.abilityState.sixNamiSlow105={until:target.abilitySerial+2,debuff:true};
+         }
+         var aura:Object=attack.sixNamiTicket105;
+         if(!aura)
+         {
+            aura=abilityState.sixNamiBless105;
+            if(!aura || int(aura.left)<=0) return;
+            --aura.left;
+            attack.sixNamiTicket105=aura;
+            attack.sixNamiTargets105=[];
+         }
+         if(target.hp<=0 || attack.sixNamiTargets105.indexOf(target)>=0) return;
+         attack.sixNamiTargets105.push(target);
+         attack.sixDerived105=true;
+         try
+         {
+            target.injured(int(aura.source.getDamage()*Number(aura.ratio)),1,DisplayTools.getAttrs("FX60_MAGIC"),3,this,false,this,null,"",true);
+            if(target.hp>0) abilityControl(target,"weak",3,sixFollowupDebuff105(Number(aura.weak)));
+         }
+         finally { delete attack.sixDerived105; }
+      }
+
+      private function sixFollowupSpeed105() : Number
+      {
+         var factor:Number=abilityState && abilityState.sixNamiSlow105 ? .5 : 1;
+         if(!GameMap.currentMap || hp<=0) return factor;
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(team))
+         {
+            if(!unit || unit===this || unit.hp<=0 || unit.line!=line) continue;
+            var aura:Array=unit.sixFollowupPassive105("nami");
+            if(aura) return factor*Number(aura[4]);
+         }
+         return factor;
+      }
+
+
+      private function sixStarPassive105() : Array
+      {
+         var action:Array = skillB && skillB.skills && skillB.skills.length ? skillB.skills[0] : null;
+         return action && action[0] == "manual_ability" && String(action[1]).indexOf("six_") == 0 ? action : null;
+      }
+
+      private function sixStarLane105(distance:int = 3000, front:Boolean = false, forward:Boolean = false) : Array
+      {
+         return abilityCandidates(otherTeam,line,pos,distance,-1,false,front ? "front" : "nearest",null,forward);
+      }
+
+      private function sixStarStunned105() : Array
+      {
+         var targets:Array=[];
+         for each(var unit:Avatar in sixStarLane105())
+            if(unit.hasModBuff("stun")) targets.push(unit);
+         return targets;
+      }
+
+      private function sixStarLowestEnemy105() : Avatar
+      {
+         var result:Avatar = null;
+         for each(var enemy:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+         {
+            if(enemy.hp<=0) continue;
+            if(!result || enemy.hp/enemy.hpMax < result.hp/result.hpMax ||
+               (enemy.hp/enemy.hpMax == result.hp/result.hpMax && enemy.abilityIndex < result.abilityIndex))
+               result=enemy;
+         }
+         return result;
+      }
+
+      private function sixReactionPassive105(kind:String) : Array
+      {
+         var action:Array=sixStarPassive105();
+         return action && action[1]=="six_reaction_"+kind+"_p" ? action : null;
+      }
+
+      private function sixReactionEvelynnTarget105(targets:Array) : Avatar
+      {
+         var result:Avatar=null;
+         for each(var foe:Avatar in targets)
+         {
+            if(foe.hp>=foe.hpMax*.4) continue;
+            if(!result || foe.hp/foe.hpMax<result.hp/result.hpMax ||
+               foe.hp/foe.hpMax==result.hp/result.hpMax && foe.abilityIndex<result.abilityIndex) result=foe;
+         }
+         return result;
+      }
+
+      private function sixReactionExecute105(kind:String, effect:String, sourceSkill:SkillSet) : Boolean
+      {
+         var action:Array=sourceSkill.getNativeAction();
+         if(!action) return false;
+         var target:Avatar;
+         if(kind=="six_reaction_plant_n")
+         {
+            var allies:Array=abilityCandidates(team,line,pos,GameMapConfig.LINE_POS,-1);
+            var healing:Number=getDamage()*Number(action[4]);
+            for each(var ally:Avatar in allies)
+            {
+               if(ally.hp>=ally.hpMax) ally.addBuff("purify",1,0,0,-1,this);
+               else sixFollowupHeal105(ally,healing);
+            }
+            return allies.length>0;
+         }
+         if(kind=="six_reaction_evelynn_c")
+         {
+            var enemies:Array=sixStarLane105();
+            target=sixReactionEvelynnTarget105(enemies);
+            if(!target) return false;
+            sixStarHit105(target,Number(action[4]),2,effect);
+            for each(var foe:Avatar in enemies)
+               if(foe!==target && sixFollowupHit105(foe,Number(action[5]),2,effect)) abilityControl(foe,"silence",1);
+            if(hp>0)
+            {
+               hp=hpMax;
+               queueVitalBar104();
+               checkMove(false,GameMapConfig.LINE_POS,null,-1,true);
+               addBuff("purify",1,0,0,-1,this);
+            }
+            return true;
+         }
+         if(kind=="six_reaction_elise_c")
+         {
+            var targets:Array=abilityCandidates(otherTeam,line,pos,sourceSkill.getCastRange(),1,false,"ratio");
+            if(!targets.length || abilityState.root || buffs.root) return false;
+            target=targets[0];
+            addBuff("shield",2,hpMax*Number(action[4]),0,-1,this);
+            abilityDash(target);
+            var before:int=target.hp;
+            var missing:Number=1-before/target.hpMax;
+            sixStarHit105(target,Number(action[5])+Number(action[6])*Math.min(1,missing/.67),2,effect);
+            var lost:Number=Math.max(0,before-Math.max(0,target.hp));
+            if(lost>0 && hp>0)
+            {
+               sixFollowupHeal105(this,lost,true);
+               if(target.hp<=0 && skillB) { skillB.cooldown(); skillB.cooldown(); }
+            }
+            return true;
+         }
+         return false;
+      }
+
+      private function sixReactionBurnChanged105() : void
+      {
+         if(hp<=0) return;
+         var nativeBurn:Buff=buffs.burn as Buff;
+         var layers:int=nativeBurn && nativeBurn.round>0 && nativeBurn.value>0 ?
+            Math.max(1,int(abilityState.sixReactionBurnLayers105)) : 0;
+         var pending:Number=layers ? Tools.toInt(nativeBurn.value)*nativeBurn.round : 0;
+         var dot:Object;
+         var raw:Number;
+         for each(dot in manualSkillDots)
+         {
+            if(!dot || dot.kind!="burn" || dot.round<=0) continue;
+            raw=dot.bookRemaining===undefined ? Tools.toInt(Number(dot.apTick)+Number(dot.hpMaxFraction)*hpMax)*dot.round :
+               Number(dot.bookRemaining);
+            if(raw>0) { ++layers; pending+=raw; }
+         }
+         for each(dot in abyssDots104)
+            if(dot.kind=="burn" && dot.left>0 && dot.amount>0) { ++layers; pending+=dot.amount*dot.left; }
+         if(layers<4) return;
+         for each(var observer:Avatar in abilityAllEnemies())
+         {
+            var passive:Array=observer.skillB ? observer.sixReactionPassive105("annie") : null;
+            if(!passive) continue;
+            removeBuff("burn");
+            for(var key:String in manualSkillDots)
+            {
+               dot=manualSkillDots[key];
+               if(!dot || dot.kind!="burn") continue;
+               var visual:Buff=dot.visual as Buff;
+               if(visual && m_buff && visual.displayObject && visual.displayObject.parent===m_buff)
+                  m_buff.removeChild(visual.displayObject);
+               delete manualSkillDots[key];
+            }
+            var cast:Object=beginAbilityAttack(observer,"passive");
+            try
+            {
+               injured(Tools.toInt(pending*Number(passive[4])),1,DisplayTools.getAttrs(String(passive[3])),3,
+                  observer,false,observer,null,"",true);
+               observer.abilityControl(this,"stun",1);
+            }
+            finally { endAbilityAttack(cast); }
+            break;
+         }
+      }
+
+      private function sixReactionDefense105(kind:String) : Number
+      {
+         var raw:Number=kind=="dePh" ? dePh : deMa;
+         return Math.max(0,raw*(1+getManualBattleStack("defense"))+Number(abilityState["sixReactionDefense105_"+kind] || 0));
+      }
+
+      private function sixReactionStun105() : void
+      {
+         for each(var observer:Avatar in abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1))
+         {
+            var passive:Array=observer.skillB ? observer.sixReactionPassive105("thresh") : null;
+            if(!passive || hp<=0) continue;
+            for each(var stat:String in ["dePh","deMa"])
+            {
+               var key:String="sixReactionDefense105_"+stat;
+               var amount:Number=sixReactionDefense105(stat)*Number(passive[4]);
+               abilityState[key]=Number(abilityState[key] || 0)-amount;
+               observer.abilityState[key]=Number(observer.abilityState[key] || 0)+amount;
+            }
+            var cast:Object=beginAbilityAttack(observer,"passive");
+            try { observer.abilityControl(this,"curse",1); }
+            finally { endAbilityAttack(cast); }
+         }
+      }
+
+      private function sixReactionDamageTaken105() : void
+      {
+         delete abilityState.sixReactionMfStacks105;
+         if(hp<=0 || hp>=hpMax*.35 || !skillB || !sixReactionPassive105("elise")) return;
+         if(abilityState.sixReactionEliseUsed105 && skillB.m_cooldownNum>=0) return;
+         abilityState.sixReactionEliseUsed105=true;
+         abilityState.sixReactionElise105={until:abilitySerial+1,skip:true};
+         skillB.m_cooldownNum=skillB.skillSetData.cooldown;
+         addBuff("purify",1,0,0,-1,this);
+      }
+
+      private function sixReactionIncoming105(amount:int, source:Avatar, kind:int) : int
+      {
+         if(kind==4)
+         {
+            var wound:Object=abilityState.sixReactionMfWound105;
+            return wound ? int(amount*(1-Number(wound.value))) : amount;
+         }
+         if(!source || source.team==team || !source.skillB) return amount;
+         var passive:Array=source.sixReactionPassive105("mf");
+         return passive ? int(amount*(1+int(source.abilityState.sixReactionMfStacks105)*Number(passive[5]))) : amount;
+      }
+
+      private function sixReactionMfDealt105(target:Avatar, amount:Number) : void
+      {
+         if(amount<=0 || hp<=0 || target.team==team) return;
+         var passive:Array=sixReactionPassive105("mf");
+         if(!passive) return;
+         var strength:Number=Math.min(1,int(abilityState.sixReactionMfStacks105)*Number(passive[6]));
+         var wound:Object=target.abilityState.sixReactionMfWound105;
+         if(strength>0 && target.hp>0 && (!wound || strength>=Number(wound.value)))
+            target.abilityState.sixReactionMfWound105={until:target.abilitySerial+1,value:strength};
+         var cast:Object=beginAbilityAttack(this,"passive");
+         cast.sixReactionMfHeal105=true;
+         try { sixFollowupHeal105(this,amount*Number(passive[4]),true); }
+         finally { endAbilityAttack(cast); }
+         var surplus:Number=Number(cast.sixReactionMfOverflow105 || 0);
+         if(surplus<=0 || buffs.curse) return;
+         if(buffs.evil) { removeBuff("evil"); return; }
+         var shield:Buff=buffs.sixReactionMfShield105 as Buff;
+         if(!shield)
+         {
+            shield=new Buff("shield",0,0);
+            shield.source=this;
+            buffs.sixReactionMfShield105=shield;
+         }
+         shield.value+=surplus;
+         queueVitalBar104();
+      }
+
+      public function sixReactionConfigurePlant105(skillId:String) : void
+      {
+         skill0=new SkillSet(skillId,this,1);
+         skill1=null;
+         skill2=null;
+         skillB=null;
+         manualAttackRangeOverride=550;
+      }
+
+      private function sixReactionZyraDeath105() : void
+      {
+         var passive:Array=sixReactionPassive105("zyra");
+         if(!passive) return;
+         var ratio:Number=Number(passive[4]);
+         if(skill0 && skill0.skills)
+            for each(var action:Array in skill0.skills)
+               if(action[0]=="summon" && action[2]=="A_2326_5") { ratio=Number(action[1]); break; }
+         for(var i:int=0;i<4;i++)
+         {
+            var plant:Avatar=new Avatar(GlobalData.modDefinitionId("A_2326_5","summoned"),{lv:lv,slv:1});
+            plant.goFight(team,line,0,false);
+            if(!plant.inheritSummonPanel(this,ratio)) break;
+            plant.sixReactionConfigurePlant105("S_985104001_5");
+            plant.addBuff("summon",99);
+            GameMap.currentMap.addAvatar(plant,team,line,pos,false);
+         }
+      }
+
+      private function sixBatchPassive105(kind:String) : Array
+      {
+         var action:Array=sixStarPassive105();
+         return action && action[1]=="six_batch_"+kind+"_p" ? action : null;
+      }
+
+      private function sixBatchJinxStacks105() : Array
+      {
+         var stacks:Array=abilityState.sixBatchJinx105 as Array;
+         if(!stacks) return [];
+         for(var i:int=stacks.length-1;i>=0;--i)
+            if(int(stacks[i])<abilitySerial) stacks.splice(i,1);
+         return stacks;
+      }
+
+      private function sixBatchKayleStage105() : int
+      {
+         return GameMap.currentMap && sixBatchPassive105("kayle") ?
+            Math.min(4,int(GameMap.currentMap.roundNum/(isLeader ? 7 : 8))) : 0;
+      }
+
+      private function sixBatchNear105(center:Avatar, radius:int) : Array
+      {
+         return abilityCandidates(otherTeam,center.line,center.pos,radius,-1,false,"nearest",[center]);
+      }
+
+      private function sixBatchZiggsTarget105() : Avatar
+      {
+         var target:Avatar=null;
+         for each(var foe:Avatar in abilityAllEnemies())
+            if(foe.getType()==1 && !foe.isManualSummonUnit && (!target || foe.hpMax>target.hpMax ||
+               foe.hpMax==target.hpMax && foe.abilityIndex<target.abilityIndex)) target=foe;
+         return target;
+      }
+
+      public function sixBatchConfigureSummon105(sand:Boolean, clone:Boolean) : void
+      {
+         if(!sand && !clone) return;
+         skill1=null;
+         skill2=null;
+         skillB=null;
+         if(sand)
+         {
+            skill0=null;
+            abilityState.sixBatchSand105=true;
+         }
+      }
+
+      private function sixBatchExecute105(kind:String, effect:String, sourceSkill:SkillSet) : Boolean
+      {
+         var action:Array=sourceSkill.getNativeAction();
+         if(!action) return false;
+         var context:Object=currentAbilityAttack();
+         var target:Avatar=null;
+         var foe:Avatar;
+         var neighbors:Array;
+         if(kind=="six_batch_kayle_c")
+         {
+            // No dispel flag: this protection lasts through the stated owner turns.
+            abilityState.sixBatchKayleGuard105={until:abilitySerial+(sixBatchKayleStage105()==4 ? 2 : 1),value:Number(action[4])};
+            abilityState.sixBatchKayleHit105=2000;
+            return true;
+         }
+         if(kind=="six_batch_shaco_box")
+         {
+            if(!context || context.sixBatchShacoPos105==null) return false;
+            var box:Avatar=new Avatar(GlobalData.modDefinitionId("A_2019_5","summoned"),{lv:lv,slv:1});
+            box.goFight(team,int(context.sixBatchShacoLine105),0,false);
+            if(!box.inheritSummonPanel(this,Number(action[4]))) return false;
+            box.addBuff("summon",3);
+            GameMap.currentMap.addAvatar(box,team,int(context.sixBatchShacoLine105),int(context.sixBatchShacoPos105),false);
+            box.abilityFeedback(box.avatarData.name,effect);
+            return true;
+         }
+         if(kind=="six_batch_jinx_c")
+         {
+            target=sixStarLowestEnemy105();
+            if(!target) return false;
+            neighbors=sixBatchNear105(target,500);
+            var attack:Number=Tools.toInt(getDamage()*(1+checkTalent(1)));
+            var damage:Number=attack*Number(action[4])+(target.hpMax-target.hp)*Number(action[5]);
+            context.sixBatchJinxRocket105=true;
+            try
+            {
+               sixStarHit105(target,damage/Math.max(1,attack),1,effect);
+               for each(foe in neighbors)
+                  sixStarHit105(foe,damage*Number(action[6])/Math.max(1,Tools.toInt(getDamage()*(1+checkTalent(1)))),1,effect);
+            }
+            finally { delete context.sixBatchJinxRocket105; }
+            return true;
+         }
+         if(kind=="six_batch_tf_n")
+         {
+            var globalFoes:Array=abilityAllEnemies();
+            globalFoes.sort(function(a:Avatar,b:Avatar):Number {
+               return int(a.line!=line)-int(b.line!=line) || Math.abs(a.pos-pos)-Math.abs(b.pos-pos) || a.abilityIndex-b.abilityIndex;
+            });
+            for each(foe in globalFoes.slice(0,4))
+               if(sixFollowupHit105(foe,Number(action[4]),2,effect))
+                  abilityControl(foe,"weak",2,sixFollowupDebuff105(Number(action[5])));
+            return globalFoes.length>0;
+         }
+         if(kind=="six_batch_ziggs_c")
+         {
+            target=sixBatchZiggsTarget105();
+            if(!target) return false;
+            neighbors=sixBatchNear105(target,400).slice(0,3);
+            sixStarHit105(target,trueSkillCoefficient104(Number(action[4])),3,effect);
+            for each(foe in neighbors) sixStarHit105(foe,trueSkillCoefficient104(Number(action[5])),3,effect);
+            return true;
+         }
+         var targets:Array=sixStarLane105(GameMapConfig.LINE_POS,true);
+         if(kind=="six_batch_tf_c")
+         {
+            if(hp>=hpMax*.9) return false;
+            addBuff("purify",2);
+            addBuff("shield",2,hpMax*Number(action[5]));
+            addBuff("steel",2,Number(action[6]));
+            var previousStrong:Buff=buffs.strong as Buff;
+            addBuff("strong",2,Number(action[7]));
+            abilityState.sixBatchTfMove105={until:abilitySerial+2,value:Number(action[8]),
+               strong:buffs.strong!==previousStrong ? buffs.strong : null,debuff:false};
+            sixFollowupHeal105(this,(hpMax-hp)*Number(action[9]));
+            if(targets.length && sixFollowupHit105(targets[0],Number(action[4]),2,effect))
+               abilityControl(targets[0],"stun",1);
+            return true;
+         }
+         if(!targets.length) return false;
+         if(kind=="six_batch_jinx_n")
+         {
+            var repeats:int=1+sixBatchJinxStacks105().length;
+            for(var index:int=0;index<repeats && hp>0;index++)
+            {
+               targets=sixStarLane105(GameMapConfig.LINE_POS,true);
+               if(!targets.length) break;
+               target=targets[0];
+               neighbors=sixBatchNear105(target,350);
+               sixStarHit105(target,Number(action[4]),1,effect);
+               for each(foe in neighbors) sixStarHit105(foe,Number(action[5]),1,effect);
+            }
+         }
+         else if(kind=="six_batch_ziggs_n")
+         {
+            target=targets[0];
+            neighbors=sixBatchNear105(target,400);
+            if(sixFollowupHit105(target,Number(action[4]),2,effect))
+            {
+               abilityControl(target,"weak",2,sixFollowupDebuff105(Number(action[6])));
+               abilityControl(target,"sunder",2,sixFollowupDebuff105(Number(action[7])));
+            }
+            for each(foe in neighbors) sixStarHit105(foe,Number(action[5]),2,effect);
+         }
+         else return false;
+         return true;
+      }
+
+      private function sixBatchDeath105(source:Avatar) : void
+      {
+         if(hp>0 || abilityState.sixBatchDeath105 || !GameMap.currentMap) return;
+         abilityState.sixBatchDeath105=true;
+         if(skillB) sixReactionZyraDeath105();
+         for each(var observer:Avatar in abilityAllEnemies())
+         {
+            var sameLane:Boolean=observer.line==line;
+            var context:Object=source===observer ? currentAbilityAttack() : null;
+            if(observer.skillB && observer.sixBatchPassive105("jinx") &&
+               (sameLane || context && context.owner===observer && context.sixBatchJinxRocket105))
+            {
+               var stacks:Array=observer.sixBatchJinxStacks105();
+               stacks.push(observer.abilitySerial+3);
+               observer.abilityState.sixBatchJinx105=stacks;
+            }
+            var lissandra:Array=sameLane && observer.skillB ? observer.sixBatchPassive105("lissandra") : null;
+            if(lissandra)
+            {
+               var response:Object=beginAbilityAttack(observer,"passive");
+               try
+               {
+                  for each(var foe:Avatar in observer.sixBatchNear105(this,300))
+                     observer.sixStarHit105(foe,Number(lissandra[4]),2,String(lissandra[3]));
+               }
+               finally { endAbilityAttack(response); }
+            }
+         }
+      }
+
+      private function sixBatchCurse105() : void
+      {
+         for each(var observer:Avatar in abilityAllEnemies())
+         {
+            var passive:Array=observer.skillB ? observer.sixBatchPassive105("shaco") : null;
+            if(!passive || hp<=0) continue;
+            var response:Object=beginAbilityAttack(observer,"passive");
+            try
+            {
+               if(observer.sixFollowupHit105(this,Number(passive[4]),2,String(passive[3])) && hp>0)
+                  addBuff("poison",2,observer.getDamage()*Number(passive[5]),0,-1,observer);
+            }
+            finally { endAbilityAttack(response); }
+         }
+      }
+
+      private function sixBatchIncoming105(amount:int, source:Avatar, kind:int, dotKind:String) : int
+      {
+         if(kind==4)
+         {
+            var wound:Object=abilityState.sixBatchZiggsWound105;
+            return wound ? int(amount*(1-Number(wound.value))) : amount;
+         }
+         if(!source || source.team==team) return amount;
+         var yasuo:Array=skillB ? sixBatchPassive105("yasuo") : null;
+         if(yasuo && kind>=1 && kind<=3 && !dotKind && hp>0 && shieldValue104()<=0 &&
+            (!abilityState.sixBatchYasuoShield105 || skillB.m_cooldownNum<0))
+         {
+            var guardContext:Object=beginAbilityAttack(this,"passive");
+            try { addBuff("shield",1,hpMax*Number(yasuo[5]),0,-1,this); }
+            finally { endAbilityAttack(guardContext); }
+            if(shieldValue104()>0)
+            {
+               abilityState.sixBatchYasuoShield105=true;
+               skillB.m_cooldownNum=skillB.skillSetData.cooldown;
+            }
+         }
+         var guard:Object=abilityState.sixBatchKayleGuard105;
+         if(guard && int(guard.until)>=abilitySerial)
+            amount=int(Math.round(amount*(1-Number(guard.value))*1e8)/1e8);
+         var syndra:Array=source.skillB ? source.sixBatchPassive105("syndra") : null;
+         if(syndra && GameMap.currentMap)
+            amount=int(amount*(1+int(GameMap.currentMap.roundNum/10)*Number(syndra[4])));
+         return amount;
+      }
+
+      private function sixBatchAfterDamage105(target:Avatar, taken:Number) : void
+      {
+         if(taken<=0 || hp<=0 || target.team==team || !skillB) return;
+         var ziggs:Array=sixBatchPassive105("ziggs");
+         if(ziggs && target.hp>0)
+            target.abilityState.sixBatchZiggsWound105={until:target.abilitySerial+2,value:Number(ziggs[4]),debuff:true};
+         var passive:Array=sixBatchPassive105("tf");
+         var attack:Object=currentAbilityAttack();
+         if(!passive || attack && attack.owner===this && attack.sixBatchTfProc105) return;
+         var key:String="sixBatchTfHits105_"+abilityIndex;
+         var count:int=(int(target.abilityState[key])+1)%4;
+         target.abilityState[key]=count;
+         if(count!=0 || target.hp<=0) return;
+         var response:Object=beginAbilityAttack(this,"passive");
+         response.sixBatchTfProc105=true;
+         try
+         {
+            for each(var name:String in ["strong","steel","armor","hitup","fleeup","critup","toughup","book_penetration","bless"])
+            {
+               var buff:Buff=target.buffs[name] as Buff;
+               if(!buff) continue;
+               target.removeBuff(name);
+               addBuff(name,buff.round,buff.value,0,-1,this);
+               return;
+            }
+            abilityControl(target,"curse",1);
+            sixStarHit105(target,trueSkillCoefficient104(Number(passive[4])),3,String(passive[3]));
+         }
+         finally { endAbilityAttack(response); }
+      }
+
+      private function sixBatchSpeed105() : Number
+      {
+         var jinx:Array=skillB ? sixBatchPassive105("jinx") : null;
+         var result:Number=jinx ? 1+sixBatchJinxStacks105().length*Number(jinx[4]) : 1;
+         var move:Object=abilityState.sixBatchTfMove105;
+         if(move)
+         {
+            result*=1+Number(move.value);
+            if(move.strong && move.strong===buffs.strong) result/=1+Number(move.strong.value);
+         }
+         return result;
+      }
+
+      private function sixBatchKayleAttack105(aim:Avatar, stage:int) : int
+      {
+         var passive:Array=sixBatchPassive105("kayle");
+         var targets:Array=sixStarLane105();
+         var positions:Array=[];
+         var target:Avatar;
+         var total:int=0;
+         var main:Number=stage>=3 ? trueSkillCoefficient104(Number(passive[5])) : Number(passive[4]);
+         var splash:Number=trueSkillCoefficient104(Number(passive[6]));
+         for each(target in targets) positions.push(target.pos);
+         var attack:Object=beginAbilityAttack(this,"basic");
+         try
+         {
+            for each(target in targets)
+            {
+               var before:int=target.hp;
+               if(sixFollowupHit105(target,main,
+                  stage>=3 ? 3 : avatarData.damageType,String(passive[3])))
+               {
+                  var lost:int=Math.max(0,before-target.hp);
+                  total+=lost;
+                  applyBookAttackEffects(target,lost);
+               }
+            }
+            if(stage>=3)
+               for(var i:int=0;i<targets.length;i++)
+               {
+                  target=targets[i];
+                  for(var j:int=0;j<positions.length && target.hp>0;j++)
+                     if(i!=j && Math.abs(positions[i]-positions[j])<=200)
+                     {
+                        before=target.hp;
+                        sixStarHit105(target,splash,3,String(passive[3]));
+                        total+=Math.max(0,before-target.hp);
+                     }
+               }
+         }
+         finally
+         {
+            endAbilityAttack(attack);
+            emitModEvent("basic_attack",this,aim);
+         }
+         return total;
+      }
+
+      private function sixStarCanCast105(kind:String, distance:int) : Boolean
+      {
+         switch(kind)
+         {
+            case "six_reaction_plant_n": return true;
+            case "six_reaction_evelynn_c": return sixReactionEvelynnTarget105(sixStarLane105())!=null;
+            case "six_reaction_elise_c":
+               return !abilityState.root && !buffs.root && sixStarLane105(distance).length>0;
+            case "six_batch_kayle_c": return true;
+            case "six_batch_tf_c": return hp<hpMax*.9;
+            case "six_batch_tf_n":
+            case "six_batch_jinx_c": return abilityAllEnemies().length>0;
+            case "six_batch_ziggs_c": return sixBatchZiggsTarget105()!=null;
+            case "six_batch_shaco_box":
+            case "six_batch_jinx_n":
+            case "six_batch_ziggs_n": return sixStarLane105(distance).length>0;
+         }
+         switch(kind)
+         {
+            case "six_shen_n":
+            case "six_yi_c":
+               return true;
+            case "six_nami_n":
+               return sixFollowupAlly105(true)!=null;
+            case "six_fiora_n":
+               return !abilityState.root && sixStarLane105(distance).length>0;
+            case "six_fiora_c":
+            case "six_lee_c":
+            case "six_irelia_c":
+            case "six_morgana_n":
+            case "six_morgana_c":
+               return sixStarLane105(distance).length>0;
+            case "six_caitlyn_c":
+               return sixStarLowestEnemy105() != null;
+            case "six_kennen_p":
+               return sixStarStunned105().length >= 3;
+            case "six_yi_n":
+            case "six_gangplank_c":
+            case "six_blitz_c":
+            case "six_akali_c":
+            case "six_ahri_c":
+            case "six_caitlyn_n":
+            case "six_talon_n":
+               return sixStarLane105(distance,false,kind=="six_talon_n").length > 0;
+         }
+         return false;
+      }
+
+      private function sixStarHit105(target:Avatar, ratio:Number, kind:int, effect:String) : void
+      {
+         if(!target || target.hp <= 0 || hp <= 0) return;
+         var selected:Vector.<Avatar> = new Vector.<Avatar>();
+         selected.push(target);
+         attackAimList(selected,kind,ratio,0,effect,false,null,GameMapConfig.LINE_POS+1);
+      }
+
+      private function sixStarExecute105(kind:String, effect:String, sourceSkill:SkillSet) : Boolean
+      {
+         if(kind.indexOf("six_reaction_")==0) return sixReactionExecute105(kind,effect,sourceSkill);
+         if(kind.indexOf("six_batch_")==0) return sixBatchExecute105(kind,effect,sourceSkill);
+         if(["six_irelia_c","six_lee_c","six_fiora_n","six_fiora_c","six_nami_n","six_morgana_n","six_morgana_c"].indexOf(kind)>=0)
+            return sixFollowupExecute105(kind,effect,sourceSkill);
+         var action:Array = sourceSkill.getNativeAction();
+         var ratio:Number = Number(action[4]);
+         var target:Avatar;
+         var primary:Avatar;
+         var foes:Array;
+         var i:int;
+         var anchor:int;
+         if(kind=="six_yi_c")
+         {
+            removeBuff("weak");
+            addBuff("strong",2,ratio);
+            abilityState.highlander={until:abilitySerial+2,left:0,extra:Number(action[5]),debuff:false};
+            return true;
+         }
+         if(kind=="six_shen_n")
+         {
+            abilityState.sixShen105={charges:3,ratio:ratio,debuff:false};
+            return true;
+         }
+         if(kind=="six_caitlyn_c")
+         {
+            primary=sixStarLowestEnemy105();
+            if(!primary) return false;
+            sixStarHit105(primary,ratio,1,effect);
+            return true;
+         }
+         if(kind=="six_kennen_p")
+         {
+            foes=sixStarStunned105();
+            if(foes.length<3) return false;
+            for each(target in foes) sixStarHit105(target,ratio,2,effect);
+            return true;
+         }
+
+         foes=sixStarLane105(Math.abs(sourceSkill.getCastRange()),
+             kind=="six_yi_n" || kind=="six_gangplank_c" || kind=="six_ahri_c",kind=="six_talon_n");
+         if(!foes.length) return false;
+         primary=foes[0] as Avatar;
+         switch(kind)
+         {
+            case "six_yi_n":
+               for each(target in foes.slice(0,4)) sixStarHit105(target,ratio,1,effect);
+               break;
+            case "six_gangplank_c":
+               anchor=primary.pos;
+               currentAbilityAttack().sixCritTrue105=true;
+               for each(target in foes)
+                  if(Math.abs(target.pos-anchor)<=300) sixStarHit105(target,ratio,1,effect);
+               break;
+            case "six_blitz_c":
+               for each(target in foes)
+               {
+                  target.dispelShieldForSkill();
+                  target.removeBuff("purify");
+                  abilityControl(target,"silence",1);
+                  sixStarHit105(target,ratio,2,effect);
+               }
+               break;
+            case "six_akali_c":
+            case "six_ahri_c":
+               for each(target in foes)
+                  if(target.getDamage()>primary.getDamage()) primary=target;
+               if(kind=="six_akali_c")
+               {
+                  abilityControl(primary,"stun",1);
+                  sixStarHit105(primary,ratio,2,effect);
+               }
+               else
+               {
+                  checkMove(false,300);
+                  primary.checkMove(true,500,this,-1,true);
+                  sixStarHit105(primary,ratio,2,effect);
+                  i=0;
+                  for each(target in foes)
+                  {
+                     if(target===primary) continue;
+                     sixStarHit105(target,Number(action[5]),2,effect);
+                     if(++i==2) break;
+                  }
+               }
+               break;
+            case "six_talon_n":
+               for(i=0;i<2;i++) for each(target in foes) sixStarHit105(target,Number(action[4+i]),1,effect);
+               break;
+            case "six_caitlyn_n":
+               checkMove(false,500);
+               sixStarHit105(primary,ratio,2,effect);
+               if(primary.hp>0) abilityState.sixCaitlyn105={target:primary,ratio:Number(action[5]),effect:effect,debuff:false};
+               break;
+            default:
+               return false;
+         }
+         return true;
+      }
+
+      public function sixStarConfigureTurret105() : void
+      {
+         abilityState.sixTurret105=true;
+         manualAttackRangeOverride=1000;
+         skill0=skill1=skill2=skillB=null;
+         manualActionTypeOverride=1;
+      }
+
+      public function sixStarShenTarget105() : Avatar
+      {
+         var selected:Avatar=null;
+         var sameLane:Boolean=false;
+         for each(var ally:Avatar in GameMap.currentMap.getAliveList(team))
+         {
+            if(ally===this || ally.hp<=0) continue;
+            if(ally.line==line) sameLane=true;
+            if(!selected || ally.hp<selected.hp) selected=ally;
+         }
+         return sameLane ? selected : null;
+      }
+
+      private function sixStarTurnStart105() : void
+      {
+         if(abilityState.sixTurret105 && hp>0)
+            injured(int(hpMax*.3),1,DisplayTools.getAttrs("FX60_HEAL"),4,this,false,this);
+         var shot:Object=abilityState.sixCaitlyn105;
+         if(!shot) return;
+         delete abilityState.sixCaitlyn105;
+         if(hp<=0 || !shot.target || shot.target.hp<=0) return;
+         var attack:Object=beginAbilityAttack(this,"active");
+         try { sixStarHit105(shot.target,Number(shot.ratio),1,String(shot.effect)); }
+         finally { endAbilityAttack(attack); }
+      }
+
+      public function sixStarSkillBegin105(attack:Object, sourceSkill:SkillSet) : void
+      {
+         if(sourceSkill && sourceSkill === skillB) return;
+         if(sourceSkill)
+         {
+            var row:Object=GlobalData.$mConfig_skill[sourceSkill.skillSetData.id];
+            if(row && row.sixStarLeech105) attack.sixLeech105=true;
+            if(row && row.sixStarNamiWave105) attack.sixNamiWave105=true;
+            if(row && row.sixStarBatchShacoBox105)
+            {
+               attack.sixBatchShacoLine105=line;
+               attack.sixBatchShacoPos105=pos;
+            }
+         }
+         if(!abilityState.sixFire105) return;
+         attack.sixFire105 = true;
+         delete abilityState.sixFire105;
+      }
+
+      public function sixStarSkillFinished105(attack:Object, sourceSkill:SkillSet) : void
+      {
+         if(hp<=0 || sourceSkill === skillB) return;
+         var row:Object=GlobalData.$mConfig_skill[sourceSkill.skillSetData.id];
+         if(row && row.sixStarBatchSandHeal105 && manualSummonFamilies)
+         {
+            for each(var sand:Avatar in manualSummonFamilies["manual-1124-soldier"])
+               if(sand && sand.hp>0)
+               {
+                  sand.hp=sand.hpMax;
+                  sand.queueVitalBar104(GameMap.actionDelay);
+               }
+         }
+         if(sourceSkill===skill0 && skillB && sixBatchPassive105("gabriel"))
+         {
+            var friends:int=abilityCandidates(team,line,pos,GameMapConfig.LINE_POS,-1,false,"nearest",[this]).length;
+            sourceSkill.abilityCooldownOverride=Math.max(0,sourceSkill.skillSetData.cooldown-friends);
+         }
+         if(row && row.sixStarLeech105 && Number(attack.sixDrain105)>0)
+            injured(int(attack.sixDrain105),1,DisplayTools.getAttrs("FX60_HEAL"),4,this,false,this);
+         var passive:Array=sixStarPassive105();
+         if(!passive) return;
+         for(var cast:int=0;cast<int(attack.sixKatarinaRecasts105) && hp>0;++cast)
+            sixStarRecastKatarina105();
+         switch(passive[1])
+         {
+            case "six_lee_p":
+               abilityState.sixLeeArmed105=true;
+               break;
+            case "six_morgana_p":
+               addBuff("purify",2);
+               addBuff("shield",2,int(hpMax*Number(passive[4])));
+               break;
+            case "six_shen_p":
+               addBuff("shield",2,int(hpMax*Number(passive[4])));
+               addBuff("steel",2,Number(passive[5]));
+               addBuff("taunt",2);
+               break;
+            case "six_gangplank_p":
+               if(sourceSkill===skill1) abilityState.sixFire105=true;
+               break;
+            case "six_wukong_p":
+               if(sourceSkill!==skill1) break;
+               for each(var clone:Avatar in abilityState.summons_wukong)
+               {
+                  if(!clone || clone.hp<=0) continue;
+                  clone.skill1=new SkillSet(sourceSkill.skillSetData.id,clone,1,true);
+                  try { clone.skill1.useSkill(); }
+                  finally { clone.skill1=null; }
+               }
+               break;
+         }
+      }
+
+      private function sixStarRecastKatarina105() : void
+      {
+         abilityState.sixRecast105=true;
+         try { if(skill0) skill0.useSkill(); }
+         finally { delete abilityState.sixRecast105; }
+      }
+
+      private function sixStarCombatEvent105(event:String, target:Avatar, amount:Number, overheal:Number) : void
+      {
+         if(hp<=0) return;
+         var phase:Object=abilityState.highlander;
+         if(event=="kill" && phase && phase.extra)
+         {
+            ++phase.until;
+            if(buffs["strong"]) ++buffs["strong"].round;
+         }
+         var passive:Array=sixStarPassive105();
+         if(!passive) return;
+         var kind:String=String(passive[1]);
+         var ratio:Number=Number(passive[4]);
+         var attack:Object=currentAbilityAttack();
+         if(event=="kill" && kind=="six_katarina_p" && !abilityState.sixRecast105)
+         {
+            addBuff("strong",2,ratio);
+            if(attack && attack.owner===this && attack.kind=="active" && attack.skill)
+               attack.sixKatarinaRecasts105=int(attack.sixKatarinaRecasts105)+1;
+            else sixStarRecastKatarina105();
+         }
+         else if(event=="basic_attack" && kind=="six_wukong_p")
+         {
+            for each(var clone:Avatar in abilityState.summons_wukong)
+            {
+               if(!clone || clone.hp<=0) continue;
+               var cloneTargets:Array;
+               var victim:Avatar=target && target.hp>0 && target.line==clone.line ? target : null;
+               if(!victim)
+               {
+                  cloneTargets=clone.sixStarLane105();
+                  victim=cloneTargets.length ? cloneTargets[0] as Avatar : null;
+               }
+               if(victim)
+               {
+                  var one:Vector.<Avatar> =new Vector.<Avatar>();
+                  one.push(victim);
+                  clone.attackAimList(one,-1,1,0,null,false,null,GameMapConfig.LINE_POS+1);
+               }
+            }
+         }
+         else if(event=="healed" && kind=="six_ahri_p" && hp>=hpMax && amount==0 && overheal>0)
+         {
+            addBuff("purify",1);
+            addBuff("hitup",1,ratio);
+            addBuff("fleeup",1,ratio);
+         }
+         else if(event=="hit" && target && target.hp>0 && attack && attack.owner===this && !attack.sixDerived105)
+         {
+            if(kind=="six_jarvan_p" && buffs["strong"])
+            {
+               abilityControl(target,"sunder",1,ratio);
+               abilityControl(target,"weak",1,ratio);
+            }
+            else if(kind=="six_gangplank_p" && attack.sixFire105)
+            {
+               delete attack.sixFire105;
+               target.addManualSkillDot(id+":six_fire","burn",getDamage()*ratio,0,2,this,1);
+            }
+            else if(kind=="six_darius_p")
+               sixStarBleed105(target,ratio,Number(passive[5]));
+            else if(kind=="six_talon_p" && attack.kind=="active" && attack.skill!==skillB)
+            {
+               var key:String="sixTalonHits_"+abilityIndex;
+               var hits:int=(int(target.abilityState[key])+1)%3;
+               target.abilityState[key]=hits;
+               if(!hits) target.addManualSkillDot(id+":six_talon","bleed",getDamage()*ratio,0,3,this,1);
+            }
+         }
+      }
+
+      private function sixStarBleed105(target:Avatar, ratio:Number, fury:Number) : void
+      {
+         var prefix:String=id+":six_darius:";
+         var layers:Array=[];
+         for(var key:String in target.manualSkillDots)
+            if(key.indexOf(prefix)==0) layers.push(key);
+         var index:int=0;
+         while(index<4 && layers.indexOf(prefix+index)>=0) ++index;
+         var next:String=prefix+index;
+         if(target.yasuoImmune104("bleed") || target.s2AnnieImmune() || target.hasModBuff("purify"))
+         {
+            target.addManualSkillDot(next,"bleed",getDamage()*ratio,0,3,this,1);
+            return;
+         }
+         target.addManualSkillDot(next,"bleed",getDamage()*ratio,0,3,this,1);
+         for each(key in layers) target.manualSkillDots[key].round=3;
+         if(layers.length>=4 && !abilityState.sixBloodrage105)
+         {
+            abilityState.sixBloodrage105=true;
+            addManualBattleStack("attack",fury,1);
+            addManualBattleStack("defense",fury,1);
+         }
+      }
+
+      private function sixStarCriticalDamage105(target:Avatar, raw:int, share:Number) : Array
+      {
+         var converted:Array=countDamage(this,target,Tools.toInt(raw*trueSkillCoefficient104()),3,share);
+         converted[2]=3;
+         return converted;
+      }
+
+      private function sixStarDirectInjury105(target:Avatar, damage:Array, crit:Number, options:*, kind:int,
+            visualSource:Avatar, appliedBuff:Buff, raw:int, share:Number) : int
+      {
+         var attack:Object=currentAbilityAttack();
+         var before:int=target.hp;
+         var effective:int=damage.length>2 ? int(damage[2]) : kind;
+         var result:int=target.injured(damage[0],crit,options,effective,visualSource,damage[1],this,appliedBuff);
+         if(kind<1 || kind>3 || !attack || attack.owner!==this || attack.sixDerived105) return result;
+         if(attack.sixLeech105)
+            attack.sixDrain105=Number(attack.sixDrain105 || 0)+Math.max(0,before-Math.max(0,target.hp));
+         if(target.hp<=0 || hp<=0 || attack.skill===skillB) return result;
+         var bonus:int=0;
+         var bonusType:int=3;
+         var fiora:Boolean=Boolean(attack.sixFioraTrue105);
+         if(fiora)
+         {
+            bonus=int(target.hpMax*Number(attack.sixFioraTrue105));
+         }
+         else if(attack.sixShenStrike105)
+         {
+            bonusType=1;
+            bonus=int(countDamage(this,target,int(hpMax*Number(attack.sixShenStrike105)),1,1)[0]);
+         }
+         else if((attack.kind=="basic" || attack.kind=="active") && abilityState.highlander && abilityState.highlander.extra)
+         {
+            var sign:Number=AvatarData.damageRate(avatarData.signType,target.avatarData.signType);
+            bonus=int(raw*share*crit*sign*Number(abilityState.highlander.extra));
+         }
+         if(bonus>0)
+         {
+            attack.sixDerived105=true;
+            try
+            {
+               target.injured(bonus,bonusType==1 || fiora ? crit : 1,DisplayTools.getAttrs("FX60_SLASH"),
+                  bonusType,this,false,this,null,"",bonusType==3 && !fiora);
+            }
+            finally { delete attack.sixDerived105; }
+         }
+         return result;
+      }
+
 
       private function abilityEnemies(distance:Number, center:Avatar = null, maximum:int = 1, heroOnly:Boolean = false, order:String = "nearest", excluded:Array = null, forward:Boolean = false) : Array
       {
@@ -876,7 +2142,15 @@ package com.meng52.game.module.avatar
 
       private function abilitySummon(aid:String, count:int, ratio:Number, turns:int, key:String, focus:Avatar = null, clone:Boolean = false) : void
       {
-         ratio *= activeManualEffectMultiplier();
+         var summonRow:Object=null;
+         if(clone && key=="wukong")
+         {
+            var summonerAttack:Object=currentAbilityAttack();
+            if(summonerAttack && summonerAttack.skill)
+               summonRow=GlobalData.$mConfig_skill[summonerAttack.skill.skillSetData.id];
+         }
+         if(summonRow && summonRow.sixStarClone105) ratio=1;
+         else ratio *= activeManualEffectMultiplier();
          if(!Avatar.isValidSummonMultiplier(ratio)) return;
          var previous:Array = abilityState["summons_"+key] as Array;
          if(previous) for each(var old:Avatar in previous) if(old && old.hp > 0) { old.hp = 0; old.deadFast(); }
@@ -975,6 +2249,7 @@ package com.meng52.game.module.avatar
       {
          if(abilityState.deathHandled) return;
          abilityState.deathHandled = true;
+         sixBatchDeath105(null);
          for(var key:String in abilityState)
          {
             var state:Object = abilityState[key];
@@ -1002,6 +2277,8 @@ package com.meng52.game.module.avatar
       private function abilityTurnStart() : Boolean
       {
          ++abilitySerial;
+         if(buffs.sixReactionMfShield105 && Number(buffs.sixReactionMfShield105.value)>0)
+            abilityState.sixReactionMfStacks105=int(abilityState.sixReactionMfStacks105)+1;
          var key:String;
          var state:Object;
          var owner:Avatar;
@@ -1590,7 +2867,8 @@ package com.meng52.game.module.avatar
       private function removeIndependentShields104() : void
       {
          var keys:Array=[];
-         for(var key:String in buffs) if(key.indexOf("yasuoShield104_")==0) keys.push(key);
+         for(var key:String in buffs)
+            if(key.indexOf("yasuoShield104_")==0 || key=="sixReactionMfShield105") keys.push(key);
          for each(key in keys) removeBuff(key);
       }
       private function yasuoDamage104(amount:Number, source:Avatar, derived:Boolean = false) : Number
@@ -1745,6 +3023,7 @@ package com.meng52.game.module.avatar
       public function abilityCanCast(kind:String, distance:int, sourceSkill:* = null) : Boolean
       {
          if(hp <= 0 || !GameMap.currentMap) return false;
+         if(kind.indexOf("six_")==0) return sixStarCanCast105(kind,distance);
          if(kind.indexOf("night_yasuo_")==0) return yasuoCanCast104(kind);
          if(kind.indexOf("dragon_kaisa_")==0) return kaisaCanCast104(kind);
          if(kind.indexOf("skin2_")==0) return skin2CanCast(kind,sourceSkill);
@@ -1876,6 +3155,15 @@ package com.meng52.game.module.avatar
          if(!friendly) for each(var focused:Avatar in list) if(s2LiveMark(focused,"charmed") && focused.skin2.charmed.owner.team==team) return focused;
          for each(var unit:Avatar in list) if(!excludeSelf || unit !== this) return unit;
          return null;
+      }
+
+      private function sixBatchVayneTarget105(targets:Array) : Avatar
+      {
+         var key:String="rings_"+abilityIndex;
+         var rear:Array=targets.concat().reverse();
+         for each(var unit:Avatar in rear)
+            if(unit.skin2[key] && int(unit.skin2[key].count)>0) return unit;
+         return rear.length ? rear[0] : null;
       }
       public function skin2Focus(list:Vector.<Avatar>) : Vector.<Avatar>
       {
@@ -2041,7 +3329,8 @@ package com.meng52.game.module.avatar
                   target=s2Pick("farthest");abilityPull(target,this,GameMapConfig.LINE_POS);
                   if(s2Hit(target,s2Value(skill,"hit"),1)) {abilityControl(target,"stun",1);s2Mark(target,"exposed",2);}break;
                case 1206:
-                  for each(unit in targets) if(unit.skin2["rings_"+abilityIndex]) {target=unit;break;}
+                  if(skill.getNativeSetting("sixStarBatchRear105")) target=sixBatchVayneTarget105(targets);
+                  else for each(unit in targets) if(unit.skin2["rings_"+abilityIndex]) {target=unit;break;}
                   for(i=0;i<2;i++) s2Hit(target,s2Value(skill,"hit"),1,true);break;
                case 1207:
                   for each(unit in targets.slice(0,2)) s2Hit(unit,s2Value(skill,"hit"));
@@ -2127,6 +3416,23 @@ package com.meng52.game.module.avatar
                   for each(unit in targets) {s2Hit(unit,s2Value(skill,"hit"));if(s2LiveMark(unit,"exposed") && unit.skin2.exposed.owner===this) abilityControl(unit,"silence",1);}break;
                case 1206:
                   removeAllDebuff();addBuff("strong",2,s2Value(skill,"attackBuff"));addBuff("fleeup",2,s2Value(skill,"dodgeBuff"));target=s2Pick("ratio");
+                  if(skill.getNativeSetting("sixStarBatchRear105"))
+                  {
+                     addBuff("bless",-1);
+                     target=sixBatchVayneTarget105(targets);
+                     for(i=0;i<2;i++) s2Hit(target,s2Value(skill,"hit"),1,true);
+                     if(s2Hit(target,s2Value(skill,"hit"),1,true) && target.hp>0 && !target.abilityState.channel)
+                     {
+                        target.checkMove(false,800,this,-1,true);
+                        if(target.pos==(target.team==1 ? GameMapConfig.LINE_POS : 0))
+                        {
+                           sixStarHit105(target,trueSkillCoefficient104(6),3,"FX60_MAGIC");
+                           abilityControl(target,"curse",1);
+                           abilityControl(target,"stun",1);
+                        }
+                     }
+                     break;
+                  }
                   var ringKey:String="rings_"+abilityIndex;
                   count=target.skin2[ringKey] ? int(target.skin2[ringKey].count) : 0;
                   for each(unit in targets)
@@ -2502,17 +3808,28 @@ package com.meng52.game.module.avatar
             else if(key=="sap")kind="sap";
             else if(key=="root")kind="root";
             else if(key=="alistarGuard104")kind="guard";
+            else if(key=="sixBatchKayleGuard105")kind="guard";
+            else if(key=="sixReactionElise105")kind="guard";
             else if(key=="reviewDashReady104")kind="phase";
             else if(key=="grey")kind="grey";
             else if(key=="highlander")kind="phase";
-            else if(key=="thunder" || key=="polarCount")kind="charge";
+            else if(key=="thunder" || key=="polarCount" || key=="sixFire105")kind="charge";
             else if(key=="evilStacks" || key=="santaStacks")kind="growth";
             else if(key=="form" && state.hammer)kind="hammer";
-            if(kind.length)result.push({key:key,kind:kind,target:this,count:(key=="thunder" || key=="polarCount" || key=="evilStacks" || key=="santaStacks") ? int(state) : 0});
+            if(kind.length)result.push({key:key,kind:kind,target:this,count:(key=="thunder" || key=="polarCount" || key=="evilStacks" || key=="santaStacks" || key=="sixFire105") ? int(state) : 0});
          }
          if(abilityState.channel) result.push({key:"channel",kind:"channel",lane:abilityState.channel.line,pos:abilityState.channel.pos,span:800,ground:true});
          if(abilityState.zone) result.push({key:"zone",kind:"zone",lane:abilityState.zone.line,pos:abilityState.zone.pos,span:700,ground:true});
          if(abilityState.ball && abilityState.ball.hp>0 && abilityState.ball.line==line) result.push({key:"magicBall",kind:"ball",target:abilityState.ball,link:this});
+         if(skillB && sixBatchPassive105("jinx") && (count=sixBatchJinxStacks105().length)>0)
+            result.push({key:"sixBatchJinx105",kind:"charge",target:this,count:count});
+         if(skillB && (count=sixBatchKayleStage105())>0)
+            result.push({key:"sixBatchKayle105",kind:"growth",target:this,count:count});
+         if(skillB && sixBatchPassive105("syndra") && GameMap.currentMap &&
+            (count=int(GameMap.currentMap.roundNum/10))>0)
+            result.push({key:"sixBatchSyndra105",kind:"growth",target:this,count:count});
+         if((count=int(abilityState.sixReactionMfStacks105))>0)
+            result.push({key:"sixReactionMfStacks105",kind:"charge",target:this,count:count});
          if(manualBattleStacks) for(key in manualBattleStacks) if(Number(manualBattleStacks[key])>0) {result.push({key:"battleGrowth",kind:"growth",target:this});break;}
          count=0;if(manualTimedStacks)for each(state in manualTimedStacks)if(state.expiresAt>=manualOwnerActionSerial)++count;
          if(count)result.push({key:"timedGrowth",kind:"charge",target:this,count:count});
@@ -2786,6 +4103,7 @@ package com.meng52.game.module.avatar
 
       private function executeAbilityBody(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
+         if(kind.indexOf("six_")==0) return sixStarExecute105(kind,effect,sourceSkill);
          if(kind.indexOf("night_yasuo_")==0) return yasuoExecute104(kind,sourceSkill);
          if(kind.indexOf("dragon_kaisa_")==0) return kaisaExecute104(kind,sourceSkill);
          if(kind.indexOf("skin2_")==0) return executeSkin2(kind,sourceSkill);
@@ -2928,12 +4246,19 @@ package com.meng52.game.module.avatar
                if(skill0) skill0.useSkill();
                break;
             case "veigar_n":
-               enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",1.2)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.getType()==1 && !target.isManualSummonUnit)
+               var expandedVeigar:Boolean=Boolean(manualConfig && manualConfig.sixStarVeigar105);
+               enemies=expandedVeigar ? sixStarLane105(3000,true).slice(0,2) : abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600));
+               if(!enemies.length) return false;
+               var growEvil:Boolean=false;
+               for each(target in enemies)
+                  if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",1.2)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.getType()==1 && !target.isManualSummonUnit)
+                     growEvil=true;
+               if(growEvil)
                {
                   var oldEvilStacks:int = int(abilityState.evilStacks);
                   abilityState.evilStacks = Math.min(nativeAbilityNumber(sourceSkill,kind,"cast_5",10),oldEvilStacks+nativeAbilityNumber(sourceSkill,kind,"cast_6",1));
-                  if(int(abilityState.evilStacks) > oldEvilStacks) abilityState.evilStackBonus = Number(abilityState.evilStackBonus || nativeAbilityNumber(sourceSkill,kind,"cast_7",0)) + equipmentPart104(sourceSkill,"evil_stack",nativeAbilityNumber(sourceSkill,kind,"cast_8",0.03)) * activeManualEffectMultiplier();
+                  var evilGrowth:Number=expandedVeigar ? .07 : nativeAbilityNumber(sourceSkill,kind,"cast_8",0.03)*activeManualEffectMultiplier();
+                  if(int(abilityState.evilStacks) > oldEvilStacks) abilityState.evilStackBonus = Number(abilityState.evilStackBonus || nativeAbilityNumber(sourceSkill,kind,"cast_7",0)) + equipmentPart104(sourceSkill,"evil_stack",evilGrowth);
                   abilityFeedback("邪恶之力："+int(abilityState.evilStacks)+"/10","FX_S9160_STRONG");
                }
                break;
@@ -3254,7 +4579,7 @@ package com.meng52.game.module.avatar
             targets = abilityCandidates(otherTeam,line,pos,GameMapConfig.LINE_POS,-1);
             if(targets.length == 0) return false;
             var params:Array = sourceSkill.getNativeAction();
-            addBuff("critup",1,Number(params[4]));
+            if(Number(params[4])>0) addBuff("critup",1,Number(params[4]));
             var reduction:Number = Number(params[5]);
             for each(target in targets)
                if(abilityHit(target,Number(params[6]),1,effect) && target.hp > 0)
@@ -3275,7 +4600,8 @@ package com.meng52.game.module.avatar
                if(abilityHit(target,3,2,effect) && target.hp > 0)
                {
                   abilityControl(target,"curse",1);
-                  abilityControl(target,"stun",1);
+                  var polarRow:Object=GlobalData.$mConfig_skill[sourceSkill.skillSetData.id];
+                  abilityControl(target,"stun",polarRow && polarRow.sixStarPolarStun105 ? int(polarRow.sixStarPolarStun105) : 1);
                }
             }
          }
@@ -3676,9 +5002,17 @@ package com.meng52.game.module.avatar
 
       public function emitModEvent(event:String,source:Avatar = null,target:Avatar = null,amount:Number = 0,overheal:Number = 0) : Boolean
       {
+         if(event=="death") sixBatchDeath105(source);
+         if(event=="crit" && skillB && sixBatchPassive105("yasuo")) skillB.cooldown();
          yasuoEvent104(event,source,target,amount);
          kaisaEvent104(event,source,target);
          skin2Event(event,source,target,amount,overheal);
+         if(skillB && skillB.skills && skillB.skills.length ||
+            abilityState.highlander && abilityState.highlander.extra)
+         {
+            sixStarCombatEvent105(event,target,amount,overheal);
+            sixFollowupEvent105(event,source,target,overheal);
+         }
          if(!skillB || !skillB.isModEffectSequence() || !GameMap.currentMap) return false;
          var row:Object = GlobalData.$mConfig_skill[skillB.skillSetData.id];
          var gate:Object = row ? row.modCondition : null;
@@ -3695,6 +5029,7 @@ package com.meng52.game.module.avatar
          if(gate.requiredBuff && !hasModBuff(String(gate.requiredBuff))) return false;
          if(gate.absentBuff && hasModBuff(String(gate.absentBuff))) return false;
          if(gate.otherHpBelow != null && (!other || Math.max(0,other.hp)/Math.max(1,other.hpMax) > Number(gate.otherHpBelow))) return false;
+         if(gate.otherHpNotFull105 && (!other || other.hp >= other.hpMax)) return false;
          if(gate.otherRequiredBuff && (!other || !other.hasModBuff(String(gate.otherRequiredBuff)))) return false;
          var nearbyRadius:Number = gate.nearbyRadius == null ? 600 : Number(gate.nearbyRadius);
          var nearbyFriend:int = 0;
@@ -3722,7 +5057,7 @@ package com.meng52.game.module.avatar
             abilityState.modEventRound = round; abilityState.modEventCount = 0;
          }
          var limit:int = gate.maxPerRound == null ? 1 : int(gate.maxPerRound);
-         if(int(abilityState.modEventCount) >= limit) return false;
+         if(limit > 0 && int(abilityState.modEventCount) >= limit) return false;
          var every:int = gate.everyEvents == null ? 1 : int(gate.everyEvents);
          if(every > 1)
          {
@@ -3740,7 +5075,15 @@ package com.meng52.game.module.avatar
          abilityState.modEventCount = int(abilityState.modEventCount)+1;
          abilityState.modEventReady = ownTurn+skillB.skillSetData.cooldown;
          abilityState.modFilteredEvents = 0;
-         try { skillB.useSkill(); }
+         try
+         {
+            skillB.useSkill();
+            if(gate.sixStarRefreshNormal105 && skill0)
+            {
+               skill0.m_cooldownNum=-1;
+               skill0.abilityCooldownOverride=-1;
+            }
+         }
          finally { abilityState.modEventBusy = false; --modEventDepth; skillB.modEventContext = previous; }
          return true;
       }
@@ -4136,10 +5479,18 @@ package com.meng52.game.module.avatar
          var _loc4_:Number = ratioDamage104() ? opposedCritChance105(delta) :
              Tools.toInt(Math.min(_loc6_[7],Math.max(0,_loc6_[5]+100*delta/(_loc5_+_loc8_+_loc6_[11]))));
          GameMapTools.gameTrace("暴击判定",param1.id,param2.id);
-         var _loc3_:Boolean = ratioDamage104() ? rollPercent105(_loc4_) : Random.getRandom() < _loc4_;
+         var sixAttack:Object=param1.skillB ? currentAbilityAttack() : null;
+         var force:Boolean=sixAttack && sixAttack.owner===param1 && sixAttack.sixForceCrit105;
+         var chance:Number=_loc4_;
+         if(sixAttack && sixAttack.owner===param1 && sixAttack.kind=="active" && param1.skillB)
+         {
+            var rengar:Array=param1.sixFollowupPassive105("rengar");
+            if(rengar) chance=Math.min(100,chance*Number(rengar[4]));
+         }
+         var _loc3_:Boolean = force || (ratioDamage104() ? rollPercent105(chance) : Random.getRandom() < chance);
          if(_loc3_)
          {
-            _loc7_ = ratioDamage104() ? 2 * opposedPower105(delta) : _loc6_[3] + _loc5_ * _loc6_[16] / (_loc5_ + _loc6_[12]);
+            _loc7_ = ratioDamage104() ? 2 * opposedPower105(force ? Math.max(0,_loc5_) : delta) : _loc6_[3] + _loc5_ * _loc6_[16] / (_loc5_ + _loc6_[12]);
             GameMapTools.gameTrace("暴击倍数",_loc7_);
             return _loc7_;
          }
@@ -5302,6 +6653,7 @@ package com.meng52.game.module.avatar
          manualSkillDots[param1] = _loc1_;
          showBuff(_loc2_);
          s2AnnieStatus(param2);
+         if(param2=="burn") sixReactionBurnChanged105();
       }
 
       public function hasManualDamageOverTime() : Boolean
@@ -5417,6 +6769,8 @@ package com.meng52.game.module.avatar
          _loc11_.source = source;
          if(param1 == "poison" && source && GlobalData.$mConfig_simple.hero_skill_output_rate_104 != null) _loc11_.poisonHpRate104 = source.poisonSkillOutputRate104();
          var _loc12_:Buff = buffs[param1];
+         var priorBurnLayers:int=param1=="burn" && _loc12_ && _loc12_.round>0 && _loc12_.value>0 ?
+            Math.max(1,int(abilityState.sixReactionBurnLayers105)) : 0;
          // A timed revival must never shorten an existing permanent one.
          // Legacy bless uses value 0; the explicit timed_bless action uses 1.
          if(param1 == "bless" && _loc12_)
@@ -5433,6 +6787,7 @@ package com.meng52.game.module.avatar
          param4 = GameMap.actionDelay + param4;
          var _loc10_:Number = 0;
          if(param1 == "weak" && abilityState.highlander) return;
+         if(abilityState.sixIreliaImmune105 && SIX_IRELIA_IMMUNITIES.indexOf(param1)>=0) return;
          if(param1 == "silence")
          {
             _loc10_ = checkTalent(8);
@@ -5699,8 +7054,30 @@ package com.meng52.game.module.avatar
             }
          }
          if(_loc9_ && _loc11_.type=="shield") queueVitalBar104(param4);
-         if(param1=="stun" && hp>0 && buffs.stun) kaisaNotifyStun104(this);
-         if(_loc9_) s2AnnieStatus(param1);
+         if(param1=="stun" && hp>0 && buffs.stun)
+         {
+            kaisaNotifyStun104(this);
+            if(GameMap.currentMap)
+            {
+               for each(var observer105:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+               {
+                  if(observer105.line!=line || !observer105.skillB || !observer105.skillB.skills) continue;
+                  var opening105:Array=observer105.sixStarPassive105();
+                  if(opening105 && opening105[1]=="six_kennen_p") observer105.skillB.checkUse();
+               }
+            }
+         }
+         if(_loc9_)
+         {
+            s2AnnieStatus(param1);
+            if(param1=="curse") sixBatchCurse105();
+            if(param1=="stun") sixReactionStun105();
+            if(param1=="burn" && param3>0)
+            {
+               abilityState.sixReactionBurnLayers105=priorBurnLayers+1;
+               sixReactionBurnChanged105();
+            }
+         }
 
       }
 
@@ -5883,6 +7260,7 @@ package com.meng52.game.module.avatar
             // Only the new timed variant expires; legacy revival stays armed.
             if(_loc3_ == "bless" && _loc1_.value <= 0) continue;
             if(_loc3_ == "purify" && _loc1_.value > 0) continue;
+            if(_loc3_=="sixReactionMfShield105") continue;
             --_loc1_.round;
             switch(_loc3_)
             {
@@ -6255,6 +7633,7 @@ package com.meng52.game.module.avatar
          {
             manualSkillDots[key].bookRemaining = total;
             manualSkillDots[key].bookTicks = rounds;
+            sixReactionBurnChanged105();
          }
       }
 
@@ -6457,7 +7836,8 @@ package com.meng52.game.module.avatar
                _loc5_ *= 1 + _loc6_.value;
             }
          }
-          _loc4_ = Tools.toInt(_loc4_ * (1 + getManualBattleStack("defense")) * _loc5_);
+          _loc4_ = Tools.toInt((_loc4_ * (1 + getManualBattleStack("defense")) +
+             Number(abilityState.sixReactionDefense105_dePh || 0)) * _loc5_);
          return Math.max(Tools.toInt(_loc4_ * (buffs && buffs["armor"] ? 1 + Number(buffs["armor"].value) : 1)),0);
       }
 
@@ -6545,7 +7925,8 @@ package com.meng52.game.module.avatar
                _loc5_ *= 1 + _loc6_.value;
             }
          }
-          _loc4_ = Tools.toInt(_loc4_ * (1 + getManualBattleStack("defense")) * _loc5_);
+          _loc4_ = Tools.toInt((_loc4_ * (1 + getManualBattleStack("defense")) +
+             Number(abilityState.sixReactionDefense105_deMa || 0)) * _loc5_);
          return Math.max(_loc4_,0);
       }
 
@@ -6583,6 +7964,11 @@ package com.meng52.game.module.avatar
                _loc2_ *= 1 + _loc3_.value;
             }
          }
+         if(GameMap.currentMap && !initializingFightAttributes)
+         {
+            _loc2_ *= sixFollowupSpeed105();
+            if(hpMax && (skillB || abilityState.sixBatchTfMove105)) _loc2_ *= sixBatchSpeed105();
+         }
          return Tools.toInt(_loc5_ * _loc2_);
       }
 
@@ -6590,6 +7976,7 @@ package com.meng52.game.module.avatar
       {
          var _loc3_:int = 0;
          var _loc2_:* = null;
+         if(GameMap.currentMap && !initializingFightAttributes && hpMax && skillB && sixBatchKayleStage105()>0) return 3000;
          if(isFinite(manualAttackRangeOverride) && manualAttackRangeOverride > 0) return int(manualAttackRangeOverride);
          if(hpMax)
          {
@@ -6640,6 +8027,7 @@ package com.meng52.game.module.avatar
          if(!hpMax) _loc3_ = Tools.toInt(_loc3_ * (1 + getBookCombatBonus("hit")));
          if(!hpMax) _loc3_ = Tools.toInt(bondPanel104("hit",_loc3_));
          if(!hpMax) _loc3_ = applyAbyssRelic104("hit",_loc3_);
+         if(hpMax && abilityState.sixBatchKayleHit105) _loc3_+=int(abilityState.sixBatchKayleHit105);
          if(buffs)
          {
             _loc1_ = buffs["hitup"] as Buff;
@@ -6724,6 +8112,10 @@ package com.meng52.game.module.avatar
          if(!hpMax) _loc2_ = Tools.toInt(_loc2_ * (1 + getBookCombatBonus("crit")));
          if(!hpMax) _loc2_ = Tools.toInt(bondPanel104("crit",_loc2_));
          if(!hpMax) _loc2_ = applyAbyssRelic104("crit",_loc2_);
+         if(abilityState && abilityState.sixPolarTurns105)
+            _loc2_ += int(_loc2_*int(abilityState.sixPolarTurns105)*Number(abilityState.sixPolarGrowth105));
+         var sixBatchYasuo:Array=GameMap.currentMap && !initializingFightAttributes && hpMax && this.skillB ? sixBatchPassive105("yasuo") : null;
+         if(sixBatchYasuo) _loc2_=int(_loc2_*Number(sixBatchYasuo[4]));
          if(buffs)
          {
             _loc1_ = buffs["critup"] as Buff;
@@ -7434,10 +8826,17 @@ package com.meng52.game.module.avatar
          kaisaTryCaptain104();
          getTeamHp();
          emitModEvent("turn_start",this,this);
-         if(checkBuffOfSkillB())
+         var openingPassive:Array=skillB && skillB.skills ? sixStarPassive105() : null;
+         var openingRow:Object=skillB && skillB.skillSetData ? GlobalData.$mConfig_skill[skillB.skillSetData.id] : null;
+         if(openingPassive && openingPassive[1]=="six_kennen_p" ||
+            openingRow && openingRow.sixStarBalance105 && openingRow.modCondition && openingRow.modCondition.kind=="absent_buff")
+            skillB.checkUse();
+         else if(checkBuffOfSkillB())
          {
             checkSkillB();
          }
+         if(abilityState.sixTurret105 || abilityState.sixCaitlyn105) sixStarTurnStart105();
+         if(hp>0 && (skillB || abilityState.sixMorganaLinks105)) sixFollowupTurn105();
          getTeamHp();
          if(GameMap.currentMap.isEnd(line))
          {
@@ -7464,10 +8863,20 @@ package com.meng52.game.module.avatar
             _gl.delayCall(_currentMap.endAction,GameMap.actionDelay);
             return true;
          }
-         if(buffs["stun"])
+         var cocoon:Object=abilityState.sixReactionElise105;
+         if(cocoon && cocoon.skip)
+         {
+            cocoon.skip=false;
+            cocoon.until=abilitySerial;
+         }
+         else if(buffs["stun"])
          {
             _gl.delayCall(SoundManager.getOnlyExample().playSound,GameMap.actionDelay,"stun");
             GameMap.actionDelay += 0.2;
+         }
+         else if(abilityState.sixBatchSand105)
+         {
+            if(!sixStarLane105(getRange()).length && sixStarLane105().length) checkMove(true);
          }
          else
          {
@@ -7715,7 +9124,7 @@ package com.meng52.game.module.avatar
 
       public function checkMove(param1:Boolean, param2:int = 0, param3:Avatar = null, param4:Number = -1, param5:Boolean = false, param6:String = null) : Number
       {
-         if(param5 && abilityState.channel) return 0;
+         if(abilityState.sixTurret105 || param5 && abilityState.channel) return 0;
          if(!param5 && s2LiveMark(this,"cold") && param2>0) param2=Math.round(param2*s2ColdMoveFactor());
          if(abilityState.root && !param5) return 0;
          var _loc18_:int = 0;
@@ -7922,6 +9331,7 @@ package com.meng52.game.module.avatar
 
       public function reline(param1:int, param2:int = -2147483648, param3:int = -2147483648, param4:Number = 0, param5:Number = 0, forced:Boolean = false) : void
       {
+         if(abilityState && abilityState.sixTurret105) return;
          if(forced && abilityState.channel) return;
          if(!forced && s2LiveMark(this,"cold") && param2!=-2147483648) param2=pos+Math.round((param2-pos)*s2ColdMoveFactor());
          if(abilityState.root && !forced) return;
@@ -8163,6 +9573,11 @@ package com.meng52.game.module.avatar
 
       public function attackAimList(param1:Vector.<Avatar>, param2:int = -1, param3:Number = 1, param4:int = 0, param5:String = null, param6:Boolean = false, param7:Buff = null, param8:int = -1, param9:Number = 1, effectSource:Avatar = null) : int
       {
+         if(abilityState.sixBatchSand105 && (param2<0 || param2>=1 && param2<=3)) return 0;
+         var kayleStage:int=param2==-1 && skillB ? sixBatchKayleStage105() : 0;
+         if(kayleStage>=2 && param1 && param1.length) return sixBatchKayleAttack105(param1[0],kayleStage);
+         var basicPassive105:Array = param2 == -1 && skillB ? sixStarPassive105() : null;
+         if(basicPassive105 && basicPassive105[1]=="six_caitlyn_p") param3 *= Number(basicPassive105[4]);
          if(param2 < 0 || param2 >= 1 && param2 <= 4) param3 *= purpleBondMultiplier();
          if(param7 && param7.type == "shield") param7.value *= purpleBondMultiplier();
          var basicContext:Object = null;
@@ -8173,9 +9588,24 @@ package com.meng52.game.module.avatar
          if(!currentAbilityAttack() && (param2 < 0 || param2 >= 1 && param2 <= 3))
          {
             basicContext = beginAbilityAttack(this,"basic");
+            if(param2==-1)
+            {
+               if(abilityState.sixFire105) sixStarSkillBegin105(basicContext,null);
+               var shenCharge105:Object=abilityState.sixShen105;
+               if(shenCharge105 && shenCharge105.charges>0)
+               {
+                  basicContext.sixShenStrike105=shenCharge105.ratio;
+                  --shenCharge105.charges;
+               }
+            }
             markedBasic = aimTarget && aimTarget.abilityHasMark(this,"aim");
             if(markedBasic) param3 *= 1+0.8*Number(aimTarget.abilityState["mark_aim_"+abilityIndex].scale);
          }
+         var sixAttack105:Object=currentAbilityAttack();
+         var sixCritical105:Boolean=sixAttack105 && sixAttack105.owner===this && sixAttack105.sixCritTrue105;
+         var sixDirect105:Boolean=sixAttack105 && sixAttack105.owner===this && (
+            sixCritical105 || sixAttack105.sixLeech105 || sixAttack105.sixShenStrike105 || sixAttack105.sixFioraTrue105 ||
+            abilityState.highlander && abilityState.highlander.extra);
          try
          {
 
@@ -8280,9 +9710,10 @@ package com.meng52.game.module.avatar
             {
                if(!contactTarget104 || contactTarget104.hp<=0) continue;
                if(_loc42_ && checkMiss(this,contactTarget104,_loc25_)) continue;
-               _loc46_=_loc42_ ? countDamage(this,contactTarget104,_loc14_,param2,param9) : [_loc14_,false];
-               _loc20_=_loc42_ ? checkCrit(this,contactTarget104) : 1;
-               _loc21_+=contactTarget104.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+               _loc46_ = _loc42_ ? countDamage(this,contactTarget104,_loc14_,param2,param9) : [_loc14_,false];
+               _loc20_ = _loc42_ ? checkCrit(this,contactTarget104) : 1;
+               if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(contactTarget104,_loc14_,param9);
+               _loc21_+=(sixDirect105 ? sixStarDirectInjury105(contactTarget104,_loc46_,_loc20_,_loc25_,param2,this,param7,_loc14_,param9) : contactTarget104.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7));
             }
             return _loc21_;
          }
@@ -8322,9 +9753,10 @@ package com.meng52.game.module.avatar
                {
                   _loc46_ = _loc42_ ? countDamage(this,waveTarget,_loc14_,param2,param9) : [_loc14_,false];
                   _loc20_ = _loc42_ ? checkCrit(this,waveTarget) : 1;
+                  if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(waveTarget,_loc14_,param9);
                   if(_loc20_ != 1 && skillB && avatarData.skill_diff == 2) GlobalData.skillBoo = true;
                   bookHPBefore = waveTarget.hp;
-                  _loc21_ += waveTarget.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+                  _loc21_ += (sixDirect105 ? sixStarDirectInjury105(waveTarget,_loc46_,_loc20_,_loc25_,param2,this,param7,_loc14_,param9) : waveTarget.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7));
                   if(bookBasicAttack) applyBookAttackEffects(waveTarget,Math.max(0,bookHPBefore - waveTarget.hp));
                }
                waveEndDelay = Math.max(waveEndDelay,GameMap.actionDelay);
@@ -8377,6 +9809,7 @@ package com.meng52.game.module.avatar
                {
                   _loc46_ = _loc42_ ? countDamage(this,_loc10_,_loc14_,param2,param9) : [_loc14_,false];
                   _loc20_ = _loc42_ ? checkCrit(this,_loc10_) : 1;
+                  if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc10_,_loc14_,param9);
                   if(_loc20_ != 1)
                   {
                      if(skillB)
@@ -8388,7 +9821,7 @@ package com.meng52.game.module.avatar
                      }
                   }
                   bookHPBefore = _loc10_.hp;
-                  _loc21_ += _loc10_.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+                  _loc21_ += (sixDirect105 ? sixStarDirectInjury105(_loc10_,_loc46_,_loc20_,_loc25_,param2,this,param7,_loc14_,param9) : _loc10_.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7));
                   if(bookBasicAttack) applyBookAttackEffects(_loc10_,Math.max(0,bookHPBefore - _loc10_.hp));
                   _loc33_++;
                   _loc26_ = _loc10_.pos;
@@ -8454,6 +9887,7 @@ package com.meng52.game.module.avatar
             {
                _loc46_ = _loc42_ ? countDamage(this,_loc10_,_loc14_,param2,param9) : [_loc14_,false];
                _loc20_ = _loc42_ ? checkCrit(this,_loc10_) : 1;
+               if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc10_,_loc14_,param9);
                if(_loc20_ != 1)
                {
                   if(skillB)
@@ -8465,7 +9899,7 @@ package com.meng52.game.module.avatar
                   }
                }
                bookHPBefore = _loc10_.hp;
-               _loc21_ += _loc10_.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7);
+               _loc21_ += (sixDirect105 ? sixStarDirectInjury105(_loc10_,_loc46_,_loc20_,_loc25_,param2,this,param7,_loc14_,param9) : _loc10_.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7));
                if(bookBasicAttack) applyBookAttackEffects(_loc10_,Math.max(0,bookHPBefore - _loc10_.hp));
                _loc33_++;
             }
@@ -8538,6 +9972,7 @@ package com.meng52.game.module.avatar
                   {
                      _loc46_ = _loc42_ ? countDamage(this,_loc12_,_loc14_,param2,param9) : [_loc14_,false];
                      _loc20_ = _loc42_ ? checkCrit(this,_loc12_) : 1;
+                     if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc12_,_loc14_,param9);
                      if(_loc20_ != 1)
                      {
                         if(skillB)
@@ -8549,7 +9984,7 @@ package com.meng52.game.module.avatar
                         }
                      }
                      bookHPBefore = _loc12_.hp;
-                     _loc21_ += _loc12_.injured(_loc46_[0],_loc20_,_loc25_,param2,_loc10_,_loc46_[1],this,param7);
+                     _loc21_ += (sixDirect105 ? sixStarDirectInjury105(_loc12_,_loc46_,_loc20_,_loc25_,param2,_loc10_,param7,_loc14_,param9) : _loc12_.injured(_loc46_[0],_loc20_,_loc25_,param2,_loc10_,_loc46_[1],this,param7));
                      if(bookBasicAttack) applyBookAttackEffects(_loc12_,Math.max(0,bookHPBefore - _loc12_.hp));
                      _loc33_++;
                   }
@@ -8606,6 +10041,7 @@ package com.meng52.game.module.avatar
                   {
                      _loc46_ = _loc42_ ? countDamage(this,_loc12_,_loc14_,param2,param9) : [_loc14_,false];
                      _loc20_ = _loc42_ ? checkCrit(this,_loc12_) : 1;
+                     if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc12_,_loc14_,param9);
                      if(_loc20_ != 1)
                      {
                         if(skillB)
@@ -8617,7 +10053,7 @@ package com.meng52.game.module.avatar
                         }
                      }
                      bookHPBefore = _loc12_.hp;
-                     _loc21_ += _loc12_.injured(_loc46_[0],_loc20_,_loc25_,param2,_loc11_,_loc46_[1],this,param7);
+                     _loc21_ += (sixDirect105 ? sixStarDirectInjury105(_loc12_,_loc46_,_loc20_,_loc25_,param2,_loc11_,param7,_loc14_,param9) : _loc12_.injured(_loc46_[0],_loc20_,_loc25_,param2,_loc11_,_loc46_[1],this,param7));
                      if(bookBasicAttack) applyBookAttackEffects(_loc12_,Math.max(0,bookHPBefore - _loc12_.hp));
                      _loc33_++;
                   }
@@ -8754,8 +10190,14 @@ package com.meng52.game.module.avatar
 
       public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "", derivedDamage104:Boolean = false, fixedRecovery105:Boolean = false) : int
       {
+         if(abilityState.sixReactionElise105 && param4!=0 && param4!=4 && param4!=5) return 0;
+         if(abilityState.sixReactionMfWound105 || param7 && param7.sixReactionPassive105("mf"))
+            param1=sixReactionIncoming105(param1,param7,param4);
          var settledCriticalDamage104:Number=0;
          var abilityHpBefore:int = hp;
+         if(abilityState.sixBatchZiggsWound105 || abilityState.sixBatchKayleGuard105 ||
+            skillB && avatarData.id=="A_1119_6" || param7 && param7.skillB && param7.avatarData.id=="A_1126_6")
+            param1=sixBatchIncoming105(param1,param7,param4,dotKind);
          var modShieldBefore:Number = shieldValue104();
          var nurseHealAmount:int = 0;
          var abilityDamageTaken:Number = 0;
@@ -8863,6 +10305,12 @@ package com.meng52.game.module.avatar
             nurseHealAmount = Math.max(0,param1);
             param1 = Math.min(param1,hpMax - hp);
             hp += param1;
+            var sustain:Object=currentAbilityAttack();
+            if(sustain && sustain.owner===this && sustain.sixReactionMfHeal105)
+            {
+               sustain.sixReactionMfHeal105=false;
+               sustain.sixReactionMfOverflow105=Math.max(0,nurseHealAmount-param1);
+            }
             recordStatistics104(bookHealer,this,0,Math.max(0,param1));
             GameMapTools.gameTrace(id + "治療++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + param1);
             _loc12_ = GlobalLanguageStr.getLanguageStr(30000) + param1;
@@ -8880,7 +10328,9 @@ package com.meng52.game.module.avatar
             }
             else _loc18_ = 1 + _loc13_ * _loc24_[15] / (_loc13_ + _loc24_[13]);
             GameMapTools.gameTrace("減傷" + _loc18_,"原傷害" + param1,"新傷害" + Tools.toInt(param1 / _loc18_));
-            if(!derivedDamage104) param1 = Tools.toInt(param1 / _loc18_);
+            var fioraAttack:Object=currentAbilityAttack();
+            if(!derivedDamage104 && !(fioraAttack && fioraAttack.owner===param7 && fioraAttack.sixForceCrit105))
+               param1 = Tools.toInt(param1 / _loc18_);
             trace("最终伤害算减伤之前" + param1);
             if(abyssOrigin104 != "relic_reflect") switch(param4 - 1)
             {
@@ -8906,6 +10356,8 @@ package com.meng52.game.module.avatar
                param1 = int(skin2Incoming(param1,param7 || param5,param4));
                param1 = int(yasuoDamage104(param1,param7 || param5,derivedDamage104));
             }
+            if(abilityState.sixMorganaSources105 || param7 && param7.skillB && param7.avatarData.id=="A_1024_6")
+               param1 = sixFollowupIncoming105(param1,param7,param4,dotKind);
             param1 = abyssModifyDamage104(param1,param7,param4,dotKind);
             settledCriticalDamage104=Math.max(0,param1);
             _loc9_ = buffs["shield"] as Buff;
@@ -9088,6 +10540,8 @@ package com.meng52.game.module.avatar
             _loc19_.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
          }
          var modActualDamage:Number = param4 == 4 ? 0 : (abyssRevivedNow104 ? Math.max(0,abilityHpBefore) : Math.max(0,abilityHpBefore-Math.max(0,hp)));
+         if(modActualDamage>0 && (abilityState.sixReactionMfStacks105 || skillB && avatarData.id=="A_1036_6"))
+            sixReactionDamageTaken105();
          if(abilityHpBefore > 0 && param4 != 0 && param4 != 4 && param4 != 5) abyssAfterDamage104(param7,modActualDamage,abyssShieldSpent104,param4,dotKind);
          if(param4 >= 1 && param4 != 4 && param4 != 5)
             recordStatistics104(param7 || param5,this,abilityDamageTaken+statisticsShield104,0);
@@ -9173,6 +10627,8 @@ package com.meng52.game.module.avatar
             }
          }
          if(param4 != 4) abilityRecordDamage(param7,param4,abilityHpBefore,abilityDamageTaken);
+         if(modActualDamage>0 && skillB && avatarData.id=="A_1138_6" && sixFollowupPassive105("tahm"))
+            abilityState.sixTahmGrey105=Number(abilityState.sixTahmGrey105 || 0)+modActualDamage;
          var catContext:Object = currentAbilityAttack();
          if(param2 > 1 && param4 >= 1 && param4 <= 3 && param7 && catContext && catContext.owner === param7 && catContext.catCaptainCapture)
             catContext.catCrits = int(catContext.catCrits) + 1;
@@ -9181,6 +10637,14 @@ package com.meng52.game.module.avatar
          if(hp <= 0 && abilityHpBefore > 0 && param7 && param7.team != team && param7.skillB && param7.skillB.skills && param7.skillB.skills.length && param7.skillB.skills[0][0] == "santa_kill")
             if(getType() == 1 && !isManualSummonUnit) param7.queueSantaKill();
          if(param4 == 4 && nurseHealAmount > 0 && abyssOrigin104 != "relic_lifesteal") queueNurseHealing(nurseHealAmount,Math.max(0,nurseHealAmount-Math.max(0,hpMax-abilityHpBefore)));
+         if(param4>=1 && param4<=3 && param7 && catContext &&
+            (catContext.sixNamiWave105 || catContext.sixNamiTicket105 || param7.abilityState.sixNamiBless105))
+            param7.sixFollowupAfterHit105(this,catContext,abilityDamageTaken+statisticsShield104);
+         if(param7 && param7.skillB && (param4>=1 && param4<=3 || param4>=6 && param4<=8))
+         {
+            param7.sixBatchAfterDamage105(this,abilityDamageTaken+statisticsShield104);
+            param7.sixReactionMfDealt105(this,modActualDamage+statisticsShield104);
+         }
          return param1;
       }
 
@@ -10178,6 +11642,7 @@ package com.meng52.game.module.avatar
             kept.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2});
             abyssDots104 = kept;
             s2AnnieStatus(dotName);
+            if(dotName=="burn") sixReactionBurnChanged105();
             abyssTrace104("normal_dot",source,this,{"kind":dotName,"amount":dotAmount,"duration":2});
          }
          else if(kind == 13 && Random.getRandom(1000000) < int(Number(normal.value) * 1000000))

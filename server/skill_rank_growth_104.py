@@ -176,6 +176,7 @@ def apply_skill_rank_growth_104(document):
     if cfg.get('skill_rank_growth_104', {}).get('schema') == SCHEMA:
         return document
     refs = hero_skill_references(cfg)
+    refs.update(cfg.get('six_star_legacy_skill_slots_105',{}))
     final_factors = {}
     for family, factor in cfg.get('hero_balance_iteration_104', {}).get('final_skill_multipliers', {}).items():
         if type(factor) not in (int, float) or not math.isfinite(factor) or not .03 <= factor <= 10:
@@ -194,6 +195,8 @@ def apply_skill_rank_growth_104(document):
         endpoint = endpoints[sid]['skills']
         actions = copy.deepcopy(endpoint)
         shallow, nested, fields, checked = [], [], {}, []
+        fixed_slot = slot != 10 and row.get('sixStarBalance105')
+        fixed = {(index, position) for index, position in row.get('rankFixedPaths105', [])}
         for index, action in enumerate(actions):
             if action[0] == 'manual_ability' and action[1] in SKIN_FIXED:
                 keys = row['skin_v2_keys'] = list(row.get('skin_v2_keys', []))
@@ -203,18 +206,25 @@ def apply_skill_rank_growth_104(document):
                         action.append(value)
             if action[0] == 'rally_soldiers' and len(action) == 5:
                 action.extend([.3, .5])  # heal/maxHP, attack buff; counts unchanged
-            for path in sorted(magnitude_paths(action)):
+            paths = magnitude_paths(action)
+            if action[0] == 'cure' and len(action) == 4 and row.get('sixStarExactHeal105'):
+                paths.add((2,))
+            for path in sorted(paths):
+                if (index, *path) in fixed:
+                    continue
                 value = _get(action, path)
                 if type(value) not in (int, float) or not math.isfinite(value):
                     raise ValueError(f'Invalid magnitude: {sid} {index} {path}')
                 value *= factor
                 base = value / 2 if slot == 10 else value
                 _put(action, path, base)
+                if fixed_slot:
+                    continue
                 entry = [index, path[0] if len(path) == 1 else list(path), base / 9]
                 (shallow if len(path) == 1 else nested).append(entry)
                 checked.append([index, list(path), base, base * 2])
         manual = any(a[0] == 'manual_ability' and not a[1].startswith('skin2_') and len(a) == 4 for a in actions)
-        if any(a[0] == 'manual_ability' and not a[1].startswith('skin2_') for a in actions):
+        if any(a[0] == 'manual_ability' and not a[1].startswith(('skin2_', 'six_')) for a in actions):
             base = .5 if slot == 10 else 1
             fields['manualFixedScale104'] = [base, base / 9]
             row['manualFixedScale104'] = base
@@ -240,12 +250,27 @@ def apply_skill_rank_growth_104(document):
         row['skill'] = actions
         row['skillUp'] = shallow
         row['skillUpPaths'] = nested
-        row['rankSettingGrowth104'] = fields
+        row['rankSettingGrowth104'] = {} if fixed_slot else fields
         row['rankGrowth104'] = {'schema': SCHEMA, 'slot': slot, 'magnitudes': checked}
         for action in actions:
             if action[0] == 'manual_ability' and action[1].startswith('skin2_'):
                 _skin_rank_text(row, action[1])
-        audit.append({'sid': sid, 'slot': slot, 'magnitudes': len(checked), 'settings': sorted(fields)})
+        if row.get('sixStarBalance105'):
+            template = row.get('rankInfoTemplate', row.get('info',''))
+            if '{sixVeigarStack}' in template:
+                multiplier = row.get('equipment_parts_104', {}).get('evil_stack', 1)
+                text = template.replace('{sixVeigarStack}', f'{7*multiplier:.4g}%')
+                row['info'] = row['rankInfoTemplate'] = text
+            if '{sixClonePanel}' in template:
+                ratio = row['manualClonePolicy']['panelStatRatio']
+                text = template.replace('{sixClonePanel}', f'{100*ratio:.6g}%')
+                row['info'] = row['rankInfoTemplate'] = text
+            from hero_iteration_103 import _render_base_info
+            _render_base_info(row)
+            if row.get('sixStarLeeCombo105'):
+                base, bonus = actions[2][1], actions[2][4]
+                row['info'] = row['info'].replace('{rankSum:2:1:4}', f'{100*(base+bonus):.4g}%')
+        audit.append({'sid': sid, 'slot': slot, 'magnitudes': len(checked), 'settings': sorted(row['rankSettingGrowth104'])})
     cfg['skill_rank_growth_104'] = {'schema': SCHEMA, 'hero_rows': sum(a.startswith('A_1') for a in cfg['avatar']),
                                     'skills': len(refs), 'audit': audit}
     return document

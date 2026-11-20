@@ -1,0 +1,57 @@
+{
+  "digest": "3bd1ef3fc2394f4df4cff3f489b5a3c06cc388a549dc1804f8bfd09ac502f2d4",
+  "assets": [
+    {
+      "alias": "MOD_SHYVANA_DRAGON105_0",
+      "kind": "image",
+      "path": "effects/dragon_buff_0.png",
+      "sha256": "1949c3dc139e356e59cc3cd8d3a1a99b8b584ab28010a40842566360b186ae31",
+      "bytes": 6391,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.shyvana-dragon-105",
+      "version": "1.0.5",
+      "contentDigest": "3bd1ef3fc2394f4df4cff3f489b5a3c06cc388a549dc1804f8bfd09ac502f2d4"
+    },
+    {
+      "alias": "MOD_SHYVANA_DRAGON105_1",
+      "kind": "image",
+      "path": "effects/dragon_buff_1.png",
+      "sha256": "cfe5f666230070a0368f2fa549e6e4324d6726090b9b568a2b59cca4e990a1df",
+      "bytes": 6426,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.shyvana-dragon-105",
+      "version": "1.0.5",
+      "contentDigest": "3bd1ef3fc2394f4df4cff3f489b5a3c06cc388a549dc1804f8bfd09ac502f2d4"
+    },
+    {
+      "alias": "MOD_SHYVANA_DRAGON105_2",
+      "kind": "image",
+      "path": "effects/dragon_buff_2.png",
+      "sha256": "efd3c05fdf1ddeb533b8441589df37c39b6c4cfba20ac28086efc5752fe878a5",
+      "bytes": 6513,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.shyvana-dragon-105",
+      "version": "1.0.5",
+      "contentDigest": "3bd1ef3fc2394f4df4cff3f489b5a3c06cc388a549dc1804f8bfd09ac502f2d4"
+    },
+    {
+      "alias": "MOD_SHYVANA_DRAGON105_3",
+      "kind": "image",
+      "path": "effects/dragon_buff_3.png",
+      "sha256": "489bc628cbf27b5185dbe2fa21c7f7de565a82cbd5710eeaa387f702668471b8",
+      "bytes": 6343,
+      "width": 57,
+      "height": 79,
+      "role": "effect",
+      "packageId": "builtin.shyvana-dragon-105",
+      "version": "1.0.5",
+      "contentDigest": "3bd1ef3fc2394f4df4cff3f489b5a3c06cc388a549dc1804f8bfd09ac502f2d4"
+    }
+  ]
+}

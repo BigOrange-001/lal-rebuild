@@ -13,7 +13,8 @@ CONFIG = ROOT / 'config/reconstruction/full-config.json'
 FOLLOWUP_IDS = (1008,1024,1026,1027,1130,1131,1132,1133,1135,1138,1142,1202)
 EXTENDED_IDS = (1115,1117,1119,1120,1123,1124,1125,1126,1128,1136,1206,1214,1223,1227,1998)
 REACTION_IDS = (1029,1030,1032,1033,1036,1040)
-IDS = {f'A_{i}_6' for i in range(1001,1026) if i not in (1008,1024)} | {f'A_{i}_6' for i in FOLLOWUP_IDS + EXTENDED_IDS + REACTION_IDS}
+NEXT_IDS = (1053,1054,1056,1060,1078,1086,1098,1103,1114,1127,1203,1205,1211)
+IDS = {f'A_{i}_6' for i in range(1001,1026) if i not in (1008,1024)} | {f'A_{i}_6' for i in FOLLOWUP_IDS + EXTENDED_IDS + REACTION_IDS + NEXT_IDS}
 
 
 class SixStarBalanceTests(TestCase):
@@ -26,8 +27,8 @@ class SixStarBalanceTests(TestCase):
         sid = self.cfg['avatar'][aid]['pl'][slot]
         return _native_skill_snapshot(self.cfg, sid, level if slot==10 else 1)
 
-    def arena(self, ident, enemies, allies=()):
-        owner = base_unit(self.cfg, f'A_{ident}_6', 60, 10, 0, .5, True, 1)
+    def arena(self, ident, enemies, allies=(), *, leader=True):
+        owner = base_unit(self.cfg, f'A_{ident}_6', 60, 10, 0, .5, leader, 1)
         owner.update(pos=1700, ap=1000, hp=100000, hp_max=100000)
         def dummy(side, index, line, pos, hp):
             return dict(aid='A_1008_6', isme=side==1, tpl=[1,1,1,0,500], line=line, pos=pos,

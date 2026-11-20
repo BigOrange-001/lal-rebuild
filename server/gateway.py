@@ -173,6 +173,8 @@ def build_static_config(path):
  apply_dragonmancer_kaisa(document)
  from nightbringer_yasuo_104 import apply_nightbringer_yasuo
  apply_nightbringer_yasuo(document)
+ from shyvana_dragon_media_105 import apply_dragon_media
+ apply_dragon_media(document)
  from new_skin_bonds_104 import apply_new_skin_bonds_104
  apply_new_skin_bonds_104(document)
  from skin_acquisition_104 import apply_skin_acquisition_104

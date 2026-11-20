@@ -251,6 +251,11 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
 
     def execute(self, owner, kind, scale, skill):
         if kind.startswith('six_'):return self.six_star_execute(owner,kind,skill)
+        row=self.six_star_row(skill)
+        if row.get('sixStarNextBaronLane105'):
+            return self.six_next_execute(owner,'six_next_baron_n',skill)
+        if row.get('sixStarNextBaronDrain105'):
+            return self.six_next_execute(owner,'six_next_baron_c',skill)
         if kind in ('skin2_1206_0', 'skin2_1206_1') and self.six_star_row(skill).get('sixStarBatchRear105'):
             return self.six_batch_vayne(owner, kind, skill)
         if kind.startswith('dragon_kaisa_'):return self.execute_kaisa(owner,kind,skill)
@@ -763,6 +768,8 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         relic_shield=kind=='shield' and getattr(self,'_equip_origin',None)=='relic_shield'
         if ctx and value and kind!='summon' and not relic_shield:value*=ctx['effect_factor']
         result=super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
+        if kind in ('stun','silence') and self._buff(unit,kind):
+            self.six_next_interrupt(unit)
         if kind == 'curse' and self._buff(unit, 'curse') is not curse and self._buff(unit, 'curse'):
             self.six_batch_curse(unit)
         if kind=='stun' and self._buff(unit,'stun'):
@@ -770,6 +777,7 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             self.six_star_stun_applied(unit)
             if self._buff(unit, 'stun') is not old_stun:
                 self.six_reaction_stun(unit)
+                self.six_next_stun(unit)
         if kind == 'burn':
             burn = self._buff(unit, 'burn')
             if burn and burn.layers > burn_layers:
@@ -792,6 +800,7 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             if event == 'crit' and self.six_batch_passive(owner, 'yasuo'):
                 self._tick_slot_cd(owner, '_skill_cd_b')
             if event == 'kill':self.six_star_extend_yi(owner)
+            self.six_next_event(owner,event,target)
             self.six_star_event(owner,event,target,amount,overheal)
             self.six_followup_event(owner,event,target,source,overheal)
         self.yasuo_event(owner,event,source,target,amount)
@@ -801,6 +810,12 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
     def _tick_slot_cd(self, owner, key):
         super()._tick_slot_cd(owner,key)
         if key=='_skill_cd_leader':self.kaisa_try_hunt(owner)
+
+    def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
+        purify=self._buff(unit,'purify') if kind=='purify' else None
+        super()._remove_buff(unit,kind,consume,clear_shields)
+        if purify and not self._buff(unit,'purify') and (passive:=self.six_next_passive(unit,'sivir')):
+            self.six_next_heal(unit,unit['hp_max']*passive[5])
 
     def _remove_all_debuff(self, unit):
         super()._remove_all_debuff(unit)
@@ -815,6 +830,9 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             if isinstance(value,dict) and value.get('debuff') is False:state.pop(key,None)
 
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None, fixed_recovery=False, derived=False):
+        if (source and self._team_number(source)!=self._team_number(target) and damage_type in (1,2,3,6,7,8)
+                and self._buff(target,'curse') and self.state(source).get('next_baron_drain',-1)>=self.state(source)['serial']):
+            amount*=2
         amount = self.six_reaction_incoming(target, amount, damage_type, source)
         amount = self.six_batch_damage_received(target, amount, damage_type, source, dot_kind)
         ctx=self._context(source) if source else None
@@ -850,6 +868,7 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             self.six_batch_after_damage(source, target, taken)
         if sustain:
             self.six_reaction_mf_dealt(source, target, receipt.get('actual', 0)+receipt.get('shield_absorbed', 0))
+        self.six_next_after_damage(source,target,damage_type,lost,taken,dot_kind,ctx)
         if target.get('hp',0)<=0:self.death(target)
         if before>0 and target.get('hp',0)<=0 and source is not None and self._team_number(source)!=self._team_number(target):
             self.queue_cat_skin_kill(source)
@@ -901,18 +920,35 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         return result
 
     def _basic_attack(self, attacker, target):
+        riven = self.six_next_passive(attacker, 'riven')
+        riven_targets = self.six_next_radius(attacker, target, 600) if riven else ()
         with self.context(attacker,'basic') as ctx:
             self.six_star_begin(attacker,ctx,None)
             before=target['hp'];damage_type=(attacker.get('tpl') or [0,1,1])[2]
             ratio=attacker['skillB']['skills'][0][4] if passive_kind(attacker)=='six_caitlyn_p' else 1
+            if passive:=self.six_next_passive(attacker,'graves'):
+                gap=abs(attacker['pos']-target['pos'])
+                ratio=passive[4 if gap<=200 else 5 if gap<=350 else 6]
+                ratio*=1+self.state(attacker).get('next_graves_basic',0)
             shen=self.state(attacker).get('six_shen')
             if shen and shen['charges']>0:
                 ctx['six_shen_strike']=True
                 shen['charges']-=1
             if not self.six_batch_kayle_attack(attacker, damage_type):
-                self._native_damage(attacker,target,ratio,damage_type)
-                if self._ability_last_hit:self._book_attack_effects(attacker,target,max(0,before-target['hp']))
+                targets=[target]
+                if self.six_next_passive(attacker,'diana'):
+                    targets=self.six_star_lane(attacker,350,forward=True) or targets
+                for victim in targets:
+                    before=victim['hp']
+                    self._native_damage(attacker,victim,ratio,damage_type)
+                    if self._ability_last_hit:self._book_attack_effects(attacker,victim,max(0,before-victim['hp']))
         self.polar_basic_attack(attacker)
+        if len(riven_targets) > 3 and attacker['hp'] > 0:
+            with self.context(attacker, 'passive'):
+                for foe in riven_targets:
+                    if foe['hp'] > 0:
+                        self.control(attacker, foe, 'stun', 1)
+                        self._native_damage(attacker, foe, riven[4], 1)
         self._emit_mod_event(attacker,'basic_attack',attacker,target)
 
     def _check_move(self, unit, forward, distance=0, forced=False):
@@ -932,6 +968,7 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         return _to_int(value*(1+self._buff_value(unit,'strong'))/(1+self._buff_value(unit,'weak'))*self.six_followup_speed(unit)*self.six_batch_speed(unit))
 
     def _get_range(self, unit):
+        if self.six_next_passive(unit,'graves'):return 500
         return 3000 if self.six_batch_kayle_stage(unit) else super()._get_range(unit)
 
     def _get_crit(self, unit):
@@ -967,7 +1004,13 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             self.six_star_begin(attacker,ctx,slot)
             result=super()._apply_native_skill(attacker,enemies,slot)
         self.six_star_finished(attacker,slot,skill,ctx,result)
-        if result and slot=='skill':attacker['_ability_normal_cast']=True
+        if result and slot=='skill':
+            attacker['_ability_normal_cast']=True
+            state=self.state(attacker)
+            if attacker['hp']>0 and state.get('next_dragon') and not state.get('next_dragon_recast'):
+                state['next_dragon_recast']=True
+                try:self._apply_native_skill(attacker,self.opponents(attacker),'skill')
+                finally:state.pop('next_dragon_recast',None)
         return result
 
     def _use_skill_slot(self, attacker, enemies, slot, cd_key):
@@ -983,6 +1026,13 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         override=attacker.pop('_ability_cd_override',None)
         if result and override is not None:attacker[cd_key]=override
         return result
+
+    def _use_turn_start_passive(self, attacker, enemies):
+        if passive_kind(attacker) in ('six_next_aoxing_p','six_next_sivir_p'):
+            if self._buff(attacker,'stun') or self._buff(attacker,'silence'):
+                return False
+            return self._use_skill_slot(attacker,enemies,'skillB','_skill_cd_b')
+        return super()._use_turn_start_passive(attacker,enemies)
 
     def explode(self, target, bomb):
         from abyss_equip_passives import delayed_cast
@@ -1065,6 +1115,11 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             net['until'] = self.state(attacker)['serial']
             return True
         if self._buff(attacker,'stun'):return True
+        if self.six_next_channel_turn(attacker):return True
+        if self.state(attacker).get('next_storm'):
+            if attacker.get('leader'):
+                self._use_skill_slot(attacker,enemies,'leader_skill','_skill_cd_leader')
+            return True
         enemies=self.opponents(attacker)
         if not enemies:return False
         summoned=self._buff(attacker,'summon') is not None

@@ -78,12 +78,12 @@ const passive = options.noPassive ? null : {
 };
 const unit = {
   hp: options.dead ? 0 : 1000, line: 0, team: 1, otherTeam: 2,
-  id: 'A_1226_6', manualFocusTarget: null,
+  id: 'A_1226_6', manualFocusTarget: null, abilityState: {},
   avatarData: {skill_diff: 18}, buffs: options.guarded ? {stun: {}} : {},
   skill0: null, skill1: null, skill2: null, skillB: passive,
   fightRes: {parent: null},
   advanceManualOwnerAction: noop, kaisaTryCaptain104: noop, getScale() { return 1; },
-  emitModEvent: noop,
+  emitModEvent: noop, sixFollowupTurn105: noop,
   refreshIcon: noop, getTeamHp: noop, abilityTurnStart() { return false; },
   checkBuff() { return false; }, getEffectiveActionType() { return 2; },
   checkSkill() { calls.active++; return false; },

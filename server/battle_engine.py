@@ -1752,7 +1752,7 @@ class ReferenceBattle:
         converted = _percent_debuff_value(action[3])
         if converted < 0:
             return
-        targets = self._skill_targets(attacker, enemies, pl)
+        targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=index)
         for target in targets:
             self._native_damage(attacker, target, action[1], action[2])
             self._add_buff(target, "weak", int(action[4]), converted)

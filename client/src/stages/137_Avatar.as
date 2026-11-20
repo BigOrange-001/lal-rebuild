@@ -10191,7 +10191,7 @@ package com.meng52.game.module.avatar
       public function injured(param1:int, param2:Number = 1, param3:* = null, param4:int = -1, param5:Avatar = null, param6:Boolean = false, param7:Avatar = null, param8:Buff = null, dotKind:String = "", derivedDamage104:Boolean = false, fixedRecovery105:Boolean = false) : int
       {
          if(abilityState.sixReactionElise105 && param4!=0 && param4!=4 && param4!=5) return 0;
-         if(abilityState.sixReactionMfWound105 || param7 && param7.skillB && param7.avatarData.id=="A_1030_6")
+         if(abilityState.sixReactionMfWound105 || param7 && param7.sixReactionPassive105("mf"))
             param1=sixReactionIncoming105(param1,param7,param4);
          var settledCriticalDamage104:Number=0;
          var abilityHpBefore:int = hp;
@@ -10640,11 +10640,11 @@ package com.meng52.game.module.avatar
          if(param4>=1 && param4<=3 && param7 && catContext &&
             (catContext.sixNamiWave105 || catContext.sixNamiTicket105 || param7.abilityState.sixNamiBless105))
             param7.sixFollowupAfterHit105(this,catContext,abilityDamageTaken+statisticsShield104);
-         if(param7 && param7.skillB && (param4>=1 && param4<=3 || param4>=6 && param4<=8) &&
-            (param7.avatarData.id=="A_1125_6" || param7.avatarData.id=="A_1214_6"))
+         if(param7 && param7.skillB && (param4>=1 && param4<=3 || param4>=6 && param4<=8))
+         {
             param7.sixBatchAfterDamage105(this,abilityDamageTaken+statisticsShield104);
-         if(param7 && param7.skillB && param7.avatarData.id=="A_1030_6" && (param4>=1 && param4<=3 || param4>=6 && param4<=8))
             param7.sixReactionMfDealt105(this,modActualDamage+statisticsShield104);
+         }
          return param1;
       }
 

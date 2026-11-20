@@ -354,6 +354,7 @@ class SixStarBalanceTests(TestCase):
 
     def test_extended_global_targeting_and_ziggs_heal_reduction(self):
         battle, owner, enemies = self.arena(1123, [(0,1300,100000), (1,900,100000)])
+        battle._add_buff(enemies[0], 'taunt', 2)
         self.assertTrue(self.cast(battle, owner))
         for foe in enemies:
             self.assertLess(foe['hp'], 100000)

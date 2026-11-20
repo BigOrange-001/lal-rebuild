@@ -31,8 +31,8 @@ def _enemy_pools(cfg):
         raise GameplayFault('InvalidConfig','Tower requires skin orange and ordinary orange heroes')
     return pools
 
-def _enemy_team(cfg,rng):
-    pools=_enemy_pools(cfg)
+def _enemy_team(cfg,rng,pools=None):
+    if pools is None:pools=_enemy_pools(cfg)
     aids=[rng.choice(pools['skin_orange'])]
     for _ in range(8):
         ticket=rng.randrange(100)
@@ -46,12 +46,12 @@ def _enemy_team(cfg,rng):
                      None,None,(1,0,-1)[i%3]/3,None,1,cap])
     return team
 
-def roll_tower_encounter(cfg,stage,rng):
+def roll_tower_encounter(cfg,stage,rng,*,pools=None):
     """Bind random enemies and their fitted attributes to one fight intent."""
     from activity_tower_overlay import _base_stats
     from campaign_workbook_overlay import _fit_power
     stage=copy.deepcopy(stage)
-    team=_enemy_team(cfg,rng)
+    team=_enemy_team(cfg,rng,pools)
     target=int(stage['tower_enemy_rule']['target_power'])
     stats,actual=_fit_power(cfg,team,_base_stats(cfg,team),target)
     stage.update(team2=team,enemy_unit_stats_by_diff={'0':stats},
@@ -66,6 +66,7 @@ def roll_tower_encounter(cfg,stage,rng):
 
 def _extend_tower(cfg,stages):
     anchor=int(stages[f'P_200_{EXTENSION_START}']['recommended_power'])
+    pools=_enemy_pools(cfg)
     for floor in range(EXTENSION_START+1,MAX_FLOOR+1):
         stage=copy.deepcopy(stages[f'P_200_{EXTENSION_START}'])
         target=round(anchor*(FINAL_POWER/anchor)**((floor-EXTENSION_START)/(MAX_FLOOR-EXTENSION_START)))
@@ -73,7 +74,7 @@ def _extend_tower(cfg,stages):
                      tower_tier=7,index=floor,indexID_s=floor,win=[-2],
                      tower_enemy_rule={'target_power':target,'units':9,'captain':'skin_orange',
                                        'other_slots_percent':{'skin_orange':40,'orange':60}})
-        stages[stage['id']]=roll_tower_encounter(cfg,stage,random.Random(f'tower-103-preview-{floor}'))
+        stages[stage['id']]=roll_tower_encounter(cfg,stage,random.Random(f'tower-103-preview-{floor}'),pools=pools)
 
 def enemy_quality(stage):
     qualities=[]

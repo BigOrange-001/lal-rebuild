@@ -42,7 +42,7 @@ class GameplaySocial:
         roster = json.loads(roster_path.read_text(encoding="utf-8")) if roster_path.exists() else {}
         self.avatars = self.cfg.get("avatar") or roster.get("heroes", {})
         self.simple = self.cfg.get("system_simple", {})
-        self.roster = GameplayRosterEquipment(store, self.config)
+        self.roster = GameplayRosterEquipment.for_config(store, self.config)
         self.companions = GuildCompanions(store, self.config)
         candidates = list(comp.get("fragment_bots", [])) + list(comp.get("pvp_bots", []))
         self.bots = [self._make_bot(row, index) for index, row in enumerate(candidates[:12])]

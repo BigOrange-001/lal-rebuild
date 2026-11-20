@@ -83,7 +83,7 @@ class GuildCompanions:
                "records": {"help_suids": {}, "help_fuids": {}}, "avatars": heroes}
         from gameplay_roster import GameplayRosterEquipment
 
-        base = GameplayRosterEquipment(self.store, self.config).battle_attributes(bot, captain, scope="assist")
+        base = GameplayRosterEquipment.for_config(self.store, self.config).battle_attributes(bot, captain, scope="assist")
         card = {**base, "aid": aids[0], "leader": 1, "isme": False, "buffs": {},
                 "line": 0, "pos": 0.2,
                 "new_4attrs": {key: int(base.get(key, 0)) for key in ("hit", "flee", "crit", "tough")}}

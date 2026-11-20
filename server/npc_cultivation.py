@@ -59,7 +59,7 @@ class NpcCultivator:
         self.cfg = self.config.get("cfg", self.config)
         self.simple = self.cfg.get("system_simple", {})
         self.heroes = self.cfg.get("avatar", {})
-        self.roster = GameplayRosterEquipment(store, self.config)
+        self.roster = GameplayRosterEquipment.for_config(store, self.config)
         self.talent_ranks: dict[int, list[str]] = {}
         for tid, row in sorted(self.cfg.get("talent", {}).items()):
             try:
@@ -321,13 +321,23 @@ class NpcCultivator:
     def fit(self, aids, template, target_power, power_fn, seed, *, uid, name, scope, lines=None):
         """Find the cultivation progress whose real power is closest to target."""
         cache = {}
+        previous_profile = None
+        previous_result = None
 
         def measure(progress):
+            nonlocal previous_profile, previous_result
             key = round(progress, 6)
             if key not in cache:
                 profile = self.build(aids, template, progress, seed, uid=uid, name=name, lines=lines)
-                units = self.units(profile, scope=scope, lines=lines)
-                cache[key] = (power_fn(units), progress, profile, units)
+                # Integer levels, ranks and gear frequently produce the exact
+                # same team on adjacent bisection steps. Keep the progress
+                # from this step for the recipe, even on a power cache hit.
+                if profile != previous_profile:
+                    units = self.units(profile, scope=scope, lines=lines)
+                    previous_result = (power_fn(units), units)
+                    previous_profile = profile
+                power, units = previous_result
+                cache[key] = (power, progress, profile, units)
             return cache[key]
 
         low, high = 0.0, MAX_PROGRESS

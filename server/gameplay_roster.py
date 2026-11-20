@@ -81,14 +81,23 @@ class GameplayRosterEquipment:
     CURRENCY = {"gold", "coin", "score", "medal", "mark"}
     ATTRS = {"dust", "sp", "dn_stone", "culture_book"}
 
+    @classmethod
+    def for_config(cls, store, config):
+        """Use the roster already bound to this store and exact configuration."""
+        for handler in getattr(store, "gameplay_handlers", ()):
+            if isinstance(handler, cls) and handler.store is store and handler.full_config is config:
+                return handler
+        return cls(store, config)
+
     def __init__(self, store, config):
         self.store = store
         if isinstance(config, str): config = json.loads(config)
         self.full_config = config if isinstance(config, dict) else {}
-        side_path = __import__("pathlib").Path(__file__).resolve().parents[1] / "config/reconstruction/roster-config.json"
-        side = json.loads(side_path.read_text(encoding="utf-8")) if side_path.exists() else {}
         if isinstance(config, dict) and isinstance(config.get("mod_roster"), dict):
             side = config["mod_roster"]
+        else:
+            side_path = __import__("pathlib").Path(__file__).resolve().parents[1] / "config/reconstruction/roster-config.json"
+            side = json.loads(side_path.read_text(encoding="utf-8")) if side_path.exists() else {}
         if not isinstance(config, dict): self._fail("InvalidConfig", "Expected a game config object")
         if "cfg" in config:
             source = config.get("cfg", {})

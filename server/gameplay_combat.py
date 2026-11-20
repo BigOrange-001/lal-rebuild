@@ -117,7 +117,7 @@ class GameplayCombat:
             attr_fn = None
             try:
                 from gameplay_roster import GameplayRosterEquipment
-                attr_fn = GameplayRosterEquipment(self.store, self.full_config).battle_attributes
+                attr_fn = GameplayRosterEquipment.for_config(self.store, self.full_config).battle_attributes
             except ImportError:
                 pass
             def mutate(profile):
@@ -609,7 +609,7 @@ class GameplayCombat:
                     reward.setdefault("heroes", []).append({"aid": tower_hero, "num": 1})
                 if reward.get("avatar_exp"):
                     from gameplay_roster import GameplayRosterEquipment
-                    roster_rules = GameplayRosterEquipment(self.store, self.full_config)
+                    roster_rules = GameplayRosterEquipment.for_config(self.store, self.full_config)
                     hero_id = reward["avatar_exp"]["hero_id"]
                     hero = profile["avatars"][hero_id]
                     hero_aid = str(hero.get("aid", hero_id)).split("|")[0]
@@ -829,7 +829,7 @@ class GameplayCombat:
             if any(not isinstance(a, str) or a not in roster for a in aids):
                 raise GameplayFault("InvalidTeam", "Expedition heroes must be owned")
             from gameplay_roster import GameplayRosterEquipment
-            roster_rules=GameplayRosterEquipment(self.store,self.full_config)
+            roster_rules=GameplayRosterEquipment.for_config(self.store,self.full_config)
             for aid in aids:
                 roster_rules._hero(profile, aid)
                 roster_rules._check_not_dn(profile,aid)
@@ -882,7 +882,7 @@ class GameplayCombat:
             # anchor. Keep each surviving hero's HP percentage while moving
             # both snapshots to exploration's native bare-Avatar rules.
             from gameplay_roster import GameplayRosterEquipment
-            attributes = GameplayRosterEquipment(self.store, self.full_config).battle_attributes
+            attributes = GameplayRosterEquipment.for_config(self.store, self.full_config).battle_attributes
             ledger = state.setdefault("health_ledger", {})
             for iid, hero in state.get("army", {}).items():
                 if not isinstance(hero, dict) or iid not in profile.get("avatars", {}):
@@ -991,7 +991,7 @@ class GameplayCombat:
                         or len(set(aids)) != len(aids) or any(a not in roster for a in aids)):
                     raise GameplayFault("InvalidTeam", f"Select one to {army_max} unique owned heroes")
                 from gameplay_roster import GameplayRosterEquipment
-                attributes = GameplayRosterEquipment(self.store, self.full_config).battle_attributes
+                attributes = GameplayRosterEquipment.for_config(self.store, self.full_config).battle_attributes
                 previous_army = state.get("army", {}) if isinstance(state.get("army"), dict) else {}
                 health_ledger = state.setdefault("health_ledger", {})
                 selected = {}
@@ -1046,7 +1046,7 @@ class GameplayCombat:
                        or not 0 <= row[2] <= 1 for row in rows):
                     raise GameplayFault("InvalidFormation", "探险阵型坐标无效")
                 from gameplay_roster import GameplayRosterEquipment
-                attributes = GameplayRosterEquipment(self.store, self.full_config).battle_attributes
+                attributes = GameplayRosterEquipment.for_config(self.store, self.full_config).battle_attributes
                 own = []
                 for i, iid in enumerate(ids):
                     hero = profile.get("avatars", {}).get(iid)

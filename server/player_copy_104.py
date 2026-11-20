@@ -58,6 +58,7 @@ def clean_player_text(text):
 
 def apply_player_copy_104(document):
     cfg = document.get('cfg', document)
+    cleaned = {}
     for aid, hero in cfg.get('avatar', {}).items():
         if aid.startswith('A_2024_'):
             hero['name'] = '哮天犬'
@@ -65,7 +66,9 @@ def apply_player_copy_104(document):
         if isinstance(value, dict):
             for key, child in value.items():
                 if key in TEXT_FIELDS and isinstance(child, str):
-                    value[key] = clean_player_text(child)
+                    if child not in cleaned:
+                        cleaned[child] = clean_player_text(child)
+                    value[key] = cleaned[child]
                 elif isinstance(child, (dict, list)):
                     visit(child)
         elif isinstance(value, list):

@@ -1,7 +1,7 @@
 """Persistent local players and original-client resource gift mail RPCs."""
 import datetime,hashlib,hmac,json,secrets,time,sqlite3,threading
 from ledger_codec import pack_json,unpack_json_text,compact_ledger
-from vip_campaign import normalize_vip_profile,legacy_first_bonus_from_receipts
+from vip_campaign import normalize_vip_profile
 from gameplay_energy import normalize_energy_purchase_day
 from cultivation_rules import normalize_profile as normalize_culture_profile
 from game_clock import GameClock
@@ -13,10 +13,15 @@ class GameplayFault(Exception):
 
 def native_dates(value):
  if isinstance(value,dict):
-  if set(value)=={'$date'}:return datetime.datetime.fromtimestamp(value['$date'],datetime.timezone.utc).replace(tzinfo=None)
+  if len(value)==1 and '$date' in value:return _decode_date(value)
   return {k:native_dates(v) for k,v in value.items()}
  if isinstance(value,list):return [native_dates(v) for v in value]
  return value
+
+def _decode_date(row):
+ if len(row)==1 and '$date' in row:
+  return datetime.datetime.fromtimestamp(row['$date'],datetime.timezone.utc).replace(tzinfo=None)
+ return row
 
 # Client-owned durable projection. Optional top-level profile fields
 # are copied only when present. Backend-only fight intents and independent
@@ -183,8 +188,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
  def _login_profile(self,uid,token):
   def track_login(p):
    normalize_energy_purchase_day(p,self.clock.now())
-   receipts=[unpack_json_text(r[0],self.db) for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
-   normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
+   self._normalize_saved_vip(uid,p)
    attrs=p.setdefault('attrs',{});attrs['login_total']=int(attrs.get('login_total',0))+1
    self.adventure.record_login(p)
    attrs.setdefault('sign_in',{'k':1,'n':0,'t':None})
@@ -235,33 +239,33 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   context=self.context_for(uid)
   if context is not self:return context.state_snapshot(uid)
   with self.lock:
-   # Apply any legacy normalization first; its write increments the same UID revision.
-   self.profile(uid)
-   self.db.execute('BEGIN')
-   try:
-    row=self.db.execute('SELECT p.profile,r.revision FROM players p JOIN player_state_revision r ON r.uid=p.uid WHERE p.uid=?',(uid,)).fetchone()
-    if not row:raise GameplayFault('UnknownPlayer','Player does not exist')
-    raw_profile=native_dates(json.loads(row[0]))
-    missing=[key for key in CLIENT_PROFILE_SYNC_REQUIRED_FIELDS if key not in raw_profile]
-    if missing:raise GameplayFault('InvalidProfileSyncProjection','Missing required client profile fields: '+','.join(missing))
-    profile={key:raw_profile[key] for key in CLIENT_PROFILE_SYNC_REQUIRED_FIELDS}
-    profile.update({key:raw_profile[key] for key in CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS if key in raw_profile})
-    # This is intentionally a client-owned projection, not a copy of every
-    # persisted backend field. msg_num/apply_num are independently derived,
-    # pending_battles contains backend intent/replay state, and sessionid is
-    # transport authentication state; none belongs in the snapshot.
-    result={'uid':uid,'revision':int(row[1]),'profile':profile}
-    self.db.commit()
-    return result
-   except Exception:
-    self.db.rollback();raise
+   _,stored,revision=self._normalized_profile(uid)
+   if revision is None:raise GameplayFault('UnknownPlayer','Player does not exist')
+   raw_profile=json.loads(stored,object_hook=_decode_date)
+   missing=[key for key in CLIENT_PROFILE_SYNC_REQUIRED_FIELDS if key not in raw_profile]
+   if missing:raise GameplayFault('InvalidProfileSyncProjection','Missing required client profile fields: '+','.join(missing))
+   profile={key:raw_profile[key] for key in CLIENT_PROFILE_SYNC_REQUIRED_FIELDS}
+   profile.update({key:raw_profile[key] for key in CLIENT_PROFILE_SYNC_OPTIONAL_FIELDS if key in raw_profile})
+   return {'uid':uid,'revision':int(revision),'profile':profile}
  def profile(self,uid):
   context=self.context_for(uid)
   if context is not self:return context.profile(uid)
-  profile_row=self.db.execute('SELECT profile FROM players WHERE uid=?',(uid,)).fetchone()
+  p,_,_=self._normalized_profile(uid)
+  p['msg_num']=self.db.execute('SELECT COUNT(*) FROM gift_mail WHERE uid=? AND claimed=0',(uid,)).fetchone()[0]
+  return native_dates(p)
+ def _normalize_saved_vip(self,uid,profile):
+  def payment_receipts():
+   for row in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),)):
+    yield unpack_json_text(row[0],self.db)
+  normalize_vip_profile(profile,legacy_receipts=payment_receipts())
+ def _normalized_profile(self,uid):
+  # Read the profile and revision from the same SQLite snapshot.
+  profile_row=self.db.execute('SELECT p.profile,r.revision FROM players p LEFT JOIN player_state_revision r ON r.uid=p.uid WHERE p.uid=?',(uid,)).fetchone()
   if not profile_row:raise GameplayFault('UnknownPlayer','Player does not exist')
+  revision=profile_row[1]
   p=json.loads(profile_row[0])
-  normalize_spending(p,self.clock.now())
+  now=self.clock.now()
+  normalize_spending(p,now)
   # The native activity-combat progress check indexes ploy_cids by chapter
   # before the first activity request. Preserve valid records on old saves.
   if not isinstance(p.get('ploy_cids'),dict):p['ploy_cids']={}
@@ -273,7 +277,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   # Preserve valid legacy values; do not infer it from login_total.
   if type(p.get('catena')) is not int or p['catena'] < 0:p['catena']=0
   if not isinstance(p.get('records'),dict):p['records']={}
-  normalize_daily_counters(p,self.clock.now())
+  normalize_daily_counters(p,now)
   p['records'].setdefault('help_suids',{})
   p['records'].setdefault('help_fuids',{})
   attrs=p.setdefault('attrs',{})
@@ -363,7 +367,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    p['exploration'].setdefault(key,value)
   times=p['records'].get('exploration_times')
   if not isinstance(times,dict):times={}
-  today=game_day(self.clock.now())
+  today=game_day(now)
   if times.get('day')!=today:
    times.update({'day':today,'refresh_count':3,'refresh_buy':0,'relive_buy':0,'mode_buy':0,'vip_relive':1})
   else:
@@ -393,29 +397,28 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
    p['team']=[[mapping.get(a,a) for a in team] for team in p['team']]
   cfg=self.config.get('cfg',self.config) if isinstance(self.config,dict) else {}
   normalize_culture_profile(p,cfg)
-  for k in ['wager_free_score','wager_free_coin']:p['attrs'].setdefault(k,{'$date':self.clock.now()})
+  for k in ['wager_free_score','wager_free_coin']:p['attrs'].setdefault(k,{'$date':now})
   p['records'].setdefault('free_wager_count',0)
   p.setdefault('as_equips',[[] for _ in range(6)])
   p.setdefault('cid','M_001_1');p.setdefault('hid','M_001_1')
-  p.setdefault('add_time',p.get('create_time',{'$date':self.clock.now()}))
+  p.setdefault('add_time',p.get('create_time',{'$date':now}))
   p['attrs'].setdefault('gamble_index',0)
   if type(p['attrs'].get('wager_coin_1_count')) is not int or p['attrs']['wager_coin_1_count']<0:p['attrs']['wager_coin_1_count']=0
   p['attrs'].setdefault('fund',{'key':'1','money':10,'last_time':None})
-  p['attrs'].setdefault('fund_add_time',p.get('add_time',{'$date':self.clock.now()}))
+  p['attrs'].setdefault('fund_add_time',p.get('add_time',{'$date':now}))
   p.setdefault('combat_score',{'normal':{},'hard':{},'ploy':{}})
   if not isinstance(p['combat_score'],dict):p['combat_score']={'normal':{},'hard':{},'ploy':{}}
   for difficulty in ('normal','hard','ploy'):p['combat_score'].setdefault(difficulty,{})
   p.setdefault('task',{})
   p['records'].setdefault('everyday_gift',[])
-  normalize_energy_purchase_day(p,self.clock.now())
+  normalize_energy_purchase_day(p,now)
   p['attrs'].setdefault('login_total',0)
   p['attrs'].setdefault('pay_money',0)
   p['attrs'].setdefault('pay_total',0)
   p['attrs'].setdefault('pay_count',0)
   p['attrs'].setdefault('pay_first',0)
   p['attrs'].setdefault('pay_first_gift',0)
-  receipts=[unpack_json_text(r[0],self.db) for r in self.db.execute("SELECT result FROM operation_ledger WHERE uid=? AND operation_key LIKE 'user.local_pay_test:%' ORDER BY created,operation_key",(str(uid),))]
-  normalize_vip_profile(p,legacy_first_bonus_from_receipts(receipts))
+  self._normalize_saved_vip(uid,p)
   p['attrs'].setdefault('rank_lv',[])
   p['attrs'].setdefault('mon_card',{})
   p['attrs'].setdefault('mon_card_claim_day',{})
@@ -426,7 +429,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   p['records'].setdefault('box_record',[])
   p['records'].setdefault('welfare_times',[0,0,0,0])
   p['attrs'].setdefault('sign_in',{'k':1,'n':0,'t':None})
-  p['attrs']['check_in']=self._refresh_check_in_for_login(self._normalize_check_in_state(p['attrs'].get('check_in')),self._check_in_today())
+  p['attrs']['check_in']=self._refresh_check_in_for_login(self._normalize_check_in_state(p['attrs'].get('check_in')),today)
   p['records'].setdefault('vip_gift',[])
   p['attrs'].setdefault('pay_gift',0)
   p['attrs'].setdefault('spend_total',0)
@@ -452,14 +455,14 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
      if not latest:raise GameplayFault('UnknownPlayer','Player does not exist')
      if latest[0]!=profile_row[0]:
       self.db.rollback()
-      return self.profile(uid)
+      return self.context_for(uid)._normalized_profile(uid)
      self.db.execute('UPDATE players SET profile=? WHERE uid=?',(normalized,uid))
      self._bump_revision(uid)
+     revision=self.state_revision(uid)
      self.db.commit()
     except Exception:
      self.db.rollback();raise
-  p['msg_num']=self.db.execute('SELECT COUNT(*) FROM gift_mail WHERE uid=? AND claimed=0',(uid,)).fetchone()[0]
-  return native_dates(p)
+  return p,normalized,revision
  @staticmethod
  def _normalize_equipment_attrs(equips):
   """Migrate legacy flat equipment stats to the native nested schema."""
@@ -581,9 +584,10 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   return json.loads(row[0])
  @staticmethod
  def _profile_json(value):
+  if value is None or type(value) in (str,int,float,bool):return value
   if isinstance(value,datetime.datetime):return {'$date':int(value.replace(tzinfo=datetime.timezone.utc).timestamp())}
   if isinstance(value,dict):
-   if set(value)=={'$date'}:return {'$date':int(value['$date'])}
+   if len(value)==1 and '$date' in value:return {'$date':int(value['$date'])}
    return {str(k):PlayerStore._profile_json(v) for k,v in value.items()}
   if isinstance(value,(list,tuple)):return [PlayerStore._profile_json(v) for v in value]
   if value is None or isinstance(value,(str,int,float,bool)):return value

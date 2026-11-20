@@ -158,6 +158,8 @@ def load_game_config(path, now=None):
  apply_power_balance_104(document)
  from resource_drops_104 import apply_resource_drops_104
  apply_resource_drops_104(document)
+ from six_star_balance_105 import apply_six_star_balance
+ apply_six_star_balance(document)
  from bonds_104 import apply_bonds_104
  apply_bonds_104(document)
  from equipment_bonds_104 import apply_equipment_bonds_104

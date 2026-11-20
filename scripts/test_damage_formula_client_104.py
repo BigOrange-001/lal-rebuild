@@ -17,7 +17,8 @@ def runtime():
     data = json.loads((ROOT/'config/reconstruction/combat-rules-1.0.4.json').read_text('utf8'))
     script = '''const assert=require('assert'),int=Math.trunc;const trace=()=>{};
 const stored=new Map(),LocalStore={getItemObj:k=>stored.get(k),setItemObj:(k,v)=>stored.set(k,v)};
-let roll=99;const Random={getRandom:()=>roll},Tools={toInt:x=>Math.trunc(+Number(x).toFixed(5))};
+let roll=99,attackContext=null;const currentAbilityAttack=()=>attackContext;
+const Random={getRandom:()=>roll},Tools={toInt:x=>Math.trunc(+Number(x).toFixed(5))};
 const GameMapTools={gameTrace(){}},GameMap={actionDelay:0,currentAvatar:{id:1,team:1}};
 const GameMapLayer={gl:{infoLayer:{popTextForAvatar(){}},delayCall(){}}};
 const SoundManager={getOnlyExample:()=>({playSound(){}})},GlobalLanguageStr={getLanguageStr(){return ''}},missTween=()=>{};
@@ -109,6 +110,15 @@ methods.beginDamageRules104();
 roll=0;assert(Math.abs(methods.checkCrit(a,b)-2*methods.opposedPower105(3000))<1e-10);
 roll=99;assert.equal(methods.checkCrit(a,b),1);
 roll=24;assert(methods.checkMiss(a,b));roll=1624;assert(!methods.checkMiss(a,b));
+a.skillB={};a.sixFollowupPassive105=()=>[null,null,null,null,1.5];
+const activeCutoff=Math.round(methods.opposedCritChance105(3000)*150);
+const nativeDraw=bucket=>bucket%100*100+Math.floor(bucket/100);
+attackContext={owner:a,kind:'active'};
+roll=nativeDraw(activeCutoff-1);assert.equal(methods.checkCrit(a,b),2*methods.opposedPower105(3000));
+roll=nativeDraw(activeCutoff);assert.equal(methods.checkCrit(a,b),1);
+attackContext.kind='basic';roll=nativeDraw(activeCutoff-1);assert.equal(methods.checkCrit(a,b),1);
+attackContext.sixForceCrit105=true;roll=99;assert.equal(methods.checkCrit(a,b),2*methods.opposedPower105(6000));
+attackContext=null;
 methods.setLegacyDamage104(true);methods.beginDamageRules104();roll=30;assert(Math.abs(methods.checkCrit(a,b)-(2+6000*.5/9000))<1e-8);
 roll=44;assert(methods.checkMiss(a,b));roll=45;assert(!methods.checkMiss(a,b));
 console.log('Actual client crit/miss boundaries and legacy critical multiplier passed');

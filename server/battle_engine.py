@@ -266,12 +266,13 @@ def _percent_debuff_value(raw):
 
 class _Buff:
     """Mirror of Buff(type, round, value) from 140_Buff.as."""
-    __slots__ = ("type", "round", "value", "source", "poison_hp_rate_104")
+    __slots__ = ("type", "round", "value", "source", "poison_hp_rate_104", "layers")
 
     def __init__(self, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
         self.poison_hp_rate_104 = poison_hp_rate_104
         self.type = str(kind)
         self.round = _to_int(rounds)
+        self.layers = int(self.type != 'burn' or (self.round > 0 and value > 0))
         self.value = value
         self.source = source
 
@@ -435,6 +436,8 @@ class ReferenceBattle:
                                         + incoming.value)
             current.round = incoming.round
             current.source = incoming.source
+            if kind == 'burn':
+                current.layers += incoming.layers
             return
         if kind in ("root", "weak", "sunder", "shield", "strong", "steel", "armor",
                     "hitup", "fleeup", "critup", "toughup", "book_penetration"):
@@ -493,6 +496,7 @@ class ReferenceBattle:
             if kind == "bless" and entry.value <= 0:
                 continue
             if kind=='purify' and entry.value>0:continue
+            if kind=='sixReactionMfShield105':continue
             entry.round -= 1
             if kind == "summon" and entry.round < 0:
                 unit["hp"] = 0
@@ -618,7 +622,7 @@ class ReferenceBattle:
             return 1.0
         return precision_recovery(self._effective_secondary(source, self._get_hit, 4))
 
-    def _roll_attack(self, attacker, target):
+    def _roll_attack(self, attacker, target, *, crit_rate=1, force_crit=False):
         """Zero means evaded. Otherwise return the hit's critical multiplier."""
         rules, attack = self._combat_rules, self._attack
         if ratio_enabled(rules):
@@ -633,7 +637,10 @@ class ReferenceBattle:
             self._emit_mod_event(attacker, 'miss', attacker, target)
             self._emit_mod_event(target, 'dodge', attacker, target)
             return 0
-        if roll_percent(self.rng, crit_chance(critical, tough, attack, rules), rules):
+        chance = min(100, crit_chance(critical, tough, attack, rules) * crit_rate)
+        if force_crit or roll_percent(self.rng, chance, rules):
+            if force_crit:
+                tough = 0
             return critical_multiplier(critical, attack, tough, rules)
         return 1
 
@@ -720,6 +727,8 @@ class ReferenceBattle:
             was_alive = target.get("hp", 0) > 0
             missing = max(0, int(target.get("hp_max", 0)) - int(target.get("hp", 0)))
             healed = max(0, min(missing, amount))
+            if receipt is not None:
+                receipt['healing_overflow'] = max(0, amount-healed)
             target["hp"] = int(target.get("hp", 0)) + healed
             observer = getattr(self, '_study_statistics_event', None)
             if observer is not None and healed:
@@ -768,6 +777,8 @@ class ReferenceBattle:
                 if spent >= budget:break
             absorbed = min(amount, math.ceil(spent / factor))
             amount -= absorbed
+        if receipt is not None:
+            receipt['shield_absorbed'] = max(0, absorbed)
         observer = getattr(self, '_study_statistics_event', None)
         if observer is not None and int(target.get('hp', 0)) > 0:
             observer(source, target, max(0, absorbed) + min(max(0, amount), int(target['hp'])), 0)
@@ -822,12 +833,12 @@ class ReferenceBattle:
             dealt = self._final_direct_damage(dealt, target, critical)
         return self._injured(target, dealt, damage_type, source=source)
 
-    def _final_direct_damage(self, amount, target, critical=1):
+    def _final_direct_damage(self, amount, target, critical=1, ignore_tough=False):
         attack = self._attack
         if len(attack) <= 21:
             return amount
         amount = to_int(to_int(amount * critical) * attack[21])
-        if ratio_enabled(self._combat_rules):
+        if ignore_tough or ratio_enabled(self._combat_rules):
             return amount  # Opposed toughness is applied once at the recipient.
         tough = max(0, self._get_tough(target))
         return to_int(amount / (1 + tough * attack[15] / (tough + attack[13])))
@@ -904,6 +915,14 @@ class ReferenceBattle:
                 policy = policies[index]
         if policy == 'ally_self':
             return [attacker] if any(u is attacker for u in alive) else []
+        if policy == 'ally_lane_lowest_hp_ratio_n' and self._six_star_setting(skill,'ExactHeal'):
+            lane = sorted((u for u in alive if u['line']==attacker['line']),
+                          key=lambda u:u['hp']/max(1,u['hp_max']))
+            return lane[:self._policy_max_targets(skill,index,2)]
+        if policy == 'enemy_lane_frontmost' and self._six_star_setting(skill,'Turret'):
+            lane = sorted((u for u in alive if u['line']==attacker['line']),
+                          key=lambda u:u['pos'] if self._team_number(attacker)==2 else -u['pos'])
+            return lane[:self._policy_max_targets(skill,index,1)]
         if policy == 'ally_all_lowest_hp_ratio':
             args=self._policy_args(skill,index) or {}
             if args.get('heroOnly'):alive=[u for u in alive if self._get_type(u)==1 and not u.get('summon_owner_token')]
@@ -1432,6 +1451,16 @@ class ReferenceBattle:
         if result and slot!='skillB':self._emit_mod_event(attacker,'skill_cast',attacker,attacker)
         return result
 
+    def _six_star_setting(self, skill, name):
+        return self._config.get('skill', {}).get(skill.get('skid'), {}).get('sixStar'+name+'105')
+
+    @staticmethod
+    def _six_locked_targets(context, fallback):
+        if 'six_followup_target' not in context:
+            return fallback
+        target=context['six_followup_target']
+        return [target] if target['hp']>0 else []
+
     def _apply_native_skill_steps(self, attacker, enemies, slot="skill"):
         """Execute a native action list, mirroring the client's dispatch switch.
 
@@ -1456,6 +1485,43 @@ class ReferenceBattle:
                    "precast_dot": {id(u) for u in enemies if any(
                        self._has_manual_dot_kind(u, kind) for kind in ("burn", "bleed", "poison", "phantasm"))},
                    "precast_burn": {id(u) for u in enemies if self._has_manual_dot_kind(u, "burn")}}
+        if self._six_star_setting(skill, 'ReactionEvelynnTarget'):
+            reach = self._get_cast_range(attacker, skill)
+            target = min((u for u in enemies if u['hp'] > 0 and u['line'] == attacker['line']
+                          and abs(u['pos']-attacker['pos']) <= reach),
+                         key=lambda u: u['hp']/u['hp_max'], default=None)
+            if target is None:
+                return False
+            context['six_followup_target'] = target
+        if self._six_star_setting(skill, 'ReactionThreshBox'):
+            context['reaction_box'] = self._skill_targets(attacker, enemies, skill['pl'], skill=skill, index=0)
+        if any(self._six_star_setting(skill,flag) for flag in (
+                'IreliaDash','LeeCombo','ZedRandom','TahmRange','TahmPull')):
+            reach=self._get_range(attacker) if self._six_star_setting(skill,'TahmRange') else abs(skill['pl'][2])
+            lane=[u for u in enemies if u['line']==attacker['line']]
+            legal=self._find_aim_list(attacker,lane,reach,skill['pl'][5]==0)
+            if not legal:
+                return False
+            if self._six_star_setting(skill,'ZedRandom'):
+                ordered=sorted(legal,key=lambda u:abs(u['pos']-attacker['pos']))
+                chosen=ordered[self.rng.get_random(len(ordered))%len(ordered)]
+            elif self._six_star_setting(skill,'IreliaDash'):
+                side=self._team_number(attacker)
+                chosen=min(legal,key=lambda u: -u['pos'] if side==1 else u['pos'])
+            else:
+                chosen=min(legal,key=lambda u:abs(u['pos']-attacker['pos']))
+            context['six_followup_target']=chosen
+        if self._six_star_setting(skill,'Axe'):
+            direction = -1 if self._team_number(attacker)==1 else 1
+            candidates = [u for u in enemies if u['line']==attacker['line'] and u['hp']>0
+                          and 0<=(u['pos']-attacker['pos'])*direction<=actions[0][3]]
+            if not candidates:
+                return False
+            context['six_axe_targets'] = sorted(candidates,key=lambda u:abs(u['pos']-attacker['pos']))[:3]
+            context['six_axe_missing'] = attacker['hp_max']-attacker['hp']
+        if self._six_star_setting(skill, 'Advance'):
+            edge = 0 if self._team_number(attacker)==1 else self._LINE_POS
+            self._reline(attacker, attacker['line'], edge)
         manual_seen=any(isinstance(a,list) and a and a[0]=='manual_ability' for a in actions)
         settled=False
         for index, action in enumerate(actions):
@@ -1466,7 +1532,18 @@ class ReferenceBattle:
                 # No matching case in the native switch: skip and carry on.
                 continue
             try:
-                applied=handler(self, attacker, enemies, allies, skill, action, index, context)
+                step_allies = allies
+                step_skill = skill
+                if self._six_star_setting(skill,'ShenTeleport') and 4<=index<=6:
+                    ally = context['targets'].get(0)
+                    if ally is None or ally['hp']<=0:
+                        continue
+                    step_allies = [ally]
+                    step_skill = dict(skill, actionTargetPolicies=[None]*index+['ally_all'])
+                    if action[0]=='caster_hp_shield':
+                        self._add_buff(ally,'shield',int(action[2]),_to_int(attacker['hp_max']*action[1]))
+                        continue
+                applied=handler(self, attacker, enemies, step_allies, step_skill, action, index, context)
                 if action[0]!='manual_ability' or applied is True:settled=True
             except (TypeError, ValueError, IndexError, KeyError):
                 return False
@@ -1481,14 +1558,45 @@ class ReferenceBattle:
         if len(action) < 3:
             raise ValueError("damage action needs a coefficient and a damage type")
         pl = skill.get("pl") or []
-        targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=index)
+        targets = self._six_locked_targets(context,self._skill_targets(attacker,enemies,pl,skill=skill,index=index))
+        if self._six_star_setting(skill,'KindredVolley') and index==2:
+            direction=-1 if self._team_number(attacker)==1 else 1
+            targets=sorted((u for u in enemies if u['hp']>0 and u['line']==attacker['line']
+                            and 0<=(u['pos']-attacker['pos'])*direction<=self._get_cast_range(attacker,skill)),
+                           key=lambda u:abs(u['pos']-attacker['pos']))[:3]
+        if self._six_star_setting(skill,'NamiWave') and index==0:
+            direction=-1 if self._team_number(attacker)==1 else 1
+            targets=sorted((u for u in enemies if u['hp']>0 and u['line']==attacker['line']
+                            and 0<=(u['pos']-attacker['pos'])*direction<=800),
+                           key=lambda u:abs(u['pos']-attacker['pos']))[:4]
+            context['six_wave_primary']=targets[0] if targets else None
+        if self._six_star_setting(skill, 'Axe'):
+            targets = [u for u in context.get('six_axe_targets', []) if u['hp']>0]
+        if self._six_star_setting(skill, 'EzrealBarrage') and index in (3,5,7,9):
+            target = context['targets'].get(index-1)
+            targets = [target] if target and target['hp']>0 else []
+        if self._six_star_setting(skill, 'TalonChain') and targets:
+            primary = targets[0]
+            others = sorted((u for u in enemies if u is not primary and u['hp']>0 and u['line']==primary['line']),
+                            key=lambda u:abs(u['pos']-primary['pos']))
+            targets = [primary, *others[:2]]
         total = 0
         first = None
+        landed = []
         for target in targets:
-            total += self._native_damage(attacker, target, action[1], action[2])
+            before = target['hp']
+            dealt = self._native_damage(attacker, target, action[1], action[2])
+            if self._six_star_setting(skill,'Orb') or self._six_star_setting(skill,'LeeCombo'):
+                dealt = min(before,max(0,before-target['hp']))
+            total += dealt
             first = first or target
+            if getattr(self,'_ability_last_hit',True):
+                landed.append(target)
         context["damage"][index] = total
-        context["kills"][index] = self._kill_record(targets)
+        hit_targets = landed if self._six_star_setting(skill,'EzrealHit') or self._six_star_setting(skill,'Axe') else targets
+        context["kills"][index] = self._kill_record(hit_targets)
+        if self._six_star_setting(skill,'Axe'):
+            context['kills'][index]['hit_heroes'] = [u for u in landed if self._get_type(u)==1 and not u.get('summon_owner')]
         if first is not None:
             context["targets"][index] = first
 
@@ -1496,11 +1604,15 @@ class ReferenceBattle:
         """true_damage (139_SkillSet.as:1406): damage with type forced to 3."""
         pl = skill.get("pl") or []
         coefficient = self._true_skill_coefficient(float(action[1]))
-        targets = self._skill_targets(attacker, enemies, pl)
+        orb = self._six_star_setting(skill, 'Orb')
+        policy = orb or self._six_star_setting(skill, 'BatchTrueTargets')
+        targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=index) if policy else self._skill_targets(attacker, enemies, pl)
         total = 0
         first = None
         for target in targets:
-            total += self._native_damage(attacker, target, coefficient, 3)
+            before = target['hp']
+            dealt = self._native_damage(attacker, target, coefficient, 3)
+            total += min(before,max(0,before-target['hp'])) if orb else dealt
             first = first or target
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(targets)
@@ -1533,13 +1645,16 @@ class ReferenceBattle:
         condition = str(action[3])
         bonus = float(action[4])
         total = 0
-        for target in self._skill_targets(attacker, enemies, pl):
+        targets=self._six_locked_targets(context,self._skill_targets(attacker,enemies,pl))
+        for target in targets:
+            before=target['hp']
             coefficient = base
             if self._condition_matches(condition, target, context, skill, index):
                 coefficient += bonus
             if damage_type == 3:
                 coefficient = self._true_skill_coefficient(coefficient)
-            total += self._native_damage(attacker, target, coefficient, damage_type)
+            dealt=self._native_damage(attacker,target,coefficient,damage_type)
+            total+=min(before,max(0,before-target['hp'])) if self._six_star_setting(skill,'LeeCombo') else dealt
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(
             [u for u in enemies if int(u.get("hp", 0)) > 0])
@@ -1570,9 +1685,20 @@ class ReferenceBattle:
         if len(action) < 4:
             raise ValueError("stun action needs a coefficient, damage type and rounds")
         pl = skill.get("pl") or []
-        targets = self._skill_targets(attacker, enemies, pl)
+        if 'reaction_box' in context:
+            targets = [u for u in context['reaction_box'] if u['hp'] > 0]
+        elif self._six_star_setting(skill,'NamiWave') and index==1:
+            target=context.get('six_wave_primary')
+            targets=[target] if target and target['hp']>0 else []
+        elif self._six_star_setting(skill,'LaneStun') and index==2:
+            targets = [u for u in enemies if u['hp']>0 and u['line']==attacker['line']]
+        elif self._six_star_setting(skill,'Advance'):
+            targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=0)
+        else:
+            targets = self._skill_targets(attacker, enemies, pl)
         for target in targets:
-            self._native_damage(attacker, target, action[1], action[2])
+            if action[1]:
+                self._native_damage(attacker, target, action[1], action[2])
             self._add_buff(target, "stun", int(action[3]), 0)
         if targets:
             context["targets"][index] = targets[0]
@@ -1594,9 +1720,14 @@ class ReferenceBattle:
         if len(action) < 4:
             raise ValueError("silence action needs a coefficient, damage type and rounds")
         pl = skill.get("pl") or []
-        targets = self._skill_targets(attacker, enemies, pl)
+        if self._six_star_setting(skill,'Turret') and index==2:
+            target = context['targets'].get(1)
+            targets = [target] if target and target['hp']>0 else []
+        else:
+            targets = self._six_locked_targets(context,self._skill_targets(attacker,enemies,pl))
         for target in targets:
-            self._native_damage(attacker, target, action[1], action[2])
+            if action[1]:
+                self._native_damage(attacker, target, action[1], action[2])
             self._add_buff(target, "silence", int(action[3]), 0)
         if targets:
             context["targets"][index] = targets[0]
@@ -1646,9 +1777,13 @@ class ReferenceBattle:
         converted = _percent_debuff_value(action[3])
         if converted < 0:
             return
-        targets = self._skill_targets(attacker, enemies, pl)
+        axe = self._six_star_setting(skill,'Axe')
+        reaction = any(self._six_star_setting(skill, flag) for flag in ('ReactionBarrage', 'ReactionEvelynnTarget'))
+        candidates = self._skill_targets(attacker, enemies, pl, skill=skill, index=index) if reaction else self._skill_targets(attacker, enemies, pl)
+        targets = context.get('six_axe_targets', []) if axe else self._six_locked_targets(context, candidates) if reaction else candidates
         for target in targets:
-            self._native_damage(attacker, target, action[1], action[2])
+            if action[1] or not (axe or reaction):
+                self._native_damage(attacker, target, action[1], action[2])
             self._add_buff(target, "sunder", int(action[4]), converted)
         if targets:
             context["targets"][index] = targets[0]
@@ -1664,11 +1799,13 @@ class ReferenceBattle:
             raise ValueError("poison action needs a coefficient, type, dot and rounds")
         pl = skill.get("pl") or []
         magnitude = _to_int(float(action[3]) * self._ap_with_talent(attacker))
-        targets = self._skill_targets(attacker, enemies, pl)
+        targets = self._six_locked_targets(context,self._skill_targets(attacker,enemies,pl))
         total = 0
         for target in targets:
             total += self._native_damage(attacker, target, action[1], action[2])
             definition=self._config.get('avatar',{}).get(attacker.get('aid'),{})
+            if self._six_star_setting(skill,'ZedRandom') and not getattr(self,'_ability_last_hit',True):
+                continue
             pack=definition.get('builtin_pack_104')
             rate=float(self._config.get('system_simple',{}).get('hero_skill_output_rate_104',1)) if pack or str(attacker.get('aid','')).startswith('A_1') else 1
             if pack=='nine':rate*=2/3
@@ -1740,7 +1877,10 @@ class ReferenceBattle:
         """
         if len(action) < 2:
             raise ValueError("cure needs a heal coefficient")
-        amount = self._heal_channel_value(attacker, action[1])
+        if len(action)==4 and self._six_star_setting(skill,'ExactHeal'):
+            amount = _to_int(self._get_damage(attacker)*action[1]+attacker['hp_max']*action[2])
+        else:
+            amount = self._heal_channel_value(attacker, action[1])
         for target in self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
                                               skill=skill, index=index):
             self._injured(target, amount, damage_type=4, source=attacker)
@@ -1907,7 +2047,10 @@ class ReferenceBattle:
         self._book_burn_serial = getattr(self, '_book_burn_serial', 0) + 1
         key = 'book-burn:' + str(self._book_burn_serial)
         if self._add_manual_skill_dot(target, key, 'burn', 0, 0, rounds, source, 7, False):
-            target['_manual_dots'][key].update(bookRemaining=total, bookTicks=rounds)
+            dot = target.get('_manual_dots', {}).get(key)
+            if dot is not None:
+                dot.update(bookRemaining=total, bookTicks=rounds)
+                self._status_received(target, 'burn')
 
     def _act_book_burn(self, attacker, enemies, allies, skill, action, index, context):
         for target in self._skill_targets(attacker, enemies, skill.get('pl') or [], skill=skill, index=index):
@@ -2045,7 +2188,12 @@ class ReferenceBattle:
             total += context["damage"].get(source, 0)
         if total <= 0:
             return
-        for ally in [u for u in allies if int(u.get("hp", 0)) > 0]:
+        recipients = [u for u in allies if u['hp']>0]
+        if self._six_star_setting(skill,'LeeCombo'):
+            recipients=[attacker]
+        if self._six_star_setting(skill,'Orb'):
+            recipients = [u for u in recipients if u['line']==attacker['line'] and abs(u['pos']-attacker['pos'])<=300]
+        for ally in recipients:
             amount = max(0, _to_int(total * fraction))
             if amount > 0:
                 self._injured(ally, amount, damage_type=4, source=attacker)
@@ -2062,7 +2210,7 @@ class ReferenceBattle:
         record = context["kills"].get(source) or {}
         hero_hits = len(record.get("hit_heroes") or [])
         multiplier = min(cap, hero_hits * per_hero)
-        missing_at_cast = max(0, int(attacker.get("hp_max", 0)) - int(attacker.get("hp", 0)))
+        missing_at_cast = context.get('six_axe_missing', max(0, int(attacker.get("hp_max", 0)) - int(attacker.get("hp", 0))))
         refund = missing_at_cast * multiplier
         if refund > 0:
             self._injured(attacker, _to_int(refund), damage_type=4)
@@ -2139,8 +2287,11 @@ class ReferenceBattle:
         target_pl = list(pl)
         while len(target_pl) <= 4:
             target_pl.append(0)
-        target_pl[4] = max(0, max_targets - 1)
-        targets = self._skill_targets(attacker, enemies, target_pl)[:max(1, max_targets)]
+        if max_targets < 0 and self._six_star_setting(skill, 'ReactionBarrage'):
+            targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=index)
+        else:
+            target_pl[4] = max(0, max_targets - 1)
+            targets = self._skill_targets(attacker, enemies, target_pl)[:max(1, max_targets)]
         total = 0
         for target in targets:
             hit = 0
@@ -2347,7 +2498,17 @@ class ReferenceBattle:
 
     def _act_select_target(self, attacker, enemies, allies, skill, action, index, context):
         """select_target (139_SkillSet.as:822): publish one target, no effect."""
-        candidates = self._custom_targets(attacker, skill, ally=False)
+        if self._six_star_setting(skill,'EzrealBarrage'):
+            lineup = context.get('six_ezreal_targets')
+            if lineup is None:
+                lineup = sorted((u for u in enemies if u['hp']>0 and u['line']==attacker['line']),
+                                key=lambda u:abs(u['pos']-attacker['pos']))[:4]
+                context['six_ezreal_targets'] = lineup
+            offset = (index-2)//2
+            candidates = lineup[offset:offset+1]
+        else:
+            candidates = self._custom_targets(attacker, skill, ally=False)
+        candidates = self._six_locked_targets(context, candidates) if self._six_star_setting(skill, 'ReactionEvelynnTarget') else candidates
         if candidates:
             context["targets"][index] = candidates[0]
 
@@ -2392,8 +2553,8 @@ class ReferenceBattle:
         """
         if len(action) < 5:
             raise ValueError("move_to_target_lane needs a policy, offsets and a vfx")
-        candidates = self._find_aim_list(attacker, self._living_opponents(attacker),
-                                         int(self._LINE_POS) + 1, False)
+        candidates = self._six_locked_targets(context,self._find_aim_list(
+            attacker, self._living_opponents(attacker),int(self._LINE_POS)+1,False))
         if not candidates:
             return
         target = candidates[0]
@@ -2430,7 +2591,12 @@ class ReferenceBattle:
         """move_to_ally (139_SkillSet.as:1369): reline onto a chosen ally."""
         if len(action) < 2:
             raise ValueError("move_to_ally needs a vfx")
-        candidates = self._custom_targets(attacker, skill, ally=True, candidates=allies)
+        if self._six_star_setting(skill,'ShenTeleport'):
+            other = [u for u in allies if u is not attacker and u['hp']>0]
+            target = min(other,key=lambda u:u['hp']) if any(u['line']==attacker['line'] for u in other) else None
+            candidates = [target] if target else []
+        else:
+            candidates = self._custom_targets(attacker, skill, ally=True, candidates=allies)
         if not candidates:
             return
         ally = candidates[0]
@@ -2445,11 +2611,12 @@ class ReferenceBattle:
         """pull (139_SkillSet.as:1813): damage, then a forced forward move."""
         if len(action) < 4:
             raise ValueError("pull needs a coefficient, a type and a distance")
-        targets = self._skill_targets(attacker, enemies, skill.get("pl") or [])
+        targets = self._six_locked_targets(context,self._skill_targets(attacker,enemies,skill.get('pl') or []))
         if not targets:
             return
         target = targets[0]
-        self._native_damage(attacker, target, action[1], action[2])
+        if action[1] or not self._six_star_setting(skill,'TahmPull'):
+            self._native_damage(attacker,target,action[1],action[2])
         context["kills"][index] = self._kill_record(targets)
         context["targets"][index] = target
         if int(target.get("hp", 0)) <= 0:
@@ -2463,14 +2630,16 @@ class ReferenceBattle:
         """pull_group (139_SkillSet.as:1819): pull a spread of enemies inward."""
         if len(action) < 5:
             raise ValueError("pull_group needs a coefficient, type, distance and gap")
-        targets = self._skill_targets(attacker, enemies, skill.get("pl") or [])
+        axe = self._six_star_setting(skill,'Axe')
+        targets = context['six_axe_targets'] if axe else self._skill_targets(attacker,enemies,skill.get('pl') or [])
         if not targets:
             return
         maximum = _to_int(action[3])
         keep_gap = _to_int(action[4])
         total = 0
         for target in targets:
-            total += self._native_damage(attacker, target, action[1], action[2])
+            if action[1] or not axe:
+                total += self._native_damage(attacker, target, action[1], action[2])
         context["damage"][index] = total
         context["kills"][index] = self._kill_record(targets)
         context["targets"][index] = targets[0]
@@ -2511,7 +2680,13 @@ class ReferenceBattle:
         candidates = self._living_opponents(attacker)
         if skill.get('actionTargetPolicies'):
             candidates = self._skill_targets(attacker, candidates, skill.get('pl') or [], skill=skill, index=index)
-        for target in self._find_aim_list(attacker, candidates, radius, False):
+        if self._six_star_setting(skill,'NamiWave') and index==2:
+            target=context.get('six_wave_primary')
+            candidates=[target] if target and target['hp']>0 else []
+        targets = context.get('reaction_box')
+        if targets is None:
+            targets = self._find_aim_list(attacker, candidates, radius, False)
+        for target in targets:
             if int(target.get("hp", 0)) <= 0:
                 continue
             self._check_move(target, False, distance, forced=True)
@@ -2520,7 +2695,10 @@ class ReferenceBattle:
         """manual_dot (139_SkillSet.as:919): route an authored DOT onto a target."""
         if len(action) < 6:
             raise ValueError("manual_dot needs at least five arguments")
-        targets = self._custom_targets(attacker, skill, ally=False)
+        if self._six_star_setting(skill, 'ReactionGlobalDot'):
+            targets = self._skill_targets(attacker, enemies, skill.get('pl') or [], skill=skill, index=index)
+        else:
+            targets = self._custom_targets(attacker, skill, ally=False)
         if not targets:
             return
         kind = str(action[1])
@@ -2614,7 +2792,17 @@ class ReferenceBattle:
                 or not math.isfinite(float(fraction)) or not 0.01 <= float(fraction) <= 100:
             return
         bounded = self._has_bounded_summon_policy(str(skill.get("equipment_source_skill_104") or skill.get("skid", "")))
-        level = max(1, _to_int(float(fraction) * _to_int(attacker.get("lv", 1))))
+        sand = self._six_star_setting(skill, 'BatchSand')
+        shaco = self._six_star_setting(skill, 'BatchShacoClone')
+        plant_skill = self._six_star_setting(skill, 'ReactionPlant')
+        if plant_skill:
+            bounded = False
+            anchor_index = (self._policy_args(skill, index) or {}).get('centerActionIndex')
+            anchor = context["targets"].get(anchor_index)
+            if anchor is None:
+                return
+        owner_level = _to_int(attacker.get("lv", 1))
+        level = max(1, owner_level if sand or shaco else _to_int(float(fraction)*owner_level))
         skill_id = str(skill.get("skid", ""))
         if bounded and self._has_live_bounded_summon(attacker, skill_id):
             return
@@ -2632,9 +2820,35 @@ class ReferenceBattle:
         clone = self._spawn_summon(attacker, aid, float(fraction), rounds, level=level,
                                    bounded=bounded, bounded_skill_id=skill_id,
                                    ap_factor=self._summon_ap_factor(skill_id),
-                                   stat_ratios=ratios, extra_multiplier=extra)
+                                   stat_ratios=ratios, extra_multiplier=extra,
+                                   skill_level=1 if shaco or plant_skill else None)
         if clone is not None:
+            if sand or shaco or plant_skill:
+                key = '_reaction_counted_plant' if plant_skill else '_batch_sand' if sand else '_batch_shaco_clone'
+                clone[key] = True
+                clone['leader_skill'] = clone['book_skill'] = clone['skillB'] = None
+                if plant_skill:
+                    self._configure_reaction_plant(clone, plant_skill, anchor)
+                elif sand:
+                    clone['skill'] = None
+                    clone['range'] = 175
+                else:
+                    clone['range'] = 125
+                live = [u for u in attacker.get('_team', []) if u is not clone and u.get(key)
+                        and u.get('summon_owner_token') == clone.get('summon_owner_token') and u['hp'] > 0]
+                limit = 3 if plant_skill else 2 if sand else 1
+                while len(live) >= limit:
+                    expired = live.pop(0)
+                    expired['hp'] = 0
+                    notify = getattr(self, 'six_batch_notify_death', None)
+                    if notify:
+                        notify(expired, None)
             context["targets"][index] = clone
+
+    def _configure_reaction_plant(self, unit, skill_id, anchor):
+        unit['skill'] = _native_skill_snapshot(self._config, skill_id, 1)
+        unit.update(leader_skill=None, book_skill=None, skillB=None, range=550,
+                    line=anchor['line'], pos=anchor['pos'])
 
     @staticmethod
     def _has_bounded_summon_policy(skill_id):
@@ -2832,8 +3046,14 @@ class ReferenceBattle:
         if rounds < 1 or _to_int(action[4]) != 0 or _to_int(action[5]) != 0:
             return
         # One live turret per hero; the native `boundedSummons[0].hp > 0` check.
+        six_star = self._six_star_setting(skill,'Turret')
         for unit in (attacker.get("_team") or []):
-            if int(unit.get("hp", 0)) > 0 and unit.get("_turret"):
+            if int(unit.get("hp", 0)) <= 0 or not unit.get("_turret"):
+                continue
+            if six_star:
+                if unit.get('_six_turret_cast')==(attacker.get('_owner_token'),skill['skid']):
+                    return
+            elif not unit.get('_six_star_turret'):
                 return
         turret = self._spawn_summon(attacker, "A_2001_4", float(scale), rounds,
                                     level=max(1, _to_int(attacker.get("lv", 1))),
@@ -2845,6 +3065,10 @@ class ReferenceBattle:
         turret["skillB"] = None
         turret["_turret"] = True
         turret["manualActionTypeOverride"] = 1
+        if six_star:
+            from six_star_battle_105 import configure_turret
+            configure_turret(turret)
+            turret['_six_turret_cast'] = (attacker.get('_owner_token'),skill['skid'])
         context["targets"][index] = turret
 
     def _act_clone_normal(self, attacker, enemies, allies, skill, action, index, context):
@@ -2885,7 +3109,7 @@ class ReferenceBattle:
         """focus_fire (139_SkillSet.as:1155): every in-range ally strikes one target."""
         if len(action) < 2:
             raise ValueError("focus_fire needs a vfx")
-        candidates = self._custom_targets(attacker, skill, ally=False)
+        candidates = self._six_locked_targets(context,self._custom_targets(attacker,skill,ally=False))
         if not candidates:
             return
         target = candidates[0]
@@ -3339,6 +3563,9 @@ class ReferenceBattle:
         if (attacker.get("skillB") or {}).get("modEffectSequence"):
             from battle_mod_effects import condition_ready
             return condition_ready(self,attacker,attacker["skillB"])
+        actions = (attacker.get('skillB') or {}).get('skills') or []
+        if actions and actions[0][:2]==['manual_ability','six_kennen_p']:
+            return True
         diff = _to_int(attacker.get("skill_diff", 0))
         if diff <= 0:
             return False

@@ -81,7 +81,7 @@ function countDamage(a,b,raw,kind,share){calls.push('damage');return [raw*share,
 function checkCrit(){calls.push('crit');return 2}
 function checkMiss(a,t){calls.push('miss');return t.dodged}
 let hit={hp:1000,injured:(raw,crit)=>raw*crit},miss={hp:1000,dodged:true,injured:()=>{throw Error('dodge must not take damage')}};
-function resolve(param1){let _loc41_={nativeContact104:true},_loc42_=true,_loc25_={},_loc14_=100,param2=1,param9=1,param7=null,_loc46_,_loc20_,_loc21_=0;CONTACT}
+function resolve(param1){let sixCritical105=false,sixDirect105=false,_loc41_={nativeContact104:true},_loc42_=true,_loc25_={},_loc14_=100,param2=1,param9=1,param7=null,_loc46_,_loc20_,_loc21_=0;CONTACT}
 assert.equal(resolve([hit,miss]),200);assert.deepEqual(calls,['miss','damage','crit','miss']);
 '''.replace('CONTACT',contact)
         result=subprocess.run(['node'],input=script,text=True,encoding='utf8',capture_output=True)

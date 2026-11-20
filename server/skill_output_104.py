@@ -33,6 +33,8 @@ def output_paths(action):
         if action[1] in ('damage','heal') or (action[1]=='buff' and action[8]=='shield'):
             return {(i,) for i in (5,6,7,18,19) if i<len(action)}
         return set()
+    if action[0] == 'cure' and len(action) == 4 and type(action[2]) in (int, float):
+        return {(1,), (2,)}
     damage, healing, _defense = _action_paths(action)
     return set(damage + healing + EXTRA.get(action[0], []))
 
@@ -45,6 +47,7 @@ def apply_skill_output_104(document):
     refs = {h['pl'][i] for h in heroes.values() for i in (10, 11, 13)
             if len(h['pl']) > i and h['pl'][i]}
     refs.update(cfg.get('hero_packs_104',{}).get('skills',[]))
+    refs.update(cfg.get('six_star_legacy_skill_slots_105',{}))
     refs.update(cfg.get('equipment_bonds_104',{}).get('skills',[]))
     variants = cfg['system_simple'].get('bond_skill_variants_104', {})
     refs.update(s for aid, combinations in variants.items() if aid in heroes

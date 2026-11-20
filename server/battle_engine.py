@@ -467,7 +467,10 @@ class ReferenceBattle:
         if not isinstance(container, dict):
             return
         for kind in [k for k,v in container.items() if v.type in _GOOD_BUFFS]:
-            del container[kind]
+            if kind == 'purify':
+                self._remove_buff(unit, kind)
+            else:
+                container.pop(kind, None)
 
     def _remove_all_debuff(self, unit):
         unit.pop('_relic_dots',None)
@@ -503,7 +506,10 @@ class ReferenceBattle:
                 unit["hp"] = 0
                 return True
             if entry.round < 0:
-                del container[kind]
+                if kind == 'purify':
+                    self._remove_buff(unit, kind)
+                else:
+                    del container[kind]
         poison = container.get("poison")
         if poison is not None:
             tick = _to_int(poison.value + self._poison_hp_fraction * int(unit.get("hp_max", 0)) * poison.poison_hp_rate_104)
@@ -689,6 +695,8 @@ class ReferenceBattle:
         if before>0 and damage_type not in (0,4,5):
             from abyss_equip_passives import after_damage
             after_damage(self,source,target,actual,max(0,shield_before-self._buff_value(target,'shield')),damage_type,dot_kind)
+            if target.get('hp',0)<=0 and hasattr(self, 'six_next_last_cast'):
+                self.six_next_last_cast(target)
         if receipt is not None:receipt.update(actual=actual,before=before,after=int(target.get('hp',0)))
         killed=before>0 and target.get('hp',0)<=0
         shield_broke=had_shield and self._buff_value(target,'shield')<=0
@@ -2844,6 +2852,8 @@ class ReferenceBattle:
                     clone.update(leader_skill=None, book_skill=None, skillB=None)
                     if not shaco:
                         clone["skill"] = None
+                if self._six_star_setting(skill,'NextLeBlancClone'):
+                    clone["skill"] = copy.deepcopy(attacker.get("skill"))
                 if policy.get("actionType") in (1, 2, 4):
                     clone["manualActionTypeOverride"] = policy["actionType"]
                 if isinstance(policy.get("attackRange"), (int, float)) and policy["attackRange"] > 0:

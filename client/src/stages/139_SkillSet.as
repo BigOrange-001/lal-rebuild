@@ -2987,10 +2987,13 @@ package com.meng52.game.module.skill
          return _loc1_ / (1 - _loc1_);
       }
 
-      private function planRicochetBursts(param1:int, action:Array) : Array
+      private function planRicochetBursts(param1:int, action:Array, primary:Avatar = null) : Array
       {
-         var initial:Vector.<Avatar> = getCustomActionTargets(param1,currentActionTargets,currentTargetGroups,false);
-         var primary:Avatar = initial.length > 0 ? initial[0] : null;
+         if(!primary)
+         {
+            var initial:Vector.<Avatar> = getCustomActionTargets(param1,currentActionTargets,currentTargetGroups,false);
+            primary = initial.length > 0 ? initial[0] : null;
+         }
          var result:Array = [];
          if(!primary || action.length != 6 || !(action[2] is Array)) return result;
          var coefficients:Array = action[2];
@@ -3028,6 +3031,21 @@ package com.meng52.game.module.skill
          if(plan.length==0) return;
          var primary:Avatar = plan[0].target as Avatar;
          currentActionTargets[param1] = primary;
+         playRicochetPlan105(plan,action,primary);
+      }
+
+      public function castBasicRicochet105(primary:Avatar, action:Array) : void
+      {
+         var limited:Array=action.concat();
+         limited[1]=1;
+         limited[2]=action[2].slice(0,3);
+         var plan:Array=planRicochetBursts(0,limited,primary);
+         plan.shift();
+         playRicochetPlan105(plan,limited,primary);
+      }
+
+      private function playRicochetPlan105(plan:Array, action:Array, primary:Avatar) : void
+      {
          var totals:Object = {};
          for each(var planned:Object in plan) totals[planned.target.id] = Number(totals[planned.target.id] || 0)+Number(planned.coefficient);
          for each(var hit:Object in plan)
@@ -3759,6 +3777,7 @@ package com.meng52.game.module.skill
             _loc2_.skill2 = null;
             _loc2_.skillB = null;
          }
+         if(getNativeSetting("sixStarNextLeBlancClone105",false)) _loc2_.sixNextCopyNormal105(avatar);
          var plantSkill:String=getNativeSetting("sixStarReactionPlant105") as String;
          if(plantSkill && plantSkill.length) _loc2_.sixReactionConfigurePlant105(plantSkill);
          if(typeof _loc1_.actionType == "number" && (_loc1_.actionType == 1 || _loc1_.actionType == 2 || _loc1_.actionType == 4)) _loc2_.manualActionTypeOverride = int(_loc1_.actionType);

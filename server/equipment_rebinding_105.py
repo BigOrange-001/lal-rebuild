@@ -59,6 +59,16 @@ def rebind_six_star_components(cfg, plan):
         'A_1130_6': [None, ('决斗突刺的溢出护盾', 0, 6, ['manual_ability'])],
         'A_1131_6': [('潮汐涌泉的治疗', 0, 4, ['manual_ability']), None],
         'A_1133_6': [None, ('灵魂镣铐到期伤害', 0, 5, ['manual_ability'])],
+        'A_1053_6': [(), None],
+        'A_1054_6': [(), None],
+        'A_1056_6': [('折翼之舞第三式伤害', 0, 6, ['manual_ability']),
+                     ('折翼之舞第二式护盾', 0, 8, ['manual_ability'])],
+        'A_1060_6': [None, ()],
+        'A_1086_6': [None, None],
+        'A_1098_6': [(), None],
+        'A_1114_6': [None, ('连锁闪电后续弹射伤害', 0, 5, ['manual_ability'])],
+        'A_1127_6': [None, ()],
+        'A_1205_6': [None, None],
     }
     for aid, replacements in changes.items():
         for effect, change in zip(plan['heroes'][aid]['affinities'], replacements):

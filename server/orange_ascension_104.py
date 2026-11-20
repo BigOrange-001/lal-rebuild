@@ -89,6 +89,10 @@ def apply_orange_ascension_104(document):
 
 
 def builtin_asset(cfg, content_digest, path):
+    from shyvana_dragon_media_105 import builtin_asset as dragon_asset
+    custom = dragon_asset(cfg, content_digest, path)
+    if custom is not None:
+        return custom
     from nightbringer_yasuo_104 import builtin_asset as yasuo_asset
     custom = yasuo_asset(cfg, content_digest, path)
     if custom is not None:

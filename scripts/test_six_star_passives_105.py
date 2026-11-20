@@ -33,14 +33,15 @@ for (const [kind, amount] of [['six_reaction_mf_p',.8], ['six_batch_ziggs_p',.6]
     };
     const target = {
         team:2, hp:100, abilitySerial:0, abilityState:{}, buffs:{strong:new Buff('strong',2,.3)},
-        removeBuff(name){ delete this.buffs[name]; }
+        removeBuff(name){ delete this.buffs[name]; },
+        sixNextAfterDamage105(){}
     };
     attach(owner, 'sixStarPassive105');
     attach(owner, 'sixReactionPassive105', 'kind');
     attach(owner, 'sixBatchPassive105', 'kind');
     attach(owner, 'sixReactionMfDealt105', 'target,amount');
     attach(owner, 'sixBatchAfterDamage105', 'target,taken');
-    attach(target, 'settle', 'param7,param4,param1,abilityDamageTaken,modActualDamage,statisticsShield104');
+    attach(target, 'settle', 'param7,param4,param1,abilityDamageTaken,modActualDamage,statisticsShield104,dotKind=""');
     target.settle(owner, 4, 40, 40, 40, 0);
     if (owner.hp !== 70 || Object.keys(target.abilityState).length)
         throw Error('Damage passives unexpectedly fired from healing');

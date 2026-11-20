@@ -3,6 +3,7 @@ from combat_math import damage_before_final
 from six_star_extended_battle_105 import SixStarExtendedBattle
 from six_star_reaction_battle_105 import SixStarReactionBattle
 from six_star_followup_battle_105 import FOLLOWUP_ACTIONS, SixStarFollowupBattle
+from six_star_next_battle_105 import SixStarNextBattle
 
 
 def passive_kind(unit):
@@ -10,7 +11,7 @@ def passive_kind(unit):
     return actions[0][1] if actions and actions[0][0] == 'manual_ability' and actions[0][1].startswith('six_') else None
 
 
-class SixStarBattleMixin(SixStarFollowupBattle, SixStarExtendedBattle, SixStarReactionBattle):
+class SixStarBattleMixin(SixStarFollowupBattle, SixStarExtendedBattle, SixStarReactionBattle, SixStarNextBattle):
     def six_star_row(self, skill):
         return self._config.get('skill', {}).get((skill or {}).get('skid'), {})
 
@@ -19,6 +20,8 @@ class SixStarBattleMixin(SixStarFollowupBattle, SixStarExtendedBattle, SixStarRe
                                order='front' if front else 'nearest', forward=forward)
 
     def six_star_execute(self, owner, kind, skill):
+        if kind.startswith('six_next_'):
+            return self.six_next_execute(owner, kind, skill)
         if kind.startswith('six_reaction_'):
             return self.six_reaction_execute(owner, kind, skill)
         if kind.startswith('six_batch_'):

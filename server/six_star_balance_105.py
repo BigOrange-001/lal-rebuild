@@ -78,7 +78,9 @@ def apply_six_star_balance(document):
     from six_star_followup_105 import PASSIVE_NAMES, apply_followup
     from six_star_extended_105 import PASSIVE_NAMES as EXTENDED_NAMES, apply_extended
     from six_star_reactions_105 import PASSIVE_NAMES as REACTION_NAMES, apply_reactions
-    passive_names = {1022:'满盈灵息', 1023:'暗影流血', 1025:'远程狙击', **PASSIVE_NAMES, **EXTENDED_NAMES, **REACTION_NAMES}
+    from six_star_next_105 import PASSIVE_NAMES as NEXT_NAMES, apply_next
+    passive_names = {1022:'满盈灵息', 1023:'暗影流血', 1025:'远程狙击',
+                     **PASSIVE_NAMES, **EXTENDED_NAMES, **REACTION_NAMES, **NEXT_NAMES}
     avatars, skills = cfg['avatar'], cfg['skill']
     changed = {}
 
@@ -349,6 +351,7 @@ def apply_six_star_balance(document):
     apply_followup(cfg, normal, captain, passive)
     apply_extended(normal, captain, passive)
     apply_reactions(cfg, normal, captain, passive)
+    apply_next(avatars, normal, captain, passive)
     for aid in changed:
         pl = avatars[aid]['pl']
         actions = skills.get(pl[13], {}).get('skill', []) if len(pl)>13 else []

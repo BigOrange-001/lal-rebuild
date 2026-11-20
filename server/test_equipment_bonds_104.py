@@ -14,6 +14,10 @@ import test_stat_power_103 as stat_tests
 class EquipmentBonds104Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # Baseline component weights predate the six-star skill rewrite.
+        balance = patch('six_star_balance_105.apply_six_star_balance', lambda document:document)
+        balance.start()
+        cls.addClassCleanup(balance.stop)
         b=Backend(':memory:',PLAN.parent/'full-config.json');cls.doc=b.config;cls.cfg=b.config['cfg'];b.db.close()
 
     def profile(self,aid,eids):

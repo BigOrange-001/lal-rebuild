@@ -219,7 +219,7 @@ def make_template(sid, native, base):
                 'passiveTrigger':triggers[0] if len(triggers)==1 else native.get('modPassiveTrigger',0), 'runtimeVersion':'1.0.3'},
             'actions':[{'type':a[0],'arguments':copy.deepcopy(a[1:])} for a in native.get('skill',[])],
             'upgrades':[]}
-    kinds={a[1] for a in native.get('skill',[]) if a[0]=='manual_ability'}
+    kinds={a[1] for a in native.get('skill',[]) if a[0]=='manual_ability' and not str(a[1]).startswith('six_')}
     if kinds:
         result['nativeTemplate']['abilityParameters']={kind:ability_defaults(kind) for kind in sorted(kinds)}
         result['nativeTemplate']['abilityContract']=digest(ability_contract())
@@ -338,7 +338,10 @@ def validate_template(skill,base,path='skill'):
         if isinstance(raw[-1],str) and raw[-1] not in profile['effects']:
             fail('Unknown native visual effect; select an installed resource',path+'.actions[%d]'%i)
         if action['type']=='manual_ability' and raw[1] not in ability_contract()['mechanisms']:
-            fail('Unknown compound ability',path+'.actions[%d]'%i)
+            # Six-star abilities store their coefficients in the node itself.
+            if not str(raw[1]).startswith('six_') or not any(
+                    a[:2]==raw[:2] and len(a)==len(raw) for a in donor.get('skill',[])):
+                fail('Unknown compound ability',path+'.actions[%d]'%i)
         _validate_103_action(raw,path+'.actions[%d]'%i)
         if action['type']=='locked_sequence' and (type(raw[1]) is not int or not 1<=raw[1]<=32 or len(raw)!=raw[1]+5):
             fail('Sequence count must match its editable hit coefficients',path+'.actions[%d]'%i)

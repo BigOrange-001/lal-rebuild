@@ -46,6 +46,7 @@ process.stdout.write(JSON.stringify(units.map(u=>u.pos)));
 ATTACK_HARNESS = r'''
 const methods=JSON.parse(require('node:fs').readFileSync(0,'utf8'));
 const GameMapConfig={MIN_SPACE_POS:200,LINE_POS:3000}, int=Math.trunc;
+const GameMap={currentMap:true};
 const attach=(obj,name,params='')=>obj[name]=eval('(function('+params+'){with(this){'+methods[name]+'}})');
 const map={alive1List:[],alive2List:[]};
 attach(map,'getForwardPos','param1,param2');
@@ -57,6 +58,7 @@ for (const team of [1,2]) {
     map.alive1List=team===1?[]:[enemy];
     map.alive2List=team===2?[]:[enemy];
     const actor={line:1,pos:map.getFinalPos(team,1,enemy.pos),hpMax:100,
+                 initializingFightAttributes:false,skillB:null,abilityState:{},
                  range:125,manualAttackRangeOverride:NaN,isManualSummonUnit:true};
     attach(actor,'getRange','param1=false');
     attach(actor,'findAimList','param1,param2=null,param3=-1,param4=false');
@@ -73,7 +75,10 @@ for (const team of [1,2]) {
     const crossLane=hits();
     actor.range=0;
     actor.manualAttackRangeOverride=NaN;
-    result.push([...closest,at350,outside,ranged,crossLane,actor.getRange()]);
+    const disabled=actor.getRange();
+    actor.range=175;
+    actor.abilityState.sixBatchSand105=true;
+    result.push([...closest,at350,outside,ranged,crossLane,disabled,actor.getRange()]);
 }
 process.stdout.write(JSON.stringify(result));
 '''
@@ -141,7 +146,7 @@ class ClientSummonFormationTests(FormationScenarios, unittest.TestCase):
         result = subprocess.run([NODE, '-e', ATTACK_HARNESS], input=json.dumps(methods),
                                 capture_output=True, text=True, encoding='utf-8', timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout), [[200, 1, 0, 1, 0, 1, 0, 0]] * 2)
+        self.assertEqual(json.loads(result.stdout), [[200, 1, 0, 1, 0, 1, 0, 0, 175]] * 2)
 
 
 class ServerSummonFormationTests(FormationScenarios, unittest.TestCase):

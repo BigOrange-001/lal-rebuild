@@ -23,6 +23,11 @@ from skill_balance_overlay import _get
 class OrangeAscension104Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # This suite checks the original ascension contract. The six-star
+        # follow-up has its own end-to-end balance checks.
+        balance = patch('six_star_balance_105.apply_six_star_balance', lambda document:document)
+        balance.start()
+        cls.addClassCleanup(balance.stop)
         cls.backend=Backend(':memory:',ROOT/'config/reconstruction/full-config.json')
         cls.doc=cls.backend.config;cls.cfg=cls.doc['cfg']
         # Later stages append to the media table that orange ascension creates.
@@ -260,7 +265,7 @@ const int=Math.trunc; let modEventDepth=0,modEventBudget=0;
 const GameMap={currentMap:null},GlobalData={$mConfig_skill:{}};
 const emit=new Function('event','source','target','amount','overheal','with(this){'+input.body+'}');
 // Function constructor needs these globals just as AS sees its imported classes.
-global.GameMap=GameMap;global.GlobalData=GlobalData;global.int=int;global.skin2Event=()=>{};global.yasuoEvent104=()=>{};global.kaisaEvent104=()=>{};
+global.GameMap=GameMap;global.GlobalData=GlobalData;global.int=int;global.skin2Event=()=>{};global.yasuoEvent104=()=>{};global.kaisaEvent104=()=>{};global.sixStarCombatEvent105=()=>{};
 Object.defineProperty(global,'modEventDepth',{get:()=>modEventDepth,set:v=>modEventDepth=v});
 Object.defineProperty(global,'modEventBudget',{get:()=>modEventBudget,set:v=>modEventBudget=v});
 let results=[];

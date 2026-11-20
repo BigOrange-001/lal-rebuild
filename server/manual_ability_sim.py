@@ -14,6 +14,8 @@ from dragonmancer_kaisa_sim import KaisaBattleMixin
 from nightbringer_yasuo_sim import YasuoBattleMixin
 from combat_math import damage_before_final, to_int
 from combat_rules import ratio_enabled
+from six_star_battle_105 import SixStarBattleMixin, passive_kind
+from six_star_followup_battle_105 import IRELIA_IMMUNITIES
 
 
 KINDS = frozenset(f'{hero}_{slot}' for hero in (
@@ -22,7 +24,7 @@ KINDS = frozenset(f'{hero}_{slot}' for hero in (
     'tahm','caitlyn','kaelthas','karthus','aoxing') for slot in ('n','c'))
 
 
-class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
+class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
     def __init__(self, *args, trace_abilities=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.ability_contexts=[]
@@ -200,7 +202,11 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         return not self.candidates(target,self._team_number(target),target['line'],target['pos'],300,-1,True,excluded=[target])
 
     def summon(self, owner, aid, count, ratio, turns, key, focus=None, clone=False):
-        ctx=self._context(owner);ratio*=ctx['effect_factor'] if ctx else 1
+        ctx=self._context(owner)
+        if clone and key == 'wukong' and self.six_star_row(ctx.get('skill') if ctx else None).get('sixStarClone105'):
+            ratio = 1
+        else:
+            ratio *= ctx['effect_factor'] if ctx else 1
         state=self.state(owner)
         for old in state.get('summons_'+key,[]):old['hp']=0;self.death(old)
         units=[]
@@ -225,11 +231,11 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         return self.yasuo_attack(unit, _to_int(value*(1+stack_rate*state.get('santa_stacks',0))))
 
     def _get_de_ph(self, unit, ignore_sunder=False):
-        base=dict(unit,de_ph=unit.get('de_ph',0)*(1+self._get_manual_battle_stack(unit,'defense')))
+        base=dict(unit,de_ph=self.six_reaction_defense(unit,'de_ph'))
         return super()._get_de_ph(base,ignore_sunder)
 
     def _get_de_ma(self, unit, ignore_sunder=False):
-        base=dict(unit,de_ma=unit.get('de_ma',0)*(1+self._get_manual_battle_stack(unit,'defense')))
+        base=dict(unit,de_ma=self.six_reaction_defense(unit,'de_ma'))
         return super()._get_de_ma(base,ignore_sunder)
 
     def _summon_panel_snapshot(self, owner):
@@ -244,6 +250,9 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         return value*float(row.get('equipment_parts_104',{}).get(part,1))
 
     def execute(self, owner, kind, scale, skill):
+        if kind.startswith('six_'):return self.six_star_execute(owner,kind,skill)
+        if kind in ('skin2_1206_0', 'skin2_1206_1') and self.six_star_row(skill).get('sixStarBatchRear105'):
+            return self.six_batch_vayne(owner, kind, skill)
         if kind.startswith('dragon_kaisa_'):return self.execute_kaisa(owner,kind,skill)
         if kind.startswith('night_yasuo_'):return self.execute_yasuo(owner,kind,skill)
         if kind in ('cat_n','cat_c'):return self.execute_cat_skin(owner,kind,skill)
@@ -356,11 +365,17 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                 state['highlander']=dict(until=serial+3,left=2,debuff=False)
                 if owner.get('skill'):self._apply_native_skill(owner,self.opponents(owner),'skill')
             case 'veigar_n':
-                enemies=en(600)
+                expanded=row.get('sixStarVeigar105')
+                enemies=self.six_star_lane(owner,front=True)[:2] if expanded else en(600)
                 if not enemies:return False
-                if hit(enemies[0],1.2*scale,2) and self.hero(enemies[0]):
+                grew=False
+                for target in enemies:
+                    if hit(target,1.2*scale,2) and self.hero(target):
+                        grew=True
+                if grew:
                     old=state.get('evil_stacks',0);state['evil_stacks']=min(10,old+1)
-                    if state['evil_stacks']>old:state['evil_bonus']=state.get('evil_bonus',0)+self.equipment_part(skill,'evil_stack',.03)*effect
+                    base=.07 if expanded else .03*effect
+                    if state['evil_stacks']>old:state['evil_bonus']=state.get('evil_bonus',0)+self.equipment_part(skill,'evil_stack',base)
             case 'veigar_c':
                 enemies=en(700,hero=True,order='ratio') or en(700)
                 if not enemies:return False
@@ -559,7 +574,8 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         self._add_buff(owner,'purify',0,count)
 
     def _get_hit(self,owner):
-        return super()._get_hit(owner)+int(self.state(owner).get('polar_cast_hit',0))+int(self.state(owner).get('veigar_cast_hit',0))
+        state = self.state(owner)
+        return super()._get_hit(owner)+int(state.get('polar_cast_hit',0))+int(state.get('veigar_cast_hit',0))+state.get('batch_kayle_hit',0)
 
     def execute_santa_skin(self,owner,kind,skill):
         targets=(self.candidates(owner,3-self._team_number(owner),owner['line'],owner['pos'],self._LINE_POS,-1)
@@ -652,7 +668,8 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         if kind=='polar_n':
             targets=self.candidates(owner,3-self._team_number(owner),owner['line'],owner['pos'],self._LINE_POS,-1)
             if not targets:return False
-            params=skill['skills'][0];self._add_buff(owner,'critup',1,float(params[4]))
+            params=skill['skills'][0]
+            if params[4]>0:self._add_buff(owner,'critup',1,float(params[4]))
             reduction=float(params[5])
             for target in targets:
                 if self.hit(owner,target,float(params[6]),1) and target['hp']>0:
@@ -666,7 +683,8 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
             try:
                 for target in targets:
                     if self.hit(owner,target,3,2) and target['hp']>0:
-                        self.control(owner,target,'curse',1);self.control(owner,target,'stun',1)
+                        self.control(owner,target,'curse',1)
+                        self.control(owner,target,'stun',self.six_star_row(skill).get('sixStarPolarStun105',1))
             finally:state['polar_cast_hit']=old
         self.manual_casts[kind]=self.manual_casts.get(kind,0)+1
         return True
@@ -733,16 +751,49 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         finally:state.update(cat_busy=False,cat_pending=0)
 
     def _add_buff(self, unit, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
-        if self.yasuo_immune(unit,kind):return
+        state=self.state(unit)
+        if self.yasuo_immune(unit,kind) or kind=='weak' and state.get('highlander'):return
+        if kind in IRELIA_IMMUNITIES and state.get('six_irelia_immune'):return
         if self.state(unit).get("channel") and kind in ("stun","silence","root","pull","push"):return
         ctx=self._context()
+        old_stun = self._buff(unit, 'stun') if kind == 'stun' else None
+        old_burn = self._buff(unit, 'burn') if kind == 'burn' else None
+        burn_layers = old_burn.layers if old_burn else 0
+        curse = self._buff(unit, 'curse') if kind == 'curse' else None
         relic_shield=kind=='shield' and getattr(self,'_equip_origin',None)=='relic_shield'
         if ctx and value and kind!='summon' and not relic_shield:value*=ctx['effect_factor']
         result=super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
-        if kind=='stun' and self._buff(unit,'stun'):self.kaisa_stun(unit)
+        if kind == 'curse' and self._buff(unit, 'curse') is not curse and self._buff(unit, 'curse'):
+            self.six_batch_curse(unit)
+        if kind=='stun' and self._buff(unit,'stun'):
+            self.kaisa_stun(unit)
+            self.six_star_stun_applied(unit)
+            if self._buff(unit, 'stun') is not old_stun:
+                self.six_reaction_stun(unit)
+        if kind == 'burn':
+            burn = self._buff(unit, 'burn')
+            if burn and burn.layers > burn_layers:
+                self.six_reaction_burn_changed(unit)
         return result
 
+    def _status_received(self, target, kind):
+        super()._status_received(target, kind)
+        if kind == 'burn':
+            self.six_reaction_burn_changed(target)
+
     def _emit_mod_event(self, owner, event, source=None, target=None, amount=0, overheal=0):
+        if owner is not None:
+            if event == 'death':
+                self.six_batch_notify_death(owner, source)
+            if event == 'damage_taken':
+                self.six_reaction_taken(owner, amount)
+            if event == 'hit' and target is not None:
+                self.six_batch_vayne_event(owner, event, target)
+            if event == 'crit' and self.six_batch_passive(owner, 'yasuo'):
+                self._tick_slot_cd(owner, '_skill_cd_b')
+            if event == 'kill':self.six_star_extend_yi(owner)
+            self.six_star_event(owner,event,target,amount,overheal)
+            self.six_followup_event(owner,event,target,source,overheal)
         self.yasuo_event(owner,event,source,target,amount)
         self.kaisa_event(owner,event,source,target)
         return super()._emit_mod_event(owner,event,source,target,amount,overheal)
@@ -764,6 +815,8 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
             if isinstance(value,dict) and value.get('debuff') is False:state.pop(key,None)
 
     def _injured(self, target, amount, damage_type=0, source=None, dot_kind=None, receipt=None, fixed_recovery=False, derived=False):
+        amount = self.six_reaction_incoming(target, amount, damage_type, source)
+        amount = self.six_batch_damage_received(target, amount, damage_type, source, dot_kind)
         ctx=self._context(source) if source else None
         state=self.state(target);guard=state.get('guard')
         relic_reflect=getattr(self,'_equip_origin',None)=='relic_reflect'
@@ -771,36 +824,63 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         if not relic_reflect and ctx and ctx['kind'] in ('active','basic') and 1<=damage_type<=3 and guard and guard['charges']>0:
             ctx['guards'][id(target)]=target
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
+        amount=self.six_followup_damage_received(target,amount,damage_type,source,dot_kind)
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')
-        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt,fixed_recovery=fixed_recovery,derived=derived)
-        taken=max(0,before-max(0,target.get('hp',0)))+max(0,shield_before-self._buff_value(target,'shield'))
+        sustain = source is not None and damage_type in (1, 2, 3, 6, 7, 8) and self.six_reaction_passive(source, 'mf')
+        if sustain and receipt is None:
+            receipt = {}
+        dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt,
+                              fixed_recovery=fixed_recovery,derived=derived)
+        lost=max(0,before-max(0,target.get('hp',0)))
+        taken=lost+max(0,shield_before-self._buff_value(target,'shield'))
+        if lost and damage_type in (1,2,3,6,7,8) and self.six_followup_passive(target,'tahm'):
+            state['six_tahm_grey']=state.get('six_tahm_grey',0)+lost
         grey=state.get('grey')
         if grey and taken>0 and damage_type!=4:
             factor=grey['effect'];grey['value']=min(target['hp_max']*.2*factor,grey['value']+taken*.4*factor)
         if ctx and 1<=damage_type<=3:
-            ctx['hp_damage']=ctx.get('hp_damage',0)+min(max(0,before),max(0,dealt))
+            dealt_hp=min(max(0,before),max(0,dealt))
+            ctx['hp_damage']=ctx.get('hp_damage',0)+dealt_hp
+            if damage_type==1:ctx['six_physical_hp']=ctx.get('six_physical_hp',0)+dealt_hp
             entry=ctx['targets'].setdefault(id(target),[target,0]);entry[1]+=taken
             if target['hp']<=0 and self.hero(target) and all(u is not target for u in ctx['kills']):ctx['kills'].append(target)
+        if source is not None and 1<=damage_type<=3:
+            self.six_followup_direct_hit(source,target,ctx,taken)
+        if source is not None and damage_type in (1, 2, 3, 6, 7, 8):
+            self.six_batch_after_damage(source, target, taken)
+        if sustain:
+            self.six_reaction_mf_dealt(source, target, receipt.get('actual', 0)+receipt.get('shield_absorbed', 0))
         if target.get('hp',0)<=0:self.death(target)
         if before>0 and target.get('hp',0)<=0 and source is not None and self._team_number(source)!=self._team_number(target):
             self.queue_cat_skin_kill(source)
             if self.hero(target):self.queue_santa_kill(source)
         return dealt
 
-    def _native_damage(self, attacker, target, multiplier, damage_type, share=1):
+    def _native_damage(self, attacker, target, multiplier, damage_type, share=1, *, raw_override=None):
+        if attacker.get('_batch_sand'):
+            self._ability_last_hit = False
+            return 0
         attack=self._attack
         if not attack:
             self._ability_last_hit=True
+            if raw_override is not None:
+                multiplier = raw_override/max(1, self._get_damage(attacker))
             return super()._native_damage(attacker,target,multiplier*share,damage_type)
-        crit = self._roll_attack(attacker, target)
+        ctx=self._context(attacker)
+        rengar=self.six_followup_passive(attacker,'rengar')
+        crit_rate = rengar[0] if rengar and ctx and ctx['kind']=='active' else 1
+        force_crit = bool(ctx and ctx.get('six_force_crit'))
+        crit = self._roll_attack(attacker, target, crit_rate=crit_rate, force_crit=force_crit)
         self._ability_last_hit = bool(crit)
         if not crit:
             return 0
-        ctx=self._context(attacker)
         if ctx and ctx.get('cat_capture') and crit>1:ctx['cat_crits']+=1
+        if ctx and ctx.get('six_crit_true') and crit>1 and damage_type == 1:
+            damage_type=3
+            multiplier=self._true_skill_coefficient(multiplier)
         row_a=self._config.get('avatar',{}).get(attacker.get('aid'),{});row_b=self._config.get('avatar',{}).get(target.get('aid'),{})
         sign_a=(row_a.get('tl') or [0,0,0])[0];sign_b=(row_b.get('tl') or [0,0,0])[0]
-        raw=to_int(self._get_damage(attacker)*float(multiplier))
+        raw=to_int(self._get_damage(attacker)*float(multiplier) if raw_override is None else raw_override)
         amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share,base_attack=attacker.get('ap',0),rules=self._combat_rules)
         from abyss_equip_passives import conversion
         fraction = conversion(self,attacker) if damage_type in (1,2) else 0
@@ -810,9 +890,10 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                 base_attack=attacker.get('ap',0),rules=self._combat_rules)
             amount+=damage_before_final(raw*fraction,sign_a,sign_b,3,0,0,attack,share,
                 base_attack=attacker.get('ap',0),rules=self._combat_rules)
-        amount=self._final_direct_damage(amount,target,crit)
+        amount=self._final_direct_damage(amount,target,crit,force_crit)
         receipt={}
-        result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt)
+        result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt,derived=force_crit)
+        self.six_star_extra_damage(attacker,target,ctx,raw,share,crit,sign_a,sign_b)
         self._ability_last_hit=True
         if crit>1:
             self._emit_mod_event(attacker,'crit',attacker,target,receipt.get('actual',0))
@@ -820,28 +901,51 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         return result
 
     def _basic_attack(self, attacker, target):
-        with self.context(attacker,'basic'):
+        with self.context(attacker,'basic') as ctx:
+            self.six_star_begin(attacker,ctx,None)
             before=target['hp'];damage_type=(attacker.get('tpl') or [0,1,1])[2]
-            self._native_damage(attacker,target,1,damage_type)
-            if self._ability_last_hit:self._book_attack_effects(attacker,target,max(0,before-target['hp']))
+            ratio=attacker['skillB']['skills'][0][4] if passive_kind(attacker)=='six_caitlyn_p' else 1
+            shen=self.state(attacker).get('six_shen')
+            if shen and shen['charges']>0:
+                ctx['six_shen_strike']=True
+                shen['charges']-=1
+            if not self.six_batch_kayle_attack(attacker, damage_type):
+                self._native_damage(attacker,target,ratio,damage_type)
+                if self._ability_last_hit:self._book_attack_effects(attacker,target,max(0,before-target['hp']))
         self.polar_basic_attack(attacker)
         self._emit_mod_event(attacker,'basic_attack',attacker,target)
 
     def _check_move(self, unit, forward, distance=0, forced=False):
-        if forced and self.state(unit).get("channel"):return False
+        if unit.get("_six_star_turret") or forced and self.state(unit).get("channel"):return False
         previous=unit['pos'];result=super()._check_move(unit,forward,distance,forced)
         if unit['pos']!=previous:self.state(unit).pop('channel',None)
         return result
 
     def _reline(self, unit, line, pos=None, offset=None, forced=False):
-        if forced and self.state(unit).get("channel"):return False
+        if unit.get("_six_star_turret") or forced and self.state(unit).get("channel"):return False
         previous=(unit['line'],unit['pos']);result=super()._reline(unit,line,pos,offset,forced)
         if (unit['line'],unit['pos'])!=previous:self.state(unit).pop('channel',None)
         return result
 
     def _get_speed(self, unit):
         value=super()._get_speed(unit)
-        return _to_int(value*(1+self._buff_value(unit,'strong'))/(1+self._buff_value(unit,'weak')))
+        return _to_int(value*(1+self._buff_value(unit,'strong'))/(1+self._buff_value(unit,'weak'))*self.six_followup_speed(unit)*self.six_batch_speed(unit))
+
+    def _get_range(self, unit):
+        return 3000 if self.six_batch_kayle_stage(unit) else super()._get_range(unit)
+
+    def _get_crit(self, unit):
+        value=super()._get_crit(unit)
+        yasuo = self.six_batch_passive(unit, 'yasuo')
+        if yasuo:
+            temporary = self._buff_value(unit, 'critup')
+            value = int((value-temporary)*yasuo[4]+temporary)
+        turns=self.state(unit).get('six_polar_turns',0)
+        if turns:
+            base=value-self._buff_value(unit,'critup')
+            growth=self.six_star_row(unit.get('skillB')).get('sixStarPolarGrowth105',0)
+            value+=int(max(0,base)*turns*growth)
+        return value
 
     @contextmanager
     def manual_skill_context(self, attacker, skill):
@@ -859,8 +963,10 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
     def _apply_native_skill(self, attacker, enemies, slot='skill'):
         skill=attacker.get(slot)
         if not isinstance(skill,dict) or not skill.get('skills'):return False
-        with self.context(attacker,'active',skill):
+        with self.context(attacker,'active',skill) as ctx:
+            self.six_star_begin(attacker,ctx,slot)
             result=super()._apply_native_skill(attacker,enemies,slot)
+        self.six_star_finished(attacker,slot,skill,ctx,result)
         if result and slot=='skill':attacker['_ability_normal_cast']=True
         return result
 
@@ -869,7 +975,11 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                 and not self.yasuo_cast_silenced(attacker)):
             return False
         attacker.pop('_ability_cd_override',None)
+        if slot=='skill':
+            attacker.pop('_six_star_refresh_normal',None)
         result=super()._use_skill_slot(attacker,enemies,slot,cd_key)
+        if slot=='skill' and attacker.pop('_six_star_refresh_normal',False):
+            attacker[cd_key]=-1
         override=attacker.pop('_ability_cd_override',None)
         if result and override is not None:attacker[cd_key]=override
         return result
@@ -884,6 +994,7 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
             for victim in targets:self.hit(owner,victim,bomb['coefficient'],2)
 
     def death(self, unit):
+        self.six_batch_notify_death(unit, None)
         state=self.state(unit)
         if state.get('death_handled'):return
         state['death_handled']=True
@@ -918,6 +1029,8 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
                 state.pop(key,None)
                 if owner['hp']>0 and entry['value']>0:self._add_buff(owner,'shield',2,_to_int(entry['value']*self.hero_output_rate_104(owner)))
             elif 'until' in entry and serial>entry['until']:state.pop(key,None)
+        self.six_star_owner_turn(owner)
+        self.six_reaction_turn(owner)
         zone=state.get('zone')
         if zone and owner['hp']>0:
             from abyss_equip_passives import delayed_cast
@@ -943,7 +1056,14 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         if not enemies:return False
         for cd in ('_skill_cd','_skill_cd_b','_skill_cd_leader','_skill_cd_book'):self._tick_slot_cd(attacker,cd)
         self._use_turn_start_passive(attacker,enemies)
-        if attacker['hp']<=0 or self.turn_start(attacker) or self._tick_buffs(attacker) or attacker['hp']<=0:return True
+        if attacker['hp']<=0 or self.turn_start(attacker) or self._tick_buffs(attacker) or attacker['hp']<=0:
+            if attacker['hp'] <= 0:
+                self.six_batch_notify_death(attacker, None)
+            return True
+        net = self.state(attacker).get('reaction_elise_net')
+        if net and net.pop('skip', False):
+            net['until'] = self.state(attacker)['serial']
+            return True
         if self._buff(attacker,'stun'):return True
         enemies=self.opponents(attacker)
         if not enemies:return False
@@ -960,6 +1080,10 @@ class SkillCompleteBattle(YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
         else:
             target=min(nearby_enemies,key=lambda u:(u['line']!=attacker['line'],
                                                     abs(u['pos']-attacker['pos']),self.state(u)['index']))
+        if attacker.get('_batch_sand'):
+            if target['line'] == attacker['line'] and abs(target['pos']-attacker['pos']) > self._get_range(attacker):
+                self._check_move(attacker, True)
+            return True
         # Close into the actual native attack/cast range before trying melee
         # abilities. The old study attacked across the map without moving.
         if target['line']!=attacker['line']:self._reline(attacker,target['line'],attacker['pos'])

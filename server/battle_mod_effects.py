@@ -60,11 +60,15 @@ def execute(battle,owner,enemies,allies,skill,action,index,context):
         if unit:
             while len(existing)>=action[14]:
                 expired=existing.pop(0);expired['hp']=0
-            ratio=action[12]
-            unit['de_ph']=max(0,int(battle._get_de_ph(owner)*ratio))
-            unit['de_ma']=max(0,int(battle._get_de_ma(owner)*ratio))
-            for key in ('hit','flee','crit','tough'):
-                unit['new_4attrs'][key]=max(0,int(battle._stat_buff(owner,key)*ratio))
+            if battle._six_star_setting(skill, 'Turret'):
+                from six_star_battle_105 import configure_turret
+                configure_turret(unit)
+            else:
+                ratio=action[12]
+                unit['de_ph']=max(0,int(battle._get_de_ph(owner)*ratio))
+                unit['de_ma']=max(0,int(battle._get_de_ma(owner)*ratio))
+                for key in ('hit','flee','crit','tough'):
+                    unit['new_4attrs'][key]=max(0,int(battle._stat_buff(owner,key)*ratio))
             unit['_effect_summon_owner']=owner.get('_owner_token')
             unit['_effect_summon_family']=family
         return

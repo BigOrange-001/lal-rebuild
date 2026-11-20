@@ -112,6 +112,10 @@ def _scale_skill(source, factor):
             # intentionally excludes them and is not the bond magnitude map.
             if action[1] == 'buff':
                 extras.extend((i,) for i in (5,6,7,18,19) if i < len(action))
+        if action[0] == 'manual_ability' and str(action[1]).startswith('six_') and not str(action[1]).endswith('_p'):
+            extras.extend((i,) for i in range(4, len(action)))
+        if action[0] == 'cure' and row.get('sixStarExactHeal105') and len(action) == 4:
+            extras.append((2,))
         if action[0] in ('heal_ap', 'heal_max_hp'):
             extras.append((1,))
         for path in set(damage + defense + extras):
@@ -196,7 +200,7 @@ def apply_bonds_104(document):
                             row['skillUp'] = copy.deepcopy(mechanism.get('upgrades'))
                             row.pop('skillUpPaths', None)
                             for attr in list(row):
-                                if attr.startswith('action') or attr in ('rankInfoTemplate', 'manualDamageMultiplier', 'manualEffectMultiplier', 'manualSummonPolicy', 'manualClonePolicy', 'captainSummonMultiplier', 'chainDot', 'modEffectSequence', 'modCondition', 'modPassiveTrigger', 'builtin_native_source_104'):
+                                if attr.startswith(('action', 'sixStar')) or attr == 'rankFixedPaths105' or attr in ('rankInfoTemplate', 'manualDamageMultiplier', 'manualEffectMultiplier', 'manualSummonPolicy', 'manualClonePolicy', 'captainSummonMultiplier', 'chainDot', 'modEffectSequence', 'modCondition', 'modPassiveTrigger', 'builtin_native_source_104'):
                                     row.pop(attr, None)
                             row['actionTargetPolicies'] = copy.deepcopy(mechanism['policies'])
                             row['actionTargetMaxTargets'] = copy.deepcopy(mechanism['caps'])

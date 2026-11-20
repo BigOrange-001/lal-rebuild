@@ -24,6 +24,7 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     if gate.get('requiredBuff') and not has_buff(battle,owner,gate['requiredBuff']):return False
     if gate.get('absentBuff') and has_buff(battle,owner,gate['absentBuff']):return False
     if 'otherHpBelow' in gate and (other is None or max(0,other.get('hp',0))/max(1,other.get('hp_max',1))>gate['otherHpBelow']):return False
+    if gate.get('otherHpNotFull105') and (other is None or other['hp'] >= other['hp_max']):return False
     if gate.get('otherRequiredBuff') and (other is None or not has_buff(battle,other,gate['otherRequiredBuff'])):return False
     radius=gate.get('nearbyRadius',600)
     near=[u for u in battle.a+battle.b if u is not owner and u.get('hp',0)>0 and u.get('line')==owner.get('line') and abs(u.get('pos',0)-owner.get('pos',0))<=radius]
@@ -35,7 +36,8 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     if turn<owner.get('_mod_event_ready',(skill.get('pl') or [0])[0]):return False
     round_=getattr(battle,'round_index',0)
     if owner.get('_mod_event_round')!=round_:owner.update(_mod_event_round=round_,_mod_event_count=0)
-    if owner.get('_mod_event_count',0)>=gate.get('maxPerRound',1):return False
+    limit=gate.get('maxPerRound',1)
+    if limit and owner.get('_mod_event_count',0)>=limit:return False
     every=gate.get('everyEvents',1)
     if every>1:
         owner['_mod_filtered_events']=owner.get('_mod_filtered_events',0)+1
@@ -55,5 +57,11 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     owner['_mod_event_count']=owner.get('_mod_event_count',0)+1
     owner['_mod_event_ready']=turn+skill['pl'][1]
     owner['_mod_filtered_events']=0
-    try:return battle._apply_native_skill(owner,enemies,'skillB')
+    try:
+        cast=battle._apply_native_skill(owner,enemies,'skillB')
+        if cast and gate.get('sixStarRefreshNormal105'):
+            owner['_skill_cd']=-1
+            # The killing skill may still be settling its own cooldown.
+            owner['_six_star_refresh_normal']=True
+        return cast
     finally:owner['_mod_event_busy']=False;owner['_mod_event']=previous;battle._mod_event_depth=depth

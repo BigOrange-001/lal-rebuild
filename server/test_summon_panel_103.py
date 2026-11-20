@@ -4,7 +4,8 @@ import json
 import unittest
 from pathlib import Path
 
-from battle_engine import ReferenceBattle, _native_skill_snapshot
+from battle_engine import ReferenceBattle, _native_skill_snapshot, base_unit
+from manual_ability_sim import SkillCompleteBattle
 from summon_panel_103 import apply_summon_panel_config, NOTICE, OLD_RULE
 
 
@@ -13,12 +14,12 @@ class SummonPanelTests(unittest.TestCase):
     def setUpClass(cls):
         cls.config = json.loads((Path(__file__).resolve().parents[1] / 'config/reconstruction/full-config.json').read_text('utf-8'))['cfg']
 
-    def battle(self):
+    def battle(self, battle_type=ReferenceBattle):
         owner = dict(aid='A_1132_5',isme=True,lv=99,slv=10,line=0,pos=1500,hp=53,hp_max=10001,
                      ap=1001,de_ph=501,de_ma=401,new_4attrs=dict(hit=101,flee=103,crit=107,tough=109),
                      talent=[0,.1,.2,.3],_manual_battle_stacks=dict(attack=.2,defense=.3,flee=7),
                      _timed_stacks=[dict(stat='attack',value=.1,expiresAt=5)])
-        battle = ReferenceBattle([owner], [],config=self.config)
+        battle = battle_type([owner], [],config=self.config)
         owner=battle.a[0];owner['_team']=battle.a
         for key,value in dict(strong=.5,weak=.2,steel=.4,sunder=.25,armor=.2,
                               hitup=11,fleeup=13,critup=17,toughup=19).items():
@@ -78,6 +79,41 @@ class SummonPanelTests(unittest.TestCase):
         unit=battle._spawn_summon(owner,'A_2003_2',.01,2)
         self.assertEqual([unit[k] for k in ('de_ph','de_ma')],[0,0])
         self.assertEqual(unit['new_4attrs'],dict(hit=0,flee=0,crit=0,tough=0))
+
+    def test_out_of_range_summon_advances_with_snapshot_speed_then_attacks(self):
+        battle,owner=self.battle()
+        owner['pos']=2400
+        enemy=base_unit(self.config,'A_1029_5',1,team=2)
+        enemy['pos']=900
+        battle.b.append(enemy)
+        skill=_native_skill_snapshot(self.config,'S_631029_5')
+        action=next(a for a in skill['skills'] if a[0]=='summon')
+        context={'targets':{}}
+        battle._act_summon(owner,battle.b,battle.a,skill,action,0,context)
+        bear=context['targets'][0]
+        self.assertEqual(bear['pos'],1900)
+        self.assertNotIn('speed',bear)
+        self.assertEqual(bear['tpl'][3],350)
+        battle.rng.get_random=lambda *_:0
+        sides={1:battle.a,2:battle.b}
+        initial_hp=enemy['hp']
+        battle._run_unit_turn(bear,sides,1)
+        self.assertEqual((bear['pos'],enemy['hp']),(1550,initial_hp))
+        battle._run_unit_turn(bear,sides,1)
+        self.assertEqual(bear['pos'],1200)
+        self.assertLess(enemy['hp'],initial_hp)
+
+    def test_dog_casts_team_support_after_its_lane_is_clear(self):
+        battle,owner=self.battle(SkillCompleteBattle)
+        enemy=base_unit(self.config,'A_1029_5',1,line=1,team=2)
+        battle.b.append(enemy)
+        dog=battle._spawn_summon(owner,'A_2024_6',.5,3)
+        start_pos=dog['pos']
+        start_hp=enemy['hp']
+        battle._run_unit_turn(dog,{1:battle.a,2:battle.b},1)
+        self.assertIsNotNone(battle._buff(owner,'bless'))
+        self.assertGreater(owner['hp'],53)
+        self.assertEqual((dog['line'],dog['pos'],enemy['hp']),(0,start_pos,start_hp))
 
     def test_description_overlay_is_idempotent(self):
         document={'cfg':copy.deepcopy(self.config)}

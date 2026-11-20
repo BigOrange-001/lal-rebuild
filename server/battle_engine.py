@@ -1341,9 +1341,10 @@ class ReferenceBattle:
 
     @staticmethod
     def _get_speed(unit):
-        for key in ("speed", "spd"):
-            value = unit.get(key)
-            if isinstance(value, (int, float)) and not isinstance(value, bool):
+        tpl = unit.get("tpl") or ()
+        snapshot_speed = tpl[3] if len(tpl) > 3 else 0
+        for value in (unit.get("speed"), unit.get("spd"), snapshot_speed):
+            if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
                 return _to_int(value)
         return 0
 

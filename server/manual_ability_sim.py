@@ -1071,7 +1071,6 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         nearby_enemies=enemies
         if summoned:
             nearby_enemies=[u for u in enemies if u['line']==attacker['line']]
-            if not nearby_enemies:return True
         focus=attacker.get('_ability_focus')
         if self.kaisa_is(attacker) and not self.kaisa_lane(attacker,attacker['line']):return True
         if self.yasuo_is(attacker) and not self.yasuo_lane(attacker):return True
@@ -1079,17 +1078,18 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             target=focus
         else:
             target=min(nearby_enemies,key=lambda u:(u['line']!=attacker['line'],
-                                                    abs(u['pos']-attacker['pos']),self.state(u)['index']))
+                                                    abs(u['pos']-attacker['pos']),self.state(u)['index']),
+                       default=None)
         if attacker.get('_batch_sand'):
-            if target['line'] == attacker['line'] and abs(target['pos']-attacker['pos']) > self._get_range(attacker):
+            if target and target['line'] == attacker['line'] and abs(target['pos']-attacker['pos']) > self._get_range(attacker):
                 self._check_move(attacker, True)
             return True
         # Close into the actual native attack/cast range before trying melee
         # abilities. The old study attacked across the map without moving.
-        if target['line']!=attacker['line']:self._reline(attacker,target['line'],attacker['pos'])
-        action_type=self._get_action_type(attacker)
-        if abs(target['pos']-attacker['pos'])>self._get_range(attacker) and action_type!=3:
-            self._check_move(attacker,True)
+        if target is not None:
+            if target['line']!=attacker['line']:self._reline(attacker,target['line'],attacker['pos'])
+            if abs(target['pos']-attacker['pos'])>self._get_range(attacker) and self._get_action_type(attacker)!=3:
+                self._check_move(attacker,True)
         acted=False
         if not self._buff(attacker,'silence'):
             for slot,cd in (('book_skill','_skill_cd_book'),('skill','_skill_cd')):
@@ -1105,6 +1105,6 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
                     self._basic_attack(attacker,target)
                     if target is focus:
                         attacker.pop('_ability_focus',None)
-            elif target.get('hp',0)>0 and abs(target['pos']-attacker['pos'])<=reach:
+            elif target and target.get('hp',0)>0 and abs(target['pos']-attacker['pos'])<=reach:
                 self._basic_attack(attacker,target)
         return True

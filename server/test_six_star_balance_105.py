@@ -27,8 +27,8 @@ class SixStarBalanceTests(TestCase):
         sid = self.cfg['avatar'][aid]['pl'][slot]
         return _native_skill_snapshot(self.cfg, sid, level if slot==10 else 1)
 
-    def arena(self, ident, enemies, allies=()):
-        owner = base_unit(self.cfg, f'A_{ident}_6', 60, 10, 0, .5, True, 1)
+    def arena(self, ident, enemies, allies=(), *, leader=True):
+        owner = base_unit(self.cfg, f'A_{ident}_6', 60, 10, 0, .5, leader, 1)
         owner.update(pos=1700, ap=1000, hp=100000, hp_max=100000)
         def dummy(side, index, line, pos, hp):
             return dict(aid='A_1008_6', isme=side==1, tpl=[1,1,1,0,500], line=line, pos=pos,

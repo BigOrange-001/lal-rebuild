@@ -920,6 +920,8 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         return result
 
     def _basic_attack(self, attacker, target):
+        riven = self.six_next_passive(attacker, 'riven')
+        riven_targets = self.six_next_radius(attacker, target, 600) if riven else ()
         with self.context(attacker,'basic') as ctx:
             self.six_star_begin(attacker,ctx,None)
             before=target['hp'];damage_type=(attacker.get('tpl') or [0,1,1])[2]
@@ -941,6 +943,12 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
                     self._native_damage(attacker,victim,ratio,damage_type)
                     if self._ability_last_hit:self._book_attack_effects(attacker,victim,max(0,before-victim['hp']))
         self.polar_basic_attack(attacker)
+        if len(riven_targets) > 3 and attacker['hp'] > 0:
+            with self.context(attacker, 'passive'):
+                for foe in riven_targets:
+                    if foe['hp'] > 0:
+                        self.control(attacker, foe, 'stun', 1)
+                        self._native_damage(attacker, foe, riven[4], 1)
         self._emit_mod_event(attacker,'basic_attack',attacker,target)
 
     def _check_move(self, unit, forward, distance=0, forced=False):
@@ -1098,7 +1106,6 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         if not enemies:return False
         for cd in ('_skill_cd','_skill_cd_b','_skill_cd_leader','_skill_cd_book'):self._tick_slot_cd(attacker,cd)
         self._use_turn_start_passive(attacker,enemies)
-        self.six_next_event(attacker,'turn_start',attacker)
         if attacker['hp']<=0 or self.turn_start(attacker) or self._tick_buffs(attacker) or attacker['hp']<=0:
             if attacker['hp'] <= 0:
                 self.six_batch_notify_death(attacker, None)

@@ -1961,11 +1961,26 @@ package com.meng52.game.module.avatar
          if(amount>0) addBuff("shield",2,amount,0,-1,source);
       }
 
+      private function sixNextRivenAttack105(foes:Array, passive:Array) : void
+      {
+         if(!foes || foes.length<=3 || hp<=0) return;
+         var attack:Object=beginAbilityAttack(this,"passive");
+         try
+         {
+            for each(var foe:Avatar in foes)
+            {
+               if(foe.hp<=0) continue;
+               abilityControl(foe,"stun",1);
+               sixStarHit105(foe,Number(passive[4]),1,String(passive[3]));
+            }
+         }
+         finally {endAbilityAttack(attack);}
+      }
+
       private function sixNextEvent105(event:String,target:Avatar) : void
       {
          if(hp<=0) return;
          var passive:Array;
-         var foes:Array;
          if(event=="turn_start" && (passive=sixNextPassive105("baron")))
          {
             if(!abilityState.nextBaronBase) abilityState.nextBaronBase={hp:hpMax,ap:ap,ph:dePh,ma:deMa};
@@ -1985,33 +2000,19 @@ package com.meng52.game.module.avatar
          if(event=="dodge" && (passive=sixNextPassive105("leblanc"))) sixNextMirror105(Number(passive[4]));
          if(event!="basic_attack" || !target) return;
          if((passive=sixNextPassive105("maokai"))) sixNextHeal105(hpMax*Number(passive[4]));
-         if((passive=sixNextPassive105("riven")))
+         if((passive=sixNextPassive105("sivir")))
          {
-            foes=abilityCandidates(otherTeam,target.line,target.pos,600,-1);
-            if(foes.length>3)
-            {
-               var rivenAttack:Object=beginAbilityAttack(this,"passive");
-               try
-               {
-                  for each(var foe:Avatar in foes)
-                  {
-                     abilityControl(foe,"stun",1);
-                     sixStarHit105(foe,Number(passive[4]),1,String(passive[3]));
-                  }
-               }
-               finally {endAbilityAttack(rivenAttack);}
-            }
-         }
-         if((passive=sixNextPassive105("sivir")) && skill1)
-         {
+            var captain:SkillSet=skill1;
+            if(!captain && avatarData && avatarData.skill1) captain=new SkillSet(avatarData.skill1,this,1,true);
+            if(!captain) return;
             var ricochet:Array=null;
-            for each(var step:Array in skill1.skills) if(step[0]=="ricochet_bursts") {ricochet=step;break;}
+            for each(var step:Array in captain.skills) if(step[0]=="ricochet_bursts") {ricochet=step;break;}
             if(!ricochet) return;
             var ricochetAttack:Object=beginAbilityAttack(this,"passive");
             ricochetAttack.sixNextLeech=Number(passive[4]);
             try
             {
-               skill1.castBasicRicochet105(target,ricochet);
+               captain.castBasicRicochet105(target,ricochet);
             }
             finally {endAbilityAttack(ricochetAttack);}
          }
@@ -10177,6 +10178,8 @@ package com.meng52.game.module.avatar
          if(param7 && param7.type == "shield") param7.value *= purpleBondMultiplier();
          var basicContext:Object = null;
          var aimTarget:Avatar = param1 && param1.length ? param1[0] : null;
+         var rivenTargets105:Array=basicPassive105 && basicPassive105[1]=="six_next_riven_p" && aimTarget ?
+            abilityCandidates(otherTeam,aimTarget.line,aimTarget.pos,600,-1) : null;
          if(param1 && param1.length == 1) prepareParallelVisualTarget(aimTarget,true);
          var playBatchAttack:Boolean = param1 && param1.length ? playParallelAttackTween() : true;
          var markedBasic:Boolean = false;
@@ -10665,7 +10668,11 @@ package com.meng52.game.module.avatar
             {
                if(markedBasic && basicContext.hits.indexOf(aimTarget) >= 0) delete aimTarget.abilityState["mark_aim_"+abilityIndex];
                endAbilityAttack(basicContext);
-               if(bookBasicAttack) emitModEvent("basic_attack",this,aimTarget);
+                if(bookBasicAttack)
+                {
+                   sixNextRivenAttack105(rivenTargets105,basicPassive105);
+                   emitModEvent("basic_attack",this,aimTarget);
+                }
                if(bookBasicAttack && this.skillB && this.skillB.skills && this.skillB.skills.length && this.skillB.skills[0][0] == "polar_basic") polarBasicAttack();
             }
          }

@@ -246,16 +246,16 @@ class SixStarNextBattle:
             return
         if passive := self.six_next_passive(owner, 'maokai'):
             self.six_next_heal(owner, owner['hp_max']*passive[4])
-        if passive := self.six_next_passive(owner, 'riven'):
-            targets = self.six_next_radius(owner, target, 600)
-            if len(targets) > 3:
-                with self.context(owner, 'passive'):
-                    for foe in targets:
-                        self.control(owner, foe, 'stun', 1)
-                        self._native_damage(owner, foe, passive[4], 1)
         if passive := self.six_next_passive(owner, 'sivir'):
-            ricochet = next((step for step in (owner.get('leader_skill') or {}).get('skills', [])
-                             if step[0] == 'ricochet_bursts'), None)
+            captain = owner.get('leader_skill')
+            if captain is None:
+                avatar = self._config.get('avatar', {}).get(owner['aid'], {})
+                slots = avatar.get('pl', [])
+                definition = self._config.get('skill', {}).get(slots[11], {}) if len(slots) > 11 else {}
+                actions = definition.get('skill', [])
+            else:
+                actions = captain.get('skills', [])
+            ricochet = next((step for step in actions if step[0] == 'ricochet_bursts'), None)
             if ricochet:
                 with self.context(owner, 'passive') as ctx:
                     ctx['six_next_leech'] = passive[4]

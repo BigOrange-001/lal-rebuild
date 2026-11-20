@@ -12,9 +12,10 @@ class NextSixStarTests(TestCase):
         fixtures.SixStarBalanceTests.setUpClass()
         cls.fixture = fixtures.SixStarBalanceTests()
 
-    def arena(self, number, enemies=None, allies=()):
+    def arena(self, number, enemies=None, allies=(), *, leader=True):
         battle, owner, foes = self.fixture.arena(
-            number, enemies or [(0,1500,100000),(0,1410,100000),(0,1330,100000),(1,1500,100000)], allies)
+            number, enemies or [(0,1500,100000),(0,1410,100000),(0,1330,100000),(1,1500,100000)],
+            allies, leader=leader)
         owner['_team'] = battle.a
         battle._roll_attack = lambda *args, **kwargs: 1
         return battle, owner, foes
@@ -77,6 +78,30 @@ class NextSixStarTests(TestCase):
                                battle._buff(owner,'next_diana_shield').value,delta=1)
         self.assertEqual(foes[-1]['hp'],100000)
 
+    def test_riven_counts_primary_before_killing_it(self):
+        for size in (3, 4):
+            with self.subTest(enemies=size):
+                rows = [(0,1500,1), *((0,1410-i*80,100000) for i in range(size-1)), (1,1500,100000)]
+                battle, owner, foes = self.arena(1056, rows)
+                battle._basic_attack(owner, foes[0])
+                self.assertEqual(foes[0]['hp'], 0)
+                for foe in foes[1:-1]:
+                    self.assertEqual(battle._buff(foe,'stun') is not None, size == 4)
+                    self.assertEqual(foe['hp'] < 100000, size == 4)
+                self.assertIsNone(battle._buff(foes[-1],'stun'))
+                self.assertEqual(foes[-1]['hp'], 100000)
+
+    def test_sivir_bounces_without_captain_skill_equipped(self):
+        captain = self.fixture.snapshot(1078, 11)
+        ricochet = next(step for step in captain['skills'] if step[0] == 'ricochet_bursts')
+        battle, owner, foes = self.arena(1078, leader=False)
+        self.assertIsNone(owner['leader_skill'])
+        with patch.object(battle, '_native_damage', wraps=battle._native_damage) as hit:
+            battle._basic_attack(owner, foes[0])
+        self.assertEqual([call.args[1] for call in hit.call_args_list], foes[:3])
+        self.assertEqual([call.args[2] for call in hit.call_args_list], [1, *ricochet[2][1:3]])
+        self.assertIsNone(owner['leader_skill'])
+
     def test_karthus_waits_or_interrupts_and_casts_twice_on_death_once(self):
         battle, owner, foes = self.arena(1098, allies=[(0,1850,100000)])
         self.assertTrue(self.fixture.cast(battle,owner,'leader_skill'))
@@ -131,7 +156,7 @@ class NextSixStarTests(TestCase):
         self.assertTrue(self.fixture.cast(battle,owner))
         self.assertTrue(all(battle._buff(foe,'curse') for foe in foes[:3]))
         self.assertIsNone(battle._buff(foes[-1],'curse'))
-        battle._emit_mod_event(owner,'turn_start',owner,owner)
+        battle._run_unit_turn(owner,{1:battle.a,2:battle.b},1)
         self.assertEqual(owner['hp_max'],115000)
         self.assertEqual(owner['ap'],1150)
 

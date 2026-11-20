@@ -201,6 +201,8 @@ def load_game_config(path, now=None):
  apply_guild_exchange(document)
  from activity_windows_105 import apply_activity_windows_105
  apply_activity_windows_105(document,now)
+ from hero_passive_quality_105 import restrict_low_star_passives
+ restrict_low_star_passives(document)
  document['cfg_version']=(ROOT/'VERSION').read_text(encoding='utf-8').strip()
  return document
 

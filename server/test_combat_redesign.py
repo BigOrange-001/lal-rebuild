@@ -47,9 +47,9 @@ class CombatRedesignTests(unittest.TestCase):
         rules=candidate_config(config())['combat_rules']
         self.assertEqual([defense_damage(v,700,1000,rules=rules) for v in (1000,2000,3000)],[500,1000,1500])
         b,a,t=self.battle(SkillCompleteBattle)
-        self.assertEqual(b._native_damage(a,t,1,1),330)
+        self.assertEqual(b._native_damage(a,t,1,1),264)
         b._add_buff(a,'strong',3,1)
-        self.assertEqual(b._native_damage(a,t,1,1),660)
+        self.assertEqual(b._native_damage(a,t,1,1),528)
 
     def test_sunder_and_penetration_still_feed_effective_defense(self):
         b,a,t=self.battle(SkillCompleteBattle)
@@ -57,29 +57,29 @@ class CombatRedesignTests(unittest.TestCase):
         self.assertEqual(b._defense_against(a,t,1),350)
         b._book_bonus=lambda owner,kind:0.75 if owner is a and kind=='penetration' else 0
         self.assertEqual(b._defense_against(a,t,1),175)
-        expected=math.trunc(defense_damage(1000,175,1000,rules=b._combat_rules)*0.66)
+        expected=math.trunc(defense_damage(1000,175,1000,rules=b._combat_rules)*float(b._attack[21]))
         self.assertEqual(b._native_damage(a,t,1,1),expected)
 
     def test_native_true_and_explicit_true_have_distinct_rates(self):
         for cls in (ReferenceBattle,SkillCompleteBattle):
             b,a,t=self.battle(cls)
-            self.assertEqual(b._native_damage(a,t,1,3),330)
-            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),528,delta=1)
+            self.assertEqual(b._native_damage(a,t,1,3),264)
+            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),422,delta=1)
         b,a,t=self.battle(SkillCompleteBattle)
         self.assertTrue(b.hit(a,t,1,3))
-        self.assertEqual(t['hp'],100000-528)
+        self.assertEqual(t['hp'],100000-422)
 
     def test_true_skill_does_not_double_apply_native_rate(self):
         for rate in (0.3,0.5,0.8):
             cfg=candidate_config(config(),attack_overrides={'1':rate})
             b,a,t=self.battle(SkillCompleteBattle,cfg)
-            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),528,delta=1)
+            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),422,delta=1)
 
     def test_absolute_and_reference_share_ratio_curve(self):
         b,a,t=self.battle()
-        self.assertEqual(b._injured_absolute(t,1000,1,a),330)
-        self.assertEqual(b._native_damage(a,t,1,1),330)
-        self.assertEqual(b._native_damage(a,t,1,2),487)
+        self.assertEqual(b._injured_absolute(t,1000,1,a),264)
+        self.assertEqual(b._native_damage(a,t,1,1),264)
+        self.assertEqual(b._native_damage(a,t,1,2),389)
 
     def test_opposed_chances_and_multipliers(self):
         cfg = candidate_config(config())
@@ -100,12 +100,12 @@ class CombatRedesignTests(unittest.TestCase):
     def test_opposed_toughness_applies_once(self):
         b,a,t=self.battle(SkillCompleteBattle)
         t['new_4attrs']['tough']=100000
-        self.assertEqual(b._native_damage(a,t,1,1),206)
-        self.assertEqual(b._injured(t,1000,6,a,dot_kind='burn'),412)
+        self.assertEqual(b._native_damage(a,t,1,1),165)
+        self.assertEqual(b._injured(t,1000,6,a,dot_kind='burn'),330)
         self.assertEqual(b._injured(t,1000,3,a,derived=True),1000)
-        self.assertEqual(settle_damage(1000,2,100000,100,b._attack,rules=b._combat_rules)['health_damage'],725)
+        self.assertEqual(settle_damage(1000,2,100000,100,b._attack,rules=b._combat_rules)['health_damage'],560)
         a['new_4attrs']['crit']=100000
-        self.assertEqual(b._injured(t,1000,6,a,dot_kind='poison'),660)
+        self.assertEqual(b._injured(t,1000,6,a,dot_kind='poison'),528)
 
     def test_caster_precision_scales_heal_and_shield_once(self):
         b,a,t=self.battle(SkillCompleteBattle)
@@ -144,7 +144,7 @@ class CombatRedesignTests(unittest.TestCase):
         b._config['system_simple']['attack'][21]=1
         self.assertEqual(b._native_damage(a,t,1,1),300)
         b._config=candidate_config(config())
-        self.assertEqual(b._native_damage(a,t,1,1),330)
+        self.assertEqual(b._native_damage(a,t,1,1),264)
 
     def test_disabled_matches_absent_rules_at_fractional_boundaries(self):
         cfg=candidate_config(config());cfg['combat_rules']['model']='legacy'

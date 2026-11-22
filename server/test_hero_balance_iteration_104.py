@@ -68,4 +68,52 @@ class IterationBalanceTests(unittest.TestCase):
             self.assertEqual(result['win_rate'],.5);self.assertEqual(result['outright_win_rate'],.4)
 
 
+class MechanismTextTests(unittest.TestCase):
+    """Live six-star descriptions state the actions each skill really has."""
+    @classmethod
+    def setUpClass(cls):
+        cls.cfg=load_game_config(ROOT/'config/reconstruction/full-config.json')['cfg']
+
+    def row(self,aid,slot):
+        return self.cfg['skill'][self.cfg['avatar'][aid]['pl'][slot]]
+
+    def tokens(self,row,prefix):
+        import re
+        line=next(l for l in row['rankInfoTemplate'].split('\n') if l.startswith(prefix))
+        return [row['skill'][int(i)][0] for i in re.findall(r'\{rank:(\d+):',line)]
+
+    def test_no_design_notes_and_tokens_name_the_added_actions(self):
+        old=('怒气积累','万魂领域','圣诞预热','虚空压制','虚空追击','寒冰护援','粽香援护','舞步防护','净化援助','手里剑直击')
+        for aid,hero in self.cfg['avatar'].items():
+            if not aid.endswith('_6'):continue
+            for slot in (10,11,13):
+                sid=hero['pl'][slot] if len(hero['pl'])>slot else None
+                if sid not in self.cfg['skill']:continue
+                for field in ('info','rankInfoTemplate'):
+                    text=self.cfg['skill'][sid].get(field,'')
+                    for note in old:self.assertNotIn(note,text,(aid,sid,field))
+                self.assertNotRegex(self.cfg['skill'][sid].get('info',''),r'\{(rank|flat):',(aid,sid))
+        self.assertEqual(self.tokens(self.row('A_1028_6',10),'每次施放命中敌人后'),['battle_stack'])
+        self.assertEqual(self.tokens(self.row('A_1217_6',10),'每次施放另外获得'),['battle_stack_unconditional'])
+        self.assertEqual(self.tokens(self.row('A_1103_6',10),'同时对本路最前方'),['damage'])
+        self.assertEqual(self.tokens(self.row('A_1134_6',10),'随后突进至本路'),['damage'])
+        self.assertEqual(self.tokens(self.row('A_1049_6',10),'为全队生命比例最低'),['target_hp_shield'])
+        self.assertEqual(self.tokens(self.row('A_1212_6',11),'全队生命比例最低'),['target_hp_shield'])
+        # Garen's normal is shared by two variant pairs, so both additions apply.
+        self.assertEqual(self.tokens(self.row('A_1001_6',10),'为全队生命比例最低'),['cure','cure'])
+
+    def test_captains_without_added_effects_have_no_line_and_retargets_are_named(self):
+        for aid in ('A_1028_6','A_1049_6','A_1074_6','A_1134_6','A_1217_6','A_1001_6'):
+            self.assertNotIn('\n',self.row(aid,11)['rankInfoTemplate'].strip(),aid)
+        amumu=self.row('A_1074_6',11)['info']
+        self.assertIn('400范围内所有敌人',amumu);self.assertNotIn('最多4名',amumu)
+        self.assertIn('范围内生命比例最低的友军恢复生命',self.row('A_1212_6',11)['info'])
+        self.assertIn('施放时净化自身。',self.row('A_1210_6',11)['info'])
+
+    def test_erlang_skills_state_numbers(self):
+        for slot in (10,11,13):
+            self.assertRegex(self.row('A_1226_6',slot)['info'],r'\d')
+            self.assertIn('{',self.row('A_1226_6',slot)['rankInfoTemplate'])
+
+
 if __name__=='__main__':unittest.main()

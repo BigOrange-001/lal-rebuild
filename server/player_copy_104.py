@@ -18,6 +18,14 @@ REPLACEMENTS = {
     '先施加减益再结算伤害': '先施加减益再造成伤害',
     '当前采用击杀触发的兼容方案，不是粽子死亡触发；未实现其他粽子攻击力增加10%并无限叠加。': '',
 }
+SUMMON_DOG = '召唤哮天犬协同作战。'
+ERLANG_TEXT = {
+    '击退全屏范围内的所有敌人，造成魔法伤害并施加虚弱与诅咒；虚弱和诅咒持续2回合。':
+        '击退全屏范围内的所有敌人，造成{rank:1:1}魔法伤害，再造成{rank:2:1}魔法伤害并施加{rank:2:3}虚弱，同时施加诅咒；虚弱和诅咒持续2回合。',
+    SUMMON_DOG: '召唤哮天犬协同作战，存在{flat:0:3}次自身行动。',
+    '每回合发射五道天雷，对当前生命值最低的敌方英雄造成魔法伤害；准备与冷却均为0回合。':
+        '每回合发射五道天雷，对全场当前生命值最低的敌方英雄连续造成5次{rank:0:2}魔法伤害，目标阵亡后停止。',
+}
 PATTERNS = [
     (r'[，,；;]?(?:中毒|灼烧)?(?:并)?沿用原版(?:附加|结算|触发)?规则', ''),
     (r'[，,；;]?嘲讽目标遵循原生优先规则', ''),
@@ -79,6 +87,14 @@ def apply_player_copy_104(document):
                     'battle_ploy','combat_ploy','battle_association','combat_association',
                     'destiny','guide','task','vip','system_simple'):
         visit(cfg.get(section, {}))
+    # Erlang Xin Zhao's authored rows named no numbers. Bind them to the live
+    # actions; the client renders the template per rank, info shows rank 1.
+    for row in cfg.get('skill', {}).values():
+        text = SUMMON_DOG if row.get('name') == '唤犬令' else row.get('info')
+        for old, new in ERLANG_TEXT.items():
+            if isinstance(text, str) and text.startswith(old):
+                row['info'] = row['rankInfoTemplate'] = new + text[len(old):]
+                row['copyTokens105'] = True
     # Some historical descriptions were scaled as prose rather than from the
     # live action. Repair their displayed numbers without changing mechanics.
     for row in cfg.get('skill', {}).values():
@@ -86,7 +102,8 @@ def apply_player_copy_104(document):
         for field in ('info','rankInfoTemplate'):
             text=row.get(field)
             if not isinstance(text,str):continue
-            if field=='info' and row.get('calibration_104'):
+            if field=='info' and (row.get('calibration_104') or row.get('balance_mechanism_104')
+                                  or row.get('copyTokens105')):
                 def bind_review(match):
                     kind,index,path=match.groups()
                     value=actions[int(index)]
@@ -94,8 +111,8 @@ def apply_player_copy_104(document):
                     value*=row.get('rankDisplayFactors104',{}).get(index+':'+path,1)
                     return f'{value*100:.1f}%' if kind=='rank' else str(round(value))
                 text=re.sub(r'\{(rank|flat):(\d+):([0-9.]+)\}',bind_review,text)
-            if row.get('name') == '唤犬令':
-                text = '召唤哮天犬协同作战。'
+            if row.get('name') == '唤犬令' and not row.get('copyTokens105'):
+                text = SUMMON_DOG
             if any(a[:2]==['manual_ability','alistar_c'] for a in actions):
                 if row.get('calibration_104'):
                     heal=.5*row.get('manualEffectMultiplier',1)*.8*100

@@ -2875,7 +2875,7 @@ class ReferenceBattle:
                         clone["skill"] = None
                 if self._six_star_setting(skill,'NextLeBlancClone'):
                     clone["skill"] = copy.deepcopy(attacker.get("skill"))
-                    clone["next_mirror_clone"] = True
+                    clone["next_mirror_generation"] = 1
                 if policy.get("actionType") in (1, 2, 4):
                     clone["manualActionTypeOverride"] = policy["actionType"]
                 if isinstance(policy.get("attackRange"), (int, float)) and policy["attackRange"] > 0:

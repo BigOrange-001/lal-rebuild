@@ -110,9 +110,10 @@ def apply_next(avatars, normal, captain, passive):
     timing(row, 2, 4)
     row['sixStarNextLeBlancClone105'] = True
     text(row, row.get('rankInfoTemplate', row['info']) + '\n队长技能召唤的分身也可施放恶意魔印。')
-    action(passive(1127), 'leblanc_p', 0, 0, 0, mirror, [1, 8],
+    action(passive(1127), 'leblanc_p', 0, 0, 0, mirror, [1, 8, 3],
            '自身或分身闪避时，在闪避者所在分路召唤一个能施放小技能的分身，继承本体{rank:0:4}即时面板。'
-           '分身存活3次自身行动，每个本体最多保留{flat:0:5}个分身；达到上限时替换最早召唤的存活分身。', (5,))
+           '本体直接召出的分身为第一代；第{flat:0:6}代分身仍可闪避，但不会再召唤。'
+           '闪避分身存活3次自身行动，每个本体最多保留{flat:0:5}个；达到上限时替换最早召唤的存活分身。', (5, 6))
 
     row = normal(1203)
     row['sixStarNextBaronLane105'] = True

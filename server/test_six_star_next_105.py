@@ -78,6 +78,11 @@ class NextSixStarTests(TestCase):
                                battle._buff(owner,'next_diana_shield').value,delta=1)
         self.assertEqual(foes[-1]['hp'],100000)
 
+    def test_lux_captain_applies_accuracy_above_one_hundred_thousand(self):
+        battle, owner, foes = self.arena(1060)
+        self.assertTrue(self.fixture.cast(battle, owner, 'leader_skill'))
+        self.assertGreater(battle._buff_value(owner, 'hitup'), 100000)
+
     def test_diana_magic_basic_adds_defense_damage_once_per_target(self):
         battle, owner, foes = self.arena(1086)
         self.assertEqual(battle._config['avatar'][owner['aid']]['tl'][2], 2)
@@ -179,19 +184,46 @@ class NextSixStarTests(TestCase):
         self.assertNotIn('next_charge',battle.state(owner))
         self.assertNotIn('next_storm',battle.state(owner))
 
-    def test_leblanc_consumes_mark_and_keeps_only_three_passive_clones(self):
+    def test_leblanc_consumes_mark_and_shares_one_pool_of_twelve_clones(self):
         battle, owner, foes = self.arena(1127)
         self.assertTrue(self.fixture.cast(battle,owner))
         self.assertTrue(battle.marked(owner,foes[0],'next_mirror'))
         self.assertTrue(self.fixture.cast(battle,owner))
         self.assertFalse(battle.marked(owner,foes[0],'next_mirror'))
         self.assertIsNotNone(battle._buff(foes[0],'silence'))
-        for _ in range(4):
-            battle._emit_mod_event(owner,'dodge',foes[0],owner)
+        panel = battle._summon_panel_snapshot(owner)
+        battle._emit_mod_event(owner, 'dodge', foes[0], owner)
+        first = battle.state(owner)['next_mirrors'][0]
+        for stat in ('hp_max', 'ap', 'de_ph', 'de_ma'):
+            self.assertEqual(first[stat], panel[stat])
+        for stat in ('hit', 'flee', 'crit', 'tough'):
+            self.assertEqual(first['new_4attrs'][stat], panel[stat])
+
+        # A clone uses the original owner's full panel, but summons on its own lane.
+        first['ap'] *= 2
+        first['line'] = 1
+        battle._emit_mod_event(first, 'dodge', foes[0], first)
+        second = battle.state(owner)['next_mirrors'][-1]
+        self.assertEqual(second['ap'], panel['ap'])
+        self.assertEqual(second['line'], first['line'])
+        for _ in range(11):
+            battle._emit_mod_event(second, 'dodge', foes[0], second)
         clones = battle.state(owner)['next_mirrors']
-        self.assertEqual(len(clones),3)
-        self.assertEqual(sum(u['hp']>0 for u in battle.a[1:]),3)
-        self.assertTrue(all(u['skill'] and not u['skillB'] for u in clones))
+        self.assertEqual(len(clones), 12)
+        self.assertEqual(first['hp'], 0)
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 12)
+        self.assertTrue(all(u['skill'] and not u['skillB'] and
+                            u['summon_owner_token'] == owner['_owner_token'] for u in clones))
+
+    def test_leblanc_captain_clone_dodge_also_uses_passive_pool(self):
+        battle, owner, foes = self.arena(1127)
+        self.assertTrue(self.fixture.cast(battle, owner, 'leader_skill'))
+        captain_clone = battle.a[1]
+        self.assertTrue(captain_clone['next_mirror_clone'])
+        battle._emit_mod_event(captain_clone, 'dodge', foes[0], captain_clone)
+        passive_clone, = battle.state(owner)['next_mirrors']
+        self.assertIsNot(passive_clone, captain_clone)
+        self.assertEqual(passive_clone['ap'], battle._summon_panel_snapshot(owner)['ap'])
 
     def test_baron_heals_only_from_hitting_an_existing_own_curse(self):
         for prior, landed in (('none', True), ('ally', True), ('own', False), ('own', True)):

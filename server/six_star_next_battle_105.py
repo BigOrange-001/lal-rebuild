@@ -222,6 +222,21 @@ class SixStarNextBattle:
             for key, factor in (('ap', 1.6), ('de_ph', 1.5), ('de_ma', 1.5)):
                 owner[key] = int(owner[key]*factor)
 
+    def six_next_spawn_mirror(self, owner, dodger, passive):
+        state = self.state(owner)
+        living = [u for u in state.get('next_mirrors', []) if u['hp'] > 0]
+        clone = self._spawn_summon(owner, owner['aid'], passive[4], 3, position_anchor=dodger)
+        if clone is None:
+            return
+        self.six_next_copy_normal(clone, owner)
+        clone['next_mirror_clone'] = True
+        if len(living) >= int(passive[5]):
+            old = living.pop(0)
+            old['hp'] = 0
+            self.death(old)
+        living.append(clone)
+        state['next_mirrors'] = living
+
     def six_next_event(self, owner, event, target):
         if owner['hp'] <= 0 or event not in ('turn_start', 'dodge', 'basic_attack'):
             return
@@ -233,17 +248,13 @@ class SixStarNextBattle:
             for key in keys:
                 owner[key] += int(base[key]*scale)
             owner['hp'] += int(base['hp_max']*scale)
-        if event == 'dodge' and (passive := self.six_next_passive(owner, 'leblanc')):
-            living = [u for u in state.get('next_mirrors', []) if u['hp'] > 0]
-            clone = self._spawn_summon(owner, owner['aid'], passive[4], 3, level=owner['lv'])
-            if clone is not None:
-                self.six_next_copy_normal(clone, owner)
-                if len(living) >= 3:
-                    old = living.pop(0)
-                    old['hp'] = 0
-                    self.death(old)
-                living.append(clone)
-                state['next_mirrors'] = living
+        if event == 'dodge':
+            mirror_owner = owner
+            if owner.get('next_mirror_clone'):
+                token = owner.get('summon_owner_token')
+                mirror_owner = next((u for u in owner.get('_team', []) if u.get('_owner_token') == token), None)
+            if mirror_owner is not None and (passive := self.six_next_passive(mirror_owner, 'leblanc')):
+                self.six_next_spawn_mirror(mirror_owner, owner, passive)
         if event != 'basic_attack' or target is None:
             return
         if passive := self.six_next_passive(owner, 'maokai'):

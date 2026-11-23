@@ -1999,7 +1999,8 @@ class ReferenceBattle:
             raise ValueError("stat_flat stat must be hit/flee/crit/tough")
         value = float(action[2])
         rounds = int(action[3])
-        if not (0 < value <= 100000) or not (1 <= rounds <= 20):
+        # No upper cap on the bonus: Lux's captain skill grants more than 100000.
+        if not (0 < value < float('inf')) or not (1 <= rounds <= 20):
             raise ValueError("stat_flat arguments are outside the authored bounds")
         for target in self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
                                               skill=skill, index=index):
@@ -2874,6 +2875,7 @@ class ReferenceBattle:
                         clone["skill"] = None
                 if self._six_star_setting(skill,'NextLeBlancClone'):
                     clone["skill"] = copy.deepcopy(attacker.get("skill"))
+                    clone["next_mirror_clone"] = True
                 if policy.get("actionType") in (1, 2, 4):
                     clone["manualActionTypeOverride"] = policy["actionType"]
                 if isinstance(policy.get("attackRange"), (int, float)) and policy["attackRange"] > 0:
@@ -3014,7 +3016,7 @@ class ReferenceBattle:
 
     def _spawn_summon(self, owner, aid, scale, rounds, level=None, bounded=False,
                       bounded_skill_id=None, ap_factor=None, stat_ratios=None,
-                      extra_multiplier=1, skill_level=None):
+                      extra_multiplier=1, skill_level=None, position_anchor=None):
         """Create a live-panel snapshot; never use template growth as inherited stats."""
         if type(scale) not in (int, float) or not math.isfinite(scale) or not 0.01 <= scale <= 100:
             return None
@@ -3028,10 +3030,11 @@ class ReferenceBattle:
             return None
         if level is None:
             level = max(1, _to_int(owner.get("lv", 1)))
+        anchor = owner if position_anchor is None else position_anchor
         try:
             unit = base_unit(self._config, aid, max(1, _to_int(level)),
                              max(1, _to_int(owner.get("slv", 1) if skill_level is None else skill_level)),
-                             int(owner.get("line", 0)), 0.0, False,
+                             int(anchor.get("line", 0)), 0.0, False,
                              self._team_number(owner),
                              enforce_avatar_level_cap=False, summoned=True)
         except (ValueError, KeyError, TypeError, IndexError):
@@ -3063,10 +3066,10 @@ class ReferenceBattle:
         unit["summon_owner"] = owner.get("aid")
         unit["summon_owner_token"] = owner.get("_owner_token")
         unit["_team"] = owner.get("_team")
-        unit["line"] = int(owner.get("line", 0))
+        unit["line"] = int(anchor.get("line", 0))
         # Match the client's authored summon offset, not minimum unit spacing.
         team = self._team_number(owner)
-        raw_pos = _to_int(owner.get("pos", 0)) + (-self._SUMMON_POS if team == 1 else self._SUMMON_POS)
+        raw_pos = _to_int(anchor.get("pos", 0)) + (-self._SUMMON_POS if team == 1 else self._SUMMON_POS)
         unit["pos"] = self._get_final_pos(team, unit["line"], raw_pos)
         self._add_buff(unit, "summon", max(1, _to_int(rounds)), 0)
         roster = owner.get("_team")

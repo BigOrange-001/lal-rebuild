@@ -1680,23 +1680,25 @@ package com.meng52.game.module.avatar
          if(owner && owner.skill0)
             skill0=new SkillSet(owner.skill0.skillSetData.id,this,owner.skill0.lv);
          skill1=null;skill2=null;skillB=null;
+         abilityState.nextMirrorOwner=owner;
       }
 
-      private function sixNextMirror105(ratio:Number) : void
+      private function sixNextMirror105(owner:Avatar, passive:Array) : void
       {
-         var group:Array=abilityState.nextMirrors || [];
+         if(!GameMap.currentMap) return;
+         var group:Array=owner.abilityState.nextMirrors || [];
          var living:Array=[];
          for each(var old:Avatar in group) if(old && old.hp>0) living.push(old);
-         var clone:Avatar=new Avatar(GlobalData.modDefinitionId(avatarData.id,"summoned"),{lv:lv,slv:slv});
+         var clone:Avatar=new Avatar(GlobalData.modDefinitionId(owner.avatarData.id,"summoned"),{lv:owner.lv,slv:owner.slv});
          clone.goFight(team,line,0,false);
-         if(!clone.inheritSummonPanel(this,ratio)) return;
-         clone.sixNextCopyNormal105(this);
+         if(!clone.inheritSummonPanel(owner,Number(passive[4]))) return;
+         clone.sixNextCopyNormal105(owner);
          clone.manualActionTypeOverride=1;
          clone.addBuff("summon",3);
          GameMap.currentMap.addAvatar(clone,team,line,pos+(team==1 ? -1 : 1)*GameMapConfig.SUMMON_POS,false);
-         if(living.length>=3) {old=living.shift() as Avatar;old.hp=0;old.dead();}
+         if(living.length>=int(passive[5])) {old=living.shift() as Avatar;old.hp=0;old.dead();}
          living.push(clone);
-         abilityState.nextMirrors=living;
+         owner.abilityState.nextMirrors=living;
       }
 
       private function sixNextCommandVoid105(target:Avatar) : void
@@ -2000,7 +2002,12 @@ package com.meng52.game.module.avatar
                queueVitalBar104();
             }
          }
-         if(event=="dodge" && (passive=sixNextPassive105("leblanc"))) sixNextMirror105(Number(passive[4]));
+         if(event=="dodge")
+         {
+            var mirrorOwner:Avatar=(abilityState.nextMirrorOwner as Avatar) || this;
+            passive=mirrorOwner.sixNextPassive105("leblanc");
+            if(passive) sixNextMirror105(mirrorOwner,passive);
+         }
          if(event!="basic_attack" || !target) return;
          if((passive=sixNextPassive105("maokai"))) sixNextHeal105(hpMax*Number(passive[4]));
          if((passive=sixNextPassive105("sivir")))

@@ -348,6 +348,8 @@ class SixStarNextBattle:
             return
         direct = 1 <= kind <= 3 and not dot_kind
         if source and self._team_number(source) != self._team_number(target):
+            if demon := self.demon_state(source):
+                demon['dealt'] = True
             self.six_next_rage(source)
             if direct:
                 self.six_next_rage(target)

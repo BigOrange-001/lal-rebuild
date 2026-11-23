@@ -61,6 +61,11 @@ once('         if(this.yasuoNightRounds104>=0) _loc6_ = Tools.toInt(_loc6_*1.75)
 # Endless Rage settles before bless and the older lethal guards.
 once('         skin2Lethal();\n         if(hp <= 0 && buffs["bless"])',
      '         demonLethal105();\n         skin2Lethal();\n         if(hp <= 0 && buffs["bless"])')
+# Outgoing damage to HP or shields prevents rage decay; a hit can deal zero.
+once('         if((param7 && param7.skillB || skillB || param4==7 || dotKind=="burn") && modActualDamage+statisticsShield104>0)',
+     '         if(abilityHpBefore>0 && param7 && param4>=1 && param4!=4 && param4!=5)\n'
+     '            param7.demonRecordDamage105(this,modActualDamage+statisticsShield104);\n'
+     '         if((param7 && param7.skillB || skillB || param4==7 || dotKind=="burn") && modActualDamage+statisticsShield104>0)')
 # Rage from direct enemy damage, next to Shyvana's.
 once('            if(direct)\n            {\n               sixNextRage105();\n',
      '            if(direct)\n            {\n               sixNextRage105();\n               demonHurtTaken105();\n')

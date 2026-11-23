@@ -120,6 +120,10 @@
          if(!passive || demonHurtGain105>=Number(passive[20])) return;
          demonHurtGain105+=demonGain105(Math.min(Number(passive[19]),Number(passive[20])-demonHurtGain105));
       }
+      private function demonRecordDamage105(target:Avatar, amount:Number) : void
+      {
+         if(amount>0 && target.team!=team && demonPassive105()) demonDealt105=true;
+      }
       private function demonEvent105(event:String, source:Avatar, target:Avatar) : void
       {
          if(source!==this || !target || target.team==team) return;
@@ -128,7 +132,6 @@
          var passive:Array=demonPassive105();
          if(event=="hit" && passive)
          {
-            demonDealt105=true;
             if(basic) demonGain105(Number(passive[15]));
          }
          if(event!="crit") return;

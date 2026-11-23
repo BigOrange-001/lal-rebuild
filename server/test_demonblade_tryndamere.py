@@ -206,6 +206,40 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         # Idle again (-10), and the hurt cap starts over (+2).
         self.assertEqual(b.demon_rage(o), 10)
 
+    def test_relic_poison_settles_before_endless_rage(self):
+        battle, owner, _, enemies = self.battle()
+        owner['hp'] = 10
+        owner['_relic_dots'] = [dict(kind='poison', source=enemies[0], amount=1000, left=2)]
+        battle._tick_buffs(owner)
+        self.assertEqual(owner['hp'], 1)
+        self.assertEqual(battle.demon_state(owner)['fury'], 2)
+
+        owner['hp'] = 2000
+        battle.demon_state(owner)['fury'] = 0
+        battle._tick_buffs(owner)
+        self.assertEqual(owner['hp'], 35800)  # 2,000 - 1,200 poison + 35,000 recovery.
+        self.assertFalse(owner.get('_relic_dots'))
+
+    def test_zero_damage_hit_decays_rage_but_shield_damage_preserves_it(self):
+        battle, owner, _, enemies = self.battle()
+        target = enemies[0]
+        battle.demon_turn(owner)
+        battle.state(target)['guard'] = dict(kind='kayle', charges=1, owner=None)
+        battle._basic_attack(owner, target)
+        self.assertEqual(target['hp'], target['hp_max'])
+        hit_rage = battle.demon_rage(owner)
+        self.assertGreater(hit_rage, 20)
+        battle.demon_turn(owner)
+        self.assertEqual(battle.demon_rage(owner), hit_rage - 10)
+
+        battle._add_buff(target, 'shield', 2, 1000)
+        battle._basic_attack(owner, target)
+        self.assertEqual(target['hp'], target['hp_max'])
+        self.assertLess(battle._buff_value(target, 'shield'), 1000)
+        hit_rage = battle.demon_rage(owner)
+        battle.demon_turn(owner)
+        self.assertEqual(battle.demon_rage(owner), hit_rage)
+
     def test_captain_buffs_lane_weakens_two_and_heals_from_spent_rage(self):
         b, o, friends, en = self.battle(3, allies=2)
         b.demon_state(o)['rage'] = 60

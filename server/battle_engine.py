@@ -488,6 +488,9 @@ class ReferenceBattle:
         had_relic_dots = bool(unit.get('_relic_dots'))
         tick_dots(self,unit)
         if had_relic_dots and unit.get('hp',0)<=0:return True
+        return self._settle_turn_buffs(unit)
+
+    def _settle_turn_buffs(self, unit):
         container = unit.get("_buffs")
         if not isinstance(container, dict) or not container:
             # Manual DOT rows live outside the buff map and still expire.

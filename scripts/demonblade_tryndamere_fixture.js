@@ -40,7 +40,7 @@ function make(team,pos,{demon=false,leader=false,line=0}={}){
   if(u.hp<=0)return 0;
   if(kind===4){const heal=Math.min(amount,u.hpMax-u.hp);u.hp+=heal;return heal}
   u.hp-=amount;if(u.hp<=0)u.demonLethal105();
-  if(source&&source!==u){source.demonEvent105('hit',source,u);u.demonHurtTaken105()}
+  if(source&&source!==u){source.demonEvent105('hit',source,u);source.demonRecordDamage105(u,amount);u.demonHurtTaken105()}
   return amount;
  };
  u.abilityHit=(target,coefficient,kind)=>{target.injured(int(coefficient*.8*u.getDamage()),1,null,kind,u);return true};
@@ -127,7 +127,9 @@ let cases=0;
  assert.equal(a.demonRage105,18);
  a.demonTurn105();a.demonHurtTaken105();assert.equal(a.demonRage105,10);
  const ctx=beginAbilityAttack(a,'basic');a.demonEvent105('hit',a,en[0]);a.demonEvent105('crit',a,en[0]);endAbilityAttack(ctx);
- assert.equal(a.demonRage105,20);assert.equal(a.demonDealt105,true);
+ assert.equal(a.demonRage105,20);assert.equal(a.demonDealt105,false);
+ a.demonRecordDamage105(en[0],0);assert.equal(a.demonDealt105,false);
+ a.demonRecordDamage105(en[0],1);assert.equal(a.demonDealt105,true);
  const skillCtx=beginAbilityAttack(a,'active');a.demonEvent105('crit',a,en[0]);endAbilityAttack(skillCtx);
  assert.equal(a.demonRage105,20);
  cases++;

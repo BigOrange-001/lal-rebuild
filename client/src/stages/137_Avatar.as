@@ -3691,6 +3691,10 @@ package com.meng52.game.module.avatar
          if(!passive || demonHurtGain105>=Number(passive[20])) return;
          demonHurtGain105+=demonGain105(Math.min(Number(passive[19]),Number(passive[20])-demonHurtGain105));
       }
+      private function demonRecordDamage105(target:Avatar, amount:Number) : void
+      {
+         if(amount>0 && target.team!=team && demonPassive105()) demonDealt105=true;
+      }
       private function demonEvent105(event:String, source:Avatar, target:Avatar) : void
       {
          if(source!==this || !target || target.team==team) return;
@@ -3699,7 +3703,6 @@ package com.meng52.game.module.avatar
          var passive:Array=demonPassive105();
          if(event=="hit" && passive)
          {
-            demonDealt105=true;
             if(basic) demonGain105(Number(passive[15]));
          }
          if(event!="crit") return;
@@ -11527,6 +11530,8 @@ package com.meng52.game.module.avatar
             param7.sixBatchAfterDamage105(this,abilityDamageTaken+statisticsShield104);
             param7.sixReactionMfDealt105(this,modActualDamage+statisticsShield104);
          }
+         if(abilityHpBefore>0 && param7 && param4>=1 && param4!=4 && param4!=5)
+            param7.demonRecordDamage105(this,modActualDamage+statisticsShield104);
          if((param7 && param7.skillB || skillB || param4==7 || dotKind=="burn") && modActualDamage+statisticsShield104>0)
             sixNextAfterDamage105(param7,param4,modActualDamage,statisticsShield104,dotKind);
          return param1;

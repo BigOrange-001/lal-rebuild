@@ -90,9 +90,9 @@ class DemonTryndBattleMixin:
     def _get_damage(self, unit):
         return self.demon_attack(unit, super()._get_damage(unit))
 
-    def _tick_buffs(self, unit):
+    def _settle_turn_buffs(self, unit):
         self.demon_turn(unit)
-        return super()._tick_buffs(unit)
+        return super()._settle_turn_buffs(unit)
 
     def demon_turn(self, unit):
         demon = self.demon_state(unit)
@@ -148,7 +148,6 @@ class DemonTryndBattleMixin:
             return
         demon = self.demon_state(owner)
         if event == 'hit' and demon is not None:
-            demon['dealt'] = True
             ctx = self._context(owner)
             if ctx and ctx['kind'] == 'basic':
                 self.demon_gain(owner, self.demon_passive(owner)[P_RAGE_BASIC])

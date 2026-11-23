@@ -94,6 +94,18 @@ class NextSixStarTests(TestCase):
             self.assertEqual(call.args[3], 2)
             self.assertEqual(call.args[4], defenses)
 
+    def test_diana_nami_blessing_does_not_repeat_lunar_damage(self):
+        battle, owner, foes = self.arena(1086, [(0,1500,100000)], [(0,1750,100000)])
+        aura = dict(source=battle.a[1], left=3, ratio=1.25, weak=.66)
+        battle.state(owner)['six_nami_bless'] = aura
+        with (patch.object(battle, '_fixed_true_damage', wraps=battle._fixed_true_damage) as nami,
+              patch.object(battle, 'six_next_raw', wraps=battle.six_next_raw) as lunar):
+            battle._basic_attack(owner, foes[0])
+        self.assertEqual(aura['left'], 2)
+        nami.assert_called_once()
+        lunar.assert_called_once()
+        self.assertIs(lunar.call_args.args[1], foes[0])
+
     def test_diana_defense_damage_measures_target_defense_against_her_defenses(self):
         battle, owner, foes = self.arena(1086)
         target = foes[0]

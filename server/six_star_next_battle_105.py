@@ -369,7 +369,8 @@ class SixStarNextBattle:
                     leech = max(leech, .7)
                 self.six_next_heal(source, lost*leech)
                 # Diana's basic attack is magic: guard re-entry instead of filtering by channel.
-                if (direct and ctx['kind']=='basic' and not ctx.get('six_next_lunar')
+                if (direct and ctx['kind']=='basic' and not ctx.get('six_derived')
+                        and not ctx.get('six_next_lunar')
                         and (passive := self.six_next_passive(source, 'diana'))):
                     ctx['six_next_lunar'] = True
                     try:

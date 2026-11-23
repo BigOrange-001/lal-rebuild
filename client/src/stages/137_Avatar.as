@@ -3655,6 +3655,7 @@ package com.meng52.game.module.avatar
       {
          if(!demonForceCrit105) return false;
          demonForceCrit105=false;
+         demonFxStop105("edge");
          return true;
       }
       private function demonTurn105() : void
@@ -3665,6 +3666,8 @@ package com.meng52.game.module.avatar
          demonActed105=true;demonDealt105=false;demonHurtGain105=0;demonAuraGain105=0;
          if(demonFury105>=0 && --demonFury105<0)
          {
+            demonFxStop105("aura");
+            demonFx105("calm");
             demonRage105=0;
             removeAllDebuff();
             var heal:int=Tools.toInt(hpMax*Number(passive[13]));
@@ -3688,6 +3691,8 @@ package com.meng52.game.module.avatar
             removeBuff("curse");
             demonGain105(Number(passive[10]));
             abilityFeedback("无尽怒火","",0xFF3B1F);
+            demonFx105("fury");
+            demonFx105("aura");
          }
          hp=1;
          if(GameMapLayer.gl) GameMapLayer.gl.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
@@ -3698,9 +3703,16 @@ package com.meng52.game.module.avatar
          if(!passive || demonHurtGain105>=Number(passive[20])) return;
          demonHurtGain105+=demonGain105(Math.min(Number(passive[19]),Number(passive[20])-demonHurtGain105));
       }
-      private function demonRecordDamage105(target:Avatar, amount:Number) : void
+      private function demonRecordDamage105(target:Avatar, amount:Number, critical:Boolean = false) : void
       {
-         if(amount>0 && target.team!=team && demonPassive105()) demonDealt105=true;
+         if(amount<=0 || target.team==team) return;
+         var attack:Object=currentAbilityAttack();
+         if(attack && attack.owner===this && attack.demonSlashTarget105===target)
+            attack.demonSlashDamage105=true;
+         if(!demonPassive105()) return;
+         demonDealt105=true;
+         if(critical && attack && attack.owner===this && attack.kind=="basic")
+            demonFx105("crit",target);
       }
       private function demonEvent105(event:String, source:Avatar, target:Avatar) : void
       {
@@ -3745,6 +3757,7 @@ package com.meng52.game.module.avatar
          // Needs 40 rage but never spends it.
          if(hp<hpMax*Number(action[8]) && demonRage105>=Number(action[9]))
          {
+            demonFx105("mend");
             injured(Tools.toInt(hpMax*Number(action[10])+getDamage()*Number(action[11])),1,null,4,this,false,this);
          }
          if(!abilityState.root && !buffs.root) abilityDash(front);
@@ -3762,13 +3775,17 @@ package com.meng52.game.module.avatar
             for each(var target:Avatar in targets)
             {
                if(hp<=0) break;
+               wave.demonSlashTarget105=target;
+               wave.demonSlashDamage105=false;
                if(!demonHit105(target,Number(action[4]))) continue;
+               if(wave.demonSlashDamage105) demonFx105(target===front ? "slash" : "cleave",target);
                if(target.hp>0) abilityControl(target,"sunder",2,sunder/(1-sunder));
                if(passive && gained<Number(passive[18]))
                   gained+=demonGain105(Math.min(Number(passive[17]),Number(passive[18])-gained));
             }
          }
          finally {endAbilityAttack(wave);}
+         if(passive && !demonForceCrit105) demonFx105("edge");
          if(passive) demonForceCrit105=true;
          return true;
       }
@@ -3789,13 +3806,20 @@ package com.meng52.game.module.avatar
             unit.addBuff("strong",2,Number(action[4]),0,-1,this);
             unit.addBuff("critup",2,Number(action[5]),0,-1,this);
          }
+         demonFx105("warcry");
+         for each(unit in allies) demonFx105("rally",unit);
          var enemies:Array=demonLane105();
          if(enemies.length)
          {
             var weakened:Array=[enemies[0]].concat(abilityCandidates(otherTeam,Avatar(enemies[0]).line,Avatar(enemies[0]).pos,
                GameMapConfig.LINE_POS,1,false,"nearest",[enemies[0]]));
             var weak:Number=Math.min(.95,Math.max(0,Number(action[6])));
-            for each(unit in weakened) abilityControl(unit,"weak",2,weak/(1-weak));
+            for each(unit in weakened)
+            {
+               var priorWeak:Buff=unit.buffs.weak;
+               abilityControl(unit,"weak",2,weak/(1-weak));
+               if(unit.buffs.weak && unit.buffs.weak!==priorWeak) demonFx105("weak",unit);
+            }
          }
          if(!demonPassive105()) return true;
          var spent:Number=Math.min(demonRage105,Math.max(demonRage105*Number(action[7]),Number(action[8])));
@@ -3829,6 +3853,713 @@ package com.meng52.game.module.avatar
       private function refreshRageBar105(value:Number) : void
       {
          if(mBloodSpr) mBloodSpr.setRage105(value/100);
+      }
+
+      // BEGIN DEMON FX CORE 105
+      // Demonblade Tryndamere effects, painted in code: no texture files.
+      // Blood crimson and black smoke, with the spectral demon blade as the signature.
+      // This core only touches flash.* so scripts/demonblade_fx_preview.py renders the same code.
+      private static const DEMON_FX_GROUND105:Number = .42;
+
+      private static function demonFxSize105(id:String) : Array
+      {
+         switch(id)
+         {
+            case "glow": return [128,128];
+            case "ember": return [32,32];
+            case "spark": return [64,16];
+            case "slash": return [256,128];
+            case "ring": return [256,256];
+            case "sigil": return [256,256];
+            case "flame": return [64,128];
+            case "shard": return [32,64];
+            case "smoke": return [128,128];
+            case "blade": return [96,256];
+         }
+         return [32,32];
+      }
+      public static function demonFxPaint105(id:String) : flash.display.BitmapData
+      {
+         var size:Array=demonFxSize105(id);
+         var w:Number=size[0];var h:Number=size[1];
+         var bmp:flash.display.BitmapData=new flash.display.BitmapData(w,h,true,0);
+         var shape:flash.display.Shape;var g:flash.display.Graphics;var m:flash.geom.Matrix;var i:int;var a:Number;
+         if(id=="glow" || id=="ember" || id=="spark")
+         {
+            shape=new flash.display.Shape();g=shape.graphics;m=new flash.geom.Matrix();m.createGradientBox(w,h,0,0,0);
+            if(id=="glow") g.beginGradientFill("radial",[0xFFFFFF,0xFF9AB0,0xFF2A4A,0xB0082A,0x40000F],[1,.85,.45,.15,0],[0,36,96,170,255],m);
+            else if(id=="ember") g.beginGradientFill("radial",[0xFFFFFF,0xFFA0B4,0xFF2A4A,0xA0001E],[1,.9,.35,0],[0,50,140,255],m);
+            else g.beginGradientFill("radial",[0xFFFFFF,0xFF8CA4,0xE0103A],[1,.75,0],[0,90,255],m);
+            g.drawEllipse(0,0,w,h);g.endFill();
+            demonFxDraw105(bmp,shape,0);
+         }
+         else if(id=="slash")
+         {
+            // A crescent that bulges toward +x; the bright layers hug the leading edge.
+            var layers:Array=[[1,0x7A0A3A,.9,10],[.72,0xE0102E,1,4],[.34,0xFF6A84,1,2],[.12,0xFFFFFF,1,1]];
+            for each(var layer:Array in layers)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;
+               g.beginFill(layer[1],layer[2]);
+               demonFxCrescent105(g,70,64,150,54,1.35,46*Number(layer[0]));
+               g.endFill();
+               demonFxDraw105(bmp,shape,layer[3]);
+            }
+         }
+         else if(id=="ring")
+         {
+            shape=new flash.display.Shape();g=shape.graphics;m=new flash.geom.Matrix();m.createGradientBox(w,h,0,0,0);
+            g.beginGradientFill("radial",[0xC0002A,0xC0002A,0xE0103A,0xFFC0CC,0xFF2A4A,0x900020],[0,0,.3,1,.45,0],[0,150,196,224,240,255],m);
+            g.drawCircle(w/2,h/2,w/2);g.endFill();
+            demonFxDraw105(bmp,shape,1.5);
+         }
+         else if(id=="sigil")
+         {
+            for(var pass:int=0;pass<2;pass++)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;
+               var color:uint=pass ? 0xFFB0C0 : 0xE0102E;var thick:Number=pass ? 1 : 3;
+               g.lineStyle(thick*1.6,color,1);g.drawCircle(128,128,116);
+               g.lineStyle(thick*.8,color,1);g.drawCircle(128,128,104);g.drawCircle(128,128,46);
+               // Rune ticks between the outer rings.
+               for(i=0;i<36;i++)
+               {
+                  a=i*Math.PI*2/36;
+                  var r0:Number=i%3==0 ? 102 : 106;var r1:Number=i%3==0 ? 118 : 114;
+                  g.moveTo(128+Math.cos(a)*r0,128+Math.sin(a)*r0);g.lineTo(128+Math.cos(a+.05)*r1,128+Math.sin(a+.05)*r1);
+               }
+               // Heptagram {7/3}.
+               g.lineStyle(thick,color,1);
+               for(i=0;i<=7;i++)
+               {
+                  a=-Math.PI/2+(i*3%7)*Math.PI*2/7;
+                  if(i==0) g.moveTo(128+Math.cos(a)*100,128+Math.sin(a)*100);
+                  else g.lineTo(128+Math.cos(a)*100,128+Math.sin(a)*100);
+               }
+               // A spiked core.
+               for(i=0;i<=16;i++)
+               {
+                  a=i*Math.PI*2/16;var spike:Number=i%2 ? 18 : 40;
+                  if(i==0) g.moveTo(128+Math.cos(a)*spike,128+Math.sin(a)*spike);
+                  else g.lineTo(128+Math.cos(a)*spike,128+Math.sin(a)*spike);
+               }
+               if(pass==0) demonFxDraw105(bmp,shape,1,0xA00020,12);
+               else demonFxDraw105(bmp,shape,0);
+            }
+         }
+         else if(id=="flame")
+         {
+            for(pass=0;pass<2;pass++)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;m=new flash.geom.Matrix();
+               var k:Number=pass ? .62 : 1;
+               m.createGradientBox(64*k,128*k,Math.PI/2,32-32*k,124-120*k);
+               if(pass) g.beginGradientFill("radial",[0xFFFFFF,0xFFB8C8,0xFF4A6A],[1,.95,0],[0,90,255],m,"pad","rgb",.55);
+               else g.beginGradientFill("radial",[0xFF5A78,0xD0103A,0x50001A],[1,.85,0],[0,120,255],m,"pad","rgb",.6);
+               g.moveTo(32,124);
+               g.curveTo(32-30*k,118-14*k,32-24*k,124-50*k);
+               g.curveTo(32-16*k,124-82*k,32+2*k,124-118*k);
+               g.curveTo(32+4*k,124-84*k,32+22*k,124-58*k);
+               g.curveTo(32+30*k,118-12*k,32,124);
+               g.endFill();
+               demonFxDraw105(bmp,shape,pass ? 2 : 5);
+            }
+         }
+         else if(id=="shard")
+         {
+            shape=new flash.display.Shape();g=shape.graphics;m=new flash.geom.Matrix();m.createGradientBox(32,64,Math.PI/2,0,0);
+            g.beginGradientFill("linear",[0xFFFFFF,0xFFC8D4,0xFF3050],[1,1,.9],[0,110,255],m);
+            g.moveTo(16,3);g.lineTo(27,30);g.lineTo(16,61);g.lineTo(5,30);g.lineTo(16,3);g.endFill();
+            g.lineStyle(1,0xFFFFFF,.9);g.moveTo(16,6);g.lineTo(16,58);
+            demonFxDraw105(bmp,shape,0,0xFF4A6A,6);
+         }
+         else if(id=="smoke")
+         {
+            // Dark wisps, drawn with normal blending under the glow.
+            shape=new flash.display.Shape();g=shape.graphics;
+            for(i=0;i<7;i++)
+            {
+               a=i*Math.PI*2/7;var rr:Number=14+(i%3)*6;
+               m=new flash.geom.Matrix();m.createGradientBox(60,48,a,64+Math.cos(a)*rr-30,64+Math.sin(a)*rr-24);
+               g.beginGradientFill("radial",[0x2A0820,0x1A0410],[.7,0],[0,255],m);
+               g.drawEllipse(64+Math.cos(a)*rr-30,64+Math.sin(a)*rr-24,60,48);g.endFill();
+            }
+            demonFxDraw105(bmp,shape,8);
+         }
+         else if(id=="blade")
+         {
+            // The demon blade: serrated, point up, a white-hot fuller down the middle.
+            var edge:Array=[[48,4],[58,30],[54,38],[66,70],[60,78],[70,110],[63,118],[68,150],[60,168],[90,176],[80,192],[55,188],[54,232]];
+            for(pass=0;pass<2;pass++)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;m=new flash.geom.Matrix();m.createGradientBox(96,256,0,0,0);
+               if(pass==0) g.beginGradientFill("linear",[0x50001A,0xE0102E,0xFF6A84,0xE0102E,0x50001A],[1,1,1,1,1],[0,90,128,166,255],m);
+               else g.beginFill(0xFFFFFF,1);
+               var k2:Number=pass ? .18 : 1;
+               for(i=0;i<edge.length;i++)
+               {
+                  var ex:Number=48+(edge[i][0]-48)*k2;
+                  if(i==0) g.moveTo(ex,edge[i][1]);else g.lineTo(ex,edge[i][1]);
+               }
+               for(i=edge.length-1;i>=0;i--) g.lineTo(48-(edge[i][0]-48)*k2,edge[i][1]);
+               g.endFill();
+               if(pass==0)
+               {
+                  g.beginFill(0x7A0A3A,1);g.drawCircle(48,242,9);g.endFill();
+                  g.beginFill(0xFF6A84,1);g.drawCircle(48,242,3);g.endFill();
+                  demonFxDraw105(bmp,shape,1,0xFF103A,12);
+               }
+               else demonFxDraw105(bmp,shape,1.5);
+            }
+         }
+         return bmp;
+      }
+      private static function demonFxCrescent105(g:flash.display.Graphics, cx:Number, cy:Number, rx:Number, ry:Number, span:Number, width:Number) : void
+      {
+         var steps:int=28;var i:int;var a:Number;
+         for(i=0;i<=steps;i++)
+         {
+            a=-span+2*span*i/steps;
+            if(i==0) g.moveTo(cx+rx*Math.cos(a),cy+ry*Math.sin(a));
+            else g.lineTo(cx+rx*Math.cos(a),cy+ry*Math.sin(a));
+         }
+         for(i=steps;i>=0;i--)
+         {
+            a=-span+2*span*i/steps;
+            var w:Number=width*Math.pow(Math.max(0,Math.cos(a/span*Math.PI/2)),1.6);
+            g.lineTo(cx+(rx-w)*Math.cos(a),cy+(ry-w*.4)*Math.sin(a));
+         }
+      }
+      private static function demonFxDraw105(bmp:flash.display.BitmapData, shape:flash.display.Shape, blur:Number, glow:uint = 0, glowSize:Number = 0) : void
+      {
+         // Filters only render for children, so the shape sits in a holder.
+         var holder:flash.display.Sprite=new flash.display.Sprite();holder.addChild(shape);
+         var filters:Array=[];
+         if(blur>0) filters.push(new flash.filters.BlurFilter(blur,blur,2));
+         if(glowSize>0) filters.push(new flash.filters.GlowFilter(glow,1,glowSize,glowSize,2,2));
+         shape.filters=filters;
+         bmp.draw(holder,null,null,null,null,true);
+      }
+
+      public static function demonFxLife105(kind:String) : Number
+      {
+         switch(kind)
+         {
+            case "slash": return 1.5;
+            case "cleave": return 1;
+            case "crit": return .65;
+            case "warcry": return 1.6;
+            case "rally": return 1.2;
+            case "weak": return 1;
+            case "fury": return 1.9;
+            case "calm": return 1.8;
+            case "mend": return 1.3;
+         }
+         return -1;
+      }
+      private static function demonFxRand105(seed:int, index:int) : Number
+      {
+         var v:Number=Math.sin(seed*12.9898+index*78.233)*43758.5453;
+         return v-Math.floor(v);
+      }
+      private static function demonFxOut105(p:Number) : Number
+      {
+         p=Math.max(0,Math.min(1,p));
+         return 1-(1-p)*(1-p)*(1-p);
+      }
+      private static function demonFxBack105(p:Number) : Number
+      {
+         p=Math.max(0,Math.min(1,p))-1;
+         return 1+p*p*(2.7*p+1.7);
+      }
+      // fy squashes vertically after the rotation, laying the sprite on the ground.
+      private static function demonFxPut105(out:Array, k:String, x:Number, y:Number, sx:Number, sy:Number, r:Number, a:Number, c:uint = 0xFFFFFF, add:Boolean = true, fy:Number = 1) : void
+      {
+         if(!(a>.01) || Math.abs(sx)<.001 || Math.abs(sy)<.001) return;
+         out.push({k:k,x:x,y:y,sx:sx,sy:sy,r:r,a:Math.min(1,a),c:c,add:add,fy:fy});
+      }
+      // Bursting sparks: count, start, life, reach.
+      private static function demonFxSparks105(out:Array, seed:int, t:Number, x:Number, y:Number, count:int, start:Number, life:Number, reach:Number, c:uint = 0xFFFFFF, up:Number = 0) : void
+      {
+         for(var i:int=0;i<count;i++)
+         {
+            var p:Number=(t-start-demonFxRand105(seed,i+300)*.06)/life;
+            if(p<0 || p>1) continue;
+            var dir:Number=demonFxRand105(seed,i)*Math.PI*2;
+            var d:Number=reach*(.55+.45*demonFxRand105(seed,i+100))*demonFxOut105(p);
+            var px:Number=x+Math.cos(dir)*d;var py:Number=y+Math.sin(dir)*d*.75-up*p*p;
+            demonFxPut105(out,"spark",px,py,(1.5-p)*.9,.7,dir,1-p*p,c);
+         }
+      }
+      // Rising embers that loop when cycle is positive.
+      private static function demonFxEmbers105(out:Array, seed:int, t:Number, x:Number, y:Number, count:int, start:Number, life:Number, spread:Number, rise:Number, c:uint = 0xFFFFFF) : void
+      {
+         for(var i:int=0;i<count;i++)
+         {
+            var age:Number=t-start-demonFxRand105(seed,i+500)*life*.4;
+            if(age<0 || age>life) continue;
+            var p:Number=age/life;
+            var px:Number=x+(demonFxRand105(seed,i+600)-.5)*spread+Math.sin(age*7+i)*6;
+            var py:Number=y+(demonFxRand105(seed,i+700)-.5)*spread*.35-rise*p;
+            var s:Number=.45+.5*demonFxRand105(seed,i+800);
+            demonFxPut105(out,"ember",px,py,s,s,0,Math.sin(p*Math.PI)*1.2,c);
+         }
+      }
+      private static function demonFxRing105(out:Array, t:Number, x:Number, y:Number, start:Number, life:Number, from:Number, to:Number, alpha:Number, c:uint = 0xFFFFFF, flat:Number = .42) : void
+      {
+         var p:Number=(t-start)/life;
+         if(p<0 || p>1) return;
+         var s:Number=from+(to-from)*demonFxOut105(p);
+         demonFxPut105(out,"ring",x,y,s,s*flat,0,alpha*(1-p),c);
+      }
+      // Dark smoke puffs, normal blend, drawn first so they sit under the glow.
+      private static function demonFxSmoke105(out:Array, seed:int, t:Number, x:Number, y:Number, count:int, start:Number, life:Number, reach:Number, size:Number, alpha:Number) : void
+      {
+         for(var i:int=0;i<count;i++)
+         {
+            var p:Number=(t-start-demonFxRand105(seed,i+960)*.08)/life;
+            if(p<0 || p>1) continue;
+            var a:Number=i*Math.PI*2/count+demonFxRand105(seed,i+970);
+            var d:Number=reach*demonFxOut105(p);var s:Number=size*(.7+.6*p);
+            demonFxPut105(out,"smoke",x+Math.cos(a)*d,y+Math.sin(a)*d*.45-12*p,s,s*.65,a,alpha*(1-p),0xFFFFFF,false);
+         }
+      }
+      private static function demonFxFlame105(out:Array, x:Number, groundY:Number, sx:Number, sy:Number, sway:Number, a:Number, c:uint = 0xFFFFFF) : void
+      {
+         // The flame texture's base sits 60 pixels below its centre.
+         demonFxPut105(out,"flame",x,groundY-60*sy,sx,sy,sway,a,c);
+      }
+
+      // Sprites of one effect at time t: {k,x,y,sx,sy,r,a,c,add}. (sx,sy) is the caster, (tx,ty) the target.
+      public static function demonFxSprites105(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var G:Number=DEMON_FX_GROUND105;
+         var ang:Number=Math.atan2(ty-sy,tx-sx);if(tx==sx && ty==sy) ang=-Math.PI/2;
+         var i:int;var p:Number;var u:Number;var s:Number;var a:Number;var px:Number;var py:Number;
+         if(kind=="slash")
+         {
+            // Dash: a burning streak runs from the caster to the target.
+            var head:Number=demonFxOut105(t/.18);var trail:Number=t<.2 ? 1 : Math.max(0,1-(t-.2)/.16);
+            for(i=0;i<7;i++)
+            {
+               var f:Number=head-i*.075;if(f<0) continue;
+               px=sx+(tx-sx)*f;py=sy+(ty-sy)*f;
+               demonFxPut105(out,"spark",px,py,3.2-i*.32,1.5-i*.12,ang,(1-i/7)*trail);
+            }
+            for(i=0;i<10;i++)
+            {
+               f=demonFxRand105(seed,i+40);u=t-f*.18;if(u<0 || u>.55) continue;
+               var side:Number=(demonFxRand105(seed,i+60)-.5)*28;
+               px=sx+(tx-sx)*f-Math.sin(ang)*side;py=sy+(ty-sy)*f+Math.cos(ang)*side-40*u;
+               demonFxPut105(out,"ember",px,py,.6,.6,0,1-u/.55);
+            }
+            u=t-.18;if(u<0) return;
+            demonFxSmoke105(out,seed,t,tx,ty+18,5,.2,.85,46,.8,.75);
+            // Impact flash.
+            p=u/.28;if(p<=1) demonFxPut105(out,"glow",tx,ty,.5+1.1*demonFxOut105(p),.5+1.1*demonFxOut105(p),0,1-p);
+            // Spinning blades.
+            p=u/.62;
+            if(p<=1)
+            {
+               s=(.5+.3*demonFxOut105(u/.1));a=1-p*p;
+               for(i=0;i<3;i++)
+               {
+                  var rot:Number=ang+i*2.094+u*17;
+                  demonFxPut105(out,"slash",tx+Math.cos(rot)*8,ty+Math.sin(rot)*8,s*(1+i*.08),s*(1+i*.08),rot,a*.95);
+               }
+               for(i=0;i<2;i++) demonFxPut105(out,"slash",tx,ty,s*.62,s*.62,-u*13+i*Math.PI,a*.8,0xFF5A7A);
+            }
+            demonFxRing105(out,t,tx,ty+30,.22,.5,.25,1.4,1);
+            demonFxRing105(out,t,tx,ty+30,.36,.55,.2,1.05,.8,0xFF4060);
+            // The closing cross cut.
+            u=t-.56;
+            if(u>=0 && u<=.4)
+            {
+               var wipe:Number=demonFxOut105(u/.08);a=u<.18 ? 1 : 1-(u-.18)/.22;
+               for(i=0;i<2;i++)
+               {
+                  rot=ang+Math.PI/2+(i ? .78 : -.78);
+                  demonFxPut105(out,"slash",tx,ty,.25+.8*wipe,.7,rot,a);
+                  demonFxPut105(out,"slash",tx,ty,(.25+.8*wipe)*.8,.5,rot,a*.9,0xFFE8EE);
+               }
+               demonFxPut105(out,"glow",tx,ty,1.1,1.1,0,a*.6);
+            }
+            demonFxSparks105(out,seed,t,tx,ty,18,.2,.55,110);
+            demonFxSparks105(out,seed+7,t,tx,ty,10,.58,.45,90,0xFFD0DA);
+            // Sundered armour flakes off.
+            for(i=0;i<5;i++)
+            {
+               u=t-.4-i*.04;if(u<0 || u>.6) continue;
+               p=u/.6;var drift:Number=(demonFxRand105(seed,i+900)-.5)*70;
+               demonFxPut105(out,"shard",tx+drift*p,ty-10+70*p*p,.55,.55,(demonFxRand105(seed,i+910)-.5)*8*p,1-p,0xFF3048);
+            }
+            demonFxEmbers105(out,seed,t,tx,ty,12,.3,.8,80,70);
+         }
+         else if(kind=="cleave")
+         {
+            u=t-.22;if(u<0) return;
+            p=u/.3;if(p<=1) demonFxPut105(out,"glow",tx,ty,.4+.9*demonFxOut105(p),.4+.9*demonFxOut105(p),0,1-p);
+            p=u/.38;
+            if(p<=1)
+            {
+               rot=ang+Math.PI/2+.6;s=.3+.8*demonFxOut105(u/.07);
+               demonFxPut105(out,"slash",tx,ty,s,.7,rot,1-p*p);
+               demonFxPut105(out,"slash",tx,ty,s*.8,.5,rot,(1-p*p)*.8,0xFFE8EE);
+            }
+            demonFxSparks105(out,seed,t,tx,ty,9,.22,.45,100);
+            for(i=0;i<3;i++)
+            {
+               u=t-.35-i*.05;if(u<0 || u>.5) continue;
+               p=u/.5;drift=(demonFxRand105(seed,i+900)-.5)*60;
+               demonFxPut105(out,"shard",tx+drift*p,ty+60*p*p,.45,.45,(demonFxRand105(seed,i+910)-.5)*8*p,1-p,0xFF3048);
+            }
+         }
+         else if(kind=="crit")
+         {
+            rot=ang+Math.PI/2+.55;
+            demonFxSmoke105(out,seed,t,tx,ty+16,3,.02,.55,34,.6,.6);
+            p=t/.2;if(p<=1) demonFxPut105(out,"glow",tx,ty,.6+1.4*demonFxOut105(p),.6+1.4*demonFxOut105(p),0,1-p,0xFFD0DA);
+            a=t<.28 ? 1 : Math.max(0,1-(t-.28)/.3);
+            s=.3+.8*demonFxOut105(t/.07);
+            demonFxPut105(out,"slash",tx,ty,s,.85,rot,a);
+            demonFxPut105(out,"slash",tx,ty,s*.82,.6,rot,a*.9,0xFFE8EE);
+            u=t-.07;
+            if(u>=0)
+            {
+               s=.3+.9*demonFxOut105(u/.07);a=u<.22 ? 1 : Math.max(0,1-(u-.22)/.28);
+               demonFxPut105(out,"slash",tx,ty,s,.8,rot+Math.PI-1.1,a,0xFF5A7A);
+            }
+            demonFxRing105(out,t,tx,ty+28,.04,.4,.3,1.1,.9,0xFF8AA0);
+            demonFxSparks105(out,seed,t,tx,ty,14,0,.45,100,0xFFE8D8);
+         }
+         else if(kind=="warcry")
+         {
+            demonFxSmoke105(out,seed,t,sx,sy+34,8,.08,1.1,80,.8,.7);
+            // Rune circle under the caster.
+            p=t/.28;a=t<1.15 ? 1 : Math.max(0,1-(t-1.15)/.4);
+            s=.3+.6*demonFxBack105(p);
+            demonFxPut105(out,"sigil",sx,sy+34,s,s,t*1.6,a*.95,0xFFFFFF,true,G);
+            demonFxPut105(out,"sigil",sx,sy+34,s*.6,s*.6,-t*2.6,a*.7,0xFF5A7A,true,G);
+            demonFxPut105(out,"glow",sx,sy,1.3+.15*Math.sin(t*20),1.3+.15*Math.sin(t*20),0,a*.55*(1-t/1.6),0xFF3050);
+            // Roar waves.
+            for(i=0;i<3;i++) demonFxRing105(out,t,sx,sy+20,i*.16,.75,.3,2.0-i*.3,.9,i==1 ? 0xFF5A7A : 0xFFFFFF,.55);
+            // Flames erupt around the circle.
+            for(i=0;i<12;i++)
+            {
+               p=(t-.05-i*.012)/.75;if(p<0 || p>1) continue;
+               a=i*Math.PI*2/12;var spread:Number=40*(1+.25*p);
+               demonFxFlame105(out,sx+Math.cos(a)*spread,sy+34+Math.sin(a)*spread*G,.5,.3+.75*Math.sin(p*Math.PI),Math.sin(t*9+i)*.12,Math.sin(p*Math.PI));
+            }
+            // Roar streaks.
+            for(i=0;i<16;i++)
+            {
+               p=(t-.05-demonFxRand105(seed,i+30)*.05)/.45;if(p<0 || p>1) continue;
+               a=i*Math.PI*2/16+demonFxRand105(seed,i)*.2;var d:Number=40+150*demonFxOut105(p);
+               demonFxPut105(out,"spark",sx+Math.cos(a)*d,sy+Math.sin(a)*d*.6,2.4*(1-p)+.4,.8,a,1-p);
+            }
+            demonFxEmbers105(out,seed,t,sx,sy+20,14,.1,1,90,80);
+         }
+         else if(kind=="rally")
+         {
+            // Rage flows from the caster and lifts the ally.
+            for(i=0;i<8;i++)
+            {
+               p=(t-i*.035)/.4;if(p<0 || p>1) continue;
+               var bend:Number=(demonFxRand105(seed,i)-.5)*120*Math.sin(p*Math.PI);
+               px=sx+(tx-sx)*p-Math.sin(ang)*bend;py=sy+(ty-sy)*p+Math.cos(ang)*bend;
+               demonFxPut105(out,"ember",px,py,.8,.8,0,1,0xFF5A7A);
+               demonFxPut105(out,"spark",px,py,1.4,.6,ang,.7,0xFF3050);
+            }
+            u=t-.38;if(u<0) return;
+            p=u/.45;if(p<=1) demonFxPut105(out,"glow",tx,ty,.6+.8*demonFxOut105(p),.6+.8*demonFxOut105(p),0,(1-p)*.9,0xFF5A7A);
+            demonFxRing105(out,t,tx,ty+30,.38,.5,.3,1.0,.9,0xFF9AB0);
+            for(i=0;i<3;i++)
+            {
+               p=(u-i*.06)/.55;if(p<0 || p>1) continue;
+               demonFxFlame105(out,tx+(i-1)*20,ty+34,.35,.25+.4*Math.sin(p*Math.PI),0,Math.sin(p*Math.PI),0xFF9AB0);
+            }
+            for(i=0;i<6;i++)
+            {
+               p=(u-demonFxRand105(seed,i+20)*.2)/.45;if(p<0 || p>1) continue;
+               px=tx+(demonFxRand105(seed,i+10)-.5)*56;
+               demonFxPut105(out,"spark",px,ty+20-90*demonFxOut105(p),1.6,.6,-Math.PI/2,1-p,0xFFC8D4);
+            }
+         }
+         else if(kind=="weak")
+         {
+            u=t-.2;if(u<0) return;
+            p=u/.6;
+            if(p<=1)
+            {
+               s=1.3-.85*demonFxOut105(p);
+               demonFxPut105(out,"ring",tx,ty+30,s,s*G,0,(1-p)*.85,0x701020,false);
+               demonFxPut105(out,"ring",tx,ty+30,s*.8,s*.8*G,0,(1-p)*.6,0xFF3050);
+            }
+            for(i=0;i<6;i++)
+            {
+               p=(u-i*.04)/.55;if(p<0 || p>1) continue;
+               px=tx+(demonFxRand105(seed,i)-.5)*60;
+               demonFxPut105(out,"spark",px,ty-40+70*demonFxOut105(p),1.5,.6,Math.PI/2,(1-p)*.9,0xC02040);
+               demonFxPut105(out,"shard",px+8,ty-20+60*p*p,.4,.4,p*5,(1-p)*.8,0x803050,false);
+            }
+         }
+         else if(kind=="fury")
+         {
+            // Lethal damage: the demon blade drops into the ground, a white burst,
+            // a slammed rune circle and a pillar of demonfire.
+            demonFxSmoke105(out,seed,t,sx,sy+30,10,.14,1.3,72,.85,.8);
+            p=t/.32;
+            if(p<=1)
+            {
+               demonFxPut105(out,"glow",sx,sy,1.4+1.1*demonFxOut105(p),1.4+1.1*demonFxOut105(p),0,(1-p)*.8,0xFF3010);
+               demonFxPut105(out,"glow",sx,sy,.8+.8*demonFxOut105(p),.8+.8*demonFxOut105(p),0,1-p);
+            }
+            a=t<1.45 ? 1 : Math.max(0,1-(t-1.45)/.45);
+            s=1.05-.3*demonFxOut105(t/.22);
+            demonFxPut105(out,"sigil",sx,sy+34,s,s,-t*2.2,a,0xFFFFFF,true,G);
+            demonFxPut105(out,"sigil",sx,sy+34,s*.62,s*.62,t*3.4,a*.85,0xFF5A7A,true,G);
+            for(i=0;i<3;i++) demonFxRing105(out,t,sx,sy+30,.14+i*.13,.7,.35,1.6-i*.25,1,i==2 ? 0xFF3048 : 0xFFFFFF);
+            for(i=0;i<18;i++)
+            {
+               p=(t-.04-i*.018)/1.1;if(p<0 || p>1) continue;
+               a=i*Math.PI*2/18;
+               var lift:Number=Math.pow(Math.sin(p*Math.PI),.6);
+               demonFxFlame105(out,sx+Math.cos(a)*30,sy+34+Math.sin(a)*30*G,.45,.3+.8*lift,Math.sin(t*10+i*1.3)*.14,lift);
+            }
+            for(i=0;i<3;i++)
+            {
+               p=(t-.06-i*.08)/1.3;if(p<0 || p>1) continue;
+               lift=Math.pow(Math.sin(p*Math.PI),.5);
+               demonFxFlame105(out,sx+(i-1)*12,sy+38,.7-i*.12,(.8+.15*Math.sin(t*14+i))*lift,Math.sin(t*7+i)*.08,lift,i==1 ? 0xFFFFFF : 0xFF9AB0);
+            }
+            // The demon blade drops point first; its tip is 124 texture pixels below the centre.
+            p=t/.16;a=t<1.3 ? 1 : Math.max(0,1-(t-1.3)/.45);
+            var fall:Number=Math.min(1,p*p);var bladeY:Number=sy+40-124*.78-200*(1-fall);
+            demonFxPut105(out,"blade",sx,bladeY,.94,.84,Math.PI,a*.75,0x300010,false);
+            demonFxPut105(out,"blade",sx,bladeY,.78,.78,Math.PI,a);
+            if(t>=.14) demonFxPut105(out,"blade",sx,bladeY,.78*(1+.5*demonFxOut105((t-.14)/.3)),.78,Math.PI,Math.max(0,1-(t-.14)/.3)*.7,0xFFE8EE);
+            demonFxSparks105(out,seed,t,sx,sy,22,.05,.65,120,0xFFFFFF,30);
+            demonFxEmbers105(out,seed,t,sx,sy+10,20,.15,1.2,70,120);
+         }
+         else if(kind=="aura")
+         {
+            // Endless Rage, looping while it lasts: the demon blade hovers behind him.
+            for(i=0;i<2;i++)
+            {
+               p=(t*.45+i*.5)%1;
+               demonFxPut105(out,"smoke",sx+(i ? 18 : -18)+Math.sin(t+i)*6,sy+34-26*p,.8+.4*p,(.8+.4*p)*.6,t*.3+i,.5*Math.sin(p*Math.PI),0xFFFFFF,false);
+            }
+            px=sx+36;py=sy-22+Math.sin(t*2.2)*5;
+            demonFxPut105(out,"blade",px,py,.64,.6,Math.PI+.3,.6,0x300010,false);
+            demonFxPut105(out,"blade",px,py,.55,.55,Math.PI+.3,.62+.15*Math.sin(t*5));
+            demonFxPut105(out,"sigil",sx,sy+36,.68,.68,t*.9,.5+.12*Math.sin(t*3),0xFF4060,true,G);
+            demonFxPut105(out,"glow",sx,sy,1.05+.08*Math.sin(t*7),1.05+.08*Math.sin(t*7),0,.42+.08*Math.sin(t*11),0xE0103A);
+            for(var back:int=1;back>=0;back--)
+               for(i=0;i<6;i++)
+               {
+                  a=i*Math.PI/3+t*1.3;
+                  if((Math.sin(a)<0)!=(back==1)) continue;
+                  demonFxFlame105(out,sx+Math.cos(a)*30,sy+36+Math.sin(a)*30*G,.4,.42+.16*Math.sin(t*11+i*1.7),Math.sin(t*6+i)*.12,back ? .55 : .85);
+               }
+            for(i=0;i<10;i++)
+            {
+               p=(t*.7+demonFxRand105(seed,i))%1;
+               px=sx+(demonFxRand105(seed,i+30)-.5)*54+Math.sin(t*4+i)*6;
+               demonFxPut105(out,"ember",px,sy+30-100*p,.5,.5,0,Math.sin(p*Math.PI));
+            }
+         }
+         else if(kind=="edge")
+         {
+            // Demon Slash readies a critical: a glint runs along the blade.
+            p=(t%1.1)/.4;
+            demonFxPut105(out,"glow",sx+22,sy-14,.32+.04*Math.sin(t*6),.32+.04*Math.sin(t*6),0,.45,0xFF3050);
+            if(p<=1)
+            {
+               s=Math.sin(p*Math.PI);
+               demonFxPut105(out,"spark",sx+22,sy-14,1.3*s,.9*s,t*2,s);
+               demonFxPut105(out,"spark",sx+22,sy-14,1.3*s,.9*s,t*2+Math.PI/2,s);
+            }
+         }
+         else if(kind=="calm")
+         {
+            // Fury ends: debuffs shatter, the circle closes and a column of light heals.
+            for(i=0;i<12;i++)
+            {
+               p=(t-demonFxRand105(seed,i+50)*.08)/.6;if(p<0 || p>1) continue;
+               a=demonFxRand105(seed,i)*Math.PI*2;d=20+110*demonFxOut105(p);
+               demonFxPut105(out,"shard",sx+Math.cos(a)*d,sy+Math.sin(a)*d*.7+30*p*p,.5,.5,a+p*6,1-p,0xC8A8FF);
+            }
+            p=t/.7;
+            if(p<=1)
+            {
+               s=.9*(1-demonFxOut105(p));
+               demonFxPut105(out,"sigil",sx,sy+36,s,s,t*4,1-p,0xFF4A6A,true,G);
+            }
+            demonFxRing105(out,t,sx,sy+30,.1,.6,.3,1.6,1,0xFFE6A0);
+            u=t-.3;
+            if(u>=0 && u<=1.3)
+            {
+               p=u/1.3;a=Math.sin(p*Math.PI);
+               demonFxPut105(out,"glow",sx,sy-30,.7,2.4*demonFxOut105(u/.3),0,a*.85,0xFFE7A0);
+               demonFxPut105(out,"glow",sx,sy,1.3,1.3,0,a*.7,0xFFE8D8);
+            }
+            for(i=0;i<16;i++)
+            {
+               p=(t-.3-demonFxRand105(seed,i+70)*.5)/.9;if(p<0 || p>1) continue;
+               a=i*Math.PI*2/16+p*3;var r:Number=46*(1-p*.6);
+               demonFxPut105(out,"ember",sx+Math.cos(a)*r,sy+30+Math.sin(a)*r*G-110*p,.6,.6,0,Math.sin(p*Math.PI)*1.2,0xFFE7A0);
+            }
+         }
+         else if(kind=="mend")
+         {
+            // Low-health heal on Demon Slash: crimson motes spiral in, then a warm flare.
+            demonFxPut105(out,"sigil",sx,sy+36,.55,.55,-t*3,Math.sin(Math.min(1,t/1.1)*Math.PI)*.7,0xFF4060,true,G);
+            for(i=0;i<14;i++)
+            {
+               p=(t-i*.018)/.45;if(p<0 || p>1) continue;
+               a=i*Math.PI*2/14+p*4;r=80*(1-demonFxOut105(p));
+               demonFxPut105(out,"ember",sx+Math.cos(a)*r,sy+Math.sin(a)*r*.7,1,1,0,1,0xFF4060);
+               demonFxPut105(out,"spark",sx+Math.cos(a)*r,sy+Math.sin(a)*r*.7,1.2,.5,a+Math.PI/2,.8,0xFF3050);
+            }
+            u=t-.4;if(u<0) return;
+            p=u/.5;if(p<=1) demonFxPut105(out,"glow",sx,sy,.9+.9*demonFxOut105(p),.9+.9*demonFxOut105(p),0,1-p,0xFF9AB0);
+            demonFxRing105(out,t,sx,sy+30,.4,.5,.3,1.1,.9,0xFF8AA0);
+            for(i=0;i<4;i++)
+            {
+               p=(u-i*.07)/.6;if(p<0 || p>1) continue;
+               demonFxFlame105(out,sx+(i-1.5)*16,sy+34-40*p,.32,.3+.35*Math.sin(p*Math.PI),0,Math.sin(p*Math.PI),0xFF9AB0);
+            }
+         }
+      }
+      // END DEMON FX CORE 105
+
+      // Live effects drawn on the battle clock.
+      private static var demonFxLive105:Array = [];
+      private static var demonFxTextures105:Object = {};
+      private static var demonFxLayer105:Sprite;
+      private static var demonFxMap105:Object;
+      private static var demonFxSeed105:int = 0;
+      private static var demonFxScratch105:Array = [];
+
+      private static function demonFxClear105() : void
+      {
+         if(demonFxLayer105) demonFxLayer105.removeFromParent(true);
+         demonFxLayer105=null;demonFxMap105=null;demonFxLive105=[];
+      }
+      private static function demonFxReady105() : Boolean
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(!layer || !GameMap.currentMap || GameMapLayer.isFastest) return false;
+         if(demonFxMap105!==GameMap.currentMap || !demonFxLayer105 || !demonFxLayer105.parent)
+         {
+            demonFxClear105();
+            demonFxMap105=GameMap.currentMap;
+            demonFxLayer105=new Sprite();demonFxLayer105.touchable=false;demonFxLayer105.name="demonbladeEffects105";
+            layer.effectLayer.addChild(demonFxLayer105);
+         }
+         return true;
+      }
+      private static function demonFxTexture105(id:String) : starling.textures.Texture
+      {
+         var texture:starling.textures.Texture=demonFxTextures105[id];
+         if(texture) return texture;
+         var bitmap:flash.display.BitmapData=demonFxPaint105(id);
+         texture=starling.textures.Texture.fromBitmapData(bitmap,false,false);
+         texture.root.onRestore=function():void {texture.root.uploadBitmapData(bitmap);};
+         demonFxTextures105[id]=texture;
+         return texture;
+      }
+      private static function demonFxOrigin105(unit:Avatar) : Point
+      {
+         if(!unit || !unit.m_fightRes || !unit.m_fightRes.parent || !demonFxLayer105) return null;
+         return demonFxLayer105.globalToLocal(unit.m_fightRes.localToGlobal(new Point(0,0)));
+      }
+      // Effects play on the visual timeline, like damage numbers.
+      private function demonFx105(kind:String, target:Avatar = null) : void
+      {
+         if(GameMapLayer.isFastest || !GameMapLayer.gl || !GameMap.currentMap) return;
+         GameMapLayer.gl.delayCall(demonFxStart105,GameMap.actionDelay,kind,this,target || this,GameMap.currentMap);
+      }
+      private function demonFxStop105(kind:String) : void
+      {
+         if(!GameMapLayer.gl || !GameMap.currentMap) return;
+         GameMapLayer.gl.delayCall(demonFxEnd105,GameMap.actionDelay,kind,this,GameMap.currentMap);
+      }
+      private static function demonFxStart105(kind:String, source:Avatar, target:Avatar, battle:Object) : void
+      {
+         if(battle!==GameMap.currentMap || !demonFxReady105()) return;
+         var looping:Boolean=demonFxLife105(kind)<0;
+         if(looping)
+            for each(var live:Object in demonFxLive105)
+               if(live.kind==kind && live.source===source && !live.stop) return;
+         var from:Point=demonFxOrigin105(source);var to:Point=demonFxOrigin105(target);
+         if(!from || !to) return;
+         var holder:Sprite=new Sprite();holder.touchable=false;demonFxLayer105.addChild(holder);
+         demonFxLive105.push({kind:kind,age:0,source:source,target:target,sx:from.x,sy:from.y,tx:to.x,ty:to.y,
+            seed:++demonFxSeed105,holder:holder,images:[],follow:looping || kind=="calm" || kind=="mend" || kind=="warcry",fade:1,stop:false});
+         if(demonFxLive105.length>24) demonFxDrop105(0);
+      }
+      private static function demonFxEnd105(kind:String, source:Avatar, battle:Object) : void
+      {
+         if(battle!==GameMap.currentMap) return;
+         for each(var live:Object in demonFxLive105)
+            if(live.kind==kind && live.source===source) live.stop=true;
+      }
+      private static function demonFxDrop105(index:int) : void
+      {
+         Sprite(demonFxLive105[index].holder).removeFromParent(true);
+         demonFxLive105.splice(index,1);
+      }
+      private static function demonFxAdvance105(elapsed:Number) : void
+      {
+         if(!demonFxLive105.length) return;
+         if(!demonFxReady105()) {demonFxClear105();return;}
+         elapsed=Math.max(0,elapsed);
+         for(var i:int=demonFxLive105.length-1;i>=0;i--)
+         {
+            var fx:Object=demonFxLive105[i];
+            fx.age+=elapsed;
+            var source:Avatar=fx.source as Avatar;
+            if(demonFxLife105(fx.kind)<0 && (!source || source.hp<=0)) fx.stop=true;
+            if(fx.stop) fx.fade-=elapsed/.35;
+            var life:Number=demonFxLife105(fx.kind);
+            if(fx.fade<=0 || (life>=0 && fx.age>=life)) {demonFxDrop105(i);continue;}
+            if(fx.follow)
+            {
+               var at:Point=demonFxOrigin105(source);
+               if(at) {fx.sx=at.x;fx.sy=at.y;}
+            }
+            else
+            {
+               var to:Point=demonFxOrigin105(fx.target as Avatar);
+               if(to) {fx.tx=to.x;fx.ty=to.y;}
+            }
+            demonFxScratch105.length=0;
+            demonFxSprites105(fx.kind,fx.age,fx.sx,fx.sy,fx.tx,fx.ty,fx.seed,demonFxScratch105);
+            var images:Array=fx.images;var n:int;
+            for(n=0;n<demonFxScratch105.length;n++)
+            {
+               var part:Object=demonFxScratch105[n];
+               var texture:starling.textures.Texture=demonFxTexture105(part.k);
+               var ground:Sprite=images[n];var image:Image;
+               if(!ground)
+               {
+                  ground=new Sprite();ground.touchable=false;image=new Image(texture);image.touchable=false;
+                  ground.addChild(image);Sprite(fx.holder).addChild(ground);images.push(ground);
+               }
+               else
+               {
+                  image=Image(ground.getChildAt(0));
+                  if(image.texture!==texture) {image.texture=texture;image.readjustSize();}
+               }
+               image.pivotX=texture.width/2;image.pivotY=texture.height/2;
+               image.scaleX=part.sx;image.scaleY=part.sy;image.rotation=part.r;
+               image.alpha=Math.max(0,Math.min(1,part.a*fx.fade));image.color=part.c;
+               image.blendMode=part.add ? "add" : "normal";
+               ground.x=part.x;ground.y=part.y;ground.scaleY=part.fy;ground.visible=true;
+            }
+            for(;n<images.length;n++) Sprite(images[n]).visible=false;
+         }
       }
 
       // END DEMONBLADE TRYNDAMERE 105
@@ -4785,6 +5516,7 @@ package com.meng52.game.module.avatar
       public static function advanceEffects104(elapsed:Number) : void
       {
          yasuoAdvanceEffects104(elapsed);
+         demonFxAdvance105(elapsed);
          if(GameMapLayer.isFastest) {if(fxLayer104)clearEffects104();return;}
          if(!fxEnsure104()) {clearEffects104();return;}
          fxTime104+=elapsed;fxPoll104+=elapsed;if(fxPoll104<.04)return;fxPoll104=0;
@@ -11539,7 +12271,7 @@ package com.meng52.game.module.avatar
             param7.sixReactionMfDealt105(this,modActualDamage+statisticsShield104);
          }
          if(abilityHpBefore>0 && param7 && param4>=1 && param4!=4 && param4!=5)
-            param7.demonRecordDamage105(this,modActualDamage+statisticsShield104);
+            param7.demonRecordDamage105(this,modActualDamage+statisticsShield104,param2>1);
          if((param7 && param7.skillB || skillB || param4==7 || dotKind=="burn") && modActualDamage+statisticsShield104>0)
             sixNextAfterDamage105(param7,param4,modActualDamage,statisticsShield104,dotKind);
          return param1;

@@ -19,6 +19,9 @@ function make(team,pos,{demon=false,leader=false,line=0}={}){
   demonRage105:0,demonFury105:-1,demonFuryReady105:0,demonFuryUsed105:0,demonHurtGain105:0,demonAuraGain105:0,
   demonDealt105:false,demonActed105:false,demonForceCrit105:false};
  Object.assign(u,methods);
+ // Effects are visual only: record which ones each skill plays.
+ u.fx=[];u.demonFx105=(kind,target)=>u.fx.push(kind+':'+(target&&target!==u?units.indexOf(target):'self'));
+ u.demonFxStop105=kind=>u.fx.push('stop:'+kind);
  u.skill0=demon?skill(data.normal):null;u.skill1=demon?skill(data.captain):null;u.skillB=demon?skill(data.passive):null;
  u.mBloodSpr={setRage105:rate=>u.bars.push(rate)};
  u.sixNextPassive105=key=>u.shyvana&&key==='shyvana';
@@ -161,6 +164,54 @@ let cases=0;
  dragon.abilityState.nextDragon=true;dragon.queueRageBar105();assert.equal(dragon.bars.at(-1),1);
  en[0].queueRageBar105();assert.deepEqual(en[0].bars,[]);
  a.demonRage105=100;a.queueRageBar105();assert.equal(a.bars.at(-1),1);
+ cases++;
+}
+{
+ // Demon Slash: dash slash on the front enemy, cleaves on the rest, then the crit glint.
+ let {a,en}=fresh(3);
+ a.demonExecute105('demon_trynd_n',a.skill0);
+ assert.deepEqual(a.fx,['slash:1','cleave:2','cleave:3','edge:self']);
+ a.demonExecute105('demon_trynd_n',a.skill0);
+ assert.equal(a.fx.filter(k=>k==='edge:self').length,1);
+ const ctx=beginAbilityAttack(a,'basic');a.demonEvent105('crit',a,en[0]);
+ a.demonRecordDamage105(en[0],0,true);
+ assert.equal(a.fx.includes('crit:1'),false);
+ a.demonRecordDamage105(en[0],100,true);endAbilityAttack(ctx);
+ a.demonTakeForceCrit105();
+ assert.deepEqual(a.fx.slice(-2),['crit:1','stop:edge']);
+ // The low-health heal flares before the slash.
+ ({a}=fresh(1));a.demonRage105=50;a.hp=30000;a.demonExecute105('demon_trynd_n',a.skill0);
+ assert.deepEqual(a.fx.slice(0,2),['mend:self','slash:1']);
+ // War cry: the roar, every ally in the lane lifted, the weakened enemies marked.
+ let friends;({a,friends,en}=fresh(3,2));a.demonRage105=60;
+ a.demonExecute105('demon_trynd_c',a.skill1);
+ assert.deepEqual(a.fx,['warcry:self','rally:self','rally:1','rally:2','weak:3','weak:4']);
+ // Endless Rage: the trigger and the aura, then the calm when it ends.
+ ({a,en}=fresh(1));a.injured(200000,1,null,1,en[0]);
+ assert.deepEqual(a.fx,['fury:self','aura:self']);
+ a.hp=0;a.demonLethal105();assert.equal(a.fx.length,2);
+ for(let i=0;i<3;i++)a.demonTurn105();
+ assert.deepEqual(a.fx.slice(2),[]);
+ a.demonTurn105();
+ assert.deepEqual(a.fx.slice(2),['stop:aura','calm:self']);
+ cases++;
+}
+{
+ const {a,en}=fresh(3);
+ const attack=a.abilityHit;
+ a.abilityHit=(target,coefficient,kind)=>{
+   if(target===en[0]) return false; // Evaded.
+   if(target===en[1]) {a.demonRecordDamage105(target,0);return true;} // Immune.
+   return attack(target,coefficient,kind);
+ };
+ a.demonExecute105('demon_trynd_n',a.skill0);
+ assert.deepEqual(a.fx,['cleave:3','edge:self']);
+ a.fx=[];
+ const addBuff=en[0].addBuff;
+ en[0].buffs.weak={value:5};
+ en[0].addBuff=(key,...args)=>{if(key!=='weak')addBuff(key,...args);};
+ a.demonExecute105('demon_trynd_c',a.skill1);
+ assert.deepEqual(a.fx,['warcry:self','rally:self','weak:2']);
  cases++;
 }
 console.log(`Demonblade Tryndamere native cases passed: ${cases}`);

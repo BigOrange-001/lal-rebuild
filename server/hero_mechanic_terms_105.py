@@ -46,6 +46,7 @@ TERMS = {
 }
 
 SLOTS = {'N': 10, 'C': 11, 'P': 13}
+VARIANT_FIELDS = {'N': 'skill', 'C': 'leader_skill', 'P': 'skillB'}
 
 # Family number -> {slot: [(mechanic name, one-line note)]}.
 NOTES = {
@@ -90,25 +91,38 @@ def _family(aid):
     return int(parts[1]) if len(parts) == 3 and parts[1].isdigit() else None
 
 
+def _skill_rows(hero, skills, bond_variants, equipment_variants):
+    pl = hero.get('pl') or []
+    for slot, index in SLOTS.items():
+        field = VARIANT_FIELDS[slot]
+        sources = [pl[index]] if len(pl) > index else []
+        sources.extend(replacement[field] for replacement in bond_variants.values() if field in replacement)
+        ids = sources + [sid for source in sources for sid in equipment_variants.get(source, {}).values()]
+        for sid in dict.fromkeys(ids):
+            if sid in skills:
+                yield slot, skills[sid]
+
+
 def apply_hero_mechanic_terms(document):
     cfg = document.get('cfg', document)
     if cfg.get('hero_mechanic_terms_105'):
         return document
     avatars, skills = cfg['avatar'], cfg['skill']
+    simple = cfg.get('system_simple', {})
+    bond_variants = simple.get('bond_skill_variants_104', {})
+    equipment_variants = simple.get('equipment_skill_variants_104', {})
     for aid, hero in avatars.items():
         number = _family(aid)
         if number not in TERMS:
             continue
-        pl = hero.get('pl') or []
-        rows = {slot: skills.get(pl[index]) for slot, index in SLOTS.items()
-                if len(pl) > index and pl[index] in skills}
-        text = ''.join(str(row.get('info', '')) + str(row.get('rankInfoTemplate', '')) for row in rows.values())
+        rows = list(_skill_rows(hero, skills, bond_variants.get(aid, {}), equipment_variants.get(aid, {})))
+        text = '\n'.join(str(row.get('info', '')) + '\n' + str(row.get('rankInfoTemplate', '')) for _, row in rows)
         present = {term: color for term, color in TERMS[number].items() if term in text}
         if not present:
             continue
         hero.setdefault('tipTerms105', {}).update(present)
         family_notes = NOTES.get(number, {})
-        for slot, row in rows.items():
+        for slot, row in rows:
             notes = family_notes.get(slot, ())
             if number == 1114 and slot == 'C':
                 actions = row.get('skill') or []

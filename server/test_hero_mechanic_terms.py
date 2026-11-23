@@ -14,15 +14,20 @@ class HeroMechanicTermTests(unittest.TestCase):
     def setUpClass(cls):
         cls.cfg = load_game_config(ROOT / 'config/reconstruction/full-config.json')['cfg']
 
-    def skill_text(self, hero):
-        return ''.join(str(self.cfg['skill'][sid].get('info', '')) for sid in hero['pl'][10:14]
-                       if sid and sid in self.cfg['skill'])
+    def skill_text(self, aid, hero):
+        simple = self.cfg['system_simple']
+        bonds = simple['bond_skill_variants_104'].get(aid, {})
+        equipment = simple['equipment_skill_variants_104'].get(aid, {})
+        sources = [sid for sid in hero['pl'][10:14] if sid]
+        sources.extend(sid for variants in bonds.values() for sid in variants.values())
+        ids = sources + [sid for source in sources for sid in equipment.get(source, {}).values()]
+        return '\n'.join(str(self.cfg['skill'][sid].get('info', '')) for sid in ids if sid in self.cfg['skill'])
 
     def test_every_listed_mechanic_reaches_an_avatar_that_uses_it(self):
         found = {}
         for aid, hero in self.cfg['avatar'].items():
             terms = hero.get('tipTerms105') or {}
-            text = self.skill_text(hero)
+            text = self.skill_text(aid, hero)
             for term, color in terms.items():
                 self.assertIn(term, text, (aid, term))
                 self.assertNotIn(color, MARKUP, (aid, term))
@@ -73,6 +78,20 @@ class HeroMechanicTermTests(unittest.TestCase):
             self.assertIn('通缉', normal['info'])
             self.assertIn(f'{percentage}物防', normal['info'])
             self.assertIn('穿透比例见小技能', dict(captain['tipNotes105'])['通缉'])
+
+    def test_bond_and_equipment_captain_variants_keep_mechanic_notes(self):
+        aid = 'A_1211_6'
+        simple = self.cfg['system_simple']
+        bonds = simple['bond_skill_variants_104'][aid]
+        equipment = simple['equipment_skill_variants_104'][aid]
+        sources = {self.cfg['avatar'][aid]['pl'][SLOTS['C']]}
+        sources.update(row['leader_skill'] for row in bonds.values() if 'leader_skill' in row)
+        self.assertGreater(len(sources), 1)
+        variants = {sid for source in sources for sid in equipment.get(source, {}).values()}
+        self.assertTrue(variants)
+        for sid in sources | variants:
+            note = dict(self.cfg['skill'][sid]['tipNotes105'])['通缉']
+            self.assertIn('穿透比例见小技能', note, sid)
 
     def test_applying_twice_changes_nothing(self):
         import copy

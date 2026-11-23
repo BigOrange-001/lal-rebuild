@@ -720,7 +720,8 @@ class SixStarBalanceTests(TestCase):
             with patch.object(b,'_injured',wraps=b._injured) as injured:
                 for victim in (enemies[0],enemies[0],enemies[1]):
                     b._native_damage(target,victim,1,1)
-                self.assertEqual([call.args[1] for call in injured.call_args_list if call.args[2]==3],[1250,1250])
+                # Fixed true damage: full panel (1250) under the global scale, then toughness.
+                self.assertEqual([call.args[1] for call in injured.call_args_list if call.args[2]==3],[660,660])
         self.assertEqual(aura['left'],2)
         self.assertAlmostEqual(b._buff_value(enemies[0],'weak'),.66/.34)
         self.assertTrue(self.cast(b,owner,'leader_skill'))

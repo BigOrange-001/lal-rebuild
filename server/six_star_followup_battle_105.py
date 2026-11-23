@@ -214,7 +214,7 @@ class SixStarFollowupBattle:
         seen.add(id(target))
         ctx['six_derived']=True
         try:
-            self._injured(target,int(self._get_damage(aura['source'])*aura['ratio']),3,source=owner)
+            self._fixed_true_damage(owner,target,int(self._get_damage(aura['source'])*aura['ratio']))
             self.control(owner,target,'weak',3,percent_debuff(aura['weak']))
         finally:
             ctx.pop('six_derived',None)

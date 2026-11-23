@@ -937,7 +937,7 @@ package com.meng52.game.ui.panel
             _loc5_ = new SkillSet(_loc3_,_avatar,_avatar.skill0 && _loc3_ == _avatar.skill0.skillSetData.id ? _avatar.slv : 1,_avatar.skill1 && _loc3_ == _avatar.skill1.skillSetData.id);
             _loc4_ = _loc5_.skillSetData.name;
             _loc2_ = getSkillDetailsOrFallback(_loc5_) + "\n";
-            _loc2_ = Tools.formatLineX(_loc2_,GlobalTextStyle.COLOR_W_W_Y_G);
+            _loc2_ = SkillSet.formatTip105(_loc2_);
             GlobalFunction.popAlert(_loc4_,_loc2_,{"res":_avatar.resId});
          }
       }
@@ -961,7 +961,7 @@ package com.meng52.game.ui.panel
                _loc6_ = new SkillSet(_loc4_,null);
                _loc5_ = _loc6_.skillSetData.name;
                _loc2_ = getSkillDetailsOrFallback(_loc6_) + "\n";
-               _loc2_ = Tools.formatLineX(_loc2_,GlobalTextStyle.COLOR_W_W_Y_G);
+               _loc2_ = SkillSet.formatTip105(_loc2_);
                GlobalFunction.popAlert(_loc5_,_loc2_,{"res":_avatar.resId},false);
             }
          }

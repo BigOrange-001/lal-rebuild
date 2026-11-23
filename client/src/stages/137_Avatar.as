@@ -1000,7 +1000,7 @@ package com.meng52.game.module.avatar
          attack.sixDerived105=true;
          try
          {
-            target.injured(int(aura.source.getDamage()*Number(aura.ratio)),1,DisplayTools.getAttrs("FX60_MAGIC"),3,this,false,this,null,"",true);
+            target.injured(int(aura.source.getDamage()*Number(aura.ratio)),1,DisplayTools.getAttrs("FX60_MAGIC"),3,this,false,this);
             if(target.hp>0) abilityControl(target,"weak",3,sixFollowupDebuff105(Number(aura.weak)));
          }
          finally { delete attack.sixDerived105; }
@@ -6127,8 +6127,8 @@ package com.meng52.game.module.avatar
       private static var configuredTrueDamageRate104:Number = NaN;
       private static const DAMAGE_CHOICE_KEY104:String = "lal_legacy_damage_formula_104";
       private static const DEFAULT_DAMAGE_RULES104:Object = {
-         reduction_exponent:1.5,defense_attack_midpoint:0.7,miss_slope:40,crit_slope:60,true_skill_rate:0.8,
-         attack_overrides:{"1":0.5,"4":8,"5":15,"6":35,"7":60,"15":0,"16":0,"21":0.528}
+         reduction_exponent:1.5,defense_attack_midpoint:0.7,miss_slope:40,crit_slope:60,true_skill_rate:1,
+         attack_overrides:{"1":1,"4":8,"5":15,"6":35,"7":60,"15":0,"16":0,"21":0.528}
       };
 
       public static function useLegacyDamage104() : Boolean
@@ -11145,7 +11145,8 @@ package com.meng52.game.module.avatar
          }
          else if(param4 == 3)
          {
-            _loc21_ = 13648080;
+            // Derived true damage is the white bonus damage: a share of damage already settled.
+            _loc21_ = derivedDamage104 ? 16777215 : 13648080;
          }
          else if(param4 == 8)
          {

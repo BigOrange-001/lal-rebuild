@@ -115,11 +115,11 @@ class KaisaBattleMixin:
         owner["_kaisa_plasma_busy"]=True
         try:
             self._add_buff(target,"curse",1,source=owner)
-            # Fixed true damage enters after AP, armor, RPS and the old 0.3
-            # true-AP coefficient; final mitigation, shields and revival apply.
+            # Fixed true damage: full panel, no armor; global scale, toughness,
+            # damage reduction, shields and revival apply.
             raw=_to_int(target["hp_max"]*.2)
             with self.context(owner,"passive"):
                 self._event("kaisa_plasma_burst",owner,target,raw=raw)
-                self._injured(target,self._final_direct_damage(raw,target,1),3,source=owner)
+                self._fixed_true_damage(owner,target,raw)
                 if owner.get('hp',0)>0:self._injured(owner,_to_int(owner['hp_max']*.05),4,source=owner)
         finally:owner["_kaisa_plasma_busy"]=False

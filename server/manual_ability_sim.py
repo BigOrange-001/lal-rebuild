@@ -649,15 +649,8 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
                     for victim in self.opponents(target):
                         if victim['line']!=target['line']:continue
                         if target.get('hp',0)<=0:break
-                        # A fixed true amount: no AP coefficient, miss or crit.
-                        amount=raw
-                        attack=self._attack
-                        if len(attack)>21:
-                            amount=_to_int(amount*float(attack[21]))
-                            if not ratio_enabled(self._combat_rules):
-                                tough=max(0,self._get_tough(victim))
-                                amount=_to_int(amount/(1+tough*float(attack[15])/(tough+float(attack[13]))))
-                        amount=_to_int(amount*(1+self._talent(victim,16)))
+                        # Fixed true damage: no AP coefficient, miss or crit.
+                        amount=self._fixed_true_amount(victim,raw)
                         self._event('nurse_retribution',target,victim,amount=amount)
                         self._injured(victim,amount,3,source=target)
         finally:

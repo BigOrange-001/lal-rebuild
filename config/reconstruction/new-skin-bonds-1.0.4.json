@@ -8,7 +8,7 @@
       "families": ["A_1801", "A_1802"],
       "benefits": {
         "A_1801": {"mechanics": {"kaisa_q_sunder": 0.33}, "info": "艾卡西亚暴雨每发命中后，额外施加33%破甲，持续1回合。"},
-        "A_1802": {"mechanics": {"yasuo_crit_true": 0.5}, "info": "黑夜剑心的暴击追加真实伤害由35%提高至50%。"}
+        "A_1802": {"mechanics": {"yasuo_crit_true": 0.5}, "info": "黑夜剑心的暴击附加伤害由35%提高至50%。"}
       }
     },
     {

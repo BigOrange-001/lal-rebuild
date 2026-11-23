@@ -46,6 +46,10 @@ once('         if(yasuoNightRounds104>=0 && --yasuoNightRounds104<0) yasuoQueueN
 once('            if(rengar) chance=Math.min(100,chance*Number(rengar[4]));\n         }\n',
      '            if(rengar) chance=Math.min(100,chance*Number(rengar[4]));\n         }\n'
      '         chance=Math.min(100,chance+param1.demonCritBonus105());\n')
+# The crit stat's share of crit damage, above the base x2.
+once('            GameMapTools.gameTrace("暴击倍数",_loc7_);\n',
+     '            if(ratioDamage104()) _loc7_ = 2 + (_loc7_ - 2) * param1.demonCritDamageRate105();\n'
+     '            GameMapTools.gameTrace("暴击倍数",_loc7_);\n')
 # Curse immunity during Endless Rage.
 once('         if(yasuoImmune104(param1)) return;\n         if(s2AnnieImmune() && Buff.LIST_DEBUFF',
      '         if(yasuoImmune104(param1)) return;\n         if(demonImmune105(param1)) return;\n'

@@ -81,7 +81,7 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         self.assertEqual(100000-en[0]['hp'], 320)
         self.assertEqual(b.demon_rage(o), 25)
 
-    def test_bloodlust_spends_forty_rage_only_below_forty_percent(self):
+    def test_bloodlust_needs_forty_rage_below_forty_percent_and_spends_none(self):
         b, o, _, en = self.battle(1)
         b.demon_state(o)['rage'] = 50
         o['hp'] = 50000
@@ -93,16 +93,21 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         attack = b._get_damage(o)
         self.cast(b, o)
         self.assertEqual(o['hp'], 30000+20000+attack)
-        self.assertEqual(b.demon_rage(o), 15)
+        self.assertEqual(b.demon_rage(o), 55)
+        b, o, _, en = self.battle(1)
+        b.demon_state(o)['rage'] = 39
+        o['hp'] = 30000
+        self.cast(b, o)
+        self.assertEqual(o['hp'], 30000)
 
     def test_basic_attack_ratio_rage_and_forced_crit(self):
         b, o, _, en = self.battle(1)
         b._basic_attack(o, en[0])
-        self.assertEqual(100000-en[0]['hp'], 180)
+        self.assertEqual(100000-en[0]['hp'], 200)
         self.assertEqual(b.demon_rage(o), 25)
         b.demon_state(o)['force'] = True
         b._basic_attack(o, en[0])
-        self.assertEqual(100000-en[0]['hp'], 180+360)
+        self.assertEqual(100000-en[0]['hp'], 200+400)
         self.assertEqual(b.demon_rage(o), 35)
         self.assertFalse(b.demon_state(o)['force'])
 
@@ -115,7 +120,31 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         o['hp'] = 10000
         self.assertEqual(b._get_damage(o), 160)
 
-    def test_endless_rage_precedes_bless_holds_three_turns_and_heals_from_rage(self):
+    def test_crit_stat_share_of_crit_damage_is_raised_by_thirty_percent(self):
+        c = copy.deepcopy(self.cfg)
+        b = SkillCompleteBattle([base_unit(c, AID, 1, 1, 0, .2, True, 1), base_unit(c, 'A_1001_6', 1, 1, 0, .2, False, 1)],
+                                [base_unit(c, 'A_1001_6', 1, 1, 0, .2, True, 2)], config=c)
+        demon, other, enemy = b.a[0], b.a[1], b.b[0]
+        for unit in (demon, other, enemy):
+            unit['new_4attrs'] = dict(hit=1000000, flee=0, crit=30000, tough=0)
+            unit['tpl'] = [0]*5
+        plain = b._roll_attack(other, enemy, force_crit=True)
+        self.assertGreater(plain, 2)
+        self.assertAlmostEqual(b._roll_attack(demon, enemy, force_crit=True), 2+(plain-2)*1.3)
+
+    def test_endless_rage_lasts_two_turns_outside_the_captain_slot(self):
+        b, o, _, en = self.battle(1)
+        o['leader'] = 0
+        b._injured(o, 200000, 1, source=en[0])
+        for _ in range(2):
+            b.demon_turn(o)
+            b._injured(o, 200000, 1, source=en[0])
+            self.assertEqual(o['hp'], 1)
+        b.demon_turn(o)
+        self.assertFalse(b.demon_fury(o))
+        self.assertEqual(o['hp'], 1+35000)
+
+    def test_endless_rage_precedes_bless_holds_three_turns_as_captain_and_ends_with_cleanse_heal(self):
         b, o, _, en = self.battle(1)
         b._add_buff(o, 'bless', 2, source=o)
         b._add_buff(o, 'curse', 2)
@@ -134,12 +163,13 @@ class DemonbladeTryndamereTests(unittest.TestCase):
             b.demon_turn(o)
             b._injured(o, 200000, 1, source=en[0])
             self.assertEqual(o['hp'], 1)
-        rage = b.demon_rage(o)
+        b._add_buff(o, 'stun', 2)
         b.demon_turn(o)
         self.assertFalse(b.demon_fury(o))
         self.assertEqual(b.demon_rage(o), 0)
-        # The idle-action decay (-10) settles before the end-of-fury heal.
-        self.assertEqual(o['hp'], 1+int(100000*(rage-10)*.005))
+        self.assertIsNone(b._buff(o, 'weak'))
+        self.assertIsNone(b._buff(o, 'stun'))
+        self.assertEqual(o['hp'], 1+35000)
         b._injured(o, 200000, 1, source=en[0])
         # Bless was kept through Endless Rage and now catches the next lethal hit.
         self.assertEqual(o['hp'], 50000)

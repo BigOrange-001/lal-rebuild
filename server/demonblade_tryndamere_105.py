@@ -9,24 +9,27 @@ PASSIVE = 'S_98618033_6'
 EFFECT = 'FX_DEMON_TRYND105'
 
 # Index constants shared with the simulator and client (action[0][index]).
-N_DAMAGE, N_SUNDER, N_RADIUS, N_TARGETS, N_LOW_HP, N_RAGE_COST, N_HEAL_HP, N_HEAL_ATK = range(4, 12)
+# N_RAGE_NEED is a threshold only: Demon Slash never spends rage.
+N_DAMAGE, N_SUNDER, N_RADIUS, N_TARGETS, N_LOW_HP, N_RAGE_NEED, N_HEAL_HP, N_HEAL_ATK = range(4, 12)
 C_POWER, C_CRIT, C_WEAK, C_SPEND, C_SPEND_MIN, C_HEAL_ATK, C_HEAL_HP, C_AURA_RAGE, C_AURA_CAP = range(4, 13)
 (P_BASIC, P_CRIT_PER_RAGE, P_ATK_PER_MISSING, P_ATK_CAP, P_FURY_COOLDOWN, P_FURY_LIMIT, P_FURY_RAGE,
- P_FURY_ROUNDS, P_FURY_ATK, P_FURY_HEAL_PER_RAGE, P_RAGE_START, P_RAGE_BASIC, P_RAGE_CRIT, P_RAGE_SKILL,
- P_RAGE_SKILL_CAP, P_RAGE_HURT, P_RAGE_HURT_CAP, P_RAGE_DECAY) = range(4, 22)
+ P_FURY_ROUNDS, P_FURY_ATK, P_FURY_END_HEAL, P_RAGE_START, P_RAGE_BASIC, P_RAGE_CRIT, P_RAGE_SKILL,
+ P_RAGE_SKILL_CAP, P_RAGE_HURT, P_RAGE_HURT_CAP, P_RAGE_DECAY, P_FURY_ROUNDS_MEMBER, P_CRIT_DAMAGE_RATE) = range(4, 24)
 
 NORMAL_TEXT = ('突进至本路敌方最前排面前，本路内无距离限制。对该敌人及其300范围内的敌人，最多3名，造成{rank:0:4}攻击力物理伤害，'
-               '并施加25%破甲2回合；下一次普攻必定暴击。若施放时生命低于40%且怒气不少于40，先消耗40怒气，'
-               '回复20%最大生命加100%攻击力的生命。')
+               '并施加25%破甲2回合；下一次普攻必定暴击。若施放时生命低于40%且怒气不少于40，先回复20%最大生命加100%攻击力的生命，'
+               '不消耗怒气。')
 CAPTAIN_TEXT = ('本路友军获得30%力量和4000暴击，持续2回合。对本路敌方前排及其后方最近一名敌人施加30%衰弱2回合。'
                 '消耗当前一半怒气（至少20点），本路友军每人回复“消耗怒气×（10%蛮王攻击力＋1.5%蛮王最大生命）”的生命；'
                 '满血的友军改为获得等量护盾2回合。任队长期间：本路友军每次暴击，蛮王获得2怒气，每次自身行动间隔最多10点。')
 PASSIVE_TEXT = ('拥有怒气，上限100，开战时20。普攻命中获得5怒气，暴击再获得5怒气；技能每命中一名敌人获得5怒气，'
                 '每次施放最多15点；受到敌方直接伤害获得2怒气，每次自身行动间隔最多8点；自身行动没有造成伤害时失去10怒气。'
-                '普攻造成180%攻击力物理伤害。每点怒气使暴击率提高0.4%，上限100%。每损失1%生命，攻击力提高0.8%，最多60%。'
+                '普攻造成200%攻击力物理伤害。每点怒气使暴击率提高0.4%，上限100%。暴击属性带来的暴击伤害提高30%。'
+                '每损失1%生命，攻击力提高0.8%，最多60%。'
                 '无尽怒火：受到致死伤害时触发，冷却12个战斗回合，每场最多2次；先于神佑结算，且不消耗神佑。'
-                '生命保留1点，解除并免疫诅咒，立即获得60怒气，3回合内生命不会低于1，攻击力提高60%，独立乘算。'
-                '该状态不可驱散，沉默不影响触发，虚弱、击退和控制仍然生效。状态结束时消耗全部怒气，每点回复0.5%最大生命。')
+                '生命保留1点，解除并免疫诅咒，立即获得60怒气，攻击力提高60%，独立乘算，期间生命不会低于1；'
+                '任队长时持续3回合，否则持续2回合。该状态不可驱散，沉默不影响触发，虚弱、击退和控制仍然生效。'
+                '状态结束时消耗全部怒气，解除自身所有减益，并回复35%最大生命。')
 
 
 def apply_demonblade_tryndamere(document):
@@ -64,7 +67,7 @@ def apply_demonblade_tryndamere(document):
     c = row(CAPTAIN, '恶魔战吼', 'demon_trynd_c', 1, 3, CAPTAIN_TEXT,
             .3, 4000, .3, .5, 20, .1, .015, 2, 10)
     p = row(PASSIVE, '战斗狂怒', 'demon_trynd_p', 0, 0, PASSIVE_TEXT,
-            1.8, .004, .008, .6, 12, 2, 60, 3, .6, .005, 20, 5, 5, 5, 15, 2, 8, 10)
+            2.0, .004, .008, .6, 12, 2, 60, 3, .6, .35, 20, 5, 5, 5, 15, 2, 8, 10, 2, 1.3)
     for skill in (q, c, p):
         cfg['skill'][skill['id']] = skill
     cfg['effect'][EFFECT] = {}

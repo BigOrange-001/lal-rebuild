@@ -34,6 +34,7 @@ function make(team,pos,{demon=false,leader=false,line=0}={}){
  u.abilityDash=target=>{u.line=target.line;u.pos=target.pos+(u.team===1?125:-125);return true};
  u.addBuff=(key,round,value=0)=>{if(u.demonImmune105(key))return;u.buffs[key]={type:key,round,value}};
  u.removeBuff=key=>{delete u.buffs[key]};
+ u.removeAllDebuff=()=>{for(const key of ['stun','silence','weak','sunder','curse','root'])delete u.buffs[key]};
  u.abilityControl=(target,key,round,value=0)=>target.addBuff(key,round,value);
  u.injured=(amount,crit,fx,kind,source)=>{
   if(u.hp<=0)return 0;
@@ -77,12 +78,14 @@ let cases=0;
  assert.equal(a.demonRage105,55);
  ({a}=fresh(1));a.demonRage105=50;a.hp=30000;const attack=a.getDamage();
  a.demonExecute105('demon_trynd_n',a.skill0);
- assert.equal(a.hp,30000+20000+attack);assert.equal(a.demonRage105,15);
+ assert.equal(a.hp,30000+20000+attack);assert.equal(a.demonRage105,55);
+ ({a}=fresh(1));a.demonRage105=39;a.hp=30000;a.demonExecute105('demon_trynd_n',a.skill0);assert.equal(a.hp,30000);
  cases++;
 }
 {
  const {a}=fresh(1);a.demonRage105=50;
  assert.ok(Math.abs(a.demonCritBonus105()-20)<1e-9);
+ assert.equal(a.demonCritDamageRate105(),1.3);assert.equal(make(1,2000).demonCritDamageRate105(),1);
  a.hp=50000;assert.equal(a.getDamage(),140);
  a.hp=10000;assert.equal(a.getDamage(),160);
  cases++;
@@ -96,9 +99,17 @@ let cases=0;
  a.addBuff('curse',2);assert.equal(a.buffs.curse,undefined);
  a.addBuff('weak',2,1);assert.ok(a.buffs.weak);
  for(let i=0;i<3;i++){a.demonTurn105();a.injured(200000,1,null,1,en[0]);assert.equal(a.hp,1)}
- const rage=a.demonRage105;a.demonTurn105();
+ a.addBuff('stun',2);a.demonTurn105();
  assert.equal(a.demonFuryActive105(),false);assert.equal(a.demonRage105,0);
- assert.equal(a.hp,1+int(100000*(rage-10)*.005));
+ assert.equal(a.buffs.weak,undefined);assert.equal(a.buffs.stun,undefined);
+ assert.equal(a.hp,1+35000);
+ cases++;
+}
+{
+ const {a,en}=fresh(1);a.isLeader=false;
+ a.injured(200000,1,null,1,en[0]);
+ for(let i=0;i<2;i++){a.demonTurn105();a.injured(200000,1,null,1,en[0]);assert.equal(a.hp,1)}
+ a.demonTurn105();assert.equal(a.demonFuryActive105(),false);assert.equal(a.hp,1+35000);
  cases++;
 }
 {

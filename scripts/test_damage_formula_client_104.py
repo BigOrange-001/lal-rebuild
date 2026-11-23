@@ -104,7 +104,7 @@ console.log(rows.length+' native damage cases match the Python ratio/legacy mode
 
     def test_native_probabilities_and_legacy_fallback(self):
         self.run_js(runtime()+'''
-let a={id:1,checkTalent:()=>0,getCrit:()=>6000,getHit:()=>3000,demonCritBonus105:()=>0,emitModEvent(){}},b={id:2,buffs:{},checkTalent:()=>0,getTough:()=>3000,getFlee:()=>6000,getEffectiveActionType:()=>1,emitModEvent(){}};
+let a={id:1,checkTalent:()=>0,getCrit:()=>6000,getHit:()=>3000,demonCritBonus105:()=>0,demonCritDamageRate105:()=>1,emitModEvent(){}},b={id:2,buffs:{},checkTalent:()=>0,getTough:()=>3000,getFlee:()=>6000,getEffectiveActionType:()=>1,emitModEvent(){}};
 b.abyssOnDodge104=()=>{};
 methods.beginDamageRules104();
 roll=0;assert(Math.abs(methods.checkCrit(a,b)-2*methods.opposedPower105(3000))<1e-10);

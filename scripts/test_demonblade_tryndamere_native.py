@@ -52,7 +52,8 @@ class NativeDemonbladeTests(unittest.TestCase):
                      'chance=Math.min(100,chance+param1.demonCritBonus105());','if(demonImmune105(param1)) return;',
                      '_loc6_ = demonAttack105(_loc6_);','demonLethal105();\n         skin2Lethal();',
                      'demonHurtTaken105();','param3 *= Number(demonPassive105()[4]);',
-                     'if(demonTakeForceCrit105()) basicContext.sixForceCrit105=true;'):
+                     'if(demonTakeForceCrit105()) basicContext.sixForceCrit105=true;',
+                     'if(ratioDamage104()) _loc7_ = 2 + (_loc7_ - 2) * param1.demonCritDamageRate105();'):
             self.assertEqual(avatar.count(hook),1,hook)
         # Shyvana's two rage changes and the bar creation each refresh the strip.
         self.assertEqual(avatar.count('queueRageBar105();'),code.count('queueRageBar105();')+3)

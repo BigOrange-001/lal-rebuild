@@ -2,9 +2,9 @@
 from battle_engine import _to_int
 from demonblade_tryndamere_105 import (
     C_AURA_CAP, C_AURA_RAGE, C_CRIT, C_HEAL_ATK, C_HEAL_HP, C_POWER, C_SPEND, C_SPEND_MIN, C_WEAK,
-    N_DAMAGE, N_HEAL_ATK, N_HEAL_HP, N_LOW_HP, N_RADIUS, N_RAGE_COST, N_SUNDER, N_TARGETS,
-    P_ATK_CAP, P_ATK_PER_MISSING, P_BASIC, P_CRIT_PER_RAGE, P_FURY_ATK, P_FURY_COOLDOWN,
-    P_FURY_HEAL_PER_RAGE, P_FURY_LIMIT, P_FURY_RAGE, P_FURY_ROUNDS, P_RAGE_BASIC, P_RAGE_CRIT,
+    N_DAMAGE, N_HEAL_ATK, N_HEAL_HP, N_LOW_HP, N_RADIUS, N_RAGE_NEED, N_SUNDER, N_TARGETS,
+    P_ATK_CAP, P_ATK_PER_MISSING, P_BASIC, P_CRIT_DAMAGE_RATE, P_CRIT_PER_RAGE, P_FURY_ATK, P_FURY_COOLDOWN,
+    P_FURY_END_HEAL, P_FURY_LIMIT, P_FURY_RAGE, P_FURY_ROUNDS, P_FURY_ROUNDS_MEMBER, P_RAGE_BASIC, P_RAGE_CRIT,
     P_RAGE_DECAY, P_RAGE_HURT, P_RAGE_HURT_CAP, P_RAGE_SKILL, P_RAGE_SKILL_CAP, P_RAGE_START,
 )
 from six_star_followup_battle_105 import percent_debuff
@@ -54,6 +54,10 @@ class DemonTryndBattleMixin:
         passive = self.demon_passive(unit)
         return self.demon_rage(unit) * passive[P_CRIT_PER_RAGE] * 100 if passive else 0
 
+    def _crit_damage_rate(self, unit):
+        passive = self.demon_passive(unit)
+        return passive[P_CRIT_DAMAGE_RATE] if passive else super()._crit_damage_rate(unit)
+
     def demon_attack(self, unit, value):
         passive = self.demon_passive(unit)
         if passive is None or not unit.get('hp_max'):
@@ -101,8 +105,9 @@ class DemonTryndBattleMixin:
         if demon['fury'] >= 0:
             demon['fury'] -= 1
             if demon['fury'] < 0:
-                heal = _to_int(unit['hp_max'] * demon['rage'] * passive[P_FURY_HEAL_PER_RAGE])
                 demon['rage'] = 0.0
+                self._remove_all_debuff(unit)
+                heal = _to_int(unit['hp_max'] * passive[P_FURY_END_HEAL])
                 if heal > 0:
                     self._injured(unit, heal, 4, source=unit, fixed_recovery=True)
 
@@ -123,7 +128,7 @@ class DemonTryndBattleMixin:
             return False
         demon['used'] += 1
         demon['ready'] = self.round_index + int(passive[P_FURY_COOLDOWN])
-        demon['fury'] = int(passive[P_FURY_ROUNDS])
+        demon['fury'] = int(passive[P_FURY_ROUNDS] if unit.get('leader') else passive[P_FURY_ROUNDS_MEMBER])
         unit['hp'] = 1
         self._remove_buff(unit, 'curse')
         self.demon_gain(unit, passive[P_FURY_RAGE])
@@ -192,8 +197,7 @@ class DemonTryndBattleMixin:
             return False
         demon = self.demon_state(owner)
         if (demon and owner['hp'] < owner['hp_max'] * action[N_LOW_HP]
-                and demon['rage'] >= action[N_RAGE_COST]):
-            demon['rage'] -= action[N_RAGE_COST]
+                and demon['rage'] >= action[N_RAGE_NEED]):
             amount = _to_int(owner['hp_max'] * action[N_HEAL_HP] + self._get_damage(owner) * action[N_HEAL_ATK])
             self._injured(owner, amount, 4, source=owner)
         if not self._rooted(owner):

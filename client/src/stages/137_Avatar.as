@@ -3626,6 +3626,11 @@ package com.meng52.game.module.avatar
          var passive:Array=demonPassive105();
          return passive ? demonRage105*Number(passive[5])*100 : 0;
       }
+      public function demonCritDamageRate105() : Number
+      {
+         var passive:Array=demonPassive105();
+         return passive ? Number(passive[23]) : 1;
+      }
       private function demonAttack105(value:int) : int
       {
          var passive:Array=demonPassive105();
@@ -3653,8 +3658,9 @@ package com.meng52.game.module.avatar
          demonActed105=true;demonDealt105=false;demonHurtGain105=0;demonAuraGain105=0;
          if(demonFury105>=0 && --demonFury105<0)
          {
-            var heal:int=Tools.toInt(hpMax*demonRage105*Number(passive[13]));
             demonRage105=0;
+            removeAllDebuff();
+            var heal:int=Tools.toInt(hpMax*Number(passive[13]));
             if(heal>0) injured(heal,1,null,4,this,false,this,null,"",false,true);
          }
          queueRageBar105();
@@ -3670,7 +3676,7 @@ package com.meng52.game.module.avatar
             if(demonFuryUsed105>=int(passive[9]) || round<demonFuryReady105) return;
             ++demonFuryUsed105;
             demonFuryReady105=round+int(passive[8]);
-            demonFury105=int(passive[11]);
+            demonFury105=int(isLeader ? passive[11] : passive[22]);
             hp=1;
             removeBuff("curse");
             demonGain105(Number(passive[10]));
@@ -3726,10 +3732,9 @@ package com.meng52.game.module.avatar
          var action:Array=sourceSkill.skills[0];
          if(kind=="demon_trynd_c") return demonWarCry105(action);
          var front:Avatar=demonLane105()[0];
+         // Needs 40 rage but never spends it.
          if(hp<hpMax*Number(action[8]) && demonRage105>=Number(action[9]))
          {
-            demonRage105-=Number(action[9]);
-            queueRageBar105();
             injured(Tools.toInt(hpMax*Number(action[10])+getDamage()*Number(action[11])),1,null,4,this,false,this);
          }
          if(!abilityState.root && !buffs.root) abilityDash(front);
@@ -6302,6 +6307,7 @@ package com.meng52.game.module.avatar
          if(_loc3_)
          {
             _loc7_ = ratioDamage104() ? 2 * opposedPower105(force ? Math.max(0,_loc5_) : delta) : _loc6_[3] + _loc5_ * _loc6_[16] / (_loc5_ + _loc6_[12]);
+            if(ratioDamage104()) _loc7_ = 2 + (_loc7_ - 2) * param1.demonCritDamageRate105();
             GameMapTools.gameTrace("暴击倍数",_loc7_);
             return _loc7_;
          }

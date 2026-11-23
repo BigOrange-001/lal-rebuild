@@ -60,20 +60,21 @@ class CombatRedesignTests(unittest.TestCase):
         expected=math.trunc(defense_damage(1000,175,1000,rules=b._combat_rules)*float(b._attack[21]))
         self.assertEqual(b._native_damage(a,t,1,1),expected)
 
-    def test_native_true_and_explicit_true_have_distinct_rates(self):
+    def test_native_true_and_skill_true_both_deal_the_full_panel(self):
+        # No armor; only the global scale (0.528) applies at zero toughness.
         for cls in (ReferenceBattle,SkillCompleteBattle):
             b,a,t=self.battle(cls)
-            self.assertEqual(b._native_damage(a,t,1,3),264)
-            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),422,delta=1)
+            self.assertEqual(b._native_damage(a,t,1,3),528)
+            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),528,delta=1)
         b,a,t=self.battle(SkillCompleteBattle)
         self.assertTrue(b.hit(a,t,1,3))
-        self.assertEqual(t['hp'],100000-422)
+        self.assertEqual(t['hp'],100000-528)
 
     def test_true_skill_does_not_double_apply_native_rate(self):
         for rate in (0.3,0.5,0.8):
             cfg=candidate_config(config(),attack_overrides={'1':rate})
             b,a,t=self.battle(SkillCompleteBattle,cfg)
-            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),422,delta=1)
+            self.assertAlmostEqual(b._native_damage(a,t,b._true_skill_coefficient(1),3),528,delta=1)
 
     def test_absolute_and_reference_share_ratio_curve(self):
         b,a,t=self.battle()

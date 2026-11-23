@@ -53,7 +53,7 @@ def apply_nightbringer_yasuo(document):
     p = row(PASSIVE, '黑夜剑心', 'night_yasuo_p', 0, 0,
             '战斗开始时，自身暴击属性数值翻倍。自身每次攻击暴击后，获得自身最大生命值5%'
             '加25%攻击力的护盾；护盾可累加，每份独立持续2回合，后续获得护盾不刷新旧护盾的持续时间。')
-    p['info'] += '自身所有攻击暴击时，额外造成该次暴击结算伤害35%的真实伤害，计算包含护盾吸收部分。追加真伤不再暴击。'
+    p['info'] += '自身所有攻击暴击时，额外造成该次暴击结算伤害35%的附加伤害，计算包含护盾吸收部分。附加伤害不再暴击。'
     p['rankInfoTemplate'] = p['info']
     for skill in (q, c, p):
         cfg['skill'][skill['id']] = skill

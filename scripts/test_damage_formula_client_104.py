@@ -55,7 +55,7 @@ class ClientFormulaTests(unittest.TestCase):
         self.run_js(script+'''
 const original=GlobalData.$mConfig_simple.attack.slice();
 assert(methods.ratioDamage104(),'no saved choice defaults to new');
-assert.equal(methods.damageAttack104()[21],.528);assert.equal(methods.REAL_DAMAGE_RATE,.5);
+assert.equal(methods.damageAttack104()[21],.528);assert.equal(methods.REAL_DAMAGE_RATE,1);
 methods.beginDamageRules104();let panel={mDisposed:false,mLegacyDamageCheckmark104:{visible:false}};
 toggle.call(panel);assert(panel.mLegacyDamageCheckmark104.visible);assert(methods.ratioDamage104(),'current battle retains its model');
 methods.damageChoiceLoaded104=false;methods.legacyDamageChoice104=false;assert(methods.useLegacyDamage104(),'legacy survives preference reload');
@@ -69,11 +69,11 @@ console.log('New default, saved legacy switch, next-battle activation and exact 
     def test_native_config_initialization_can_assign_true_damage_rate(self):
         self.run_js(runtime()+'''
 const original=GlobalData.$mConfig_simple.attack.slice();
-methods.REAL_DAMAGE_RATE=.3;assert.equal(methods.REAL_DAMAGE_RATE,.5);
+methods.REAL_DAMAGE_RATE=.3;assert.equal(methods.REAL_DAMAGE_RATE,1);
 methods.setLegacyDamage104(true);methods.beginDamageRules104();assert.equal(methods.REAL_DAMAGE_RATE,.3);
 methods.REAL_DAMAGE_RATE=.4;assert.equal(methods.REAL_DAMAGE_RATE,.4);
 assert.equal(methods.trueSkillCoefficient104(),2.5);
-methods.setLegacyDamage104(false);methods.beginDamageRules104();assert.equal(methods.REAL_DAMAGE_RATE,.5);
+methods.setLegacyDamage104(false);methods.beginDamageRules104();assert.equal(methods.REAL_DAMAGE_RATE,1);
 assert.deepEqual(GlobalData.$mConfig_simple.attack,original);
 console.log('Native config writes remain supported without changing the selected formula');
 ''')
@@ -97,7 +97,7 @@ for(const [legacy,raw,ap,defense,kind,sign,share,expected] of rows){
  let a={abyssConversion104:()=>0,ap,id:1,avatarData:{signType:1}},b={id:2,avatarData:{signType:sign},checkTalent:()=>0,getDePh:()=>defense,getDeMa:()=>defense,getDefenseAgainst:()=>defense};
  assert.equal(methods.countDamage(a,b,raw,kind,share)[0],expected,JSON.stringify({legacy,raw,ap,defense,kind,sign,share}));
 }
-methods.setLegacyDamage104(false);methods.beginDamageRules104();assert.equal(methods.trueSkillCoefficient104(),1.6);
+methods.setLegacyDamage104(false);methods.beginDamageRules104();assert.equal(methods.trueSkillCoefficient104(),1);
 methods.setLegacyDamage104(true);methods.beginDamageRules104();assert.equal(methods.trueSkillCoefficient104(),1/.3);
 console.log(rows.length+' native damage cases match the Python ratio/legacy models');
 ''')

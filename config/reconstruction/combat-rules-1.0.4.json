@@ -4,9 +4,9 @@
   "defense_attack_midpoint": 0.7,
   "miss_slope": 40,
   "crit_slope": 60,
-  "true_skill_rate": 0.8,
+  "true_skill_rate": 1.0,
   "attack_overrides": {
-    "1": 0.5,
+    "1": 1.0,
     "4": 8,
     "5": 15,
     "6": 35,

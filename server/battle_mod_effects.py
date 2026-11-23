@@ -83,8 +83,8 @@ def execute(battle,owner,enemies,allies,skill,action,index,context):
             if len(action)==20:
                 coefficient=action[5]+event_value/max(1,battle._get_damage(owner))
                 if coefficient<=0:continue
-                battle._native_damage(owner,unit,coefficient/.3 if action[16]==3 else coefficient,action[16])
-            elif action[16]==3:battle._injured(unit,max(0,int(battle._get_damage(owner)*action[5])),3,source=owner)
+                battle._native_damage(owner,unit,battle._true_skill_coefficient(coefficient) if action[16]==3 else coefficient,action[16])
+            elif action[16]==3:battle._native_damage(owner,unit,battle._true_skill_coefficient(action[5]),3)
             else:battle._native_damage(owner,unit,action[5],action[16])
         elif kind=='buff':
             value=action[7]

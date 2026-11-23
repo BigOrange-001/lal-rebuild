@@ -859,8 +859,18 @@ class ReferenceBattle:
         tough = max(0, self._get_tough(target))
         return to_int(amount / (1 + tough * attack[15] / (tough + attack[13])))
 
+    def _fixed_true_amount(self, target, raw):
+        """Fixed-value true damage before Avatar.injured settles it: the full
+        panel ignores armor, then the global scale and the true-damage talent
+        apply; opposed toughness and damage modifiers follow in _injured."""
+        amount = self._final_direct_damage(_to_int(raw), target, 1)
+        return _to_int(amount * (1 + self._talent(target, 16)))
+
+    def _fixed_true_damage(self, source, target, raw):
+        return self._injured(target, self._fixed_true_amount(target, raw), 3, source=source)
+
     def _true_skill_coefficient(self, coefficient):
-        rate = self._combat_rules.get('true_skill_rate', 0.8) if ratio_enabled(self._combat_rules) else 1
+        rate = self._combat_rules.get('true_skill_rate', 1.0) if ratio_enabled(self._combat_rules) else 1
         return coefficient * rate / self._real_damage_rate
 
     def _native_damage(self, attacker, target, multiplier, damage_type):

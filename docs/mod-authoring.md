@@ -43,7 +43,7 @@ python -B scripts/mod_tools.py fork work/my-hero work/another-hero
 
 ## new 数据
 
-最小包只有 `manifest.json` 与 `heroes.json`，可以完全复用内置技能与素材。字段见示例与 Schema。`signType` 使用与客户端一致的 `attack`、`tank`、`assist`；`actionType` 使用 `forward`、`sly`、`stand`、`cunning`。这两者分别编译到原生 `tl[0]`、`tl[1]`，不把法术伤害误作职业类型。英雄普攻 `damageType` 独立选择 `physical`、`magic` 或 `true`，分别编译为 `tl[2]` 的 1、2、3。真实伤害不扣物防／魔防，沿用原版 `REAL_DAMAGE_RATE`（当前默认 0.3）及其他原生结算规则，不能理解为无条件造成面板攻击的 100%。技能动作的 `damageType` 仍按该动作公开规范选择。
+最小包只有 `manifest.json` 与 `heroes.json`，可以完全复用内置技能与素材。字段见示例与 Schema。`signType` 使用与客户端一致的 `attack`、`tank`、`assist`；`actionType` 使用 `forward`、`sly`、`stand`、`cunning`。这两者分别编译到原生 `tl[0]`、`tl[1]`，不把法术伤害误作职业类型。英雄普攻 `damageType` 独立选择 `physical`、`magic` 或 `true`，分别编译为 `tl[2]` 的 1、2、3。新版公式下真实伤害按面板100%计算，不扣物防／魔防，之后照常经过韧性、减伤、护盾和保命结算；旧版公式仍沿用原版 `REAL_DAMAGE_RATE` 0.3。技能动作的 `damageType` 仍按该动作公开规范选择。
 
 ### 位移与原版目标链扩展（2026-10-18）
 

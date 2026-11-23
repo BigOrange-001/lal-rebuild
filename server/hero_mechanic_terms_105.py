@@ -70,14 +70,18 @@ NOTES = {
     1086: {'C': [('月光', '新月打击命中后施加，持续3回合')]},
     1105: {'C': [('狩猎标记', '标枪命中后施加，持续3回合')]},
     1025: {'C': [('瞄准标记', '绳网瞄准命中后施加，持续2回合')]},
-    1114: {'C': [('风暴电荷', '连锁闪电命中英雄时获得1层，最多3层'),
-                 ('电荷', '连锁闪电每次施放获得1层，5层时开启引导')]},
     1127: {'C': [('恶意魔印', '再次命中带魔印的目标时，改为真实伤害并沉默')]},
     1207: {'P': [('魅惑', '倾城独唱眩晕生效时施加，持续1回合；友军主动伤害技能优先选择该目标')]},
-    1211: {'C': [('通缉', '通缉射击命中后施加，持续1回合；期间本人技能对其无视100%物防')]},
+    1211: {'C': [('通缉', '通缉射击施加，持续1回合；物防穿透比例见小技能')]},
     1218: {'P': [('鸦群', '大招施放时及之后两次自身行动开始，各造成一次全路魔伤')]},
     1219: {'P': [('旋风', '斩钢前两次各积1层，第三次消耗2层并击飞')]},
     1040: {'P': [('疗愈', '治疗本路所有友军100%植物攻击力，满血友军获得净化')]},
+}
+
+
+AOXING_CHARGE_NOTES = {
+    'aoxing_c': (('风暴电荷', '连锁闪电每次命中至少1名敌方英雄时获得1层，最多3层'),),
+    'six_next_aoxing_c': (('电荷', '施放连锁闪电增加1层；已有5层时再施放会开启引导'),),
 }
 
 
@@ -103,9 +107,14 @@ def apply_hero_mechanic_terms(document):
         if not present:
             continue
         hero.setdefault('tipTerms105', {}).update(present)
-        for slot, notes in NOTES.get(number, {}).items():
-            row = rows.get(slot)
-            if row is None:
+        family_notes = NOTES.get(number, {})
+        for slot, row in rows.items():
+            notes = family_notes.get(slot, ())
+            if number == 1114 and slot == 'C':
+                actions = row.get('skill') or []
+                if actions and actions[0][:1] == ['manual_ability'] and len(actions[0]) > 1:
+                    notes = AOXING_CHARGE_NOTES.get(actions[0][1], ())
+            if not notes:
                 continue
             own = row.setdefault('tipNotes105', [])
             for term, note in notes:

@@ -53,6 +53,27 @@ class HeroMechanicTermTests(unittest.TestCase):
         kayle = self.cfg['skill'][self.cfg['avatar']['A_1120_6']['pl'][11]]
         self.assertEqual([n[0] for n in kayle['tipNotes105']], ['登神长阶'])
 
+    def test_aoxing_captain_notes_follow_each_charge_mechanic(self):
+        for aid in ('A_1114_4', 'A_1114_5', 'A_1114_6'):
+            captain = self.cfg['skill'][self.cfg['avatar'][aid]['pl'][SLOTS['C']]]
+            notes = captain['tipNotes105']
+            self.assertEqual(len(notes), 1, aid)
+            if aid.endswith('_6'):
+                self.assertEqual(notes[0][0], '电荷')
+                self.assertIn('已有5层', notes[0][1])
+            else:
+                self.assertEqual(notes[0][0], '风暴电荷')
+                self.assertIn('最多3层', notes[0][1])
+
+    def test_caitlyn_wanted_note_uses_the_normal_skill_for_penetration(self):
+        for quality, percentage in ((5, '25%'), (6, '100%')):
+            hero = self.cfg['avatar'][f'A_1211_{quality}']
+            normal = self.cfg['skill'][hero['pl'][SLOTS['N']]]
+            captain = self.cfg['skill'][hero['pl'][SLOTS['C']]]
+            self.assertIn('通缉', normal['info'])
+            self.assertIn(f'{percentage}物防', normal['info'])
+            self.assertIn('穿透比例见小技能', dict(captain['tipNotes105'])['通缉'])
+
     def test_applying_twice_changes_nothing(self):
         import copy
         from hero_mechanic_terms_105 import apply_hero_mechanic_terms

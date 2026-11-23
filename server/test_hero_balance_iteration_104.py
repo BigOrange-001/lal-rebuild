@@ -101,6 +101,7 @@ class MechanismTextTests(unittest.TestCase):
         self.assertEqual(self.tokens(self.row('A_1212_6',11),'全队生命比例最低'),['target_hp_shield'])
         # Garen's normal is shared by two variant pairs, so both additions apply.
         self.assertEqual(self.tokens(self.row('A_1001_6',10),'为全队生命比例最低'),['cure','cure'])
+        self.assertIn('施法者攻击力＋10%最大生命值', self.row('A_1001_6',10)['info'])
 
     def test_captains_without_added_effects_have_no_line_and_retargets_are_named(self):
         for aid in ('A_1028_6','A_1049_6','A_1074_6','A_1134_6','A_1217_6','A_1001_6'):

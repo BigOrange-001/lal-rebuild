@@ -48,9 +48,9 @@ def _single(groups):
 def _purify_cure_text(groups):
     cures=[cure for _purify,cure in groups]
     if len(cures)==1:
-        return f'为全队生命比例最低的友方英雄净化，并回复自身攻击面板{_r(cures[0])}的生命。'
+        return f'为全队生命比例最低的友方英雄净化，并回复（施法者攻击力＋10%最大生命值）×{_r(cures[0])}的生命。'
     amounts='、'.join(_r(c) for c in cures)
-    return f'为全队生命比例最低的友方英雄净化并回复生命，共结算{len(cures)}次，依次回复自身攻击面板{amounts}的生命。'
+    return f'为全队生命比例最低的友方英雄净化并回复生命，共结算{len(cures)}次，每次以（施法者攻击力＋10%最大生命值）为基数，依次回复{amounts}的生命。'
 
 
 # Effect-only lines, written on the skill that carries the added actions.

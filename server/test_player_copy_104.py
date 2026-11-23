@@ -22,6 +22,23 @@ class PlayerCopyTests(unittest.TestCase):
         once=copy.deepcopy(document);apply_player_copy_104(document)
         self.assertEqual(document,once)
 
+    def test_mechanism_and_erlang_text_bind_live_values(self):
+        document={'cfg':{'skill':{
+            'm':{'info':'造成20%伤害。\n本场攻击提高{rank:1:2}。','rankInfoTemplate':'造成20%伤害。\n本场攻击提高{rank:1:2}。',
+                 'balance_mechanism_104':'x','skill':[['damage',.2,1],['battle_stack','attack',.035,6]]},
+            'e':{'name':'五雷轰顶','info':'每回合发射五道天雷，对当前生命值最低的敌方英雄造成魔法伤害；准备与冷却均为0回合。',
+                 'skill':[['locked_sequence',5,.521,.521,.521,.521,.521,2,0,'FX']]},
+            'd':{'name':'唤犬令','info':'召唤灵兽协同作战。','skill':[['summon',1.0,'A_2024_6',4,'FX']]}}}}
+        apply_player_copy_104(document)
+        skills=document['cfg']['skill']
+        self.assertEqual(skills['m']['info'],'造成20%伤害。\n本场攻击提高3.5%。')
+        self.assertIn('{rank:1:2}',skills['m']['rankInfoTemplate'])
+        self.assertIn('{rank:0:2}',skills['e']['rankInfoTemplate'])
+        self.assertEqual(skills['e']['info'],'每回合发射五道天雷，对全场当前生命值最低的敌方英雄连续造成5次52.1%魔法伤害，目标阵亡后停止。')
+        self.assertEqual(skills['d']['info'],'召唤哮天犬协同作战，存在4次自身行动。')
+        once=copy.deepcopy(document);apply_player_copy_104(document)
+        self.assertEqual(document,once)
+
     def test_display_names_for_stages_resources_and_unknown_units(self):
         stages={'M_010_5':{'name':'第10章·还没排好的火力'},'M_001_1':{'name':'第1章·散落的工事'}}
         ploy={'P_1':{'name':'英雄经验·难度3'},'P_2':{'name':'远古试炼·第4档'},'P_3':{'name':'灵魂塔·第12层'}}

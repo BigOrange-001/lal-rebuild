@@ -184,7 +184,7 @@ class NextSixStarTests(TestCase):
         self.assertNotIn('next_charge',battle.state(owner))
         self.assertNotIn('next_storm',battle.state(owner))
 
-    def test_leblanc_consumes_mark_and_shares_one_pool_of_twelve_clones(self):
+    def test_leblanc_consumes_mark_and_shares_one_pool_of_eight_clones(self):
         battle, owner, foes = self.arena(1127)
         self.assertTrue(self.fixture.cast(battle,owner))
         self.assertTrue(battle.marked(owner,foes[0],'next_mirror'))
@@ -206,12 +206,12 @@ class NextSixStarTests(TestCase):
         second = battle.state(owner)['next_mirrors'][-1]
         self.assertEqual(second['ap'], panel['ap'])
         self.assertEqual(second['line'], first['line'])
-        for _ in range(11):
+        for _ in range(7):
             battle._emit_mod_event(second, 'dodge', foes[0], second)
         clones = battle.state(owner)['next_mirrors']
-        self.assertEqual(len(clones), 12)
+        self.assertEqual(len(clones), 8)
         self.assertEqual(first['hp'], 0)
-        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 12)
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
         self.assertTrue(all(u['skill'] and not u['skillB'] and
                             u['summon_owner_token'] == owner['_owner_token'] for u in clones))
 

@@ -1,0 +1,155 @@
+      // Skill detail popup in the original layout: green preparation and
+      // cooldown, white effect text with the coefficients, gray range notes,
+      // then yellow notes. Hero mechanic names keep their own color.
+      // Markup is the native COLOR_W_W_Y_G scheme: () gray, [] yellow, {} green.
+      private static const TIP_LINE_UNITS105:int = 21;
+      private static const TIP_LINE_BUDGET105:int = 18;
+      private static var tipTerms105:Array = [];
+      private static const TIP_GLOSSARY105:Array = [
+         [["眩晕"],"眩晕：无法行动"],
+         [["沉默"],"沉默：无法施放技能"],
+         [["嘲讽"],"嘲讽：成为敌方攻击和技能的优先目标"],
+         [["虚弱"],"虚弱：攻击力降低"],
+         [["破甲"],"破甲：物防和法防降低"],
+         [["诅咒"],"诅咒：无法获得增益效果"],
+         [["中毒"],"中毒：持续伤害，期间受到伤害提高20%"],
+         [["灼伤","灼烧"],"灼伤：持续伤害，期间受到治疗降低40%"],
+         [["流血"],"流血：持续伤害，对护盾造成3倍伤害"],
+         [["神佑"],"神佑：阵亡时立即复活"],
+         [["净化"],"净化：驱散并抵抗有害状态"],
+         [["真实伤害"],"真实伤害：无视物防和法防"],
+         [["附加伤害"],"附加伤害：按已造成的伤害追加，不再计算防御"]
+      ];
+
+      public function getInfoDetails() : String
+      {
+         var data:SkillSetData = skillSetData;
+         var terms:Array = tipHeroTerms105();
+         tipTerms105 = terms;
+         var lines:Array = ["{准备:" + data.warmup + "  冷却:" + data.cooldown + "}"];
+         if(data.hpType > 0) lines.push(GlobalLanguageStr.getLanguageStr(24030,GameMapTools.toPercentage(data.hpType)));
+         else if(data.hpType < 0) lines.push(GlobalLanguageStr.getLanguageStr(24031,GameMapTools.toPercentage(-data.hpType)));
+         var range:Array = [];
+         var body:String = tipSplitRange105(tipPlain105(getInfo()),range);
+         if(body) lines.push(body);
+         if(range.length) lines.push("(" + range.join("，") + ")");
+         var used:int = 0;
+         for each(var line:String in lines) used += tipLineCount105(line);
+         var notes:Array = [];
+         var scanned:String = body;
+         var row:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
+         if(row && row.tipNotes105 is Array)
+            for each(var own:Array in row.tipNotes105)
+            {
+               var note:String = tipPlain105(String(own[0]) + "：" + String(own[1]));
+               notes.push("[" + note + "]");
+               scanned += note;
+            }
+         for each(note in notes) used += tipLineCount105(note);
+         if(notes.length) ++used;
+         // Generic terms only while the popup still fits without scrolling.
+         for each(var entry:Array in TIP_GLOSSARY105)
+         {
+            if(!tipMentions105(scanned,entry[0],terms)) continue;
+            var text:String = "[" + tipGlossaryText105(entry) + "]";
+            var cost:int = tipLineCount105(text) + (notes.length ? 0 : 1);
+            if(used + cost > TIP_LINE_BUDGET105) continue;
+            used += cost;
+            notes.push(text);
+         }
+         if(notes.length) lines.push("\n" + notes.join("\n"));
+         return lines.join("\n");
+      }
+
+      public static function formatTip105(text:String) : String
+      {
+         var html:String = Tools.formatLineX(text,GlobalTextStyle.COLOR_W_W_Y_G);
+         for each(var term:Array in tipTerms105)
+         {
+            var color:String = uint(term[1]).toString(16);
+            while(color.length < 6) color = "0" + color;
+            // formatLineX may wrap a name across lines; match through the break.
+            var source:String = String(term[0]).replace(/[.*+?^${}()|[\]\\]/g,"\\$&").split("").join("\n?");
+            html = html.replace(new RegExp(source,"g"),function(... parts):String
+            {
+               return "<font color=\"#" + color + "\">" + parts[0] + "</font>";
+            });
+         }
+         tipTerms105 = [];
+         return html;
+      }
+
+      private function tipHeroTerms105() : Array
+      {
+         var id:String = avatar && avatar.avatarData ? String(avatar.avatarData.id) : null;
+         var row:Object = id && GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[id] : null;
+         var terms:Array = [];
+         if(row && row.tipTerms105)
+            for(var key:String in row.tipTerms105) terms.push([key,uint(row.tipTerms105[key])]);
+         // Longer names first so a shorter one cannot split them.
+         terms.sort(function(a:Array, b:Array):int { return String(b[0]).length - String(a[0]).length; });
+         return terms;
+      }
+
+      private static function tipPlain105(text:String) : String
+      {
+         // ASCII brackets are color markers in formatLineX; keep authored ones visible.
+         return String(text || "").replace(/\(/g,"（").replace(/\)/g,"）").replace(/\[/g,"【")
+            .replace(/\]/g,"】").replace(/\{/g,"｛").replace(/\}/g,"｝").replace(/^\s+|\s+$/g,"");
+      }
+
+      private static function tipSplitRange105(body:String, range:Array) : String
+      {
+         var sentences:Array = [];
+         for each(var sentence:String in body.split("。"))
+         {
+            var keep:Array = [];
+            for each(var clause:String in sentence.split("；"))
+            {
+               var trimmed:String = clause.replace(/^\s+|\s+$/g,"");
+               // Only short clauses that are purely about reach move to the gray line.
+               if(trimmed.length && trimmed.length <= 16 && /施法距离|可跨路|全屏生效/.test(trimmed)) range.push(trimmed);
+               else keep.push(clause);
+            }
+            sentences.push(keep.join("；"));
+         }
+         return sentences.join("。").replace(/[；]+。/g,"。").replace(/。{2,}/g,"。").replace(/^[。\s]+|\s+$/g,"");
+      }
+
+      private static function tipMentions105(text:String, aliases:Array, terms:Array) : Boolean
+      {
+         for each(var alias:String in aliases)
+         {
+            var own:Boolean = false;
+            for each(var term:Array in terms) if(String(term[0]).indexOf(alias) >= 0) own = true;
+            if(!own && text.indexOf(alias) >= 0) return true;
+         }
+         return false;
+      }
+
+      private static function tipGlossaryText105(entry:Array) : String
+      {
+         if(entry[0][0] == "神佑")
+         {
+            var revive:Number = Number(Avatar.damageAttack104()[20]);
+            if(revive > 0) return "神佑：阵亡时立即复活并恢复" + GameMapTools.toPercentage(revive) + "生命";
+         }
+         return String(entry[1]);
+      }
+
+      private static function tipLineCount105(text:String) : int
+      {
+         var count:int = 0;
+         for each(var line:String in text.split("\n"))
+         {
+            var units:Number = 0;
+            for(var i:int = 0; i < line.length; i++)
+            {
+               var code:int = line.charCodeAt(i);
+               if("()[]{}".indexOf(line.charAt(i)) >= 0) continue;
+               units += code >= 32 && code <= 126 ? 0.5 : 1;
+            }
+            count += Math.max(1,Math.ceil(units / TIP_LINE_UNITS105));
+         }
+         return count;
+      }

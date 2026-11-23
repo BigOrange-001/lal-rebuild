@@ -224,7 +224,7 @@
       "index": 37,
       "class": "com.meng52.game.ui.panel.PanelBetterStart",
       "source": "client/src/stages/035_PanelBetterStart.as",
-      "source_sha256": "8f90547579a83d5fd08a5d4e0d978578e5d4fd0f30bfe89f59318b1db7aa61f6"
+      "source_sha256": "ef6a3e175672bd1953f7bec88ab9babb7b6c8670228411d8d1f14e1f834f41fd"
     },
     {
       "index": 38,
@@ -855,7 +855,7 @@
       "index": 142,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "1a5945e2381f965d063068037a9322143f22bf918f8fe0854f99aae7329c86e5"
+      "source_sha256": "283fc0e1ee594948b141ba30855e52c26557ef240e76222d7c523588991e49c4"
     },
     {
       "index": 143,
@@ -867,7 +867,7 @@
       "index": 144,
       "class": "com.meng52.game.ui.panel.PanelDetailAll",
       "source": "client/src/stages/141_PanelDetailAll.as",
-      "source_sha256": "d2cc04aa2d9ec9edd68a1d9126814e1cbe7c76370d58d1d1963c5dbb2d9ed699"
+      "source_sha256": "e8a404d22aad9b7b2b6d8b2cfa9f7aa61e195589b52cdaf57d47bd0d6dd51cde"
     },
     {
       "index": 145,
@@ -879,7 +879,7 @@
       "index": 146,
       "class": "com.meng52.game.ui.element.LOL_DetailAvatar",
       "source": "client/src/stages/143_LOL_DetailAvatar.as",
-      "source_sha256": "c5781029d731759a5e7f83fabfc7075f6b1a4bd763ee695717e2356c8bc72c6c"
+      "source_sha256": "44da54a45453086772e7bf7eed56605c3eff612bda940ade96c3b3364e5fb8ae"
     },
     {
       "index": 147,

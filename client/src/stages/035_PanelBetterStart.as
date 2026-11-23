@@ -1103,7 +1103,7 @@ package com.meng52.game.ui.panel
             _loc5_ = new SkillSet(_loc3_,mAvatar,mAvatar.slv,false);
             _loc4_ = _loc5_.skillSetData.name;
             _loc2_ = _loc5_.getInfoDetails() + "\n";
-            _loc2_ = Tools.formatLineX(_loc2_,GlobalTextStyle.COLOR_W_W_Y_G);
+            _loc2_ = SkillSet.formatTip105(_loc2_);
             GlobalFunction.popAlert(_loc4_,_loc2_,{"res":mAvatar.resId},false);
             param1.stopPropagation();
          }

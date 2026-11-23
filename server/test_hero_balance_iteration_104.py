@@ -107,7 +107,9 @@ class MechanismTextTests(unittest.TestCase):
         for aid in ('A_1028_6','A_1049_6','A_1074_6','A_1134_6','A_1217_6','A_1001_6'):
             self.assertNotIn('\n',self.row(aid,11)['rankInfoTemplate'].strip(),aid)
         amumu=self.row('A_1074_6',11)['info']
-        self.assertIn('400范围内所有敌人',amumu);self.assertNotIn('最多4名',amumu)
+        self.assertIn('本路所有敌人',amumu)
+        self.assertNotIn('400范围',amumu)
+        self.assertNotIn('最多4名',amumu)
         self.assertIn('范围内生命比例最低的友军恢复生命',self.row('A_1212_6',11)['info'])
         self.assertIn('施放时净化自身。',self.row('A_1210_6',11)['info'])
 

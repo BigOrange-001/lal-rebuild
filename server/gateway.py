@@ -205,6 +205,9 @@ def build_static_config(path):
  apply_guild_exchange(document)
  from hero_passive_quality_105 import restrict_low_star_passives
  restrict_low_star_passives(document)
+ # Last: mechanic names are matched against the final skill texts.
+ from hero_mechanic_terms_105 import apply_hero_mechanic_terms
+ apply_hero_mechanic_terms(document)
  return document
 
 

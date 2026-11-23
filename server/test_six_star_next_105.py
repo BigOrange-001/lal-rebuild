@@ -78,6 +78,48 @@ class NextSixStarTests(TestCase):
                                battle._buff(owner,'next_diana_shield').value,delta=1)
         self.assertEqual(foes[-1]['hp'],100000)
 
+    def test_diana_magic_basic_adds_defense_damage_once_per_target(self):
+        battle, owner, foes = self.arena(1086)
+        self.assertEqual(battle._config['avatar'][owner['aid']]['tl'][2], 2)
+        defenses = battle._get_de_ph(owner)+battle._get_de_ma(owner)
+        with patch.object(battle, 'six_next_raw', wraps=battle.six_next_raw) as raw:
+            battle._basic_attack(owner, foes[0])
+        hit = [call.args[1] for call in raw.call_args_list]
+        # Every same-lane enemy the 350 sweep reaches takes the lunar damage once.
+        self.assertEqual(len(hit), len({id(target) for target in hit}))
+        self.assertIn(foes[0], hit)
+        self.assertNotIn(foes[-1], hit)
+        for call in raw.call_args_list:
+            self.assertAlmostEqual(call.args[2], defenses*1.75)
+            self.assertEqual(call.args[3], 2)
+            self.assertEqual(call.args[4], defenses)
+
+    def test_diana_nami_blessing_does_not_repeat_lunar_damage(self):
+        battle, owner, foes = self.arena(1086, [(0,1500,100000)], [(0,1750,100000)])
+        aura = dict(source=battle.a[1], left=3, ratio=1.25, weak=.66)
+        battle.state(owner)['six_nami_bless'] = aura
+        with (patch.object(battle, '_fixed_true_damage', wraps=battle._fixed_true_damage) as nami,
+              patch.object(battle, 'six_next_raw', wraps=battle.six_next_raw) as lunar):
+            battle._basic_attack(owner, foes[0])
+        self.assertEqual(aura['left'], 2)
+        nami.assert_called_once()
+        lunar.assert_called_once()
+        self.assertIs(lunar.call_args.args[1], foes[0])
+
+    def test_diana_defense_damage_measures_target_defense_against_her_defenses(self):
+        battle, owner, foes = self.arena(1086)
+        target = foes[0]
+        target['de_ma'] = 30000
+        owner['ap'], owner['de_ph'], owner['de_ma'] = 5000, 40000, 40000
+        defenses = battle._get_de_ph(owner)+battle._get_de_ma(owner)
+        dealt = []
+        for base in (None, defenses):
+            target['hp'] = target['hp_max']
+            battle._native_damage(owner, target, 1, 2, raw_override=100000, defense_base=base)
+            dealt.append(target['hp_max']-target['hp'])
+        # Against her low attack the target's 30000 magic defense nearly caps the reduction.
+        self.assertGreater(dealt[1], dealt[0]*2)
+
     def test_riven_counts_primary_before_killing_it(self):
         for size in (3, 4):
             with self.subTest(enemies=size):

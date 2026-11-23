@@ -1599,11 +1599,11 @@ package com.meng52.game.module.avatar
          return action && action[1]=="six_next_"+name+"_p" ? action : null;
       }
 
-      private function sixNextRaw105(target:Avatar, amount:Number, type:int, effect:String) : void
+      private function sixNextRaw105(target:Avatar, amount:Number, type:int, effect:String, defenseBase:Number = -1) : void
       {
          var attack:Number=Tools.toInt(getDamage()*(1+checkTalent(1)));
          if(amount>0 && attack>0)
-            sixStarHit105(target,type==3 ? trueSkillCoefficient104(amount/attack) : amount/attack,type,effect);
+            sixStarHit105(target,type==3 ? trueSkillCoefficient104(amount/attack) : amount/attack,type,effect,defenseBase);
       }
 
       private function sixNextHeal105(amount:Number) : void
@@ -1806,7 +1806,8 @@ package com.meng52.game.module.avatar
                for each(target in sixStarLane105(600))
                {
                   start=context ? int(context.hitSerial) : 0;
-                  sixNextRaw105(target,amount*Number(a[6]),2,effect);
+                  // Diana's damage comes from her defenses, so the target's defense is measured against them.
+                  sixNextRaw105(target,amount*Number(a[6]),2,effect,defenses);
                   if(context && int(context.hitSerial)>start) ++hits;
                }
                if(hits>=3) sixNextStackShield105("nextDianaShield",amount);
@@ -1823,7 +1824,7 @@ package com.meng52.game.module.avatar
                   if(Math.abs(target.pos-start)>=100) ++count;
                }
                for(var i:int=0;i<count;++i)
-                  for each(target in foes) sixNextRaw105(target,defenses*Number(a[4]),2,effect);
+                  for each(target in foes) sixNextRaw105(target,defenses*Number(a[4]),2,effect,defenses);
                return true;
             case "six_next_karthus_c":
                abilityState.nextRequiem={ratio:a[4],effect:effect};
@@ -2047,8 +2048,14 @@ package com.meng52.game.module.avatar
                   leech=Math.max(leech,Number(passive[4]));
                if(direct && attack.kind=="active" && source.abilityState.nextBaronDrain>=source.manualOwnerActionSerial) leech=Math.max(leech,.7);
                if(leech>0) source.sixNextHeal105(damage*leech);
-               if(direct && attack.kind=="basic" && kind==1 && hp>0 && (passive=source.sixNextPassive105("diana")))
-                  source.sixNextRaw105(this,(source.getDePh()+source.getDeMa())*Number(passive[4]),2,String(passive[3]));
+               // Diana's basic attack is magic: guard re-entry instead of filtering by channel.
+               if(direct && attack.kind=="basic" && !attack.sixDerived105 && !attack.sixNextLunar105 && hp>0 && (passive=source.sixNextPassive105("diana")))
+               {
+                  attack.sixNextLunar105=true;
+                  var lunarDefenses105:Number=source.getDePh()+source.getDeMa();
+                  try { source.sixNextRaw105(this,lunarDefenses105*Number(passive[4]),2,String(passive[3]),lunarDefenses105); }
+                  finally { attack.sixNextLunar105=false; }
+               }
                if(direct && attack.kind=="basic" && hp>0 && source.sixNextPassive105("malzahar"))
                   source.abilityControl(this,"silence",1);
                if(direct && hp>0 && (attack.kind=="basic" || attack.kind=="active") && source.sixNextPassive105("malzahar"))
@@ -2111,12 +2118,12 @@ package com.meng52.game.module.avatar
          return false;
       }
 
-      private function sixStarHit105(target:Avatar, ratio:Number, kind:int, effect:String) : void
+      private function sixStarHit105(target:Avatar, ratio:Number, kind:int, effect:String, defenseBase:Number = -1) : void
       {
          if(!target || target.hp <= 0 || hp <= 0) return;
          var selected:Vector.<Avatar> = new Vector.<Avatar>();
          selected.push(target);
-         attackAimList(selected,kind,ratio,0,effect,false,null,GameMapConfig.LINE_POS+1);
+         attackAimList(selected,kind,ratio,0,effect,false,null,GameMapConfig.LINE_POS+1,1,null,defenseBase);
       }
 
       private function sixStarExecute105(kind:String, effect:String, sourceSkill:SkillSet) : Boolean
@@ -6232,7 +6239,7 @@ package com.meng52.game.module.avatar
 
       // END DAMAGE FORMULA 104
 
-      public static function countDamage(param1:Avatar, param2:Avatar, param3:int, param4:int = -1, param5:Number = 1) : Array
+      public static function countDamage(param1:Avatar, param2:Avatar, param3:int, param4:int = -1, param5:Number = 1, defenseBase:Number = -1) : Array
       {
          var _loc7_:Number = Number(NaN);
          var _loc6_:Array = [];
@@ -6244,22 +6251,23 @@ package com.meng52.game.module.avatar
             trace(param2.getDePh() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + param2.getDefenseAgainst(param1,1));
             trace(param2.getDeMa() + "|||||||||||||||||||||||||||||||" + param2.id + "|||||||||||||||||||||||||||||||||" + param2.getDefenseAgainst(param1,2));
          }
+         var baseAttack:Number = defenseBase >= 0 ? defenseBase : param1.ap;
          var abyssTrue104:Number = (param4 == 1 || param4 == 2) ? param1.abyssConversion104() : 0;
          if(abyssTrue104 > 0)
          {
             // Split raw damage before each branch's element and rounding stages.
             var abyssPhysicalRaw104:Number = Tools.toInt(param3 * (1 - abyssTrue104) * _loc6_[1]);
             var abyssTrueRaw104:Number = Tools.toInt(param3 * abyssTrue104 * _loc6_[1]);
-            _loc7_ = Tools.toInt(Tools.toInt(defenseDamage104(abyssPhysicalRaw104,param2.getDefenseAgainst(param1,param4),param1.ap)) * param5) + Tools.toInt(Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE) * param5);
+            _loc7_ = Tools.toInt(Tools.toInt(defenseDamage104(abyssPhysicalRaw104,param2.getDefenseAgainst(param1,param4),baseAttack)) * param5) + Tools.toInt(Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE) * param5);
             param5 = 1;
          }
          else if(param4 == 1)
          {
-            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,1),param1.ap);
+            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,1),baseAttack);
          }
          else if(param4 == 2)
          {
-            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,2),param1.ap);
+            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,2),baseAttack);
          }
          else if(param4 == 3)
          {
@@ -10427,7 +10435,7 @@ package com.meng52.game.module.avatar
          }
       }
 
-      public function attackAimList(param1:Vector.<Avatar>, param2:int = -1, param3:Number = 1, param4:int = 0, param5:String = null, param6:Boolean = false, param7:Buff = null, param8:int = -1, param9:Number = 1, effectSource:Avatar = null) : int
+      public function attackAimList(param1:Vector.<Avatar>, param2:int = -1, param3:Number = 1, param4:int = 0, param5:String = null, param6:Boolean = false, param7:Buff = null, param8:int = -1, param9:Number = 1, effectSource:Avatar = null, defenseBase:Number = -1) : int
       {
          if(abilityState.sixBatchSand105 && (param2<0 || param2>=1 && param2<=3)) return 0;
          var kayleStage:int=param2==-1 && skillB ? sixBatchKayleStage105() : 0;
@@ -10585,7 +10593,7 @@ package com.meng52.game.module.avatar
             {
                if(!contactTarget104 || contactTarget104.hp<=0) continue;
                if(_loc42_ && checkMiss(this,contactTarget104,_loc25_)) continue;
-               _loc46_ = _loc42_ ? countDamage(this,contactTarget104,_loc14_,param2,param9) : [_loc14_,false];
+               _loc46_ = _loc42_ ? countDamage(this,contactTarget104,_loc14_,param2,param9,defenseBase) : [_loc14_,false];
                _loc20_ = _loc42_ ? checkCrit(this,contactTarget104) : 1;
                if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(contactTarget104,_loc14_,param9);
                _loc21_+=(sixDirect105 ? sixStarDirectInjury105(contactTarget104,_loc46_,_loc20_,_loc25_,param2,this,param7,_loc14_,param9) : contactTarget104.injured(_loc46_[0],_loc20_,_loc25_,param2,this,_loc46_[1],this,param7));
@@ -10626,7 +10634,7 @@ package com.meng52.game.module.avatar
                }
                else
                {
-                  _loc46_ = _loc42_ ? countDamage(this,waveTarget,_loc14_,param2,param9) : [_loc14_,false];
+                  _loc46_ = _loc42_ ? countDamage(this,waveTarget,_loc14_,param2,param9,defenseBase) : [_loc14_,false];
                   _loc20_ = _loc42_ ? checkCrit(this,waveTarget) : 1;
                   if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(waveTarget,_loc14_,param9);
                   if(_loc20_ != 1 && skillB && avatarData.skill_diff == 2) GlobalData.skillBoo = true;
@@ -10682,7 +10690,7 @@ package com.meng52.game.module.avatar
                }
                else
                {
-                  _loc46_ = _loc42_ ? countDamage(this,_loc10_,_loc14_,param2,param9) : [_loc14_,false];
+                  _loc46_ = _loc42_ ? countDamage(this,_loc10_,_loc14_,param2,param9,defenseBase) : [_loc14_,false];
                   _loc20_ = _loc42_ ? checkCrit(this,_loc10_) : 1;
                   if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc10_,_loc14_,param9);
                   if(_loc20_ != 1)
@@ -10760,7 +10768,7 @@ package com.meng52.game.module.avatar
             }
             else
             {
-               _loc46_ = _loc42_ ? countDamage(this,_loc10_,_loc14_,param2,param9) : [_loc14_,false];
+               _loc46_ = _loc42_ ? countDamage(this,_loc10_,_loc14_,param2,param9,defenseBase) : [_loc14_,false];
                _loc20_ = _loc42_ ? checkCrit(this,_loc10_) : 1;
                if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc10_,_loc14_,param9);
                if(_loc20_ != 1)
@@ -10845,7 +10853,7 @@ package com.meng52.game.module.avatar
                   }
                   else
                   {
-                     _loc46_ = _loc42_ ? countDamage(this,_loc12_,_loc14_,param2,param9) : [_loc14_,false];
+                     _loc46_ = _loc42_ ? countDamage(this,_loc12_,_loc14_,param2,param9,defenseBase) : [_loc14_,false];
                      _loc20_ = _loc42_ ? checkCrit(this,_loc12_) : 1;
                      if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc12_,_loc14_,param9);
                      if(_loc20_ != 1)
@@ -10914,7 +10922,7 @@ package com.meng52.game.module.avatar
                   }
                   else
                   {
-                     _loc46_ = _loc42_ ? countDamage(this,_loc12_,_loc14_,param2,param9) : [_loc14_,false];
+                     _loc46_ = _loc42_ ? countDamage(this,_loc12_,_loc14_,param2,param9,defenseBase) : [_loc14_,false];
                      _loc20_ = _loc42_ ? checkCrit(this,_loc12_) : 1;
                      if(sixCritical105 && param2==1 && _loc20_>1) _loc46_ = sixStarCriticalDamage105(_loc12_,_loc14_,param9);
                      if(_loc20_ != 1)

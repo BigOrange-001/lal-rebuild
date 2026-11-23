@@ -102,6 +102,35 @@ methods.setLegacyDamage104(true);methods.beginDamageRules104();assert.equal(meth
 console.log(rows.length+' native damage cases match the Python ratio/legacy models');
 ''')
 
+    def test_diana_native_lunar_damage_ignores_derived_hits_and_uses_local_defense_base(self):
+        damage = runtime() + '''
+const source={ap:5000,avatarData:{signType:1},abyssConversion104:()=>0};
+const target={avatarData:{signType:1},checkTalent:()=>0,getDePh:()=>0,getDeMa:()=>30000,getDefenseAgainst:()=>30000};
+methods.beginDamageRules104();
+const standard=methods.countDamage(source,target,100000,2)[0];
+assert(methods.countDamage(source,target,100000,2,1,80000)[0]>standard*2);
+assert.equal(methods.countDamage(source,target,100000,2)[0],standard);
+'''
+        reaction = method('client/src/stages/137_Avatar.as', 'sixNextAfterDamage105').replace(
+            'for each(var dragon in GameMap.currentMap.getAliveList(otherTeam))',
+            'for (const dragon of GameMap.currentMap.getAliveList(otherTeam))',
+        )
+        script = damage + 'const reaction=' + reaction + ';'
+        self.run_js(script + '''
+GameMap.currentMap={};
+const attacker={team:1,sixNextRage105(){},sixNextPassive105:key=>key==='diana'?[0,0,0,'lunar',1.75]:null,
+ getDePh:()=>40000,getDeMa:()=>40000};
+const victim={team:2,hp:200000,sixNextRage105(){},demonHurtTaken105(){},sixNextPassive105(){return null}};
+const lunar=[];
+attacker.sixNextRaw105=(...args)=>{lunar.push(args);reaction.call(victim,attacker,2,500,0,'')};
+attackContext={owner:attacker,kind:'basic',sixDerived105:true};
+reaction.call(victim,attacker,3,500,0,'');
+assert.equal(lunar.length,0);
+delete attackContext.sixDerived105;
+reaction.call(victim,attacker,2,500,0,'');
+assert.deepEqual(lunar,[[victim,140000,2,'lunar',80000]]);
+''')
+
     def test_native_probabilities_and_legacy_fallback(self):
         self.run_js(runtime()+'''
 let a={id:1,checkTalent:()=>0,getCrit:()=>6000,getHit:()=>3000,demonCritBonus105:()=>0,demonCritDamageRate105:()=>1,emitModEvent(){}},b={id:2,buffs:{},checkTalent:()=>0,getTough:()=>3000,getFlee:()=>6000,getEffectiveActionType:()=>1,emitModEvent(){}};

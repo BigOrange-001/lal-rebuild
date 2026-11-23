@@ -871,7 +871,7 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
             if self.hero(target):self.queue_santa_kill(source)
         return dealt
 
-    def _native_damage(self, attacker, target, multiplier, damage_type, share=1, *, raw_override=None):
+    def _native_damage(self, attacker, target, multiplier, damage_type, share=1, *, raw_override=None, defense_base=None):
         if attacker.get('_batch_sand'):
             self._ability_last_hit = False
             return 0
@@ -897,15 +897,17 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         row_a=self._config.get('avatar',{}).get(attacker.get('aid'),{});row_b=self._config.get('avatar',{}).get(target.get('aid'),{})
         sign_a=(row_a.get('tl') or [0,0,0])[0];sign_b=(row_b.get('tl') or [0,0,0])[0]
         raw=to_int(self._get_damage(attacker)*float(multiplier) if raw_override is None else raw_override)
-        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share,base_attack=attacker.get('ap',0),rules=self._combat_rules)
+        # Damage scaled from another stat may name that stat as the base the target's defense is measured against.
+        base_attack=attacker.get('ap',0) if defense_base is None else defense_base
+        amount=damage_before_final(raw,sign_a,sign_b,damage_type,self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share,base_attack=base_attack,rules=self._combat_rules)
         from abyss_equip_passives import conversion
         fraction = conversion(self,attacker) if damage_type in (1,2) else 0
         if fraction:
             amount=damage_before_final(raw*(1-fraction),sign_a,sign_b,damage_type,
                 self._defense_against(attacker,target,1),self._defense_against(attacker,target,2),attack,share,
-                base_attack=attacker.get('ap',0),rules=self._combat_rules)
+                base_attack=base_attack,rules=self._combat_rules)
             amount+=damage_before_final(raw*fraction,sign_a,sign_b,3,0,0,attack,share,
-                base_attack=attacker.get('ap',0),rules=self._combat_rules)
+                base_attack=base_attack,rules=self._combat_rules)
         amount=self._final_direct_damage(amount,target,crit,force_crit)
         receipt={}
         result=self._injured(target,amount,damage_type,source=attacker,receipt=receipt,derived=force_crit)

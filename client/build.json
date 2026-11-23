@@ -837,13 +837,13 @@
       "index": 139,
       "source": "client/src/stages/178_ProgressBar.as",
       "class": "com.meng52.game.ui.element.ProgressBar",
-      "source_sha256": "3394710ea01c05b6b8a97ccce6aa136de9662657fc0dbd028c45b069b48ad348"
+      "source_sha256": "668d184200d221a0153d2c6bf75dfcd68a92740232cf1a7506bbb18ff868d4fc"
     },
     {
       "index": 140,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "c0ee759ff769efa166e184d36e3fe5645a91a1a6079bca03c13e3e9f07226deb"
+      "source_sha256": "15e0d4e8366629e8e14b3cf9a9c111106a934c086609ff7351b38b3b362a265a"
     },
     {
       "index": 141,

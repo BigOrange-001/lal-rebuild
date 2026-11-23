@@ -10,6 +10,7 @@ from contextlib import contextmanager
 
 from attack_range_105 import MIN_ATTACK_RANGE
 from battle_engine import ReferenceBattle, _to_int
+from demonblade_tryndamere_sim import DemonTryndBattleMixin
 from dragonmancer_kaisa_sim import KaisaBattleMixin
 from nightbringer_yasuo_sim import YasuoBattleMixin
 from combat_math import damage_before_final, to_int
@@ -24,7 +25,7 @@ KINDS = frozenset(f'{hero}_{slot}' for hero in (
     'tahm','caitlyn','kaelthas','karthus','aoxing') for slot in ('n','c'))
 
 
-class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
+class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin, ReferenceBattle):
     def __init__(self, *args, trace_abilities=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.ability_contexts=[]
@@ -260,6 +261,7 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             return self.six_batch_vayne(owner, kind, skill)
         if kind.startswith('dragon_kaisa_'):return self.execute_kaisa(owner,kind,skill)
         if kind.startswith('night_yasuo_'):return self.execute_yasuo(owner,kind,skill)
+        if kind.startswith('demon_trynd_'):return self.execute_demon(owner,kind,skill)
         if kind in ('cat_n','cat_c'):return self.execute_cat_skin(owner,kind,skill)
         if kind in ('polar_n','polar_c'):return self.execute_polar_skin(owner,kind,skill)
         if kind in ('santa_n','santa_c'):return self.execute_santa_skin(owner,kind,skill)
@@ -805,6 +807,7 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             self.six_followup_event(owner,event,target,source,overheal)
         self.yasuo_event(owner,event,source,target,amount)
         self.kaisa_event(owner,event,source,target)
+        self.demon_event(owner,event,source,target)
         return super()._emit_mod_event(owner,event,source,target,amount,overheal)
 
     def _tick_slot_cd(self, owner, key):
@@ -889,7 +892,8 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
         rengar=self.six_followup_passive(attacker,'rengar')
         crit_rate = rengar[0] if rengar and ctx and ctx['kind']=='active' else 1
         force_crit = bool(ctx and ctx.get('six_force_crit'))
-        crit = self._roll_attack(attacker, target, crit_rate=crit_rate, force_crit=force_crit)
+        crit = self._roll_attack(attacker, target, crit_rate=crit_rate, force_crit=force_crit,
+                                 crit_bonus=self.demon_crit_bonus(attacker))
         self._ability_last_hit = bool(crit)
         if not crit:
             return 0
@@ -926,6 +930,9 @@ class SkillCompleteBattle(SixStarBattleMixin, YasuoBattleMixin, KaisaBattleMixin
             self.six_star_begin(attacker,ctx,None)
             before=target['hp'];damage_type=(attacker.get('tpl') or [0,1,1])[2]
             ratio=attacker['skillB']['skills'][0][4] if passive_kind(attacker)=='six_caitlyn_p' else 1
+            if (demon_ratio:=self.demon_basic_ratio(attacker)) is not None:
+                ratio=demon_ratio
+                if self.demon_take_force_crit(attacker):ctx['six_force_crit']=True
             if passive:=self.six_next_passive(attacker,'graves'):
                 gap=abs(attacker['pos']-target['pos'])
                 ratio=passive[4 if gap<=200 else 5 if gap<=350 else 6]

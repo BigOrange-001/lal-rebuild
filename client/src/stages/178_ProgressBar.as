@@ -46,6 +46,14 @@ package com.meng52.game.ui.element
 
       private var m_quarterMarks104:Array = [];
 
+      private var m_team105:int = 1;
+
+      private var m_rageSpr105:Sprite;
+
+      private var m_rageFill105:Sprite;
+
+      private var m_rage105:Number = -1;
+
       private static const HEALTH_VALUES_KEY104:String = "lal_battle_health_values_104";
       private static const HEALTH_VALUES_EVENT104:String = "battle_health_values_changed_104";
       private static var healthValuesLoaded104:Boolean = false;
@@ -78,6 +86,7 @@ package com.meng52.game.ui.element
       {
          super();
          this.touchable = false;
+         m_team105 = param1;
          if(!m_allSpr)
          {
             m_allSpr = new Sprite();
@@ -280,6 +289,37 @@ package com.meng52.game.ui.element
          m_shieldSpr.clipRect = new Rectangle(_x0+_x,m_middle.y-m_middle.pivotY,Math.max(0,shieldEnd-_x),m_middle.height);
          m_shieldSpr.visible = shieldEnd > _x;
          refreshQuarterMarks104(capacity);
+      }
+
+      // A third-width copy of the native HP slot, left-aligned under the HP bar.
+      public function setRage105(rate:Number) : void
+      {
+         rate = isFinite(rate) ? Math.max(0,Math.min(1,rate)) : 0;
+         if(!m_rageSpr105)
+         {
+            m_rageSpr105 = new Sprite();
+            m_rageSpr105.addChild(DisplayTools.newImg("aFrame" + m_team105));
+            m_rageFill105 = new Sprite();
+            // aHp3 is the white native fill; tint it so rage never reads as HP or shield.
+            var fill:Image = DisplayTools.newImg("aHp3");
+            fill.width = m_middle.width;
+            fill.height = m_middle.height;
+            fill.x = m_middle.x;
+            fill.y = m_middle.y;
+            fill.color = 0xFF7A1A;
+            m_rageFill105.addChild(fill);
+            m_rageSpr105.addChild(m_rageFill105);
+            m_rageSpr105.scaleX = 1 / 3;
+            m_rageSpr105.x = -Math.round(m_bottom.width / 3);
+            m_rageSpr105.y = Math.round(m_bottom.height) + 1;
+            m_allSpr.addChild(m_rageSpr105);
+         }
+         if(m_rage105 == rate) return;
+         m_rage105 = rate;
+         var slot:int = m_middle.width;
+         m_rageFill105.clipRect = new Rectangle(-Math.round(slot / 2),m_middle.y - m_middle.pivotY,Math.round(rate * slot),m_middle.height);
+         m_rageFill105.visible = rate > 0;
+         m_rageFill105.flatten();
       }
 
       public function get perRate() : Number

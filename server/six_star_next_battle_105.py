@@ -348,9 +348,12 @@ class SixStarNextBattle:
             return
         direct = 1 <= kind <= 3 and not dot_kind
         if source and self._team_number(source) != self._team_number(target):
+            if demon := self.demon_state(source):
+                demon['dealt'] = True
             self.six_next_rage(source)
             if direct:
                 self.six_next_rage(target)
+                self.demon_hurt(target)
                 if self.six_next_passive(target, 'graves') and target['hp'] > 0:
                     state = self.state(target)
                     state['next_graves_hits'] = (state.get('next_graves_hits', 0)+1) % 3

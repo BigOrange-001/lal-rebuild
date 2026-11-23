@@ -14,6 +14,8 @@ if start in s:
     s = s[:s.index(start)] + (rest[1:] if rest.startswith(chr(10)) else rest)
 anchor = '      public function abilityCanCast('
 code = (ROOT / 'client/src/demonblade_tryndamere.aspart').read_text('utf-8')
+# Skill effects, painted in code; scripts/demonblade_fx_preview.py renders the same core.
+code += chr(10) + (ROOT / 'client/src/demonblade_tryndamere_fx.aspart').read_text('utf-8')
 s = s.replace(anchor, start + code + '\n' + end + '\n' + anchor, 1)
 
 
@@ -61,10 +63,13 @@ once('         if(this.yasuoNightRounds104>=0) _loc6_ = Tools.toInt(_loc6_*1.75)
 # Endless Rage settles before bless and the older lethal guards.
 once('         skin2Lethal();\n         if(hp <= 0 && buffs["bless"])',
      '         demonLethal105();\n         skin2Lethal();\n         if(hp <= 0 && buffs["bless"])')
+# Upgrade the previously generated hook before running the idempotent insertion.
+s = s.replace('param7.demonRecordDamage105(this,modActualDamage+statisticsShield104);',
+              'param7.demonRecordDamage105(this,modActualDamage+statisticsShield104,param2>1);')
 # Outgoing damage to HP or shields prevents rage decay; a hit can deal zero.
 once('         if((param7 && param7.skillB || skillB || param4==7 || dotKind=="burn") && modActualDamage+statisticsShield104>0)',
      '         if(abilityHpBefore>0 && param7 && param4>=1 && param4!=4 && param4!=5)\n'
-     '            param7.demonRecordDamage105(this,modActualDamage+statisticsShield104);\n'
+     '            param7.demonRecordDamage105(this,modActualDamage+statisticsShield104,param2>1);\n'
      '         if((param7 && param7.skillB || skillB || param4==7 || dotKind=="burn") && modActualDamage+statisticsShield104>0)')
 # Rage from direct enemy damage, next to Shyvana's.
 once('            if(direct)\n            {\n               sixNextRage105();\n',
@@ -84,12 +89,25 @@ once('         queueVitalBar104();\n         abilityFeedback("巨龙真身"',
 # Show the strip as soon as the HP bar exists.
 once('            refreshVitalBar104(hp,hpMax,shieldValue104());\n            mBloodSpr.y',
      '            refreshVitalBar104(hp,hpMax,shieldValue104());\n            queueRageBar105();\n            mBloodSpr.y')
+# Effects advance on the battle clock with the other custom effects.
+once('         yasuoAdvanceEffects104(elapsed);\n',
+     '         yasuoAdvanceEffects104(elapsed);\n         demonFxAdvance105(elapsed);\n')
 p.write_text(s, encoding='utf-8', newline='')
+
+# The map teardown is separate from the legacy overlay's in-battle resets.
+map_layer = ROOT / 'client/src/stages/177_GameMapLayer.as'
+layer_source = map_layer.read_text('utf-8')
+release = '         Avatar.clearEffects104();\n         Avatar.demonFxClear105();\n'
+if release not in layer_source:
+    teardown = '         Avatar.clearEffects104();\n'
+    if layer_source.count(teardown) != 1:
+        raise ValueError('Missing or ambiguous battle teardown hook')
+    map_layer.write_text(layer_source.replace(teardown, release, 1), encoding='utf-8', newline='')
 
 manifest = ROOT / 'client/build.json'
 cfg = json.loads(manifest.read_text('utf-8'))
 for stage in cfg['stages']:
-    if stage['source'] in ('client/src/stages/137_Avatar.as', 'client/src/stages/178_ProgressBar.as'):
+    if stage['source'] in ('client/src/stages/137_Avatar.as', 'client/src/stages/177_GameMapLayer.as', 'client/src/stages/178_ProgressBar.as'):
         stage['source_sha256'] = hashlib.sha256((ROOT / stage['source']).read_bytes()).hexdigest()
 manifest.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 print('Synchronized Demonblade Tryndamere and rage strip')

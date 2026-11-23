@@ -47,14 +47,16 @@ class NativeDemonbladeTests(unittest.TestCase):
         code=(ROOT/'client/src/demonblade_tryndamere.aspart').read_text('utf-8')
         block=avatar[avatar.index('      // BEGIN DEMONBLADE TRYNDAMERE 105\n'):avatar.index('      // END DEMONBLADE TRYNDAMERE 105\n')]
         self.assertIn(code,block)
+        self.assertIn((ROOT/'client/src/demonblade_tryndamere_fx.aspart').read_text('utf-8'),block)
         for hook in ('return demonCanCast105(kind);','return demonExecute105(kind,sourceSkill);',
                      'demonEvent105(event,source,target);','demonStart105();','demonTurn105();',
                      'chance=Math.min(100,chance+param1.demonCritBonus105());','if(demonImmune105(param1)) return;',
                      '_loc6_ = demonAttack105(_loc6_);','demonLethal105();\n         skin2Lethal();',
                      'demonHurtTaken105();','param3 *= Number(demonPassive105()[4]);',
-                     'param7.demonRecordDamage105(this,modActualDamage+statisticsShield104);',
+                     'param7.demonRecordDamage105(this,modActualDamage+statisticsShield104,param2>1);',
                      'if(demonTakeForceCrit105()) basicContext.sixForceCrit105=true;',
-                     'if(ratioDamage104()) _loc7_ = 2 + (_loc7_ - 2) * param1.demonCritDamageRate105();'):
+                     'if(ratioDamage104()) _loc7_ = 2 + (_loc7_ - 2) * param1.demonCritDamageRate105();',
+                     'demonFxAdvance105(elapsed);'):
             self.assertEqual(avatar.count(hook),1,hook)
         # Shyvana's two rage changes and the bar creation each refresh the strip.
         self.assertEqual(avatar.count('queueRageBar105();'),code.count('queueRageBar105();')+3)

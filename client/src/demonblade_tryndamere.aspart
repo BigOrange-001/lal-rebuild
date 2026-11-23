@@ -77,6 +77,7 @@
       {
          if(!demonForceCrit105) return false;
          demonForceCrit105=false;
+         demonFxStop105("edge");
          return true;
       }
       private function demonTurn105() : void
@@ -87,6 +88,8 @@
          demonActed105=true;demonDealt105=false;demonHurtGain105=0;demonAuraGain105=0;
          if(demonFury105>=0 && --demonFury105<0)
          {
+            demonFxStop105("aura");
+            demonFx105("calm");
             demonRage105=0;
             removeAllDebuff();
             var heal:int=Tools.toInt(hpMax*Number(passive[13]));
@@ -110,6 +113,8 @@
             removeBuff("curse");
             demonGain105(Number(passive[10]));
             abilityFeedback("无尽怒火","",0xFF3B1F);
+            demonFx105("fury");
+            demonFx105("aura");
          }
          hp=1;
          if(GameMapLayer.gl) GameMapLayer.gl.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
@@ -120,9 +125,16 @@
          if(!passive || demonHurtGain105>=Number(passive[20])) return;
          demonHurtGain105+=demonGain105(Math.min(Number(passive[19]),Number(passive[20])-demonHurtGain105));
       }
-      private function demonRecordDamage105(target:Avatar, amount:Number) : void
+      private function demonRecordDamage105(target:Avatar, amount:Number, critical:Boolean = false) : void
       {
-         if(amount>0 && target.team!=team && demonPassive105()) demonDealt105=true;
+         if(amount<=0 || target.team==team) return;
+         var attack:Object=currentAbilityAttack();
+         if(attack && attack.owner===this && attack.demonSlashTarget105===target)
+            attack.demonSlashDamage105=true;
+         if(!demonPassive105()) return;
+         demonDealt105=true;
+         if(critical && attack && attack.owner===this && attack.kind=="basic")
+            demonFx105("crit",target);
       }
       private function demonEvent105(event:String, source:Avatar, target:Avatar) : void
       {
@@ -167,6 +179,7 @@
          // Needs 40 rage but never spends it.
          if(hp<hpMax*Number(action[8]) && demonRage105>=Number(action[9]))
          {
+            demonFx105("mend");
             injured(Tools.toInt(hpMax*Number(action[10])+getDamage()*Number(action[11])),1,null,4,this,false,this);
          }
          if(!abilityState.root && !buffs.root) abilityDash(front);
@@ -184,13 +197,17 @@
             for each(var target:Avatar in targets)
             {
                if(hp<=0) break;
+               wave.demonSlashTarget105=target;
+               wave.demonSlashDamage105=false;
                if(!demonHit105(target,Number(action[4]))) continue;
+               if(wave.demonSlashDamage105) demonFx105(target===front ? "slash" : "cleave",target);
                if(target.hp>0) abilityControl(target,"sunder",2,sunder/(1-sunder));
                if(passive && gained<Number(passive[18]))
                   gained+=demonGain105(Math.min(Number(passive[17]),Number(passive[18])-gained));
             }
          }
          finally {endAbilityAttack(wave);}
+         if(passive && !demonForceCrit105) demonFx105("edge");
          if(passive) demonForceCrit105=true;
          return true;
       }
@@ -211,13 +228,20 @@
             unit.addBuff("strong",2,Number(action[4]),0,-1,this);
             unit.addBuff("critup",2,Number(action[5]),0,-1,this);
          }
+         demonFx105("warcry");
+         for each(unit in allies) demonFx105("rally",unit);
          var enemies:Array=demonLane105();
          if(enemies.length)
          {
             var weakened:Array=[enemies[0]].concat(abilityCandidates(otherTeam,Avatar(enemies[0]).line,Avatar(enemies[0]).pos,
                GameMapConfig.LINE_POS,1,false,"nearest",[enemies[0]]));
             var weak:Number=Math.min(.95,Math.max(0,Number(action[6])));
-            for each(unit in weakened) abilityControl(unit,"weak",2,weak/(1-weak));
+            for each(unit in weakened)
+            {
+               var priorWeak:Buff=unit.buffs.weak;
+               abilityControl(unit,"weak",2,weak/(1-weak));
+               if(unit.buffs.weak && unit.buffs.weak!==priorWeak) demonFx105("weak",unit);
+            }
          }
          if(!demonPassive105()) return true;
          var spent:Number=Math.min(demonRage105,Math.max(demonRage105*Number(action[7]),Number(action[8])));

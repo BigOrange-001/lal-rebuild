@@ -1758,7 +1758,7 @@ package com.meng52.game.module.skill
                   }
                   break;
                case "stat_flat":
-                  if(_loc20_.length >= 5 && (_loc20_[1] == "hit" || _loc20_[1] == "flee" || _loc20_[1] == "crit" || _loc20_[1] == "tough") && isFinite(Number(_loc20_[2])) && Number(_loc20_[2]) > 0 && Number(_loc20_[2]) <= 100000 && int(_loc20_[3]) >= 1 && int(_loc20_[3]) <= 20)
+                  if(_loc20_.length >= 5 && (_loc20_[1] == "hit" || _loc20_[1] == "flee" || _loc20_[1] == "crit" || _loc20_[1] == "tough") && isFinite(Number(_loc20_[2])) && Number(_loc20_[2]) > 0 && int(_loc20_[3]) >= 1 && int(_loc20_[3]) <= 20)
                   {
                      var flatTargets:Vector.<Avatar> = getCustomActionTargets(_loc14_,actionTargets,targetGroups,true);
                      var flatBuffType:String = String(_loc20_[1]) + "up";

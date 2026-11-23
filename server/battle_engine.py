@@ -1999,7 +1999,8 @@ class ReferenceBattle:
             raise ValueError("stat_flat stat must be hit/flee/crit/tough")
         value = float(action[2])
         rounds = int(action[3])
-        if not (0 < value <= 100000) or not (1 <= rounds <= 20):
+        # No upper cap on the bonus: Lux's captain skill grants more than 100000.
+        if not (0 < value < float('inf')) or not (1 <= rounds <= 20):
             raise ValueError("stat_flat arguments are outside the authored bounds")
         for target in self._ally_buff_targets(attacker, allies, skill.get("pl") or [],
                                               skill=skill, index=index):

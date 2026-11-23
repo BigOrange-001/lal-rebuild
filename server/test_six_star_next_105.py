@@ -78,6 +78,11 @@ class NextSixStarTests(TestCase):
                                battle._buff(owner,'next_diana_shield').value,delta=1)
         self.assertEqual(foes[-1]['hp'],100000)
 
+    def test_lux_captain_applies_accuracy_above_one_hundred_thousand(self):
+        battle, owner, foes = self.arena(1060)
+        self.assertTrue(self.fixture.cast(battle, owner, 'leader_skill'))
+        self.assertGreater(battle._buff_value(owner, 'hitup'), 100000)
+
     def test_diana_magic_basic_adds_defense_damage_once_per_target(self):
         battle, owner, foes = self.arena(1086)
         self.assertEqual(battle._config['avatar'][owner['aid']]['tl'][2], 2)

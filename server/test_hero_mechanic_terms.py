@@ -93,6 +93,17 @@ class HeroMechanicTermTests(unittest.TestCase):
             note = dict(self.cfg['skill'][sid]['tipNotes105'])['通缉']
             self.assertIn('穿透比例见小技能', note, sid)
 
+    def test_notes_do_not_show_max_rank_as_a_fixed_magnitude(self):
+        for aid, term, dynamic in (
+                ('A_1204_6', '暴露', '比例见小技能'),
+                ('A_1216_5', '寒冷', '幅度取决于施加寒冷的技能')):
+            hero = self.cfg['avatar'][aid]
+            for slot in ('C', 'P'):
+                row = self.cfg['skill'][hero['pl'][SLOTS[slot]]]
+                note = dict(row['tipNotes105'])[term]
+                self.assertIn(dynamic, note, (aid, slot))
+                self.assertNotIn('%', note, (aid, slot))
+
     def test_applying_twice_changes_nothing(self):
         import copy
         from hero_mechanic_terms_105 import apply_hero_mechanic_terms

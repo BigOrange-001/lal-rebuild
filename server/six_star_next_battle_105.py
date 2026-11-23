@@ -32,11 +32,11 @@ class SixStarNextBattle:
         shield.round = 2
         shield.value += int(amplify_shield(owner, 'shield', amount))
 
-    def six_next_raw(self, owner, target, amount, kind):
+    def six_next_raw(self, owner, target, amount, kind, defense_base=None):
         if owner['hp'] > 0 and target['hp'] > 0 and amount > 0:
             if kind == 3:
                 amount /= self._real_damage_rate
-            self._native_damage(owner, target, 1, kind, raw_override=amount)
+            self._native_damage(owner, target, 1, kind, raw_override=amount, defense_base=defense_base)
 
     def six_next_lightning(self, owner, action):
         targets = self.six_star_lane(owner, 650)
@@ -110,7 +110,8 @@ class SixStarNextBattle:
             self._add_buff(owner, 'shield', 2, shield, source=owner)
             hits = 0
             for target in self.six_star_lane(owner, 600):
-                self.six_next_raw(owner, target, shield*a[6], 2)
+                # Diana's damage comes from her defenses, so the target's defense is measured against them.
+                self.six_next_raw(owner, target, shield*a[6], 2, defenses)
                 hits += bool(self._ability_last_hit)
             if hits >= 3:
                 self.six_next_stack_shield(owner, 'next_diana_shield', shield)
@@ -128,7 +129,7 @@ class SixStarNextBattle:
                 hits += abs(target['pos']-start) >= 100
             for _ in range(hits):
                 for target in foes:
-                    self.six_next_raw(owner, target, defenses*a[4], 2)
+                    self.six_next_raw(owner, target, defenses*a[4], 2, defenses)
         elif kind == 'six_next_karthus_c':
             if state.get('next_requiem') or not self.opponents(owner):
                 return False
@@ -367,8 +368,15 @@ class SixStarNextBattle:
                 if direct and ctx['kind']=='active' and self.state(source).get('next_baron_drain', -1)>=self.state(source)['serial']:
                     leech = max(leech, .7)
                 self.six_next_heal(source, lost*leech)
-                if direct and kind==1 and ctx['kind']=='basic' and (passive := self.six_next_passive(source, 'diana')):
-                    self.six_next_raw(source, target, (self._get_de_ph(source)+self._get_de_ma(source))*passive[4], 2)
+                # Diana's basic attack is magic: guard re-entry instead of filtering by channel.
+                if (direct and ctx['kind']=='basic' and not ctx.get('six_next_lunar')
+                        and (passive := self.six_next_passive(source, 'diana'))):
+                    ctx['six_next_lunar'] = True
+                    try:
+                        defenses = self._get_de_ph(source)+self._get_de_ma(source)
+                        self.six_next_raw(source, target, defenses*passive[4], 2, defenses)
+                    finally:
+                        ctx['six_next_lunar'] = False
                 if direct and ctx['kind'] in ('basic','active') and self.six_next_passive(source, 'malzahar'):
                     if ctx['kind']=='basic' and target['hp']>0:
                         self.control(source, target, 'silence', 1)

@@ -1599,11 +1599,18 @@ package com.meng52.game.module.avatar
          return action && action[1]=="six_next_"+name+"_p" ? action : null;
       }
 
-      private function sixNextRaw105(target:Avatar, amount:Number, type:int, effect:String) : void
+      // Damage scaled from another stat may name that stat as the base the
+      // target's defense is measured against (countDamage uses it over ap).
+      public var defenseBase105:Number = NaN;
+
+      private function sixNextRaw105(target:Avatar, amount:Number, type:int, effect:String, defenseBase:Number = -1) : void
       {
          var attack:Number=Tools.toInt(getDamage()*(1+checkTalent(1)));
-         if(amount>0 && attack>0)
-            sixStarHit105(target,type==3 ? trueSkillCoefficient104(amount/attack) : amount/attack,type,effect);
+         if(!(amount>0 && attack>0)) return;
+         var previous:Number=defenseBase105;
+         defenseBase105=defenseBase>=0 ? defenseBase : NaN;
+         try { sixStarHit105(target,type==3 ? trueSkillCoefficient104(amount/attack) : amount/attack,type,effect); }
+         finally { defenseBase105=previous; }
       }
 
       private function sixNextHeal105(amount:Number) : void
@@ -1806,7 +1813,8 @@ package com.meng52.game.module.avatar
                for each(target in sixStarLane105(600))
                {
                   start=context ? int(context.hitSerial) : 0;
-                  sixNextRaw105(target,amount*Number(a[6]),2,effect);
+                  // Diana's damage comes from her defenses, so the target's defense is measured against them.
+                  sixNextRaw105(target,amount*Number(a[6]),2,effect,defenses);
                   if(context && int(context.hitSerial)>start) ++hits;
                }
                if(hits>=3) sixNextStackShield105("nextDianaShield",amount);
@@ -1823,7 +1831,7 @@ package com.meng52.game.module.avatar
                   if(Math.abs(target.pos-start)>=100) ++count;
                }
                for(var i:int=0;i<count;++i)
-                  for each(target in foes) sixNextRaw105(target,defenses*Number(a[4]),2,effect);
+                  for each(target in foes) sixNextRaw105(target,defenses*Number(a[4]),2,effect,defenses);
                return true;
             case "six_next_karthus_c":
                abilityState.nextRequiem={ratio:a[4],effect:effect};
@@ -2047,8 +2055,14 @@ package com.meng52.game.module.avatar
                   leech=Math.max(leech,Number(passive[4]));
                if(direct && attack.kind=="active" && source.abilityState.nextBaronDrain>=source.manualOwnerActionSerial) leech=Math.max(leech,.7);
                if(leech>0) source.sixNextHeal105(damage*leech);
-               if(direct && attack.kind=="basic" && kind==1 && hp>0 && (passive=source.sixNextPassive105("diana")))
-                  source.sixNextRaw105(this,(source.getDePh()+source.getDeMa())*Number(passive[4]),2,String(passive[3]));
+               // Diana's basic attack is magic: guard re-entry instead of filtering by channel.
+               if(direct && attack.kind=="basic" && !attack.sixNextLunar105 && hp>0 && (passive=source.sixNextPassive105("diana")))
+               {
+                  attack.sixNextLunar105=true;
+                  var lunarDefenses105:Number=source.getDePh()+source.getDeMa();
+                  try { source.sixNextRaw105(this,lunarDefenses105*Number(passive[4]),2,String(passive[3]),lunarDefenses105); }
+                  finally { attack.sixNextLunar105=false; }
+               }
                if(direct && attack.kind=="basic" && hp>0 && source.sixNextPassive105("malzahar"))
                   source.abilityControl(this,"silence",1);
                if(direct && hp>0 && (attack.kind=="basic" || attack.kind=="active") && source.sixNextPassive105("malzahar"))
@@ -6250,16 +6264,16 @@ package com.meng52.game.module.avatar
             // Split raw damage before each branch's element and rounding stages.
             var abyssPhysicalRaw104:Number = Tools.toInt(param3 * (1 - abyssTrue104) * _loc6_[1]);
             var abyssTrueRaw104:Number = Tools.toInt(param3 * abyssTrue104 * _loc6_[1]);
-            _loc7_ = Tools.toInt(Tools.toInt(defenseDamage104(abyssPhysicalRaw104,param2.getDefenseAgainst(param1,param4),param1.ap)) * param5) + Tools.toInt(Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE) * param5);
+            _loc7_ = Tools.toInt(Tools.toInt(defenseDamage104(abyssPhysicalRaw104,param2.getDefenseAgainst(param1,param4),isNaN(param1.defenseBase105) ? param1.ap : param1.defenseBase105)) * param5) + Tools.toInt(Tools.toInt(abyssTrueRaw104 * REAL_DAMAGE_RATE) * param5);
             param5 = 1;
          }
          else if(param4 == 1)
          {
-            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,1),param1.ap);
+            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,1),isNaN(param1.defenseBase105) ? param1.ap : param1.defenseBase105);
          }
          else if(param4 == 2)
          {
-            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,2),param1.ap);
+            _loc7_ = defenseDamage104(_loc7_,param2.getDefenseAgainst(param1,2),isNaN(param1.defenseBase105) ? param1.ap : param1.defenseBase105);
          }
          else if(param4 == 3)
          {

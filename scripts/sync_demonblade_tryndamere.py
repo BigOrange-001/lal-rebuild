@@ -94,10 +94,20 @@ once('         yasuoAdvanceEffects104(elapsed);\n',
      '         yasuoAdvanceEffects104(elapsed);\n         demonFxAdvance105(elapsed);\n')
 p.write_text(s, encoding='utf-8', newline='')
 
+# The map teardown is separate from the legacy overlay's in-battle resets.
+map_layer = ROOT / 'client/src/stages/177_GameMapLayer.as'
+layer_source = map_layer.read_text('utf-8')
+release = '         Avatar.clearEffects104();\n         Avatar.demonFxClear105();\n'
+if release not in layer_source:
+    teardown = '         Avatar.clearEffects104();\n'
+    if layer_source.count(teardown) != 1:
+        raise ValueError('Missing or ambiguous battle teardown hook')
+    map_layer.write_text(layer_source.replace(teardown, release, 1), encoding='utf-8', newline='')
+
 manifest = ROOT / 'client/build.json'
 cfg = json.loads(manifest.read_text('utf-8'))
 for stage in cfg['stages']:
-    if stage['source'] in ('client/src/stages/137_Avatar.as', 'client/src/stages/178_ProgressBar.as'):
+    if stage['source'] in ('client/src/stages/137_Avatar.as', 'client/src/stages/177_GameMapLayer.as', 'client/src/stages/178_ProgressBar.as'):
         stage['source_sha256'] = hashlib.sha256((ROOT / stage['source']).read_bytes()).hexdigest()
 manifest.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 print('Synchronized Demonblade Tryndamere and rage strip')

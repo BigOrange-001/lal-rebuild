@@ -843,7 +843,7 @@
       "index": 140,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "c309486eb6b5d7b5f6e419f94db3c8a2986a027db3add41f99f255287d5a38cb"
+      "source_sha256": "35495904ab02652c2f60ac2bd1436f91688d300604fe91e4e9ce67953b4e207c"
     },
     {
       "index": 141,
@@ -1076,7 +1076,7 @@
       "index": 178,
       "source": "client/src/stages/177_GameMapLayer.as",
       "class": "com.meng52.game.ui.map.GameMapLayer",
-      "source_sha256": "0e34b4ceaf0440e820b2b3e1ce3ca47dee74b60526d5a04863252dbbc8f7ca22"
+      "source_sha256": "b7f294b0adb0397fbb8b36f0ff1fadb702f609186e699e7d2fbef38f38e20e0c"
     },
     {
       "index": 179,

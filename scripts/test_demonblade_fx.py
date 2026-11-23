@@ -76,6 +76,23 @@ class DemonbladeEffectTests(unittest.TestCase):
             self.assertIn(f'case "{name}": return [', code)
         self.assertNotIn('$assetManager', code[:code.index('// END DEMON FX CORE 105')])
 
+    def test_battle_teardown_releases_demonblade_effect_state(self):
+        from test_vital_bar_104 import method
+        layer = (ROOT / 'client/src/stages/177_GameMapLayer.as').read_text('utf-8')
+        self.assertIn('Avatar.clearEffects104();\n         Avatar.demonFxClear105();\n         juggler.purge();', layer)
+        clear = method('client/src/stages/137_Avatar.as', 'demonFxClear105')
+        script = "const clear=" + clear + ";" + '''
+const assert=require('assert');
+let effect={demonFxLayer105:{removeFromParent(dispose){assert.equal(dispose,true);}},
+            demonFxMap105:{},demonFxLive105:[{source:{},target:{}}]};
+clear.call(effect);
+assert.equal(effect.demonFxLayer105,null);
+assert.equal(effect.demonFxMap105,null);
+assert.deepEqual(effect.demonFxLive105,[]);
+'''
+        run = subprocess.run(['node'], input=script, text=True, encoding='utf-8', capture_output=True, cwd=ROOT)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+
     def test_preview_harness_takes_the_core_verbatim(self):
         sys.path.insert(0, str(ROOT / 'scripts'))
         from demonblade_fx_preview import harness_source

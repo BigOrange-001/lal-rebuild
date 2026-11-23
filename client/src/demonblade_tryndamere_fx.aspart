@@ -584,7 +584,7 @@
       private static var demonFxSeed105:int = 0;
       private static var demonFxScratch105:Array = [];
 
-      private static function demonFxClear105() : void
+      public static function demonFxClear105() : void
       {
          if(demonFxLayer105) demonFxLayer105.removeFromParent(true);
          demonFxLayer105=null;demonFxMap105=null;demonFxLive105=[];

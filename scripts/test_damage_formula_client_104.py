@@ -55,7 +55,7 @@ class ClientFormulaTests(unittest.TestCase):
         self.run_js(script+'''
 const original=GlobalData.$mConfig_simple.attack.slice();
 assert(methods.ratioDamage104(),'no saved choice defaults to new');
-assert.equal(methods.damageAttack104()[21],.66);assert.equal(methods.REAL_DAMAGE_RATE,.5);
+assert.equal(methods.damageAttack104()[21],.528);assert.equal(methods.REAL_DAMAGE_RATE,.5);
 methods.beginDamageRules104();let panel={mDisposed:false,mLegacyDamageCheckmark104:{visible:false}};
 toggle.call(panel);assert(panel.mLegacyDamageCheckmark104.visible);assert(methods.ratioDamage104(),'current battle retains its model');
 methods.damageChoiceLoaded104=false;methods.legacyDamageChoice104=false;assert(methods.useLegacyDamage104(),'legacy survives preference reload');

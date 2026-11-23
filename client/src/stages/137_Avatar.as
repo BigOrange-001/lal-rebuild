@@ -5864,7 +5864,7 @@ package com.meng52.game.module.avatar
       private static const DAMAGE_CHOICE_KEY104:String = "lal_legacy_damage_formula_104";
       private static const DEFAULT_DAMAGE_RULES104:Object = {
          reduction_exponent:1.5,defense_attack_midpoint:0.7,miss_slope:40,crit_slope:60,true_skill_rate:0.8,
-         attack_overrides:{"1":0.5,"4":8,"5":15,"6":35,"7":60,"15":0,"16":0,"21":0.66}
+         attack_overrides:{"1":0.5,"4":8,"5":15,"6":35,"7":60,"15":0,"16":0,"21":0.528}
       };
 
       public static function useLegacyDamage104() : Boolean

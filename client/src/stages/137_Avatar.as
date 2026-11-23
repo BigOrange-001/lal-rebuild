@@ -1675,24 +1675,26 @@ package com.meng52.game.module.avatar
          GameMapLayer.gl.delayCall(sixNextShowDragon105,GameMap.actionDelay,GameMap.currentMap);
       }
 
-      public function sixNextCopyNormal105(owner:Avatar) : void
+      public function sixNextCopyNormal105(owner:Avatar, generation:int = 1) : void
       {
          if(owner && owner.skill0)
             skill0=new SkillSet(owner.skill0.skillSetData.id,this,owner.skill0.lv);
          skill1=null;skill2=null;skillB=null;
          abilityState.nextMirrorOwner=owner;
+         abilityState.nextMirrorGeneration=generation;
       }
 
       private function sixNextMirror105(owner:Avatar, passive:Array) : void
       {
-         if(!GameMap.currentMap) return;
+         var generation:int=int(abilityState.nextMirrorGeneration);
+         if(!GameMap.currentMap || generation>=int(passive[6])) return;
          var group:Array=owner.abilityState.nextMirrors || [];
          var living:Array=[];
          for each(var old:Avatar in group) if(old && old.hp>0) living.push(old);
          var clone:Avatar=new Avatar(GlobalData.modDefinitionId(owner.avatarData.id,"summoned"),{lv:owner.lv,slv:owner.slv});
          clone.goFight(team,line,0,false);
          if(!clone.inheritSummonPanel(owner,Number(passive[4]))) return;
-         clone.sixNextCopyNormal105(owner);
+         clone.sixNextCopyNormal105(owner,generation+1);
          clone.manualActionTypeOverride=1;
          clone.addBuff("summon",3);
          GameMap.currentMap.addAvatar(clone,team,line,pos+(team==1 ? -1 : 1)*GameMapConfig.SUMMON_POS,false);

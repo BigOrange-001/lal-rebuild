@@ -1660,6 +1660,7 @@ package com.meng52.game.module.avatar
       {
          if(!sixNextPassive105("shyvana") || hp<=0 || abilityState.nextDragon) return;
          abilityState.nextRage=int(abilityState.nextRage)+5;
+         queueRageBar105();
          if(int(abilityState.nextRage)<100) return;
          abilityState.nextDragon=true;
          removeAllDebuff();
@@ -1669,6 +1670,7 @@ package com.meng52.game.module.avatar
          dePh=int(dePh*1.5);
          deMa=int(deMa*1.5);
          queueVitalBar104();
+         queueRageBar105();
          abilityFeedback("巨龙真身","FX_A_1054_MAGIC");
          GameMapLayer.gl.delayCall(sixNextShowDragon105,GameMap.actionDelay,GameMap.currentMap);
       }
@@ -2029,6 +2031,7 @@ package com.meng52.game.module.avatar
             if(direct)
             {
                sixNextRage105();
+               demonHurtTaken105();
                if(sixNextPassive105("graves") && hp>0)
                {
                   abilityState.nextGravesHits=int(abilityState.nextGravesHits)+1;
@@ -3565,10 +3568,261 @@ package com.meng52.game.module.avatar
 
       // END NIGHTBRINGER YASUO 104
 
+      // BEGIN DEMONBLADE TRYNDAMERE 105
+      // Demonblade Tryndamere: rage resource, Endless Rage and the war cry.
+      // Action indices match server/demonblade_tryndamere_105.py.
+      private var demonRage105:Number = 0;
+      private var demonFury105:int = -1;
+      private var demonFuryReady105:int = 0;
+      private var demonFuryUsed105:int = 0;
+      private var demonHurtGain105:Number = 0;
+      private var demonAuraGain105:Number = 0;
+      private var demonDealt105:Boolean = false;
+      private var demonActed105:Boolean = false;
+      private var demonForceCrit105:Boolean = false;
+
+      public function demonIs105() : Boolean
+      {
+         var row:Object=GlobalData.$mConfig_avatar ? GlobalData.$mConfig_avatar[avatarData.id] : null;
+         return row && row.demonbladeTryndamere105===true;
+      }
+      public function demonPassive105() : Array
+      {
+         if(!skillB || !skillB.skills || !demonIs105()) return null;
+         for each(var action:Array in skillB.skills)
+            if(action[0]=="manual_ability" && action[1]=="demon_trynd_p") return action;
+         return null;
+      }
+      public function demonCaptain105() : Array
+      {
+         if(!isLeader || !skill1 || !skill1.skills || !demonIs105()) return null;
+         for each(var action:Array in skill1.skills)
+            if(action[0]=="manual_ability" && action[1]=="demon_trynd_c") return action;
+         return null;
+      }
+      private function demonStart105() : void
+      {
+         var passive:Array=demonPassive105();
+         demonRage105=passive ? Number(passive[14]) : 0;
+         demonFury105=-1;demonFuryReady105=0;demonFuryUsed105=0;
+         demonHurtGain105=0;demonAuraGain105=0;
+         demonDealt105=false;demonActed105=false;demonForceCrit105=false;
+         queueRageBar105();
+      }
+      public function demonGain105(amount:Number) : Number
+      {
+         if(!demonPassive105() || hp<=0 || !(amount>0)) return 0;
+         var before:Number=demonRage105;
+         demonRage105=Math.min(100,before+amount);
+         if(demonRage105!=before) queueRageBar105();
+         return demonRage105-before;
+      }
+      public function demonFuryActive105() : Boolean
+      {
+         return demonFury105>=0;
+      }
+      public function demonCritBonus105() : Number
+      {
+         var passive:Array=demonPassive105();
+         return passive ? demonRage105*Number(passive[5])*100 : 0;
+      }
+      private function demonAttack105(value:int) : int
+      {
+         var passive:Array=demonPassive105();
+         if(!passive || !hpMax) return value;
+         var missing:Number=Math.max(0,1-Math.max(0,hp)/hpMax);
+         value=Tools.toInt(value*(1+Math.min(Number(passive[7]),missing*100*Number(passive[6]))));
+         if(demonFury105>=0) value=Tools.toInt(value*(1+Number(passive[12])));
+         return value;
+      }
+      private function demonImmune105(kind:String) : Boolean
+      {
+         return kind=="curse" && demonFury105>=0;
+      }
+      private function demonTakeForceCrit105() : Boolean
+      {
+         if(!demonForceCrit105) return false;
+         demonForceCrit105=false;
+         return true;
+      }
+      private function demonTurn105() : void
+      {
+         var passive:Array=demonPassive105();
+         if(!passive || hp<=0) return;
+         if(demonActed105 && !demonDealt105) demonRage105=Math.max(0,demonRage105-Number(passive[21]));
+         demonActed105=true;demonDealt105=false;demonHurtGain105=0;demonAuraGain105=0;
+         if(demonFury105>=0 && --demonFury105<0)
+         {
+            var heal:int=Tools.toInt(hpMax*demonRage105*Number(passive[13]));
+            demonRage105=0;
+            if(heal>0) injured(heal,1,null,4,this,false,this,null,"",false,true);
+         }
+         queueRageBar105();
+      }
+      private function demonLethal105() : void
+      {
+         if(hp>0) return;
+         var passive:Array=demonPassive105();
+         if(!passive) return;
+         if(demonFury105<0)
+         {
+            var round:int=GameMap.currentMap ? int(GameMap.currentMap.roundNum) : 0;
+            if(demonFuryUsed105>=int(passive[9]) || round<demonFuryReady105) return;
+            ++demonFuryUsed105;
+            demonFuryReady105=round+int(passive[8]);
+            demonFury105=int(passive[11]);
+            hp=1;
+            removeBuff("curse");
+            demonGain105(Number(passive[10]));
+            abilityFeedback("无尽怒火","",0xFF3B1F);
+         }
+         hp=1;
+         if(GameMapLayer.gl) GameMapLayer.gl.delayCall(refreshHp,GameMap.actionDelay,hp,false,shieldValue104(),hpMax);
+      }
+      public function demonHurtTaken105() : void
+      {
+         var passive:Array=demonPassive105();
+         if(!passive || demonHurtGain105>=Number(passive[20])) return;
+         demonHurtGain105+=demonGain105(Math.min(Number(passive[19]),Number(passive[20])-demonHurtGain105));
+      }
+      private function demonEvent105(event:String, source:Avatar, target:Avatar) : void
+      {
+         if(source!==this || !target || target.team==team) return;
+         var attack:Object=currentAbilityAttack();
+         var basic:Boolean=attack && attack.owner===this && attack.kind=="basic";
+         var passive:Array=demonPassive105();
+         if(event=="hit" && passive)
+         {
+            demonDealt105=true;
+            if(basic) demonGain105(Number(passive[15]));
+         }
+         if(event!="crit") return;
+         if(passive && basic) demonGain105(Number(passive[16]));
+         if(!GameMap.currentMap) return;
+         for each(var leader:Avatar in GameMap.currentMap.getAliveList(team))
+            if(leader!==this && leader.hp>0 && leader.line==line) leader.demonAuraCrit105();
+      }
+      public function demonAuraCrit105() : void
+      {
+         var captain:Array=demonCaptain105();
+         if(!captain || demonAuraGain105>=Number(captain[12])) return;
+         demonAuraGain105+=demonGain105(Math.min(Number(captain[11]),Number(captain[12])-demonAuraGain105));
+      }
+      private function demonLane105() : Array
+      {
+         return abilityCandidates(otherTeam,line,GameMapConfig.LINE_POS/2,GameMapConfig.LINE_POS,-1,false,"front");
+      }
+      private function demonCanCast105(kind:String) : Boolean
+      {
+         if(!demonIs105() || hp<=0 || kind=="demon_trynd_p") return false;
+         if(kind=="demon_trynd_c") return true;
+         var front:Array=demonLane105();
+         if(!front.length) return false;
+         return !(abilityState.root || buffs.root) || Math.abs(Avatar(front[0]).pos-pos)<=getRange();
+      }
+      private function demonExecute105(kind:String, sourceSkill:*) : Boolean
+      {
+         if(!sourceSkill || !demonCanCast105(kind)) return false;
+         var action:Array=sourceSkill.skills[0];
+         if(kind=="demon_trynd_c") return demonWarCry105(action);
+         var front:Avatar=demonLane105()[0];
+         if(hp<hpMax*Number(action[8]) && demonRage105>=Number(action[9]))
+         {
+            demonRage105-=Number(action[9]);
+            queueRageBar105();
+            injured(Tools.toInt(hpMax*Number(action[10])+getDamage()*Number(action[11])),1,null,4,this,false,this);
+         }
+         if(!abilityState.root && !buffs.root) abilityDash(front);
+         // Centred on the front enemy: the native spacing keeps the landing point
+         // in front of it, which would otherwise eat most of the radius.
+         var targets:Array=abilityCandidates(otherTeam,front.line,front.pos,int(action[6]),int(action[7]),false,"nearest");
+         var passive:Array=demonPassive105();
+         var gained:Number=0;
+         var sunder:Number=Math.min(.95,Math.max(0,Number(action[5])));
+         var wave:Object=beginAbilityAttack(this,"active");
+         wave.skill=sourceSkill;
+         wave.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
+         try
+         {
+            for each(var target:Avatar in targets)
+            {
+               if(hp<=0) break;
+               if(!demonHit105(target,Number(action[4]))) continue;
+               if(target.hp>0) abilityControl(target,"sunder",2,sunder/(1-sunder));
+               if(passive && gained<Number(passive[18]))
+                  gained+=demonGain105(Math.min(Number(passive[17]),Number(passive[18])-gained));
+            }
+         }
+         finally {endAbilityAttack(wave);}
+         if(passive) demonForceCrit105=true;
+         return true;
+      }
+      private function demonHit105(target:Avatar, coefficient:Number) : Boolean
+      {
+         var rate:Number=Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104);
+         if(!isFinite(rate) || rate<=0) rate=1;
+         return abilityHit(target,coefficient/rate,1,"FX_DEMON_TRYND105");
+      }
+      private function demonWarCry105(action:Array) : Boolean
+      {
+         var allies:Array=[];
+         if(GameMap.currentMap)
+            for each(var unit:Avatar in GameMap.currentMap.getAliveList(team))
+               if(unit.hp>0 && unit.line==line) allies.push(unit);
+         for each(unit in allies)
+         {
+            unit.addBuff("strong",2,Number(action[4]),0,-1,this);
+            unit.addBuff("critup",2,Number(action[5]),0,-1,this);
+         }
+         var enemies:Array=demonLane105();
+         if(enemies.length)
+         {
+            var weakened:Array=[enemies[0]].concat(abilityCandidates(otherTeam,Avatar(enemies[0]).line,Avatar(enemies[0]).pos,
+               GameMapConfig.LINE_POS,1,false,"nearest",[enemies[0]]));
+            var weak:Number=Math.min(.95,Math.max(0,Number(action[6])));
+            for each(unit in weakened) abilityControl(unit,"weak",2,weak/(1-weak));
+         }
+         if(!demonPassive105()) return true;
+         var spent:Number=Math.min(demonRage105,Math.max(demonRage105*Number(action[7]),Number(action[8])));
+         demonRage105-=spent;
+         queueRageBar105();
+         var amount:int=Tools.toInt(spent*(getDamage()*Number(action[9])+hpMax*Number(action[10])));
+         if(amount>0)
+            for each(unit in allies)
+            {
+               if(unit.hp>=unit.hpMax) unit.addBuff("shield",2,amount,0,-1,this);
+               else unit.injured(amount,1,null,4,this,false,this);
+            }
+         abilityFeedback("恶魔战吼","",0xFF3B1F);
+         return true;
+      }
+
+      // Rage strip under the HP bar: Demonblade Tryndamere and Shyvana.
+      private function rageValue105() : Number
+      {
+         if(demonPassive105()) return demonRage105;
+         if(skillB && sixNextPassive105("shyvana")) return abilityState.nextDragon ? 100 : int(abilityState.nextRage);
+         return -1;
+      }
+      private function queueRageBar105() : void
+      {
+         var value:Number=rageValue105();
+         if(!mBloodSpr || value<0) return;
+         if(GameMapLayer.gl) GameMapLayer.gl.delayCall(refreshRageBar105,GameMap.actionDelay,value);
+         else refreshRageBar105(value);
+      }
+      private function refreshRageBar105(value:Number) : void
+      {
+         if(mBloodSpr) mBloodSpr.setRage105(value/100);
+      }
+
+      // END DEMONBLADE TRYNDAMERE 105
+
       public function abilityCanCast(kind:String, distance:int, sourceSkill:* = null) : Boolean
       {
          if(hp <= 0 || !GameMap.currentMap) return false;
          if(kind.indexOf("six_")==0) return sixStarCanCast105(kind,distance);
+         if(kind.indexOf("demon_trynd_")==0) return demonCanCast105(kind);
          if(kind.indexOf("night_yasuo_")==0) return yasuoCanCast104(kind);
          if(kind.indexOf("dragon_kaisa_")==0) return kaisaCanCast104(kind);
          if(kind.indexOf("skin2_")==0) return skin2CanCast(kind,sourceSkill);
@@ -4658,6 +4912,7 @@ package com.meng52.game.module.avatar
       private function executeAbilityBody(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
          if(kind.indexOf("six_")==0) return sixStarExecute105(kind,effect,sourceSkill);
+         if(kind.indexOf("demon_trynd_")==0) return demonExecute105(kind,sourceSkill);
          if(kind.indexOf("night_yasuo_")==0) return yasuoExecute104(kind,sourceSkill);
          if(kind.indexOf("dragon_kaisa_")==0) return kaisaExecute104(kind,sourceSkill);
          if(kind.indexOf("skin2_")==0) return executeSkin2(kind,sourceSkill);
@@ -5559,6 +5814,7 @@ package com.meng52.game.module.avatar
          if(event=="death") sixBatchDeath105(source);
          if(event=="crit" && skillB && sixBatchPassive105("yasuo")) skillB.cooldown();
          yasuoEvent104(event,source,target,amount);
+         demonEvent105(event,source,target);
          kaisaEvent104(event,source,target);
          skin2Event(event,source,target,amount,overheal);
          if(skillB && skillB.skills && skillB.skills.length ||
@@ -6041,6 +6297,7 @@ package com.meng52.game.module.avatar
             var rengar:Array=param1.sixFollowupPassive105("rengar");
             if(rengar) chance=Math.min(100,chance*Number(rengar[4]));
          }
+         chance=Math.min(100,chance+param1.demonCritBonus105());
          var _loc3_:Boolean = force || (ratioDamage104() ? rollPercent105(chance) : Random.getRandom() < chance);
          if(_loc3_)
          {
@@ -6587,6 +6844,7 @@ package com.meng52.game.module.avatar
             param1.addChild(_loc3_);
             mBloodSpr = new ProgressBar(team,hp / hpMax,hpMax);
             refreshVitalBar104(hp,hpMax,shieldValue104());
+            queueRageBar105();
             mBloodSpr.y = -_loc3_.pivotY - 5;
             param1.addChild(mBloodSpr);
             if(isLeader)
@@ -7305,6 +7563,7 @@ package com.meng52.game.module.avatar
       public function addBuff(param1:String, param2:int, param3:Number = 0, param4:Number = 0, param5:int = -1, param6:Avatar = null) : void
       {
          if(yasuoImmune104(param1)) return;
+         if(demonImmune105(param1)) return;
          if(s2AnnieImmune() && Buff.LIST_DEBUFF.indexOf(param1)>=0) return;
          if(abilityState.channel && ["stun","silence","root","pull","push"].indexOf(param1)>=0) return;
          var _loc8_:* = 0;
@@ -7799,6 +8058,7 @@ package com.meng52.game.module.avatar
                return true;
             }
          }
+         demonTurn105();
          if(yasuoNightRounds104>=0 && --yasuoNightRounds104<0) yasuoQueueNight104(false);
          if(yasuoVampRounds104>=0) --yasuoVampRounds104;
          tickManualLethalFloors();
@@ -8292,6 +8552,7 @@ package com.meng52.game.module.avatar
          if(hpMax && abilityEntryAttack > 0) _loc6_ += int(abilityEntryAttack * (abilityState.evilStackBonus != null ? Number(abilityState.evilStackBonus) : 0.03 * int(abilityState.evilStacks)));
          if(hpMax && this.abilityState && int(this.abilityState.santaStacks) > 0) _loc6_ = Tools.toInt(_loc6_ * (1+(skillB && skillB.skills && skillB.skills.length && skillB.skills[0][0]=="santa_kill" ? Number(skillB.skills[0][3]) : 0.05)*int(this.abilityState.santaStacks)));
          if(this.yasuoNightRounds104>=0) _loc6_ = Tools.toInt(_loc6_*1.75);
+         _loc6_ = demonAttack105(_loc6_);
          return Math.max(_loc6_,0);
       }
 
@@ -9298,6 +9559,7 @@ package com.meng52.game.module.avatar
          initFightAttr();
          abilityEntryAttack = ap;
          yasuoStart104();
+         demonStart105();
          ready();
       }
 
@@ -10163,6 +10425,7 @@ package com.meng52.game.module.avatar
          if(kayleStage>=2 && param1 && param1.length) return sixBatchKayleAttack105(param1[0],kayleStage);
          var basicPassive105:Array = param2 == -1 && skillB ? sixStarPassive105() : null;
          if(basicPassive105 && basicPassive105[1]=="six_caitlyn_p") param3 *= Number(basicPassive105[4]);
+         if(param2 == -1 && demonPassive105()) param3 *= Number(demonPassive105()[4]);
          if(basicPassive105 && param1 && param1.length)
          {
             if(basicPassive105[1]=="six_next_graves_p")
@@ -10192,6 +10455,7 @@ package com.meng52.game.module.avatar
             basicContext = beginAbilityAttack(this,"basic");
             if(param2==-1)
             {
+               if(demonTakeForceCrit105()) basicContext.sixForceCrit105=true;
                if(abilityState.sixFire105) sixStarSkillBegin105(basicContext,null);
                var shenCharge105:Object=abilityState.sixShen105;
                if(shenCharge105 && shenCharge105.charges>0)
@@ -11124,6 +11388,7 @@ package com.meng52.game.module.avatar
                GameMapTools.gameTrace(id + "触发限时保命，保留" + hp + "生命");
             }
          }
+         demonLethal105();
          skin2Lethal();
          if(hp <= 0 && buffs["bless"])
          {

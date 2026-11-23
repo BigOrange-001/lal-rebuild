@@ -25,7 +25,7 @@ function make(team=1,pos=2400,yasuo=true){
  u.getHpMax=()=>u.hpMax;u.getRecoveryTalentMultiplier=()=>1;
  u.abilityEntryAttack=0;u.manualAttackStack=0;u.timedAttackStack=0;
  u.getManualBattleStack=()=>u.manualAttackStack;u.getManualTimedStack=()=>u.timedAttackStack;
- u.yasuoEffect104=()=>{};u.fxPulse104=()=>{};u.abilityFeedback=()=>{};u.queueVitalBar104=()=>{};
+ u.yasuoEffect104=()=>{};u.demonAttack105=v=>v;u.fxPulse104=()=>{};u.abilityFeedback=()=>{};u.queueVitalBar104=()=>{};
  u.yasuoResetVisuals104=()=>{};u.yasuoQueueNight104=()=>{};
  u.yasuoWhirlwind104=(lane,offset,points)=>u.flights.push({lane,offset,points:structuredClone(points)});
  u.beginParallelVisualBatch=()=>({});u.endParallelVisualBatch=()=>{};u.prepareParallelVisualTarget=()=>{};

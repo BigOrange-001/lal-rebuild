@@ -629,7 +629,7 @@ class ReferenceBattle:
             return 1.0
         return precision_recovery(self._effective_secondary(source, self._get_hit, 4))
 
-    def _roll_attack(self, attacker, target, *, crit_rate=1, force_crit=False):
+    def _roll_attack(self, attacker, target, *, crit_rate=1, force_crit=False, crit_bonus=0):
         """Zero means evaded. Otherwise return the hit's critical multiplier."""
         rules, attack = self._combat_rules, self._attack
         if ratio_enabled(rules):
@@ -644,7 +644,7 @@ class ReferenceBattle:
             self._emit_mod_event(attacker, 'miss', attacker, target)
             self._emit_mod_event(target, 'dodge', attacker, target)
             return 0
-        chance = min(100, crit_chance(critical, tough, attack, rules) * crit_rate)
+        chance = min(100, crit_chance(critical, tough, attack, rules) * crit_rate + crit_bonus)
         if force_crit or roll_percent(self.rng, chance, rules):
             if force_crit:
                 tough = 0

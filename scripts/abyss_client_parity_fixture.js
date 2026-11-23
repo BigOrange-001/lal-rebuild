@@ -38,7 +38,7 @@ function unit(data){
  abilityDirectMultiplier:()=>1,damageAttack104:()=>attack,checkTalent:()=>0,getTough:()=>0,
  getDamage(){return this.ap;},getHpMax(){return this.hpMax;},getType:()=>1,getDePh:()=>0,getDeMa:()=>0,
  getDefenseAgainst:()=>0,getRecoveryTalentMultiplier:()=>1,
- getBookCombatBonus:()=>0,skin2Incoming:v=>v,yasuoDamage104:v=>v,yasuoImmune104:()=>false,
+ getBookCombatBonus:()=>0,skin2Incoming:v=>v,yasuoDamage104:v=>v,yasuoImmune104:()=>false,demonImmune105:()=>false,
  s2AnnieImmune:()=>false,s2AnnieStatus:noop,
  hasManualDotKind(k){return !!this.buffs[k]||this.hasAbyssDot104(k);},skin2Lethal:noop,s2Family:()=>0,
  recordStatistics104:noop,emitModEvent:noop,yasuoCritical104:noop,abilityRecordDamage:noop,

@@ -265,7 +265,7 @@ const int=Math.trunc; let modEventDepth=0,modEventBudget=0;
 const GameMap={currentMap:null},GlobalData={$mConfig_skill:{}};
 const emit=new Function('event','source','target','amount','overheal','with(this){'+input.body+'}');
 // Function constructor needs these globals just as AS sees its imported classes.
-global.GameMap=GameMap;global.GlobalData=GlobalData;global.int=int;global.skin2Event=()=>{};global.yasuoEvent104=()=>{};global.kaisaEvent104=()=>{};global.sixStarCombatEvent105=()=>{};
+global.GameMap=GameMap;global.GlobalData=GlobalData;global.int=int;global.skin2Event=()=>{};global.yasuoEvent104=()=>{};global.demonEvent105=()=>{};global.kaisaEvent104=()=>{};global.sixStarCombatEvent105=()=>{};
 Object.defineProperty(global,'modEventDepth',{get:()=>modEventDepth,set:v=>modEventDepth=v});
 Object.defineProperty(global,'modEventBudget',{get:()=>modEventBudget,set:v=>modEventBudget=v});
 let results=[];

@@ -27,7 +27,7 @@ let enemies=Array.from({length:4},(_,i)=>({id:'enemy'+i,team:2,hp:10000,hpMax:10
 const unit={heroSkillOutputRate104:()=>1,equipmentPart104:(skill,part,value)=>value,id:'owner',team:1,otherTeam:2,line:0,pos:2200,hp:5000,hpMax:10000,abilityIndex:1,
 abilityState:{},parallelVisualBatches:[],buffs:{},skillB:null,m_buff:{},showBuff:noop,abilityFeedback:noop,checkTalent:()=>0,flushParallelVisualBatch:noop,
 abilityDirectMultiplier:()=>1,getTough:()=>0,getBookCombatBonus:()=>0,hasManualDotKind:()=>false,abilityRecordDamage:noop,
-ap:300,abilityEntryAttack:0,getManualBattleStack:()=>0,getManualTimedStack:()=>0,
+ap:300,abilityEntryAttack:0,getManualBattleStack:()=>0,getManualTimedStack:()=>0,demonAttack105:v=>v,
 removeAllDebuff:noop,reline(line,pos){this.line=line;this.pos=pos;},
 addBuff(kind,round,value=0){this.buffs[kind]=new Buff(kind,round,value);},
 injured(amount,a,b,type){if(type===4)this.hp=Math.min(this.hpMax,this.hp+amount);},

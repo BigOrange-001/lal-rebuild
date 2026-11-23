@@ -65,14 +65,14 @@ LIVE_TEXT={
  'self_purify':lambda g:_single(g) and '施放时净化自身。',
  'front_magic_silence':lambda g:f'同时对本路最前方的敌人造成{_r(_single(g)[0])}魔法伤害并沉默1回合。',
  'front_physical':lambda g:f'同时对本路最前方的敌人造成{_r(_single(g)[0])}物理伤害。',
- 'dash_lowest_magic':lambda g:f'随后突进至本路生命比例最低的敌人面前，对其造成{_r(_single(g)[0])}魔法伤害。',
+ 'dash_lowest_magic':lambda g:f'随后突进，并对本路生命比例最低的敌人造成{_r(_single(g)[0])}魔法伤害。',
  'lowest_purify_shield':lambda g:f'全队生命比例最低的友方英雄另外获得净化和其最大生命值{_r(_single(g)[1])}的护盾，持续2回合。',
 }
 LIVE_TEXT_FAMILIES={'A_1001','A_1028','A_1049','A_1074','A_1103','A_1132','A_1134','A_1210','A_1212','A_1217'}
 # Retargeted captain skills: the original body named the old target set.
 TARGET_TEXT={
  'A_1074':('自身周围400范围内距离自己最近的最多4名敌人','本路所有敌人'),
- 'A_1212':('为范围内全场友方恢复生命，并分别附加','为范围内生命比例最低的友军恢复生命，并为范围内全体友军分别附加'),
+ 'A_1212':('为范围内全场友方恢复生命，并分别附加','为全队生命比例最低的友军恢复生命，并为本路全体友军分别附加'),
 }
 
 

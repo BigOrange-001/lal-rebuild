@@ -96,7 +96,7 @@ class MechanismTextTests(unittest.TestCase):
         self.assertEqual(self.tokens(self.row('A_1028_6',10),'每次施放命中敌人后'),['battle_stack'])
         self.assertEqual(self.tokens(self.row('A_1217_6',10),'每次施放另外获得'),['battle_stack_unconditional'])
         self.assertEqual(self.tokens(self.row('A_1103_6',10),'同时对本路最前方'),['damage'])
-        self.assertEqual(self.tokens(self.row('A_1134_6',10),'随后突进至本路'),['damage'])
+        self.assertEqual(self.tokens(self.row('A_1134_6',10),'随后突进，并对本路生命比例最低的敌人'),['damage'])
         self.assertEqual(self.tokens(self.row('A_1049_6',10),'为全队生命比例最低'),['target_hp_shield'])
         self.assertEqual(self.tokens(self.row('A_1212_6',11),'全队生命比例最低'),['target_hp_shield'])
         # Garen's normal is shared by two variant pairs, so both additions apply.
@@ -110,7 +110,9 @@ class MechanismTextTests(unittest.TestCase):
         self.assertIn('本路所有敌人',amumu)
         self.assertNotIn('400范围',amumu)
         self.assertNotIn('最多4名',amumu)
-        self.assertIn('范围内生命比例最低的友军恢复生命',self.row('A_1212_6',11)['info'])
+        zongzi = self.row('A_1212_6',11)['info']
+        self.assertIn('为全队生命比例最低的友军恢复生命',zongzi)
+        self.assertIn('为本路全体友军分别附加',zongzi)
         self.assertIn('施放时净化自身。',self.row('A_1210_6',11)['info'])
 
     def test_erlang_skills_state_numbers(self):

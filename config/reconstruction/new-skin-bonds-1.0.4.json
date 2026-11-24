@@ -1,5 +1,5 @@
 {
-  "schema": "new-skin-bonds-20261113",
+  "schema": "new-skin-bonds-20261124",
   "bonds": [
     {
       "id": "dragon_night_104",
@@ -31,6 +31,73 @@
         "A_1801": {"stats": {"ap": 0.14, "hp": 0.14}},
         "A_1206": {"stats": {"ap": 0.14, "hp": 0.14}}
       }
+    },
+    {
+      "id": "demonblade_brothers_105",
+      "name": "蛮易信三兄弟",
+      "relation": "skin",
+      "families": [
+        "A_1803",
+        "A_1009",
+        "A_1012"
+      ],
+      "benefits": {
+        "A_1803": {
+          "mechanics": {
+            "demon_q_damage": 1.3,
+            "demon_q_summon": 2
+          },
+          "info": "恶魔旋斩伤害系数提高30%，对召唤物造成双倍伤害。"
+        },
+        "A_1009": {
+          "stats": {
+            "ap": 0.2,
+            "hp": 0.2
+          }
+        },
+        "A_1012": {
+          "stats": {
+            "ap": 0.2,
+            "hp": 0.2
+          }
+        }
+      }
+    },
+    {
+      "id": "demonblade_ashe_105",
+      "name": "凛冬怒火",
+      "relation": "skin",
+      "families": [
+        "A_1803",
+        "A_1202"
+      ],
+      "benefits": {
+        "A_1803": {
+          "mechanics": {
+            "demon_rage_gain": 1.5
+          },
+          "info": "怒气获取量及各来源的获取限额提高50%，怒气值总上限仍为100。"
+        },
+        "A_1202": {}
+      }
+    },
+    {
+      "id": "demonblade_ryze_105",
+      "name": "狂怒恶魔",
+      "relation": "skin",
+      "families": [
+        "A_1803",
+        "A_1203"
+      ],
+      "benefits": {
+        "A_1803": {
+          "mechanics": {
+            "demon_q_curse": 2
+          },
+          "info": "恶魔旋斩每命中一名存活目标，额外施加一次诅咒，持续2回合。"
+        },
+        "A_1203": {}
+      }
     }
   ],
   "equipment": {
@@ -41,6 +108,48 @@
     "A_1801_6": [
       {"equipment": "E_1020_6", "kind": "stats", "name": "圣光龙枪", "stats": {"ap": 0.2}, "info": "本人穿戴圣光双枪，攻击力提高20%。"},
       {"equipment": "E_5006_6", "kind": "stats", "name": "影刃龙步", "stats": {"hp": 0.2}, "info": "本人穿戴影刃战靴，生命值提高20%。"}
+    ],
+    "A_1803_5": [
+      {
+        "equipment": "E_1004_5",
+        "kind": "mechanic",
+        "name": "无尽怒刃",
+        "mechanics": {
+          "demon_basic_ratio": 2.35
+        },
+        "info": "本人穿戴无尽之刃时，战斗狂怒的普通攻击伤害系数提高至235%攻击力。"
+      },
+      {
+        "equipment": "E_5001_5",
+        "kind": "stats",
+        "name": "狂战怒步",
+        "stats": {
+          "ap": 0.14,
+          "hp": 0.14
+        },
+        "info": "本人穿戴紫色狂战士胫甲时，攻击力和生命值各提高14%。"
+      }
+    ],
+    "A_1803_6": [
+      {
+        "equipment": "E_1004_5",
+        "kind": "mechanic",
+        "name": "无尽怒刃",
+        "mechanics": {
+          "demon_basic_ratio": 2.35
+        },
+        "info": "本人穿戴无尽之刃时，战斗狂怒的普通攻击伤害系数提高至235%攻击力。"
+      },
+      {
+        "equipment": "E_5001_5",
+        "kind": "stats",
+        "name": "狂战怒步",
+        "stats": {
+          "ap": 0.14,
+          "hp": 0.14
+        },
+        "info": "本人穿戴紫色狂战士胫甲时，攻击力和生命值各提高14%。"
+      }
     ]
   }
 }

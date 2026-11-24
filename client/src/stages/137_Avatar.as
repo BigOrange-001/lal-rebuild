@@ -3625,13 +3625,20 @@ package com.meng52.game.module.avatar
          demonDealt105=false;demonActed105=false;demonForceCrit105=false;
          queueRageBar105();
       }
-      public function demonGain105(amount:Number) : Number
+      public function demonGain105(amount:Number, limit:Number = 100) : Number
       {
          if(!demonPassive105() || hp<=0 || !(amount>0)) return 0;
          var before:Number=demonRage105;
-         demonRage105=Math.min(100,before+amount);
+         demonRage105=Math.min(100,before+Math.min(limit,amount*skinBondNumber104("demon_rage_gain",1)));
          if(demonRage105!=before) queueRageBar105();
          return demonRage105-before;
+      }
+      private function demonBasicRatio105(passive:Array) : Number
+      {
+         for each(var row:Object in getEquipmentBondRows104())
+            if(row.mechanics && row.mechanics.demon_basic_ratio!=null)
+               return Number(row.mechanics.demon_basic_ratio);
+         return Number(passive[4]);
       }
       public function demonFuryActive105() : Boolean
       {
@@ -3709,8 +3716,9 @@ package com.meng52.game.module.avatar
       public function demonHurtTaken105() : void
       {
          var passive:Array=demonPassive105();
-         if(!passive || demonHurtGain105>=Number(passive[20])) return;
-         demonHurtGain105+=demonGain105(Math.min(Number(passive[19]),Number(passive[20])-demonHurtGain105));
+         if(!passive) return;
+         var cap:Number=Number(passive[20])*skinBondNumber104("demon_rage_gain",1);
+         demonHurtGain105+=demonGain105(Number(passive[19]),Math.max(0,cap-demonHurtGain105));
       }
       private function demonRecordDamage105(target:Avatar, amount:Number, critical:Boolean = false) : void
       {
@@ -3742,8 +3750,9 @@ package com.meng52.game.module.avatar
       public function demonAuraCrit105() : void
       {
          var captain:Array=demonCaptain105();
-         if(!captain || demonAuraGain105>=Number(captain[12])) return;
-         demonAuraGain105+=demonGain105(Math.min(Number(captain[11]),Number(captain[12])-demonAuraGain105));
+         if(!captain) return;
+         var cap:Number=Number(captain[12])*skinBondNumber104("demon_rage_gain",1);
+         demonAuraGain105+=demonGain105(Number(captain[11]),Math.max(0,cap-demonAuraGain105));
       }
       private function demonLane105() : Array
       {
@@ -3775,6 +3784,10 @@ package com.meng52.game.module.avatar
          var targets:Array=abilityCandidates(otherTeam,front.line,front.pos,int(action[6]),int(action[7]),false,"nearest");
          var passive:Array=demonPassive105();
          var gained:Number=0;
+         var cap:Number=passive ? Number(passive[18])*skinBondNumber104("demon_rage_gain",1) : 0;
+         var damage:Number=Number(action[4])*skinBondNumber104("demon_q_damage",1);
+         var summonRate:Number=skinBondNumber104("demon_q_summon",1);
+         var curseRounds:int=int(skinBondNumber104("demon_q_curse"));
          var sunder:Number=Math.min(.95,Math.max(0,Number(action[5])));
          var wave:Object=beginAbilityAttack(this,"active");
          wave.skill=sourceSkill;
@@ -3786,11 +3799,13 @@ package com.meng52.game.module.avatar
                if(hp<=0) break;
                wave.demonSlashTarget105=target;
                wave.demonSlashDamage105=false;
-               if(!demonHit105(target,Number(action[4]))) continue;
+               var ratio:Number=target.isManualSummonUnit || target.getType()==2 ? summonRate : 1;
+               if(!demonHit105(target,damage*ratio)) continue;
                if(wave.demonSlashDamage105) demonFx105(target===front ? "slash" : "cleave",target);
                if(target.hp>0) abilityControl(target,"sunder",2,sunder/(1-sunder));
-               if(passive && gained<Number(passive[18]))
-                  gained+=demonGain105(Math.min(Number(passive[17]),Number(passive[18])-gained));
+               if(target.hp>0 && curseRounds>0) abilityControl(target,"curse",curseRounds);
+               if(passive && gained<cap)
+                  gained+=demonGain105(Number(passive[17]),cap-gained);
             }
          }
          finally {endAbilityAttack(wave);}
@@ -11183,7 +11198,7 @@ package com.meng52.game.module.avatar
          if(kayleStage>=2 && param1 && param1.length) return sixBatchKayleAttack105(param1[0],kayleStage);
          var basicPassive105:Array = param2 == -1 && skillB ? sixStarPassive105() : null;
          if(basicPassive105 && basicPassive105[1]=="six_caitlyn_p") param3 *= Number(basicPassive105[4]);
-         if(param2 == -1 && demonPassive105()) param3 *= Number(demonPassive105()[4]);
+         if(param2 == -1 && demonPassive105()) param3 *= demonBasicRatio105(demonPassive105());
          if(basicPassive105 && param1 && param1.length)
          {
             if(basicPassive105[1]=="six_next_graves_p")

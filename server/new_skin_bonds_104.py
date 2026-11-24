@@ -22,8 +22,9 @@ def apply_new_skin_bonds_104(document):
     for bond in copy.deepcopy(plan['bonds']):
         if set(bond['families']) != set(bond['benefits']):
             raise ValueError('New skin bond membership mismatch')
-        if any(family + '_6' not in skins for family in bond['families']):
-            raise ValueError('New skin bonds require six-star skin identities')
+        orange_ids = {family + '_6' for family in bond['families']}
+        if not orange_ids <= cfg['avatar'].keys() or not orange_ids & skins:
+            raise ValueError('New skin bonds require valid heroes and at least one six-star skin')
         if any(row['id'] == bond['id'] for row in definitions):
             raise ValueError('Duplicate new skin bond ID')
         bond['minimum_quality'] = {family: 6 for family in bond['families']}
@@ -43,13 +44,21 @@ def apply_new_skin_bonds_104(document):
         'S_98618021_6': '异界剑盟羁绊激活时，本技能伤害提升12%，并且可以在被沉默时释放。',
         'S_98618023_6': '龙影夜刃羁绊激活时，暴击附加伤害提高至50%。',
     }
+    for q in (5, 6):
+        notes[f'S_98618030_{q}'] = (
+            '蛮易信三兄弟激活时，伤害系数提高30%，对召唤物造成双倍伤害。'
+            '狂怒恶魔激活时，命中存活目标后施加2回合诅咒。')
+        notes[f'S_98618033_{q}'] = (
+            '穿戴无尽之刃时，普攻伤害系数提高至235%攻击力。'
+            '凛冬怒火激活时，怒气获取量和各来源的获取限额提高50%，总上限仍为100。')
     for sid, note in notes.items():
         if note:
             row = cfg['skill'][sid]
             row['info'] += '\n' + note
             row['rankInfoTemplate'] += '\n' + note
     cfg['equipment_bonds_104']['heroes'] = len(equipment)
-    cfg['equipment_bonds_104']['stats'] = sum(len(rows) for rows in plan['equipment'].values())
+    cfg['equipment_bonds_104']['stats'] = sum(
+        row['kind'] == 'stats' for rows in plan['equipment'].values() for row in rows)
     simple['new_skin_bonds_104'] = plan['schema']
     validate_bindings(cfg)
     return document

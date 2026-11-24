@@ -39,6 +39,8 @@ const GlobalData={modChannelAllowed:(aid,key)=>cfg.mod_runtime?.heroes?.[aid]?.c
 const GameMap={currentMap:null};
 const GlobalFunction={setOtherCfgAvatar:()=>{throw Error('stale owned DN snapshot was used');}};
 function attach(unit,definitions){for(const [name,[params,body]] of Object.entries(definitions))unit[name]=eval('(function('+params+'){with(this){'+body+String.fromCharCode(10)+'}})');return unit;}
+let bondDefinitionSource104,bondFamilies104;
+const familyBondDefinitions104=eval('(function(definitions,family){'+input.familyBondDefinitions+'})');
 function Skill(sid,lv=1,superSkill=false,book=false){
  if(!sid||!cfg.skill[sid])return null;
  let row=cfg.skill[sid],actions=JSON.parse(JSON.stringify(row.skill||[]));
@@ -110,7 +112,7 @@ class StatPower103Tests(unittest.TestCase):
         backend.db.close()
         cls.avatar_methods = methods('137_Avatar.as', {
             'applyAbyssRelic104':'stat,value','abyssRelicPowerRate104':'',
-            'skin2Initialize':'','s2Family':'','getBondRows104':'','bondPanel104':'stat,value','updateBondSkills104':'','getEquipmentBondRows104':'','equipmentSkillId104':'source','equipmentOutputRate104':'',
+            'skin2Initialize':'','s2Family':'','sixNextPassive105':'name','sixStarPassive105':'','demonAttack105':'value','demonPassive105':'','demonIs105':'','getBondRows104':'','bondPanel104':'stat,value','updateBondSkills104':'','getEquipmentBondRows104':'','equipmentSkillId104':'source','equipmentOutputRate104':'',
             'getHpMax':'param1=-1,param2=-1,param3=false','getDamage':'param1=-1,param2=-1,param3=false',
             'getDePh':'param1=-1,param2=-1,param3=false','getDeMa':'param1=-1,param2=-1,param3=false',
             'getPhysicalDefense':'param1,param2,param3,ignoreSunder','getMagicDefense':'param1,param2,param3,ignoreSunder',
@@ -154,7 +156,8 @@ class StatPower103Tests(unittest.TestCase):
         selected['mod_runtime']=cfg.get('mod_runtime',{})
         payload = {'cfg':selected,'profile':profile,'avatarMethods':self.avatar_methods,'equipMethods':self.equip_methods,
                    'skillMethods':self.skill_methods,'dnMethods':self.dn_methods,'talentMethods':self.talent_methods,
-                   'projectionMethods':self.projection_methods,'normalizePower':method_body((ROOT/'client/src/stages/137_Avatar.as').read_text('utf8'),'normalizeTeamPower104')}
+                   'projectionMethods':self.projection_methods,'normalizePower':method_body((ROOT/'client/src/stages/137_Avatar.as').read_text('utf8'),'normalizeTeamPower104'),
+                   'familyBondDefinitions':methods('137_Avatar.as', {'familyBondDefinitions104':'definitions,family'})['familyBondDefinitions104'][1]}
         run = subprocess.run([shutil.which('node'), '-e', HARNESS], input=json.dumps(payload,default=str),
                              capture_output=True, encoding='utf-8', timeout=20)
         self.assertEqual(run.returncode, 0, run.stderr)

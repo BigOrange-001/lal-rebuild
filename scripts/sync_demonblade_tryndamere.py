@@ -77,7 +77,7 @@ once('            if(direct)\n            {\n               sixNextRage105();\n'
 # Basic attack ratio and the forced crit after Demon Slash.
 once('         if(basicPassive105 && basicPassive105[1]=="six_caitlyn_p") param3 *= Number(basicPassive105[4]);\n',
      '         if(basicPassive105 && basicPassive105[1]=="six_caitlyn_p") param3 *= Number(basicPassive105[4]);\n'
-     '         if(param2 == -1 && demonPassive105()) param3 *= Number(demonPassive105()[4]);\n')
+     '         if(param2 == -1 && demonPassive105()) param3 *= demonBasicRatio105(demonPassive105());\n')
 once('            basicContext = beginAbilityAttack(this,"basic");\n            if(param2==-1)\n            {\n',
      '            basicContext = beginAbilityAttack(this,"basic");\n            if(param2==-1)\n            {\n'
      '               if(demonTakeForceCrit105()) basicContext.sixForceCrit105=true;\n')

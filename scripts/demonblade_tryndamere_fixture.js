@@ -5,7 +5,7 @@ const Avatar=x=>x;
 let units=[],contexts=[];
 const GameMapConfig={LINE_POS:3000};
 const GameMapLayer={gl:null};
-const GlobalData={$mConfig_avatar:{[data.aid]:{demonbladeTryndamere105:true}},$mConfig_simple:{hero_skill_output_rate_104:.8}};
+const GlobalData={$mConfig_avatar:{[data.aid]:{demonbladeTryndamere105:true},[data.fiveAid]:{demonbladeTryndamere105:true}},$mConfig_simple:{hero_skill_output_rate_104:.8}};
 const GameMap={actionDelay:0,currentMap:{roundNum:0,getAliveList:team=>units.filter(u=>u.team===team&&u.hp>0)}};
 function beginAbilityAttack(owner,kind){const ctx={owner,kind};contexts.push(ctx);return ctx}
 function endAbilityAttack(ctx){assert.equal(contexts.pop(),ctx)}
@@ -26,6 +26,9 @@ function make(team,pos,{demon=false,leader=false,line=0}={}){
  u.mBloodSpr={setRage105:rate=>u.bars.push(rate)};
  u.sixNextPassive105=key=>u.shyvana&&key==='shyvana';
  u.getRange=()=>350;
+ u.getType=()=>u.unitType||1;
+ u.skinBondNumber104=(key,fallback=0)=>u.bondMechanics?.[key]??fallback;
+ u.getEquipmentBondRows104=()=>u.equipmentBonds||[];
  u.getDamage=()=>u.demonAttack105(int(u.ap*(1+(u.buffs.strong?u.buffs.strong.value:0))));
  u.shieldValue104=()=>u.buffs.shield?u.buffs.shield.value:0;
  u.refreshHp=()=>{};u.abilityFeedback=text=>u.feedback.push(text);
@@ -58,6 +61,31 @@ function fresh(count=1,allies=0){
  return {a,friends,en};
 }
 let cases=0;
+{
+ const {a,en}=fresh(3);
+ a.bondMechanics={demon_q_damage:1.3,demon_q_summon:2,demon_rage_gain:1.5,demon_q_curse:2};
+ a.equipmentBonds=[{mechanics:{demon_basic_ratio:2.35}}];
+ en[1].isManualSummonUnit=true;
+ assert.equal(a.demonBasicRatio105(a.demonPassive105()),2.35);
+ assert.ok(a.demonExecute105('demon_trynd_n',a.skill0));
+ assert.deepEqual(en.map(t=>100000-t.hp),[208,416,208]);
+ assert.deepEqual(en.map(t=>t.buffs.curse.round),[2,2,2]);
+ assert.equal(a.demonRage105,42.5);
+ for(let i=0;i<6;i++)a.demonHurtTaken105();
+ assert.equal(a.demonRage105,54.5);
+ a.demonGain105(100);assert.equal(a.demonRage105,100);
+ cases++;
+}
+{
+ const {a,en}=fresh(1);
+ a.avatarData.id=data.fiveAid;a.skillB=skill(data.fivePassive);a.demonStart105();
+ assert.equal(a.demonRage105,20);
+ assert.equal(a.demonGain105(5),5);assert.equal(a.demonCritBonus105(),10);
+ a.hp=50000;assert.equal(a.getDamage(),100);assert.equal(a.demonCritDamageRate105(),1);
+ a.injured(200000,1,null,1,en[0]);
+ assert.ok(a.hp<=0);assert.equal(a.demonFuryActive105(),false);assert.deepEqual(a.feedback,[]);
+ cases++;
+}
 {
  const {a,en}=fresh(5);en[4].line=1;
  assert.ok(a.demonExecute105('demon_trynd_n',a.skill0));

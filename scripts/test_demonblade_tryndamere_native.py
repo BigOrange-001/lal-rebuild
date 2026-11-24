@@ -32,10 +32,12 @@ def translate():
 class NativeDemonbladeTests(unittest.TestCase):
     def test_native_methods(self):
         from gateway import load_game_config
-        from demonblade_tryndamere_105 import AID,NORMAL,CAPTAIN,PASSIVE
+        from demonblade_tryndamere_105 import AID, FIVE_STAR_AID, NORMAL, CAPTAIN, PASSIVE
         cfg=load_game_config(ROOT/'config/reconstruction/full-config.json')['cfg']
+        five_passive=cfg['avatar'][FIVE_STAR_AID]['pl'][13]
         data=dict(aid=AID,normal=NORMAL,captain=CAPTAIN,passive=PASSIVE,
-                  skills={key:cfg['skill'][key] for key in (NORMAL,CAPTAIN,PASSIVE)})
+                  fiveAid=FIVE_STAR_AID,fivePassive=five_passive,
+                  skills={key:cfg['skill'][key] for key in (NORMAL,CAPTAIN,PASSIVE,five_passive)})
         source=(ROOT/'scripts/demonblade_tryndamere_fixture.js').read_text('utf-8')
         source=source.replace('/*METHODS*/',translate()).replace('/*DATA*/',json.dumps(data))
         run=subprocess.run(['node'],input=source,text=True,encoding='utf-8',capture_output=True,cwd=ROOT)
@@ -52,7 +54,7 @@ class NativeDemonbladeTests(unittest.TestCase):
                      'demonEvent105(event,source,target);','demonStart105();','demonTurn105();',
                      'chance=Math.min(100,chance+param1.demonCritBonus105());','if(demonImmune105(param1)) return;',
                      '_loc6_ = demonAttack105(_loc6_);','demonLethal105();\n         skin2Lethal();',
-                     'demonHurtTaken105();','param3 *= Number(demonPassive105()[4]);',
+                     'demonHurtTaken105();','param3 *= demonBasicRatio105(demonPassive105());',
                      'param7.demonRecordDamage105(this,modActualDamage+statisticsShield104,param2>1);',
                      'if(demonTakeForceCrit105()) basicContext.sixForceCrit105=true;',
                      'if(ratioDamage104()) _loc7_ = 2 + (_loc7_ - 2) * param1.demonCritDamageRate105();',
@@ -62,7 +64,7 @@ class NativeDemonbladeTests(unittest.TestCase):
         self.assertEqual(avatar.count('queueRageBar105();'),code.count('queueRageBar105();')+3)
         bar=(ROOT/'client/src/stages/178_ProgressBar.as').read_text('utf-8')
         self.assertIn('public function setRage105(rate:Number) : void',bar)
-        self.assertIn('m_rageSpr105.scaleX = 1 / 3;',bar)
+        self.assertIn('m_bottom.getBounds(m_allSpr)',bar)
 
 
 if __name__=='__main__':unittest.main()

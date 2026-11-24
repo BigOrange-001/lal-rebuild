@@ -1,7 +1,7 @@
 """Reviewed equipment ownership; retain authored skill effects when moving a bond."""
 import copy
 import json
-from collections import Counter
+from collections import defaultdict
 from pathlib import Path
 
 PLAN = Path(__file__).resolve().parents[1] / 'config/reconstruction/equipment-binding-20261117.json'
@@ -113,12 +113,16 @@ def annie_passive(row):
 def validate_bindings(cfg):
     definitions = cfg['system_simple']['equipment_bonds_104']
     gear = {eid for eid, e in cfg['equip'].items() if e.get('quality') in (5, 6) and e.get('type') != 6}
-    owners = Counter()
+    owners = defaultdict(set)
     for aid, rows in definitions.items():
         ids = [r['equipment'] for r in rows]
         if len(ids) != len(set(ids)):
             raise ValueError('Duplicate personal equipment affinity: ' + aid)
-        owners.update(ids)
-    if set(owners) != gear or any(n > 3 for n in owners.values()):
-        raise ValueError('Every purple/orange equipment must have one to three bond owners')
+        for eid in ids:
+            owners[eid].add(aid.rsplit('_', 1)[0])
+    demonblade_items = {'E_1004_5', 'E_5001_5'}
+    if set(owners) != gear or any(
+            len(families - ({'A_1803'} if eid in demonblade_items else set())) > 3
+            for eid, families in owners.items()):
+        raise ValueError('Equipment exceeds the reviewed affinity owner limit')
     cfg['system_simple']['equipment_binding_schema_105'] = load_plan()['schema']

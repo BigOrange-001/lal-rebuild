@@ -1,12 +1,17 @@
-"""Demonblade Tryndamere: orange skin with a rage resource and authored final kit."""
+"""Demonblade Tryndamere's five- and six-star forms and shared rage kit."""
 from __future__ import annotations
 import copy
+import hashlib
+import json
+from pathlib import Path
 
 AID = 'A_1803_6'
+FIVE_STAR_AID = 'A_1803_5'
 NORMAL = 'S_98618030_6'
 CAPTAIN = 'S_98618031_6'
 PASSIVE = 'S_98618033_6'
 EFFECT = 'FX_DEMON_TRYND105'
+MEDIA = Path(__file__).resolve().parents[1] / 'config/reconstruction/demonblade-media'
 
 # Index constants shared with the simulator and client (action[0][index]).
 # N_RAGE_NEED is a threshold only: Demon Slash never spends rage.
@@ -39,12 +44,12 @@ def apply_demonblade_tryndamere(document):
     cfg = document.get('cfg', document)
     if cfg.get('demonblade_tryndamere_105'):
         return document
-    if AID in cfg['avatar']:
+    if AID in cfg['avatar'] or FIVE_STAR_AID in cfg['avatar']:
         raise ValueError('Demonblade Tryndamere identity already exists')
-    # Same orange skin panel as Kai'Sa and Nightbringer Yasuo; base Tryndamere art.
+    # Same skin panel template as Kai'Sa and Nightbringer Yasuo.
     hero = copy.deepcopy(cfg['avatar']['A_1206_6'])
     base = cfg['avatar']['A_1028_6']
-    hero.update(id=AID, name='恶魔之刃蛮王', res=base['res'], role='战士',
+    hero.update(id=AID, name='恶魔之刃泰达米尔', res='MOD_DEMONBLADE_6', role='战士',
                 stat_profile=1, hero_category_104='skin', demonbladeTryndamere105=True,
                 skill_diff=0, voiceDisabled104=True, ranged_skill=False)
     hero.pop('skin_revision_v2_104', None)
@@ -75,16 +80,59 @@ def apply_demonblade_tryndamere(document):
     p['tipNotes105'] = [list(note) for note in PASSIVE_NOTES]
     for skill in (q, c, p):
         cfg['skill'][skill['id']] = skill
+
+    purple = copy.deepcopy(cfg['avatar']['A_1206_5'])
+    purple.update({key: hero[key] for key in ('name', 'role', 'stat_profile', 'hero_category_104',
+                  'demonbladeTryndamere105', 'skill_diff', 'voiceDisabled104', 'ranged_skill')})
+    purple.update(id=FIVE_STAR_AID, res='MOD_DEMONBLADE_5', tipTerms105={'怒气': TIP_TERMS['怒气']})
+    purple['tl'][2] = hero['tl'][2]
+    purple.pop('skin_revision_v2_104', None)
+    purple['tl'][0] = base['tl'][0]
+    purple['tl'][9] = hero['tl'][9] + 1
+    purple['pl'][9] = hero['pl'][9]
+    purple['pl'][10:14] = [NORMAL[:-1] + '5', CAPTAIN[:-1] + '5', purple['pl'][12], PASSIVE[:-1] + '5']
+    cfg['avatar'][FIVE_STAR_AID] = purple
+
+    for skill in (q, c):
+        purple_skill = copy.deepcopy(skill)
+        purple_skill.update(id=skill['id'][:-1] + '5', res='S_9004_5')
+        cfg['skill'][purple_skill['id']] = purple_skill
+    purple_passive = copy.deepcopy(p)
+    rage_text = '每点怒气使暴击率提高0.4%。'
+    purple_passive.update(id=PASSIVE[:-1] + '5', res='S_9004_5', info=rage_text,
+                          rankInfoTemplate=rage_text, tipNotes105=[list(PASSIVE_NOTES[0])])
+    # The existing client and simulator treat zero allowed uses as no Endless Rage.
+    action = purple_passive['skill'][0]
+    action[P_BASIC:P_RAGE_START] = [1.0, .004, 0, 0, 0, 0, 0, 0, 0, 0]
+    action[P_FURY_ROUNDS_MEMBER] = 0
+    action[P_CRIT_DAMAGE_RATE] = 1.0
+    cfg['skill'][purple_passive['id']] = purple_passive
+
     cfg['effect'][EFFECT] = {}
     skins = cfg['system_simple'].setdefault('skin_hero_ids', [])
-    if AID not in skins:
-        skins.append(AID)
+    skins.extend(aid for aid in (AID, FIVE_STAR_AID) if aid not in skins)
     norm = cfg['summon_calibration']['normalization']
-    norm['skin_hero_ids'] = sorted(set(norm.get('skin_hero_ids', []) + [AID]))
+    norm['skin_hero_ids'] = sorted(set(norm.get('skin_hero_ids', [])) | {AID, FIVE_STAR_AID})
     for name in ('advanced', 'vip'):
         cards = cfg['summon_calibration']['pools'][name]['qualities']['orange']['cards']
         reference = next(card for card in cards if card['id'] == 'A_1206_6')
         cards.append(dict(reference, id=AID, name=hero['name']))
-    cfg['demonblade_tryndamere_105'] = dict(id=AID, panelSource='A_1206_6', artSource='A_1028_6',
+    media = json.loads((MEDIA / 'manifest.json').read_text('utf-8'))
+    cfg['builtin_assets_104']['assets'].extend(copy.deepcopy(media['assets']))
+    cfg.setdefault('mod_runtime', {}).setdefault('assets', []).extend(copy.deepcopy(media['assets']))
+    cfg['demonblade_tryndamere_105'] = dict(id=AID, panelSource='A_1206_6', media=media,
                                          skills=[NORMAL, CAPTAIN, PASSIVE], finalCoefficients=True)
     return document
+
+
+def builtin_asset(cfg, digest, path):
+    media = cfg.get('demonblade_tryndamere_105', {}).get('media', {})
+    if digest != media.get('digest'):
+        return None
+    entry = next((row for row in media['assets'] if row['path'] == path), None)
+    if entry is None:
+        raise ValueError('Unknown Demonblade Tryndamere asset')
+    data = (MEDIA / entry['path']).read_bytes()
+    if hashlib.sha256(data).hexdigest() != entry['sha256']:
+        raise ValueError('Demonblade Tryndamere media hash mismatch')
+    return data, 'image/png'

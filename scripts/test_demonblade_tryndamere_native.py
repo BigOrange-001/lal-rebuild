@@ -64,7 +64,7 @@ class NativeDemonbladeTests(unittest.TestCase):
         self.assertEqual(avatar.count('queueRageBar105();'),code.count('queueRageBar105();')+3)
         bar=(ROOT/'client/src/stages/178_ProgressBar.as').read_text('utf-8')
         self.assertIn('public function setRage105(rate:Number) : void',bar)
-        self.assertIn('m_rageSpr105.scaleX = 1 / 3;',bar)
+        self.assertIn('m_bottom.getBounds(m_allSpr)',bar)
 
 
 if __name__=='__main__':unittest.main()

@@ -73,6 +73,37 @@ for(const fastest of [false,true]){
 console.log('Native HP/shield/empty widths, overflow, death and fast playback passed');
 ''')
 
+    def test_rage_strip_matches_hp_frame_at_every_fill(self):
+        path = 'client/src/stages/178_ProgressBar.as'
+        definition = 'const setRage105='+method(path,'setRage105')+';'
+        self.run_js('const refresh='+method(path,'refresh')+';'+PRELUDE+definition+'''
+class Quad {
+ constructor(width,height,color){Object.assign(this,{naturalWidth:width,height,color,scaleX:1})}
+ get width(){return this.naturalWidth*this.scaleX}
+}
+let b=bar();
+let frame={x:-47,y:-12,width:94,height:24,bottom:12};
+b.m_bottom={getBounds(parent){assert.strictEqual(parent,b.m_allSpr);return frame}};
+b.m_rageFill105=null;
+b.setRage105=setRage105;
+assert.equal(b.m_allSpr.children.length,0,'no strip on a unit without rage');
+b.setRage105(0);
+let [track,fill]=b.m_allSpr.children;
+assert.deepEqual([track.x,track.y,track.width,track.height],[-47,12,94,4]);
+assert.deepEqual([fill.x,fill.y,fill.height],[-47,12,4]);
+assert.equal(fill.visible,false);
+b.setRage105(.2);
+assert.equal(fill.visible,true);
+assert.ok(Math.abs(fill.width-18.8)<1e-8);
+b.refresh(.5,true,1);
+b.setRage105(1.2);
+assert.equal(fill.width,94);
+assert.equal(track.width,94);
+b.setRage105(NaN);
+assert.equal(fill.visible,false);
+assert.equal(b.m_allSpr.children.length,3,'reuse one rage track and fill after HP updates');
+''')
+
     def test_quarter_marks_compress_with_overflow_for_both_teams(self):
         source = 'client/src/stages/178_ProgressBar.as'
         code = 'const refresh='+method(source,'refresh')+';'+PRELUDE

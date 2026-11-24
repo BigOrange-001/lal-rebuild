@@ -2,7 +2,6 @@ import copy
 import json
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 from gateway import Backend
 from battle_engine import ReferenceBattle,base_unit,_native_skill_snapshot
 from hero_packs_104 import ROOT,SKIN_FAMILIES,compile_builtin,apply_hero_packs_104
@@ -14,8 +13,6 @@ class HeroPacks104Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         path=ROOT.parent/'full-config.json'
-        with patch('equipment_bonds_104.apply_equipment_bonds_104',side_effect=lambda d:d), patch('hero_packs_104.apply_hero_packs_104',side_effect=lambda d:d), patch('bonds_104.apply_bonds_104',side_effect=lambda d:d), patch('hero_calibration_104.apply_hero_calibration_104',side_effect=lambda d:d):
-            before=Backend(':memory:',path);cls.old=copy.deepcopy(before.config['cfg']);before.db.close()
         backend=Backend(':memory:',path);cls.cfg=copy.deepcopy(backend.config['cfg']);backend.db.close()
 
     def battle(self,aid,leader=False):
@@ -38,6 +35,19 @@ class HeroPacks104Tests(unittest.TestCase):
         enemy['hp']=1;battle._injured(enemy,100,3,source=owner)
         self.assertEqual(len(battle.a),2)
         self.assertFalse(battle.a[1]['skillB'])
+
+    def test_zed_passive_recognizes_non_native_burn(self):
+        for route in ('manual', 'relic'):
+            with self.subTest(route=route):
+                battle, owner, enemy = self.battle('A_1132_6')
+                owner['_mod_owner_turn'] = 1
+                if route == 'manual':
+                    battle._add_manual_skill_dot(owner, 'test_burn', 'burn', 100, 0, 2, enemy, 7, False)
+                else:
+                    owner['_relic_dots'] = [{'kind': 'burn', 'left': 2, 'amount': 100, 'source': enemy}]
+                self.assertIsNone(battle._buff(owner, 'burn'))
+                self.assertTrue(battle._emit_mod_event(owner, 'turn_start', owner, owner))
+                self.assertEqual(len(battle.a), 2)
 
     def test_all_imported_slots_execute_without_missing_actions(self):
         for aid in self.cfg['hero_packs_104']['heroes']:

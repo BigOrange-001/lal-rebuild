@@ -1,5 +1,7 @@
 """Bounded generic passive events; synchronous settlement with explicit chain guards."""
 def has_buff(battle,unit,kind):
+    if kind == 'burn':
+        return battle._has_manual_dot_kind(unit,kind)
     if kind=='root':return battle._rooted(unit)
     if kind=='timed_bless':
         buff=battle._buff(unit,'bless')

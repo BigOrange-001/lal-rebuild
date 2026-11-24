@@ -18,6 +18,9 @@ class EquipmentBonds104Tests(unittest.TestCase):
         balance = patch('six_star_balance_105.apply_six_star_balance', lambda document:document)
         balance.start()
         cls.addClassCleanup(balance.stop)
+        prepared = patch("prepared_config.read_prepared", return_value=None)
+        prepared.start()
+        cls.addClassCleanup(prepared.stop)
         b=Backend(':memory:',PLAN.parent/'full-config.json');cls.doc=b.config;cls.cfg=b.config['cfg'];b.db.close()
 
     def profile(self,aid,eids):

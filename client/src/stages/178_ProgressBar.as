@@ -46,7 +46,11 @@ package com.meng52.game.ui.element
 
       private var m_quarterMarks104:Array = [];
 
-      private var m_rageFill105:Quad;
+      private var m_rageFill105:Sprite;
+
+      private var m_rageSlot105:Rectangle;
+
+      private var m_rageRate105:Number = -1;
 
       private static const HEALTH_VALUES_KEY104:String = "lal_battle_health_values_104";
       private static const HEALTH_VALUES_EVENT104:String = "battle_health_values_changed_104";
@@ -287,21 +291,41 @@ package com.meng52.game.ui.element
       public function setRage105(rate:Number) : void
       {
          rate = isFinite(rate) ? Math.max(0,Math.min(1,rate)) : 0;
+         if(m_rageRate105 == rate) return;
+         m_rageRate105 = rate;
          if(!m_rageFill105)
          {
-            // Match the HP frame's full width and put the thin strip flush below it.
-            var frame:Rectangle = m_bottom.getBounds(m_allSpr);
-            var track:Quad = new Quad(frame.width,4,0x351921);
-            track.x = frame.x;
-            track.y = frame.bottom;
-            m_allSpr.addChild(track);
-            m_rageFill105 = new Quad(frame.width,4,0xFF7A1A);
-            m_rageFill105.x = track.x;
-            m_rageFill105.y = track.y;
-            m_allSpr.addChild(m_rageFill105);
+            var strip:Sprite = new Sprite();
+            var frame:Image = new Image(m_bottom.texture);
+            frame.pivotX = m_bottom.pivotX;
+            frame.pivotY = m_bottom.pivotY;
+            frame.x = m_bottom.x;
+            frame.y = m_bottom.y;
+            strip.addChild(frame);
+
+            // Use native bar artwork for the fill, tinted for rage.
+            var fill:Image = DisplayTools.newImg("aHp3");
+            fill.width = m_middle.width;
+            fill.height = m_middle.height;
+            fill.x = m_middle.x;
+            fill.y = m_middle.y;
+            fill.color = 0xFF7A1A;
+            m_rageFill105 = new Sprite();
+            m_rageFill105.addChild(fill);
+            m_rageSlot105 = fill.getBounds(m_rageFill105);
+            strip.addChild(m_rageFill105);
+
+            // Match the native width. Ignore the frame texture's clear edge when stacking the bars.
+            var bounds:Rectangle = m_bottom.getBounds(m_allSpr);
+            var clearEdge:int = 3;
+            strip.scaleY = 0.25;
+            strip.y = bounds.bottom - clearEdge - (bounds.top + clearEdge) * strip.scaleY;
+            m_allSpr.addChild(strip);
          }
-         m_rageFill105.scaleX = rate;
+         m_rageFill105.clipRect = new Rectangle(m_rageSlot105.x,m_rageSlot105.y,
+            Math.round(m_rageSlot105.width * rate),m_rageSlot105.height);
          m_rageFill105.visible = rate > 0;
+         m_rageFill105.flatten();
       }
 
       public function get perRate() : Number

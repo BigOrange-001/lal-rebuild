@@ -73,35 +73,39 @@ for(const fastest of [false,true]){
 console.log('Native HP/shield/empty widths, overflow, death and fast playback passed');
 ''')
 
-    def test_rage_strip_matches_hp_frame_at_every_fill(self):
+    def test_rage_reuses_the_full_width_native_hp_frame(self):
         path = 'client/src/stages/178_ProgressBar.as'
         definition = 'const setRage105='+method(path,'setRage105')+';'
         self.run_js('const refresh='+method(path,'refresh')+';'+PRELUDE+definition+'''
-class Quad {
- constructor(width,height,color){Object.assign(this,{naturalWidth:width,height,color,scaleX:1})}
- get width(){return this.naturalWidth*this.scaleX}
+class Image {
+ constructor(texture){Object.assign(this,{texture,width:texture.width,height:texture.height,x:0,y:0})}
 }
-let b=bar();
-let frame={x:-47,y:-12,width:94,height:24,bottom:12};
-b.m_bottom={getBounds(parent){assert.strictEqual(parent,b.m_allSpr);return frame}};
-b.m_rageFill105=null;
-b.setRage105=setRage105;
-assert.equal(b.m_allSpr.children.length,0,'no strip on a unit without rage');
-b.setRage105(0);
-let [track,fill]=b.m_allSpr.children;
-assert.deepEqual([track.x,track.y,track.width,track.height],[-47,12,94,4]);
-assert.deepEqual([fill.x,fill.y,fill.height],[-47,12,4]);
-assert.equal(fill.visible,false);
-b.setRage105(.2);
-assert.equal(fill.visible,true);
-assert.ok(Math.abs(fill.width-18.8)<1e-8);
-b.refresh(.5,true,1);
-b.setRage105(1.2);
-assert.equal(fill.width,94);
-assert.equal(track.width,94);
-b.setRage105(NaN);
-assert.equal(fill.visible,false);
-assert.equal(b.m_allSpr.children.length,3,'reuse one rage track and fill after HP updates');
+const DisplayTools={newImg(key){
+ assert.equal(key,'aHp3');
+ return {getBounds(){return {x:this.x-this.width/2,y:this.y-this.height/2,width:this.width,height:this.height}}};
+}};
+for(const team of [1,2]){
+ let b=bar(), texture={name:'aFrame'+team,width:94,height:24};
+ b.m_bottom={texture,x:0,y:0,pivotX:47,pivotY:12,
+  getBounds(parent){assert.strictEqual(parent,b.m_allSpr);return {top:-12,bottom:12}}};
+ b.m_rageFill105=null;b.m_rageSlot105=null;b.m_rageRate105=-1;b.setRage105=setRage105;
+ assert.equal(b.m_allSpr.children.length,0,'no rage strip until the unit has rage');
+ b.setRage105(0);
+ let [strip]=b.m_allSpr.children, [frame,fill]=strip.children;
+ assert.strictEqual(frame.texture,texture);
+ assert.deepEqual([frame.pivotX,frame.pivotY,frame.width],[47,12,94]);
+ assert.deepEqual([strip.x,strip.y,strip.scaleX,strip.scaleY],[0,11.25,1,.25]);
+ assert.equal(fill.visible,false);
+ b.setRage105(.2);
+ assert.deepEqual([fill.clipRect.x,fill.clipRect.y,fill.clipRect.width,fill.clipRect.height],[-43,-9,17,16]);
+ assert.equal(fill.visible,true);
+ b.refresh(.5,true,1);
+ b.setRage105(1.2);
+ assert.equal(fill.clipRect.width,86);
+ b.setRage105(NaN);
+ assert.equal(fill.visible,false);
+ assert.equal(b.m_allSpr.children.length,2,'reuse one strip when HP or rage changes');
+}
 ''')
 
     def test_quarter_marks_compress_with_overflow_for_both_teams(self):

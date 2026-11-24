@@ -82,7 +82,7 @@ def apply_stats(stats, aid, bonds):
 
 
 def skill_ids(cfg, aid, bonds):
-    key = '|'.join(sorted(bond['id'] for bond in bonds))
+    key = '|'.join(sorted(bond['id'] for bond in bonds if not bond.get('runtime_only')))
     simple = cfg.get('system_simple', {})
     variants = simple.get('bond_skill_variants_104', {}).get(aid, {}).get(key, {})
     sources = simple.get('bond_skill_sources_104', {}).get(aid, {})

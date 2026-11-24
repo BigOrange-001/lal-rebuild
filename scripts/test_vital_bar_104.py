@@ -94,7 +94,8 @@ for(const team of [1,2]){
  let [strip]=b.m_allSpr.children, [frame,fill]=strip.children;
  assert.strictEqual(frame.texture,texture);
  assert.deepEqual([frame.pivotX,frame.pivotY,frame.width],[47,12,94]);
- assert.deepEqual([strip.x,strip.y,strip.scaleX,strip.scaleY],[0,11.25,1,.25]);
+ assert.deepEqual([strip.x,strip.y,strip.scaleX,strip.scaleY],[0,12.6,1,.4]);
+ assert.equal(fill.children[0].color,0xFF3030);
  assert.equal(fill.visible,false);
  b.setRage105(.2);
  assert.deepEqual([fill.clipRect.x,fill.clipRect.y,fill.clipRect.width,fill.clipRect.height],[-43,-9,17,16]);

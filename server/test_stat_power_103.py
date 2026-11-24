@@ -65,7 +65,7 @@ function Equipment(id){
 function Avatar(id,data=null){
  let row=data||profile.avatars[id],aid=(row.aid||id).split('|')[0],d=cfg.avatar[aid],p=d.pl;
  let tid=typeof row.talent==='string'?row.talent:row.talent?.id,t=cfg.talent[tid];
- let unit=attach({id,mData:row,team:0,otherTeam:0,isOthers:false,lv:row.lv||1,slv:row.slv||1,phase:row.phase||0,
+ let unit=attach({id,mData:row,team:0,otherTeam:0,isOthers:false,demonFury105:-1,lv:row.lv||1,slv:row.slv||1,phase:row.phase||0,
  hp:0,hpMax:0,ap:0,dePh:0,deMa:0,hit:0,flee:0,crit:0,tough:0,speed:0,range:0,
  hpP:row.hp||0,apP:row.ap||0,dePhP:row.de_ph||0,deMaP:row.de_ma||0,cultureSchema:row.culture_schema||'',
  equips:[],abyssRelic104:null,bondLineup104:profile.team[0],mDestiny:null,mDNdata:null,buffs:{},skin2:{},abilityState:{},abilityEntryAttack:0,manualAttackRangeOverride:NaN,

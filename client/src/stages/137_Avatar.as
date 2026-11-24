@@ -218,7 +218,8 @@ package com.meng52.game.module.avatar
       {
          if(!GlobalData.$mConfig_simple.bonds_104 || !avatarData || mData && mData.hp_max) return;
          var keys:Array = [];
-         for each(var bond:Object in getBondRows104()) keys.push(String(bond.id));
+         for each(var bond:Object in getBondRows104())
+            if(!bond.runtime_only) keys.push(String(bond.id));
          keys.sort();
          var all:Object = GlobalData.$mConfig_simple.bond_skill_variants_104;
          var variants:Object = all ? all[avatarData.id] : null;

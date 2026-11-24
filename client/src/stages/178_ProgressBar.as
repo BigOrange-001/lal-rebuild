@@ -309,7 +309,7 @@ package com.meng52.game.ui.element
             fill.height = m_middle.height;
             fill.x = m_middle.x;
             fill.y = m_middle.y;
-            fill.color = 0xFF7A1A;
+            fill.color = 0xFF3030;
             m_rageFill105 = new Sprite();
             m_rageFill105.addChild(fill);
             m_rageSlot105 = fill.getBounds(m_rageFill105);
@@ -318,7 +318,7 @@ package com.meng52.game.ui.element
             // Match the native width. Ignore the frame texture's clear edge when stacking the bars.
             var bounds:Rectangle = m_bottom.getBounds(m_allSpr);
             var clearEdge:int = 3;
-            strip.scaleY = 0.25;
+            strip.scaleY = 0.4;
             strip.y = bounds.bottom - clearEdge - (bounds.top + clearEdge) * strip.scaleY;
             m_allSpr.addChild(strip);
          }

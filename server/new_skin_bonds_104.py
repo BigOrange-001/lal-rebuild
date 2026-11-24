@@ -28,6 +28,9 @@ def apply_new_skin_bonds_104(document):
         if any(row['id'] == bond['id'] for row in definitions):
             raise ValueError('Duplicate new skin bond ID')
         bond['minimum_quality'] = {family: 6 for family in bond['families']}
+        # The late overlay applies stats and battle mechanics directly. Its
+        # bonds have no rows in the prebuilt skill-variant combination table.
+        bond['runtime_only'] = True
         definitions.append(bond)
     equipment = simple['equipment_bonds_104']
     from equipment_rebinding_105 import rebind_new_skins, validate_bindings

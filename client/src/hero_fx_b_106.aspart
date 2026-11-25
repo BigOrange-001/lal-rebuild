@@ -2,34 +2,1469 @@
       // 组 B：塔姆(nine)、马尔扎哈+虚灵(nine)、李青 1215、男爵瑞兹 1203、通用治疗/护盾/净化(兜底)、凯特琳 1211、薇恩 1206
       // Contract (see hero_fx_core_106.aspart): kinds and texture ids are local names here;
       // the core prefixes them with "b:". Private helpers in this file must be named hfxB...106.
+      // BEGIN HERO FX B PURE 106
+      // Everything up to END HERO FX B PURE 106 only touches flash.* and the core helpers,
+      // so scripts/hero_fx_preview_b_106.py renders it and scripts/test_hero_fx_b_106.py runs it in Node.
+      private static function hfxBSize106(id:String) : Array
+      {
+         switch(id)
+         {
+            case "glow": return [128,128];
+            case "dot": return [32,32];
+            case "spark": return [64,16];
+            case "ring": return [256,256];
+            case "tracer": return [256,16];
+            case "beam": return [256,16];
+            case "shard": return [32,64];
+            case "flame": return [64,128];
+            case "smoke": return [128,128];
+            case "arc": return [64,128];
+            case "swoosh": return [256,128];
+            case "palm": return [128,128];
+            case "bell": return [128,128];
+            case "sigil": return [256,256];
+            case "brand": return [64,64];
+            case "rift": return [64,192];
+            case "tongue": return [256,48];
+            case "jaw": return [128,64];
+            case "crack": return [256,256];
+            case "muzzle": return [64,64];
+            case "reticle": return [128,128];
+            case "trap": return [128,128];
+            case "trapjaw": return [128,48];
+            case "bolt": return [128,32];
+            case "heart": return [64,64];
+            case "heart_half": return [64,64];
+            case "plus": return [32,32];
+            case "dome": return [128,128];
+            case "vortex": return [256,256];
+         }
+         return null;
+      }
+      public static function heroFxPaintB106(id:String) : flash.display.BitmapData
+      {
+         var size:Array=hfxBSize106(id);
+         if(!size) return null;
+         var w:Number=size[0];var h:Number=size[1];var W:uint=0xFFFFFF;
+         var bmp:flash.display.BitmapData=new flash.display.BitmapData(w,h,true,0);
+         var shape:flash.display.Shape=new flash.display.Shape();var g:flash.display.Graphics=shape.graphics;
+         var m:flash.geom.Matrix=new flash.geom.Matrix();m.createGradientBox(w,h,0,0,0);
+         var i:int;var j:int;var a:Number;var r:Number;var x:Number;var y:Number;var k:Number;var pass:int;var pt:Array;
+         if(id=="glow" || id=="dot" || id=="spark")
+         {
+            if(id=="glow") g.beginGradientFill("radial",[W,W,W,W],[1,.55,.2,0],[0,50,140,255],m);
+            else if(id=="dot") g.beginGradientFill("radial",[W,W,W],[1,.85,0],[0,90,255],m);
+            else g.beginGradientFill("radial",[W,W,W],[1,.7,0],[0,100,255],m);
+            g.drawEllipse(0,0,w,h);g.endFill();
+            hfxBDraw106(bmp,shape,0);
+         }
+         else if(id=="ring")
+         {
+            g.beginGradientFill("radial",[W,W,W,W,W,W],[0,0,.3,1,.45,0],[0,150,196,224,240,255],m);
+            g.drawCircle(w/2,h/2,w/2);g.endFill();
+            hfxBDraw106(bmp,shape,1.5);
+         }
+         else if(id=="tracer")
+         {
+            // Thin tail on the left, a rounded hot head at x=252.
+            g.beginGradientFill("linear",[W,W,W,W],[0,.2,.75,1],[0,110,215,255],m);
+            g.moveTo(0,7.5);g.lineTo(236,5);g.curveTo(252,5,252,8);g.curveTo(252,11,236,11);g.lineTo(0,8.5);g.lineTo(0,7.5);g.endFill();
+            hfxBDraw106(bmp,shape,1,W,4);
+         }
+         else if(id=="beam")
+         {
+            m.createGradientBox(w,h,Math.PI/2,0,0);
+            g.beginGradientFill("linear",[W,W,W,W,W],[0,.45,1,.45,0],[0,70,128,186,255],m);
+            g.drawRect(0,0,w,h);g.endFill();
+            hfxBDraw106(bmp,shape,0);
+         }
+         else if(id=="shard")
+         {
+            m.createGradientBox(32,64,Math.PI/2,0,0);
+            g.beginGradientFill("linear",[W,W,W],[1,.9,.7],[0,110,255],m);
+            g.moveTo(16,4);g.lineTo(26,30);g.lineTo(16,60);g.lineTo(6,30);g.lineTo(16,4);g.endFill();
+            hfxBDraw106(bmp,shape,0,W,5);
+         }
+         else if(id=="flame")
+         {
+            for(pass=0;pass<2;pass++)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;m=new flash.geom.Matrix();
+               k=pass ? .62 : 1;
+               m.createGradientBox(64*k,128*k,Math.PI/2,32-32*k,124-120*k);
+               if(pass) g.beginGradientFill("radial",[W,W,W],[1,.95,0],[0,90,255],m,"pad","rgb",.55);
+               else g.beginGradientFill("radial",[W,W,W],[.9,.6,0],[0,120,255],m,"pad","rgb",.6);
+               g.moveTo(32,124);
+               g.curveTo(32-30*k,118-14*k,32-24*k,124-50*k);
+               g.curveTo(32-16*k,124-82*k,32+2*k,124-118*k);
+               g.curveTo(32+4*k,124-84*k,32+22*k,124-58*k);
+               g.curveTo(32+30*k,118-12*k,32,124);
+               g.endFill();
+               hfxBDraw106(bmp,shape,pass ? 2 : 5);
+            }
+         }
+         else if(id=="smoke")
+         {
+            for(i=0;i<7;i++)
+            {
+               a=i*Math.PI*2/7;r=14+(i%3)*6;
+               m=new flash.geom.Matrix();m.createGradientBox(60,48,a,64+Math.cos(a)*r-30,64+Math.sin(a)*r-24);
+               g.beginGradientFill("radial",[0x8A8A8A,0x8A8A8A],[.75,0],[0,255],m);
+               g.drawEllipse(64+Math.cos(a)*r-30,64+Math.sin(a)*r-24,60,48);g.endFill();
+            }
+            hfxBDraw106(bmp,shape,8);
+         }
+         else if(id=="arc" || id=="swoosh")
+         {
+            // Crescents bulging toward +x: a thin sound-wave arc, or a broad kick swoosh.
+            var layers:Array=id=="arc" ? [[1,.4,5],[.6,.8,2],[.28,1,.8]] : [[1,.35,8],[.72,.7,4],[.34,1,2],[.12,1,1]];
+            for each(var layer:Array in layers)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;
+               g.beginFill(W,layer[1]);
+               if(id=="arc") hfxBCrescent106(g,12,64,38,54,1.15,10*Number(layer[0]));
+               else hfxBCrescent106(g,70,64,150,54,1.35,46*Number(layer[0]));
+               g.endFill();
+               hfxBDraw106(bmp,shape,layer[2]);
+            }
+         }
+         else if(id=="palm")
+         {
+            // An open golden palm, fingers up: the Sonic Wave print.
+            for(pass=0;pass<2;pass++)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;
+               g.beginFill(pass ? 0xFFF6D8 : 0xFFB830,pass ? .7 : 1);
+               k=pass ? .72 : 1;
+               hfxBEllipse106(g,64,80,24*k,23*k,0);
+               for(i=0;i<4;i++) hfxBEllipse106(g,47+i*11.5,50-(i==1 || i==2 ? 6 : 0),6*k,(20-(i==3 ? 3 : 0))*k,(i-1.5)*.1);
+               hfxBEllipse106(g,37,78,6.5*k,16*k,-.75);
+               g.endFill();
+               if(pass) hfxBDraw106(bmp,shape,3);
+               else hfxBDraw106(bmp,shape,1,0xFF9A10,14);
+            }
+            shape=new flash.display.Shape();g=shape.graphics;m=new flash.geom.Matrix();m.createGradientBox(60,60,0,34,48);
+            g.beginGradientFill("radial",[W,W],[.9,0],[0,255],m);g.drawCircle(64,78,30);g.endFill();
+            hfxBDraw106(bmp,shape,0);
+         }
+         else if(id=="bell")
+         {
+            // The Golden Bell: a translucent gilded bell with a bright rim.
+            m.createGradientBox(88,90,0,20,14);
+            g.beginGradientFill("linear",[0xA06810,0xFFE08A,0xFFD050,0x8A5A10],[.75,.8,.7,.75],[0,90,150,255],m);
+            g.moveTo(40,32);g.curveTo(40,18,64,18);g.curveTo(88,18,88,32);g.lineTo(92,78);g.curveTo(95,95,108,100);
+            g.lineTo(20,100);g.curveTo(33,95,36,78);g.lineTo(40,32);g.endFill();
+            g.lineStyle(3,0xFFF0B0,1);g.drawEllipse(20,95,88,10);
+            g.lineStyle(2,0xFFE8A0,.9);g.moveTo(39,42);g.curveTo(64,47,89,42);g.moveTo(36,82);g.curveTo(64,88,92,82);
+            g.lineStyle(3,0xFFF4D0,.8);g.moveTo(50,28);g.curveTo(46,50,46,84);
+            g.lineStyle();g.beginFill(0xFFE08A,1);g.drawCircle(64,12,6);g.endFill();
+            hfxBDraw106(bmp,shape,.6,0xFFC040,10);
+         }
+         else if(id=="sigil" || id=="vortex")
+         {
+            for(pass=0;pass<2;pass++)
+            {
+               shape=new flash.display.Shape();g=shape.graphics;
+               k=pass ? 1 : 2.6;
+               g.lineStyle(1.6*k,W,1);g.drawCircle(128,128,116);
+               g.lineStyle(.9*k,W,1);g.drawCircle(128,128,102);
+               if(id=="sigil")
+               {
+                  // Blood contract: rune ticks, a pentagram and nodes.
+                  g.drawCircle(128,128,40);
+                  for(i=0;i<30;i++)
+                  {
+                     a=i*Math.PI*2/30;
+                     if(i%5==0) {g.drawCircle(128+Math.cos(a)*109,128+Math.sin(a)*109,4);continue;}
+                     g.moveTo(128+Math.cos(a)*104,128+Math.sin(a)*104);g.lineTo(128+Math.cos(a+.06)*114,128+Math.sin(a+.06)*114);
+                  }
+                  for(i=0;i<=5;i++)
+                  {
+                     a=-Math.PI/2+(i*2%5)*Math.PI*2/5;
+                     if(i==0) g.moveTo(128+Math.cos(a)*100,128+Math.sin(a)*100);
+                     else g.lineTo(128+Math.cos(a)*100,128+Math.sin(a)*100);
+                  }
+                  for(i=0;i<5;i++) {a=-Math.PI/2+i*Math.PI*2/5;g.drawCircle(128+Math.cos(a)*100,128+Math.sin(a)*100,7);}
+               }
+               else
+               {
+                  // Void portal: six arms spiralling into the centre.
+                  for(i=0;i<6;i++)
+                  {
+                     for(j=0;j<=16;j++)
+                     {
+                        r=14+84*j/16;a=i*Math.PI/3+r*.032;
+                        g.lineStyle((1+3*j/16)*k,W,1);
+                        if(j==0) g.moveTo(128+Math.cos(a)*r,128+Math.sin(a)*r);
+                        else g.lineTo(128+Math.cos(a)*r,128+Math.sin(a)*r);
+                     }
+                  }
+                  g.lineStyle(1.2*k,W,1);g.drawCircle(128,128,20);
+               }
+               if(pass==0) hfxBDraw106(bmp,shape,1.5,W,10);
+               else hfxBDraw106(bmp,shape,0);
+            }
+         }
+         else if(id=="brand")
+         {
+            g.lineStyle(3,W,1);g.drawCircle(32,32,24);
+            g.lineStyle(3.5,W,1);g.moveTo(32,13);g.lineTo(32,51);
+            g.moveTo(32,31);g.lineTo(19,17);g.moveTo(32,31);g.lineTo(45,17);
+            g.moveTo(24,45);g.lineTo(32,38);g.lineTo(40,45);
+            hfxBDraw106(bmp,shape,.5,W,6);
+         }
+         else if(id=="rift")
+         {
+            // A jagged vertical tear; bright along the seam.
+            m.createGradientBox(64,192,0,0,0);
+            g.beginGradientFill("linear",[W,W,W],[0,1,0],[20,128,236],m);
+            g.moveTo(32,4);
+            for(i=1;i<=12;i++) {y=4+i*184/12;g.lineTo(32-Math.sin(Math.PI*i/12)*(18+(i%2 ? 6 : -4)),y);}
+            for(i=11;i>=0;i--) {y=4+i*184/12;g.lineTo(32+Math.sin(Math.PI*i/12)*(18+(i%2 ? -4 : 6)),y);}
+            g.endFill();
+            hfxBDraw106(bmp,shape,2);
+         }
+         else if(id=="tongue")
+         {
+            // Tongue from its root at x=0 to a rounded tip at the right.
+            m.createGradientBox(256,48,Math.PI/2,0,0);
+            g.beginGradientFill("linear",[0xFFA0B8,0xF0607E,0xA0284A],[1,1,1],[0,120,255],m);
+            g.moveTo(0,15);g.curveTo(120,18,214,11);g.curveTo(252,7,252,24);g.curveTo(252,41,214,37);g.curveTo(120,30,0,33);g.lineTo(0,15);g.endFill();
+            g.lineStyle(2,0xB03050,.8);g.moveTo(10,24);g.curveTo(120,24,222,24);
+            g.lineStyle(2,0xFFD6E0,.75);g.moveTo(20,19);g.curveTo(120,20,206,15);
+            hfxBDraw106(bmp,shape,.6);
+         }
+         else if(id=="jaw" || id=="trapjaw")
+         {
+            // An upper jaw with teeth along the lower edge; flip vertically for the lower jaw.
+            if(id=="jaw")
+            {
+               g.lineStyle(2,0x3A0A14,1);g.beginFill(0x7A2034,1);
+               g.moveTo(6,42);g.curveTo(64,-26,122,42);g.lineTo(112,44);g.curveTo(64,8,16,44);g.lineTo(6,42);g.endFill();
+               g.lineStyle(1,0x9A8A7A,1);
+               for(i=0;i<7;i++)
+               {
+                  x=22+i*14;y=40-22*(1-((x-64)/52)*((x-64)/52));
+                  g.beginFill(0xF8F4E8,1);g.moveTo(x-6,y);g.lineTo(x,y+(i==1 || i==5 ? 15 : 11));g.lineTo(x+6,y);g.lineTo(x-6,y);g.endFill();
+               }
+            }
+            else
+            {
+               g.lineStyle(9,0x50565F,1);g.moveTo(8,16);g.curveTo(64,2,120,16);
+               g.lineStyle(3,0xC0C8D2,1);g.moveTo(10,14);g.curveTo(64,0,118,14);
+               g.lineStyle(1,0x5A606A,1);
+               for(i=0;i<8;i++)
+               {
+                  x=16+i*13.7;y=14-8*(1-((x-64)/56)*((x-64)/56))+4;
+                  g.beginFill(0xDDE3EA,1);g.moveTo(x-5,y);g.lineTo(x,y+18);g.lineTo(x+5,y);g.lineTo(x-5,y);g.endFill();
+               }
+            }
+            hfxBDraw106(bmp,shape,.4);
+         }
+         else if(id=="crack")
+         {
+            // Radial ground cracks with side branches.
+            for(i=0;i<9;i++)
+            {
+               a=i*Math.PI*2/9+(hfxRand106(17,i)-.5)*.5;
+               x=128+Math.cos(a)*10;y=128+Math.sin(a)*10;
+               var reach:Number=80+38*hfxRand106(17,i+20);
+               for(j=1;j<=6;j++)
+               {
+                  r=10+(reach-10)*j/6;var bend:Number=(hfxRand106(17,i*7+j)-.5)*.5;
+                  var nx:Number=128+Math.cos(a+bend*.4)*r;var ny:Number=128+Math.sin(a+bend*.4)*r;
+                  g.lineStyle(4.5-j*.6,W,1);g.moveTo(x,y);g.lineTo(nx,ny);
+                  if(j==3)
+                  {
+                     g.lineStyle(1.6,W,1);g.moveTo(nx,ny);
+                     g.lineTo(nx+Math.cos(a+.7)*22,ny+Math.sin(a+.7)*22);
+                  }
+                  x=nx;y=ny;
+               }
+            }
+            hfxBDraw106(bmp,shape,.8,W,5);
+         }
+         else if(id=="muzzle")
+         {
+            m.createGradientBox(64,64,0,0,0);
+            g.beginGradientFill("radial",[W,W,W],[1,.8,.1],[0,110,255],m);
+            for(i=0;i<=12;i++)
+            {
+               a=i*Math.PI/6;r=i%2 ? 8 : (i%4==0 ? 31 : 22);
+               if(i==0) g.moveTo(32+Math.cos(a)*r,32+Math.sin(a)*r);else g.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);
+            }
+            g.endFill();
+            hfxBDraw106(bmp,shape,1,W,6);
+         }
+         else if(id=="reticle")
+         {
+            g.lineStyle(5,W,1);g.drawCircle(64,64,44);
+            g.lineStyle(1.5,W,.6);g.drawCircle(64,64,56);
+            g.lineStyle(4,W,1);
+            for(i=0;i<4;i++) {a=i*Math.PI/2;g.moveTo(64+Math.cos(a)*28,64+Math.sin(a)*28);g.lineTo(64+Math.cos(a)*60,64+Math.sin(a)*60);}
+            g.lineStyle();g.beginFill(W,1);g.drawCircle(64,64,4);g.endFill();
+            hfxBDraw106(bmp,shape,.6,W,4);
+         }
+         else if(id=="trap")
+         {
+            // Yordle-snap trap seen from above, painted in steel.
+            g.lineStyle(10,0x4A4F58,1);g.drawCircle(64,64,48);
+            g.lineStyle(2,0x9AA2AE,1);g.drawCircle(64,64,53);g.drawCircle(64,64,43);
+            g.lineStyle(1,0x5A606A,1);
+            for(i=0;i<14;i++)
+            {
+               a=i*Math.PI*2/14;
+               g.beginFill(0xD8DEE6,1);
+               g.moveTo(64+Math.cos(a-.16)*43,64+Math.sin(a-.16)*43);g.lineTo(64+Math.cos(a)*29,64+Math.sin(a)*29);
+               g.lineTo(64+Math.cos(a+.16)*43,64+Math.sin(a+.16)*43);g.endFill();
+            }
+            g.lineStyle(2,0xB8C0CA,1);g.beginFill(0x6A707A,1);g.drawCircle(64,64,12);g.endFill();
+            g.lineStyle(2,0xE8ECF2,.9);g.moveTo(52,64);g.lineTo(76,64);
+            hfxBDraw106(bmp,shape,.4);
+         }
+         else if(id=="bolt")
+         {
+            // A silver crossbow bolt pointing to +x with crimson fletching.
+            m.createGradientBox(128,32,Math.PI/2,0,0);
+            g.beginGradientFill("linear",[0xF4F8FF,0xC8D2E0,0x7A8496],[1,1,1],[0,128,255],m);
+            g.drawRect(16,14,88,4);g.endFill();
+            g.lineStyle(1,0x5A6478,1);g.beginFill(0xF4F8FF,1);
+            g.moveTo(100,8);g.lineTo(126,16);g.lineTo(100,24);g.lineTo(105,16);g.lineTo(100,8);g.endFill();
+            g.beginFill(0xC8304E,.95);g.moveTo(30,15);g.lineTo(8,5);g.lineTo(16,15);g.lineTo(30,15);g.endFill();
+            g.beginFill(0xC8304E,.95);g.moveTo(30,17);g.lineTo(8,27);g.lineTo(16,17);g.lineTo(30,17);g.endFill();
+            g.lineStyle();g.beginFill(0xE8ECF4,1);g.drawRect(12,13.5,4,5);g.endFill();
+            hfxBDraw106(bmp,shape,.3,0xE8F0FF,4);
+         }
+         else if(id=="heart" || id=="heart_half")
+         {
+            m.createGradientBox(64,64,0,0,-4);
+            g.lineStyle(2,W,1);g.beginGradientFill("radial",[W,W,W],[1,.8,.55],[0,140,255],m);
+            var steps:int=40;var half:Boolean=id=="heart_half";
+            for(i=0;i<=steps;i++)
+            {
+               a=half ? Math.PI+Math.PI*i/steps : Math.PI*2*i/steps;
+               pt=hfxBHeart106(a);
+               if(i==0) g.moveTo(32+pt[0],28+pt[1]);else g.lineTo(32+pt[0],28+pt[1]);
+            }
+            if(half)
+            {
+               // Jagged seam down the middle back to the tip.
+               var seam:Array=[[2,-2],[-2,3],[3,8],[-1,13],[2,18],[0,26]];
+               for(i=0;i<seam.length;i++) g.lineTo(32+seam[i][0],28+seam[i][1]);
+            }
+            g.endFill();
+            g.lineStyle();g.beginFill(W,.85);g.drawEllipse(half ? 15 : 14,15,9,6);g.endFill();
+            hfxBDraw106(bmp,shape,.5,W,5);
+         }
+         else if(id=="plus")
+         {
+            g.beginFill(W,1);g.drawRoundRect(13,5,6,22,6,6);g.drawRoundRect(5,13,22,6,6,6);g.endFill();
+            hfxBDraw106(bmp,shape,1,W,4);
+         }
+         else if(id=="dome")
+         {
+            g.beginGradientFill("radial",[W,W,W,W,W],[.06,.1,.35,.9,0],[0,140,215,240,255],m);
+            g.drawCircle(64,64,64);g.endFill();
+            hfxBDraw106(bmp,shape,0);
+            shape=new flash.display.Shape();g=shape.graphics;
+            g.lineStyle(5,W,.85);
+            for(i=0;i<=10;i++) {a=Math.PI*(1.12+.3*i/10);if(i==0) g.moveTo(64+Math.cos(a)*48,64+Math.sin(a)*48);else g.lineTo(64+Math.cos(a)*48,64+Math.sin(a)*48);}
+            hfxBDraw106(bmp,shape,0);
+            hfxBDraw106(bmp,shape,3);
+         }
+         return bmp;
+      }
+      private static function hfxBHeart106(a:Number) : Array
+      {
+         var s:Number=Math.sin(a);var k:Number=1.65;
+         return [16*s*s*s*k,-(13*Math.cos(a)-5*Math.cos(2*a)-2*Math.cos(3*a)-Math.cos(4*a))*k];
+      }
+      private static function hfxBEllipse106(g:flash.display.Graphics, cx:Number, cy:Number, rx:Number, ry:Number, rot:Number) : void
+      {
+         for(var i:int=0;i<=24;i++)
+         {
+            var a:Number=i*Math.PI*2/24;var x:Number=Math.cos(a)*rx;var y:Number=Math.sin(a)*ry;
+            var px:Number=cx+x*Math.cos(rot)-y*Math.sin(rot);var py:Number=cy+x*Math.sin(rot)+y*Math.cos(rot);
+            if(i==0) g.moveTo(px,py);else g.lineTo(px,py);
+         }
+      }
+      private static function hfxBCrescent106(g:flash.display.Graphics, cx:Number, cy:Number, rx:Number, ry:Number, span:Number, width:Number) : void
+      {
+         var steps:int=28;var i:int;var a:Number;
+         for(i=0;i<=steps;i++)
+         {
+            a=-span+2*span*i/steps;
+            if(i==0) g.moveTo(cx+rx*Math.cos(a),cy+ry*Math.sin(a));
+            else g.lineTo(cx+rx*Math.cos(a),cy+ry*Math.sin(a));
+         }
+         for(i=steps;i>=0;i--)
+         {
+            a=-span+2*span*i/steps;
+            var w:Number=width*Math.pow(Math.max(0,Math.cos(a/span*Math.PI/2)),1.6);
+            g.lineTo(cx+(rx-w)*Math.cos(a),cy+(ry-w*.4)*Math.sin(a));
+         }
+      }
+      private static function hfxBDraw106(bmp:flash.display.BitmapData, shape:flash.display.Shape, blur:Number, glow:uint = 0, glowSize:Number = 0) : void
+      {
+         // Filters only render for children, so the shape sits in a holder.
+         var holder:flash.display.Sprite=new flash.display.Sprite();holder.addChild(shape);
+         var filters:Array=[];
+         if(blur>0) filters.push(new flash.filters.BlurFilter(blur,blur,2));
+         if(glowSize>0) filters.push(new flash.filters.GlowFilter(glow,1,glowSize,glowSize,2,2));
+         shape.filters=filters;
+         bmp.draw(holder,null,null,null,null,true);
+      }
+
+      public static function heroFxLifeB106(kind:String) : Number
+      {
+         switch(kind)
+         {
+            case "tahm_tongue": return 1;
+            case "tahm_slam": return 1.4;
+            case "tahm_gold": return 1.3;
+            case "malz_flame": return 1.2;
+            case "malz_cast": return .8;
+            case "malz_summon": return 1.6;
+            case "void_burn": return 1;
+            case "void_venom": return .9;
+            case "lee_wave": return 1.1;
+            case "lee_dash": return 1;
+            case "lee_kick": return 1.5;
+            case "lee_crash": return 1;
+            case "lee_bell": return 1.1;
+            case "ryze_brand": return 1.1;
+            case "ryze_leech": return .9;
+            case "ryze_domain": return 1.7;
+            case "ryze_hell": return 1.1;
+            case "ryze_growth": return 1.1;
+            case "cait_shot": return .8;
+            case "cait_wanted": return .9;
+            case "cait_snipe": return 1.5;
+            case "cait_trap": return 1;
+            case "vayne_bolt": return .7;
+            case "vayne_bolt_ult": return .85;
+            case "vayne_hunt": return 1.2;
+            case "vayne_burst": return 1;
+            case "fb_heal": return 1;
+            case "fb_shield": return .9;
+            case "fb_cleanse": return .9;
+         }
+         return 0;
+      }
+      // Every sprite of this group goes through here: one sprite never exceeds alpha .85.
+      private static function hfxBPut106(out:Array, k:String, x:Number, y:Number, sx:Number, sy:Number, r:Number, a:Number, c:uint = 0xFFFFFF, add:Boolean = true, fy:Number = 1) : void
+      {
+         hfxPut106(out,k,x,y,sx,sy,r,a>.85 ? .85 : a,c,add,fy);
+      }
+      private static function hfxBFlash106(out:Array, t:Number, x:Number, y:Number, start:Number, life:Number, from:Number, to:Number, alpha:Number, c:uint = 0xFFFFFF) : void
+      {
+         var p:Number=(t-start)/life;
+         if(p<0 || p>1) return;
+         var s:Number=from+(to-from)*hfxOut106(p);
+         hfxBPut106(out,"glow",x,y,s,s,0,alpha*(1-p),c);
+      }
+      private static function hfxBRing106(out:Array, t:Number, x:Number, y:Number, start:Number, life:Number, from:Number, to:Number, alpha:Number, c:uint = 0xFFFFFF, flat:Number = .42) : void
+      {
+         var p:Number=(t-start)/life;
+         if(p<0 || p>1) return;
+         var s:Number=from+(to-from)*hfxOut106(p);
+         hfxBPut106(out,"ring",x,y,s,s*flat,0,alpha*(1-p),c);
+      }
+      private static function hfxBSparks106(out:Array, seed:int, t:Number, x:Number, y:Number, count:int, start:Number, life:Number, reach:Number, c:uint = 0xFFFFFF, up:Number = 0) : void
+      {
+         for(var i:int=0;i<count;i++)
+         {
+            var p:Number=(t-start-hfxRand106(seed,i+300)*.06)/life;
+            if(p<0 || p>1) continue;
+            var dir:Number=hfxRand106(seed,i)*Math.PI*2;
+            var d:Number=reach*(.5+.5*hfxRand106(seed,i+100))*hfxOut106(p);
+            hfxBPut106(out,"spark",x+Math.cos(dir)*d,y+Math.sin(dir)*d*.72-up*p*p,(1.4-p)*.75,.55,dir,(1-p*p)*.85,c);
+         }
+      }
+      // Sparks thrown forward in a cone around dir.
+      private static function hfxBCone106(out:Array, seed:int, t:Number, x:Number, y:Number, count:int, start:Number, life:Number, reach:Number, dir:Number, spread:Number, c:uint = 0xFFFFFF) : void
+      {
+         for(var i:int=0;i<count;i++)
+         {
+            var p:Number=(t-start-hfxRand106(seed,i+320)*.05)/life;
+            if(p<0 || p>1) continue;
+            var a:Number=dir+(hfxRand106(seed,i+40)-.5)*spread;
+            var d:Number=reach*(.45+.55*hfxRand106(seed,i+140))*hfxOut106(p);
+            hfxBPut106(out,"spark",x+Math.cos(a)*d,y+Math.sin(a)*d,(1.6-p)*.8,.55,a,(1-p*p)*.85,c);
+         }
+      }
+      // Rising motes; each starts within the first 45% of life after start.
+      private static function hfxBMotes106(out:Array, seed:int, t:Number, x:Number, y:Number, count:int, start:Number, life:Number, spread:Number, rise:Number, c:uint = 0xFFFFFF, k:String = "dot", size:Number = 1) : void
+      {
+         for(var i:int=0;i<count;i++)
+         {
+            var age:Number=t-start-hfxRand106(seed,i+500)*life*.45;
+            if(age<0 || age>life) continue;
+            var p:Number=age/life;
+            var px:Number=x+(hfxRand106(seed,i+600)-.5)*spread+Math.sin(age*6+i)*5;
+            var py:Number=y+(hfxRand106(seed,i+700)-.5)*spread*.3-rise*p;
+            var s:Number=size*(.55+.5*hfxRand106(seed,i+800));
+            hfxBPut106(out,k,px,py,s,s,0,Math.sin(p*Math.PI)*.85,c);
+         }
+      }
+      // Smoke puffs in normal blend, drawn first so they sit under the glow.
+      private static function hfxBSmoke106(out:Array, seed:int, t:Number, x:Number, y:Number, count:int, start:Number, life:Number, reach:Number, size:Number, alpha:Number, c:uint) : void
+      {
+         for(var i:int=0;i<count;i++)
+         {
+            var p:Number=(t-start-hfxRand106(seed,i+960)*.08)/life;
+            if(p<0 || p>1) continue;
+            var a:Number=i*Math.PI*2/count+hfxRand106(seed,i+970);
+            var d:Number=reach*hfxOut106(p);var s:Number=size*(.7+.6*p);
+            hfxBPut106(out,"smoke",x+Math.cos(a)*d,y+Math.sin(a)*d*.45-12*p,s,s*.65,a,alpha*(1-p),c,false);
+         }
+      }
+      private static function hfxBFlame106(out:Array, x:Number, groundY:Number, sx:Number, sy:Number, sway:Number, a:Number, c:uint = 0xFFFFFF) : void
+      {
+         // The flame texture base sits 60 pixels below its centre.
+         hfxBPut106(out,"flame",x,groundY-60*sy,sx,sy,sway,a,c);
+      }
+      // A texture whose bright end is its right edge (tracer), ending at (hx,hy) along ang.
+      private static function hfxBStreak106(out:Array, k:String, hx:Number, hy:Number, ang:Number, length:Number, thick:Number, a:Number, c:uint = 0xFFFFFF) : void
+      {
+         var s:Number=Math.max(.04,length/250);
+         hfxBPut106(out,k,hx-Math.cos(ang)*125*s,hy-Math.sin(ang)*125*s,s,thick,ang,a,c);
+      }
+
+      // Sprites of one effect at time t: (sx,sy) is the caster, (tx,ty) the target.
+      public static function heroFxSpritesB106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var hero:String=kind.substr(0,kind.indexOf("_"));
+         if(hero=="lee") hfxBLee106(kind,t,sx,sy,tx,ty,seed,out);
+         else if(hero=="ryze") hfxBRyze106(kind,t,sx,sy,tx,ty,seed,out);
+         else if(hero=="cait") hfxBCait106(kind,t,sx,sy,tx,ty,seed,out);
+         else if(hero=="vayne") hfxBVayne106(kind,t,sx,sy,tx,ty,seed,out);
+         else if(hero=="tahm") hfxBTahm106(kind,t,sx,sy,tx,ty,seed,out);
+         else if(hero=="malz" || hero=="void") hfxBVoid106(kind,t,sx,sy,tx,ty,seed,out);
+         else if(hero=="fb") hfxBShared106(kind,t,sx,sy,tx,ty,seed,out);
+      }
+      // Lee Sin: golden sonic palm, resonating dash, the dragon kick and the golden bell.
+      private static function hfxBLee106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var G:Number=.42;var GOLD:uint=0xFFC24A;var PALE:uint=0xFFE6A6;var FIRE:uint=0xFFA040;
+         var dx:Number=tx-sx;var dy:Number=ty-sy;var dist:Number=Math.sqrt(dx*dx+dy*dy);
+         var ang:Number=dist>1 ? Math.atan2(dy,dx) : -Math.PI/2;var ux:Number=Math.cos(ang);var uy:Number=Math.sin(ang);
+         var i:int;var p:Number;var u:Number;var s:Number;var a:Number;var f:Number;var g:Number;var d:Number;var px:Number;var py:Number;
+         if(kind=="lee_wave")
+         {
+            // Sonic Wave: a golden palm print flies out wrapped in sound arcs and stamps the target.
+            var fly:Number=.3;
+            hfxBFlash106(out,t,sx+ux*26,sy+uy*26,0,.25,.25,.6,.7,GOLD);
+            p=t/fly;
+            if(p<=1)
+            {
+               f=p*(.55+.45*p);
+               px=sx+dx*f;py=sy+dy*f;
+               for(i=3;i>=1;i--)
+               {
+                  g=f-i*.09;if(g<0) continue;
+                  hfxBPut106(out,"arc",sx+dx*g,sy+dy*g,.35+i*.1,.35+i*.12,ang,.62-i*.14,PALE);
+               }
+               hfxBPut106(out,"glow",px,py,.55,.55,0,.55,GOLD);
+               hfxBPut106(out,"palm",px,py,.42,.42,ang+Math.PI/2,.85);
+               hfxBPut106(out,"arc",px+ux*22,py+uy*22,.38,.42,ang,.75);
+            }
+            u=t-fly;
+            if(u<0) return;
+            p=u/.55;
+            if(p<=1)
+            {
+               s=.62-.12*hfxOut106(u/.08);
+               hfxBPut106(out,"palm",tx,ty,s,s,ang+Math.PI/2,.85*(1-p*p));
+            }
+            hfxBFlash106(out,t,tx,ty,fly,.35,.4,1.1,.7,GOLD);
+            hfxBRing106(out,t,tx,ty,fly,.45,.15,.75,.75,PALE,.85);
+            hfxBRing106(out,t,tx,ty,fly+.1,.5,.15,1,.55,GOLD,.85);
+            p=(u-.05)/.45;
+            if(p>=0 && p<=1)
+               for(i=0;i<4;i++)
+               {
+                  a=ang+(i-1.5)*.55;d=20+60*hfxOut106(p);
+                  hfxBPut106(out,"arc",tx+Math.cos(a)*d,ty+Math.sin(a)*d,.3+.2*p,.3+.25*p,a,.6*(1-p),PALE);
+               }
+            hfxBSparks106(out,seed,t,tx,ty,10,fly,.45,70,PALE);
+            // The echo lingers on the marked enemy.
+            hfxBRing106(out,t,tx,ty+30,.68,.42,.25,.7,.6,GOLD);
+         }
+         else if(kind=="lee_dash")
+         {
+            // Resonating Strike: he follows the echo in a golden blur and kicks through.
+            var bx:Number=sx;var by:Number=sy;
+            if(dist<80) {bx=tx-ux*150;by=ty-uy*150;}
+            var run:Number=.18;
+            f=hfxOut106(t/run);
+            var hx:Number=bx+(tx-bx)*f;var hy:Number=by+(ty-by)*f;
+            for(i=0;i<2;i++)
+            {
+               p=(t-i*.06)/.2;if(p<0 || p>1) continue;
+               s=.7*(1-.7*p);
+               hfxBPut106(out,"ring",tx,ty,s,s*.85,0,.25+.5*p,PALE);
+            }
+            for(i=0;i<4;i++)
+            {
+               var at:Number=i*.045;u=t-at;if(u<0 || u>.4) continue;
+               g=hfxOut106(at/run);px=bx+(tx-bx)*g;py=by+(ty-by)*g;
+               a=(1-u/.4)*.5*(1-i*.1);
+               hfxBPut106(out,"glow",px,py,.42,.62,0,a,GOLD);
+               hfxBPut106(out,"glow",px,py-8,.22,.3,0,a*.9);
+            }
+            if(t<.32)
+            {
+               a=t<run ? .8 : Math.max(0,1-(t-run)/.14)*.8;
+               var len:Number=Math.sqrt((hx-bx)*(hx-bx)+(hy-by)*(hy-by));
+               hfxBStreak106(out,"tracer",hx,hy,ang,Math.max(20,Math.min(300,len)),1.6,a,GOLD);
+            }
+            u=t-run;
+            if(u<0) return;
+            hfxBFlash106(out,t,tx,ty,run,.3,.3,1.1,.75,GOLD);
+            p=u/.42;
+            if(p<=1)
+            {
+               s=.3+.55*hfxOut106(u/.08);a=(1-p*p)*.85;
+               hfxBPut106(out,"swoosh",tx,ty,s,s*.8,ang+Math.PI/2,a,GOLD);
+               hfxBPut106(out,"swoosh",tx,ty,s*.8,s*.55,ang+Math.PI/2,a*.8);
+            }
+            p=(u-.07)/.4;
+            if(p>=0 && p<=1) {s=.3+.5*hfxOut106((u-.07)/.08);hfxBPut106(out,"swoosh",tx,ty,s,s*.7,ang+Math.PI/2+2.6,(1-p*p)*.8,PALE);}
+            hfxBRing106(out,t,tx,ty+28,run,.5,.25,1.2,.75,GOLD);
+            hfxBSparks106(out,seed,t,tx,ty,14,run,.5,100,PALE);
+         }
+         else if(kind=="lee_kick")
+         {
+            // Dragon's Rage: flames curl round the kicking leg, the tail sweeps, the target is launched.
+            var hit:Number=.24;
+            for(i=0;i<6;i++)
+            {
+               p=(t-i*.025)/.34;if(p<0 || p>1) continue;
+               a=i*Math.PI/3+p*5;
+               hfxBFlame106(out,sx+Math.cos(a)*24,sy+34+Math.sin(a)*10,.3,.25+.35*Math.sin(p*Math.PI),Math.sin(a)*.3,Math.sin(p*Math.PI)*.8,FIRE);
+            }
+            hfxBFlash106(out,t,sx,sy+10,0,.35,.4,.9,.55,FIRE);
+            for(i=0;i<2;i++)
+            {
+               u=t-.1-i*.06;p=u/.4;if(p<0 || p>1) continue;
+               var rot:Number=ang+Math.PI/2-1.6+3.2*hfxOut106(p)+i*.5;
+               a=(p<.4 ? 1 : 1-(p-.4)/.6)*.85;
+               hfxBPut106(out,"swoosh",tx-ux*10,ty-uy*10,1.05-.2*i,.9-.15*i,rot,a,i ? PALE : 0xFFB040);
+            }
+            u=t-hit;
+            if(u<0) return;
+            hfxBFlash106(out,t,tx,ty,hit,.4,.5,1.3,.65,0xFFB040);
+            hfxBFlash106(out,t,tx,ty,hit,.25,.3,.7,.55);
+            hfxBRing106(out,t,tx,ty+30,hit,.6,.3,1.35,.8,GOLD);
+            hfxBRing106(out,t,tx,ty,hit+.06,.5,.2,1.2,.6,PALE,.9);
+            for(i=0;i<8;i++)
+            {
+               p=(u-i*.015)/.6;if(p<0 || p>1) continue;
+               a=i*Math.PI/4+.3;d=26+20*hfxOut106(p);
+               hfxBFlame106(out,tx+Math.cos(a)*d,ty+34+Math.sin(a)*d*G,.38,.25+.55*Math.sin(p*Math.PI),Math.cos(a)*.35,Math.sin(p*Math.PI)*.85,0xFF9030);
+            }
+            hfxBSparks106(out,seed,t,tx,ty,16,hit,.55,130,0xFFE0A0,20);
+            // The launched enemy leaves a comet tail pointing back at Lee.
+            p=(u-.02)/.95;
+            if(p>=0 && p<=1)
+            {
+               a=p<.45 ? .8 : .8*(1-(p-.45)/.55);d=60+150*hfxOut106(p*2.5);
+               hfxBStreak106(out,"tracer",tx-ux*8,ty-uy*8,ang,d,2.4,a,0xFFB040);
+               hfxBStreak106(out,"tracer",tx-ux*8,ty-uy*8,ang,d*.8,1,a);
+            }
+            hfxBMotes106(out,seed+3,t,tx,ty,10,hit+.1,.6,60,50,0xFFB050);
+         }
+         else if(kind=="lee_crash")
+         {
+            // Knocked into: a shockwave and stars circling under the health bar.
+            hfxBFlash106(out,t,tx,ty,0,.35,.4,1.2,.65,0xFFB040);
+            hfxBRing106(out,t,tx,ty+30,0,.55,.3,1.4,.8,GOLD);
+            hfxBSparks106(out,seed,t,tx,ty,12,0,.45,95,0xFFE0A0);
+            u=t-.1;
+            if(u>=0 && u<=.85)
+               for(i=0;i<3;i++)
+               {
+                  a=u*7+i*2.094;
+                  var fade:Number=Math.min(1,u/.15)*(u>.6 ? 1-(u-.6)/.25 : 1);
+                  hfxBPut106(out,"muzzle",tx+Math.cos(a)*20,ty-34+Math.sin(a)*6,.22,.22,u*4,.8*fade,0xFFE070);
+               }
+         }
+         else if(kind=="lee_bell")
+         {
+            // Golden Bell: a bell drops over the ally and rings once.
+            f=hfxOut106(t/.2);
+            a=t<.75 ? Math.min(1,t/.12)*.5 : .5*Math.max(0,1-(t-.75)/.35);
+            py=ty-40*(1-f)+2;
+            hfxBPut106(out,"bell",tx,py,.7,.7,Math.sin(t*9)*.06*Math.max(0,1-t),a);
+            u=t-.2;
+            if(u>=0 && u<=.45) {p=u/.45;hfxBPut106(out,"spark",tx-30+60*p,py-14+10*p,1.2,.35,-.5,.7*Math.sin(p*Math.PI));}
+            hfxBRing106(out,t,tx,ty+32,.18,.55,.3,1.2,.8,0xFFD060);
+            hfxBRing106(out,t,tx,ty+32,.3,.6,.3,1,.55,0xFFF0C0);
+            hfxBFlash106(out,t,tx,ty,.18,.4,.5,1,.4,GOLD);
+            hfxBMotes106(out,seed,t,tx,ty+10,8,.2,.6,70,60,0xFFE0A0);
+         }
+      }
+      // Baron Ryze: a blood contract brand, the Hell Domain spread on the ground, Baron growth.
+      private static function hfxBRyze106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var G:Number=.42;var CRIM:uint=0xE0204A;var BLOOD:uint=0xA01030;var VIOLET:uint=0x8A3AE0;var PINK:uint=0xFF8AA8;
+         var dx:Number=tx-sx;var dy:Number=ty-sy;var dist:Number=Math.sqrt(dx*dx+dy*dy);
+         var ang:Number=dist>1 ? Math.atan2(dy,dx) : -Math.PI/2;var ux:Number=Math.cos(ang);var uy:Number=Math.sin(ang);
+         var i:int;var p:Number;var u:Number;var s:Number;var a:Number;var f:Number;var g:Number;var px:Number;var py:Number;var cx:Number;var cy:Number;
+         if(kind=="ryze_brand")
+         {
+            // A blood rune arcs over, then a contract circle closes on the ground under the target.
+            var fly:Number=.26;
+            cx=(sx+tx)/2-uy*40;cy=(sy+ty)/2+ux*40;
+            p=t/fly;
+            if(p<=1)
+            {
+               for(i=5;i>=1;i--)
+               {
+                  g=p-i*.07;if(g<0) continue;
+                  hfxBPut106(out,"dot",hfxQuad106(sx,cx,tx,g),hfxQuad106(sy,cy,ty,g),.55-i*.06,.55-i*.06,0,.62-i*.1,VIOLET);
+               }
+               px=hfxQuad106(sx,cx,tx,p);py=hfxQuad106(sy,cy,ty,p);
+               hfxBPut106(out,"glow",px,py,.5,.5,0,.7,CRIM);
+               hfxBPut106(out,"brand",px,py,.4,.4,t*9,.8,PINK);
+               hfxBPut106(out,"dot",px,py,.5,.5,0,.85);
+            }
+            u=t-fly;
+            if(u<0) return;
+            hfxBSmoke106(out,seed,t,tx,ty+30,3,fly,.7,30,.55,.5,0x6A2048);
+            a=u<.5 ? .75 : Math.max(0,1-(u-.5)/.3)*.75;
+            s=.65-.23*hfxOut106(u/.25);
+            hfxBPut106(out,"sigil",tx,ty+32,s,s,-u*2.2,a,CRIM,true,G);
+            hfxBPut106(out,"sigil",tx,ty+32,s*.55,s*.55,u*3,a*.8,VIOLET,true,G);
+            p=u/.7;
+            if(p<=1) {s=.55-.1*hfxOut106(u/.1);hfxBPut106(out,"brand",tx,ty-2,s,s,0,.85*(1-p*p),PINK);}
+            hfxBFlash106(out,t,tx,ty,fly,.35,.3,.9,.6,CRIM);
+            hfxBRing106(out,t,tx,ty,fly,.4,.2,.9,.6,PINK,.85);
+            hfxBSparks106(out,seed,t,tx,ty,8,fly,.4,70,PINK);
+         }
+         else if(kind=="ryze_leech")
+         {
+            // Blood drawn from the cursed enemy (source) back into Ryze (target).
+            for(i=0;i<8;i++)
+            {
+               p=(t-i*.04)/.45;if(p<0 || p>1) continue;
+               var side:Number=(hfxRand106(seed,i)-.5)*90;
+               cx=(sx+tx)/2-uy*side;cy=(sy+ty)/2+ux*side-30;
+               f=hfxInOut106(p);
+               px=hfxQuad106(sx,cx,tx,f);py=hfxQuad106(sy,cy,ty,f);
+               a=p<.85 ? .85 : .85*(1-p)/.15;
+               hfxBPut106(out,"dot",px,py,.7,.7,0,a,CRIM);
+               hfxBPut106(out,"spark",px,py,.9,.4,Math.atan2(hfxQuadSlope106(sy,cy,ty,f),hfxQuadSlope106(sx,cx,tx,f)),a*.7,BLOOD);
+            }
+            hfxBFlash106(out,t,tx,ty,.45,.4,.4,.9,.55,PINK);
+            hfxBRing106(out,t,tx,ty+30,.45,.4,.25,.8,.6,CRIM);
+         }
+         else if(kind=="ryze_domain")
+         {
+            // Hell Domain: contract circles unroll along the lane, hellfire rises, Ryze is shielded.
+            var ex:Number=tx+ux*60;var ey:Number=ty+uy*60;var fade:Number=t<1.25 ? 1 : Math.max(0,1-(t-1.25)/.4);
+            hfxBPut106(out,"beam",(sx+ex)/2,(sy+ey)/2+34,Math.max(20,dist+60)/256,2.2,Math.atan2(ey-sy,ex-sx),.3*fade*hfxOut106(t/.3),BLOOD);
+            for(i=0;i<4;i++)
+            {
+               f=i/3;px=sx+(ex-sx)*f;py=sy+(ey-sy)*f+34;
+               u=t-i*.09;if(u<0) continue;
+               s=.42*hfxBack106(u/.3);
+               hfxBPut106(out,"glow",px,py,.9,.9*G,0,.4*fade,BLOOD);
+               hfxBPut106(out,"sigil",px,py,s,s,u*1.2*(i%2 ? 1 : -1),.7*fade,CRIM,true,G);
+            }
+            hfxBSmoke106(out,seed,t,sx+(ex-sx)*.33,sy+(ey-sy)*.33+30,4,.1,1,50,.7,.5,0x5A2050);
+            hfxBSmoke106(out,seed+9,t,sx+(ex-sx)*.8,sy+(ey-sy)*.8+30,4,.18,1,50,.7,.5,0x5A2050);
+            for(i=0;i<12;i++)
+            {
+               f=hfxRand106(seed,i);p=(t-.12-hfxRand106(seed,i+20)*.35)/.75;if(p<0 || p>1) continue;
+               px=sx+(ex-sx)*f+(hfxRand106(seed,i+40)-.5)*50;py=sy+(ey-sy)*f+34+(hfxRand106(seed,i+60)-.5)*14;
+               hfxBFlame106(out,px,py,.32,.25+.5*Math.sin(p*Math.PI),Math.sin(t*8+i)*.12,Math.sin(p*Math.PI)*.75,i%3==0 ? VIOLET : CRIM);
+            }
+            u=t-.15;
+            if(u>=0)
+            {
+               a=(u<.15 ? u/.15 : 1)*(t<1.3 ? 1 : Math.max(0,1-(t-1.3)/.4))*.45;
+               s=.82+.04*Math.sin(t*6);
+               hfxBPut106(out,"dome",sx,sy,s,s,0,a,0xE04070);
+            }
+            hfxBRing106(out,t,sx,sy+30,0,.5,.3,1.3,.8,CRIM);
+         }
+         else if(kind=="ryze_hell")
+         {
+            // Each enemy in the domain: a pillar of hellfire and the contract brand.
+            hfxBFlash106(out,t,tx,ty,0,.35,.3,1,.6,CRIM);
+            for(i=0;i<5;i++)
+            {
+               p=(t-i*.03)/.7;if(p<0 || p>1) continue;
+               a=Math.sin(p*Math.PI);
+               hfxBFlame106(out,tx+(i-2)*12,ty+36,.38,(.35+.6*a)*(1-Math.abs(i-2)*.15),Math.sin(t*9+i)*.1,a*.8,i==2 ? PINK : CRIM);
+            }
+            p=t/.6;
+            if(p<=1) {s=.5+.08*hfxOut106(p);hfxBPut106(out,"brand",tx,ty,s,s,0,.8*(1-p*p),PINK);}
+            hfxBSparks106(out,seed,t,tx,ty,8,0,.4,70,CRIM);
+            hfxBRing106(out,t,tx,ty+32,0,.5,.3,1,.7,CRIM);
+            hfxBMotes106(out,seed,t,tx,ty+20,6,.1,.6,50,70,VIOLET);
+         }
+         else if(kind=="ryze_growth")
+         {
+            // Baron's Body grows: a violet surge and a brand rising off him.
+            hfxBRing106(out,t,tx,ty+32,0,.6,.3,1.2,.8,VIOLET);
+            hfxBRing106(out,t,tx,ty+32,.12,.6,.25,.9,.6,CRIM);
+            hfxBFlash106(out,t,tx,ty,0,.5,.4,.9,.45,VIOLET);
+            for(i=0;i<4;i++)
+            {
+               p=(t-i*.05)/.7;if(p<0 || p>1) continue;
+               hfxBFlame106(out,tx+(i<2 ? -1 : 1)*(i%2 ? 14 : 30),ty+34,.3,.3+.4*Math.sin(p*Math.PI),0,Math.sin(p*Math.PI)*.6,VIOLET);
+            }
+            hfxBMotes106(out,seed,t,tx,ty+20,10,.05,.65,70,90,0xC080FF);
+            p=t/.9;
+            if(p<=1) hfxBPut106(out,"brand",tx,ty-10-40*p,.45,.45,0,Math.sin(p*Math.PI)*.8,VIOLET);
+         }
+      }
+      // Caitlyn: rifle rounds with muzzle flash and a long tracer, the aimed execution, the wanted lock, the snap trap.
+      private static function hfxBCait106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var G:Number=.42;var FIRE:uint=0xFFE6A0;var TRACE:uint=0xFFF0C8;var RED:uint=0xFF4A3A;
+         var dx:Number=tx-sx;var dy:Number=ty-sy;var dist:Number=Math.sqrt(dx*dx+dy*dy);
+         var ang:Number=dist>1 ? Math.atan2(dy,dx) : -Math.PI/2;var ux:Number=Math.cos(ang);var uy:Number=Math.sin(ang);
+         var mx:Number=sx+ux*34;var my:Number=sy+uy*34;
+         var i:int;var p:Number;var u:Number;var s:Number;var a:Number;var f:Number;var hx:Number;var hy:Number;
+         if(kind=="cait_shot")
+         {
+            var fly:Number=.1;
+            p=t/.12;
+            if(p<=1)
+            {
+               hfxBPut106(out,"muzzle",mx,my,.55*(1-.3*p),.42*(1-.3*p),ang,.85*(1-p),FIRE);
+               hfxBPut106(out,"glow",mx,my,.4,.4,0,.6*(1-p),0xFFB040);
+            }
+            hfxBSmoke106(out,seed,t,mx,my,3,.04,.5,22,.35,.35,0x9A9A9A);
+            f=hfxClamp106(t/fly);
+            hx=mx+(tx-mx)*f;hy=my+(ty-my)*f;
+            a=t<fly ? .85 : Math.max(0,1-(t-fly)/.16)*.85;
+            hfxBStreak106(out,"tracer",hx,hy,ang,Math.min(200,f*Math.max(0,dist-34)+20),.9,a,TRACE);
+            if(t<fly) hfxBPut106(out,"dot",hx,hy,.45,.45,0,.85);
+            u=t-fly;
+            if(u<0) return;
+            hfxBFlash106(out,t,tx,ty,fly,.25,.2,.65,.75,0xFFE0A0);
+            hfxBCone106(out,seed,t,tx,ty,8,fly,.35,60,ang,1.6,FIRE);
+            hfxBRing106(out,t,tx,ty,fly,.3,.1,.5,.55,FIRE,.8);
+         }
+         else if(kind=="cait_wanted")
+         {
+            // Wanted: a red reticle spins down and locks on.
+            f=hfxOut106(t/.28);
+            s=.75-.38*f;
+            a=t<.55 ? .8 : Math.max(0,1-(t-.55)/.35)*.8;
+            hfxBPut106(out,"reticle",tx,ty,s,s,(1-f)*1.2,a,RED);
+            if(t>=.28)
+            {
+               hfxBFlash106(out,t,tx,ty,.28,.3,.2,.55,.55,0xFF6040);
+               hfxBPut106(out,"dot",tx,ty,.4,.4,0,a*(.6+.4*Math.sin(t*30)),RED);
+            }
+         }
+         else if(kind=="cait_snipe")
+         {
+            // Ace in the Hole style execution: a laser sight narrows, then one round goes clean through.
+            var aim:Number=.62;var far:Number=dist+220;
+            if(t<aim+.05)
+            {
+               p=Math.min(1,t/aim);
+               a=(.25+.35*p)*(t<aim ? 1 : 1-(t-aim)/.05)*(.85+.15*Math.sin(t*40));
+               hfxBPut106(out,"beam",(mx+tx)/2,(my+ty)/2,Math.max(20,dist-34)/256,.5-.3*p,ang,a,0xFF4040);
+               s=1-.55*hfxOut106(p);
+               hfxBPut106(out,"reticle",tx,ty,s*.7,s*.7,(1-p)*1.6,.35+.4*p,0xFF4040);
+               hfxBPut106(out,"glow",mx,my,.25+.2*p,.25+.2*p,0,.4+.4*p,0xFFD080);
+            }
+            u=t-aim;
+            if(u<0) return;
+            p=u/.16;
+            if(p<=1)
+            {
+               hfxBPut106(out,"muzzle",mx,my,.9*(1-.2*p),.7,ang,.85*(1-p),FIRE);
+               hfxBPut106(out,"glow",mx,my,.8,.8,0,.6*(1-p),0xFFB040);
+            }
+            hfxBSmoke106(out,seed,t,mx,my,4,aim+.03,.6,28,.45,.4,0x9A9A9A);
+            f=hfxClamp106(u/.1);
+            hx=mx+ux*(far-34)*f;hy=my+uy*(far-34)*f;
+            a=u<.1 ? .85 : Math.max(0,1-(u-.1)/.2)*.85;
+            hfxBStreak106(out,"tracer",hx,hy,ang,Math.min(400,f*(far-34)+20),1.4,a,0xFFF4D8);
+            p=(u-.08)/.6;
+            if(p>=0 && p<=1) hfxBPut106(out,"beam",mx+ux*(far-34)/2,my+uy*(far-34)/2,(far-34)/256,.32*(1-p*.5),ang,.55*(1-p),0xFFE0B0);
+            var hit:Number=aim+.1*Math.max(0,dist-34)/Math.max(1,far-34);
+            hfxBFlash106(out,t,tx,ty,hit,.35,.3,.9,.7);
+            hfxBFlash106(out,t,tx,ty,hit,.5,.4,1.2,.45,0xFFB040);
+            hfxBCone106(out,seed,t,tx,ty,14,hit,.45,140,ang,.7,FIRE);
+            hfxBRing106(out,t,tx,ty,hit,.45,.2,1.1,.7,0xFFE0A0,.9);
+            for(i=0;i<5;i++)
+            {
+               p=(t-hit-i*.03)/.5;if(p<0 || p>1) continue;
+               a=ang+(hfxRand106(seed,i+70)-.5)*.9;f=40+90*hfxOut106(p);
+               hfxBPut106(out,"shard",tx+Math.cos(a)*f,ty+Math.sin(a)*f+30*p*p,.4,.4,a+p*6,(1-p)*.8,0xFFD890);
+            }
+         }
+         else if(kind=="cait_trap")
+         {
+            // Yordle snap trap: the steel jaws bite shut round the feet.
+            var gy:Number=ty+30;var shut:Number=hfxClamp106(t/.1);shut*=shut;
+            var open:Number=1-shut;
+            a=t<.55 ? .85 : Math.max(0,1-(t-.55)/.4)*.85;
+            hfxBPut106(out,"trap",tx,gy,.42,.42*.5,0,a,0xFFFFFF,false);
+            hfxBPut106(out,"trapjaw",tx,gy-4-14*open,.5,.5,0,a,0xFFFFFF,false);
+            hfxBPut106(out,"trapjaw",tx,gy+4+14*open,.5,-.5,0,a,0xFFFFFF,false);
+            hfxBSparks106(out,seed,t,tx,gy-6,10,.1,.35,60,FIRE,10);
+            hfxBFlash106(out,t,tx,gy-6,.1,.3,.2,.6,.65,0xFFE8C0);
+            hfxBRing106(out,t,tx,gy,.1,.4,.2,.9,.6,0xDDE4EE);
+            p=(t-.15)/.75;
+            if(p>=0 && p<=1) hfxBPut106(out,"ring",tx,gy,.42-.06*p,(.42-.06*p)*G,0,.5*Math.sin(p*Math.PI),0xC8D0DA);
+         }
+      }
+      // Vayne: silver bolts that really fly one by one, the night hunt and the heart that breaks.
+      private static function hfxBVayne106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var SILVER:uint=0xE8F0FF;var ROSE:uint=0xFF6A8A;
+         var dx:Number=tx-sx;var dy:Number=ty-sy;var dist:Number=Math.sqrt(dx*dx+dy*dy);
+         var ang:Number=dist>1 ? Math.atan2(dy,dx) : -Math.PI/2;var ux:Number=Math.cos(ang);var uy:Number=Math.sin(ang);
+         var i:int;var p:Number;var u:Number;var s:Number;var a:Number;var f:Number;var g:Number;var d:Number;var side:Number;
+         if(kind=="vayne_bolt" || kind=="vayne_bolt_ult")
+         {
+            var big:Boolean=kind=="vayne_bolt_ult";
+            var fly:Number=big ? .16 : .18;var sc:Number=big ? .62 : .5;
+            var bx:Number=sx+ux*20;var by:Number=sy+uy*20;
+            p=t/fly;
+            if(p<=1)
+            {
+               for(i=1;i<=3;i++)
+               {
+                  g=p-i*.1;if(g<0) continue;
+                  hfxBPut106(out,"spark",bx+(tx-bx)*g,by+(ty-by)*g,1.6-.3*i,.45,ang,.5-.12*i,big ? ROSE : SILVER);
+               }
+               hfxBPut106(out,"spark",bx+(tx-bx)*p,by+(ty-by)*p,2,.7,ang,.55,big ? 0xFF5070 : 0xC8D8FF);
+               hfxBPut106(out,"bolt",bx+(tx-bx)*p,by+(ty-by)*p,sc,sc,ang,.85,0xFFFFFF,false);
+            }
+            u=t-fly;
+            if(u<0) return;
+            p=u/.25;
+            if(p<=1) hfxBPut106(out,"bolt",tx-ux*14,ty-uy*14,sc,sc,ang,.85*(1-p),0xFFFFFF,false);
+            hfxBFlash106(out,t,tx,ty,fly,.25,.2,big ? .8 : .55,.7,SILVER);
+            hfxBSparks106(out,seed,t,tx,ty,big ? 10 : 6,fly,.35,big ? 80 : 55,SILVER);
+            hfxBRing106(out,t,tx,ty,fly,.35,.15,big ? .8 : .55,.55,SILVER,.9);
+            if(big)
+            {
+               p=u/.3;
+               if(p<=1) for(i=0;i<2;i++) hfxBPut106(out,"spark",tx,ty,3.2*(1-.4*p),.6,ang+(i ? .8 : -.8),.8*(1-p),ROSE);
+            }
+         }
+         else if(kind=="vayne_hunt")
+         {
+            // Final Hour: shadow wings unfold, debuffs scatter as shards, silver rings for speed.
+            hfxBFlash106(out,t,sx,sy,0,.4,.5,1.2,.5,SILVER);
+            s=.35+.3*hfxOut106(t/.25);
+            a=(t<.6 ? 1 : Math.max(0,1-(t-.6)/.4));
+            for(i=0;i<2;i++)
+            {
+               side=i ? 1 : -1;
+               hfxBPut106(out,"swoosh",sx+side*30,sy-6,s*side,s,0,.5*a,0x3A1028,false);
+               hfxBPut106(out,"swoosh",sx+side*34,sy-6,s*side*.9,s*.9,0,.4*a,ROSE);
+            }
+            for(i=0;i<8;i++)
+            {
+               p=(t-.05-hfxRand106(seed,i+50)*.06)/.5;if(p<0 || p>1) continue;
+               g=hfxRand106(seed,i)*Math.PI*2;d=20+80*hfxOut106(p);
+               hfxBPut106(out,"shard",sx+Math.cos(g)*d,sy+Math.sin(g)*d*.7,.45,.45,g+p*5,(1-p)*.8,0xC8B8FF);
+            }
+            hfxBRing106(out,t,sx,sy+30,.05,.5,.3,1.2,.75,SILVER);
+            hfxBRing106(out,t,sx,sy+30,.18,.5,.3,1,.6,ROSE);
+            hfxBMotes106(out,seed,t,sx,sy+10,8,.1,.6,70,70,SILVER);
+         }
+         else if(kind=="vayne_burst")
+         {
+            // Silver Bolts' third mark: the heart beats once and breaks; true damage glints white.
+            var hy:Number=ty-4;
+            p=t/.16;
+            if(p<=1)
+            {
+               s=.55+.25*Math.sin(p*Math.PI);
+               hfxBPut106(out,"heart",tx,hy,s,s,0,.85,ROSE);
+               hfxBPut106(out,"heart",tx,hy,s*.6,s*.6,0,.6);
+            }
+            u=t-.16;
+            if(u<0) return;
+            p=u/.5;
+            if(p<=1)
+            {
+               f=hfxOut106(p);
+               for(i=0;i<2;i++) {side=i ? 1 : -1;hfxBPut106(out,"heart_half",tx+side*(4+22*f),hy+18*p*p,.62*side,.62,side*.5*f,.85*(1-p*p),ROSE);}
+            }
+            p=u/.3;
+            if(p<=1) for(i=0;i<2;i++) hfxBPut106(out,"spark",tx,hy,3.4*(1-.3*p),.6,i ? .78 : -.78,.8*(1-p));
+            hfxBFlash106(out,t,tx,hy,.16,.35,.3,.9,.65,0xFFD8E2);
+            hfxBRing106(out,t,tx,hy,.16,.45,.2,1,.65,ROSE,.9);
+            for(i=0;i<8;i++)
+            {
+               p=(u-hfxRand106(seed,i+30)*.05)/.55;if(p<0 || p>1) continue;
+               g=hfxRand106(seed,i)*Math.PI*2;d=20+70*hfxOut106(p);
+               hfxBPut106(out,"shard",tx+Math.cos(g)*d,hy+Math.sin(g)*d*.8+20*p*p,.4,.4,g+Math.PI/2,(1-p)*.8,i%2 ? ROSE : SILVER);
+            }
+            hfxBSparks106(out,seed,t,tx,hy,8,.16,.4,80,0xFFE0E8);
+         }
+      }
+      // Tahm Kench: the tongue and the bite, the golden belly slam, the gilded hide.
+      private static function hfxBTahm106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var G:Number=.42;var GOLD:uint=0xFFC040;var TEAL:uint=0x4AD0B0;
+         var dx:Number=tx-sx;var dy:Number=ty-sy;var dist:Number=Math.sqrt(dx*dx+dy*dy);
+         var ang:Number=dist>1 ? Math.atan2(dy,dx) : -Math.PI/2;var ux:Number=Math.cos(ang);var uy:Number=Math.sin(ang);
+         var i:int;var p:Number;var u:Number;var s:Number;var a:Number;var f:Number;var px:Number;var py:Number;
+         if(kind=="tahm_tongue")
+         {
+            // Come into the bowl: the tongue lashes out, a pair of jaws bites on the target.
+            var mx:Number=sx+ux*20;var my:Number=sy+uy*20-6;
+            var reach:Number=Math.max(20,dist-30);var L:Number;
+            if(t<.16) L=reach*hfxOut106(t/.16);
+            else if(t<.34) L=reach;
+            else L=reach*(1-hfxInOut106((t-.34)/.22));
+            if(L>4 && t<.56) hfxBPut106(out,"tongue",mx+ux*L/2,my+uy*L/2,L/256,.75+.08*Math.sin(t*30),ang,.85,0xFFFFFF,false);
+            u=t-.14;
+            if(u>=0 && u<.62)
+            {
+               f=hfxClamp106(u/.12);f*=f;
+               var gap:Number=26*(1-f)+3;
+               a=(u<.4 ? 1 : 1-(u-.4)/.22)*.85;
+               hfxBPut106(out,"jaw",tx,ty-gap-12,.6,.6,0,a,0xFFFFFF,false);
+               hfxBPut106(out,"jaw",tx,ty+gap+12,.6,-.6,0,a,0xFFFFFF,false);
+            }
+            hfxBSparks106(out,seed,t,tx,ty,8,.26,.4,60,TEAL,-20);
+            hfxBFlash106(out,t,tx,ty,.26,.3,.3,.8,.5,0xFF8AA8);
+            hfxBRing106(out,t,tx,ty+30,.26,.45,.25,.9,.55,TEAL);
+         }
+         else if(kind=="tahm_slam")
+         {
+            // Golden Body Slam: a gilded rush, the ground cracks, river water splashes up.
+            var hit:Number=.18;
+            p=t/hit;
+            if(p<=1)
+            {
+               f=hfxOut106(p);px=sx+dx*f;py=sy+dy*f;
+               hfxBStreak106(out,"tracer",px,py,ang,Math.max(20,Math.min(260,dist*f)),3,.7,GOLD);
+               hfxBPut106(out,"glow",px,py,.6,.6,0,.6,GOLD);
+            }
+            u=t-hit;
+            if(u<0) return;
+            hfxBFlash106(out,t,tx,ty,hit,.4,.5,1.5,.7,GOLD);
+            hfxBFlash106(out,t,tx,ty,hit,.22,.3,.8,.6);
+            p=u/1.1;
+            if(p<=1)
+            {
+               s=.35+.35*hfxOut106(u/.15);a=p<.5 ? .8 : .8*(1-(p-.5)/.5);
+               hfxBPut106(out,"crack",tx,ty+34,s,s,seed*.7,a,0xFFC860,true,G);
+            }
+            for(i=0;i<3;i++) hfxBRing106(out,t,tx,ty+32,hit+i*.08,.55,.3,1.5-i*.25,.8,i==1 ? 0xFFFFFF : GOLD);
+            hfxBSparks106(out,seed,t,tx,ty,14,hit,.5,120,0xFFE090,30);
+            for(i=0;i<8;i++)
+            {
+               p=(u-hfxRand106(seed,i+50)*.05)/.7;if(p<0 || p>1) continue;
+               a=-Math.PI/2+(hfxRand106(seed,i)-.5)*2.2;var v:Number=90+60*hfxRand106(seed,i+60);
+               hfxBPut106(out,"dot",tx+Math.cos(a)*v*p,ty+20+Math.sin(a)*v*p+160*p*p,.5,.5,0,(1-p)*.8,TEAL);
+            }
+            for(i=0;i<5;i++)
+            {
+               p=(u-i*.02)/.6;if(p<0 || p>1) continue;
+               a=-Math.PI/2+(hfxRand106(seed,i+80)-.5)*2.6;
+               hfxBPut106(out,"shard",tx+Math.cos(a)*70*p,ty+30+Math.sin(a)*60*p+120*p*p,.35,.35,p*7+i,(1-p)*.85,0xB08A50,false);
+            }
+         }
+         else if(kind=="tahm_gold")
+         {
+            // Gilded hide: purify burst, a golden shell, the taunting roar on the ground.
+            hfxBRing106(out,t,sx,sy,0,.4,.2,1,.7,0xFFF4D8,.9);
+            a=(t<.15 ? t/.15 : 1)*(t<.9 ? 1 : Math.max(0,1-(t-.9)/.4))*.5;
+            s=.85+.03*Math.sin(t*8);
+            hfxBPut106(out,"dome",sx,sy,s,s,0,a,GOLD);
+            hfxBPut106(out,"glow",sx,sy,1,1,0,a*.6,0xFFB030);
+            hfxBRing106(out,t,sx,sy+32,.1,.6,.3,1.6,.85,GOLD);
+            hfxBRing106(out,t,sx,sy+32,.24,.6,.3,1.3,.6,0xFFE8B0);
+            for(i=0;i<3;i++)
+            {
+               p=(t-.2-i*.15)/.3;if(p<0 || p>1) continue;
+               px=sx-26+i*24;py=sy-20+i*10;s=Math.sin(p*Math.PI);
+               hfxBPut106(out,"spark",px,py,1.4*s,.4,-.6,.8*s);
+               hfxBPut106(out,"spark",px,py,.9*s,.35,-.6+Math.PI/2,.7*s);
+            }
+            hfxBMotes106(out,seed,t,sx,sy+20,10,.1,.7,70,80,GOLD);
+         }
+      }
+      // Malzahar and the voidling: void rifts, violet flames, a summoning portal.
+      private static function hfxBVoid106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var G:Number=.42;var VOID:uint=0x9A40FF;var DEEP:uint=0x4A1488;var MAG:uint=0xD860FF;var VENOM:uint=0x9AF080;
+         var dx:Number=tx-sx;var dy:Number=ty-sy;var dist:Number=Math.sqrt(dx*dx+dy*dy);
+         var ang:Number=dist>1 ? Math.atan2(dy,dx) : -Math.PI/2;
+         var i:int;var p:Number;var u:Number;var s:Number;var a:Number;var g:Number;var r:Number;var px:Number;var py:Number;
+         var gy:Number=ty+32;
+         if(kind=="malz_flame")
+         {
+            // Null Zone flame: a rift cracks open under the feet and void fire licks up.
+            s=.2+.32*hfxOut106(t/.25);a=t<.8 ? 1 : Math.max(0,1-(t-.8)/.35);
+            hfxBSmoke106(out,seed,t,tx,gy-4,4,.05,.9,36,.6,.55,0x6A40A0);
+            hfxBPut106(out,"glow",tx,gy,s*2,s*2*G,0,.5*a,DEEP);
+            hfxBPut106(out,"crack",tx,gy,s,s,seed*.7,.7*a,VOID,true,G);
+            for(i=0;i<6;i++)
+            {
+               p=(t-.06-i*.03)/.85;if(p<0 || p>1) continue;
+               g=i*Math.PI/3+.4;
+               hfxBFlame106(out,tx+Math.cos(g)*22,gy+Math.sin(g)*22*G,.34,.3+.45*Math.sin(p*Math.PI),Math.sin(t*8+i)*.15,Math.sin(p*Math.PI)*.8,i%2 ? VOID : MAG);
+            }
+            hfxBMotes106(out,seed,t,tx,gy,8,.1,.6,50,80,MAG);
+            hfxBFlash106(out,t,tx,ty,.08,.35,.3,.8,.45,VOID);
+         }
+         else if(kind=="malz_cast")
+         {
+            for(i=0;i<8;i++)
+            {
+               p=(t-i*.03)/.4;if(p<0 || p>1) continue;
+               g=i*Math.PI/4+p*3;r=60*(1-hfxOut106(p));
+               hfxBPut106(out,"dot",sx+Math.cos(g)*r,sy-10+Math.sin(g)*r*.7,.7,.7,0,.8*Math.sin(p*Math.PI),MAG);
+            }
+            hfxBFlash106(out,t,sx,sy-10,.2,.45,.3,.8,.6,VOID);
+            hfxBRing106(out,t,sx,sy+30,.2,.5,.25,1,.6,VOID);
+         }
+         else if(kind=="malz_summon")
+         {
+            // Call of the Void: a spiral portal opens and a rift tears; the voidling steps out.
+            a=t<1.15 ? 1 : Math.max(0,1-(t-1.15)/.4);
+            s=.5*hfxBack106(t/.3);
+            hfxBPut106(out,"glow",tx,gy,s*2.4,s*2.4*G,0,.45*a,DEEP);
+            hfxBPut106(out,"vortex",tx,gy,s,s,-t*2.2,.75*a,VOID,true,G);
+            hfxBPut106(out,"vortex",tx,gy,s*.6,s*.6,t*3,.6*a,MAG,true,G);
+            var open:Number=t<.25 ? hfxOut106(t/.25) : t<.9 ? 1 : Math.max(0,1-(t-.9)/.4);
+            if(open>0)
+            {
+               hfxBPut106(out,"rift",tx,ty-6,.55*open,.6,0,.8*open,0x200838,false);
+               hfxBPut106(out,"rift",tx,ty-6,.8*open,.62,0,.75*open,MAG);
+            }
+            for(i=0;i<12;i++)
+            {
+               p=(t-hfxRand106(seed,i)*.5)/.5;if(p<0 || p>1) continue;
+               g=hfxRand106(seed,i+10)*Math.PI*2;r=90*(1-hfxInOut106(p));
+               hfxBPut106(out,"spark",tx+Math.cos(g)*r,ty-6+Math.sin(g)*r*.8,1,.4,g,.75*Math.sin(p*Math.PI),MAG);
+            }
+            hfxBFlash106(out,t,tx,ty,.3,.4,.4,1,.6,VOID);
+            hfxBRing106(out,t,tx,gy,.3,.55,.3,1.3,.7,MAG);
+         }
+         else if(kind=="void_burn")
+         {
+            // The voidling spits a void bolt; small violet flames catch on the target.
+            var fly:Number=.2;
+            p=t/fly;
+            if(p<=1)
+            {
+               for(i=3;i>=1;i--)
+               {
+                  g=p-i*.1;if(g<0) continue;
+                  hfxBPut106(out,"dot",sx+dx*g,sy+dy*g,.5-i*.08,.5-i*.08,0,.55-i*.12,VOID);
+               }
+               px=sx+dx*p;py=sy+dy*p;
+               hfxBPut106(out,"glow",px,py,.4,.4,0,.65,VOID);
+               hfxBPut106(out,"dot",px,py,.45,.45,0,.85,MAG);
+            }
+            u=t-fly;
+            if(u<0) return;
+            for(i=0;i<4;i++)
+            {
+               p=(u-i*.04)/.6;if(p<0 || p>1) continue;
+               hfxBFlame106(out,tx+(i-1.5)*14,gy,.28,.25+.35*Math.sin(p*Math.PI),Math.sin(t*9+i)*.15,Math.sin(p*Math.PI)*.75,i%2 ? VOID : MAG);
+            }
+            hfxBFlash106(out,t,tx,ty,fly,.3,.25,.7,.55,VOID);
+            hfxBSparks106(out,seed,t,tx,ty,6,fly,.35,50,MAG);
+         }
+         else if(kind=="void_venom")
+         {
+            // Poison on top: sickly bubbles rise and pop.
+            for(i=0;i<8;i++)
+            {
+               p=(t-hfxRand106(seed,i)*.3)/.55;if(p<0 || p>1) continue;
+               px=tx+(hfxRand106(seed,i+20)-.5)*56;py=ty+20-60*p;
+               s=.35+.25*p+(p>.85 ? (p-.85)*2.5 : 0);
+               hfxBPut106(out,"dot",px,py,s,s,0,(p>.85 ? (1-p)/.15 : 1)*.75,VENOM);
+            }
+            hfxBRing106(out,t,tx,gy,0,.5,.2,.8,.55,VENOM);
+         }
+      }
+      // Shared fallback looks: light and quiet.
+      private static function hfxBShared106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var i:int;var p:Number;var s:Number;var a:Number;var g:Number;var d:Number;
+         if(kind=="fb_heal")
+         {
+            hfxBPut106(out,"glow",tx,ty,1,1,0,.4*Math.sin(Math.min(1,t/.9)*Math.PI),0x60FF90);
+            hfxBRing106(out,t,tx,ty+32,0,.6,.3,.9,.55,0x9CFFB0);
+            hfxBMotes106(out,seed,t,tx,ty+20,10,0,.6,64,75,0x7CFF9A,"dot",.8);
+            hfxBMotes106(out,seed+5,t,tx,ty+20,4,.1,.6,56,70,0xC8FFD0,"plus",.8);
+         }
+         else if(kind=="fb_shield")
+         {
+            a=(t<.12 ? t/.12 : 1)*(t<.45 ? 1 : Math.max(0,1-(t-.45)/.45))*.42;
+            s=.72+.12*hfxOut106(t/.2);
+            hfxBPut106(out,"dome",tx,ty,s,s,0,a,0xFFE7A0);
+            p=(t-.08)/.35;
+            if(p>=0 && p<=1) hfxBPut106(out,"spark",tx-28+40*p,ty-34+10*p,1.1,.3,.25,.6*Math.sin(p*Math.PI));
+            hfxBRing106(out,t,tx,ty+32,0,.45,.3,.85,.5,0xFFE7A0);
+         }
+         else if(kind=="fb_cleanse")
+         {
+            hfxBRing106(out,t,tx,ty,0,.5,.2,.7,.65,0xFFF6E0,.8);
+            hfxBRing106(out,t,tx,ty,.1,.55,.2,.85,.45,0xFFE2A0,.8);
+            hfxBFlash106(out,t,tx,ty,0,.3,.3,.7,.45,0xFFF6E0);
+            p=(t-.04)/.5;
+            if(p>=0 && p<=1)
+               for(i=0;i<8;i++)
+               {
+                  g=i*Math.PI/4+.2;d=18+60*hfxOut106(p);
+                  hfxBPut106(out,"dot",tx+Math.cos(g)*d,ty+Math.sin(g)*d*.8,.45,.45,0,.8*(1-p),0xFFF0C8);
+               }
+         }
+      }
+
+      // Persistent state marks, small and faint (alpha <= .55), kept off the health bar.
+      public static function hfxBMarkKind106(row:Object) : String
+      {
+         if(!row) return null;
+         if(row.kind=="rings") return "rings";
+         if(row.key=="contract" || row.key=="growth" && row.kind=="growth" || row.key=="wanted" || row.key=="trap" || row.key=="sonic" || row.key=="ward") return row.key;
+         return null;
+      }
+      public static function hfxBMarkIds106(kind:String, count:Number) : Array
+      {
+         var ids:Array=[];
+         if(kind=="rings")
+         {
+            var n:Number=Math.max(1,Math.min(3,Math.floor(count)));
+            for(var i:int=0;i<n;i++) ids.push("heart");
+         }
+         else if(kind=="contract") ids=["sigil","brand"];
+         else if(kind=="growth") ids=["ring","dot","dot"];
+         else if(kind=="wanted") ids=["reticle","reticle"];
+         else if(kind=="trap") ids=["trap"];
+         else if(kind=="sonic") ids=["ring","ring"];
+         else if(kind=="ward") ids=["bell"];
+         return ids;
+      }
+      // One part of a mark at time t, relative to the unit centre (or the ground point).
+      public static function hfxBMark106(kind:String, index:int, count:Number, t:Number, seed:int) : Object
+      {
+         var m:Object={x:0,y:0,sx:1,sy:1,r:0,a:.5,c:0xFFFFFF,add:true};var p:Number;var s:Number;
+         if(kind=="rings")
+         {
+            // Vayne's marks: 1-3 small hearts along the bottom of the card; three beat faster.
+            var n:Number=Math.max(1,Math.min(3,Math.floor(count)));var full:Boolean=n>=3;
+            s=.24*(1+(full ? .14 : .07)*Math.sin(t*(full ? 7 : 4)+index*.8+seed));
+            m.x=(index-(n-1)/2)*15;m.y=40;m.sx=m.sy=s;m.a=full ? .55 : .45;m.c=0xFF6A8A;
+         }
+         else if(kind=="contract")
+         {
+            if(index==0) {s=.26*(1+.04*Math.sin(t*2+seed));m.y=34;m.sx=s;m.sy=s*.42;m.a=.42+.08*Math.sin(t*2+seed);m.c=0xE0204A;}
+            else {m.y=30+Math.sin(t*2.4)*2;m.sx=m.sy=.34;m.a=.45+.1*Math.sin(t*3);m.c=0xFF6A90;}
+         }
+         else if(kind=="growth")
+         {
+            var level:Number=Math.max(1,Math.min(10,count));
+            if(index==0) {s=.3*(1+.04*Math.sin(t*2));m.y=36;m.sx=s;m.sy=s*.42;m.a=.18+.025*level;m.c=0xA050FF;}
+            else
+            {
+               p=(t*.6+index*.5+seed*.13)%1;
+               m.x=(index==1 ? -20 : 20)+Math.sin(t*3+index)*3;m.y=34-40*p;m.sx=m.sy=.4;m.a=Math.sin(p*Math.PI)*.45;m.c=0xC080FF;
+            }
+         }
+         else if(kind=="wanted")
+         {
+            // A ground crosshair and a small spinning reticle tag at the card corner.
+            if(index==0) {m.y=34;m.sx=.45;m.sy=.45*.42;m.a=.45+.08*Math.sin(t*4);m.c=0xFF4038;}
+            else {m.x=30;m.y=-28;m.sx=m.sy=.22;m.r=t*.8;m.a=.55;m.c=0xFF5040;}
+         }
+         else if(kind=="trap")
+         {
+            // The ground point is Caitlyn's own spot: lay the trap at her feet, not over the card.
+            m.y=34;m.sx=.36;m.sy=.36*.5;m.a=.55;m.add=false;
+         }
+         else if(kind=="sonic")
+         {
+            p=(t*.7+index*.5)%1;s=.14+.16*p;
+            m.y=34;m.sx=s;m.sy=s*.42;m.a=.5*(1-p)*Math.min(1,p*4);m.c=0xFFC84A;
+         }
+         else if(kind=="ward")
+         {
+            m.x=-30;m.y=-26;m.sx=m.sy=.2;m.r=Math.sin(t*2.2+seed)*.18;m.a=.45+.08*Math.sin(t*3);
+         }
+         else return null;
+         return m;
+      }
+      // END HERO FX B PURE 106
+
+      // Presentation bookkeeping only; never read by combat code.
+      private var hfxBVolley106:Object;
+      private var hfxBBurst106:Avatar;
+      private var hfxBLast106:Avatar;
+
+      private function hfxBFamily106() : String
+      {
+         return avatarData ? String(avatarData.id).split("_").slice(0,2).join("_") : "";
+      }
+      private function hfxBVoidling106() : Boolean
+      {
+         return isManualSummonUnit && statisticsOwner104 && statisticsOwner104!==this && statisticsOwner104.hfxBFamily106()=="A_1103";
+      }
+      // How many strikes this cast has drawn so far (staggers the volley).
+      private function hfxBNext106() : int
+      {
+         var cast:Object=skin2.castSkill;
+         if(!hfxBVolley106 || hfxBVolley106.cast!==cast || hfxBVolley106.serial!=manualOwnerActionSerial)
+            hfxBVolley106={cast:cast,serial:manualOwnerActionSerial,n:0};
+         return hfxBVolley106.n++;
+      }
       private function heroFxClaimB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
       {
+         var n:int;var unit:Avatar;var family:int;
+         if(event=="strike")
+         {
+            switch(kind)
+            {
+               case "1215":
+                  // The follow-up hits while the echo still names this target.
+                  heroFx106(skin2.sonic===target ? "lee_dash" : "lee_wave",target);
+                  return true;
+               case "1215_ult":
+                  if(hfxBNext106()==0) heroFx106("lee_kick",target);
+                  else heroFx106("lee_crash",target,{delay:.3});
+                  return true;
+               case "1203":
+                  hfxBLast106=target;
+                  heroFx106("ryze_brand",target);
+                  return true;
+               case "1203_ult":
+                  n=hfxBNext106();
+                  if(n==0) heroFx106("ryze_domain",target);
+                  heroFx106("ryze_hell",target,{delay:.25+n*.07});
+                  return true;
+               case "1211":
+                  // Outside a cast, a Caitlyn strike is her trap biting.
+                  heroFx106(skin2.castSkill ? "cait_shot" : "cait_trap",target);
+                  return true;
+               case "1211_ult":
+                  heroFx106("cait_snipe",target);
+                  return true;
+               case "1206":
+               case "1206_ult":
+                  // The mark detonation is drawn by the "rings" pulse just before this strike.
+                  if(hfxBBurst106 && hfxBBurst106===target) {hfxBBurst106=null;return true;}
+                  hfxBBurst106=null;
+                  n=hfxBNext106();
+                  if(kind=="1206_ult")
+                  {
+                     if(n==0) heroFx106("vayne_hunt",this);
+                     heroFx106("vayne_bolt_ult",target,{delay:.12+n*.16});
+                  }
+                  else heroFx106("vayne_bolt",target,{delay:n*.14});
+                  return true;
+            }
+            return false;
+         }
+         if(event=="pulse")
+         {
+            family=s2Family();
+            if(kind=="rings" && family==1206)
+            {
+               var delay:Number=.2;
+               if(skin2.castSkill && hfxBVolley106 && hfxBVolley106.cast===skin2.castSkill && hfxBVolley106.serial==manualOwnerActionSerial)
+               {
+                  var ult:Boolean=skin2.castSkill===skill1;
+                  delay=Math.max(0,int(hfxBVolley106.n)-1)*(ult ? .16 : .14)+(ult ? .12 : 0)+.18;
+               }
+               hfxBBurst106=target;
+               heroFx106("vayne_burst",target,{delay:delay});
+               return true;
+            }
+            // The brand is already drawn by the strike; the persistent mark carries it.
+            if(kind=="contract" && family==1203) return true;
+            if(kind=="growth" && family==1203) {heroFx106("ryze_growth",this);return true;}
+            if(kind=="wanted" && family==1211) {heroFx106("cait_wanted",target,{delay:.14});return true;}
+            return false;
+         }
+         if(event=="heal" && kind=="1203" && hfxBLast106 && hfxBLast106.hp>0 && hfxBLast106!==this)
+         {
+            heroFx106("ryze_leech",this,{from:hfxBLast106,delay:.3});
+            return true;
+         }
+         if(event=="shield" && kind=="1215")
+         {
+            heroFx106("lee_bell",target,{delay:.3});
+            return true;
+         }
+         if(event=="summon" && hfxBFamily106()=="A_1103")
+         {
+            heroFx106("malz_summon",target);
+            return true;
+         }
+         if(event=="native")
+         {
+            var tribe:String=hfxBFamily106();
+            if(tribe=="A_1138")
+            {
+               if(kind=="FX_S9002_SILENCE") {heroFx106("tahm_tongue",target);return true;}
+               if(kind=="FX_A_1138_MAGIC") {heroFx106("tahm_slam",target);return true;}
+               if(kind=="FX60_PURIFY") {heroFx106("tahm_gold",this);return true;}
+               // Armour and taunt read as part of the golden hide.
+               if(kind=="FX60_STRONG" || kind=="FX_S9150_TAUNT") return true;
+            }
+            else if(hfxBVoidling106())
+            {
+               if(kind=="FX_S9160_POISON") {heroFx106("void_burn",target);return true;}
+               if(kind=="FX_S9140_POISON") {heroFx106("void_venom",target,{delay:.22});return true;}
+            }
+            else if(tribe=="A_1103" && kind=="FX_S9160_POISON")
+            {
+               heroFx106("malz_cast",this);
+               n=0;
+               if(extra && extra.targets) for each(unit in extra.targets)
+               {
+                  if(!unit || n>=6) continue;
+                  heroFx106("malz_flame",unit,{delay:.12+n*.06});++n;
+               }
+               else heroFx106("malz_flame",target,{delay:.12});
+               return true;
+            }
+         }
          return false;
       }
       // Generic looks for events no hero claimed (heal / shield / cleanse ...). Called after A, B and C.
       private function heroFxFallbackB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
       {
+         if(event=="heal") {heroFx106("fb_heal",target);return true;}
+         if(event=="shield") {heroFx106("fb_shield",target);return true;}
+         if(event=="pulse" && kind=="cleanse") {heroFx106("fb_cleanse",target);return true;}
+         if(event=="pulse" && kind=="guard") {heroFx106("fb_shield",target);return true;}
          return false;
-      }
-      public static function heroFxPaintB106(id:String) : flash.display.BitmapData
-      {
-         return null;
-      }
-      public static function heroFxLifeB106(kind:String) : Number
-      {
-         return 0;
-      }
-      public static function heroFxSpritesB106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
-      {
       }
       // Persistent state art: return ids like ["b:heart"] for rows this group owns, else null.
       private static function heroFxStateB106(row:Object) : Array
       {
-         return null;
+         var kind:String=hfxBMarkKind106(row);
+         if(!kind) return null;
+         var ids:Array=hfxBMarkIds106(kind,Number(row.count));
+         for(var i:int=0;i<ids.length;i++) ids[i]="b:"+ids[i];
+         return ids;
       }
       // Animate one persistent part; return true when this group handled the row.
       private static function heroFxAnimateB106(art:DisplayObject, row:Object, index:int, t:Number, seed:int) : Boolean
       {
-         return false;
+         var kind:String=hfxBMarkKind106(row);
+         if(!kind) return false;
+         var m:Object=hfxBMark106(kind,index,Number(row.count),t,seed);
+         if(!m) return true;
+         art.x=m.x;art.y=m.y;art.scaleX=m.sx;art.scaleY=m.sy;art.rotation=m.r;art.alpha=m.a;
+         var image:Image=art as Image;
+         if(image) {image.color=m.c;image.blendMode=m.add ? "add" : "normal";}
+         return true;
       }
       // END HERO FX B 106

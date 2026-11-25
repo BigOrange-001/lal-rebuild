@@ -29,8 +29,8 @@ class HeroPacks104Tests(unittest.TestCase):
         self.assertFalse(battle._emit_mod_event(owner,'turn_start',owner,owner))
         battle._add_buff(owner,'burn',3,1)
         for _ in range(17):battle._emit_mod_event(owner,'turn_start',owner,owner)
-        self.assertEqual(len(battle.a),17)
-        self.assertTrue(all(not u.get('skillB') for u in battle.a[1:]))
+        self.assertEqual(len(battle.a),9)
+        self.assertTrue(all(u.get('skillB') for u in battle.a[1:]))
         battle,owner,enemy=self.battle('A_1223_6')
         enemy['hp']=1;battle._injured(enemy,100,3,source=owner)
         self.assertEqual(len(battle.a),2)
@@ -49,6 +49,36 @@ class HeroPacks104Tests(unittest.TestCase):
                 self.assertTrue(battle._emit_mod_event(owner, 'turn_start', owner, owner))
                 self.assertEqual(len(battle.a), 2)
 
+    def test_zed_shadows_stop_at_generation_three_and_share_the_captain_cap(self):
+        battle, owner, enemy = self.battle('A_1132_6', True)
+        battle._apply_native_skill(owner, [enemy], 'leader_skill')
+        first = battle.a[-1]
+
+        def burn_and_trigger(unit):
+            unit['_mod_owner_turn'] = 1
+            battle._add_buff(unit, 'burn', 2, 1, source=enemy)
+            return battle._emit_mod_event(unit, 'turn_start', unit, unit)
+
+        self.assertFalse(battle._emit_mod_event(first, 'turn_start', first, first))
+        self.assertEqual(first['_zed_shadow_generation'], 1)
+        self.assertTrue(burn_and_trigger(first))
+        second = battle.a[-1]
+        self.assertEqual(second['_zed_shadow_generation'], 2)
+        self.assertTrue(burn_and_trigger(second))
+        third = battle.a[-1]
+        self.assertEqual(third['_zed_shadow_generation'], 3)
+        self.assertFalse(burn_and_trigger(third))
+        for _ in range(5):
+            self.assertTrue(burn_and_trigger(owner))
+        self.assertFalse(burn_and_trigger(second))
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
+        battle._apply_native_skill(owner, [enemy], 'leader_skill')
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
+        self.assertEqual(first['hp'], 0)
+        third['hp'] = 0
+        self.assertTrue(burn_and_trigger(second))
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
+
     def test_all_imported_slots_execute_without_missing_actions(self):
         for aid in self.cfg['hero_packs_104']['heroes']:
             battle,owner,enemy=self.battle(aid,True)
@@ -58,14 +88,14 @@ class HeroPacks104Tests(unittest.TestCase):
                 if (skill.get('modCondition') or {}).get('kind')=='event':continue
                 battle._apply_native_skill(owner,[enemy],slot)
 
-    def test_existing_zed_captain_copies_revised_normal_without_recursive_passive(self):
+    def test_zed_captain_copies_revised_normal_and_shares_shadow_passive(self):
         battle,owner,enemy=self.battle('A_1132_6',True)
         for _ in range(2):battle._apply_native_skill(owner,[enemy],'leader_skill')
         clones=[u for u in battle.a if u.get('_clone_of')]
         self.assertEqual(len(clones),2)
         self.assertEqual(sum(u['hp']>0 for u in clones),1)
         self.assertEqual(clones[-1]['skill'],owner['skill'])
-        self.assertFalse(clones[-1]['skillB'])
+        self.assertEqual(clones[-1]['skillB'],owner['skillB'])
         for aid,combinations in self.cfg['system_simple']['bond_skill_variants_104'].items():
             for bindings in combinations.values():
                 for sid in bindings.values():

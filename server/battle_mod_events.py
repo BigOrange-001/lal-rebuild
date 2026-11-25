@@ -24,6 +24,10 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     if gate.get('unitType')=='summon' and not summon or gate.get('unitType')=='hero' and (other is None or summon or battle._get_type(other)!=1):return False
     if amount<gate.get('minAmount',0) or max(0,owner.get('hp',0))/max(1,owner.get('hp_max',1))>gate.get('hpBelow',1):return False
     if gate.get('requiredBuff') and not has_buff(battle,owner,gate['requiredBuff']):return False
+    from battle_mod_effects import targets, zed_shadow_can_spawn, zed_shadow_policy
+    shadow = zed_shadow_policy(battle, owner)
+    if shadow and not zed_shadow_can_spawn(owner, shadow):
+        return False
     if gate.get('absentBuff') and has_buff(battle,owner,gate['absentBuff']):return False
     if 'otherHpBelow' in gate and (other is None or max(0,other.get('hp',0))/max(1,other.get('hp_max',1))>gate['otherHpBelow']):return False
     if gate.get('otherHpNotFull105') and (other is None or other['hp'] >= other['hp_max']):return False
@@ -47,7 +51,6 @@ def emit(battle,owner,event,source=None,target=None,amount=0,overheal=0):
     enemies=[u for u in (battle.b if battle._team_number(owner)==1 else battle.a) if u.get('hp',0)>0]
     if not enemies and all(a[1] in ('damage','push','move') for a in skill.get('skills',[])):return False
     previous=owner.get('_mod_event');owner['_mod_event']={'event':event,'source':source,'target':target,'amount':max(0,amount),'overheal':max(0,overheal),'sourceAlly':source is not None and battle._team_number(source)==battle._team_number(owner),'targetAlly':target is not None and battle._team_number(target)==battle._team_number(owner)}
-    from battle_mod_effects import targets
     allies=[u for u in (battle.a if battle._team_number(owner)==1 else battle.b) if u.get('hp',0)>0]
     first=skill['skills'][0]
     if first[2] not in ('self','all_allies','ally_radius') and not targets(owner,enemies,allies,first,{},abs(skill['pl'][2])):

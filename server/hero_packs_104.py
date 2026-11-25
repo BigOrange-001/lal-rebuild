@@ -88,6 +88,8 @@ def apply_hero_packs_104(document):
             if sid in cfg['skill']:raise ValueError('Built-in skill ID collision: '+sid)
             row=compile_builtin(s,sid,resolve)
             row['builtin_pack_104']=key;row['builtin_skill_key_104']=s['id']
+            if key == 'nine' and s['id'] in ('zed_passive_q5', 'zed_passive_q6'):
+                row['sixStarZedShadow105'] = {'maxAlive': s['actions'][0]['maxAlive'], 'maxGeneration': 3}
             if key=='nine':scale_outputs(row,2/3)
             cfg['skill'][sid]=row;imported.append(sid)
         for h in heroes:

@@ -2667,7 +2667,7 @@ package com.meng52.game.module.avatar
             if(summonerAttack && summonerAttack.skill)
                summonRow=GlobalData.$mConfig_skill[summonerAttack.skill.skillSetData.id];
          }
-         if(summonRow && summonRow.sixStarClone105) ratio=1;
+         if(summonRow && summonRow.sixStarClone105) ratio=equipmentPart104(summonerAttack.skill,"wukong_clone_panel",1);
          else ratio *= activeManualEffectMultiplier();
          if(!Avatar.isValidSummonMultiplier(ratio)) return;
          var previous:Array = abilityState["summons_"+key] as Array;
@@ -4646,6 +4646,34 @@ package com.meng52.game.module.avatar
          var index:int=spec.keys.indexOf(key);
          return index<0 ? 0 : Number(spec.values[index]);
       }
+      private function s2AnnieRetaliationVisual(targets:Vector.<Avatar>) : void
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(!layer || GameMapLayer.isFastest || !fightRes || !fightRes.parent) return;
+         flushParallelVisualBatch();
+         var map:GameMap=GameMap.currentMap;
+         var castTime:Number=GameMap.actionDelay;
+         var launchTime:Number=castTime+0.45;
+         var flightTime:Number=0.35;
+         layer.delayCall(layer.infoLayer.showSkill,castTime,"不讲道理",this,team==1 ? "skill0Bg" : "skill1Bg");
+         for each(var target:Avatar in targets)
+         {
+            if(!target || target.hp<=0) continue;
+            var bullet:Object=DisplayTools.getAttrs("FX60_MAGIC");
+            if(!bullet) continue;
+            bullet.a1=this;
+            bullet.par=layer.effectLayer;
+            bullet.x1=GameMapConfig.lineToPixel(map.getShowLine(line),offset);
+            bullet.y1=GameMapConfig.posToPixel(pos);
+            bullet.x2=GameMapConfig.lineToPixel(map.getShowLine(target.line),target.offset);
+            bullet.y2=GameMapConfig.posToPixel(target.pos);
+            bullet.sp=Math.max(1,new Point(bullet.x2-bullet.x1,bullet.y2-bullet.y1).length/flightTime);
+            layer.delayCall(DisplayTools.addBullet,launchTime,bullet);
+         }
+         // Settle rules in the current action and schedule status visuals at impact.
+         GameMap.actionDelay=launchTime+flightTime;
+      }
+
       private function s2AnnieStatus(kind:String) : void
       {
          var spec:Object=s2AnnieCore();
@@ -4668,9 +4696,11 @@ package com.meng52.game.module.avatar
                unit.removeAllDebuff();
                unit.skin2.anniePurifyUntil=Math.max(Number(unit.skin2.anniePurifyUntil || 0),unit.manualOwnerActionSerial+int(spec.purify_rounds));
             }
-            abilityFeedback("不讲道理","FX_S9150_PURIFY",10526975);
-            for each(unit in GameMap.currentMap.getAliveList(otherTeam))
+            var enemies:Vector.<Avatar> = GameMap.currentMap.getAliveList(otherTeam).concat();
+            if(GameMapLayer.gl && !GameMapLayer.isFastest) s2AnnieRetaliationVisual(enemies);
+            for each(unit in enemies)
             {
+               if(!unit || unit.hp<=0) continue;
                unit.addBuff("sunder",int(spec.debuff_rounds),Number(spec.sunder)/(1-Number(spec.sunder)),0,-1,this);
                unit.addBuff("weak",int(spec.debuff_rounds),Number(spec.weak)/(1-Number(spec.weak)),0,-1,this);
                unit.addManualSkillDot("annie_core_105_"+abilityIndex,"poison",Tools.toInt(getDamage()*Number(spec.poison_ap)),0,int(spec.debuff_rounds),this,6,true);
@@ -5780,7 +5810,7 @@ package com.meng52.game.module.avatar
                break;
             case "wukong_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",175)); if(!enemies.length) return false;
-               if(abilityHit(enemies[0],nativeAbilityNumber(sourceSkill,kind,"cast_2",1.4)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",1),effect)) abilityControl(enemies[0],"sunder",nativeAbilityNumber(sourceSkill,kind,"cast_6",2),nativeAbilityNumber(sourceSkill,kind,"cast_7",0.25)*scale);
+               if(abilityHit(enemies[0],equipmentPart104(sourceSkill,"wukong_hit",nativeAbilityNumber(sourceSkill,kind,"cast_2",1.4))*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",1),effect)) abilityControl(enemies[0],"sunder",nativeAbilityNumber(sourceSkill,kind,"cast_6",2),nativeAbilityNumber(sourceSkill,kind,"cast_7",0.25)*scale);
                abilitySummon(id,nativeAbilityNumber(sourceSkill,kind,"cast_8",1),nativeAbilityNumber(sourceSkill,kind,"cast_9",0.35)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_10",2),"wukong",null,true); checkMove(false,nativeAbilityNumber(sourceSkill,kind,"cast_12",200));
                break;
             case "wukong_c":
@@ -5792,7 +5822,7 @@ package com.meng52.game.module.avatar
             case "gangplank_n":
                marked=hp/hpMax < nativeAbilityNumber(sourceSkill,kind,"cast_0",0.5); enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_1",600)); if(!enemies.length) return false;
                abilityHit(enemies[0],nativeAbilityNumber(sourceSkill,kind,"cast_3",1.6)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_4",1),effect);
-               if(marked) { removeAllDebuff(); abilityHeal(this,nativeAbilityNumber(sourceSkill,kind,"cast_5",0.4)*scale); }
+               if(marked) { removeAllDebuff(); abilityHeal(this,equipmentPart104(sourceSkill,"orange_heal_ap",nativeAbilityNumber(sourceSkill,kind,"cast_5",0.4))*scale); }
                break;
             case "gangplank_c":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",800)); if(!enemies.length) return false; primary=enemies[0];
@@ -6558,6 +6588,30 @@ package com.meng52.game.module.avatar
       private static var modEventDepth:int = 0;
       private static var modEventBudget:int = 0;
 
+      public function zedShadowPolicy105() : Object
+      {
+         var row:Object=skillB && skillB.skillSetData ? GlobalData.$mConfig_skill[skillB.skillSetData.id] : null;
+         return row ? row.sixStarZedShadow105 : null;
+      }
+
+      public function zedShadowCanSpawn105(policy:Object, replacing:Boolean = false) : Boolean
+      {
+         if(!GameMap.currentMap || int(abilityState.zedShadowGeneration105)>=int(policy.maxGeneration)) return false;
+         var root:Avatar=(abilityState.zedShadowRoot105 as Avatar) || this;
+         var living:int=0;
+         for each(var unit:Avatar in GameMap.currentMap.getAliveList(team))
+            if(unit && unit.hp>0 && unit.abilityState.zedShadowRoot105===root) ++living;
+         return living-int(replacing)<int(policy.maxAlive);
+      }
+
+      public function zedShadowConfigure105(unit:Avatar, policy:Object) : void
+      {
+         var generation:int=int(abilityState.zedShadowGeneration105)+1;
+         unit.abilityState.zedShadowRoot105=abilityState.zedShadowRoot105 || this;
+         unit.abilityState.zedShadowGeneration105=generation;
+         unit.skillB=generation<int(policy.maxGeneration) ? new SkillSet(skillB.skillSetData.id,unit,skillB.lv) : null;
+      }
+
       public function hasModBuff(kind:String) : Boolean
       {
          if(kind == "burn") return hasManualDotKind(kind);
@@ -6594,6 +6648,8 @@ package com.meng52.game.module.avatar
          if(gate.minAmount != null && amount < Number(gate.minAmount)) return false;
          if(gate.hpBelow != null && Number(Math.max(0,hp))/Math.max(1,hpMax) > Number(gate.hpBelow)) return false;
          if(gate.requiredBuff && !hasModBuff(String(gate.requiredBuff))) return false;
+         var shadowPolicy:Object=row.sixStarZedShadow105;
+         if(shadowPolicy && !zedShadowCanSpawn105(shadowPolicy)) return false;
          if(gate.absentBuff && hasModBuff(String(gate.absentBuff))) return false;
          if(gate.otherHpBelow != null && (!other || Math.max(0,other.hp)/Math.max(1,other.hpMax) > Number(gate.otherHpBelow))) return false;
          if(gate.otherHpNotFull105 && (!other || other.hp >= other.hpMax)) return false;

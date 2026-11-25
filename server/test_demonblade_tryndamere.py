@@ -5,7 +5,7 @@ from battle_engine import base_unit
 from gateway import load_game_config
 from manual_ability_sim import SkillCompleteBattle
 from native_skill_snapshot import _native_skill_snapshot
-from demonblade_tryndamere_105 import AID, NORMAL, CAPTAIN, PASSIVE, apply_demonblade_tryndamere
+from demonblade_tryndamere_105 import AID, FIVE_STAR_AID, NORMAL, CAPTAIN, PASSIVE, apply_demonblade_tryndamere
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -15,7 +15,7 @@ class DemonbladeTryndamereTests(unittest.TestCase):
     def setUpClass(cls):
         cls.cfg = load_game_config(ROOT/'config/reconstruction/full-config.json')['cfg']
 
-    def battle(self, count=1, allies=0, critical=False, rank=1):
+    def battle(self, count=1, allies=0, critical=False, rank=1, aid=AID):
         c = copy.deepcopy(self.cfg)
         c['combat_rules'] = {}
         a = c['system_simple']['attack']
@@ -30,7 +30,7 @@ class DemonbladeTryndamereTests(unittest.TestCase):
             u.update(pos=pos, hp=100000, hp_max=100000, ap=100, de_ph=0, de_ma=0)
             u['new_4attrs'] = dict(hit=1000000, flee=0, crit=0, tough=0)
             return u
-        owner = unit(AID, 1, 2400, True)
+        owner = unit(aid, 1, 2400, True)
         friends = [unit('A_1001_6', 1, 2600+i*100) for i in range(allies)]
         enemies = [unit('A_1001_6', 2, 1400-i*150) for i in range(count)]
         b = SkillCompleteBattle([owner]+friends, enemies, config=c, trace_abilities=True)
@@ -61,6 +61,25 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         fresh = copy.deepcopy(c)
         apply_demonblade_tryndamere(fresh)
         self.assertEqual(fresh, c)
+
+    def test_five_star_keeps_rage_without_endless_rage_or_other_passive_bonuses(self):
+        hero = self.cfg['avatar'][FIVE_STAR_AID]
+        self.assertEqual(hero['res'], self.cfg['avatar']['A_1028_5']['res'])
+        self.assertEqual(hero['pl'][:8], self.cfg['avatar']['A_1206_5']['pl'][:8])
+        passive = self.cfg['skill'][hero['pl'][13]]
+        self.assertEqual([note[0] for note in passive['tipNotes105']], ['怒气'])
+        b, owner, _, enemies = self.battle(aid=FIVE_STAR_AID)
+        self.assertEqual(b.demon_rage(owner), 20)
+        self.assertEqual(b.demon_basic_ratio(owner), 1)
+        self.assertEqual(b._crit_damage_rate(owner), 1)
+        owner['hp'] //= 2
+        self.assertEqual(b._get_damage(owner), 100)
+        self.assertTrue(self.cast(b, owner))
+        self.assertEqual(b.demon_rage(owner), 25)
+        self.assertAlmostEqual(b.demon_crit_bonus(owner), 10)
+        b._injured(owner, 200000, 1, source=enemies[0])
+        self.assertLessEqual(owner['hp'], 0)
+        self.assertFalse(b.demon_fury(owner))
 
     def test_normal_dashes_to_front_hits_three_sunders_and_primes_crit(self):
         b, o, _, en = self.battle(5)

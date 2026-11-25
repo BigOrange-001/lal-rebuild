@@ -32,10 +32,12 @@ def translate():
 class NativeDemonbladeTests(unittest.TestCase):
     def test_native_methods(self):
         from gateway import load_game_config
-        from demonblade_tryndamere_105 import AID,NORMAL,CAPTAIN,PASSIVE
+        from demonblade_tryndamere_105 import AID, FIVE_STAR_AID, NORMAL, CAPTAIN, PASSIVE
         cfg=load_game_config(ROOT/'config/reconstruction/full-config.json')['cfg']
+        five_passive=cfg['avatar'][FIVE_STAR_AID]['pl'][13]
         data=dict(aid=AID,normal=NORMAL,captain=CAPTAIN,passive=PASSIVE,
-                  skills={key:cfg['skill'][key] for key in (NORMAL,CAPTAIN,PASSIVE)})
+                  fiveAid=FIVE_STAR_AID,fivePassive=five_passive,
+                  skills={key:cfg['skill'][key] for key in (NORMAL,CAPTAIN,PASSIVE,five_passive)})
         source=(ROOT/'scripts/demonblade_tryndamere_fixture.js').read_text('utf-8')
         source=source.replace('/*METHODS*/',translate()).replace('/*DATA*/',json.dumps(data))
         run=subprocess.run(['node'],input=source,text=True,encoding='utf-8',capture_output=True,cwd=ROOT)

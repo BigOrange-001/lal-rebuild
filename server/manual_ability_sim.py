@@ -204,8 +204,9 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
 
     def summon(self, owner, aid, count, ratio, turns, key, focus=None, clone=False):
         ctx=self._context(owner)
-        if clone and key == 'wukong' and self.six_star_row(ctx.get('skill') if ctx else None).get('sixStarClone105'):
-            ratio = 1
+        if (clone and key == 'wukong' and ctx and
+                self.six_star_row(ctx.get('skill')).get('sixStarClone105')):
+            ratio = self.equipment_part(ctx['skill'], 'wukong_clone_panel', 1)
         else:
             ratio *= ctx['effect_factor'] if ctx else 1
         state=self.state(owner)
@@ -340,7 +341,7 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
             case 'wukong_n':
                 enemies=en(175)
                 if not enemies:return False
-                if hit(enemies[0],1.4*scale,1):ctl(enemies[0],'sunder',2,.25*scale)
+                if hit(enemies[0],self.equipment_part(skill,'wukong_hit',1.4)*scale,1):ctl(enemies[0],'sunder',2,.25*scale)
                 self.summon(owner,owner['aid'],1,.35*scale,2,'wukong',clone=True)
                 self._check_move(owner,False,200)
             case 'wukong_c':
@@ -355,7 +356,9 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
                 marked=owner['hp']/owner['hp_max']<.5;enemies=en(600)
                 if not enemies:return False
                 hit(enemies[0],1.6*scale,1)
-                if marked:self._remove_all_debuff(owner);self.heal(owner,owner,.4*scale)
+                if marked:
+                    self._remove_all_debuff(owner)
+                    self.heal(owner,owner,self.equipment_part(skill,'orange_heal_ap',.4)*scale)
             case 'gangplank_c':
                 enemies=en(800)
                 if not enemies:return False

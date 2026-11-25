@@ -55,6 +55,41 @@ panel.mTabBar.selectedIndex=2;panel.change(null);assert.equal(added[0].kind,'rel
         result=subprocess.run(['node'],input=script,capture_output=True,text=True,encoding='utf-8',cwd=ROOT)
         self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
 
+    def test_codex_uses_mode_skill_levels_for_card_and_popup(self):
+        path = ROOT / 'client/src/stages/102_PanelActivityExploration.as'
+        source = path.read_text('utf8').split('class AbyssCodexPanel104', 1)[1]
+        script = r'''
+const assert=require('node:assert/strict'), int=Math.trunc;
+const cards=[],popups=[],noop=()=>{};
+const skin='A_1221_6',ordinary='A_1001_5';
+const AbyssCore104={
+    unlocked:{purple:[ordinary],orange:[],standalone_orange:[skin]},
+    family:aid=>aid.slice(0,-2),isOrange:aid=>aid.endsWith('_6'),
+    skillBase105:aid=>aid===skin ? 3 : 5, skillMax105:aid=>aid===skin ? 6 : 10,
+    showHeroInfo:(...args)=>popups.push(args),
+};
+const catalogue=()=>[skin,ordinary];
+Array.prototype.sortOn=function(){this.sort((a,b)=>a.state-b.state)};
+class Sprite {addChild(){}}
+class ScrollContainer extends Sprite {setSize(){}}
+class VerticalLayout {}
+const panel={lx:0,by:700,iw:600,body:new Sprite(),addText:noop,
+    heroCard:(...args)=>{cards.push(args);return {};},
+    onTap:(card,callback)=>callback()};
+'''
+        script += 'panel.bindInfo=' + method(source, 'bindInfo', 'card,aid,slv,state,orangeOnly') + ';'
+        script += 'panel.build=' + method(source, 'build', '') + ';panel.build();'
+        script += r'''
+assert.equal(cards.find(row=>row[0]===skin)[2],3);
+assert.equal(cards.find(row=>row[0]===ordinary)[2],5);
+assert.deepEqual(popups.find(row=>row[0]===skin).slice(0,2),[skin,3]);
+assert.deepEqual(popups.find(row=>row[0]===ordinary).slice(0,2),[ordinary,5]);
+assert.match(popups.find(row=>row[0]===skin)[2],/6级/);
+assert.match(popups.find(row=>row[0]===ordinary)[2],/10级/);
+'''
+        result = subprocess.run(['node'],input=script,capture_output=True,text=True,encoding='utf8',cwd=ROOT)
+        self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
+
     def test_enemy_preview_and_rest_leave(self):
         source=(ROOT/'client/src/abyss_ui_104.aspart').read_text('utf-8')
         rest=source.split('class AbyssRestPanel104',1)[1].split('class AbyssPoolPanel104',1)[0]

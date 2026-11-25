@@ -51,6 +51,7 @@ function unit(id){
  });units.set(id,proxy);return proxy;
 }
 const GameMap={currentMap:{getAliveList:team=>call(-1,'alive',[team]),isEnd:lane=>call(-1,'isEnd',[lane])}};
+const GameMapLayer={gl:null};
 const currentAbilityAttack=()=>call(-1,'context');
 const beginAbilityAttack=(owner,kind)=>call(owner.__uid,'begin',[kind]);
 const endAbilityAttack=()=>call(-1,'end');

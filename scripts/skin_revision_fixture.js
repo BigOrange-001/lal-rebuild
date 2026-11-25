@@ -2,6 +2,7 @@ const assert=require('assert'),fs=require('fs');
 const data=/*RUNTIME_DATA*/;
 let skin2Depth=0,serial=0,contexts=[],roster=[];
 let skin2AnnieChainDepth=0,skin2AnnieChain=[];
+const GameMapLayer={gl:null};
 const int=x=>Math.trunc(Number(x)||0),Tools={toInt:int},GameMapConfig={LINE_POS:3001};
 const Buff={LIST_BUFF:['shield','strong','armor','steel','purify','bless','fleeup'],LIST_DEBUFF:['stun','silence','poison','curse','root','weak','sunder','burn','evil']};
 const GlobalData={$mConfig_skill:data.skill,$mConfig_avatar:{}};

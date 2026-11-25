@@ -27,6 +27,34 @@
          var index:int=spec.keys.indexOf(key);
          return index<0 ? 0 : Number(spec.values[index]);
       }
+      private function s2AnnieRetaliationVisual(targets:Vector.<Avatar>) : void
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(!layer || GameMapLayer.isFastest || !fightRes || !fightRes.parent) return;
+         flushParallelVisualBatch();
+         var map:GameMap=GameMap.currentMap;
+         var castTime:Number=GameMap.actionDelay;
+         var launchTime:Number=castTime+0.45;
+         var flightTime:Number=0.35;
+         layer.delayCall(layer.infoLayer.showSkill,castTime,"不讲道理",this,team==1 ? "skill0Bg" : "skill1Bg");
+         for each(var target:Avatar in targets)
+         {
+            if(!target || target.hp<=0) continue;
+            var bullet:Object=DisplayTools.getAttrs("FX60_MAGIC");
+            if(!bullet) continue;
+            bullet.a1=this;
+            bullet.par=layer.effectLayer;
+            bullet.x1=GameMapConfig.lineToPixel(map.getShowLine(line),offset);
+            bullet.y1=GameMapConfig.posToPixel(pos);
+            bullet.x2=GameMapConfig.lineToPixel(map.getShowLine(target.line),target.offset);
+            bullet.y2=GameMapConfig.posToPixel(target.pos);
+            bullet.sp=Math.max(1,new Point(bullet.x2-bullet.x1,bullet.y2-bullet.y1).length/flightTime);
+            layer.delayCall(DisplayTools.addBullet,launchTime,bullet);
+         }
+         // Settle rules in the current action and schedule status visuals at impact.
+         GameMap.actionDelay=launchTime+flightTime;
+      }
+
       private function s2AnnieStatus(kind:String) : void
       {
          var spec:Object=s2AnnieCore();
@@ -49,9 +77,11 @@
                unit.removeAllDebuff();
                unit.skin2.anniePurifyUntil=Math.max(Number(unit.skin2.anniePurifyUntil || 0),unit.manualOwnerActionSerial+int(spec.purify_rounds));
             }
-            abilityFeedback("不讲道理","FX_S9150_PURIFY",10526975);
-            for each(unit in GameMap.currentMap.getAliveList(otherTeam))
+            var enemies:Vector.<Avatar> = GameMap.currentMap.getAliveList(otherTeam).concat();
+            if(GameMapLayer.gl && !GameMapLayer.isFastest) s2AnnieRetaliationVisual(enemies);
+            for each(unit in enemies)
             {
+               if(!unit || unit.hp<=0) continue;
                unit.addBuff("sunder",int(spec.debuff_rounds),Number(spec.sunder)/(1-Number(spec.sunder)),0,-1,this);
                unit.addBuff("weak",int(spec.debuff_rounds),Number(spec.weak)/(1-Number(spec.weak)),0,-1,this);
                unit.addManualSkillDot("annie_core_105_"+abilityIndex,"poison",Tools.toInt(getDamage()*Number(spec.poison_ap)),0,int(spec.debuff_rounds),this,6,true);

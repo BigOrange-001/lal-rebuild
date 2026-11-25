@@ -5,7 +5,7 @@ const Avatar=x=>x;
 let units=[],contexts=[];
 const GameMapConfig={LINE_POS:3000};
 const GameMapLayer={gl:null};
-const GlobalData={$mConfig_avatar:{[data.aid]:{demonbladeTryndamere105:true}},$mConfig_simple:{hero_skill_output_rate_104:.8}};
+const GlobalData={$mConfig_avatar:{[data.aid]:{demonbladeTryndamere105:true},[data.fiveAid]:{demonbladeTryndamere105:true}},$mConfig_simple:{hero_skill_output_rate_104:.8}};
 const GameMap={actionDelay:0,currentMap:{roundNum:0,getAliveList:team=>units.filter(u=>u.team===team&&u.hp>0)}};
 function beginAbilityAttack(owner,kind){const ctx={owner,kind};contexts.push(ctx);return ctx}
 function endAbilityAttack(ctx){assert.equal(contexts.pop(),ctx)}
@@ -58,6 +58,16 @@ function fresh(count=1,allies=0){
  return {a,friends,en};
 }
 let cases=0;
+{
+ const {a,en}=fresh(1);
+ a.avatarData.id=data.fiveAid;a.skillB=skill(data.fivePassive);a.demonStart105();
+ assert.equal(a.demonRage105,20);
+ assert.equal(a.demonGain105(5),5);assert.equal(a.demonCritBonus105(),10);
+ a.hp=50000;assert.equal(a.getDamage(),100);assert.equal(a.demonCritDamageRate105(),1);
+ a.injured(200000,1,null,1,en[0]);
+ assert.ok(a.hp<=0);assert.equal(a.demonFuryActive105(),false);assert.deepEqual(a.feedback,[]);
+ cases++;
+}
 {
  const {a,en}=fresh(5);en[4].line=1;
  assert.ok(a.demonExecute105('demon_trynd_n',a.skill0));

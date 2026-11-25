@@ -67,9 +67,15 @@
          var coefficient:Number=Number(sourceSkill.skills[0][4]);
          var globalRate:Number=Number(GlobalData.$mConfig_simple.hero_skill_output_rate_104);
          if(!isFinite(globalRate) || globalRate<=0) globalRate=1;
+         // Missiles leave back to back, .1 s apart, without waiting for the previous one to land:
+         // each shot is a wave of one parallel visual batch, so hits and numbers stream in too.
+         var rainBatch:Object=beginParallelVisualBatch();
+         try
+         {
          var seen:Array=[];
          for(var shot:Number=0;shot<count && hp>0;shot++)
          {
+            setParallelVisualWave(rainBatch,int(shot),.1);
             var live:Array=kaisaLane104(castLane);
             if(!live.length) break;
             var target:Avatar=null;
@@ -81,6 +87,9 @@
             // endAbilityAttack handles retaliation before reacquiring the next.
             var context:Object=beginAbilityAttack(this,"active");
             context.skill=sourceSkill;
+            // One launch lunge for the whole volley, not one per missile.
+            rainBatch.context=context;
+            if(shot>0) rainBatch.animated["wave"+int(shot)]=true;
             context.manualDamageMultiplier=sourceSkill.getNativeSetting("manualDamageMultiplier",1);
             try
             {
@@ -92,6 +101,8 @@
             finally {endAbilityAttack(context);}
             GameMap.actionDelay+=0.08;
          }
+         }
+         finally {endParallelVisualBatch(rainBatch);}
          return true;
       }
       private function kaisaHunt104() : Boolean

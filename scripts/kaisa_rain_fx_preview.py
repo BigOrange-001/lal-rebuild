@@ -2,8 +2,8 @@
 
 The group-K timeline and painters in client/src/kaisa_rain_fx_106.aspart (plus the
 shared pure helpers of hero_fx_core_106.aspart) are pasted into the Demonblade AIR
-harness, compiled with mxmlc and run with adl. Missile timing follows kaisaRain106:
-each missile departs .01 s after its shot is scheduled and floats at most .8 s.
+harness, compiled with mxmlc and run with adl. Timing follows kaisaVolley104 and
+kaisaRain106: shots leave .1 s apart and each lands .35 s after it was scheduled.
 
     python scripts/kaisa_rain_fx_preview.py [--out DIR]
 """
@@ -22,20 +22,16 @@ FX = ROOT / 'client/src/kaisa_rain_fx_106.aspart'
 CORE = ROOT / 'client/src/hero_fx_core_106.aspart'
 TEXTURES = ['glow', 'streak', 'bolt', 'spark', 'ring']
 ENEMY_ART = ['A_1001_5', 'A_1002_5', 'A_1005_5']
-EMERGE, FLIGHT, HOVER_MAX = .2, .34, .8
+FLIGHT = .34
 
 
-def volley(count, first=.45, gap=.38, enemies=3, seed=1):
+def volley(count, first=.45, gap=.1, enemies=3, seed=1):
     """Shots, targets and hit texts as kaisaVolley104 + kaisaRain106 schedule them."""
     fx, texts = [], []
-    start = max(0, first - .15)
     for shot in range(count):
         now = first + shot * gap
-        depart = now + .35 - FLIGHT
-        spawn = max(min(start, depart), depart - HOVER_MAX)
         target = 1 + shot % enemies
-        fx.append(dict(kind='rain', src=0, tgt=target, at=spawn, seed=seed + shot,
-                       p=dict(hover=depart - spawn, shot=shot)))
+        fx.append(dict(kind='rain', src=0, tgt=target, at=now + .35 - FLIGHT, seed=seed + shot, p=dict(shot=shot)))
         texts.append(dict(unit=target, at=now + .35, text=f'-{1480 + 37 * shot}', color=0xFFFFFF, size=20))
     return fx, texts
 
@@ -45,23 +41,23 @@ def scene(id, title, count, kaisa, enemies, note):
     units = [dict(art='kaisa', team=1, x=kaisa[0], y=kaisa[1], hp=.9, label='神龙尊者卡莎')]
     for art, at in zip(ENEMY_ART, enemies):
         units.append(dict(art=art, team=2, x=at[0], y=at[1], hp=1))
-    end = max(f['at'] + f['p']['hover'] + FLIGHT + .4 for f in fx)
+    end = max(f['at'] + FLIGHT + .4 for f in fx)
     return dict(id=id, title=title, dur=round(end + .3, 2), note=note, units=units, fx=fx, texts=texts)
 
 
 SCENES = [
     scene('rain3', '艾卡西亚暴雨 · 首次 3 发', 3, (240, 560), [(240, 300), (196, 214), (286, 150)],
-          '飞弹从卡莎身后弹出，在她两侧扇形悬浮、轻轻摆动并把弹头对准目标，随后各自沿弧线外甩再俯冲命中，身后拖着由青白到蓝的渐细光带，命中时只溅出小团等离子与金色火星。'),
+          '飞弹每 0.1 秒从卡莎左右肩交替出膛，不悬停、不等上一发命中，出膛即沿各自的弧线飞向目标，身后拖着由青白到蓝的渐细光带，命中时只溅出小团等离子与金色火星。'),
     scene('rain7', '艾卡西亚暴雨 · 第三次 7 发', 7, (240, 580), [(240, 300), (196, 214), (286, 150)],
-          '发数越多，悬浮的飞弹越多：最多悬浮 0.8 秒后依次离队，按黄金比例分布在左右两侧，从不同方向交错扑向目标。'),
+          '七发连成一串弹幕，左右交替、外甩幅度各不相同，从不同方向交错扑向目标。'),
     scene('rain5_side', '侧向目标 · 5 发', 5, (150, 600), [(320, 290), (360, 200), (280, 150)],
-          '目标不在正前方时，悬浮扇面随朝向旋转，弧线仍从两侧包抄。'),
+          '目标不在正前方时，出膛方向随朝向旋转，弧线仍从两侧包抄。'),
 ]
 
 
 def core_source():
     fx = FX.read_text('utf-8')
-    consts = fx[fx.index('      private static const KAISA_RAIN_EMERGE106'):fx.index('      // Called once per missile')]
+    consts = fx[fx.index('      private static const KAISA_RAIN_FLIGHT106'):fx.index('      // Called once per missile')]
     body = fx[fx.index('      public static function heroFxPaintK106'):fx.index('      // END KAISA RAIN TIMELINE 106')]
     core = CORE.read_text('utf-8')
     helpers = core[core.index('      // BEGIN HERO FX HELPERS 106'):core.index('      // END HERO FX HELPERS 106')]

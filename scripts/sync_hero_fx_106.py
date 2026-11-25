@@ -1,15 +1,16 @@
-"""Attach the code-painted hero effects (core + groups A/B/C) to the AIR Avatar.
+"""Attach the code-painted hero effects (core + groups A/B/C/D) to the AIR Avatar.
 
-Sources: client/src/hero_fx_core_106.aspart, kaisa_rain_fx_106.aspart and hero_fx_{a,b,c}_106.aspart.
+Sources: client/src/hero_fx_core_106.aspart, kaisa_rain_fx_106.aspart and hero_fx_{a,b,c,d}_106.aspart.
 Run after the other sync scripts; it is idempotent. Every hook only adds a call into
-the core, so the three groups never need to touch this file.
+the core, so the groups never need to touch this file.
 """
 from pathlib import Path
 import hashlib
 import json
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = ['hero_fx_core_106.aspart', 'kaisa_rain_fx_106.aspart', 'hero_fx_a_106.aspart', 'hero_fx_b_106.aspart', 'hero_fx_c_106.aspart']
+SOURCES = ['hero_fx_core_106.aspart', 'kaisa_rain_fx_106.aspart', 'hero_fx_a_106.aspart', 'hero_fx_b_106.aspart', 'hero_fx_c_106.aspart',
+           'hero_fx_d_106.aspart']
 START = '      // BEGIN HERO CODE FX 106\n'
 END = '      // END HERO CODE FX 106\n'
 
@@ -91,7 +92,7 @@ def sync():
         if row['source'] in ('client/src/stages/137_Avatar.as', 'client/src/stages/177_GameMapLayer.as'):
             row['source_sha256'] = hashlib.sha256((ROOT / row['source']).read_bytes()).hexdigest()
     config.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('Hero code FX 106: core, groups A/B/C and hooks synchronized')
+    print('Hero code FX 106: core, groups A/B/C/D and hooks synchronized')
 
 
 if __name__ == '__main__':

@@ -182,8 +182,8 @@ def idle(renderer):
     effects = json.loads((ROOT / "config/reconstruction/full-config.json").read_text("utf-8"))["cfg"]["effect"]
     sys.path.insert(0, str(ROOT / "server"))
     from battle_status_effects import STATUS_EFFECTS
-    from native_fx_wiring_106 import MISSING_FX, NATIVE_FX
-    used = set(re.findall(r'"(e\d{3})"', json.dumps([effects, STATUS_EFFECTS, NATIVE_FX, MISSING_FX])))
+    from native_fx_wiring_106 import DERIVED_FX, MISSING_FX, NATIVE_FX, SELF_FX
+    used = set(re.findall(r'"(e\d{3})"', json.dumps([effects, STATUS_EFFECTS, NATIVE_FX, MISSING_FX, DERIVED_FX, SELF_FX])))
     code = "\n".join(p.read_text("utf-8") for p in (ROOT / "client/src").rglob("*.as*"))
     used |= set(re.findall(r'"(e\d{3})"', code))
     return sorted(n.split("/")[1] for n in renderer.armatures if n.startswith("effect/") and n.split("/")[1] not in used)

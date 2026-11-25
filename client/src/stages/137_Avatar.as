@@ -1334,6 +1334,15 @@ package com.meng52.game.module.avatar
             // No dispel flag: this protection lasts through the stated owner turns.
             abilityState.sixBatchKayleGuard105={until:abilitySerial+(sixBatchKayleStage105()==4 ? 2 : 1),value:Number(action[4])};
             abilityState.sixBatchKayleHit105=2000;
+            // Divine Judgment had no visual: the native golden dome (FX_A_1120_GUARD, e019).
+            var guardFx:Object=GameMapLayer.gl && !GameMapLayer.isFastest && fightRes && fightRes.parent ? DisplayTools.getAttrs("FX_A_1120_GUARD") : null;
+            if(guardFx)
+            {
+               guardFx=Tools.clone(guardFx);
+               guardFx.a1=this;
+               guardFx.par=GameMapLayer.gl.effectLayer;
+               GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,guardFx);
+            }
             return true;
          }
          if(kind=="six_batch_shaco_box")

@@ -10,16 +10,23 @@ import zlib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from native_fx_wiring_106 import (ACTION_RULES, MANUAL_ABILITY_RULES, MISSING_FX, NATIVE_FX,
-                                  apply_native_fx_wiring)
+from native_fx_wiring_106 import (ACTION_RULES, DERIVED_FX, MANUAL_ABILITY_RULES, MISSING_FX,
+                                  NATIVE_FX, SELF_FX, apply_native_fx_wiring)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/reconstruction/full-config.json"
 TEMPLATE = ROOT / "client/resources/template/MainLLOL.swf"
-CODE_FX = [ROOT / "client/src" / name for name in
-           ("hero_fx_core_106.aspart", "hero_fx_a_106.aspart", "hero_fx_b_106.aspart",
-            "hero_fx_c_106.aspart", "kaisa_rain_fx_106.aspart")]
+CODE_FX = sorted((ROOT / "client/src").glob("hero_fx_*_106.aspart")) + [ROOT / "client/src/kaisa_rain_fx_106.aspart"]
+NEW_FX = {**NATIVE_FX, **DERIVED_FX, **SELF_FX}
+# Round two: hero, skill id of the top-star copy, effect it must now use.
+ROUND_TWO = (
+    ("A_1002_6", "FX_A_1002_CRYSTAL"), ("A_1021_6", "FX_A_1021_MYSTIC"), ("A_1016_6", "FX_A_1016_MARK"), ("A_1016_6", "FX_A_1016_STORM"),
+    ("A_1099_6", "FX_A_1099_VENOM"), ("A_1068_6", "FX_A_1068_PYRO"), ("A_1029_6", "FX_A_1029_FIREBALL"),
+    ("A_1077_6", "FX_A_1077_SHARD"), ("A_1063_6", "FX_A_1063_FANG"), ("A_1131_6", "FX_A_1131_TIDE"),
+    ("A_1095_6", "FX_A_1095_REWIND"), ("A_1056_6", "FX_A_1056_WIND"), ("A_1023_6", "FX_A_1023_BLADE"),
+    ("A_1097_6", "FX_A_1097_FEAR"), ("A_1025_6", "FX_A_1025_ACE"), ("A_1011_6", "FX_A_1011_BARRAGE"),
+)
 
 
 def effect_armatures():
@@ -72,6 +79,22 @@ class NativeFxWiringTests(unittest.TestCase):
         # Lux's beam uses the native stretched-path mode, nothing else does.
         self.assertEqual(NATIVE_FX["FX_A_1060_ULT"]["p"], {"id": "e602", "w": 3, "sc": 0.7})
         self.assertEqual([k for k, d in NATIVE_FX.items() if "p" in d], ["FX_A_1060_ULT"])
+        for key, (_, parts) in DERIVED_FX.items():
+            with self.subTest(effect=key):
+                self.assertTrue(parts)
+                for change in parts.values():
+                    if change is not None:
+                        self.assertIn(change["id"], self.armatures)
+                        self.assertLessEqual(set(change), {"id", "sc"})
+        for key, descriptor in SELF_FX.items():
+            with self.subTest(effect=key):
+                self.assertEqual(set(descriptor), {"h"})
+                self.assertIn(descriptor["h"]["id"], self.armatures)
+        # Every idle hero art piece is placed once; e005 serves both barrage copies.
+        art = [c["id"] for _, parts in DERIVED_FX.values() for c in parts.values() if c]
+        art = [a for a in art if a not in ("e029", "e542", "e023", "e006", "e014")]
+        self.assertEqual(sorted(set(art)), sorted(["e520", "e505", "e206", "e009", "e510", "e516", "e507", "e514",
+                                                     "e545", "e070", "e002", "e503", "e513", "e546", "e543", "e005"]))
 
     def test_bullet_speed_matches_the_replaced_effect(self):
         effects = self.raw["cfg"]["effect"]
@@ -79,6 +102,22 @@ class NativeFxWiringTests(unittest.TestCase):
         for key, descriptor in NATIVE_FX.items():
             with self.subTest(effect=key):
                 self.assertEqual(descriptor["sp"], effects[replaced[key]]["sp"])
+
+    def test_derived_effects_keep_speed_and_sound_of_what_they_replace(self):
+        document = copy.deepcopy(self.raw)
+        import gateway
+        effects = gateway.build_static_config(CONFIG)["cfg"]["effect"]
+        for key, (base, parts) in DERIVED_FX.items():
+            with self.subTest(effect=key):
+                old, new = effects[base], effects[key]
+                self.assertEqual(new.get("sp"), old.get("sp"))
+                for part in ("b", "h"):
+                    if parts.get(part, 0) is None:
+                        self.assertNotIn(part, new)
+                    elif part in old:
+                        self.assertEqual({k: v for k, v in new[part].items() if k not in ("id", "sc")},
+                                         {k: v for k, v in old[part].items() if k not in ("id", "sc")})
+        self.assertEqual({k for _, _, _, k, _ in ACTION_RULES} - set(NATIVE_FX), set(DERIVED_FX))
 
     def test_only_the_effect_slot_of_matching_actions_changes(self):
         document = copy.deepcopy(self.raw)
@@ -98,7 +137,7 @@ class NativeFxWiringTests(unittest.TestCase):
                 with self.subTest(skill=key, action=old[0]):
                     slot = 3 if old[0] == "manual_ability" else len(old) - 1
                     self.assertEqual(old[:slot] + old[slot + 1:], new[:slot] + new[slot + 1:])
-                    self.assertIn(new[slot], NATIVE_FX)
+                    self.assertIn(new[slot], NEW_FX)
         lux = [a[-1] for a in after["S_631060_6"]["skill"]]
         self.assertEqual(lux, ["FX_S9140_HIT", "FX_A_1060_ULT", "FX_S9140_HIT", "FX_S9140_FLEE"])
         ahri = [a[-1] for a in after["S_631022_5"]["skill"] if a[0] == "damage"]
@@ -118,9 +157,10 @@ class NativeFxWiringTests(unittest.TestCase):
 
     def test_wired_heroes_are_not_claimed_by_code_effects(self):
         source = "\n".join(path.read_text(encoding="utf-8") for path in CODE_FX)
-        for hero in ("A_1060", "A_1022", "A_1096"):
+        for hero in ("A_1060", "A_1022", "A_1096", "A_1002", "A_1021", "A_1016", "A_1099", "A_1068", "A_1029",
+                     "A_1077", "A_1063", "A_1131", "A_1095", "A_1056", "A_1023", "A_1097", "A_1025", "A_1011", "A_1120"):
             self.assertNotIn(hero, source)
-        for key in NATIVE_FX:
+        for key in NEW_FX:
             self.assertNotIn(key, source)
         for ability, old, _ in MANUAL_ABILITY_RULES:
             self.assertNotIn(ability, source)
@@ -132,7 +172,7 @@ class NativeFxWiringTests(unittest.TestCase):
         effects = cfg["effect"]
         skills = cfg["skill"]
         for hero, expected in (("A_1060_6", "FX_A_1060_ULT"), ("A_1022_6", "FX_A_1022_CHARM"),
-                               ("A_1096_6", "FX_A_1096_CARD")):
+                               ("A_1096_6", "FX_A_1096_CARD"), *ROUND_TWO):
             names = {effect_slot(action) for sid in cfg["avatar"][hero]["pl"]
                      if isinstance(sid, str) and sid in skills
                      for action in skills[sid].get("skill") or [] if isinstance(action, list)}
@@ -155,6 +195,15 @@ class NativeFxWiringTests(unittest.TestCase):
                         yield from ids(value)
         dangling = {(key, art) for key, row in effects.items() for art in ids(row) if art not in self.armatures}
         self.assertEqual(dangling, set())
+        for key in NEW_FX:
+            self.assertIn(key, effects)
+
+    def test_kayle_guard_plays_its_dome(self):
+        avatar = (ROOT / "client/src/stages/137_Avatar.as").read_text(encoding="utf-8")
+        start = avatar.index('if(kind=="six_batch_kayle_c")', avatar.index("private function sixBatchExecute105("))
+        branch = avatar[start:avatar.index("return true;", start)]
+        self.assertIn('DisplayTools.getAttrs("FX_A_1120_GUARD")', branch)
+        self.assertIn("GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,guardFx);", branch)
 
 
 if __name__ == "__main__":

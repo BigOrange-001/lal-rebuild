@@ -141,7 +141,8 @@ class HeroFxGroupBTests(unittest.TestCase):
     def test_claims_name_only_kinds_that_exist(self):
         code = GROUP.read_text('utf-8')
         claims = code[code.index(PURE_END):]
-        for kind in set(re.findall(r'heroFx106\("(\w+)"', claims)):
+        self.assertIn('heroFx106("b:"+kind,target,extra);', code)
+        for kind in set(re.findall(r'heroFxB106\("(\w+)"', claims)):
             self.assertIn(kind, KINDS)
         for kind in re.findall(r'"(\w+)" : "(\w+)"', claims):
             for k in kind:

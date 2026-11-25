@@ -109,7 +109,8 @@ class HeroFxGroupATests(unittest.TestCase):
         self.assertLessEqual(used, set(TEXTURES))
         for name in TEXTURES:
             self.assertRegex(pure, rf'case "{name}":')
-        claimed = set(re.findall(r'heroFx106\("(\w+)"', code)) | set(re.findall(r'hfxAEach106\("(\w+)"', code))
+        self.assertIn('heroFx106("a:"+kind,target,extra);', code)
+        claimed = set(re.findall(r'heroFxA106\("(\w+)"', code)) | set(re.findall(r'hfxAEach106\("(\w+)"', code))
         claimed |= {'sonaHeal', 'sonaShield', 'eggHit', 'teemoDart', 'ezJuggle', 'ezPass', 'zedStar', 'shadowStar'}
         self.assertEqual(claimed, set(KINDS))
         for ident in re.findall(r'"a:(\w+)"', code):

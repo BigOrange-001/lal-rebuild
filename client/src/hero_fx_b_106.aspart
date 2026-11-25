@@ -1323,6 +1323,10 @@
             hfxBVolley106={cast:cast,serial:manualOwnerActionSerial,n:0};
          return hfxBVolley106.n++;
       }
+      private function heroFxB106(kind:String, target:Avatar = null, extra:Object = null) : void
+      {
+         heroFx106("b:"+kind,target,extra);
+      }
       private function heroFxClaimB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
       {
          var n:int;var unit:Avatar;var family:int;
@@ -1332,27 +1336,27 @@
             {
                case "1215":
                   // The follow-up hits while the echo still names this target.
-                  heroFx106(skin2.sonic===target ? "lee_dash" : "lee_wave",target);
+                  heroFxB106(skin2.sonic===target ? "lee_dash" : "lee_wave",target);
                   return true;
                case "1215_ult":
-                  if(hfxBNext106()==0) heroFx106("lee_kick",target);
-                  else heroFx106("lee_crash",target,{delay:.3});
+                  if(hfxBNext106()==0) heroFxB106("lee_kick",target);
+                  else heroFxB106("lee_crash",target,{delay:.3});
                   return true;
                case "1203":
                   hfxBLast106=target;
-                  heroFx106("ryze_brand",target);
+                  heroFxB106("ryze_brand",target);
                   return true;
                case "1203_ult":
                   n=hfxBNext106();
-                  if(n==0) heroFx106("ryze_domain",target);
-                  heroFx106("ryze_hell",target,{delay:.25+n*.07});
+                  if(n==0) heroFxB106("ryze_domain",target);
+                  heroFxB106("ryze_hell",target,{delay:.25+n*.07});
                   return true;
                case "1211":
                   // Outside a cast, a Caitlyn strike is her trap biting.
-                  heroFx106(skin2.castSkill ? "cait_shot" : "cait_trap",target);
+                  heroFxB106(skin2.castSkill ? "cait_shot" : "cait_trap",target);
                   return true;
                case "1211_ult":
-                  heroFx106("cait_snipe",target);
+                  heroFxB106("cait_snipe",target);
                   return true;
                case "1206":
                case "1206_ult":
@@ -1362,10 +1366,10 @@
                   n=hfxBNext106();
                   if(kind=="1206_ult")
                   {
-                     if(n==0) heroFx106("vayne_hunt",this);
-                     heroFx106("vayne_bolt_ult",target,{delay:.12+n*.16});
+                     if(n==0) heroFxB106("vayne_hunt",this);
+                     heroFxB106("vayne_bolt_ult",target,{delay:.12+n*.16});
                   }
-                  else heroFx106("vayne_bolt",target,{delay:n*.14});
+                  else heroFxB106("vayne_bolt",target,{delay:n*.14});
                   return true;
             }
             return false;
@@ -1382,28 +1386,28 @@
                   delay=Math.max(0,int(hfxBVolley106.n)-1)*(ult ? .16 : .14)+(ult ? .12 : 0)+.18;
                }
                hfxBBurst106=target;
-               heroFx106("vayne_burst",target,{delay:delay});
+               heroFxB106("vayne_burst",target,{delay:delay});
                return true;
             }
             // The brand is already drawn by the strike; the persistent mark carries it.
             if(kind=="contract" && family==1203) return true;
-            if(kind=="growth" && family==1203) {heroFx106("ryze_growth",this);return true;}
-            if(kind=="wanted" && family==1211) {heroFx106("cait_wanted",target,{delay:.14});return true;}
+            if(kind=="growth" && family==1203) {heroFxB106("ryze_growth",this);return true;}
+            if(kind=="wanted" && family==1211) {heroFxB106("cait_wanted",target,{delay:.14});return true;}
             return false;
          }
          if(event=="heal" && kind=="1203" && hfxBLast106 && hfxBLast106.hp>0 && hfxBLast106!==this)
          {
-            heroFx106("ryze_leech",this,{from:hfxBLast106,delay:.3});
+            heroFxB106("ryze_leech",this,{from:hfxBLast106,delay:.3});
             return true;
          }
          if(event=="shield" && kind=="1215")
          {
-            heroFx106("lee_bell",target,{delay:.3});
+            heroFxB106("lee_bell",target,{delay:.3});
             return true;
          }
          if(event=="summon" && hfxBFamily106()=="A_1103")
          {
-            heroFx106("malz_summon",target);
+            heroFxB106("malz_summon",target);
             return true;
          }
          if(event=="native")
@@ -1411,27 +1415,27 @@
             var tribe:String=hfxBFamily106();
             if(tribe=="A_1138")
             {
-               if(kind=="FX_S9002_SILENCE") {heroFx106("tahm_tongue",target);return true;}
-               if(kind=="FX_A_1138_MAGIC") {heroFx106("tahm_slam",target);return true;}
-               if(kind=="FX60_PURIFY") {heroFx106("tahm_gold",this);return true;}
+               if(kind=="FX_S9002_SILENCE") {heroFxB106("tahm_tongue",target);return true;}
+               if(kind=="FX_A_1138_MAGIC") {heroFxB106("tahm_slam",target);return true;}
+               if(kind=="FX60_PURIFY") {heroFxB106("tahm_gold",this);return true;}
                // Armour and taunt read as part of the golden hide.
                if(kind=="FX60_STRONG" || kind=="FX_S9150_TAUNT") return true;
             }
             else if(hfxBVoidling106())
             {
-               if(kind=="FX_S9160_POISON") {heroFx106("void_burn",target);return true;}
-               if(kind=="FX_S9140_POISON") {heroFx106("void_venom",target,{delay:.22});return true;}
+               if(kind=="FX_S9160_POISON") {heroFxB106("void_burn",target);return true;}
+               if(kind=="FX_S9140_POISON") {heroFxB106("void_venom",target,{delay:.22});return true;}
             }
             else if(tribe=="A_1103" && kind=="FX_S9160_POISON")
             {
-               heroFx106("malz_cast",this);
+               heroFxB106("malz_cast",this);
                n=0;
                if(extra && extra.targets) for each(unit in extra.targets)
                {
                   if(!unit || n>=6) continue;
-                  heroFx106("malz_flame",unit,{delay:.12+n*.06});++n;
+                  heroFxB106("malz_flame",unit,{delay:.12+n*.06});++n;
                }
-               else heroFx106("malz_flame",target,{delay:.12});
+               else heroFxB106("malz_flame",target,{delay:.12});
                return true;
             }
          }
@@ -1440,10 +1444,10 @@
       // Generic looks for events no hero claimed (heal / shield / cleanse ...). Called after A, B and C.
       private function heroFxFallbackB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
       {
-         if(event=="heal") {heroFx106("fb_heal",target);return true;}
-         if(event=="shield") {heroFx106("fb_shield",target);return true;}
-         if(event=="pulse" && kind=="cleanse") {heroFx106("fb_cleanse",target);return true;}
-         if(event=="pulse" && kind=="guard") {heroFx106("fb_shield",target);return true;}
+         if(event=="heal") {heroFxB106("fb_heal",target);return true;}
+         if(event=="shield") {heroFxB106("fb_shield",target);return true;}
+         if(event=="pulse" && kind=="cleanse") {heroFxB106("fb_cleanse",target);return true;}
+         if(event=="pulse" && kind=="guard") {heroFxB106("fb_shield",target);return true;}
          return false;
       }
       // Persistent state art: return ids like ["b:heart"] for rows this group owns, else null.

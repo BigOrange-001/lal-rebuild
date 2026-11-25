@@ -5063,13 +5063,17 @@ package com.meng52.game.module.avatar
          if(row && row.modIdentity && String(row.modIdentity).indexOf("/hero/zed_shadow/")>=0) return "zedShadow";
          return "";
       }
+      private function heroFxA106(kind:String, target:Avatar = null, extra:Object = null) : void
+      {
+         heroFx106("a:"+kind,target,extra);
+      }
       private function hfxAEach106(kind:String, list:Object, step:Number, delay:Number, max:int = 6) : void
       {
          if(!list) return;
          for(var i:int=0;i<list.length && i<max;i++)
          {
             var unit:Avatar=list[i] as Avatar;
-            if(unit && unit.hp>0) heroFx106(kind,unit,{delay:delay+i*step});
+            if(unit && unit.hp>0) heroFxA106(kind,unit,{delay:delay+i*step});
          }
       }
       private function heroFxClaimA106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
@@ -5084,7 +5088,7 @@ package com.meng52.game.module.avatar
             // An egg blast ends with Teemo's shield: close the blast window there.
             if(kind=="1209" && event=="shield") hfxAUnmark106("egg",this);
             if(kind!="1228" || !target) return false;
-            heroFx106(event=="heal" ? "sonaHeal" : "sonaShield",target);
+            heroFxA106(event=="heal" ? "sonaHeal" : "sonaShield",target);
             return true;
          }
          return false;
@@ -5095,52 +5099,52 @@ package com.meng52.game.module.avatar
          switch(kind)
          {
             case "1228_ult":
-               heroFx106("sonaUlt",target,{delay:Math.min(4,hfxACount106("sonaUlt",this))*.05});return true;
+               heroFxA106("sonaUlt",target,{delay:Math.min(4,hfxACount106("sonaUlt",this))*.05});return true;
             case "1214":
-               heroFx106("judgeQ",target);return true;
+               heroFxA106("judgeQ",target);return true;
             case "1214_ult":
                // The first hit is the verdict; a second one is the true damage on dispelled targets.
-               if(hfxACount106("verdict",target)==0) heroFx106("verdict",target,{delay:Math.min(4,hfxACount106("verdictCast",this))*.06});
-               else heroFx106("judgeTrue",target,{delay:.4});
+               if(hfxACount106("verdict",target)==0) heroFxA106("verdict",target,{delay:Math.min(4,hfxACount106("verdictCast",this))*.06});
+               else heroFxA106("judgeTrue",target,{delay:.4});
                return true;
             case "1209":
             case "1209_ult":
-               heroFx106(hfxAMarked106("egg",this) || kind=="1209_ult" ? "eggHit" : "teemoDart",target,{delay:hfxAMarked106("parade",this) ? .5 : 0});return true;
+               heroFxA106(hfxAMarked106("egg",this) || kind=="1209_ult" ? "eggHit" : "teemoDart",target,{delay:hfxAMarked106("parade",this) ? .5 : 0});return true;
             case "1204":
-               heroFx106("blitzGrab",target);return true;
+               heroFxA106("blitzGrab",target);return true;
             case "1204_ult":
-               heroFx106("blitzZap",target,{delay:Math.min(4,hfxACount106("blitzZap",this))*.05+.2});
-               if(target.skin2.exposed && target.skin2.exposed.owner===this) heroFx106("blitzMute",target,{delay:.45});
+               heroFxA106("blitzZap",target,{delay:Math.min(4,hfxACount106("blitzZap",this))*.05+.2});
+               if(target.skin2.exposed && target.skin2.exposed.owner===this) heroFxA106("blitzMute",target,{delay:.45});
                return true;
             case "1213":
-               if(hfxAMarked106("volley",this)) {hfxAUnmark106("volley",this);heroFx106("ezVolley",target,{delay:.3});}
-               else heroFx106("ezCurl",target);
+               if(hfxAMarked106("volley",this)) {hfxAUnmark106("volley",this);heroFxA106("ezVolley",target,{delay:.3});}
+               else heroFxA106("ezCurl",target);
                return true;
             case "1213_ult":
                // Every lane enemy takes the world-class strike; a second hit on one target is the follow-up shot.
-               if(hfxACount106("worldie",target)==0) heroFx106("ezWorldie",target,{delay:Math.min(4,hfxACount106("worldieCast",this))*.07});
-               else heroFx106("ezFinish",target,{delay:.5});
+               if(hfxACount106("worldie",target)==0) heroFxA106("ezWorldie",target,{delay:Math.min(4,hfxACount106("worldieCast",this))*.07});
+               else heroFxA106("ezFinish",target,{delay:.5});
                return true;
          }
          return false;
       }
       private function hfxAPulse106(family:int, kind:String, target:Avatar, extra:Object) : Boolean
       {
-         if(kind=="exposed" && family==1204) {heroFx106("blitzLock",target);return true;}
+         if(kind=="exposed" && family==1204) {heroFxA106("blitzLock",target);return true;}
          if(kind=="egg_ready" && family==1209 && extra && extra.lane!=undefined)
          {
             hfxAMark106("egg",this);
-            heroFx106("eggBoom",null,{lane:extra.lane,pos:extra.pos,delay:hfxAMarked106("parade",this) ? .45 : 0});
+            heroFxA106("eggBoom",null,{lane:extra.lane,pos:extra.pos,delay:hfxAMarked106("parade",this) ? .45 : 0});
             return true;
          }
          if(kind=="cleanse" && family==1214 && target)
          {
-            heroFx106("judgeBreak",target,{delay:.12});
+            heroFxA106("judgeBreak",target,{delay:.12});
             // "Objection sustained": the stripped buff turns into a shield on the weakest lane ally.
             var ally:Avatar=null;
             for each(var unit:Avatar in GameMap.currentMap.getAliveList(team))
                if(unit.line==line && unit.hp>0 && (!ally || unit.hp/unit.hpMax<ally.hp/ally.hpMax)) ally=unit;
-            if(ally) heroFx106("judgeTransfer",ally,{from:target,delay:.3});
+            if(ally) heroFxA106("judgeTransfer",ally,{from:target,delay:.3});
             return true;
          }
          if(kind=="ball")
@@ -5148,16 +5152,16 @@ package com.meng52.game.module.avatar
             // The holder passes back to Ezreal (one-two): mark it so his own echo of the pass stays silent.
             if(target && target!==this && target.s2Family()==1213 && target.skin2.ball===this)
             {
-               hfxAMark106("backpass",target);heroFx106("ezBackPass",target);return true;
+               hfxAMark106("backpass",target);heroFxA106("ezBackPass",target);return true;
             }
             if(family!=1213) return false;
             if(hfxAMarked106("backpass",this)) return true;
-            heroFx106(!target || target===this ? "ezJuggle" : "ezPass",target);
+            heroFxA106(!target || target===this ? "ezJuggle" : "ezPass",target);
             return true;
          }
          if(kind=="shot" && family==1213)
          {
-            hfxAMark106("volley",this);heroFx106("ezShotReady",this,{delay:.15});return true;
+            hfxAMark106("volley",this);heroFxA106("ezShotReady",this,{delay:.15});return true;
          }
          return false;
       }
@@ -5167,18 +5171,18 @@ package com.meng52.game.module.avatar
          switch(kind)
          {
             case "1228_ult":
-               heroFx106("sonaCast",target,{follow:true});
+               heroFxA106("sonaCast",target,{follow:true});
                hfxAEach106("sonaEncore",extra ? extra.allies : null,.05,.4);
                return true;
             case "1214_ult":
-               heroFx106("judgeCast",target,{follow:true});return true;
+               heroFxA106("judgeCast",target,{follow:true});return true;
             case "1209_ult":
                hfxAMark106("parade",this);
-               heroFx106("teemoParade",target,{follow:true});
+               heroFxA106("teemoParade",target,{follow:true});
                hfxAEach106("eggToss",extra ? extra.targets : null,.07,.05,3);
                return true;
             case "1204_ult":
-               heroFx106("blitzReboot",target,{follow:true});
+               heroFxA106("blitzReboot",target,{follow:true});
                hfxAEach106("blitzPurify",extra ? extra.allies : null,.04,.3);
                return true;
          }
@@ -5204,7 +5208,7 @@ package com.meng52.game.module.avatar
                // Two purify actions in a row: bloom once.
                if(hfxACount106("karmaPurify",this)==0)
                {
-                  heroFx106("karmaCast",this,{follow:true});
+                  heroFxA106("karmaCast",this,{follow:true});
                   hfxAEach106("karmaPurify",targets,.04,.15);
                }
                return true;
@@ -5213,7 +5217,7 @@ package com.meng52.game.module.avatar
                if(hfxACount106("karmaNova",this)==0) hfxAEach106("karmaNova",targets,.05,.4,8);
                else hfxAEach106("karmaNova2",targets,.05,.75,8);
                return true;
-            case "FX60_HEAL": heroFx106("karmaHeal",this,{delay:1.05});return true;
+            case "FX60_HEAL": heroFxA106("karmaHeal",this,{delay:1.05});return true;
          }
          return false;
       }
@@ -8053,6 +8057,10 @@ package com.meng52.game.module.avatar
             hfxBVolley106={cast:cast,serial:manualOwnerActionSerial,n:0};
          return hfxBVolley106.n++;
       }
+      private function heroFxB106(kind:String, target:Avatar = null, extra:Object = null) : void
+      {
+         heroFx106("b:"+kind,target,extra);
+      }
       private function heroFxClaimB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
       {
          var n:int;var unit:Avatar;var family:int;
@@ -8062,27 +8070,27 @@ package com.meng52.game.module.avatar
             {
                case "1215":
                   // The follow-up hits while the echo still names this target.
-                  heroFx106(skin2.sonic===target ? "lee_dash" : "lee_wave",target);
+                  heroFxB106(skin2.sonic===target ? "lee_dash" : "lee_wave",target);
                   return true;
                case "1215_ult":
-                  if(hfxBNext106()==0) heroFx106("lee_kick",target);
-                  else heroFx106("lee_crash",target,{delay:.3});
+                  if(hfxBNext106()==0) heroFxB106("lee_kick",target);
+                  else heroFxB106("lee_crash",target,{delay:.3});
                   return true;
                case "1203":
                   hfxBLast106=target;
-                  heroFx106("ryze_brand",target);
+                  heroFxB106("ryze_brand",target);
                   return true;
                case "1203_ult":
                   n=hfxBNext106();
-                  if(n==0) heroFx106("ryze_domain",target);
-                  heroFx106("ryze_hell",target,{delay:.25+n*.07});
+                  if(n==0) heroFxB106("ryze_domain",target);
+                  heroFxB106("ryze_hell",target,{delay:.25+n*.07});
                   return true;
                case "1211":
                   // Outside a cast, a Caitlyn strike is her trap biting.
-                  heroFx106(skin2.castSkill ? "cait_shot" : "cait_trap",target);
+                  heroFxB106(skin2.castSkill ? "cait_shot" : "cait_trap",target);
                   return true;
                case "1211_ult":
-                  heroFx106("cait_snipe",target);
+                  heroFxB106("cait_snipe",target);
                   return true;
                case "1206":
                case "1206_ult":
@@ -8092,10 +8100,10 @@ package com.meng52.game.module.avatar
                   n=hfxBNext106();
                   if(kind=="1206_ult")
                   {
-                     if(n==0) heroFx106("vayne_hunt",this);
-                     heroFx106("vayne_bolt_ult",target,{delay:.12+n*.16});
+                     if(n==0) heroFxB106("vayne_hunt",this);
+                     heroFxB106("vayne_bolt_ult",target,{delay:.12+n*.16});
                   }
-                  else heroFx106("vayne_bolt",target,{delay:n*.14});
+                  else heroFxB106("vayne_bolt",target,{delay:n*.14});
                   return true;
             }
             return false;
@@ -8112,28 +8120,28 @@ package com.meng52.game.module.avatar
                   delay=Math.max(0,int(hfxBVolley106.n)-1)*(ult ? .16 : .14)+(ult ? .12 : 0)+.18;
                }
                hfxBBurst106=target;
-               heroFx106("vayne_burst",target,{delay:delay});
+               heroFxB106("vayne_burst",target,{delay:delay});
                return true;
             }
             // The brand is already drawn by the strike; the persistent mark carries it.
             if(kind=="contract" && family==1203) return true;
-            if(kind=="growth" && family==1203) {heroFx106("ryze_growth",this);return true;}
-            if(kind=="wanted" && family==1211) {heroFx106("cait_wanted",target,{delay:.14});return true;}
+            if(kind=="growth" && family==1203) {heroFxB106("ryze_growth",this);return true;}
+            if(kind=="wanted" && family==1211) {heroFxB106("cait_wanted",target,{delay:.14});return true;}
             return false;
          }
          if(event=="heal" && kind=="1203" && hfxBLast106 && hfxBLast106.hp>0 && hfxBLast106!==this)
          {
-            heroFx106("ryze_leech",this,{from:hfxBLast106,delay:.3});
+            heroFxB106("ryze_leech",this,{from:hfxBLast106,delay:.3});
             return true;
          }
          if(event=="shield" && kind=="1215")
          {
-            heroFx106("lee_bell",target,{delay:.3});
+            heroFxB106("lee_bell",target,{delay:.3});
             return true;
          }
          if(event=="summon" && hfxBFamily106()=="A_1103")
          {
-            heroFx106("malz_summon",target);
+            heroFxB106("malz_summon",target);
             return true;
          }
          if(event=="native")
@@ -8141,27 +8149,27 @@ package com.meng52.game.module.avatar
             var tribe:String=hfxBFamily106();
             if(tribe=="A_1138")
             {
-               if(kind=="FX_S9002_SILENCE") {heroFx106("tahm_tongue",target);return true;}
-               if(kind=="FX_A_1138_MAGIC") {heroFx106("tahm_slam",target);return true;}
-               if(kind=="FX60_PURIFY") {heroFx106("tahm_gold",this);return true;}
+               if(kind=="FX_S9002_SILENCE") {heroFxB106("tahm_tongue",target);return true;}
+               if(kind=="FX_A_1138_MAGIC") {heroFxB106("tahm_slam",target);return true;}
+               if(kind=="FX60_PURIFY") {heroFxB106("tahm_gold",this);return true;}
                // Armour and taunt read as part of the golden hide.
                if(kind=="FX60_STRONG" || kind=="FX_S9150_TAUNT") return true;
             }
             else if(hfxBVoidling106())
             {
-               if(kind=="FX_S9160_POISON") {heroFx106("void_burn",target);return true;}
-               if(kind=="FX_S9140_POISON") {heroFx106("void_venom",target,{delay:.22});return true;}
+               if(kind=="FX_S9160_POISON") {heroFxB106("void_burn",target);return true;}
+               if(kind=="FX_S9140_POISON") {heroFxB106("void_venom",target,{delay:.22});return true;}
             }
             else if(tribe=="A_1103" && kind=="FX_S9160_POISON")
             {
-               heroFx106("malz_cast",this);
+               heroFxB106("malz_cast",this);
                n=0;
                if(extra && extra.targets) for each(unit in extra.targets)
                {
                   if(!unit || n>=6) continue;
-                  heroFx106("malz_flame",unit,{delay:.12+n*.06});++n;
+                  heroFxB106("malz_flame",unit,{delay:.12+n*.06});++n;
                }
-               else heroFx106("malz_flame",target,{delay:.12});
+               else heroFxB106("malz_flame",target,{delay:.12});
                return true;
             }
          }
@@ -8170,10 +8178,10 @@ package com.meng52.game.module.avatar
       // Generic looks for events no hero claimed (heal / shield / cleanse ...). Called after A, B and C.
       private function heroFxFallbackB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
       {
-         if(event=="heal") {heroFx106("fb_heal",target);return true;}
-         if(event=="shield") {heroFx106("fb_shield",target);return true;}
-         if(event=="pulse" && kind=="cleanse") {heroFx106("fb_cleanse",target);return true;}
-         if(event=="pulse" && kind=="guard") {heroFx106("fb_shield",target);return true;}
+         if(event=="heal") {heroFxB106("fb_heal",target);return true;}
+         if(event=="shield") {heroFxB106("fb_shield",target);return true;}
+         if(event=="pulse" && kind=="cleanse") {heroFxB106("fb_cleanse",target);return true;}
+         if(event=="pulse" && kind=="guard") {heroFxB106("fb_shield",target);return true;}
          return false;
       }
       // Persistent state art: return ids like ["b:heart"] for rows this group owns, else null.

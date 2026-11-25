@@ -203,6 +203,10 @@ def build_static_config(path):
  apply_shop_balance_105(document)
  from guild_exchange_105 import apply_guild_exchange
  apply_guild_exchange(document)
+ # After every overlay that copies skills (abyss tiers, skill books), so the
+ # copies carry the same native effects as the hero's own skill.
+ from native_fx_wiring_106 import apply_native_fx_wiring
+ apply_native_fx_wiring(document)
  from hero_passive_quality_105 import restrict_low_star_passives
  restrict_low_star_passives(document)
  # Last: mechanic names are matched against the final skill texts.

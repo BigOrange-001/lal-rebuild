@@ -26,6 +26,9 @@ function make(team,pos,{demon=false,leader=false,line=0}={}){
  u.mBloodSpr={setRage105:rate=>u.bars.push(rate)};
  u.sixNextPassive105=key=>u.shyvana&&key==='shyvana';
  u.getRange=()=>350;
+ u.getType=()=>u.unitType||1;
+ u.skinBondNumber104=(key,fallback=0)=>u.bondMechanics?.[key]??fallback;
+ u.getEquipmentBondRows104=()=>u.equipmentBonds||[];
  u.getDamage=()=>u.demonAttack105(int(u.ap*(1+(u.buffs.strong?u.buffs.strong.value:0))));
  u.shieldValue104=()=>u.buffs.shield?u.buffs.shield.value:0;
  u.refreshHp=()=>{};u.abilityFeedback=text=>u.feedback.push(text);
@@ -58,6 +61,21 @@ function fresh(count=1,allies=0){
  return {a,friends,en};
 }
 let cases=0;
+{
+ const {a,en}=fresh(3);
+ a.bondMechanics={demon_q_damage:1.3,demon_q_summon:2,demon_rage_gain:1.5,demon_q_curse:2};
+ a.equipmentBonds=[{mechanics:{demon_basic_ratio:2.35}}];
+ en[1].isManualSummonUnit=true;
+ assert.equal(a.demonBasicRatio105(a.demonPassive105()),2.35);
+ assert.ok(a.demonExecute105('demon_trynd_n',a.skill0));
+ assert.deepEqual(en.map(t=>100000-t.hp),[208,416,208]);
+ assert.deepEqual(en.map(t=>t.buffs.curse.round),[2,2,2]);
+ assert.equal(a.demonRage105,42.5);
+ for(let i=0;i<6;i++)a.demonHurtTaken105();
+ assert.equal(a.demonRage105,54.5);
+ a.demonGain105(100);assert.equal(a.demonRage105,100);
+ cases++;
+}
 {
  const {a,en}=fresh(1);
  a.avatarData.id=data.fiveAid;a.skillB=skill(data.fivePassive);a.demonStart105();

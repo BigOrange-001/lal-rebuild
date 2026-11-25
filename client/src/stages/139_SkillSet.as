@@ -1085,9 +1085,11 @@ package com.meng52.game.module.skill
             // Retire replaced units through the normal visual/death lifecycle.
             for each(expired in expiredUnits) expired.dead();
             var summonEffect:Object = DisplayTools.getAttrs(effect || "SUMMON_EFF");
+            if(("hfxCHook106" in avatar) && avatar.hfxCHook106("native",effect || "SUMMON_EFF",unit,{targets:[unit],lane:unit.line,pos:unit.pos})) summonEffect = null;
             if(summonEffect) { summonEffect.a1 = unit; summonEffect.par = GameMapLayer.gl.effectLayer; GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,summonEffect); }
             return false;
          }
+         if("hfxCHook106" in avatar) avatar.hfxCHook106("sequence",String(skillSetData.id)+"#"+index+"#"+kind,center,{units:selected});
          var modPresentation:Object = kind == "damage" && selected.length > 1 ? avatar.beginParallelVisualBatch() : null;
          try
          {
@@ -1387,7 +1389,7 @@ package com.meng52.game.module.skill
                   var hpHealAmount:int = Tools.toInt(avatar.hpMax * Number(_loc20_[1]));
                   for each(var hpHealTarget:Avatar in hpHealTargets)
                   {
-                     hpHealTarget.injured(hpHealAmount,1,DisplayTools.getAttrs(String(_loc20_[2])),4,avatar,false,avatar);
+                     hpHealTarget.injured(hpHealAmount,1,("hfxCHook106" in avatar) && avatar.hfxCHook106("native",String(_loc20_[2]),hpHealTarget,{targets:[hpHealTarget]}) ? null : DisplayTools.getAttrs(String(_loc20_[2])),4,avatar,false,avatar);
                   }
                   GameMap.actionDelay += 0.15 * hpHealTargets.length;
                   break;

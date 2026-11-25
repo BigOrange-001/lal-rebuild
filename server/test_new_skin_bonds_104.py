@@ -164,6 +164,26 @@ class NewSkinNativeStatsTests(unittest.TestCase):
             p,_=builder.profile(heroes,equipment=True)
             self.harness.compare(p)
 
+    def test_brothers_preserves_existing_xin_skill_variant_in_both_runtimes(self):
+        builder = NewSkinBondsTests()
+        builder.cfg = self.harness.document['cfg']
+        lineup = ['A_1009_6', 'A_1001_6', 'A_1007_6', 'A_1803_6', 'A_1012_6']
+        profile, ids = builder.profile(lineup)
+        roster = GameplayRosterEquipment(None, self.harness.document)
+        stacked = roster.battle_attributes(profile, ids[0])
+        self.assertEqual(set(stacked['bonds_104']), {'b001', 'demonblade_brothers_105'})
+        baseline = copy.deepcopy(profile)
+        baseline['team'][0][3] = None
+        original = roster.battle_attributes(baseline, ids[0])
+        self.assertEqual(original['bonds_104'], ['b001'])
+        self.assertNotEqual(original['skill']['skid'], builder.cfg['avatar'][lineup[0]]['pl'][10])
+        self.assertEqual(stacked['skill']['skid'], original['skill']['skid'])
+        self.assertEqual(stacked['ap'], int(round(original['ap'] * 1.2, 5)))
+        self.assertEqual(stacked['hp_max'], int(round(original['hp_max'] * 1.2, 5)))
+        native = self.harness.native(profile, builder.cfg)['units'][0]
+        self.assertEqual(native['skillId'], original['skill']['skid'])
+        self.assertEqual((native['ap'], native['hp']), (stacked['ap'], stacked['hp_max']))
+
     def test_native_bond_numbers_use_active_snapshot_and_owner_identity(self):
         definition=stat_tests.methods('137_Avatar.as',{'skinBondNumber104':'key,fallback=0'})['skinBondNumber104']
         rows=[b for b in self.harness.document['cfg']['system_simple']['bonds_104']

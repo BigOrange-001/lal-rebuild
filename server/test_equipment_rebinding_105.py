@@ -1,7 +1,7 @@
 import copy
 import json
 import unittest
-from collections import Counter
+from collections import defaultdict
 from pathlib import Path
 from unittest.mock import patch
 
@@ -29,15 +29,23 @@ class EquipmentRebindingTests(unittest.TestCase):
     def test_every_equipment_one_to_three_owners_and_user_assignments(self):
         c = self.cfg
         definitions = c['system_simple']['equipment_bonds_104']
-        counts = Counter(r['equipment'] for rows in definitions.values() for r in rows)
+        owners = defaultdict(set)
+        for aid, rows in definitions.items():
+            for row in rows:
+                owners[row['equipment']].add(aid.rsplit('_', 1)[0])
         gear = {e for e, v in c['equip'].items() if v.get('quality') in (5, 6) and v.get('type') != 6}
         self.assertEqual(len(gear), 99)
-        self.assertEqual(set(counts), gear)
-        self.assertTrue(all(1 <= count <= 3 for count in counts.values()))
+        self.assertEqual(set(owners), gear)
+        demonblade_items = {'E_1004_5', 'E_5001_5'}
+        self.assertEqual({eid for eid, families in owners.items() if 'A_1803' in families}, demonblade_items)
+        for eid, families in owners.items():
+            extra_owners = {'A_1803'} if eid in demonblade_items else set()
+            self.assertLessEqual(len(families - extra_owners), 3, eid)
         for row in load_plan()['pinned_assignments']:
             self.assertTrue(equipped_bonds(c, row['hero'], [row['equipment']]), row)
         for aid, rows in definitions.items():
-            ordinary = [r for r in rows if r['kind'] in ('ordinary', 'stats')]
+            affinity_kinds = ('mechanic', 'stats') if aid in ('A_1803_5', 'A_1803_6') else ('ordinary', 'stats')
+            ordinary = [r for r in rows if r['kind'] in affinity_kinds]
             self.assertEqual(len(ordinary), 2, aid)
             self.assertEqual(len({c['equip'][r['equipment']]['slot'] for r in ordinary}), 2, aid)
             self.assertEqual(len(rows), len({r['equipment'] for r in rows}), aid)
@@ -52,6 +60,9 @@ class EquipmentRebindingTests(unittest.TestCase):
                 self.assertEqual(row['kind'], old['kind'])
                 if row['kind'] == 'stats':
                     self.assertEqual(row['stats'], old['stats'])
+                    continue
+                if row['kind'] == 'mechanic':
+                    self.assertEqual(row['mechanics'], old['mechanics'])
                     continue
                 slot = {'normal': 10, 'captain': 11, 'passive': 13}.get(row.get('slot'), 10)
                 sources = {self.cfg['avatar'][aid]['pl'][slot]}

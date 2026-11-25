@@ -46,13 +46,11 @@ package com.meng52.game.ui.element
 
       private var m_quarterMarks104:Array = [];
 
-      private var m_team105:int = 1;
-
-      private var m_rageSpr105:Sprite;
-
       private var m_rageFill105:Sprite;
 
-      private var m_rage105:Number = -1;
+      private var m_rageSlot105:Rectangle;
+
+      private var m_rageRate105:Number = -1;
 
       private static const HEALTH_VALUES_KEY104:String = "lal_battle_health_values_104";
       private static const HEALTH_VALUES_EVENT104:String = "battle_health_values_changed_104";
@@ -86,7 +84,6 @@ package com.meng52.game.ui.element
       {
          super();
          this.touchable = false;
-         m_team105 = param1;
          if(!m_allSpr)
          {
             m_allSpr = new Sprite();
@@ -291,33 +288,42 @@ package com.meng52.game.ui.element
          refreshQuarterMarks104(capacity);
       }
 
-      // A third-width copy of the native HP slot, left-aligned under the HP bar.
       public function setRage105(rate:Number) : void
       {
          rate = isFinite(rate) ? Math.max(0,Math.min(1,rate)) : 0;
-         if(!m_rageSpr105)
+         if(m_rageRate105 == rate) return;
+         m_rageRate105 = rate;
+         if(!m_rageFill105)
          {
-            m_rageSpr105 = new Sprite();
-            m_rageSpr105.addChild(DisplayTools.newImg("aFrame" + m_team105));
-            m_rageFill105 = new Sprite();
-            // aHp3 is the white native fill; tint it so rage never reads as HP or shield.
+            var strip:Sprite = new Sprite();
+            var frame:Image = new Image(m_bottom.texture);
+            frame.pivotX = m_bottom.pivotX;
+            frame.pivotY = m_bottom.pivotY;
+            frame.x = m_bottom.x;
+            frame.y = m_bottom.y;
+            strip.addChild(frame);
+
+            // Use native bar artwork for the fill, tinted for rage.
             var fill:Image = DisplayTools.newImg("aHp3");
             fill.width = m_middle.width;
             fill.height = m_middle.height;
             fill.x = m_middle.x;
             fill.y = m_middle.y;
-            fill.color = 0xFF7A1A;
+            fill.color = 0xFF3030;
+            m_rageFill105 = new Sprite();
             m_rageFill105.addChild(fill);
-            m_rageSpr105.addChild(m_rageFill105);
-            m_rageSpr105.scaleX = 1 / 3;
-            m_rageSpr105.x = -Math.round(m_bottom.width / 3);
-            m_rageSpr105.y = Math.round(m_bottom.height) + 1;
-            m_allSpr.addChild(m_rageSpr105);
+            m_rageSlot105 = fill.getBounds(m_rageFill105);
+            strip.addChild(m_rageFill105);
+
+            // Match the native width. Ignore the frame texture's clear edge when stacking the bars.
+            var bounds:Rectangle = m_bottom.getBounds(m_allSpr);
+            var clearEdge:int = 3;
+            strip.scaleY = 0.4;
+            strip.y = bounds.bottom - clearEdge - (bounds.top + clearEdge) * strip.scaleY;
+            m_allSpr.addChild(strip);
          }
-         if(m_rage105 == rate) return;
-         m_rage105 = rate;
-         var slot:int = m_middle.width;
-         m_rageFill105.clipRect = new Rectangle(-Math.round(slot / 2),m_middle.y - m_middle.pivotY,Math.round(rate * slot),m_middle.height);
+         m_rageFill105.clipRect = new Rectangle(m_rageSlot105.x,m_rageSlot105.y,
+            Math.round(m_rageSlot105.width * rate),m_rageSlot105.height);
          m_rageFill105.visible = rate > 0;
          m_rageFill105.flatten();
       }

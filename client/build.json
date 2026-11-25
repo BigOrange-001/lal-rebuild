@@ -626,7 +626,7 @@
       "index": 104,
       "class": "com.meng52.game.ui.panel.PanelActivityExploration",
       "source": "client/src/stages/102_PanelActivityExploration.as",
-      "source_sha256": "06e6bbffbccdd52c8b511c7eded456b1db6203f235768cafd761aec7ab84a887",
+      "source_sha256": "1265dae502c2387f97584555d572255b4ce16f5f3abb0a9cb4f8d592137dc3a5",
       "compiler": "air-mxmlc"
     },
     {
@@ -837,13 +837,13 @@
       "index": 139,
       "source": "client/src/stages/178_ProgressBar.as",
       "class": "com.meng52.game.ui.element.ProgressBar",
-      "source_sha256": "668d184200d221a0153d2c6bf75dfcd68a92740232cf1a7506bbb18ff868d4fc"
+      "source_sha256": "15a5425fbca483cd5d1a36bec5d92cb213db2e75cf08bd3a9d3255162390777a"
     },
     {
       "index": 140,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "d3f0272f599454ee383d948fdbba9ad82df7b065973693ae37fa54e15f2f241b"
+      "source_sha256": "5220fd6b4560426dfad4ebfde678a01426427469174a5beb3945e06700a3721b"
     },
     {
       "index": 141,
@@ -855,7 +855,7 @@
       "index": 142,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "b6ca6fcfe97b59657a649b2195bf56eefd82ecafaa2141b2c7a51cbb2f8ae6db"
+      "source_sha256": "9e2c9f55f437b520d30c7e829b589c14dd9a3825ecfd0494f0f55bcd822b75ea"
     },
     {
       "index": 143,
@@ -1076,7 +1076,7 @@
       "index": 178,
       "source": "client/src/stages/177_GameMapLayer.as",
       "class": "com.meng52.game.ui.map.GameMapLayer",
-      "source_sha256": "b7f294b0adb0397fbb8b36f0ff1fadb702f609186e699e7d2fbef38f38e20e0c"
+      "source_sha256": "740bb4486ba3d80025746a399a82c628902dedab64ee5cb5e9170a093d236485"
     },
     {
       "index": 179,

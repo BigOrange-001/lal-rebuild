@@ -7,6 +7,7 @@ from demonblade_tryndamere_105 import (
     P_FURY_END_HEAL, P_FURY_LIMIT, P_FURY_RAGE, P_FURY_ROUNDS, P_FURY_ROUNDS_MEMBER, P_RAGE_BASIC, P_RAGE_CRIT,
     P_RAGE_DECAY, P_RAGE_HURT, P_RAGE_HURT_CAP, P_RAGE_SKILL, P_RAGE_SKILL_CAP, P_RAGE_START,
 )
+from new_skin_bonds_104 import mechanic_value
 from six_star_followup_battle_105 import percent_debuff
 
 RAGE_MAX = 100
@@ -38,12 +39,13 @@ class DemonTryndBattleMixin:
         demon = self.demon_state(unit)
         return demon['rage'] if demon else 0
 
-    def demon_gain(self, unit, amount):
+    def demon_gain(self, unit, amount, limit=RAGE_MAX):
         demon = self.demon_state(unit)
         if demon is None or unit.get('hp', 0) <= 0 or amount <= 0:
             return 0
         before = demon['rage']
-        demon['rage'] = min(RAGE_MAX, before + amount)
+        rate = mechanic_value(self._config, unit, 'demon_rage_gain', 1)
+        demon['rage'] = min(RAGE_MAX, before + min(limit, amount * rate))
         return demon['rage'] - before
 
     def demon_fury(self, unit):
@@ -70,7 +72,14 @@ class DemonTryndBattleMixin:
 
     def demon_basic_ratio(self, unit):
         passive = self.demon_passive(unit)
-        return passive[P_BASIC] if passive else None
+        if passive is None:
+            return None
+        from equipment_bonds_104 import equipped_bonds
+        for row in equipped_bonds(self._config, unit['aid'], unit.get('equipment_bonds_104', [])):
+            ratio = row.get('mechanics', {}).get('demon_basic_ratio')
+            if ratio is not None:
+                return ratio
+        return passive[P_BASIC]
 
     def demon_take_force_crit(self, unit):
         demon = self.demon_state(unit)
@@ -138,9 +147,10 @@ class DemonTryndBattleMixin:
     def demon_hurt(self, unit):
         demon = self.demon_state(unit)
         passive = self.demon_passive(unit)
-        if demon is None or demon['hurt'] >= passive[P_RAGE_HURT_CAP]:
+        if demon is None:
             return
-        gained = self.demon_gain(unit, min(passive[P_RAGE_HURT], passive[P_RAGE_HURT_CAP] - demon['hurt']))
+        cap = passive[P_RAGE_HURT_CAP] * mechanic_value(self._config, unit, 'demon_rage_gain', 1)
+        gained = self.demon_gain(unit, passive[P_RAGE_HURT], max(0, cap - demon['hurt']))
         demon['hurt'] += gained
 
     def demon_event(self, owner, event, source, target):
@@ -161,9 +171,10 @@ class DemonTryndBattleMixin:
                 continue
             captain = self.demon_captain(leader)
             lead = self.demon_state(leader)
-            if captain is None or lead is None or lead['aura'] >= captain[C_AURA_CAP]:
+            if captain is None or lead is None:
                 continue
-            lead['aura'] += self.demon_gain(leader, min(captain[C_AURA_RAGE], captain[C_AURA_CAP] - lead['aura']))
+            cap = captain[C_AURA_CAP] * mechanic_value(self._config, leader, 'demon_rage_gain', 1)
+            lead['aura'] += self.demon_gain(leader, captain[C_AURA_RAGE], max(0, cap - lead['aura']))
 
     def demon_captain(self, unit):
         for action in (unit.get('leader_skill') or {}).get('skills', []):
@@ -207,16 +218,23 @@ class DemonTryndBattleMixin:
                                   action[N_RADIUS], int(action[N_TARGETS]), order='nearest')
         gained = 0
         passive = self.demon_passive(owner)
+        cap = passive[P_RAGE_SKILL_CAP] * mechanic_value(self._config, owner, 'demon_rage_gain', 1) if passive else 0
+        damage = action[N_DAMAGE] * mechanic_value(self._config, owner, 'demon_q_damage', 1)
+        summon_rate = mechanic_value(self._config, owner, 'demon_q_summon', 1)
+        curse_rounds = mechanic_value(self._config, owner, 'demon_q_curse')
         with self.context(owner, 'active', skill=skill):
             for target in targets:
                 if owner['hp'] <= 0:
                     break
-                if not self.demon_hit(owner, target, action[N_DAMAGE], skill):
+                multiplier = summon_rate if self._buff(target, 'summon') or self._get_type(target) == 2 else 1
+                if not self.demon_hit(owner, target, damage * multiplier, skill):
                     continue
                 if target['hp'] > 0:
                     self.control(owner, target, 'sunder', 2, percent_debuff(action[N_SUNDER]))
-                if passive is not None and gained < passive[P_RAGE_SKILL_CAP]:
-                    gained += self.demon_gain(owner, min(passive[P_RAGE_SKILL], passive[P_RAGE_SKILL_CAP] - gained))
+                    if curse_rounds and target['hp'] > 0:
+                        self.control(owner, target, 'curse', curse_rounds)
+                if passive is not None and gained < cap:
+                    gained += self.demon_gain(owner, passive[P_RAGE_SKILL], cap - gained)
         if demon is not None:
             demon['force'] = True
         return True

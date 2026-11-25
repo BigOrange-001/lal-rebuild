@@ -46,7 +46,7 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         c = self.cfg
         h = c['avatar'][AID]
         self.assertEqual(h['pl'][:8], c['avatar']['A_1206_6']['pl'][:8])
-        self.assertEqual((h['res'], h['role'], h['hero_category_104'], h['tl'][2]), ('A_1028_6', '战士', 'skin', 1))
+        self.assertEqual((h['res'], h['role'], h['hero_category_104'], h['tl'][2]), ('MOD_DEMONBLADE_6', '战士', 'skin', 1))
         self.assertEqual(h['pl'][9], 350)
         self.assertEqual(h['pl'][10:14], [NORMAL, CAPTAIN, h['pl'][12], PASSIVE])
         self.assertEqual(c['skill'][NORMAL]['pl'][:2], [0, 1])
@@ -64,7 +64,7 @@ class DemonbladeTryndamereTests(unittest.TestCase):
 
     def test_five_star_keeps_rage_without_endless_rage_or_other_passive_bonuses(self):
         hero = self.cfg['avatar'][FIVE_STAR_AID]
-        self.assertEqual(hero['res'], self.cfg['avatar']['A_1028_5']['res'])
+        self.assertEqual(hero['res'], 'MOD_DEMONBLADE_5')
         self.assertEqual(hero['pl'][:8], self.cfg['avatar']['A_1206_5']['pl'][:8])
         passive = self.cfg['skill'][hero['pl'][13]]
         self.assertEqual([note[0] for note in passive['tipNotes105']], ['怒气'])
@@ -80,6 +80,36 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         b._injured(owner, 200000, 1, source=enemies[0])
         self.assertLessEqual(owner['hp'], 0)
         self.assertFalse(b.demon_fury(owner))
+
+    def test_bonds_equipment_and_rage_cap(self):
+        from bonds_104 import active_bonds, apply_stats
+        from equipment_bonds_104 import equipped_bonds, apply_equipment_stats
+        allies = [AID, 'A_1009_6', 'A_1012_6', 'A_1202_6', 'A_1203_6']
+        active = active_bonds(self.cfg, AID, allies)
+        self.assertTrue({'demonblade_brothers_105', 'demonblade_ashe_105', 'demonblade_ryze_105'}
+                        <= {row['id'] for row in active})
+        for aid in allies[1:3]:
+            rows = [row for row in active_bonds(self.cfg, aid, allies) if row['id'] == 'demonblade_brothers_105']
+            stats = {'ap': 100, 'hp': 100}
+            apply_stats(stats, aid, rows)
+            self.assertEqual(stats, {'ap': 120, 'hp': 120})
+        b, o, _, en = self.battle(3)
+        o['bonds_104'] = [r['id'] for r in active]
+        o['equipment_bonds_104'] = ['E_1004_5', 'E_5001_5']
+        self.assertEqual(b.demon_basic_ratio(o), 2.35)
+        stats = {'ap': 100, 'hp': 100}
+        apply_equipment_stats(stats, equipped_bonds(self.cfg, AID, o['equipment_bonds_104']))
+        self.assertEqual(stats, {'ap': 114, 'hp': 114})
+        b._add_buff(en[1], 'summon', 4, source=en[0])
+        self.assertTrue(self.cast(b, o))
+        self.assertEqual([100000-u['hp'] for u in en], [208, 416, 208])
+        self.assertTrue(all(b._buff(u, 'curse').round == 2 for u in en))
+        self.assertEqual(b.demon_rage(o), 42.5)
+        for _ in range(6):
+            b.demon_hurt(o)
+        self.assertEqual(b.demon_rage(o), 54.5)
+        b.demon_gain(o, 100)
+        self.assertEqual(b.demon_rage(o), 100)
 
     def test_normal_dashes_to_front_hits_three_sunders_and_primes_crit(self):
         b, o, _, en = self.battle(5)

@@ -1,0 +1,69 @@
+{
+  "digest": "6de221cda4b5b2ce10c056cb24f96aeba1dccbe2659bc20dac81fe07022b28fe",
+  "assets": [
+    {
+      "alias": "MOD_DEMONBLADE_5",
+      "kind": "image",
+      "path": "portraits/A_1803_5.png",
+      "sha256": "97557acba667404f28c1b98160799c0a852001c833e491e1e9f5dac6115ed67a",
+      "bytes": 149089,
+      "width": 500,
+      "height": 275,
+      "role": "portrait",
+      "packageId": "builtin.demonblade-tryndamere-105",
+      "version": "1.0.5",
+      "contentDigest": "6de221cda4b5b2ce10c056cb24f96aeba1dccbe2659bc20dac81fe07022b28fe"
+    },
+    {
+      "alias": "MOD_DEMONBLADE_5_icon0000",
+      "kind": "image",
+      "path": "cards/A_1803_5.png",
+      "sha256": "15c557c84a97b5b5794649eda70f6bd14b9e247f880c093357bda8b3fda96218",
+      "bytes": 28910,
+      "width": 160,
+      "height": 160,
+      "role": "icon",
+      "packageId": "builtin.demonblade-tryndamere-105",
+      "version": "1.0.5",
+      "cardFrame": [
+        24,
+        16,
+        112,
+        128
+      ],
+      "contentDigest": "6de221cda4b5b2ce10c056cb24f96aeba1dccbe2659bc20dac81fe07022b28fe"
+    },
+    {
+      "alias": "MOD_DEMONBLADE_6",
+      "kind": "image",
+      "path": "portraits/A_1803_6.png",
+      "sha256": "c99d495a0b068d5ac723cc2b2906afd849a9b8250b95afb72e0297d9d98c1526",
+      "bytes": 168480,
+      "width": 600,
+      "height": 300,
+      "role": "portrait",
+      "packageId": "builtin.demonblade-tryndamere-105",
+      "version": "1.0.5",
+      "contentDigest": "6de221cda4b5b2ce10c056cb24f96aeba1dccbe2659bc20dac81fe07022b28fe"
+    },
+    {
+      "alias": "MOD_DEMONBLADE_6_icon0000",
+      "kind": "image",
+      "path": "cards/A_1803_6.png",
+      "sha256": "1fa5a6325a55da8af02d1914d3376cc4ea7b64cec26740e1d98f5d2d52fe8090",
+      "bytes": 31364,
+      "width": 160,
+      "height": 160,
+      "role": "icon",
+      "packageId": "builtin.demonblade-tryndamere-105",
+      "version": "1.0.5",
+      "cardFrame": [
+        24,
+        16,
+        112,
+        128
+      ],
+      "contentDigest": "6de221cda4b5b2ce10c056cb24f96aeba1dccbe2659bc20dac81fe07022b28fe"
+    }
+  ]
+}

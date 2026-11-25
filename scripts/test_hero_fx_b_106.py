@@ -138,6 +138,32 @@ class HeroFxGroupBTests(unittest.TestCase):
         # The extra hook is exactly one line and only presents.
         self.assertEqual(avatar.count('heroFxClaim106("summon"'), 1)
 
+    def test_scoped_aliases_keep_their_group_b_families(self):
+        from test_vital_bar_104 import method
+
+        avatar = 'client/src/stages/137_Avatar.as'
+        family = method(avatar, 'hfxBFamily106')
+        voidling = method(avatar, 'hfxBVoidling106')
+        base_id = method('client/src/stages/001_GlobalData.as', 'baseModHeroId')
+        script = f'const family = {family}, voidling = {voidling}, baseId = {base_id};' + """
+const assert = require('assert');
+const GlobalData = {
+    baseModHeroId: baseId,
+    $modRuntime: {aliasBaseIds: { A_2904990_6: 'A_1138_6', A_2904991_6: 'A_1103_6' }}
+};
+const tahm = {avatarData: {id: 'A_2904990_6'}, hfxBFamily106: family};
+const malzahar = {avatarData: {id: 'A_2904991_6'}, hfxBFamily106: family};
+const summon = {isManualSummonUnit: true, statisticsOwner104: malzahar};
+assert.equal(tahm.hfxBFamily106(), 'A_1138');
+assert.equal(malzahar.hfxBFamily106(), 'A_1103');
+assert.equal(family.call({avatarData: {id: 'A_1103_6'}}), 'A_1103');
+assert.equal(Boolean(voidling.call(summon)), true);
+summon.statisticsOwner104 = tahm;
+assert.equal(Boolean(voidling.call(summon)), false);
+"""
+        run = subprocess.run(['node'], input=script, text=True, encoding='utf-8', capture_output=True, cwd=ROOT)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+
     def test_claims_name_only_kinds_that_exist(self):
         code = GROUP.read_text('utf-8')
         claims = code[code.index(PURE_END):]

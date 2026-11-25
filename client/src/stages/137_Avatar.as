@@ -8043,7 +8043,7 @@ package com.meng52.game.module.avatar
 
       private function hfxBFamily106() : String
       {
-         return avatarData ? String(avatarData.id).split("_").slice(0,2).join("_") : "";
+         return avatarData ? GlobalData.baseModHeroId(String(avatarData.id)).split("_").slice(0,2).join("_") : "";
       }
       private function hfxBVoidling106() : Boolean
       {

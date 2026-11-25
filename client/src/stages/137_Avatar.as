@@ -4589,6 +4589,367 @@ package com.meng52.game.module.avatar
 
       // END DEMONBLADE TRYNDAMERE 105
 
+      // BEGIN HERO CODE FX 106
+      // BEGIN HERO FX CORE 106
+      // Code-painted hero skill effects. Three group files plug into this core:
+      // hero_fx_a_106 / hero_fx_b_106 / hero_fx_c_106, each owning its own heroes.
+      // A kind is "<group>:<name>" (e.g. "a:snipe"); a texture id is "<group>:<name>" too.
+      // Presentation only: nothing here reads gameplay RNG or changes combat state.
+      private static var hfxTextures106:Object = {};
+      private static var hfxBitmaps106:Object = {};
+      private static var hfxLayer106:Sprite;
+      private static var hfxMap106:Object;
+      private static var hfxLive106:Array = [];
+      private static var hfxScratch106:Array = [];
+      private static var hfxSeed106:int = 0;
+      // Readability guard: at most this many effects alive, each at most this many sprites.
+      private static const HFX_MAX_LIVE106:int = 28;
+      private static const HFX_MAX_SPRITES106:int = 72;
+
+      // Events:
+      //   "strike"  kind = skin family ("1206") or "<family>_ult"; replaces the atlas strike.
+      //   "pulse"   kind = fxPulse104 kind (rings, guard, exposed, ball, shot, egg_ready...);
+      //             extra = {lane,pos} for ground pulses. Replaces the atlas pulse.
+      //   "heal" / "shield"  kind = String(s2Family()); target = recipient. Nothing to replace.
+      //   "native"  kind = native effect name passed to attackAimList; target = first target;
+      //             extra = {targets:Vector.<Avatar>}. Claiming it removes the native visuals
+      //             (pre/bullet/hit) but keeps their combat flags.
+      // A group claims by drawing (heroFx106) and returning true. Returning true without
+      // drawing anything is a valid way to silence an unfitting placeholder.
+      private function heroFxClaim106(event:String, kind:String, target:Avatar = null, extra:Object = null) : Boolean
+      {
+         if(!kind) return false;
+         if(heroFxClaimA106(event,kind,target,extra)) return true;
+         if(heroFxClaimB106(event,kind,target,extra)) return true;
+         if(heroFxClaimC106(event,kind,target,extra)) return true;
+         // Shared looks (generic heal / shield / cleanse...) answer only what no hero claimed.
+         return heroFxFallbackB106(event,kind,target,extra);
+      }
+      // Play a kind from this unit toward target.
+      // extra: delay (s, added to GameMap.actionDelay), lane+pos (ground target point),
+      //        follow (track the caster instead of the target), from (another visual source).
+      private function heroFx106(kind:String, target:Avatar = null, extra:Object = null) : void
+      {
+         if(GameMapLayer.isFastest || !GameMapLayer.gl || !GameMap.currentMap || !heroFxLife106(kind)) return;
+         var delay:Number=GameMap.actionDelay+(extra && extra.delay ? Number(extra.delay) : 0);
+         var source:Avatar=extra && extra.from is Avatar ? extra.from as Avatar : this;
+         GameMapLayer.gl.delayCall(heroFxStart106,Math.max(0,delay),kind,source,target || this,extra,GameMap.currentMap);
+      }
+      // Stop a looping kind (life < 0) on this unit, on the visual timeline.
+      private function heroFxStop106(kind:String) : void
+      {
+         if(!GameMapLayer.gl || !GameMap.currentMap) return;
+         GameMapLayer.gl.delayCall(heroFxEnd106,GameMap.actionDelay,kind,this,GameMap.currentMap);
+      }
+      private static function heroFxGroup106(id:String) : String
+      {
+         return id && id.length>2 && id.charAt(1)==":" ? id.charAt(0) : "";
+      }
+      public static function heroFxLife106(kind:String) : Number
+      {
+         var group:String=heroFxGroup106(kind);var local:String=kind ? kind.substr(2) : "";
+         if(group=="a") return heroFxLifeA106(local);
+         if(group=="b") return heroFxLifeB106(local);
+         if(group=="c") return heroFxLifeC106(local);
+         return 0;
+      }
+      public static function heroFxSprites106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+         var group:String=heroFxGroup106(kind);var local:String=kind.substr(2);var first:int=out.length;
+         if(group=="a") heroFxSpritesA106(local,t,sx,sy,tx,ty,seed,out);
+         else if(group=="b") heroFxSpritesB106(local,t,sx,sy,tx,ty,seed,out);
+         else if(group=="c") heroFxSpritesC106(local,t,sx,sy,tx,ty,seed,out);
+         if(out.length>first+HFX_MAX_SPRITES106) out.length=first+HFX_MAX_SPRITES106;
+         for(var i:int=first;i<out.length;i++) out[i].k=group+":"+out[i].k;
+      }
+      public static function heroFxPaint106(id:String) : flash.display.BitmapData
+      {
+         var group:String=heroFxGroup106(id);var local:String=id.substr(2);
+         if(group=="a") return heroFxPaintA106(local);
+         if(group=="b") return heroFxPaintB106(local);
+         if(group=="c") return heroFxPaintC106(local);
+         return null;
+      }
+      private static function heroFxTexture106(id:String) : starling.textures.Texture
+      {
+         var texture:starling.textures.Texture=hfxTextures106[id];
+         if(texture || hfxBitmaps106[id]===false) return texture;
+         var bitmap:flash.display.BitmapData=heroFxPaint106(id);
+         if(!bitmap) {hfxBitmaps106[id]=false;trace("Hero FX 106: no painter for "+id);return null;}
+         texture=starling.textures.Texture.fromBitmapData(bitmap,false,false);
+         texture.root.onRestore=function():void {texture.root.uploadBitmapData(bitmap);};
+         hfxTextures106[id]=texture;hfxBitmaps106[id]=bitmap;
+         return texture;
+      }
+      // Persistent state art for fxPersistent104 rows: ids "<group>:<name>" sized like the atlas cells.
+      private static function heroFxImage106(id:String, scale:Number, alpha:Number) : DisplayObject
+      {
+         var texture:starling.textures.Texture=heroFxTexture106(id);
+         if(!texture) return null;
+         var art:Image=new Image(texture);art.pivotX=texture.width/2;art.pivotY=texture.height/2;
+         art.touchable=false;art.scaleX=art.scaleY=96/Math.max(texture.width,texture.height)*scale;art.alpha=alpha;
+         return art;
+      }
+      private static function heroFxState106(row:Object) : Array
+      {
+         var ids:Array=heroFxStateA106(row);
+         if(!ids) ids=heroFxStateB106(row);
+         if(!ids) ids=heroFxStateC106(row);
+         return ids;
+      }
+      private static function heroFxAnimate106(art:DisplayObject, row:Object, index:int, seed:int) : Boolean
+      {
+         return heroFxAnimateA106(art,row,index,fxTime104,seed) || heroFxAnimateB106(art,row,index,fxTime104,seed) || heroFxAnimateC106(art,row,index,fxTime104,seed);
+      }
+      public static function heroFxClear106() : void
+      {
+         if(hfxLayer106) hfxLayer106.removeFromParent(true);
+         hfxLayer106=null;hfxMap106=null;hfxLive106=[];
+      }
+      private static function heroFxReady106() : Boolean
+      {
+         var layer:GameMapLayer=GameMapLayer.gl;
+         if(!layer || !GameMap.currentMap || GameMapLayer.isFastest) return false;
+         if(hfxMap106!==GameMap.currentMap || !hfxLayer106 || !hfxLayer106.parent)
+         {
+            heroFxClear106();
+            hfxMap106=GameMap.currentMap;
+            hfxLayer106=new Sprite();hfxLayer106.touchable=false;hfxLayer106.name="heroCodeEffects106";
+            layer.effectLayer.addChild(hfxLayer106);
+         }
+         return true;
+      }
+      private static function heroFxOrigin106(unit:Avatar) : Point
+      {
+         if(!unit || !unit.m_fightRes || !unit.m_fightRes.parent || !hfxLayer106) return null;
+         return hfxLayer106.globalToLocal(unit.m_fightRes.localToGlobal(new Point(0,0)));
+      }
+      private static function heroFxGround106(lane:int, position:Number) : Point
+      {
+         if(!GameMapLayer.gl || !hfxLayer106 || lane<0) return null;
+         return hfxLayer106.globalToLocal(GameMapLayer.gl.getLineSpr(lane).localToGlobal(new Point(0,GameMapConfig.posToPixel(position))));
+      }
+      private static function heroFxStart106(kind:String, source:Avatar, target:Avatar, extra:Object, battle:Object) : void
+      {
+         if(battle!==GameMap.currentMap || !heroFxReady106()) return;
+         var looping:Boolean=heroFxLife106(kind)<0;
+         if(looping)
+            for each(var live:Object in hfxLive106)
+               if(live.kind==kind && live.source===source && !live.stop) return;
+         var ground:Point=extra && extra.lane!=undefined && extra.pos!=undefined ? heroFxGround106(int(extra.lane),Number(extra.pos)) : null;
+         var from:Point=heroFxOrigin106(source);var to:Point=ground || heroFxOrigin106(target);
+         if(!from) from=to;
+         if(!from || !to) return;
+         var holder:Sprite=new Sprite();holder.touchable=false;hfxLayer106.addChild(holder);
+         hfxLive106.push({kind:kind,age:0,source:source,target:target,sx:from.x,sy:from.y,tx:to.x,ty:to.y,ground:ground!=null,
+            seed:++hfxSeed106,holder:holder,images:[],follow:looping || (extra && extra.follow),fade:1,stop:false});
+         if(hfxLive106.length>HFX_MAX_LIVE106) heroFxDrop106(0);
+      }
+      private static function heroFxEnd106(kind:String, source:Avatar, battle:Object) : void
+      {
+         if(battle!==GameMap.currentMap) return;
+         for each(var live:Object in hfxLive106)
+            if(live.kind==kind && live.source===source) live.stop=true;
+      }
+      private static function heroFxDrop106(index:int) : void
+      {
+         Sprite(hfxLive106[index].holder).removeFromParent(true);
+         hfxLive106.splice(index,1);
+      }
+      public static function heroFxAdvance106(elapsed:Number) : void
+      {
+         if(!hfxLive106.length) return;
+         if(!heroFxReady106()) {heroFxClear106();return;}
+         elapsed=Math.max(0,elapsed);
+         for(var i:int=hfxLive106.length-1;i>=0;i--)
+         {
+            var fx:Object=hfxLive106[i];
+            fx.age+=elapsed;
+            var source:Avatar=fx.source as Avatar;
+            var life:Number=heroFxLife106(fx.kind);
+            if(life<0 && (!source || source.hp<=0)) fx.stop=true;
+            if(fx.stop) fx.fade-=elapsed/.35;
+            if(fx.fade<=0 || (life>=0 && fx.age>=life)) {heroFxDrop106(i);continue;}
+            if(fx.follow)
+            {
+               var at:Point=heroFxOrigin106(source);
+               if(at) {fx.sx=at.x;fx.sy=at.y;}
+            }
+            else if(!fx.ground)
+            {
+               var to:Point=heroFxOrigin106(fx.target as Avatar);
+               if(to) {fx.tx=to.x;fx.ty=to.y;}
+            }
+            hfxScratch106.length=0;
+            heroFxSprites106(fx.kind,fx.age,fx.sx,fx.sy,fx.tx,fx.ty,fx.seed,hfxScratch106);
+            var images:Array=fx.images;var n:int;var shown:int=0;
+            for(n=0;n<hfxScratch106.length;n++)
+            {
+               var part:Object=hfxScratch106[n];
+               var texture:starling.textures.Texture=heroFxTexture106(part.k);
+               if(!texture) continue;
+               var ground:Sprite=images[shown];var image:Image;
+               if(!ground)
+               {
+                  ground=new Sprite();ground.touchable=false;image=new Image(texture);image.touchable=false;
+                  ground.addChild(image);Sprite(fx.holder).addChild(ground);images.push(ground);
+               }
+               else
+               {
+                  image=Image(ground.getChildAt(0));
+                  if(image.texture!==texture) {image.texture=texture;image.readjustSize();}
+               }
+               image.pivotX=texture.width/2;image.pivotY=texture.height/2;
+               image.scaleX=part.sx;image.scaleY=part.sy;image.rotation=part.r;
+               image.alpha=Math.max(0,Math.min(1,part.a*fx.fade));image.color=part.c;
+               image.blendMode=part.add ? "add" : "normal";
+               ground.x=part.x;ground.y=part.y;ground.scaleY=part.fy;ground.visible=true;
+               ++shown;
+            }
+            for(n=shown;n<images.length;n++) Sprite(images[n]).visible=false;
+         }
+      }
+      // BEGIN HERO FX HELPERS 106
+      // Pure helpers shared by the group timelines (no flash/starling types, Node-testable).
+      public static function hfxRand106(seed:int, index:int) : Number
+      {
+         var v:Number=Math.sin(seed*12.9898+index*78.233)*43758.5453;
+         return v-Math.floor(v);
+      }
+      public static function hfxClamp106(p:Number) : Number
+      {
+         return p<0 ? 0 : p>1 ? 1 : p;
+      }
+      public static function hfxOut106(p:Number) : Number
+      {
+         p=hfxClamp106(p);
+         return 1-(1-p)*(1-p)*(1-p);
+      }
+      public static function hfxInOut106(p:Number) : Number
+      {
+         p=hfxClamp106(p);
+         return p<.5 ? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+      }
+      public static function hfxBack106(p:Number) : Number
+      {
+         p=hfxClamp106(p)-1;
+         return 1+p*p*(2.7*p+1.7);
+      }
+      // Quadratic Bezier coordinate and its derivative, for arcs and heading.
+      public static function hfxQuad106(a:Number, b:Number, c:Number, t:Number) : Number
+      {
+         return (1-t)*(1-t)*a+2*(1-t)*t*b+t*t*c;
+      }
+      public static function hfxQuadSlope106(a:Number, b:Number, c:Number, t:Number) : Number
+      {
+         return 2*(1-t)*(b-a)+2*t*(c-b);
+      }
+      // One sprite: texture k (group-local name), position, scale, rotation, alpha, tint,
+      // additive blend, and fy (vertical squash applied after rotation, to lay it on the ground).
+      public static function hfxPut106(out:Array, k:String, x:Number, y:Number, sx:Number, sy:Number, r:Number, a:Number, c:uint = 0xFFFFFF, add:Boolean = true, fy:Number = 1) : void
+      {
+         if(!(a>.01) || Math.abs(sx)<.001 || Math.abs(sy)<.001) return;
+         out.push({k:k,x:x,y:y,sx:sx,sy:sy,r:r,a:Math.min(1,a),c:c,add:add,fy:fy});
+      }
+      // END HERO FX HELPERS 106
+      // END HERO FX CORE 106
+      // BEGIN HERO FX A 106
+      // 组 A：娑娜 1228、崔斯特(法官) 1214、劫+影分身(nine)、提莫 1209 大招、布里茨 1204、伊泽瑞尔(足球) 1213、卡尔玛(nine)
+      // Contract (see hero_fx_core_106.aspart): kinds and texture ids are local names here;
+      // the core prefixes them with "a:". Private helpers in this file must be named hfxA...106.
+      private function heroFxClaimA106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
+      {
+         return false;
+      }
+      public static function heroFxPaintA106(id:String) : flash.display.BitmapData
+      {
+         return null;
+      }
+      public static function heroFxLifeA106(kind:String) : Number
+      {
+         return 0;
+      }
+      public static function heroFxSpritesA106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+      }
+      // Persistent state art: return ids like ["a:heart"] for rows this group owns, else null.
+      private static function heroFxStateA106(row:Object) : Array
+      {
+         return null;
+      }
+      // Animate one persistent part; return true when this group handled the row.
+      private static function heroFxAnimateA106(art:DisplayObject, row:Object, index:int, t:Number, seed:int) : Boolean
+      {
+         return false;
+      }
+      // END HERO FX A 106
+      // BEGIN HERO FX B 106
+      // 组 B：塔姆(nine)、马尔扎哈+虚灵(nine)、李青 1215、男爵瑞兹 1203、通用治疗/护盾/净化(兜底)、凯特琳 1211、薇恩 1206
+      // Contract (see hero_fx_core_106.aspart): kinds and texture ids are local names here;
+      // the core prefixes them with "b:". Private helpers in this file must be named hfxB...106.
+      private function heroFxClaimB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
+      {
+         return false;
+      }
+      // Generic looks for events no hero claimed (heal / shield / cleanse ...). Called after A, B and C.
+      private function heroFxFallbackB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
+      {
+         return false;
+      }
+      public static function heroFxPaintB106(id:String) : flash.display.BitmapData
+      {
+         return null;
+      }
+      public static function heroFxLifeB106(kind:String) : Number
+      {
+         return 0;
+      }
+      public static function heroFxSpritesB106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+      }
+      // Persistent state art: return ids like ["b:heart"] for rows this group owns, else null.
+      private static function heroFxStateB106(row:Object) : Array
+      {
+         return null;
+      }
+      // Animate one persistent part; return true when this group handled the row.
+      private static function heroFxAnimateB106(art:DisplayObject, row:Object, index:int, t:Number, seed:int) : Boolean
+      {
+         return false;
+      }
+      // END HERO FX B 106
+      // BEGIN HERO FX C 106
+      // 组 C：暗影薇恩+分身(nine)、白娘子 1227+青蛇/白蛇(nine)、超人提莫+蘑菇(nine)、卡萨丁(nine)、亚索 1219 大招、粽子少女+粽子(zongzi)、动感伊泽(nine)
+      // Contract (see hero_fx_core_106.aspart): kinds and texture ids are local names here;
+      // the core prefixes them with "c:". Private helpers in this file must be named hfxC...106.
+      private function heroFxClaimC106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
+      {
+         return false;
+      }
+      public static function heroFxPaintC106(id:String) : flash.display.BitmapData
+      {
+         return null;
+      }
+      public static function heroFxLifeC106(kind:String) : Number
+      {
+         return 0;
+      }
+      public static function heroFxSpritesC106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+      }
+      // Persistent state art: return ids like ["c:heart"] for rows this group owns, else null.
+      private static function heroFxStateC106(row:Object) : Array
+      {
+         return null;
+      }
+      // Animate one persistent part; return true when this group handled the row.
+      private static function heroFxAnimateC106(art:DisplayObject, row:Object, index:int, t:Number, seed:int) : Boolean
+      {
+         return false;
+      }
+      // END HERO FX C 106
+      // END HERO CODE FX 106
+
       public function abilityCanCast(kind:String, distance:int, sourceSkill:* = null) : Boolean
       {
          if(hp <= 0 || !GameMap.currentMap) return false;
@@ -4777,11 +5138,11 @@ package com.meng52.game.module.avatar
       }
       private function s2Heal(target:Avatar, coefficient:Number) : void
       {
-         if(target && target.hp > 0 && hp > 0) target.injured(Tools.toInt(getDamage()*coefficient),1,null,4,this,false,this);
+         if(target && target.hp > 0 && hp > 0) {heroFxClaim106("heal",String(s2Family()),target);target.injured(Tools.toInt(getDamage()*coefficient),1,null,4,this,false,this);}
       }
       private function s2Shield(target:Avatar, coefficient:Number, duration:int = 2) : void
       {
-         if(target && target.hp > 0 && hp > 0) target.addBuff("shield",duration,Tools.toInt(getDamage()*coefficient),0,-1,this);
+         if(target && target.hp > 0 && hp > 0) {heroFxClaim106("shield",String(s2Family()),target);target.addBuff("shield",duration,Tools.toInt(getDamage()*coefficient),0,-1,this);}
       }
       private function s2Hit(target:Avatar, coefficient:Number, kind:int = 2, rings:Boolean = false) : Boolean
       {
@@ -5462,6 +5823,7 @@ package com.meng52.game.module.avatar
       private static function fxNative104(id:String, scale:Number = 1, alpha:Number = 1) : DisplayObject
       {
          var index:int=int(id.substr(1));var sheet:int=int(index/16);var cell:int=index%16;
+         if(id.charAt(1)==":")return heroFxImage106(id,scale,alpha);
          if(id.charAt(0)!="c" || index<0 || index>=32 || !fxAtlases104[sheet])return null;
          var texture:starling.textures.Texture=fxTextures104[id];
          if(!texture)
@@ -5542,6 +5904,7 @@ package com.meng52.game.module.avatar
       {
          yasuoAdvanceEffects104(elapsed);
          demonFxAdvance105(elapsed);
+         heroFxAdvance106(elapsed);
          if(GameMapLayer.isFastest) {if(fxLayer104)clearEffects104();return;}
          if(!fxEnsure104()) {clearEffects104();return;}
          fxTime104+=elapsed;fxPoll104+=elapsed;if(fxPoll104<.04)return;fxPoll104=0;
@@ -5551,7 +5914,7 @@ package com.meng52.game.module.avatar
             if(!unit.m_fightRes || !unit.m_fightRes.parent)continue;
             for each(row in unit.fxState104())
             {
-               var ids:Array=fxPersistent104(row);if(!ids.length)continue;
+               var ids:Array=heroFxState106(row) || fxPersistent104(row);if(!ids.length)continue;
                var origin:Point=row.ground ? fxPosition104(row.lane,row.pos) : fxOrigin104(row.target);if(!origin)continue;
                key=unit.abilityIndex+":"+row.key;live[key]=true;node=fxNodes104[key];
                var signature:String=ids.join("|");
@@ -5594,6 +5957,7 @@ package com.meng52.game.module.avatar
       }
       private static function fxAnimateState104(art:DisplayObject, row:Object, index:int, seed:int) : void
       {
+         if(heroFxAnimate106(art,row,index,seed))return;
          var base:Array=art.name.split(",");var t:Number=fxTime104;var phase:Number=t*2+index*2.094+seed*.3;
          art.scaleX=Number(base[0])*(1+.06*Math.sin(phase));art.scaleY=Number(base[1])*(1+.08*Math.cos(phase));
          if(["crows","dance","phase","charge","windmark","sonic","airborne"].indexOf(row.kind)>=0)
@@ -5615,6 +5979,7 @@ package com.meng52.game.module.avatar
       private function fxPulse104(kind:String, target:Avatar = null, lane:int = -1, position:Number = 0) : void
       {
          if(GameMapLayer.isFastest)return;
+         if(heroFxClaim106("pulse",kind,target || this,lane>=0 ? {lane:lane,pos:position} : null))return;
          if(!fxEnsure104())return;
          var victim:Avatar=target || this;var profile:Array=fxProfile104(kind);var ground:Point=lane>=0 ? fxPosition104(lane,position) : null;
          for each(var piece:Object in profile)
@@ -5623,6 +5988,7 @@ package com.meng52.game.module.avatar
       private function fxStrike104(target:Avatar) : void
       {
          var kind:String=String(s2Family());
+         if(target && heroFxClaim106("strike",kind+(skin2.castSkill && skin2.castSkill===skill1 ? "_ult" : ""),target)) return;
          if(skin2.castSkill && skin2.castSkill===skill1 && fxProfile104(kind+"_ult").length)kind+="_ult";
          if(target)fxPulse104(kind,target);
       }
@@ -11335,6 +11701,8 @@ package com.meng52.game.module.avatar
          {
             _loc41_ = {};
          }
+         if(param5 && param1 && param1.length && heroFxClaim106("native",param5,param1[0],{targets:param1}))
+            _loc41_ = {nativeContact104:_loc41_.nativeContact104,laneWave:_loc41_.laneWave};
          // Keep the steel-impact presentation alive even when a device is
          // running an older effect table that does not know the custom marker.
          var isSteelLaneWave:Boolean = param5 == "FX_STEEL_LANE_WAVE";

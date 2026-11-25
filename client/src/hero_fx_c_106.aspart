@@ -1,0 +1,30 @@
+      // BEGIN HERO FX C 106
+      // 组 C：暗影薇恩+分身(nine)、白娘子 1227+青蛇/白蛇(nine)、超人提莫+蘑菇(nine)、卡萨丁(nine)、亚索 1219 大招、粽子少女+粽子(zongzi)、动感伊泽(nine)
+      // Contract (see hero_fx_core_106.aspart): kinds and texture ids are local names here;
+      // the core prefixes them with "c:". Private helpers in this file must be named hfxC...106.
+      private function heroFxClaimC106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
+      {
+         return false;
+      }
+      public static function heroFxPaintC106(id:String) : flash.display.BitmapData
+      {
+         return null;
+      }
+      public static function heroFxLifeC106(kind:String) : Number
+      {
+         return 0;
+      }
+      public static function heroFxSpritesC106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+      }
+      // Persistent state art: return ids like ["c:heart"] for rows this group owns, else null.
+      private static function heroFxStateC106(row:Object) : Array
+      {
+         return null;
+      }
+      // Animate one persistent part; return true when this group handled the row.
+      private static function heroFxAnimateC106(art:DisplayObject, row:Object, index:int, t:Number, seed:int) : Boolean
+      {
+         return false;
+      }
+      // END HERO FX C 106

@@ -1,0 +1,35 @@
+      // BEGIN HERO FX B 106
+      // 组 B：塔姆(nine)、马尔扎哈+虚灵(nine)、李青 1215、男爵瑞兹 1203、通用治疗/护盾/净化(兜底)、凯特琳 1211、薇恩 1206
+      // Contract (see hero_fx_core_106.aspart): kinds and texture ids are local names here;
+      // the core prefixes them with "b:". Private helpers in this file must be named hfxB...106.
+      private function heroFxClaimB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
+      {
+         return false;
+      }
+      // Generic looks for events no hero claimed (heal / shield / cleanse ...). Called after A, B and C.
+      private function heroFxFallbackB106(event:String, kind:String, target:Avatar, extra:Object) : Boolean
+      {
+         return false;
+      }
+      public static function heroFxPaintB106(id:String) : flash.display.BitmapData
+      {
+         return null;
+      }
+      public static function heroFxLifeB106(kind:String) : Number
+      {
+         return 0;
+      }
+      public static function heroFxSpritesB106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      {
+      }
+      // Persistent state art: return ids like ["b:heart"] for rows this group owns, else null.
+      private static function heroFxStateB106(row:Object) : Array
+      {
+         return null;
+      }
+      // Animate one persistent part; return true when this group handled the row.
+      private static function heroFxAnimateB106(art:DisplayObject, row:Object, index:int, t:Number, seed:int) : Boolean
+      {
+         return false;
+      }
+      // END HERO FX B 106

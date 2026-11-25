@@ -1,6 +1,6 @@
 """Attach the code-painted hero effects (core + groups A/B/C) to the AIR Avatar.
 
-Sources: client/src/hero_fx_core_106.aspart and hero_fx_{a,b,c}_106.aspart.
+Sources: client/src/hero_fx_core_106.aspart, kaisa_rain_fx_106.aspart and hero_fx_{a,b,c}_106.aspart.
 Run after the other sync scripts; it is idempotent. Every hook only adds a call into
 the core, so the three groups never need to touch this file.
 """
@@ -9,7 +9,7 @@ import hashlib
 import json
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = ['hero_fx_core_106.aspart', 'hero_fx_a_106.aspart', 'hero_fx_b_106.aspart', 'hero_fx_c_106.aspart']
+SOURCES = ['hero_fx_core_106.aspart', 'kaisa_rain_fx_106.aspart', 'hero_fx_a_106.aspart', 'hero_fx_b_106.aspart', 'hero_fx_c_106.aspart']
 START = '      // BEGIN HERO CODE FX 106\n'
 END = '      // END HERO CODE FX 106\n'
 
@@ -76,12 +76,14 @@ def sync():
 
     layer = ROOT / 'client/src/stages/177_GameMapLayer.as'
     t = layer.read_text('utf-8')
-    if 'Avatar.heroFxClear106();' not in t:
-        old = '         Avatar.demonFxClear105();\n'
-        if t.count(old) != 1:
-            raise ValueError('Missing GameMapLayer clear anchor')
-        t = t.replace(old, old + '         Avatar.heroFxClear106();\n', 1)
-        layer.write_text(t, encoding='utf-8', newline='')
+    # Before the existing clears, so the Demonblade teardown keeps its exact neighbours.
+    hook = '         Avatar.heroFxClear106();\n'
+    t = t.replace(hook, '')
+    old = '         Avatar.clearEffects104();\n         Avatar.demonFxClear105();\n'
+    if t.count(old) != 1:
+        raise ValueError('Missing GameMapLayer clear anchor')
+    t = t.replace(old, hook + old, 1)
+    layer.write_text(t, encoding='utf-8', newline='')
 
     config = ROOT / 'client/build.json'
     cfg = json.loads(config.read_text('utf-8'))

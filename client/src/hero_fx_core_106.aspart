@@ -1,6 +1,7 @@
       // BEGIN HERO FX CORE 106
       // Code-painted hero skill effects. Three group files plug into this core:
-      // hero_fx_a_106 / hero_fx_b_106 / hero_fx_c_106, each owning its own heroes.
+      // hero_fx_a_106 / hero_fx_b_106 / hero_fx_c_106, each owning its own heroes;
+      // group K (kaisa_rain_fx_106) is Dragonmancer Kai'Sa's Icathian Rain.
       // A kind is "<group>:<name>" (e.g. "a:snipe"); a texture id is "<group>:<name>" too.
       // Presentation only: nothing here reads gameplay RNG or changes combat state.
       private static var hfxTextures106:Object = {};
@@ -35,10 +36,11 @@
       }
       // Play a kind from this unit toward target.
       // extra: delay (s, added to GameMap.actionDelay), lane+pos (ground target point),
-      //        follow (track the caster instead of the target), from (another visual source).
+      //        follow (track the caster instead of the target), from (another visual source),
+      //        p (parameters handed to the timeline; only group K reads them).
       private function heroFx106(kind:String, target:Avatar = null, extra:Object = null) : void
       {
-         if(GameMapLayer.isFastest || !GameMapLayer.gl || !GameMap.currentMap || !heroFxLife106(kind)) return;
+         if(GameMapLayer.isFastest || !GameMapLayer.gl || !GameMap.currentMap || !heroFxLife106(kind,extra ? extra.p : null)) return;
          var delay:Number=GameMap.actionDelay+(extra && extra.delay ? Number(extra.delay) : 0);
          var source:Avatar=extra && extra.from is Avatar ? extra.from as Avatar : this;
          GameMapLayer.gl.delayCall(heroFxStart106,Math.max(0,delay),kind,source,target || this,extra,GameMap.currentMap);
@@ -53,18 +55,20 @@
       {
          return id && id.length>2 && id.charAt(1)==":" ? id.charAt(0) : "";
       }
-      public static function heroFxLife106(kind:String) : Number
+      public static function heroFxLife106(kind:String, p:Object = null) : Number
       {
          var group:String=heroFxGroup106(kind);var local:String=kind ? kind.substr(2) : "";
+         if(group=="k") return heroFxLifeK106(local,p);
          if(group=="a") return heroFxLifeA106(local);
          if(group=="b") return heroFxLifeB106(local);
          if(group=="c") return heroFxLifeC106(local);
          return 0;
       }
-      public static function heroFxSprites106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array) : void
+      public static function heroFxSprites106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array, p:Object = null) : void
       {
          var group:String=heroFxGroup106(kind);var local:String=kind.substr(2);var first:int=out.length;
-         if(group=="a") heroFxSpritesA106(local,t,sx,sy,tx,ty,seed,out);
+         if(group=="k") heroFxSpritesK106(local,t,sx,sy,tx,ty,seed,out,p);
+         else if(group=="a") heroFxSpritesA106(local,t,sx,sy,tx,ty,seed,out);
          else if(group=="b") heroFxSpritesB106(local,t,sx,sy,tx,ty,seed,out);
          else if(group=="c") heroFxSpritesC106(local,t,sx,sy,tx,ty,seed,out);
          if(out.length>first+HFX_MAX_SPRITES106) out.length=first+HFX_MAX_SPRITES106;
@@ -73,6 +77,7 @@
       public static function heroFxPaint106(id:String) : flash.display.BitmapData
       {
          var group:String=heroFxGroup106(id);var local:String=id.substr(2);
+         if(group=="k") return heroFxPaintK106(local);
          if(group=="a") return heroFxPaintA106(local);
          if(group=="b") return heroFxPaintB106(local);
          if(group=="c") return heroFxPaintC106(local);
@@ -82,6 +87,13 @@
       {
          var texture:starling.textures.Texture=hfxTextures106[id];
          if(texture || hfxBitmaps106[id]===false) return texture;
+         // "<group>:@NAME" borrows an already loaded asset texture instead of painting one.
+         if(id.charAt(2)=="@")
+         {
+            texture=GlobalData.$assetManager ? GlobalData.$assetManager.getTexture(id.substr(3)) : null;
+            if(texture) hfxTextures106[id]=texture;
+            return texture;
+         }
          var bitmap:flash.display.BitmapData=heroFxPaint106(id);
          if(!bitmap) {hfxBitmaps106[id]=false;trace("Hero FX 106: no painter for "+id);return null;}
          texture=starling.textures.Texture.fromBitmapData(bitmap,false,false);
@@ -140,7 +152,8 @@
       private static function heroFxStart106(kind:String, source:Avatar, target:Avatar, extra:Object, battle:Object) : void
       {
          if(battle!==GameMap.currentMap || !heroFxReady106()) return;
-         var looping:Boolean=heroFxLife106(kind)<0;
+         var p:Object=extra ? extra.p : null;
+         var looping:Boolean=heroFxLife106(kind,p)<0;
          if(looping)
             for each(var live:Object in hfxLive106)
                if(live.kind==kind && live.source===source && !live.stop) return;
@@ -150,7 +163,7 @@
          if(!from || !to) return;
          var holder:Sprite=new Sprite();holder.touchable=false;hfxLayer106.addChild(holder);
          hfxLive106.push({kind:kind,age:0,source:source,target:target,sx:from.x,sy:from.y,tx:to.x,ty:to.y,ground:ground!=null,
-            seed:++hfxSeed106,holder:holder,images:[],follow:looping || (extra && extra.follow),fade:1,stop:false});
+            seed:++hfxSeed106,holder:holder,images:[],follow:looping || (extra && extra.follow),fade:1,stop:false,p:p});
          if(hfxLive106.length>HFX_MAX_LIVE106) heroFxDrop106(0);
       }
       private static function heroFxEnd106(kind:String, source:Avatar, battle:Object) : void
@@ -174,7 +187,7 @@
             var fx:Object=hfxLive106[i];
             fx.age+=elapsed;
             var source:Avatar=fx.source as Avatar;
-            var life:Number=heroFxLife106(fx.kind);
+            var life:Number=heroFxLife106(fx.kind,fx.p);
             if(life<0 && (!source || source.hp<=0)) fx.stop=true;
             if(fx.stop) fx.fade-=elapsed/.35;
             if(fx.fade<=0 || (life>=0 && fx.age>=life)) {heroFxDrop106(i);continue;}
@@ -189,7 +202,7 @@
                if(to) {fx.tx=to.x;fx.ty=to.y;}
             }
             hfxScratch106.length=0;
-            heroFxSprites106(fx.kind,fx.age,fx.sx,fx.sy,fx.tx,fx.ty,fx.seed,hfxScratch106);
+            heroFxSprites106(fx.kind,fx.age,fx.sx,fx.sy,fx.tx,fx.ty,fx.seed,hfxScratch106,fx.p);
             var images:Array=fx.images;var n:int;var shown:int=0;
             for(n=0;n<hfxScratch106.length;n++)
             {

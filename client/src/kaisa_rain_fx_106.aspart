@@ -1,0 +1,194 @@
+      // BEGIN KAISA RAIN FX 106
+      // Dragonmancer Kai'Sa, Icathian Rain: each missile bursts out of her back, floats in a
+      // fan around her, then peels off on its own curving path into the target, trailing a
+      // tapered teal ribbon, and pops in a small plasma splash. Painted in code (group K).
+      public var kaisaRainStart106:Number = 0;
+      private static const KAISA_RAIN_EMERGE106:Number = .2;
+      private static const KAISA_RAIN_FLIGHT106:Number = .34;
+      private static const KAISA_RAIN_IMPACT106:Number = .32;
+      private static const KAISA_RAIN_HOVER_MAX106:Number = .8;
+
+      // Called once per missile, on the visual clock the missile's damage is settled on.
+      // The missile reaches the target when the old .35 s projectile did, so hits stay in sync.
+      private function kaisaRain106(target:Avatar, shot:Number) : void
+      {
+         if(GameMapLayer.isFastest || !GameMapLayer.gl || !GameMap.currentMap || !target) return;
+         var now:Number=GameMap.actionDelay;
+         if(shot==0) kaisaRainStart106=Math.max(0,now-.15);
+         var depart:Number=now+.35-KAISA_RAIN_FLIGHT106;
+         var spawn:Number=Math.max(Math.min(kaisaRainStart106,depart),depart-KAISA_RAIN_HOVER_MAX106);
+         heroFx106("k:rain",target,{delay:spawn-now,p:{hover:depart-spawn,shot:shot}});
+      }
+
+      public static function heroFxPaintK106(id:String) : flash.display.BitmapData
+      {
+         var w:int=id=="streak" ? 64 : id=="bolt" ? 96 : id=="spark" ? 32 : 128;
+         var h:int=id=="streak" ? 16 : id=="bolt" ? 40 : id=="spark" ? 32 : 128;
+         var bmp:flash.display.BitmapData=new flash.display.BitmapData(w,h,true,0);
+         var shape:flash.display.Shape=new flash.display.Shape();var g:flash.display.Graphics=shape.graphics;
+         var m:flash.geom.Matrix=new flash.geom.Matrix();var blur:Number=0;var glow:uint=0;var glowSize:Number=0;
+         if(id=="glow")
+         {
+            m.createGradientBox(w,h,0,0,0);
+            g.beginGradientFill("radial",[0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF],[1,.55,.16,0],[0,46,130,255],m);
+            g.drawEllipse(0,0,w,h);g.endFill();
+         }
+         else if(id=="streak")
+         {
+            // A soft white capsule; tinted per segment, so the ribbon can shade from core to rim.
+            m.createGradientBox(w,h,Math.PI/2,0,0);
+            g.beginGradientFill("linear",[0xFFFFFF,0xFFFFFF,0xFFFFFF],[0,1,0],[0,128,255],m);
+            g.drawRoundRect(2,1,w-4,h-2,h-2,h-2);g.endFill();
+            blur=1.5;
+         }
+         else if(id=="bolt")
+         {
+            // Teardrop plasma missile pointing to +x: dark teal tail, white-hot nose.
+            m.createGradientBox(w,h,0,0,0);
+            g.beginGradientFill("linear",[0x1FA7B8,0x45F0DC,0xC8FFF6,0xFFFFFF],[0,.85,1,1],[0,95,195,255],m);
+            g.moveTo(90,20);g.curveTo(78,6,48,9);g.curveTo(6,14,4,20);g.curveTo(6,26,48,31);g.curveTo(78,34,90,20);g.endFill();
+            // Two small gold fins, the dragon's horns.
+            g.beginFill(0xFFD36B,.95);g.moveTo(62,11);g.lineTo(50,3);g.lineTo(56,13);g.endFill();
+            g.beginFill(0xFFD36B,.95);g.moveTo(62,29);g.lineTo(50,37);g.lineTo(56,27);g.endFill();
+            glow=0x45F0DC;glowSize=7;blur=.8;
+         }
+         else if(id=="spark")
+         {
+            g.beginFill(0xFFFFFF,1);
+            g.moveTo(16,1);g.curveTo(17.5,14.5,31,16);g.curveTo(17.5,17.5,16,31);g.curveTo(14.5,17.5,1,16);g.curveTo(14.5,14.5,16,1);g.endFill();
+            glow=0xFFFFFF;glowSize=4;
+         }
+         else if(id=="ring")
+         {
+            g.lineStyle(5,0xFFFFFF,1);g.drawCircle(64,64,54);
+            glow=0xFFFFFF;glowSize=6;blur=1;
+         }
+         else return null;
+         var holder:flash.display.Sprite=new flash.display.Sprite();holder.addChild(shape);
+         var filters:Array=[];
+         if(blur>0) filters.push(new flash.filters.BlurFilter(blur,blur,2));
+         if(glowSize>0) filters.push(new flash.filters.GlowFilter(glow,.8,glowSize,glowSize,2,2));
+         shape.filters=filters;
+         bmp.draw(holder,null,null,null,null,true);
+         return bmp;
+      }
+      // BEGIN KAISA RAIN TIMELINE 106
+      public static function heroFxLifeK106(kind:String, p:Object) : Number
+      {
+         if(kind!="rain") return 0;
+         var hover:Number=p && isFinite(Number(p.hover)) ? Math.max(0,Number(p.hover)) : .3;
+         return hover+KAISA_RAIN_FLIGHT106+KAISA_RAIN_IMPACT106;
+      }
+      // Where the missile is at time u since it spawned: [x, y, flying 0..1, hovering weight].
+      private static function hfxKaisaAt106(u:Number, hover:Number, sx:Number, sy:Number, tx:Number, ty:Number, shot:int, seed:int) : Array
+      {
+         var dx:Number=tx-sx;var dy:Number=ty-sy;var len:Number=Math.max(1,Math.sqrt(dx*dx+dy*dy));
+         var ux:Number=dx/len;var uy:Number=dy/len;var nx:Number=-uy;var ny:Number=ux;
+         // Golden-ratio spread keeps any volley size evenly fanned without knowing its count.
+         var fan:Number=((shot*.618034+hfxRand106(seed,1)*.12)%1)*2-1;
+         // Hover beside the card (half-width 45), never on top of her portrait or health bar.
+         var side0:Number=fan<0 ? -1 : 1;
+         var lateral:Number=side0*(58+38*Math.abs(fan));var back:Number=8+hfxRand106(seed,2)*16;var lift:Number=6+(1-Math.abs(fan))*24;
+         // Lateral and back offsets are perpendicular, so the gap is at least |lateral| in any heading.
+         var hx:Number=sx+nx*lateral-ux*(back+lift);var hy:Number=sy+ny*lateral-uy*(back+lift);
+         var bob:Number=Math.min(u,hover);
+         var wobX:Number=Math.cos(bob*5.2+shot*1.7)*2.5;var wobY:Number=Math.sin(bob*6.4+shot*2.3)*3.5;
+         if(u<=hover)
+         {
+            var e:Number=hfxBack106(u/KAISA_RAIN_EMERGE106);
+            return [sx+(hx-sx)*e+wobX*e,sy-18+(hy-sy+18)*e+wobY*e,0,1];
+         }
+         var e0:Number=hfxBack106(hover/KAISA_RAIN_EMERGE106);
+         var px:Number=sx+(hx-sx)*e0+wobX*e0;var py:Number=sy-18+(hy-sy+18)*e0+wobY*e0;
+         var side:Number=fan<0 ? -1 : 1;
+         // Cubic arc: first swing further out, then dive in on the missile's own side.
+         var ox:Number=px-sx;var oy:Number=py-sy;var ol:Number=Math.max(1,Math.sqrt(ox*ox+oy*oy));
+         var c1x:Number=px+ox/ol*60;var c1y:Number=py+oy/ol*60-24;
+         var ex:Number=tx;var ey:Number=ty-12;
+         var c2x:Number=ex+nx*side*72-ux*30;var c2y:Number=ey+ny*side*72-uy*30-46;
+         var f:Number=hfxClamp106((u-hover)/KAISA_RAIN_FLIGHT106);
+         var s:Number=Math.pow(f,1.55);var r:Number=1-s;
+         return [r*r*r*px+3*r*r*s*c1x+3*r*s*s*c2x+s*s*s*ex,r*r*r*py+3*r*r*s*c1y+3*r*s*s*c2y+s*s*s*ey,f,0];
+      }
+      public static function heroFxSpritesK106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array, p:Object) : void
+      {
+         if(kind!="rain") return;
+         var hover:Number=p && isFinite(Number(p.hover)) ? Math.max(0,Number(p.hover)) : .3;
+         var shot:int=p ? int(p.shot) : 0;
+         var arrive:Number=hover+KAISA_RAIN_FLIGHT106;
+         var i:int;var a:Number;
+         if(t<arrive)
+         {
+            var head:Array=hfxKaisaAt106(t,hover,sx,sy,tx,ty,shot,seed);
+            var ahead:Array=hfxKaisaAt106(t+.012,hover,sx,sy,tx,ty,shot,seed);
+            var heading:Number=Math.atan2(ahead[1]-head[1],ahead[0]-head[0]);
+            if(head[3]>0)
+            {
+               // Floating: nose turns toward the target and sways a little.
+               var aim:Number=Math.atan2(ty-12-head[1],tx-head[0]);
+               var turn:Number=hfxClamp106(t/KAISA_RAIN_EMERGE106);
+               var delta:Number=aim+Math.sin(t*6+shot)*.22-heading;
+               delta=Math.atan2(Math.sin(delta),Math.cos(delta));
+               heading+=delta*turn;
+            }
+            else if(head[2]<.25)
+            {
+               // Leaving the hover: swing the nose from the target onto the outward arc.
+               var aim0:Number=Math.atan2(ty-12-head[1],tx-head[0]);
+               var swing:Number=heading-aim0;
+               heading=aim0+Math.atan2(Math.sin(swing),Math.cos(swing))*(head[2]/.25);
+            }
+            // Ribbon trail: tapered segments along the real path, core over a softer rim.
+            var lag:Number=head[2]>0 ? .016 : .026;
+            var px:Number=head[0];var py:Number=head[1];
+            for(i=1;i<=14;i++)
+            {
+               var back:Number=t-i*lag;
+               if(back<0) break;
+               var q:Array=hfxKaisaAt106(back,hover,sx,sy,tx,ty,shot,seed);
+               var mx:Number=(px+q[0])*.5;var my:Number=(py+q[1])*.5;
+               var dx:Number=px-q[0];var dy:Number=py-q[1];var dist:Number=Math.sqrt(dx*dx+dy*dy);
+               var fade:Number=1-(i-1)/14;var speed:Number=head[2]>0 ? 1 : .45;
+               if(dist>.5)
+               {
+                  var ang:Number=Math.atan2(dy,dx);
+                  hfxPut106(out,"streak",mx,my,(dist*1.4+8)/60,(1.1+1.6*fade)*speed,ang,.24*fade*speed,0x2F9FE8);
+                  hfxPut106(out,"streak",mx,my,(dist*1.4+6)/60,(.4+.6*fade)*speed,ang,.66*fade*fade*speed,0x7CFFF0);
+               }
+               px=q[0];py=q[1];
+            }
+            // A few motes shed from the trail while it flies.
+            if(head[2]>0)
+               for(i=0;i<4;i++)
+               {
+                  var mt:Number=t-(.04+i*.05);
+                  if(mt<hover) continue;
+                  var mote:Array=hfxKaisaAt106(mt,hover,sx,sy,tx,ty,shot,seed);
+                  var age:Number=(t-mt)/.25;
+                  hfxPut106(out,"spark",mote[0]+(hfxRand106(seed,20+i)-.5)*14*age,mote[1]+(hfxRand106(seed,30+i)-.5)*14*age+8*age,
+                     .32*(1-age*.6),.32*(1-age*.6),t*3+i,.55*(1-age),0xB9FFF6);
+               }
+            var pulse:Number=1+.08*Math.sin(t*13+shot);
+            var size:Number=head[3]>0 ? .5+.12*hfxClamp106(t/KAISA_RAIN_EMERGE106) : .62+.1*head[2];
+            hfxPut106(out,"glow",head[0],head[1],.42*pulse,.42*pulse,0,head[3]>0 ? .36 : .5,0x45F0DC);
+            hfxPut106(out,"bolt",head[0],head[1],size,size*.9,heading,.85,0xFFFFFF);
+            hfxPut106(out,"glow",head[0]+Math.cos(heading)*size*20,head[1]+Math.sin(heading)*size*20,.16,.16,0,.62,0xFFFFFF);
+            return;
+         }
+         // Impact: a short plasma splash that leaves the damage number readable.
+         var k:Number=(t-arrive)/KAISA_RAIN_IMPACT106;
+         if(k>1) return;
+         var ix:Number=tx;var iy:Number=ty-12;
+         a=1-k;
+         hfxPut106(out,"glow",ix,iy,.4+.55*hfxOut106(k),.4+.55*hfxOut106(k),0,.7*a*a,0x5FF5E6);
+         hfxPut106(out,"ring",ix,iy+8,.24+.5*hfxOut106(k),.24+.5*hfxOut106(k),0,.68*a,0x45F0DC,true,.45);
+         hfxPut106(out,"streak",ix,iy,.5+.5*hfxOut106(k),.9*a,.6+shot*.9,.5*a,0xB07CFF);
+         for(i=0;i<5;i++)
+         {
+            var dir:Number=hfxRand106(seed,40+i)*Math.PI*2;var reach:Number=16+hfxRand106(seed,50+i)*20;
+            var e:Number=hfxOut106(k*1.3);
+            hfxPut106(out,"spark",ix+Math.cos(dir)*reach*e,iy+Math.sin(dir)*reach*e*.8,.46*a,.46*a,dir,.85*a,i%2 ? 0xFFD36B : 0xC8FFF6);
+         }
+      }
+      // END KAISA RAIN TIMELINE 106
+      // END KAISA RAIN FX 106

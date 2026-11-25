@@ -415,9 +415,9 @@ package com.meng52.game.ui.map
       public function clear() : void
       {
          isPlay = true;
+         Avatar.heroFxClear106();
          Avatar.clearEffects104();
          Avatar.demonFxClear105();
-         Avatar.heroFxClear106();
          juggler.purge();
          clock.clear();
          mapStage.visible = false;

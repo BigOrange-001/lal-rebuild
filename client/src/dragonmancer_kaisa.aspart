@@ -223,58 +223,6 @@
       }
       private function kaisaProjectile104(target:Avatar, shot:Number) : void
       {
-         var layer:GameMapLayer=GameMapLayer.gl;
-         if(GameMapLayer.isFastest || !layer || !m_fightRes || !target.m_fightRes) return;
-         var texture:starling.textures.Texture=GlobalData.$assetManager.getTexture("MOD_KAISA_MISSILE104");
-         if(!texture) return;
-         var owner:Avatar=this;
-         var battle:GameMap=GameMap.currentMap;
-         layer.delayCall(function():void
-         {
-         if(GameMap.currentMap!==battle || !owner.m_fightRes || !target.m_fightRes) return;
-         var parent:Sprite=layer.effectLayer;
-         var start:Point=parent.globalToLocal(owner.m_fightRes.localToGlobal(new Point(0,-24)));
-         var finish:Point=parent.globalToLocal(target.m_fightRes.localToGlobal(new Point(0,-12)));
-         var fan:Number=(shot%3-1)*115+(int(shot/3)%2 ? 35 : -35);
-         var control:Point=new Point((start.x+finish.x)*.5+fan,Math.min(start.y,finish.y)-90-Math.abs(fan)*.4);
-         var sprite:Sprite=new Sprite();
-         sprite.touchable=false;
-         var trails:Array=[];
-         for(var i:int=0;i<12;i++)
-         {
-            var trail:Quad=new Quad(1,3,0x33E5D5);
-            trail.touchable=false;sprite.addChild(trail);trails.push(trail);
-         }
-         var missile:Image=new Image(texture);
-         missile.pivotX=texture.width*.88;missile.pivotY=texture.height*.5;
-         missile.scaleX=missile.scaleY=100/texture.width;missile.touchable=false;sprite.addChild(missile);
-         var state:Object={progress:0};
-         var time:Number=.35;
-         var tween:Tween=new Tween(state,time,"linear");
-         tween.animate("progress",1);
-         tween.onUpdate=function():void
-         {
-            if(GameMap.currentMap!==battle) {sprite.removeFromParent(true);return;}
-            var t:Number=state.progress;
-            var inv:Number=1-t;
-            missile.x=inv*inv*start.x+2*inv*t*control.x+t*t*finish.x;
-            missile.y=inv*inv*start.y+2*inv*t*control.y+t*t*finish.y;
-            missile.rotation=Math.atan2(2*inv*(control.y-start.y)+2*t*(finish.y-control.y),2*inv*(control.x-start.x)+2*t*(finish.x-control.x));
-            for(var j:int=0;j<trails.length;j++)
-            {
-               var a:Number=Math.max(0,t-(j+1)*.014);
-               var b:Number=Math.max(0,t-j*.014);
-               var x0:Number=(1-a)*(1-a)*start.x+2*(1-a)*a*control.x+a*a*finish.x;
-               var y0:Number=(1-a)*(1-a)*start.y+2*(1-a)*a*control.y+a*a*finish.y;
-               var x1:Number=(1-b)*(1-b)*start.x+2*(1-b)*b*control.x+b*b*finish.x;
-               var y1:Number=(1-b)*(1-b)*start.y+2*(1-b)*b*control.y+b*b*finish.y;
-               var q:Quad=trails[j] as Quad;
-               q.x=x0;q.y=y0;q.width=Math.max(.1,Point.distance(new Point(x0,y0),new Point(x1,y1)));
-               q.height=Math.max(.3,3*(1-j/12));q.rotation=Math.atan2(y1-y0,x1-x0);q.alpha=.45*(1-j/12);
-            }
-         };
-         tween.onComplete=function():void {sprite.removeFromParent(true);};
-         parent.addChild(sprite);
-         layer.addTween(tween);
-         },GameMap.actionDelay);
+         // Icathian Rain is drawn by kaisa_rain_fx_106 (floating missiles on curved paths).
+         kaisaRain106(target,shot);
       }

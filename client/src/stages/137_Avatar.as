@@ -1336,9 +1336,9 @@ package com.meng52.game.module.avatar
             abilityState.sixBatchKayleHit105=2000;
             // Divine Judgment had no visual: the native golden dome (FX_A_1120_GUARD, e019).
             var guardFx:Object=GameMapLayer.gl && !GameMapLayer.isFastest && fightRes && fightRes.parent ? DisplayTools.getAttrs("FX_A_1120_GUARD") : null;
-            if(guardFx)
+            if(guardFx && guardFx.h)
             {
-               guardFx=Tools.clone(guardFx);
+               guardFx=Tools.clone(guardFx.h);
                guardFx.a1=this;
                guardFx.par=GameMapLayer.gl.effectLayer;
                GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,guardFx);

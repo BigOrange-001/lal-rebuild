@@ -4,6 +4,7 @@ import copy
 import json
 import re
 import struct
+import subprocess
 import sys
 import unittest
 import zlib
@@ -202,8 +203,47 @@ class NativeFxWiringTests(unittest.TestCase):
         avatar = (ROOT / "client/src/stages/137_Avatar.as").read_text(encoding="utf-8")
         start = avatar.index('if(kind=="six_batch_kayle_c")', avatar.index("private function sixBatchExecute105("))
         branch = avatar[start:avatar.index("return true;", start)]
-        self.assertIn('DisplayTools.getAttrs("FX_A_1120_GUARD")', branch)
-        self.assertIn("GameMapLayer.gl.delayCall(DisplayTools.addEffects,GameMap.actionDelay,guardFx);", branch)
+        body = branch[branch.index("var guardFx:"):].replace("var guardFx:Object", "let guardFx")
+        entry = json.dumps(SELF_FX["FX_A_1120_GUARD"])
+        script = f"const entry = {entry}; function showGuard(fightRes) {{{body}}}" + """
+const assert = require("node:assert/strict");
+const GameMap = {actionDelay: 0.5};
+const owner = {};
+let effectEntry = entry;
+let played;
+const Tools = {clone(value) { return {...value}; }};
+const DisplayTools = {
+    getAttrs(name) {
+        assert.equal(name, "FX_A_1120_GUARD");
+        return effectEntry;
+    },
+    addEffects(descriptor) { played = descriptor; }
+};
+const GameMapLayer = {
+    isFastest: false,
+    gl: {
+        effectLayer: {},
+        delayCall(callback, delay, descriptor) {
+            assert.equal(delay, GameMap.actionDelay);
+            callback(descriptor);
+        }
+    }
+};
+showGuard.call(owner, {parent: {}});
+assert.deepEqual(played, {...entry.h, a1: owner, par: GameMapLayer.gl.effectLayer});
+assert.notEqual(played, entry.h);
+assert.equal(entry.h.par, undefined);
+played = undefined;
+effectEntry = {};
+showGuard.call(owner, {parent: {}});
+assert.equal(played, undefined);
+GameMapLayer.isFastest = true;
+effectEntry = entry;
+showGuard.call(owner, {parent: {}});
+assert.equal(played, undefined);
+"""
+        run = subprocess.run(["node"], input=script, text=True, encoding="utf-8", capture_output=True, cwd=ROOT)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
 
 
 if __name__ == "__main__":

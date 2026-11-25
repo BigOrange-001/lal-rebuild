@@ -42,7 +42,7 @@
 - server/dragonmancer_kaisa_sim.py：离线研究引擎的同规格结算。
 - config/reconstruction/dragonmancer-kaisa-media：已确认立绘、卡面与新弹体PNG及资源清单。
 - scripts/build_dragonmancer_kaisa_media.py：可复现的素材导入和弹体尺寸导出。
-- scripts/kaisa_rain_fx_preview.py（旧入口 build_dragonmancer_kaisa_preview.py 转发至此）：用 AIR 运行 client/src/kaisa_rain_fx_106.aspart 里的实际特效代码，逐帧渲染艾卡西亚暴雨（飞弹先在卡莎两侧悬浮，再各自沿弧线带拖尾飞向目标）。时间轴测试见 scripts/test_kaisa_rain_fx_106.py。
+- scripts/kaisa_rain_fx_preview.py（旧入口 build_dragonmancer_kaisa_preview.py 转发至此）：用 AIR 运行 client/src/kaisa_rain_fx_106.aspart 里的实际特效代码，逐帧渲染艾卡西亚暴雨（飞弹每 0.1 秒左右肩交替出膛，不悬停、不等上一发命中，出膛即沿各自弧线带拖尾飞向目标）。时间轴测试见 scripts/test_kaisa_rain_fx_106.py。
 
 新卡加入原有高级与VIP橙卡池，按同类皮肤的既有权重流程处理。测试账号、两种小技能等级的卡莎及第一章训练靶场由scripts/run_kaisa_playtest.py独立配置，不修改正式英雄面板或其他玩家存档。
 现有Mod替换被动/队长槽位时，不会继续偷偷触发已被替换的旧电浆/狩猎机制。

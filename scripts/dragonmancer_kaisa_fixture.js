@@ -34,6 +34,9 @@ function make(team=1,line=0,pos=2400,kaisa=true,add=true){
  u.bondEffects={};u.skinBondNumber104=(key,fallback=0)=>u.bondEffects[key]??fallback;
  u.abilityControl=(target,key,round,value=0)=>target.addBuff(key,round,value);
  u.kaisaProjectile104=(target,index)=>volleys.push({owner:u,target,index,delay:GameMap.actionDelay});
+ u.beginParallelVisualBatch=()=>({start:NaN,end:GameMap.actionDelay,animated:{},context:null});
+ u.setParallelVisualWave=(b,w,step)=>{b.end=Math.max(b.end,GameMap.actionDelay);if(isNaN(b.start))b.start=GameMap.actionDelay;GameMap.actionDelay=b.start+w*step};
+ u.endParallelVisualBatch=b=>{GameMap.actionDelay=Math.max(b.end,GameMap.actionDelay)};
  u.kaisaQueuePlasma104=(key,stacks)=>u.plasmaUpdates.push({key,stacks});
  u.abilityCandidates=(which,lane,p,d,max,hero,order)=>units.filter(x=>x.hp>0&&x.team===which&&x.line===lane)
  .sort((a,b)=>(which===1?a.pos-b.pos:b.pos-a.pos)||a.abilityIndex-b.abilityIndex);
@@ -70,6 +73,15 @@ for(let [n,hits] of [[1,[3]],[2,[2,1]],[3,[1,1,1]],[4,[1,1,1,0]]]){
 {
  let {a}=fresh();cast(a);cast(a);cast(a);
  assert.equal(volleys.length,15);assert.equal(a.kaisaCast104,3);cases++;
+}
+{
+ // Missiles leave .1 s apart, not one settlement (~.38 s) after another, and the volley still
+ // ends after the slowest hit has played out.
+ let {a}=fresh(3);a.abilityHit=(target,coefficient)=>{GameMap.actionDelay+=.38;target.injured(Math.trunc(coefficient*.8*a.ap),1,{},2,a);return true};
+ GameMap.actionDelay=1;a.kaisaCast104=2;cast(a);
+ assert.equal(volleys.length,7);
+ volleys.forEach((v,i)=>assert(Math.abs(v.delay-(1+i*.1))<1e-9,'shot '+i+' launches at '+v.delay));
+ assert(GameMap.actionDelay>=1+.6+.38-1e-9,'volley waits for its last hit');cases++;
 }
 {
  let {a,en}=fresh(2);en.forEach(u=>u.line=1);en[1].addBuff('stun',1);

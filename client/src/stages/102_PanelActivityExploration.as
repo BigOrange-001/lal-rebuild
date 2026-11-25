@@ -2139,7 +2139,8 @@ class AbyssCodexPanel104 extends AbyssPanel104
          row = rows[i];
          var x:Number = (i % cols) * cellW + (cellW - 90 * scale) * 0.5;
          var y:Number = int(i / cols) * 82;
-         var card:Sprite = heroCard(String(row.aid),AbyssCore104.family(String(row.aid)),5,x,y,scale,false,content);
+         var slv:int = AbyssCore104.skillBase105(String(row.aid));
+         var card:Sprite = heroCard(String(row.aid),AbyssCore104.family(String(row.aid)),slv,x,y,scale,false,content);
          if(row.state == 2)
          {
             gray(card);
@@ -2149,14 +2150,17 @@ class AbyssCodexPanel104 extends AbyssPanel104
             lock.touchable = false;
             content.addChild(lock);
          }
-         bindInfo(card,String(row.aid),int(row.state),Boolean(row.orangeOnly));
+         bindInfo(card,String(row.aid),slv,int(row.state),Boolean(row.orangeOnly));
       }
    }
 
-   private function bindInfo(card:Sprite, aid:String, state:int, orangeOnly:Boolean) : void
+   private function bindInfo(card:Sprite, aid:String, slv:int, state:int, orangeOnly:Boolean) : void
    {
       var note:String = state == 2 ? "开放条件：持有或曾获得该英雄后开放" : (state == 1 ? "本模式登场后开放橙卡" : (orangeOnly ? "皮肤橙卡：只出现在精英战后的选人中" : "橙卡已开放"));
-      onTap(card,function():void { AbyssCore104.showHeroInfo(aid,5,note); });
+      onTap(card,function():void
+      {
+         AbyssCore104.showHeroInfo(aid,slv,note + "\n技能等级上限：" + AbyssCore104.skillMax105(aid) + "级");
+      });
    }
 }
 

@@ -52,7 +52,10 @@ def apply_equipment_stats(stats, rows):
 
 
 def part_for_skill(row,effect):
-    return dict(effect,**effect.get('reworks',{}).get(row.get('name'),{}))
+    rework = effect.get('reworks', {}).get(row.get('name'))
+    if rework:
+        return {**effect, 'expected_action': None, 'extra_paths': (), **rework}
+    return effect
 
 
 def apply_part(row,effect):
@@ -74,21 +77,30 @@ def apply_part(row,effect):
         return True
     signature=effect['signature']
     if [a[0] for a in row['skill'][:len(signature)]]!=signature:return False
-    action=row['skill'][index];path=tuple(effect['path'])
+    if index >= len(row['skill']):return False
+    action=row['skill'][index]
+    expected=effect.get('expected_action')
+    if expected and action[:len(expected)] != expected:return False
     if effect.get('six_star_native_component') and action[0]=='manual_ability' and not str(action[1]).startswith('six_'):
         return False
-    value=_get(action,path)
-    if type(value) not in (float,int) or value<=0:raise ValueError('Equipment component changed: '+effect['part'])
+    paths = [tuple(path) for path in (effect['path'], *effect.get('extra_paths', ()))]
+    positions = {(index, *path) for path in paths}
     # Update a printed coefficient only when no untouched value shares it.
     unchanged=set()
     def visit(node,position=()):
-        if type(node) in (int,float) and position!=(index,*path):unchanged.add(_pct(node))
+        if type(node) in (int,float) and position not in positions:unchanged.add(_pct(node))
         elif isinstance(node,list):
             for i,child in enumerate(node):visit(child,(*position,i))
     visit(row['skill'])
-    _set(action,path,value*factor)
-    _update_text(row,{_pct(value):{_pct(value*factor)}},unchanged)
-    _update_growth(row,{(index,*path)},factor)
+    changes = {}
+    for path in paths:
+        value = _get(action, path)
+        if type(value) not in (float, int) or value <= 0:
+            raise ValueError('Equipment component changed: '+effect['part'])
+        _set(action, path, value*factor)
+        changes.setdefault(_pct(value), set()).add(_pct(value*factor))
+    _update_text(row, changes, unchanged)
+    _update_growth(row, positions, factor)
     return True
 
 

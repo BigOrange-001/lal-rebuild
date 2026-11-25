@@ -85,6 +85,66 @@ def rebind_six_star_components(cfg, plan):
                 if signature == ['manual_ability']:
                     effect['six_star_native_component'] = True
                     effect.pop('manual_kind',None)
+    apply_six_star_redesigns(cfg, plan)
+
+
+# (hero, equipment, slot, component, action index, expected action, path, output share)
+# Shares below one keep a focused hit or secondary effect within the original budget.
+SIX_STAR_REDESIGNS = (
+    ('A_1053_6', 'E_5001_5', 'normal', '快速拔枪的普攻增伤幅度', 0, 'six_next_graves_n', (5,), 1),
+    ('A_1119_6', 'E_1001_6', 'normal', '疾风斩第二段伤害', 2, 'damage', (1,), .56),
+    ('A_1119_6', 'E_3007_6', 'passive', '浪客之道的生命值护盾', 0, 'six_batch_yasuo_p', (5,), 1),
+    ('A_1130_6', 'E_1016_6', 'captain', '利刃华尔兹每次斩击的伤害系数', 0, 'six_fiora_c', (4,), 1),
+    ('A_1054_6', 'E_3999_5', 'passive', '巨龙真身的灼烧转护盾比例', 0, 'six_next_shyvana_p', (4,), 1),
+    ('A_1205_6', 'E_1501_5', 'captain', '自然之握的最大生命伤害系数', 0, 'six_next_maokai_c', (4,), 1),
+    ('A_1205_6', 'E_3001_6', 'passive', '吸元秘术的普攻回血比例', 0, 'six_next_maokai_p', (4,), 1),
+    ('A_1033_6', 'E_5008_6', 'normal', '暗影突袭的破甲幅度', 1, 'sunder_percent', (3,), 1),
+    ('A_1060_6', 'E_1002_6', 'passive', '光束护盾的攻击力护盾系数', 0, 'six_next_lux_p', (4,), 1),
+    ('A_1086_6', 'E_1022_6', 'normal', '苍白之瀑护盾的双抗系数', 0, 'six_next_diana_n', (5,), 1),
+    ('A_1086_6', 'E_4027_6', 'captain', '月神降临每段的双抗伤害系数', 0, 'six_next_diana_c', (4,), 1),
+    ('A_1098_6', 'E_4002_6', 'captain', '安魂曲引导完成后的全场伤害', 0, 'six_next_karthus_c', (4,), 1),
+    ('A_1114_6', 'E_1502_5', 'normal', '连锁闪电每次释放的首击伤害', 0, 'six_next_aoxing_n', (4,), .55),
+    ('A_1124_6', 'E_4015_6', 'captain', '沙兵支援的正面冲击伤害', 0, 'damage', (1,), 1),
+    ('A_1127_6', 'E_1505_5', 'normal', '幻影魔弹引爆恶意魔印的真伤', 0, 'six_next_leblanc_n', (5,), .6),
+    ('A_1133_6', 'E_1999_5', 'passive', '灵魂庇护的生命值护盾', 0, 'six_morgana_p', (4,), 1),
+    ('A_1214_6', 'E_3006_6', 'captain', '逆命对当前目标的魔法伤害', 0, 'six_batch_tf_c', (4,), 1),
+    ('A_1131_6', 'E_5004_5', 'normal', '潮汐涌泉赋予友军的追加真伤', 0, 'six_nami_n', (5,), .6),
+    ('A_1005_6', 'E_1017_6', 'normal', '真假猴王的直接物理伤害', 0, 'wukong_n', 'wukong_hit', .65),
+    ('A_1005_6', 'E_3010_6', 'normal', '真假猴王分身的面板继承比例', 0, 'wukong_n', 'wukong_clone_panel', 1),
+    ('A_1007_6', 'E_3001_5', 'captain', '真-天崩地裂的生命值护盾', 0, 'hp_shield', (1,), 1),
+    ('A_1011_6', 'E_3004_5', 'normal', '枪火谈判中橘子的攻击力回复系数', 0, 'gangplank_n', 'orange_heal_ap', 1),
+    ('A_1019_6', 'E_3002_5', 'normal', '旋斧回旋的命中回复及回复上限', 3, 'heal_missing_hp_per_hero', (1, 2), 1),
+    ('A_1018_6', 'E_4004_5', 'normal', '守护屏障强化普攻的生命伤害系数', 0, 'six_shen_n', (4,), 1),
+)
+
+
+def apply_six_star_redesigns(cfg, plan):
+    slots = {'normal': 10, 'captain': 11, 'passive': 13}
+    for aid, eid, slot, part, index, expected, targets, share in SIX_STAR_REDESIGNS:
+        effect = next(row for row in plan['heroes'][aid]['affinities'] if row['equipment'] == eid)
+        source = cfg['skill'][cfg['avatar'][aid]['pl'][slots[slot]]]
+        actions = source['skill']
+        action = actions[index]
+        prefix = ['manual_ability', expected] if action[0] == 'manual_ability' else [expected]
+        if action[:len(prefix)] != prefix:
+            raise ValueError(f'Six-star affinity target changed: {aid} {eid} {part}')
+        budget = effect['skill_budget']
+        strength = budget / share
+        for key in ('six_star_component_removed', 'six_star_native_component', 'review_source_104', 'manual_kind'):
+            effect.pop(key, None)
+        effect.update(slot=slot, part=part, skill_name=source['name'], strength=strength,
+                      power_budget=budget, benefit_share=share, benefit_curve=1,
+                      info=f'仅提高{part}{strength:.2%}。')
+        if isinstance(targets, str):
+            effect.update(index=targets, path=[], manual_kind=expected)
+        else:
+            effect.update(index=index, path=[targets[0]], extra_paths=[[i] for i in targets[1:]],
+                          expected_action=prefix, signature=[a[0] for a in actions[:index+1]])
+        if (aid, eid) == ('A_1007_6', 'E_3001_5'):
+            effect['reworks']['光盾壁垒'] = {
+                'index': 1, 'path': [1], 'signature': ['damage', 'caster_hp_shield'],
+                'part': '光盾壁垒的生命值护盾', 'info': f'仅提高光盾壁垒的生命值护盾{strength:.2%}。',
+            }
 
 
 def rebind_new_skins(cfg, equipment):

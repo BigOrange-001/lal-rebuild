@@ -25,7 +25,7 @@ RED, GOLD, GREEN, WHITE = 0xFF3B1F, 0xFFD040, 0x66FF66, 0xFFFFFF
 
 
 def units(tryn, ally=None, enemies=(), hp=1.0, rage=.5):
-    rows = [dict(art='A_1028_6', team=1, x=tryn[0], y=tryn[1], hp=hp, rage=rage, label='恶魔之刃蛮王')]
+    rows = [dict(art='A_1028_6', team=1, x=tryn[0], y=tryn[1], hp=hp, rage=rage, label='恶魔之刃泰达米尔')]
     rows.append(dict(art='A_1004_5', team=1, x=ally[0], y=ally[1], hp=.85) if ally else
                 dict(art='A_1004_5', team=1, x=-200, y=-200, hp=1))
     for art, at in zip(('A_1001_5', 'A_1002_5', 'A_1005_5'), enemies):

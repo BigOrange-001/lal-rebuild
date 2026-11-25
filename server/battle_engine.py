@@ -3150,14 +3150,21 @@ class ReferenceBattle:
         if not known_policy or normal_id!='S_621132_'+owner_aid.rsplit('_',1)[1]:return
         ratio = policy.get("panelStatRatio", 1) if known_policy else 1
         ttl = policy.get("ttlOwnTurns", 1) if known_policy else 1
+        from battle_mod_effects import configure_zed_shadow, zed_shadow_can_spawn, zed_shadow_policy
+        live=[u for u in allies if u.get('_clone_of')==owner_aid and u.get('summon_owner_token')==attacker.get('_owner_token') and u.get('hp',0)>0]
+        capacity = int(policy.get('maxAlive', 1))
+        shadow = zed_shadow_policy(self, attacker)
+        if shadow and not zed_shadow_can_spawn(attacker, shadow, replacing=len(live) >= capacity):
+            return
         clone = self._spawn_summon(attacker, owner_aid, ratio, ttl)
         if clone is None:
             return
         clone["_clone_of"] = owner_aid
         clone['skill']=copy.deepcopy(normal)
         clone['skillB']=clone['leader_skill']=clone['book_skill']=None
-        live=[u for u in allies if u.get('_clone_of')==owner_aid and u.get('summon_owner_token')==attacker.get('_owner_token') and u.get('hp',0)>0]
-        while len(live)>=int(policy.get('maxAlive',1)):
+        if shadow:
+            configure_zed_shadow(attacker, clone, shadow)
+        while len(live) >= capacity:
             live.pop(0)['hp']=0
         if not known_policy:
             clone["_clone_policy_unavailable"] = True

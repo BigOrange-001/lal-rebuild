@@ -1071,8 +1071,10 @@ package com.meng52.game.module.skill
                unit.crit = Math.max(0,int(avatar.getCrit()*ratio));
                unit.tough = Math.max(0,int(avatar.getTough()*ratio));
             }
+            var shadowPolicy:Object=summonSkill105 ? summonSkill105.sixStarZedShadow105 : null;
+            if(shadowPolicy) avatar.zedShadowConfigure105(unit,shadowPolicy);
             unit.addBuff("summon",int(step[13]));
-            while(retained.length >= int(step[14]))
+            while(!shadowPolicy && retained.length >= int(step[14]))
             {
                expired = retained.shift(); expiredUnits.push(expired); expired.hp = 0;
             }
@@ -4038,8 +4040,9 @@ package com.meng52.game.module.skill
                i++;
             }
             if(replaced == null) return;
-            avatar.manualSummonFamilies[familyKey] = survivors;
          }
+         var shadowPolicy:Object=avatar.zedShadowPolicy105();
+         if(shadowPolicy && !avatar.zedShadowCanSpawn105(shadowPolicy,replaced!=null)) return;
          clone = new Avatar(GlobalData.modDefinitionId(String(avatar.avatarData.id),"summoned"),{"lv":Math.max(1,avatar.lv),"slv":1});
          clone.goFight(avatar.team,avatar.line,0,false);
          if(!clone.inheritSummonPanel(avatar,ratio)) return;
@@ -4047,6 +4050,8 @@ package com.meng52.game.module.skill
          clone.skill1 = null;
          clone.skill2 = null;
          clone.skillB = null;
+         if(shadowPolicy) avatar.zedShadowConfigure105(clone,shadowPolicy);
+         if(replaced) avatar.manualSummonFamilies[familyKey] = survivors;
          clone.addBuff("summon",ttl);
          cloneEffect = DisplayTools.getAttrs(String(param1[param1.length - 1]));
          if(cloneEffect && cloneEffect.id)
@@ -4058,12 +4063,9 @@ package com.meng52.game.module.skill
          targetPos = GameMap.currentMap.getFinalPos(avatar.team,avatar.line,avatar.pos + (avatar.team == 1 ? -GameMapConfig.SUMMON_POS : GameMapConfig.SUMMON_POS));
          if(avatar.registerManualSummon(familyKey,clone,capacity))
          {
+            if(replaced) replaced.hp = 0;
             GameMap.currentMap.addAvatar(clone,avatar.team,avatar.line,targetPos,false);
-            if(replaced)
-            {
-               replaced.hp = 0;
-               replaced.dead();
-            }
+            if(replaced) replaced.dead();
          }
          else if(replaced)
          {

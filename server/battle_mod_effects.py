@@ -1,7 +1,28 @@
 """Reference execution of compiler-owned effect-sequence-v1 rows."""
 from __future__ import annotations
 
+from copy import deepcopy
+
 from combat_rules import ratio_enabled
+
+
+def zed_shadow_policy(battle, owner):
+    passive_id = (owner.get('skillB') or {}).get('skid')
+    return battle._config.get('skill', {}).get(passive_id, {}).get('sixStarZedShadow105')
+
+
+def zed_shadow_can_spawn(owner, policy, replacing=False):
+    root = owner.get('_zed_shadow_root', owner.get('_owner_token'))
+    living = sum(unit.get('_zed_shadow_root') == root and unit.get('hp', 0) > 0
+                 for unit in owner['_team'])
+    return owner.get('_zed_shadow_generation', 0) < policy['maxGeneration'] and living - int(replacing) < policy['maxAlive']
+
+
+def configure_zed_shadow(owner, unit, policy):
+    generation = owner.get('_zed_shadow_generation', 0) + 1
+    unit['_zed_shadow_root'] = owner.get('_zed_shadow_root', owner.get('_owner_token'))
+    unit['_zed_shadow_generation'] = generation
+    unit['skillB'] = deepcopy(owner['skillB']) if generation < policy['maxGeneration'] else None
 
 
 def condition_ready(battle,unit,skill):
@@ -58,7 +79,10 @@ def execute(battle,owner,enemies,allies,skill,action,index,context):
                   and u.get('_effect_summon_family')==family]
         unit=battle._spawn_summon(owner,action[11],action[12],action[13],bounded=True,skill_level=1)
         if unit:
-            while len(existing)>=action[14]:
+            shadow = zed_shadow_policy(battle, owner)
+            if shadow:
+                configure_zed_shadow(owner, unit, shadow)
+            while not shadow and len(existing)>=action[14]:
                 expired=existing.pop(0);expired['hp']=0
             if battle._six_star_setting(skill, 'Turret'):
                 from six_star_battle_105 import configure_turret

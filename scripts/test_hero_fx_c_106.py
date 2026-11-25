@@ -153,6 +153,37 @@ class HeroFxGroupCTests(unittest.TestCase):
             self.assertEqual(packs[key]['model'], 'effect-sequence-v1', key)
             self.assertEqual(packs[key]['actions'][int(step)]['type'], op, key)
 
+    def test_green_snake_cleanse_plays_once_per_recipient_per_action(self):
+        from test_vital_bar_104 import method
+
+        path = 'client/src/stages/137_Avatar.as'
+        functions = []
+        for name in ('hfxCNative106', 'hfxCCount106', 'hfxCEach106'):
+            js = method(path, name).replace('for each(var unit in list)', 'for (var unit of list)')
+            functions.append(f'const {name} = {js};')
+        script = '\n'.join(functions) + """
+const assert = require('assert');
+const int = value => value | 0;
+const played = [];
+const snake = {
+    abilityIndex: 1, manualOwnerActionSerial: 10, hfxCSeenSerial106: -1, hfxCSeen106: {},
+    hfxCNative106, hfxCCount106, hfxCEach106, hfxCSkillKey106: () => 'green_snake_passive',
+    heroFx106(kind, unit) { played.push([kind, unit.abilityIndex]); }
+};
+const allies = [2, 3, 4, 5].map(abilityIndex => ({abilityIndex}));
+for (let action = 10; action <= 11; action++) {
+    snake.manualOwnerActionSerial = action;
+    for (let repeat = 0; repeat < 3; repeat++) {
+        assert.equal(snake.hfxCNative106('gsnake', 'FX60_PURIFY', snake, null), true);
+        assert.equal(snake.hfxCNative106('gsnake', 'FX60_PURIFY', allies[0], {targets: allies}), true);
+    }
+}
+const once = [1, 2, 3, 4, 5].map(id => ['c:gcleanse', id]);
+assert.deepEqual(played, [...once, ...once]);
+"""
+        run = subprocess.run(['node'], input=script, text=True, encoding='utf-8', capture_output=True, cwd=ROOT)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+
     def test_hooks_are_synchronized(self):
         avatar = (ROOT / 'client/src/stages/137_Avatar.as').read_text('utf-8')
         self.assertIn(section(GROUP, PURE), avatar)

@@ -1611,13 +1611,14 @@
          return extra && extra.lane!=undefined && extra.pos!=undefined ? {lane:extra.lane,pos:extra.pos} : null;
       }
       // Play a kind on each listed target (a few at most), slightly staggered.
-      private function hfxCEach106(kind:String, target:Avatar, extra:Object, cap:int = 6, skipSelf:Boolean = false) : void
+      private function hfxCEach106(kind:String, target:Avatar, extra:Object, cap:int = 6, skipSelf:Boolean = false, oncePerAction:Boolean = false) : void
       {
          var list:* = extra ? extra.targets : null;var n:int=0;
-         if(!list || !list.length) {if(target && !(skipSelf && target===this)) heroFx106(kind,target);return;}
+         if(!list || !list.length) list=[target];
          for each(var unit:Avatar in list)
          {
             if(!unit || n>=cap || (skipSelf && unit===this)) continue;
+            if(oncePerAction && hfxCCount106(kind+":"+unit.abilityIndex)!=0) continue;
             heroFx106(kind,unit,n ? {delay:n*.06} : null);++n;
          }
       }
@@ -1707,7 +1708,7 @@
                if(name=="FX_S9150_CURSE") {heroFx106("c:gfang",target);return true;}
                if(name=="FX_S9004_ARC") {heroFx106("c:gbite",target,{delay:.05});return true;}
                if(name=="FX_S9140_POISON") {heroFx106("c:gvenom",target,{delay:.1});return true;}
-               if(name=="FX60_PURIFY") {if(hfxCCount106(name)==0) hfxCEach106("c:gcleanse",target,extra,5);return true;}
+               if(name=="FX60_PURIFY") {hfxCEach106("c:gcleanse",target,extra,5,false,true);return true;}
                if(name=="FX_S9150_CURE") {heroFx106("c:gheal",target);return true;}
                break;
             case "teemo":

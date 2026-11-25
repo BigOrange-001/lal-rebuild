@@ -47,9 +47,9 @@ const assert=require('assert');
 const textures=new Set(['glow','streak','bolt','spark','ring']);
 const scenes=[[240,560,240,300],[150,600,330,240],[240,200,240,520],[300,500,120,380]];
 let checked=0,maxCount=0;
-for(const [sx,sy,tx,ty] of scenes)for(let shot=0;shot<13;shot++)for(const hover of [0,.16,.45,.8]){
- const p={hover,shot},seed=shot+7,life=heroFxLifeK106('rain',p);
- assert.ok(Math.abs(life-(hover+KAISA_RAIN_FLIGHT106+KAISA_RAIN_IMPACT106))<1e-9);
+for(const [sx,sy,tx,ty] of scenes)for(let shot=0;shot<13;shot++){
+ const p={shot},seed=shot+7,life=heroFxLifeK106('rain',p);
+ assert.ok(Math.abs(life-(KAISA_RAIN_FLIGHT106+KAISA_RAIN_IMPACT106))<1e-9);
  for(let t=0;t<=life+1e-9;t+=1/60){
   const out=[];heroFxSpritesK106('rain',t,sx,sy,tx,ty,seed,out,p);
   maxCount=Math.max(maxCount,out.length);
@@ -60,19 +60,17 @@ for(const [sx,sy,tx,ty] of scenes)for(let shot=0;shot<13;shot++)for(const hover 
    assert.ok(Math.abs(s.x-sx)<420&&Math.abs(s.y-sy)<560,'on screen '+s.k+' '+s.x+','+s.y);
    checked++;
   }
-  // Floating missiles sit beside the 90px card, not on the portrait or health bar.
-  const bolt=out.find(s=>s.k==='bolt');
-  if(bolt&&t<hover&&t>KAISA_RAIN_EMERGE106){
-   const dx=bolt.x-sx,dy=bolt.y-sy,dist=Math.hypot(dx,dy);
-   assert.ok(dist>50,'hover overlaps the card '+dist.toFixed(1));
-  }
  }
- // The missile lands on the target exactly when the old projectile did.
- const end=[];heroFxSpritesK106('rain',hover+KAISA_RAIN_FLIGHT106-1e-6,sx,sy,tx,ty,seed,end,p);
+ // No hover: it leaves her shoulder at once, already moving, and lands on time.
+ const start=[];heroFxSpritesK106('rain',0,sx,sy,tx,ty,seed,start,p);
+ const b0=start.find(s=>s.k==='bolt');
+ assert.ok(b0&&Math.hypot(b0.x-sx,b0.y-sy)<30,'launches from her shoulder');
+ const soon=[];heroFxSpritesK106('rain',.05,sx,sy,tx,ty,seed,soon,p);
+ const b1=soon.find(s=>s.k==='bolt');
+ assert.ok(Math.hypot(b1.x-b0.x,b1.y-b0.y)>12,'already flying after .05 s');
+ const end=[];heroFxSpritesK106('rain',KAISA_RAIN_FLIGHT106-1e-6,sx,sy,tx,ty,seed,end,p);
  const bolt=end.find(s=>s.k==='bolt');
  assert.ok(Math.hypot(bolt.x-tx,bolt.y-(ty-12))<1,'lands on target');
- const start=[];heroFxSpritesK106('rain',0,sx,sy,tx,ty,seed,start,p);
- assert.ok(start.some(s=>s.k==='bolt'),'visible from spawn');
 }
 assert.ok(maxCount<=72,'sprite budget '+maxCount);
 const none=[];heroFxSpritesK106('other',0,0,0,0,0,1,none,null);assert.equal(none.length,0);

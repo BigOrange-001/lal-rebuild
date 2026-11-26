@@ -2482,6 +2482,11 @@ package com.meng52.game.module.skill
                   {
                      _loc12_ = DisplayTools.getAttrs("SUMMON_EFF");
                   }
+                  if(_loc12_ && avatar.hfxCHook106("spawn",String(_loc20_[_loc20_.length - 1]),_loc1_))
+                  {
+                     _loc12_ = null;
+                     GameMap.actionDelay += 0.25;
+                  }
                   if(_loc12_)
                   {
                      _loc12_.a1 = _loc1_;
@@ -4078,6 +4083,7 @@ package com.meng52.game.module.skill
       {
          var _loc1_:Object = DisplayTools.getAttrs(param1) as Object;
          var _loc2_:Object = null;
+         if(param2 && avatar && avatar.hfxCHook106("direct",param1,param2)) return;
          if(!_loc1_) return;
          if(_loc1_.id)
          {

@@ -189,7 +189,9 @@ assert.deepEqual(played, [...once, ...once]);
         self.assertIn(section(GROUP, PURE), avatar)
         self.assertIn('public function hfxCHook106(', avatar)
         skillset = (ROOT / 'client/src/stages/139_SkillSet.as').read_text('utf-8')
-        self.assertEqual(skillset.count('avatar.hfxCHook106('), 3)
+        # Group C's three hooks; group E reuses the public hook for "direct" and "spawn".
+        group_e = skillset.count('avatar.hfxCHook106("direct"') + skillset.count('avatar.hfxCHook106("spawn"')
+        self.assertEqual(skillset.count('avatar.hfxCHook106(') - group_e, 3)
         self.assertIn('if(("hfxCHook106" in avatar) && avatar.hfxCHook106("native",effect || "SUMMON_EFF",unit,', skillset)
         self.assertIn('if("hfxCHook106" in avatar) avatar.hfxCHook106("sequence",String(skillSetData.id)+"#"+index+"#"+kind,center,', skillset)
         self.assertIn('hpHealTarget.injured(hpHealAmount,1,("hfxCHook106" in avatar) && avatar.hfxCHook106("native",', skillset)

@@ -18,11 +18,12 @@ const GlobalData={$mConfig_skill:{TEST:row},$mConfig_simple:{skill_effect_radius
 let context;
 const currentAbilityAttack=()=>context,activeManualEffectMultiplier=()=>input.effect;
 const Avatar={};
+for(const [name,value] of Object.entries(input.consts||{}))globalThis[name]=value;
 function attach(u){for(const [name,[params,body]] of Object.entries(input.methods))u[name]=eval('(function('+params+'){with(this){'+body+'\n}})');}
 const units=input.units.map((data,i)=>Object.assign(data,{id:data.aid,hpMax:data.hp_max,abilityState:{},abilitySerial:0,
  abilityIndex:i+1,buffs:{},otherTeam:3-data.team,isManualSummonUnit:false,
  heroSkillOutputRate104:()=>1,getType:()=>1,getStar:()=>6,getDamage:()=>1000,getHpMax:()=>10000,abilityFeedback:()=>{},
- beginParallelVisualBatch:()=>null,endParallelVisualBatch:()=>{},prepareParallelVisualTarget:()=>{},
+ beginParallelVisualBatch:()=>null,endParallelVisualBatch:()=>{},prepareParallelVisualTarget:()=>{},setParallelVisualWave:()=>{},heroFxClaim106:()=>false,
  checkMove(forward,distance,center=null){this.pos+=(this.team===1?-1:1)*(forward?1:-1)*distance;},
  reline(line,pos){this.line=line;this.pos=pos;},removeBuff(k){delete this.buffs[k];},removeAllDebuff(){},
  skill0:{useSkill(){events.push(['recast']);}}}));
@@ -74,13 +75,15 @@ class ManualOracleTests(unittest.TestCase):
           abilityAlly='distance=3001,order="ratio",excludeSelf=false',abilityMarkedTarget='mark,distance,order="nearest"',
           abilityHasMark='owner,kind',abilityMark='target,kind,duration,scale=1',abilityDash='target,enemySide=false',
           abilityPull='target,center,amount',abilityControl='target,kind,duration,value=0',
-          abilityIsolated='target',abilityAllEnemies='',skillAreaRadius='value')
+          abilityIsolated='target',abilityAllEnemies='',skillAreaRadius='value',
+          aoxingChainNext106='from,visited',aoxingChainTargets106='',aoxingChain106='first,bounce,kind,effect,manual')
         cls.methods={}
         for name,params in definitions.items():
             body=method_body(source,name)
             body=re.sub(r'for each\s*\(([^)]+) in ([^)]+)\)',r'for (\1 of \2)',body)
             body=re.sub(r'function\(([^)]*)\)',lambda m:'function('+re.sub(r':\w+','',m[1])+')',body)
             cls.methods[name]=[params,body]
+        cls.consts={name:float(value) for name,value in re.findall(r'private static const (AOXING_\w+106):\w+ = ([\d.]+);',source)}
         cls.units=[dict(aid='A_1001_6',team=1,isme=True,line=0,pos=1800,hp=3000,hp_max=10000),
                    dict(aid='A_1002_6',team=1,isme=True,line=0,pos=1850,hp=2000,hp_max=10000),
                    dict(aid='A_1003_6',team=2,isme=False,line=0,pos=1600,hp=5000,hp_max=10000),
@@ -106,7 +109,7 @@ class ManualOracleTests(unittest.TestCase):
         for kind in sorted(KINDS):
             with self.subTest(kind=kind):
                 options=dict(kind=kind,scale=1.3,damage=1.5625,effect=1.25,parts=parts)
-                proc=subprocess.run([NODE,'-e',HARNESS],input=json.dumps(dict(methods=self.methods,units=self.units,**options)),
+                proc=subprocess.run([NODE,'-e',HARNESS],input=json.dumps(dict(methods=self.methods,units=self.units,consts=self.consts,**options)),
                                     capture_output=True,text=True,encoding='utf-8',timeout=15)
                 self.assertEqual(proc.returncode,0,proc.stderr)
                 actual=json.loads(proc.stdout)

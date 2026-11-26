@@ -209,6 +209,8 @@ def build_static_config(path):
  # copies carry the same native effects as the hero's own skill.
  from native_fx_wiring_106 import apply_native_fx_wiring
  apply_native_fx_wiring(document)
+ from aoxing_chain_106 import apply_aoxing_chain_106
+ apply_aoxing_chain_106(document)
  from hero_passive_quality_105 import restrict_low_star_passives
  restrict_low_star_passives(document)
  # Last: mechanic names are matched against the final skill texts.

@@ -1,6 +1,6 @@
-"""Attach the code-painted hero effects (core + groups A/B/C/D) to the AIR Avatar.
+"""Attach the code-painted hero effects (core + groups A/B/C/D/E) to the AIR Avatar.
 
-Sources: client/src/hero_fx_core_106.aspart, kaisa_rain_fx_106.aspart and hero_fx_{a,b,c,d}_106.aspart.
+Sources: client/src/hero_fx_core_106.aspart, kaisa_rain_fx_106.aspart and hero_fx_{a,b,c,d,e}_106.aspart.
 Run after the other sync scripts; it is idempotent. Every hook only adds a call into
 the core, so the groups never need to touch this file.
 """
@@ -10,9 +10,12 @@ import json
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ['hero_fx_core_106.aspart', 'kaisa_rain_fx_106.aspart', 'hero_fx_a_106.aspart', 'hero_fx_b_106.aspart', 'hero_fx_c_106.aspart',
-           'hero_fx_d_106.aspart']
+           'hero_fx_d_106.aspart', 'hero_fx_e_106.aspart']
 START = '      // BEGIN HERO CODE FX 106\n'
 END = '      // END HERO CODE FX 106\n'
+NATIVE_HOOK = ('         var heroFxClaimed106:Object={targets:param1,buff:param7};\n'
+               '         if(param5 && param1 && param1.length && heroFxClaim106("native",param5,param1[0],heroFxClaimed106))\n'
+               '            _loc41_ = {nativeContact104:_loc41_.nativeContact104,laneWave:_loc41_.laneWave,sp:heroFxClaimed106.sp};\n')
 
 
 def sync():
@@ -55,12 +58,16 @@ def sync():
     once('         if(target && target.hp > 0 && hp > 0) target.addBuff("shield",duration,Tools.toInt(getDamage()*coefficient),0,-1,this);',
          '         if(target && target.hp > 0 && hp > 0) {heroFxClaim106("shield",String(s2Family()),target);target.addBuff("shield",duration,Tools.toInt(getDamage()*coefficient),0,-1,this);}')
     # Named native effects: a claim drops the borrowed visuals and keeps the combat flags.
+    # The claim also sees the buff the action applies, and may set the bullet speed (sp) so
+    # the hit waits a known time for the projectile it draws. Upgrade the first form in place.
+    legacy = ('         if(param5 && param1 && param1.length && heroFxClaim106("native",param5,param1[0],{targets:param1}))\n'
+              '            _loc41_ = {nativeContact104:_loc41_.nativeContact104,laneWave:_loc41_.laneWave};\n')
+    s = s.replace(legacy, NATIVE_HOOK)
     once('         var _loc41_:* = DisplayTools.getAttrs(param5);\n'
          '         if(!_loc41_)\n         {\n            _loc41_ = {};\n         }\n',
          '         var _loc41_:* = DisplayTools.getAttrs(param5);\n'
          '         if(!_loc41_)\n         {\n            _loc41_ = {};\n         }\n'
-         '         if(param5 && param1 && param1.length && heroFxClaim106("native",param5,param1[0],{targets:param1}))\n'
-         '            _loc41_ = {nativeContact104:_loc41_.nativeContact104,laneWave:_loc41_.laneWave};\n')
+         + NATIVE_HOOK)
     # Persistent state art and its animation.
     once('         if(id.charAt(0)!="c" || index<0 || index>=32 || !fxAtlases104[sheet])return null;',
          '         if(id.charAt(1)==":")return heroFxImage106(id,scale,alpha);\n'
@@ -92,7 +99,7 @@ def sync():
         if row['source'] in ('client/src/stages/137_Avatar.as', 'client/src/stages/177_GameMapLayer.as'):
             row['source_sha256'] = hashlib.sha256((ROOT / row['source']).read_bytes()).hexdigest()
     config.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('Hero code FX 106: core, groups A/B/C/D and hooks synchronized')
+    print('Hero code FX 106: core, groups A/B/C/D/E and hooks synchronized')
 
 
 if __name__ == '__main__':

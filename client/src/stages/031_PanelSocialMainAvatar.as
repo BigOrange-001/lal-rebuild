@@ -6,12 +6,14 @@ package com.meng52.game.ui.screen
    import com.meng52.game.global.GlobalLanguageStr;
    import com.meng52.game.global.GlobalTextStyle;
    import com.meng52.game.module.avatar.Avatar;
+   import com.meng52.game.module.equip.Equip;
    import com.meng52.game.module.guide.GuideMaster;
    import com.meng52.game.ui.element.ItemAvatarBetter;
    import com.meng52.game.ui.element.ItemAvatarFoster;
    import com.meng52.game.ui.element.ItemAvatarSell;
    import com.meng52.game.ui.element.ItemAvatarStarUp;
    import com.meng52.game.ui.element.LOL_Scale9Button;
+   import com.meng52.game.ui.element.LOL_TextField;
    import com.meng52.game.ui.screen.PanelAvatarSell;
    import com.meng52.game.ui.stage.GuideTools;
    import com.meng52.game.ui.stage.LayoutUIAnimation;
@@ -21,12 +23,16 @@ package com.meng52.game.ui.screen
    import com.meng52.sound.SoundManager;
    import com.meng52.utils.Tools;
    import feathers.controls.List;
+   import feathers.controls.ScrollContainer;
    import feathers.data.ListCollection;
    import feathers.layout.TiledRowsLayout;
    import flash.geom.Rectangle;
    import flash.utils.getQualifiedClassName;
    import starling.events.Event;
+   import starling.events.Touch;
+   import starling.events.TouchEvent;
    import starling.display.Sprite;
+   import starling.text.TextField;
    
    public class PanelSocialMainAvatar extends PanelCenterPVE
    {
@@ -42,8 +48,20 @@ package com.meng52.game.ui.screen
          1:0,
          2:0,
          3:0,
-         4:0
+         4:0,
+         5:0
       };
+
+      // MATERIAL STACKS 106: the 材料 tab lists material cards (0) or skill books (1).
+      public static const MATERIAL_TAB:int = 5;
+
+      private static var $materialKind:int = 0;
+
+      private var mMaterialFilter:LOL_Scale9Button;
+
+      private var mMaterialHint:TextField;
+
+      private var mBookGrid:ScrollContainer;
       
       public var mBtn_clear:LOL_Scale9Button;
       
@@ -95,10 +113,22 @@ package com.meng52.game.ui.screen
          GlobalData.$mEventDispatcher.removeEventListener("update_avatar_sell_data",onUPDATE_AVATAR_DATA);
          GlobalData.$mEventDispatcher.removeEventListener("update_dn_team_ui",onMainEvent);
          removeRarityFilters();
+         removeBookGrid();
          if(mRosterFilters)
          {
             mRosterFilters.removeFromParent(true);
             mRosterFilters = null;
+         }
+         if(mMaterialFilter)
+         {
+            mMaterialFilter.removeEventListener("triggered",onMaterialFilter);
+            mMaterialFilter.removeFromParent(true);
+            mMaterialFilter = null;
+         }
+         if(mMaterialHint)
+         {
+            mMaterialHint.removeFromParent(true);
+            mMaterialHint = null;
          }
          super.onREMOVED_FROM_STAGE(param1);
       }
@@ -129,7 +159,11 @@ package com.meng52.game.ui.screen
          },{
             "label":GlobalLanguageStr.getLanguageStr(20072),
             "indexID":4
-         }],tabBar_changeHandler,tabBar_CREATION_COMPLETE);
+         },{
+            "label":"材料",
+            "indexID":MATERIAL_TAB
+         }],tabBar_changeHandler,tabBar_CREATION_COMPLETE,104);
+         // Six tabs: 6 x 104 fits the 640 stage (the default 117 only fits five).
          mTabBar.y = 17;
          mImg3_info = getImg3_info();
          mImg3_info.y = mTabBar.y + 55;
@@ -138,8 +172,269 @@ package com.meng52.game.ui.screen
          // Sort/filter controls live in the strip that used to hold the card-type sub-tabs.
          mRosterFilters = PanelAvatarSell.createRosterFilters(mRosterState,update,GlobalData.$mStageWidth,true);
          mRosterFilters.y = mImg3_info.y + 12;
-         mRosterFilters.visible = mTabBar == null || mTabBar.selectedIndex != 4;
+         mRosterFilters.visible = mTabBar == null || mTabBar.selectedIndex < 4;
          addChild(mRosterFilters);
+         createMaterialFilter(mImg3_info.y + 12);
+      }
+
+      private function createMaterialFilter(param1:Number) : void
+      {
+         mMaterialFilter = new LOL_Scale9Button("",190,46,"UI_btn_enterGame_0_0000");
+         mMaterialFilter.fontSize = 20;
+         mMaterialFilter.x = 25;
+         mMaterialFilter.y = param1;
+         mMaterialFilter.addEventListener("triggered",onMaterialFilter);
+         addChild(mMaterialFilter);
+         var _hintX:Number = mMaterialFilter.x + mMaterialFilter.width + 14;
+         mMaterialHint = GlobalTextStyle.getTextField("",17,4926491,"left",GlobalData.$mStageWidth - _hintX - 20,46);
+         mMaterialHint.touchable = false;
+         mMaterialHint.x = _hintX;
+         mMaterialHint.y = param1;
+         addChild(mMaterialHint);
+         refreshMaterialFilter();
+      }
+
+      private function refreshMaterialFilter() : void
+      {
+         var _shown:Boolean = mTabBar != null && mTabBar.selectedIndex == MATERIAL_TAB;
+         if(mMaterialFilter)
+         {
+            mMaterialFilter.text = $materialKind == 0 ? "类别：卡牌材料" : "类别：技能书";
+            mMaterialFilter.visible = _shown;
+         }
+         if(mMaterialHint)
+         {
+            mMaterialHint.text = $materialKind == 0 ? "未培养的同种材料叠放显示，每" + GlobalData.STACK_LIMIT + "张占1格" : "未升级、未装备的同名技能书叠放显示";
+            mMaterialHint.visible = _shown;
+         }
+      }
+
+      private function onMaterialFilter(param1:Event) : void
+      {
+         $materialKind = $materialKind == 0 ? 1 : 0;
+         refreshMaterialFilter();
+         if(this.mList)
+         {
+            this.mList.stopScrolling();
+         }
+         update();
+      }
+
+      // Lower numbers list first: skill cookies, EXP books, chests, then the rest.
+      private static function materialKindOrder(param1:String) : int
+      {
+         var _aid:String = String(param1).split("|")[0];
+         var _series:String = _aid.substr(0,6);
+         if(_series == "A_6992")
+         {
+            return 0;
+         }
+         if(_series == "A_6996" || _series == "A_6997" || _series == "A_6998")
+         {
+            return 1;
+         }
+         if(_series == "A_6999")
+         {
+            return 2;
+         }
+         if(_aid.indexOf("A_6") == 0)
+         {
+            return 3;
+         }
+         if(_aid.indexOf("A_4") == 0)
+         {
+            return 4;
+         }
+         if(_aid.indexOf("A_3") == 0)
+         {
+            return 5;
+         }
+         if(_aid.indexOf("A_2") == 0)
+         {
+            return 6;
+         }
+         return 7;
+      }
+
+      private function addMaterialList() : void
+      {
+         var _rows:Array = [];
+         var _keys:Array = [];
+         var _row:Object = null;
+         var _id:String = null;
+         var _avatar:Avatar = null;
+         var _avatars:Object = GlobalData.$userData.avatars;
+         var _equips:Object = GlobalData.$userData.my_equips;
+         var _used:Object = null;
+         if($materialKind == 0)
+         {
+            for(_id in _avatars)
+            {
+               if(!GlobalData.isMaterialCard(_id))
+               {
+                  continue;
+               }
+               _avatar = new Avatar(_id);
+               _row = Tools.clone(_avatars[_id]);
+               _row["id"] = _id;
+               _row["type"] = 1;
+               _row["star"] = _avatar.getStar();
+               _row["stack_key"] = GlobalData.avatarStackKey(_id,_avatars[_id]);
+               _row["kind_order"] = materialKindOrder(_id);
+               _rows.push(_row);
+               _avatar.clear();
+               _avatar = null;
+            }
+            _rows.sortOn(["kind_order","star","stack_key","id"],[16,0x10 | 2,0,0]);
+            for each(_row in _rows)
+            {
+               _keys.push(_row["stack_key"]);
+            }
+            _rows = GlobalData.collapseStacks(_rows,_keys);
+            this.setListTimer(mList,_rows,ItemAvatarBetter);
+         }
+         else
+         {
+            _used = GlobalData.stackUsedEquips();
+            for(_id in _equips)
+            {
+               _row = _equips[_id];
+               if(_row == null || !_row.eid || GlobalData.$mConfig_equip[_row.eid] == null || !GlobalFunction.checkEquipIsBook(String(_row.eid)))
+               {
+                  continue;
+               }
+               _row = Tools.clone(_row);
+               _row["id"] = _id;
+               _row["stack_key"] = GlobalData.bookStackKey(_id,_equips[_id],_used);
+               _row["quality"] = int(String(_row.eid).split("_")[2]);
+               _row["book_level"] = Math.max(1,int(_row.slv));
+               _rows.push(_row);
+            }
+            _rows.sortOn(["quality","book_level","eid","id"],[0x10 | 2,0x10 | 2,0,0]);
+            for each(_row in _rows)
+            {
+               _keys.push(_row["stack_key"]);
+            }
+            _rows = GlobalData.collapseStacks(_rows,_keys);
+            this.setListTimer(mList,[],ItemAvatarBetter);
+            showBookGrid(_rows);
+         }
+         this.setPageColorNumXY(GlobalLanguageStr.getLanguageStr(97005),null);
+         if(_rows.length <= 0)
+         {
+            this.setTips($materialKind == 0 ? "暂无卡牌材料" : "暂无技能书");
+         }
+         else if(mTips)
+         {
+            this.delTips();
+         }
+      }
+
+      // Skill books are equipment, so their cards are drawn here with the
+      // native equipment icon instead of a hero card renderer.
+      private function showBookGrid(param1:Array) : void
+      {
+         removeBookGrid();
+         var _layout:TiledRowsLayout = new TiledRowsLayout();
+         _layout.useSquareTiles = false;
+         _layout.horizontalGap = 20;
+         _layout.verticalGap = 16;
+         _layout.paddingTop = 10;
+         _layout.paddingBottom = 20;
+         _layout.horizontalAlign = "center";
+         _layout.verticalAlign = "top";
+         _layout.tileHorizontalAlign = "left";
+         _layout.tileVerticalAlign = "top";
+         mBookGrid = new ScrollContainer();
+         mBookGrid.layout = _layout;
+         mBookGrid.width = mList.width;
+         mBookGrid.height = mList.height;
+         mBookGrid.x = mList.x;
+         mBookGrid.y = mList.y;
+         mBookGrid.verticalScrollBarFactory = GlobalData.verticalScrollBarFactory;
+         mBookGrid.snapScrollPositionsToPixels = true;
+         for each(var _row:Object in param1)
+         {
+            mBookGrid.addChild(createBookCell(_row));
+         }
+         mList.visible = false;
+         addChild(mBookGrid);
+      }
+
+      private function createBookCell(param1:Object) : Sprite
+      {
+         var _cell:Sprite = new Sprite();
+         var _equip:Equip = new Equip(String(param1.id),GlobalData.$userData.my_equips[param1.id]);
+         var _icon:Sprite = _equip.getRes();
+         var _scale:Number = Math.min(1,90 / Math.max(1,Math.max(_icon.width,_icon.height)));
+         _icon.scaleX = _icon.scaleY = _scale;
+         _icon.x = int((94 - _icon.width) * 0.5);
+         _icon.touchable = false;
+         _cell.addChild(_icon);
+         var _level:int = Math.max(1,int(param1.slv));
+         var _name:LOL_TextField = new LOL_TextField(String(_equip.equipData.name) + (_level > 1 ? " " + _level + "级" : ""),104,28,false);
+         _name.fontSize = 17;
+         _name.fontColor = 16777215;
+         _name.hAlign = "center";
+         _name.shadowFilter();
+         _name.touchable = false;
+         _name.x = -5;
+         _name.y = 92;
+         _cell.addChild(_name);
+         if(int(param1.stack_count) > 1)
+         {
+            var _badge:LOL_TextField = new LOL_TextField("×" + int(param1.stack_count),86,32,false);
+            _badge.fontSize = 22;
+            _badge.fontColor = 16763904;
+            _badge.hAlign = "right";
+            _badge.shadowFilter();
+            _badge.touchable = false;
+            _badge.x = 2;
+            _badge.y = 60;
+            _cell.addChild(_badge);
+         }
+         if(GlobalFunction.checkEquipHasUsed(String(param1.id)) > -1)
+         {
+            var _worn:LOL_TextField = new LOL_TextField("装备中",90,26,false);
+            _worn.fontSize = 16;
+            _worn.fontColor = 11003770;
+            _worn.hAlign = "left";
+            _worn.shadowFilter();
+            _worn.touchable = false;
+            _worn.x = 4;
+            _worn.y = 2;
+            _cell.addChild(_worn);
+         }
+         _equip.clear();
+         var _owner:PanelSocialMainAvatar = this;
+         _cell.addEventListener("touch",function(event:TouchEvent):void
+         {
+            var _touch:Touch = event.getTouch(_cell,"ended");
+            if(_touch == null || _owner.isBookGridScrolling())
+            {
+               return;
+            }
+            GlobalFunction.setDetaiEquip(param1);
+         });
+         return _cell;
+      }
+
+      public function isBookGridScrolling() : Boolean
+      {
+         return mBookGrid == null || mBookGrid.isScrolling;
+      }
+
+      private function removeBookGrid() : void
+      {
+         if(mBookGrid)
+         {
+            mBookGrid.removeFromParent(true);
+            mBookGrid = null;
+         }
+         if(mList)
+         {
+            mList.visible = true;
+         }
       }
 
       private function compareSmartAvatars(param1:Object, param2:Object) : int
@@ -365,11 +660,18 @@ package com.meng52.game.ui.screen
       {
          var _loc2_:* = undefined;
          var _loc1_:Avatar = null;
+         removeBookGrid();
          setList();
          addList();
          if(mRosterFilters && mRosterFilters.visible)
          {
             setChildIndex(mRosterFilters,numChildren - 1);
+         }
+         refreshMaterialFilter();
+         if(mMaterialFilter && mMaterialFilter.visible)
+         {
+            setChildIndex(mMaterialFilter,numChildren - 1);
+            setChildIndex(mMaterialHint,numChildren - 1);
          }
          LayoutUIAnimation.getOnlyExample().clearIfNoGuide();
          if(this.mTabBar.selectedIndex == 4)
@@ -504,7 +806,8 @@ package com.meng52.game.ui.screen
                {
                   _loc9_ = int(_radioBarObj[0]);
                }
-               if(GlobalFunction.checkSearchTypeByType(_loc15_,_loc9_))
+               // Material cards live in the 材料 tab (MATERIAL STACKS 106).
+               if(GlobalFunction.checkSearchTypeByType(_loc15_,_loc9_) && !GlobalData.isMaterialCard(_loc15_))
                {
                   _loc1_ = new Avatar(_loc15_);
                   _loc13_ = _loc14_[_loc16_];
@@ -556,7 +859,7 @@ package com.meng52.game.ui.screen
                {
                   _loc9_ = int(_radioBarObj[1]);
                }
-               if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_))
+               if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_) && !GlobalData.isMaterialCard(_loc5_))
                {
                   _loc2_ = new Avatar(_loc5_);
                   _loc12_ = Tools.clone(_loc3_[_loc8_]);
@@ -610,7 +913,7 @@ package com.meng52.game.ui.screen
                {
                   _loc9_ = int(_radioBarObj[2]);
                }
-               if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_))
+               if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_) && !GlobalData.isMaterialCard(_loc5_))
                {
                   _loc2_ = new Avatar(_loc5_);
                   _loc12_ = Tools.clone(_loc3_[_loc8_]);
@@ -661,7 +964,7 @@ package com.meng52.game.ui.screen
                {
                   _loc9_ = int(_radioBarObj[3]);
                }
-               if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_))
+               if(GlobalFunction.checkSearchTypeByType(_loc5_,_loc9_) && !GlobalData.isMaterialCard(_loc5_))
                {
                   _loc2_ = new Avatar(_loc5_);
                   _loc12_ = Tools.clone(_loc3_[_loc8_]);
@@ -702,6 +1005,10 @@ package com.meng52.game.ui.screen
             {
                GuideMaster.getOnlyExample().checkGuide("M15_2",nextGuide);
             }
+         }
+         else if(mTabBar.selectedIndex == MATERIAL_TAB)
+         {
+            addMaterialList();
          }
          else if(mTabBar.selectedIndex == 4)
          {
@@ -838,8 +1145,9 @@ package com.meng52.game.ui.screen
          var _loc2_:int = mTabBar.selectedIndex;
          if(mRosterFilters)
          {
-            mRosterFilters.visible = _loc2_ != 4;
+            mRosterFilters.visible = _loc2_ < 4;
          }
+         refreshMaterialFilter();
          if(MainConfig.$isHasBuilding)
          {
             this.mRadioBar.setChildStatus(3,!($tabBarSelectedIndex == 1 || $tabBarSelectedIndex == 2 || $tabBarSelectedIndex == 3));
@@ -1026,7 +1334,7 @@ package com.meng52.game.ui.screen
       
       public function formatTxtInfo() : void
       {
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          this.mGold_all = GlobalFunction.getSellAvatarGold();
          var _loc3_:Number = GlobalData.$tempSell.length;
          var _loc2_:Number = GlobalData.$userData_avatarNum;

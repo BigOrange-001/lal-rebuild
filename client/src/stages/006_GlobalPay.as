@@ -189,7 +189,7 @@ package com.meng52.game.global
                GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateVip();
                GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
                GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
-               GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+               GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
                GlobalData.$mEventDispatcher.dispatchEventWith("update_shop_coin");
                GlobalData.$mEventDispatcher.dispatchEventWith("update_pay");
                GlobalData.$mEventDispatcher.dispatchEventWith("update_casion_coin");
@@ -392,7 +392,7 @@ package com.meng52.game.global
             GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateVip();
             GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
             GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             GlobalData.$mEventDispatcher.dispatchEventWith("update_shop_coin");
             GlobalData.$mEventDispatcher.dispatchEventWith("update_pay");
             GlobalData.$mEventDispatcher.dispatchEventWith("update_casion_coin");
@@ -1287,7 +1287,7 @@ package com.meng52.game.global
             GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
             GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
             GlobalFunction.delLoading();
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             GlobalData.$mEventDispatcher.dispatchEventWith("update_shop_coin");
             GlobalData.$mEventDispatcher.dispatchEventWith("update_pay");
             GlobalData.$mEventDispatcher.dispatchEventWith("update_casion_coin");

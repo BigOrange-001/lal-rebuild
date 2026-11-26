@@ -919,7 +919,7 @@ package com.meng52.game.ui.screen
          var _loc3_:Boolean = true;
          if(_loc5_)
          {
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len && (_loc6_.name == BTN_NAME_CASINO_A || _loc6_.name == BTN_NAME_CASINO_B))
             {
                _loc3_ = false;
@@ -1214,7 +1214,7 @@ package com.meng52.game.ui.screen
       {
          var _loc3_:LOL_Button = param1.currentTarget as LOL_Button;
          var _loc2_:Boolean = true;
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len && (_loc3_.name == BTN_NAME_CASINO_A || _loc3_.name == BTN_NAME_CASINO_B))
          {
             _loc2_ = false;

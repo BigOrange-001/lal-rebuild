@@ -372,7 +372,7 @@ package com.meng52.game.ui.element
             return;
          }
          GlobalData.$pvp_rival = data;
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(data["is_enemy"] >= 0)
          {
             _loc2_ = GlobalData.$mConfig_simple.capacity_config as Array;

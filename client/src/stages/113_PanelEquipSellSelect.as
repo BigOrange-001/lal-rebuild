@@ -586,7 +586,7 @@ package com.meng52.game.ui.panel
       
       public function formatTxtInfo() : void
       {
-         this.setTxtInfo(GlobalLanguageStr.getLanguageStr(90192,GlobalData.$tempEquipSellArr.length,10),GlobalLanguageStr.getLanguageStr(20463,Tools.getElementNum(GlobalData.$userData.my_equips),GlobalData.$mConfig_simple.equip_config[0]));
+         this.setTxtInfo(GlobalLanguageStr.getLanguageStr(90192,GlobalData.$tempEquipSellArr.length,10),GlobalLanguageStr.getLanguageStr(20463,GlobalData.equipSlotCount(),GlobalData.$mConfig_simple.equip_config[0]));
          if(GlobalData.$tempEquipSellArr.length > 0)
          {
             this.mBtn_sell.enabled = true;

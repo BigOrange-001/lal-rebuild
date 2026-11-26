@@ -18,6 +18,7 @@ from mod_policy import (runtime as mod_runtime, effective_digest, validate_battl
                         hero_available, band_candidates, retain_frozen_intent)
 from tower_rewards_103 import roll_tower_reward, roll_tower_encounter, validate_tower_reward, SCHEMA as TOWER_REWARD_SCHEMA
 from material_attempts_103 import remaining as material_remaining, consume_win as consume_material_win, daily_state as material_daily, BUY_COST
+import stage_sweep
 
 
 class GameplayCombat:
@@ -35,6 +36,8 @@ class GameplayCombat:
             return self._start_main(uid, params)
         if method == 'user.material_buy_attempt':
             return self._buy_material_attempt(uid,params)
+        if method == "user.stage_sweep":
+            return self._sweep(uid, params)
         if method == "user.pve_finish":
             return self._finish(uid, params)
         if method == "user.battle_finish" and params.get("fight_kind") == "exploration":
@@ -122,27 +125,7 @@ class GameplayCombat:
                 pass
             def mutate(profile):
                 profile.setdefault("cid", "M_001_1"); profile.setdefault("hid", "M_001_1")
-                progress = profile["hid"] if diff else profile["cid"]
-                if activity_kind == "tower":
-                    floor = int(stage.get("tower_floor", 0))
-                    frontier = max(1, int(profile.setdefault("records", {}).get("tower_floor", 1)))
-                    if floor < 1 or floor > int(chapter['combat']) or floor > frontier:
-                        raise GameplayFault("TowerFloorLocked", "Complete the preceding tower floor first")
-                elif activity_kind == "material":
-                    if material_remaining(profile,cid.rsplit('_',1)[0],self.store.clock.now())<=0:
-                        raise GameplayFault("ActivityAttemptsExhausted", "This material activity has no shared attempts remaining today")
-                if not is_activity and int(profile.get("lv", 1)) < int(chapter.get("ulv", 1)):
-                    raise GameplayFault("StageLocked", "Player level is below this chapter's unlock requirement")
-                if not is_activity and not self._is_unlocked(cid, progress):
-                    raise GameplayFault("StageLocked", "Complete the previous stage first")
-                limit_value = stage.get("limit", [99, 99, 99])
-                limit = int(limit_value[diff] if isinstance(limit_value, list) and len(limit_value) > diff
-                            else limit_value if type(limit_value) is int else 99)
-                attempt_bucket = "combat_ploy" if is_activity else "combat_main_hard" if diff else "combat_main"
-                attempts = int(profile.get("records", {}).get('daily_stage_attempts',{}).get(attempt_bucket, {}).get(cid, 0))
-                if attempts >= limit and activity_kind != 'material' and not stage.get("unlimited_attempts"):
-                    raise GameplayFault("ActivityAttemptsExhausted" if is_activity else "StageAttemptsExhausted",
-                                        "This stage has no attempts remaining")
+                progress = self._check_entry(profile, cid, diff, chapter, stage, is_activity, activity_kind)
                 own = serialize_player_team(self.config, profile, params.get("team_num", 0), params.get("team", []), attr_fn)
                 assist = self._resolve_assist(profile, params)
                 client_team_a = copy.deepcopy(own)
@@ -228,27 +211,7 @@ class GameplayCombat:
                 except ValueError as exc:
                     raise GameplayFault("InvalidStage", "Stage enemies must cover every native route") from exc
                 energy_cost=max(0,int(stage.get('energy',0)))
-                if mod_runtime(self.config):
-                    channel = "acquisition.drop.activity" if is_activity else "acquisition.drop.campaign"
-                    ensure_reward(self.config, stage.get("reward", {}), channel)
-                    ensure_reward(self.config, stage.get("reward", {}).get("first_clear", {}), channel)
-                    if not is_activity:
-                        groups = {}
-                        for row in stage.get("hero_drop_candidates_by_diff", {}).get(str(diff), []):
-                            if isinstance(row, dict) and not is_test_hero(self.config, row.get("aid")):
-                                groups.setdefault(row.get("star"), []).append(row.get("aid"))
-                        for quality, ids in groups.items():
-                            if not candidate_ids(self.config, ids, "acquisition.drop.campaign", include_new=True, quality=quality):
-                                raise GameplayFault("ModPoolEmpty", "主线英雄掉落的某个品阶池为空")
-                    if is_activity and stage.get("activity_kind") == "tower":
-                        if stage.get('tower_reward_rule',{}).get('schema') == TOWER_REWARD_SCHEMA:
-                            validate_tower_reward(self.full_config,stage)
-                        else:
-                            soul_pool = band_candidates(self.config, stage.get("soul_candidates", []), "acquisition.drop.tower_soul")
-                            if not soul_pool:
-                                raise GameplayFault("ModPoolEmpty", "爬塔英雄碎片池为空")
-                            if int(stage.get("tower_floor", 0)) > 100 and not candidate_ids(self.config, stage.get("tower_hero_candidates", []), "acquisition.drop.tower_hero", include_new=True, quality=6):
-                                raise GameplayFault("ModPoolEmpty", "爬塔整卡池为空")
+                self._check_reward_pools(stage, cid, diff, is_activity)
                 energy_state=self._spend_energy(profile,energy_cost)
                 stage_copy = copy.deepcopy(stage)
                 stage_copy["line"] = map_line
@@ -292,6 +255,223 @@ class GameplayCombat:
             raise
         except (ValueError, TypeError, KeyError) as exc:
             raise GameplayFault("InvalidFormation", str(exc)) from exc
+
+    def _check_entry(self, profile, cid, diff, chapter, stage, is_activity, activity_kind):
+        """Unlock, attempt and frontier checks shared by fights and sweeps."""
+        progress = profile["hid"] if diff else profile["cid"]
+        if activity_kind == "tower":
+            floor = int(stage.get("tower_floor", 0))
+            frontier = max(1, int(profile.setdefault("records", {}).get("tower_floor", 1)))
+            if floor < 1 or floor > int(chapter['combat']) or floor > frontier:
+                raise GameplayFault("TowerFloorLocked", "Complete the preceding tower floor first")
+        elif activity_kind == "material":
+            if material_remaining(profile,cid.rsplit('_',1)[0],self.store.clock.now())<=0:
+                raise GameplayFault("ActivityAttemptsExhausted", "This material activity has no shared attempts remaining today")
+        if not is_activity and int(profile.get("lv", 1)) < int(chapter.get("ulv", 1)):
+            raise GameplayFault("StageLocked", "Player level is below this chapter's unlock requirement")
+        if not is_activity and not self._is_unlocked(cid, progress):
+            raise GameplayFault("StageLocked", "Complete the previous stage first")
+        limit_value = stage.get("limit", [99, 99, 99])
+        limit = int(limit_value[diff] if isinstance(limit_value, list) and len(limit_value) > diff
+                    else limit_value if type(limit_value) is int else 99)
+        attempt_bucket = "combat_ploy" if is_activity else "combat_main_hard" if diff else "combat_main"
+        attempts = int(profile.get("records", {}).get('daily_stage_attempts',{}).get(attempt_bucket, {}).get(cid, 0))
+        if attempts >= limit and activity_kind != 'material' and not stage.get("unlimited_attempts"):
+            raise GameplayFault("ActivityAttemptsExhausted" if is_activity else "StageAttemptsExhausted",
+                                "This stage has no attempts remaining")
+        return progress
+
+    def _check_reward_pools(self, stage, cid, diff, is_activity):
+        """Mod runtime: every reward pool this stage can draw from must be non-empty."""
+        if mod_runtime(self.config):
+            channel = "acquisition.drop.activity" if is_activity else "acquisition.drop.campaign"
+            ensure_reward(self.config, stage.get("reward", {}), channel)
+            ensure_reward(self.config, stage.get("reward", {}).get("first_clear", {}), channel)
+            if not is_activity:
+                groups = {}
+                for row in stage.get("hero_drop_candidates_by_diff", {}).get(str(diff), []):
+                    if isinstance(row, dict) and not is_test_hero(self.config, row.get("aid")):
+                        groups.setdefault(row.get("star"), []).append(row.get("aid"))
+                for quality, ids in groups.items():
+                    if not candidate_ids(self.config, ids, "acquisition.drop.campaign", include_new=True, quality=quality):
+                        raise GameplayFault("ModPoolEmpty", "主线英雄掉落的某个品阶池为空")
+            if is_activity and stage.get("activity_kind") == "tower":
+                if stage.get('tower_reward_rule',{}).get('schema') == TOWER_REWARD_SCHEMA:
+                    validate_tower_reward(self.full_config,stage)
+                else:
+                    soul_pool = band_candidates(self.config, stage.get("soul_candidates", []), "acquisition.drop.tower_soul")
+                    if not soul_pool:
+                        raise GameplayFault("ModPoolEmpty", "爬塔英雄碎片池为空")
+                    if int(stage.get("tower_floor", 0)) > 100 and not candidate_ids(self.config, stage.get("tower_hero_candidates", []), "acquisition.drop.tower_hero", include_new=True, quality=6):
+                        raise GameplayFault("ModPoolEmpty", "爬塔整卡池为空")
+
+    def _attempts_left(self, profile, cid, diff, stage, is_activity, activity_kind, now):
+        """Today's remaining challenge attempts, or None when the stage has no cap."""
+        if activity_kind == "material":
+            return material_remaining(profile, cid.rsplit("_", 1)[0], now)
+        if stage.get("unlimited_attempts"):
+            return None
+        limit_value = stage.get("limit", [99, 99, 99])
+        limit = int(limit_value[diff] if isinstance(limit_value, list) and len(limit_value) > diff
+                    else limit_value if type(limit_value) is int else 99)
+        bucket = "combat_ploy" if is_activity else "combat_main_hard" if diff else "combat_main"
+        used = int(profile.get("records", {}).get("daily_stage_attempts", {}).get(bucket, {}).get(cid, 0))
+        return max(0, limit - used)
+
+    def _stage_stars(self, profile, cid, diff, is_activity):
+        scores = profile.get("combat_score", {})
+        scores = scores.get("ploy" if is_activity else "hard" if diff else "normal", {}) if isinstance(scores, dict) else {}
+        if not isinstance(scores, dict):
+            return 0
+        chapter_key, _, number = cid.rpartition("_")
+        entry = scores.get(chapter_key)
+        try:
+            index = int(number) - 1
+        except ValueError:
+            return 0
+        if isinstance(entry, list) and len(entry) > 1 and isinstance(entry[1], list):
+            value = entry[1][index] if 0 <= index < len(entry[1]) else 0
+        else:
+            value = scores.get(cid, 0)
+        return int(value) if type(value) in (int, float) else 0
+
+    @staticmethod
+    def _sweep_gift(before, after, granted_avatars, granted_equips):
+        """Native gift dict (the mail shape the client renders) of what a sweep added."""
+        gift = {}
+        for key in ("gold", "exp_reward", "score", "medal", "mark", "coin"):
+            amount = int(after.get(key, 0) or 0) - int(before.get(key, 0) or 0)
+            if amount > 0:
+                gift["exp" if key == "exp_reward" else key] = amount
+        for key in ("culture_book", "dn_stone"):
+            amount = int(after["attrs"].get(key) or 0) - int(before["attrs"].get(key) or 0)
+            if amount > 0:
+                gift[key] = amount
+        for key in ("dust", "sp"):
+            old = before["attrs"].get(key) or []
+            new = after["attrs"].get(key) or []
+            old = old if isinstance(old, list) else [old]
+            new = new if isinstance(new, list) else [new]
+            delta = [int(new[i] if i < len(new) else 0) - int(old[i] if i < len(old) else 0)
+                     for i in range(max(len(old), len(new)))]
+            if any(n > 0 for n in delta):
+                gift[key] = [max(0, n) for n in delta]
+        for key in ("avatar_soul", "equip_soul"):
+            delta = {item: int(n) - int(before[key].get(item, 0) or 0) for item, n in after[key].items()
+                     if type(n) is int and n > int(before[key].get(item, 0) or 0)}
+            if delta:
+                gift[key] = delta
+        heroes = {}
+        for iid, row in granted_avatars.items():
+            aid = str(row.get("aid", iid) if isinstance(row, dict) else iid).split("|")[0]
+            heroes[aid] = heroes.get(aid, 0) + 1
+        if heroes:
+            gift["avatar"] = heroes
+        items = {}
+        for row in granted_equips.values():
+            if isinstance(row, dict) and isinstance(row.get("eid"), str):
+                items[row["eid"]] = items.get(row["eid"], 0) + 1
+        if items:
+            gift["equip"] = items
+        return gift
+
+    def _sweep(self, uid, params):
+        """Settle `times` three-star wins of a stage at once, without a fight."""
+        cid = str(params.get("cid", ""))
+        diff = params.get("diff", 0)
+        times = params.get("times")
+        max_coin = params.get("max_coin", 0)
+        if type(diff) is not int or type(times) is not int or not 1 <= times <= stage_sweep.MAX_TIMES:
+            raise stage_sweep.fault("InvalidRequest", "扫荡次数必须是1到%d次。" % stage_sweep.MAX_TIMES)
+        if type(max_coin) is not int or max_coin < 0:
+            raise GameplayFault("InvalidRequest", "Sweep price confirmation must be a nonnegative integer")
+        key = self._operation_key("user.stage_sweep", params)
+        if not key:
+            raise GameplayFault("InvalidRequest", "Sweeps require an actionID")
+        chapter, stage = self._stage(cid, diff)
+        is_activity = cid in self._cfg("combat_ploy") and diff == 0
+        activity_kind = stage.get("activity_kind") if is_activity else None
+        energy_each = max(0, int(stage.get("energy", 0)))
+
+        def tracked(p):
+            attrs = p.get("attrs", {}) if isinstance(p.get("attrs"), dict) else {}
+            return {"gold": p.get("gold", 0), "coin": p.get("coin", 0), "score": p.get("score", 0),
+                    "medal": p.get("medal", 0), "mark": p.get("mark", 0), "exp_reward": 0,
+                    "attrs": copy.deepcopy({k: attrs.get(k) for k in ("culture_book", "dn_stone", "dust", "sp")}),
+                    "avatar_soul": copy.deepcopy(p.get("avatar_soul") or {}),
+                    "equip_soul": copy.deepcopy(p.get("equip_soul") or {})}
+
+        def mutate(profile):
+            now = int(self.store.clock.now())
+            profile.setdefault("cid", "M_001_1"); profile.setdefault("hid", "M_001_1")
+            if self._stage_stars(profile, cid, diff, is_activity) < stage_sweep.REQUIRED_STARS:
+                raise stage_sweep.fault("SweepLocked", "三星通关后才能扫荡。")
+            if int(stage.get("needvip", 0) or 0) > int(profile.get("vip_lv", 0) or 0):
+                raise stage_sweep.fault("SweepLocked", "VIP等级不足，无法扫荡该关卡。")
+            quote = stage_sweep.quote(profile, now, times)
+            if quote["coin_cost"] > max_coin:
+                raise stage_sweep.fault("SweepPriceChanged", "免费扫荡次数已变化，本次需要%d金砖，请重新确认。" % quote["coin_cost"])
+            if int(profile.get("coin", 0)) < quote["coin_cost"]:
+                raise stage_sweep.fault("InsufficientCoin", "金砖不足，本次扫荡需要%d金砖。" % quote["coin_cost"])
+            if energy_state(profile, self.full_config, now)["current"] < energy_each * times:
+                raise stage_sweep.fault("InsufficientEnergy", "体力不足，扫荡%d次需要%d体力。" % (times, energy_each * times))
+            left = self._attempts_left(profile, cid, diff, stage, is_activity, activity_kind, now)
+            if left is not None and left < times:
+                raise stage_sweep.fault("SweepAttemptsShort", "今日该关卡还可挑战%d次，不够扫荡%d次。" % (left, times))
+            self._check_reward_pools(stage, cid, diff, is_activity)
+            before = tracked(profile)
+            granted_avatars, granted_equips = {}, {}
+            exp_total = 0
+            squads = profile.get("team") if isinstance(profile.get("team"), list) else []
+            main = squads[0] if squads and isinstance(squads[0], list) else []
+            captain = next((iid for iid in main if isinstance(iid, str) and iid in profile.get("avatars", {})), None)
+            team_a = ([{"instance_id": captain, "aid": str(profile["avatars"][captain].get("aid", captain)).split("|")[0]}]
+                      if captain else [])
+            for _ in range(times):
+                # Attempts and material uses advance per settled sweep, so the
+                # same checks as a fight run before every one of them.
+                self._check_entry(profile, cid, diff, chapter, stage, is_activity, activity_kind)
+                self._spend_energy(profile, energy_each)
+                fight_id = "sweep-" + secrets.token_urlsafe(12)
+                stage_copy = copy.deepcopy(stage)
+                stage_copy["id"] = cid
+                pending = {"fight_id": fight_id, "cid": cid, "diff": diff, "seed": 0,
+                           "reward_seed": secrets.token_hex(32),
+                           "kind": "activity" if is_activity else "main", "stage": stage_copy,
+                           "created": now, "expires": now + 60, "team_a": copy.deepcopy(team_a),
+                           "team_b": [], "assist": None, "settled": False, "sweep": True}
+                if effective_digest(self.config):
+                    pending["mod_digest"] = effective_digest(self.config)
+                profile.setdefault("pending_pve", {})[fight_id] = pending
+                _, result = self._settle(uid, profile, fight_id, cid, diff, 1, stage_sweep.REQUIRED_STARS, {}, sweep=True)
+                granted_avatars.update(result.get("get_avatars", {}))
+                granted_equips.update(result.get("get_equips", {}))
+                exp_total += int(result.get("exp_reward", 0))
+            profile["coin"] = int(profile.get("coin", 0)) - quote["coin_cost"]
+            state = stage_sweep.record(profile, now, times, quote["paid"])
+            after = tracked(profile)
+            after["coin"] = int(after["coin"]) + quote["coin_cost"]
+            after["exp_reward"] = exp_total
+            gift = self._sweep_gift(before, after, granted_avatars, granted_equips)
+            free_limit = stage_sweep.free_limit(profile)
+            data = {"sweep": {"cid": cid, "diff": diff, "times": times, "gift_dict": gift,
+                              "energy_cost": energy_each * times, "coin_cost": quote["coin_cost"],
+                              "free_used": quote["free"], "paid": quote["paid"],
+                              "free_left": max(0, free_limit - state["used"]), "free_limit": free_limit,
+                              "price": stage_sweep.EXTRA_COST},
+                    "get_avatars": granted_avatars, "get_equips": granted_equips,
+                    "gold": profile.get("gold", 0), "coin": profile.get("coin", 0), "score": profile.get("score", 0),
+                    "medal": profile.get("medal", 0), "mark": profile.get("mark", 0),
+                    "exp": profile.get("exp", 0), "lv": profile.get("lv", 1),
+                    "energy": profile.get("energy", {"$date": now}),
+                    "attr_energy_extra": profile.get("attrs", {}).get("energy_extra", 0),
+                    "attrs": profile.get("attrs", {}), "records": profile.get("records", {}),
+                    "combat_score": profile.get("combat_score", {}), "ploy_cids": profile.get("ploy_cids", {})}
+            return profile, data
+
+        data, replayed = self.store.atomic_update(uid, mutate, key, params)
+        data["replayed"] = replayed
+        return data
 
     def _buy_material_attempt(self,uid,params):
         chapter=str(params.get('bid',''))
@@ -436,315 +616,320 @@ class GameplayCombat:
             raise GameplayFault("InvalidResult", "Team snapshots must be an object")
         score = max(0, min(3, int(params.get("combat_star", 3 if sign == 1 else 0)))) if sign == 1 else 0
         def mutate(profile):
-            first_clear = False
-            encounter = None
-            pending_map = profile.setdefault("pending_pve", {})
-            pending = pending_map.get(fight_id)
-            if not pending or pending.get("cid") != cid or int(pending.get("diff", -1)) != diff or int(pending.get("expires", 0)) < int(self.store.clock.now()):
-                raise GameplayFault("UnknownFight", "Battle is expired or does not belong to this player")
-            stage = pending["stage"]
-            if pending.get("settled"):
-                raise GameplayFault("FightAlreadySettled", "Battle has already been settled")
-            validate_battle_config(self.config, pending)
-            # Snapshots are bounded and validated for consistency, but never treated as server proof.
-            self._validate_snapshots(snapshots, pending)
-            profile.setdefault("combat_score", {"normal":{},"hard":{},"ploy":{}})
-            is_activity = pending.get("kind") == "activity"
-            score_key = "ploy" if is_activity else "hard" if diff else "normal"
-            scores = profile["combat_score"].setdefault(score_key, {})
-            chapter_key = cid.rsplit("_", 1)[0]
-            if sign==1 and is_activity and stage.get('activity_kind')=='material':
-                consume_material_win(profile,chapter_key,self.store.clock.now())
-            try:
-                stage_index = int(cid.rsplit("_", 1)[1]) - 1
-            except (ValueError, IndexError):
-                raise GameplayFault("UnknownStage", "Stage id has no numeric index")
-            chapter_cfg = self._cfg("battle_ploy" if is_activity else "battle_main").get(chapter_key, {})
-            stage_count = int(chapter_cfg.get("combat", stage_index + 1))
-            score_entry = scores.get(chapter_key)
-            if isinstance(score_entry, list) and len(score_entry) > 1 and isinstance(score_entry[1], list):
-                stars = list(score_entry[1])
-            else:
-                stars = []
-                # Migrate old reconstructed saves that stored scalar stars per cid.
-                for index in range(stage_count):
-                    legacy = scores.get(f"{chapter_key}_{index + 1}", 0)
-                    stars.append(max(0, min(3, int(legacy) if type(legacy) in (int, float) else 0)))
-            if len(stars) < stage_count:
-                stars.extend([0] * (stage_count - len(stars)))
-            previous = max(0, min(3, int(stars[stage_index]))) if 0 <= stage_index < len(stars) else 0
-            if sign == 1:
-                if is_activity:
-                    activity_key=cid.rsplit("_",1)[0]
-                    ploy_cids=profile.setdefault("ploy_cids",{}).setdefault(activity_key,[])
-                    first_clear=cid not in ploy_cids
-                    if first_clear: ploy_cids.append(cid)
-                    next_cid=cid
-                    counter_key="combat_ploy"
-                else:
-                    first_clear = previous == 0
-                    progress_key = "hid" if diff else "cid"
-                    next_cid = self._next_stage(cid)
-                    profile[progress_key] = self._furthest(profile.get(progress_key, "M_001_1"), next_cid)
-                    counter_key = "combat_main_hard" if diff else "combat_main"
-                stars[stage_index] = max(previous, score)
-                claim_mode = "-1" if is_activity else str(diff)
-                previous_chapter = scores.get(chapter_key, [])
-                claimed = (chapter_key in profile.get("records", {}).get("pass_battle_gift", {}).get(claim_mode, [])
-                           or isinstance(previous_chapter, list) and previous_chapter and str(previous_chapter[0]) == "1")
-                scores[chapter_key] = ["1" if claimed else "0", stars]
-                for index in range(stage_count):
-                    scores.pop(f"{chapter_key}_{index + 1}", None)
-                record_bucket = profile.setdefault("records", {}).setdefault(counter_key, {})
-                previous_wins = int(record_bucket.get(cid, 0))
-                record_bucket[cid] = previous_wins + 1
-                daily_bucket=profile['records'].setdefault('daily_stage_attempts',{}).setdefault(counter_key,{})
-                daily_bucket[cid]=int(daily_bucket.get(cid,0))+1
-                # Stars and win records are settlement authority. Return the
-                # decision with the actual rewards so a stale client frontier
-                # cannot apply a second first-clear multiplier locally.
-                first_clear = first_clear and previous_wins == 0
-                diff_rows = self.config.get("system_simple", {}).get("combat_diff", [[1, 1, 1, 1, 1]])
-                factors = diff_rows[diff] if isinstance(diff_rows, list) and len(diff_rows) > diff else [1, 1, 1, 1, 1]
-                first_rate = 2 if first_clear else 1
-                gold_factor = float(factors[3]) if isinstance(factors, list) and len(factors) > 3 else 1.0
-                exp_factor = float(factors[2]) if isinstance(factors, list) and len(factors) > 2 else 1.0
-                amount_gold = max(0, int(int(stage.get("gold", 0)) * first_rate * gold_factor))
-                exp_gain = max(0, int(int(stage.get("exp", 0)) * first_rate * exp_factor))
-                authored_reward = stage.get("reward", {})
-                reward = copy.deepcopy({k:v for k,v in authored_reward.items() if k in {"gold","coin","score","medal","mark","attrs","avatar_exp","items","heroes"}})
-                reward["gold"] = amount_gold
-                reward["exp"] = exp_gain
-                if is_activity and stage.get("activity_kind") == "material" and stage.get("activity_avatar_exp"):
-                    leader = next((unit.get("instance_id") for unit in pending.get("team_a", [])
-                                   if isinstance(unit, dict) and unit.get("instance_id") in profile.get("avatars", {})), None)
-                    if not leader:
-                        raise GameplayFault("InvalidTeam", "Material hero experience has no owned battle leader")
-                    reward["avatar_exp"] = {"hero_id": leader, "amount": int(stage["activity_avatar_exp"])}
-                tower_soul = None
-                tower_hero = None
-                tower_drop = None
-                if (is_activity and stage.get("activity_kind") == "tower"
-                        and stage.get('tower_reward_rule',{}).get('schema') == TOWER_REWARD_SCHEMA):
-                    tower_drop = roll_tower_reward(self.full_config,stage,self._reward_rng(uid,fight_id,pending,'tower-103'))
-                    reward.update(tower_drop)
-                elif is_activity and stage.get("activity_kind") == "tower":
-                    candidates = stage.get("soul_candidates", [])
-                    if mod_runtime(self.config):
-                        candidates = band_candidates(self.config, candidates, "acquisition.drop.tower_soul")
-                    if isinstance(candidates, list):
-                        candidates = [aid for aid in candidates if not is_test_hero(self.config, aid)]
-                    if not isinstance(candidates, list) or not candidates or any(aid not in self.config.get("avatar", {}) for aid in candidates):
-                        raise GameplayFault("InvalidStage", "Tower soul pool is invalid")
-                    tower_soul = self._reward_rng(uid, fight_id, pending, "tower-soul").choice(candidates)
-                    reward["avatar_soul"] = {tower_soul: int(stage.get("soul_amount", 120))}
-                    if int(stage.get("tower_floor", 0)) > 100:
-                        heroes = stage.get("tower_hero_candidates", [])
-                        if mod_runtime(self.config):
-                            heroes = candidate_ids(self.config, heroes, "acquisition.drop.tower_hero", include_new=True, quality=6)
-                        if isinstance(heroes, list):
-                            heroes = [aid for aid in heroes if not is_test_hero(self.config, aid)]
-                        if (not isinstance(heroes, list) or not heroes
-                                or any(aid not in self.config.get("avatar", {})
-                                       or not aid.startswith("A_1") or not aid.endswith("_6") for aid in heroes)):
-                            raise GameplayFault("InvalidStage", "Tower hero pool is invalid")
-                        tower_hero = self._reward_rng(uid, fight_id, pending, "tower-hero").choice(heroes)
-                # The config-gated elite gear rule rolls only on successful
-                # hard-mode mainline wins. It appends into
-                # this same reward object before the atomic grant_reward call,
-                # so inventory capacity failure rolls back the whole settlement.
-                if not is_activity and diff == 1 and sign == 1:
-                    elite_eid = roll_elite_drop(
-                        self.full_config, cid, diff, True,
-                        self._reward_rng(uid, fight_id, pending, "elite-equipment"),
-                    )
-                    if elite_eid is not None:
-                        reward.setdefault("items", []).append({"eid": elite_eid, "num": 1})
-                if not is_activity and cid.startswith("M_") and sign == 1:
-                    hero_aid = roll_campaign_hero_drop(
-                        self.full_config, stage, cid, diff, True,
-                        self._reward_rng(uid, fight_id, pending, "campaign-hero"),
-                    )
-                    if hero_aid is not None:
-                        reward.setdefault("heroes", []).append({"aid": hero_aid, "num": 1})
-                first = copy.deepcopy(authored_reward.get("first_clear", {}))
-                if isinstance(first, dict):
-                    first_attrs = first.get("attrs", {})
-                    if isinstance(first_attrs, dict):
-                        # Talent SP tutorial rewards are unique per stage across
-                        # normal and hard mode. Keep other first-clear rewards
-                        # under their existing per-difficulty semantics.
-                        sp_reward = first_attrs.pop("sp", None)
-                        if sp_reward is not None:
-                            records = profile.setdefault("records", {})
-                            claimed = records.setdefault("talent_sp_first_clear", [])
-                            if not isinstance(claimed, list):
-                                raise GameplayFault("InvalidProfile", "Talent first-clear record is malformed")
-                            if cid not in claimed:
-                                reward.setdefault("attrs", {})["sp"] = sp_reward
-                                claimed.append(cid)
-                    if first_clear:
-                        for key in ("gold","coin","score","medal","mark"): reward[key] = int(reward.get(key,0)) + int(first.get(key,0))
-                        if isinstance(first_attrs, dict) and first_attrs:
-                            reward.setdefault("attrs", {}).update(first_attrs)
-                        for key in ("items", "heroes"):
-                            if isinstance(first.get(key), list): reward.setdefault(key, []).extend(first[key])
-                exclusive_eid=None
-                if is_activity and cid.startswith("P_001_") and sign == 1:
-                    dropped_eid = roll_ancient_trial_drop(
-                        self.full_config, stage, cid, True,
-                        self._reward_rng(uid, fight_id, pending, "ancient-trial-equipment"))
-                    if dropped_eid is not None:
-                        reward.setdefault("items", []).append({"eid": dropped_eid, "num": 1})
-                    exclusive_eid=roll_ancient_exclusive_drop(self.full_config,stage,cid,True,
-                        self._reward_rng(uid,fight_id,pending,'ancient-trial-exclusive'))
-                before_avatars=set(profile.get("avatars",{})); before_equips=set(profile.get("my_equips",{}))
-                grant_reward(profile, reward, self.full_config, allow_skin=tower_drop is not None)
-                if exclusive_eid is not None:
-                    exclusive_reward={'items':[{'eid':exclusive_eid,'num':1}]}
-                    grant_reward(profile,exclusive_reward,self.full_config,allow_equipment_exclusive=True)
-                    reward.setdefault('items',[]).extend(exclusive_reward['items'])
-                if tower_hero is not None:
-                    grant_reward(profile, {"heroes": [{"aid": tower_hero, "num": 1}]}, self.full_config, allow_skin=True)
-                    reward.setdefault("heroes", []).append({"aid": tower_hero, "num": 1})
-                if reward.get("avatar_exp"):
-                    from gameplay_roster import GameplayRosterEquipment
-                    roster_rules = GameplayRosterEquipment.for_config(self.store, self.full_config)
-                    hero_id = reward["avatar_exp"]["hero_id"]
-                    hero = profile["avatars"][hero_id]
-                    hero_aid = str(hero.get("aid", hero_id)).split("|")[0]
-                    total_exp = roster_rules._hero_all_exp(hero, hero_aid)
-                    cap = roster_rules._hero_level_cap(hero_aid, hero)
-                    hero["lv"], hero["exp"] = roster_rules._level_from_exp(total_exp, cap, hero_aid)
-                if tower_soul is not None or tower_drop is not None:
-                    # Only tower-issued restricted souls authorize the later
-                    # exchange. A transaction replay cannot reach this block.
-                    from gameplay_common import skin_acquisition_blocked_ids
-                    souls = tower_drop.get('avatar_soul',{}) if tower_drop is not None else {tower_soul:int(stage.get('soul_amount',120))}
-                    for aid,amount in souls.items():
-                        if aid in skin_acquisition_blocked_ids(self.full_config):
-                            credit = profile.setdefault("attrs", {}).setdefault("tower_skin_soul_credit", {})
-                            credit[aid] = int(credit.get(aid, 0)) + amount
-                    floor = int(stage["tower_floor"])
-                    records = profile.setdefault("records", {})
-                    tower_count=int(self._cfg('battle_ploy')['P_200']['combat'])
-                    records["tower_floor"] = max(1, int(records.get("tower_floor", 1)), min(tower_count+1, floor+1))
-                encounter = profile.get("pending_limit_break")
-                if not isinstance(encounter, dict):
-                    encounter = None
-                if encounter is not None:
-                    still_valid = self._limit_break_candidates(profile, encounter.get("candidate_ids", []))
-                    if still_valid:
-                        encounter["candidate_ids"] = still_valid
-                    else:
-                        profile.pop("pending_limit_break", None)
-                        encounter = None
-                if encounter is None:
-                    ids = [unit.get("instance_id") for unit in pending.get("team_a", [])
-                           if isinstance(unit, dict)]
-                    candidates = self._limit_break_candidates(profile, ids)
-                    if (candidates and self._reward_rng(uid, fight_id, pending, "limit-break").random() < 0.05):
-                        encounter = {"fight_id": fight_id, "candidate_ids": candidates, "created": int(self.store.clock.now())}
-                        profile["pending_limit_break"] = encounter
-                # A mainline chapter-finale win grants one native-shaped,
-                # time-limited morph chance per chapter across normal/hard.
-                # Preserve a still-live chance instead of shortening its
-                # window; recording the chapter prevents replay refreshes.
-                # Chapter-finale rewards follow the authored chapter length;
-                # newer chapters may use a different number of encounters.
-                chapter_final = not is_activity and stage_index == stage_count - 1
-                if chapter_final:
-                    records = profile.setdefault("records", {})
-                    chapter_morph = copy.deepcopy(profile.get("attrs", {}).get("morph", {}))
-                    claimed = records.setdefault("morph_chance_first_clear", [])
-                    if not isinstance(claimed, list):
-                        claimed = list(claimed) if isinstance(claimed, (tuple, set)) else []
-                        records["morph_chance_first_clear"] = claimed
-                    if chapter_key not in claimed:
-                        attrs = profile.setdefault("attrs", {})
-                        morph = attrs.setdefault("morph", {})
-                        if not isinstance(morph, dict):
-                            morph = {}
-                            attrs["morph"] = morph
-                        chance = morph.get("chance", 0)
-                        chance_time = chance.get("$date") if isinstance(chance, dict) else chance
-                        try:
-                            chance_time = int(chance_time or 0)
-                        except (TypeError, ValueError, OverflowError):
-                            chance_time = 0
-                        morph_cfg = self.config.get("ploy_system_simple", {}).get("morph", {})
-                        morph_params = morph_cfg.get("params", []) if isinstance(morph_cfg, dict) else []
-                        try:
-                            window_seconds = max(0, int(morph_params[4]) * 60)
-                        except (TypeError, ValueError, IndexError, OverflowError):
-                            # Keep compatibility with a partial legacy config;
-                            # the configured duration is seven days.
-                            window_seconds = 7 * 24 * 60 * 60
-                        now = int(self.store.clock.now())
-                        chance_is_live = chance_time > 0 and now - chance_time <= window_seconds
-                        if not chance_is_live:
-                            morph["chance"] = {"$date": now}
-                        claimed.append(chapter_key)
-                    # PanelGameEndAward consumes this native field and merges
-                    # it into the current client attrs without replacing the
-                    # other morph settings.
-                    chapter_morph = copy.deepcopy(profile.get("attrs", {}).get("morph", {}))
-                assist = pending.get("assist")
-                if assist:
-                    score_cfg = self.config.get("system_simple", {}).get("score_config", [100, 1])
-                    score_index = 0 if assist.get("is_friend") else 1
-                    score_gain = max(0, int(score_cfg[score_index] if isinstance(score_cfg, list) and len(score_cfg) > score_index else (100 if score_index == 0 else 1)))
-                    profile["score"] = int(profile.get("score", 0)) + score_gain
-                    assist["score_gain"] = score_gain
-                    if not assist.get("is_bot"):
-                        records = profile.setdefault("records", {})
-                        key = "help_fuids" if assist.get("is_friend") else "help_suids"
-                        records.setdefault(key, {})[assist["uid"]] = copy.deepcopy(assist["cd_time"])
-                granted_avatars={key:value for key,value in profile.get("avatars",{}).items() if key not in before_avatars}
-                granted_equips={key:value for key,value in profile.get("my_equips",{}).items() if key not in before_equips}
-            else:
-                granted_avatars={}; granted_equips={}
-                next_cid = profile.get("hid" if diff else "cid", "M_001_1")
-                amount_gold = 0; exp_gain = 0
-            pending["settled"] = True
-            pending["result"] = sign
-            pending["finished"] = int(self.store.clock.now())
-            profile["pending_pve"].pop(fight_id, None)
-            if sign == 1 and not is_activity:
-                self.store.adventure.record_pve_win(profile, diff)
-            if sign == 1:
-                cfg_scores = profile["combat_score"]
-                # The existing panel calculates chapter/encounter progression from these fields.
-                return_data = {"sign":1,"combat_star":score,"next_cid":next_cid,"gold":profile.get("gold",0),
-                    "coin":profile.get("coin",0),"score":profile.get("score",0),"medal":profile.get("medal",0),"mark":profile.get("mark",0),
-                    "combat_score":cfg_scores,"ploy_cids":profile.get("ploy_cids",{}),"exp":profile.get("exp",0),"lv":profile.get("lv",1),
-                    "energy":profile.get("energy",{"$date":int(self.store.clock.now())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
-                    "attrs":profile.get("attrs",{}),"sp":profile.get("attrs",{}).get("sp",[0,0,0,0]),"records":profile.get("records",{}),"gold_reward":amount_gold,"exp_reward":exp_gain,
-                    "get_avatars":granted_avatars,"get_equips":granted_equips,"culture_book":profile.get("attrs",{}).get("culture_book",0),"box_key":profile.get("attrs",{}).get("box_key",0),"dust":profile.get("attrs",{}).get("dust",[0,0,0,0]),"dn_stone":profile.get("attrs",{}).get("dn_stone",0),
-                    "battle_teams":snapshots,"first_clear":first_clear}
-            else:
-                return_data = {"sign":2,"combat_star":0,"next_cid":profile.get("hid" if diff else "cid","M_001_1"),
-                    "gold":profile.get("gold",0),"coin":profile.get("coin",0),"score":profile.get("score",0),
-                    "combat_score":profile.get("combat_score",{}),"ploy_cids":profile.get("ploy_cids",{}),"exp":profile.get("exp",0),"lv":profile.get("lv",1),
-                    "energy":profile.get("energy",{"$date":int(self.store.clock.now())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
-                    "attrs":profile.get("attrs",{}),"sp":profile.get("attrs",{}).get("sp",[0,0,0,0]),"records":profile.get("records",{}),"get_avatars":{},"get_equips":{},"culture_book":profile.get("attrs",{}).get("culture_book",0),"box_key":profile.get("attrs",{}).get("box_key",0),"dust":profile.get("attrs",{}).get("dust",[0,0,0,0]),"dn_stone":profile.get("attrs",{}).get("dn_stone",0),"battle_teams":snapshots,"first_clear":False}
-            if pending.get("assist"):
-                return_data["friend_avatar"] = copy.deepcopy(pending["assist"]["friend_avatar"])
-                return_data["score"] = profile.get("score", 0)
-            if sign == 1 and chapter_final:
-                return_data["attr_morph"] = chapter_morph
-            if sign == 1 and encounter is not None:
-                return_data["limit_break_encounter"] = copy.deepcopy(encounter)
-            if sign == 1 and is_activity and stage.get("activity_kind") == "tower":
-                return_data["tower_soul_reward"] = copy.deepcopy(reward.get('avatar_soul',{}))
-                return_data["new_avatar_soul"] = copy.deepcopy(reward.get('avatar_soul',{}))
-                return_data["get_avatar_soul"] = copy.deepcopy(profile.get('avatar_soul',{}))
-                return_data["avatar_soul"] = copy.deepcopy(profile.get("avatar_soul", {}))
-                return_data["tower_floor"] = profile.get("records", {}).get("tower_floor", 1)
-            return profile, return_data
+            return self._settle(uid, profile, fight_id, cid, diff, sign, score, snapshots)
         data, replayed = self.store.atomic_update(uid, mutate, self._operation_key("user.pve_finish", params), params)
         data["fight_id"] = fight_id; data["replayed"] = replayed
         return data
+
+    def _settle(self, uid, profile, fight_id, cid, diff, sign, score, snapshots, sweep=False):
+        """Settle one pending PvE intent inside an atomic update; sweeps reuse the win path."""
+        first_clear = False
+        encounter = None
+        pending_map = profile.setdefault("pending_pve", {})
+        pending = pending_map.get(fight_id)
+        if not pending or pending.get("cid") != cid or int(pending.get("diff", -1)) != diff or int(pending.get("expires", 0)) < int(self.store.clock.now()):
+            raise GameplayFault("UnknownFight", "Battle is expired or does not belong to this player")
+        stage = pending["stage"]
+        if pending.get("settled"):
+            raise GameplayFault("FightAlreadySettled", "Battle has already been settled")
+        validate_battle_config(self.config, pending)
+        # Snapshots are bounded and validated for consistency, but never treated as server proof.
+        self._validate_snapshots(snapshots, pending)
+        profile.setdefault("combat_score", {"normal":{},"hard":{},"ploy":{}})
+        is_activity = pending.get("kind") == "activity"
+        score_key = "ploy" if is_activity else "hard" if diff else "normal"
+        scores = profile["combat_score"].setdefault(score_key, {})
+        chapter_key = cid.rsplit("_", 1)[0]
+        if sign==1 and is_activity and stage.get('activity_kind')=='material':
+            consume_material_win(profile,chapter_key,self.store.clock.now())
+        try:
+            stage_index = int(cid.rsplit("_", 1)[1]) - 1
+        except (ValueError, IndexError):
+            raise GameplayFault("UnknownStage", "Stage id has no numeric index")
+        chapter_cfg = self._cfg("battle_ploy" if is_activity else "battle_main").get(chapter_key, {})
+        stage_count = int(chapter_cfg.get("combat", stage_index + 1))
+        score_entry = scores.get(chapter_key)
+        if isinstance(score_entry, list) and len(score_entry) > 1 and isinstance(score_entry[1], list):
+            stars = list(score_entry[1])
+        else:
+            stars = []
+            # Migrate old reconstructed saves that stored scalar stars per cid.
+            for index in range(stage_count):
+                legacy = scores.get(f"{chapter_key}_{index + 1}", 0)
+                stars.append(max(0, min(3, int(legacy) if type(legacy) in (int, float) else 0)))
+        if len(stars) < stage_count:
+            stars.extend([0] * (stage_count - len(stars)))
+        previous = max(0, min(3, int(stars[stage_index]))) if 0 <= stage_index < len(stars) else 0
+        if sign == 1:
+            if is_activity:
+                activity_key=cid.rsplit("_",1)[0]
+                ploy_cids=profile.setdefault("ploy_cids",{}).setdefault(activity_key,[])
+                first_clear=cid not in ploy_cids
+                if first_clear: ploy_cids.append(cid)
+                next_cid=cid
+                counter_key="combat_ploy"
+            else:
+                first_clear = previous == 0
+                progress_key = "hid" if diff else "cid"
+                next_cid = self._next_stage(cid)
+                profile[progress_key] = self._furthest(profile.get(progress_key, "M_001_1"), next_cid)
+                counter_key = "combat_main_hard" if diff else "combat_main"
+            stars[stage_index] = max(previous, score)
+            claim_mode = "-1" if is_activity else str(diff)
+            previous_chapter = scores.get(chapter_key, [])
+            claimed = (chapter_key in profile.get("records", {}).get("pass_battle_gift", {}).get(claim_mode, [])
+                       or isinstance(previous_chapter, list) and previous_chapter and str(previous_chapter[0]) == "1")
+            scores[chapter_key] = ["1" if claimed else "0", stars]
+            for index in range(stage_count):
+                scores.pop(f"{chapter_key}_{index + 1}", None)
+            record_bucket = profile.setdefault("records", {}).setdefault(counter_key, {})
+            previous_wins = int(record_bucket.get(cid, 0))
+            record_bucket[cid] = previous_wins + 1
+            daily_bucket=profile['records'].setdefault('daily_stage_attempts',{}).setdefault(counter_key,{})
+            daily_bucket[cid]=int(daily_bucket.get(cid,0))+1
+            # Stars and win records are settlement authority. Return the
+            # decision with the actual rewards so a stale client frontier
+            # cannot apply a second first-clear multiplier locally.
+            first_clear = first_clear and previous_wins == 0
+            diff_rows = self.config.get("system_simple", {}).get("combat_diff", [[1, 1, 1, 1, 1]])
+            factors = diff_rows[diff] if isinstance(diff_rows, list) and len(diff_rows) > diff else [1, 1, 1, 1, 1]
+            first_rate = 2 if first_clear else 1
+            gold_factor = float(factors[3]) if isinstance(factors, list) and len(factors) > 3 else 1.0
+            exp_factor = float(factors[2]) if isinstance(factors, list) and len(factors) > 2 else 1.0
+            amount_gold = max(0, int(int(stage.get("gold", 0)) * first_rate * gold_factor))
+            exp_gain = max(0, int(int(stage.get("exp", 0)) * first_rate * exp_factor))
+            authored_reward = stage.get("reward", {})
+            reward = copy.deepcopy({k:v for k,v in authored_reward.items() if k in {"gold","coin","score","medal","mark","attrs","avatar_exp","items","heroes"}})
+            reward["gold"] = amount_gold
+            reward["exp"] = exp_gain
+            if is_activity and stage.get("activity_kind") == "material" and stage.get("activity_avatar_exp"):
+                leader = next((unit.get("instance_id") for unit in pending.get("team_a", [])
+                               if isinstance(unit, dict) and unit.get("instance_id") in profile.get("avatars", {})), None)
+                if not leader:
+                    raise GameplayFault("InvalidTeam", "Material hero experience has no owned battle leader")
+                reward["avatar_exp"] = {"hero_id": leader, "amount": int(stage["activity_avatar_exp"])}
+            tower_soul = None
+            tower_hero = None
+            tower_drop = None
+            if (is_activity and stage.get("activity_kind") == "tower"
+                    and stage.get('tower_reward_rule',{}).get('schema') == TOWER_REWARD_SCHEMA):
+                tower_drop = roll_tower_reward(self.full_config,stage,self._reward_rng(uid,fight_id,pending,'tower-103'))
+                reward.update(tower_drop)
+            elif is_activity and stage.get("activity_kind") == "tower":
+                candidates = stage.get("soul_candidates", [])
+                if mod_runtime(self.config):
+                    candidates = band_candidates(self.config, candidates, "acquisition.drop.tower_soul")
+                if isinstance(candidates, list):
+                    candidates = [aid for aid in candidates if not is_test_hero(self.config, aid)]
+                if not isinstance(candidates, list) or not candidates or any(aid not in self.config.get("avatar", {}) for aid in candidates):
+                    raise GameplayFault("InvalidStage", "Tower soul pool is invalid")
+                tower_soul = self._reward_rng(uid, fight_id, pending, "tower-soul").choice(candidates)
+                reward["avatar_soul"] = {tower_soul: int(stage.get("soul_amount", 120))}
+                if int(stage.get("tower_floor", 0)) > 100:
+                    heroes = stage.get("tower_hero_candidates", [])
+                    if mod_runtime(self.config):
+                        heroes = candidate_ids(self.config, heroes, "acquisition.drop.tower_hero", include_new=True, quality=6)
+                    if isinstance(heroes, list):
+                        heroes = [aid for aid in heroes if not is_test_hero(self.config, aid)]
+                    if (not isinstance(heroes, list) or not heroes
+                            or any(aid not in self.config.get("avatar", {})
+                                   or not aid.startswith("A_1") or not aid.endswith("_6") for aid in heroes)):
+                        raise GameplayFault("InvalidStage", "Tower hero pool is invalid")
+                    tower_hero = self._reward_rng(uid, fight_id, pending, "tower-hero").choice(heroes)
+            # The config-gated elite gear rule rolls only on successful
+            # hard-mode mainline wins. It appends into
+            # this same reward object before the atomic grant_reward call,
+            # so inventory capacity failure rolls back the whole settlement.
+            if not is_activity and diff == 1 and sign == 1:
+                elite_eid = roll_elite_drop(
+                    self.full_config, cid, diff, True,
+                    self._reward_rng(uid, fight_id, pending, "elite-equipment"),
+                )
+                if elite_eid is not None:
+                    reward.setdefault("items", []).append({"eid": elite_eid, "num": 1})
+            if not is_activity and cid.startswith("M_") and sign == 1:
+                hero_aid = roll_campaign_hero_drop(
+                    self.full_config, stage, cid, diff, True,
+                    self._reward_rng(uid, fight_id, pending, "campaign-hero"),
+                )
+                if hero_aid is not None:
+                    reward.setdefault("heroes", []).append({"aid": hero_aid, "num": 1})
+            first = copy.deepcopy(authored_reward.get("first_clear", {}))
+            if isinstance(first, dict):
+                first_attrs = first.get("attrs", {})
+                if isinstance(first_attrs, dict):
+                    # Talent SP tutorial rewards are unique per stage across
+                    # normal and hard mode. Keep other first-clear rewards
+                    # under their existing per-difficulty semantics.
+                    sp_reward = first_attrs.pop("sp", None)
+                    if sp_reward is not None:
+                        records = profile.setdefault("records", {})
+                        claimed = records.setdefault("talent_sp_first_clear", [])
+                        if not isinstance(claimed, list):
+                            raise GameplayFault("InvalidProfile", "Talent first-clear record is malformed")
+                        if cid not in claimed:
+                            reward.setdefault("attrs", {})["sp"] = sp_reward
+                            claimed.append(cid)
+                if first_clear:
+                    for key in ("gold","coin","score","medal","mark"): reward[key] = int(reward.get(key,0)) + int(first.get(key,0))
+                    if isinstance(first_attrs, dict) and first_attrs:
+                        reward.setdefault("attrs", {}).update(first_attrs)
+                    for key in ("items", "heroes"):
+                        if isinstance(first.get(key), list): reward.setdefault(key, []).extend(first[key])
+            exclusive_eid=None
+            if is_activity and cid.startswith("P_001_") and sign == 1:
+                dropped_eid = roll_ancient_trial_drop(
+                    self.full_config, stage, cid, True,
+                    self._reward_rng(uid, fight_id, pending, "ancient-trial-equipment"))
+                if dropped_eid is not None:
+                    reward.setdefault("items", []).append({"eid": dropped_eid, "num": 1})
+                exclusive_eid=roll_ancient_exclusive_drop(self.full_config,stage,cid,True,
+                    self._reward_rng(uid,fight_id,pending,'ancient-trial-exclusive'))
+            before_avatars=set(profile.get("avatars",{})); before_equips=set(profile.get("my_equips",{}))
+            grant_reward(profile, reward, self.full_config, allow_skin=tower_drop is not None)
+            if exclusive_eid is not None:
+                exclusive_reward={'items':[{'eid':exclusive_eid,'num':1}]}
+                grant_reward(profile,exclusive_reward,self.full_config,allow_equipment_exclusive=True)
+                reward.setdefault('items',[]).extend(exclusive_reward['items'])
+            if tower_hero is not None:
+                grant_reward(profile, {"heroes": [{"aid": tower_hero, "num": 1}]}, self.full_config, allow_skin=True)
+                reward.setdefault("heroes", []).append({"aid": tower_hero, "num": 1})
+            if reward.get("avatar_exp"):
+                from gameplay_roster import GameplayRosterEquipment
+                roster_rules = GameplayRosterEquipment.for_config(self.store, self.full_config)
+                hero_id = reward["avatar_exp"]["hero_id"]
+                hero = profile["avatars"][hero_id]
+                hero_aid = str(hero.get("aid", hero_id)).split("|")[0]
+                total_exp = roster_rules._hero_all_exp(hero, hero_aid)
+                cap = roster_rules._hero_level_cap(hero_aid, hero)
+                hero["lv"], hero["exp"] = roster_rules._level_from_exp(total_exp, cap, hero_aid)
+            if tower_soul is not None or tower_drop is not None:
+                # Only tower-issued restricted souls authorize the later
+                # exchange. A transaction replay cannot reach this block.
+                from gameplay_common import skin_acquisition_blocked_ids
+                souls = tower_drop.get('avatar_soul',{}) if tower_drop is not None else {tower_soul:int(stage.get('soul_amount',120))}
+                for aid,amount in souls.items():
+                    if aid in skin_acquisition_blocked_ids(self.full_config):
+                        credit = profile.setdefault("attrs", {}).setdefault("tower_skin_soul_credit", {})
+                        credit[aid] = int(credit.get(aid, 0)) + amount
+                floor = int(stage["tower_floor"])
+                records = profile.setdefault("records", {})
+                tower_count=int(self._cfg('battle_ploy')['P_200']['combat'])
+                records["tower_floor"] = max(1, int(records.get("tower_floor", 1)), min(tower_count+1, floor+1))
+            encounter = profile.get("pending_limit_break")
+            if not isinstance(encounter, dict):
+                encounter = None
+            if encounter is not None:
+                still_valid = self._limit_break_candidates(profile, encounter.get("candidate_ids", []))
+                if still_valid:
+                    encounter["candidate_ids"] = still_valid
+                else:
+                    profile.pop("pending_limit_break", None)
+                    encounter = None
+            # Sweeps have no fighting team; the 5% limit-break encounter needs a real win.
+            if encounter is None and not sweep:
+                ids = [unit.get("instance_id") for unit in pending.get("team_a", [])
+                       if isinstance(unit, dict)]
+                candidates = self._limit_break_candidates(profile, ids)
+                if (candidates and self._reward_rng(uid, fight_id, pending, "limit-break").random() < 0.05):
+                    encounter = {"fight_id": fight_id, "candidate_ids": candidates, "created": int(self.store.clock.now())}
+                    profile["pending_limit_break"] = encounter
+            # A mainline chapter-finale win grants one native-shaped,
+            # time-limited morph chance per chapter across normal/hard.
+            # Preserve a still-live chance instead of shortening its
+            # window; recording the chapter prevents replay refreshes.
+            # Chapter-finale rewards follow the authored chapter length;
+            # newer chapters may use a different number of encounters.
+            chapter_final = not is_activity and stage_index == stage_count - 1
+            if chapter_final:
+                records = profile.setdefault("records", {})
+                chapter_morph = copy.deepcopy(profile.get("attrs", {}).get("morph", {}))
+                claimed = records.setdefault("morph_chance_first_clear", [])
+                if not isinstance(claimed, list):
+                    claimed = list(claimed) if isinstance(claimed, (tuple, set)) else []
+                    records["morph_chance_first_clear"] = claimed
+                if chapter_key not in claimed:
+                    attrs = profile.setdefault("attrs", {})
+                    morph = attrs.setdefault("morph", {})
+                    if not isinstance(morph, dict):
+                        morph = {}
+                        attrs["morph"] = morph
+                    chance = morph.get("chance", 0)
+                    chance_time = chance.get("$date") if isinstance(chance, dict) else chance
+                    try:
+                        chance_time = int(chance_time or 0)
+                    except (TypeError, ValueError, OverflowError):
+                        chance_time = 0
+                    morph_cfg = self.config.get("ploy_system_simple", {}).get("morph", {})
+                    morph_params = morph_cfg.get("params", []) if isinstance(morph_cfg, dict) else []
+                    try:
+                        window_seconds = max(0, int(morph_params[4]) * 60)
+                    except (TypeError, ValueError, IndexError, OverflowError):
+                        # Keep compatibility with a partial legacy config;
+                        # the configured duration is seven days.
+                        window_seconds = 7 * 24 * 60 * 60
+                    now = int(self.store.clock.now())
+                    chance_is_live = chance_time > 0 and now - chance_time <= window_seconds
+                    if not chance_is_live:
+                        morph["chance"] = {"$date": now}
+                    claimed.append(chapter_key)
+                # PanelGameEndAward consumes this native field and merges
+                # it into the current client attrs without replacing the
+                # other morph settings.
+                chapter_morph = copy.deepcopy(profile.get("attrs", {}).get("morph", {}))
+            assist = pending.get("assist")
+            if assist:
+                score_cfg = self.config.get("system_simple", {}).get("score_config", [100, 1])
+                score_index = 0 if assist.get("is_friend") else 1
+                score_gain = max(0, int(score_cfg[score_index] if isinstance(score_cfg, list) and len(score_cfg) > score_index else (100 if score_index == 0 else 1)))
+                profile["score"] = int(profile.get("score", 0)) + score_gain
+                assist["score_gain"] = score_gain
+                if not assist.get("is_bot"):
+                    records = profile.setdefault("records", {})
+                    key = "help_fuids" if assist.get("is_friend") else "help_suids"
+                    records.setdefault(key, {})[assist["uid"]] = copy.deepcopy(assist["cd_time"])
+            granted_avatars={key:value for key,value in profile.get("avatars",{}).items() if key not in before_avatars}
+            granted_equips={key:value for key,value in profile.get("my_equips",{}).items() if key not in before_equips}
+        else:
+            granted_avatars={}; granted_equips={}
+            next_cid = profile.get("hid" if diff else "cid", "M_001_1")
+            amount_gold = 0; exp_gain = 0
+        pending["settled"] = True
+        pending["result"] = sign
+        pending["finished"] = int(self.store.clock.now())
+        profile["pending_pve"].pop(fight_id, None)
+        if sign == 1 and not is_activity:
+            self.store.adventure.record_pve_win(profile, diff)
+        if sign == 1:
+            cfg_scores = profile["combat_score"]
+            # The existing panel calculates chapter/encounter progression from these fields.
+            return_data = {"sign":1,"combat_star":score,"next_cid":next_cid,"gold":profile.get("gold",0),
+                "coin":profile.get("coin",0),"score":profile.get("score",0),"medal":profile.get("medal",0),"mark":profile.get("mark",0),
+                "combat_score":cfg_scores,"ploy_cids":profile.get("ploy_cids",{}),"exp":profile.get("exp",0),"lv":profile.get("lv",1),
+                "energy":profile.get("energy",{"$date":int(self.store.clock.now())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
+                "attrs":profile.get("attrs",{}),"sp":profile.get("attrs",{}).get("sp",[0,0,0,0]),"records":profile.get("records",{}),"gold_reward":amount_gold,"exp_reward":exp_gain,
+                "get_avatars":granted_avatars,"get_equips":granted_equips,"culture_book":profile.get("attrs",{}).get("culture_book",0),"box_key":profile.get("attrs",{}).get("box_key",0),"dust":profile.get("attrs",{}).get("dust",[0,0,0,0]),"dn_stone":profile.get("attrs",{}).get("dn_stone",0),
+                "battle_teams":snapshots,"first_clear":first_clear}
+        else:
+            return_data = {"sign":2,"combat_star":0,"next_cid":profile.get("hid" if diff else "cid","M_001_1"),
+                "gold":profile.get("gold",0),"coin":profile.get("coin",0),"score":profile.get("score",0),
+                "combat_score":profile.get("combat_score",{}),"ploy_cids":profile.get("ploy_cids",{}),"exp":profile.get("exp",0),"lv":profile.get("lv",1),
+                "energy":profile.get("energy",{"$date":int(self.store.clock.now())}),"attr_energy_extra":profile.get("attrs",{}).get("energy_extra",0),
+                "attrs":profile.get("attrs",{}),"sp":profile.get("attrs",{}).get("sp",[0,0,0,0]),"records":profile.get("records",{}),"get_avatars":{},"get_equips":{},"culture_book":profile.get("attrs",{}).get("culture_book",0),"box_key":profile.get("attrs",{}).get("box_key",0),"dust":profile.get("attrs",{}).get("dust",[0,0,0,0]),"dn_stone":profile.get("attrs",{}).get("dn_stone",0),"battle_teams":snapshots,"first_clear":False}
+        if pending.get("assist"):
+            return_data["friend_avatar"] = copy.deepcopy(pending["assist"]["friend_avatar"])
+            return_data["score"] = profile.get("score", 0)
+        if sign == 1 and chapter_final:
+            return_data["attr_morph"] = chapter_morph
+        if sign == 1 and encounter is not None:
+            return_data["limit_break_encounter"] = copy.deepcopy(encounter)
+        if sign == 1 and is_activity and stage.get("activity_kind") == "tower":
+            return_data["tower_soul_reward"] = copy.deepcopy(reward.get('avatar_soul',{}))
+            return_data["new_avatar_soul"] = copy.deepcopy(reward.get('avatar_soul',{}))
+            return_data["get_avatar_soul"] = copy.deepcopy(profile.get('avatar_soul',{}))
+            return_data["avatar_soul"] = copy.deepcopy(profile.get("avatar_soul", {}))
+            return_data["tower_floor"] = profile.get("records", {}).get("tower_floor", 1)
+        return profile, return_data
 
     @staticmethod
     def _limit_break_candidates(profile, ids):

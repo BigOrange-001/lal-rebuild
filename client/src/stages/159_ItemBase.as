@@ -305,7 +305,28 @@ package com.meng52.game.ui.element
             init(data);
             setLvClip();
             layoutWH();
+            showStackBadge();
          }
+      }
+
+      // MATERIAL STACKS 106: a stack row (GlobalData.collapseStacks) stands for
+      // stack_count identical copies; show the count on the card's corner.
+      public function showStackBadge() : void
+      {
+         if(data == null || int(data.stack_count) <= 1)
+         {
+            return;
+         }
+         var _badge:LOL_TextField = new LOL_TextField("×" + int(data.stack_count),86,32,false);
+         _badge.fontSize = 22;
+         _badge.fontColor = 16763904;
+         _badge.hAlign = "right";
+         _badge.shadowFilter();
+         _badge.touchable = false;
+         _badge.name = "stack_badge_106";
+         _badge.x = (mAvatar ? mAvatar.x : 0) + 2;
+         _badge.y = (mAvatar ? mAvatar.y : 0) + 62;
+         addChild(_badge);
       }
 
       override public function set index(param1:int) : void

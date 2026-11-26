@@ -275,7 +275,10 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
                 if type(count) is not int or not 1 <= count <= 100: raise GameplayFault("InvalidReward", "Hero reward count must be 1 to 100")
                 total += count
             attrs = profile.setdefault("attrs", {})
-            current_count = len(avatars)
+            from material_stacks import roster_slots, roster_slots_after
+            # Untouched material copies share one slot per stack (material_stacks).
+            current_count = roster_slots(profile)
+            needed_count = roster_slots_after(profile, [(item["aid"], item.get("num", 1)) for item in value])
             stored_capacity = attrs.get("avatar_len", 0)
             if type(stored_capacity) is not int or stored_capacity < 0: stored_capacity = 0
             simple = cfg.get("system_simple", {}) if isinstance(cfg, dict) else {}
@@ -284,7 +287,7 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
             capacity = max(current_count, stored_capacity)
             if "avatar_len" not in attrs:
                 capacity = max(capacity, configured_max)
-            if current_count + total > capacity:
+            if needed_count > capacity:
                 raise GameplayFault("AvatarCapacity", "Hero inventory has no free slots")
             attrs["avatar_len"] = capacity
             for item in value:
@@ -312,7 +315,9 @@ def grant_reward(profile, reward, config=None, *, allow_skin=False, allow_equipm
             simple = cfg.get("system_simple", {}) if isinstance(cfg, dict) else {}
             equip_cfg = simple.get("equip_config", [100]) if isinstance(simple, dict) else [100]
             capacity = int(equip_cfg[0]) if isinstance(equip_cfg, (list, tuple)) and equip_cfg and type(equip_cfg[0]) is int else 100
-            if len(equipment) + total > capacity:
+            from material_stacks import equipment_slots_after
+            # Spare untouched skill books share one slot per stack (material_stacks).
+            if equipment_slots_after(profile, definitions, [(item["eid"], item.get("num", 1)) for item in value]) > capacity:
                 raise GameplayFault("EquipCapacity", "Equipment inventory has no free slots")
             # Validate the complete reward and available storage before mutating so
             # a multi-item bundle is all-or-nothing even for direct helper callers.

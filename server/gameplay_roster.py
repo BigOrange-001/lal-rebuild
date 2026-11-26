@@ -9,6 +9,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 
 from player_store import GameplayFault
+from material_stacks import roster_slots
 from gameplay_common import (grant_reward, ensure_hero_acquirable, skin_acquisition_blocked_ids,
                              equipment_exclusive_ids, next_hero_instance_id, preserve_mod_hero_sequence)
 from mod_policy import (runtime as mod_runtime, ensure_available, hero_available,
@@ -1369,7 +1370,7 @@ class GameplayRosterEquipment:
             # (GlobalData.$userData_avatarNum), not capacity. Use profile state.
             attrs = p.setdefault("attrs", {})
             cap = self._num(attrs.get("avatar_len", 1000), "avatar_len", 1, 10_000_000)
-            if len(p.get("avatars", {})) + times > cap: self._fail("RosterFull", "Hero roster is full")
+            if roster_slots(p) + times > cap: self._fail("RosterFull", "Hero roster is full")
             if self.summon_pools is None:
                 categories = self.draw_pools.get(kind, []) if isinstance(self.draw_pools, dict) else []
                 if mod_runtime(self.full_config):
@@ -1903,7 +1904,7 @@ class GameplayRosterEquipment:
             attrs = p.get("attrs", {})
             cap = self._num(attrs.get("avatar_len", 1000) if isinstance(attrs, dict) else 1000,
                             "avatar_len", 1, 10_000_000)
-            if len(avatars) + count > cap:
+            if roster_slots(p) + count > cap:
                 self._fail("RosterFull", "Hero roster is full")
 
             ensure_regular_hero(self.full_config, aid)
@@ -2171,7 +2172,8 @@ class GameplayRosterEquipment:
         if aid not in self.heroes: self._fail("UnknownHero", "Hero does not exist in roster config")
         ensure_hero_acquirable(aid, self.full_config, allow_skin=allow_skin)
         cap = self._num(p.setdefault("attrs", {}).get("avatar_len", 1000), "avatar_len", 1, 10_000_000)
-        if len(p.setdefault("avatars", {})) >= cap: self._fail("RosterFull", "Hero roster is full")
+        p.setdefault("avatars", {})
+        if roster_slots(p) >= cap: self._fail("RosterFull", "Hero roster is full")
         iid = next_hero_instance_id(p, aid, self.full_config)
         obj = copy.deepcopy(retain) if retain else {"lv": 1, "slv": 1, "exp": 0, "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0, "phase": 0, "morph": 0, "limit_break": 0, "love_exp": 0, "equips": []}
         obj.update({"id": iid, "aid": iid})

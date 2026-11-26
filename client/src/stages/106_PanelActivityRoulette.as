@@ -583,7 +583,7 @@ package com.meng52.game.ui.panel
             GlobalFunction.popAvatarLen();
             return;
          }
-         if(Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+         if(GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
          {
             GlobalFunction.popEquipFull();
             return;
@@ -598,7 +598,7 @@ package com.meng52.game.ui.panel
          {
             mSelect = 10;
          }
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
          {
             GlobalFunction.popAvatarLen();
@@ -800,7 +800,7 @@ package com.meng52.game.ui.panel
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateVip();
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateEn();
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          upDateProgress();
          var _loc8_:Array = _loc9_.radio_gift as Array;
          var _loc4_:Array = [];
@@ -1150,11 +1150,11 @@ package com.meng52.game.ui.panel
       {
          if(mCurr_data.num > 0)
          {
-            if(awardNum != null && awardNum[0] == 1 && Tools.getElementNum(GlobalData.$userData.avatars) >= GlobalData.$userData.attrs.avatar_len)
+            if(awardNum != null && awardNum[0] == 1 && GlobalData.rosterSlotCount() >= GlobalData.$userData.attrs.avatar_len)
             {
                GlobalFunction.popAvatarLen();
             }
-            else if(awardNum != null && awardNum[1] == 1 && Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+            else if(awardNum != null && awardNum[1] == 1 && GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
             {
                GlobalFunction.popEquipFull();
             }

@@ -1445,7 +1445,7 @@ package com.meng52.game.ui.screen
             GlobalData.$userData.attrs.pvp_rank = GlobalData.$userData.attrs.pvp_rank == null ? 99999 : GlobalData.$userData.attrs.pvp_rank;
             GlobalData.$userData.records.current_rank = GlobalData.$userData.records.current_rank == null ? 99999 : GlobalData.$userData.records.current_rank;
             GlobalData.$pfUserInfo = GlobalData.$userData.pf_info;
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             GlobalData.$tempTeamID = 0;
             SendAndSelect.$uid = GlobalData.$userData.uid;
             SendAndSelect.$sessionid = GlobalData.$userData.sessionid;

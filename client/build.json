@@ -8,13 +8,13 @@
       "index": 1,
       "class": "com.meng52.game.global.GlobalData",
       "source": "client/src/stages/001_GlobalData.as",
-      "source_sha256": "596ab0ec28db50e1b8c2f023514673c9807c7fbb4433b0b10664aa718236c513"
+      "source_sha256": "88cd9fc9107705c65345e1c283ba63f6084432b9f6c5d7e03fc03ef4e3701809"
     },
     {
       "index": 2,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/002_GlobalFunction.as",
-      "source_sha256": "fb1fa4cdf7933c2d02b9938439cf0962c0b4da908d8b7520013e19d701fd9d34"
+      "source_sha256": "b7c2ddba146d8f99395296080b0664344ee00af7b5c94dc60a43b702d5722a7c"
     },
     {
       "index": 3,
@@ -26,7 +26,7 @@
       "index": 4,
       "class": "com.meng52.game.ui.screen.PanelServiceMain",
       "source": "client/src/stages/004_PanelServiceMain.as",
-      "source_sha256": "4c310eedac2fdc576275dbf4519f315e452543b30d8db864bbcbf674dc60aa1e"
+      "source_sha256": "266af6b56013d499d20049d69141c8e250ce2999237aec656b4a36698443eda8"
     },
     {
       "index": 5,
@@ -38,7 +38,7 @@
       "index": 6,
       "class": "com.meng52.game.global.GlobalPay",
       "source": "client/src/stages/006_GlobalPay.as",
-      "source_sha256": "bd92d6ec7c2323ef94ce42d226ddf6ff15dfd4dcbc0cb47e84ab48db6d70e5d6"
+      "source_sha256": "1d19f5059ebc867c427046b43d2f721d2a2721a6d390245411b3def652e070a8"
     },
     {
       "index": 7,
@@ -62,7 +62,7 @@
       "index": 10,
       "class": "com.meng52.game.ui.element.ItemVIPShopping",
       "source": "client/src/stages/010_ItemVIPShopping.as",
-      "source_sha256": "bfd2ea2740e702a6a0cb2497be40458dffa7e68ba13cbccdee30e0b928b3f95a"
+      "source_sha256": "44593337cc476a3a462f4aa39a15180cf32e981d67747d5b6add4c2f77b49de1"
     },
     {
       "index": 11,
@@ -104,7 +104,7 @@
       "index": 17,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/017_GlobalFunction.as",
-      "source_sha256": "2328ff60dd4596ff068d0d0f7bc3678bd90544d44874883bdcd0652835af007f"
+      "source_sha256": "65ef5b545354fa2cf3feecba9b5aff9a18d0dee099e081cc93b7ed43640d85f5"
     },
     {
       "index": 18,
@@ -140,7 +140,7 @@
       "index": 23,
       "class": "com.meng52.game.ui.panel.PanelGameEndAward",
       "source": "client/src/stages/023_PanelGameEndAward.as",
-      "source_sha256": "5cf7a17097509b3c1c9948be9b873732039b5d7f39163c256d946cc8df03ef28"
+      "source_sha256": "f4b51a1349e8a687d7abcb0f4e2d66fe4b3374fdf24d70c2de5954b9df1af810"
     },
     {
       "index": 24,
@@ -182,13 +182,13 @@
       "index": 30,
       "class": "com.meng52.game.ui.screen.PanelAvatarSell",
       "source": "client/src/stages/030_PanelAvatarSell.as",
-      "source_sha256": "6685c851edb1868c6123d2bb7f2463d4c6ea392a4dab29347e44f568b97388f5"
+      "source_sha256": "68cbd0dcc051439c7aa477f7cb6225b3350fedd9020310dbf1df2a5631d0c4ca"
     },
     {
       "index": 31,
       "class": "com.meng52.game.ui.screen.PanelSocialMainAvatar",
       "source": "client/src/stages/031_PanelSocialMainAvatar.as",
-      "source_sha256": "2d2dba83f0e3c68d110e3e2dff4818cddb58a0d5d56aac9cb9962bc8eef9c49b"
+      "source_sha256": "e43fc625c0e0fb9f6682af5d6c691c3dd5238e7d4e5530db9e6987a3088d35b7"
     },
     {
       "index": 32,
@@ -200,13 +200,13 @@
       "index": 33,
       "class": "com.meng52.game.ui.element.ItemBetterSelect",
       "source": "client/src/stages/033_ItemBetterSelect.as",
-      "source_sha256": "80cda6dbb37d26a4a790b0c3b149f072bff8bb993d9a6613460967cb88a29a2e"
+      "source_sha256": "90df913bee8b1e9d855835833afcbd66c46d45bf0613cadb18fec3d1f236aaca"
     },
     {
       "index": 34,
       "class": "com.meng52.game.ui.panel.PanelBetterSelect",
       "source": "client/src/stages/034_PanelBetterSelect.as",
-      "source_sha256": "e3ec49f0c842455103ff19e5ea588408ddc66ed20b8651754766328a0e350c04"
+      "source_sha256": "015d2794e2f876eb9a85deccb3c361a4aa241e0ddfba351d367045d0006c4489"
     },
     {
       "class": "com.meng52.game.ui.stage.LayoutUIAnimation",
@@ -230,13 +230,13 @@
       "index": 38,
       "class": "com.meng52.game.ui.panel.PanelCasinoA",
       "source": "client/src/stages/036_PanelCasinoA.as",
-      "source_sha256": "e877c18d5f66be6c4bdd5a3baa4c930a5f0cd733214e2993457becce83d1d80a"
+      "source_sha256": "956e4d87015b97e3c33ff40cc3cb7773fb59c234ad7b71007f99e206c65367ab"
     },
     {
       "index": 39,
       "class": "com.meng52.game.ui.panel.PanelCasinoVIP",
       "source": "client/src/stages/037_PanelCasinoVIP.as",
-      "source_sha256": "be7096006a7e899857badcfb4511aaac6ed39bcda9aa38a1b4b487b5f72bf5e7"
+      "source_sha256": "201d3280072aeae109a88626b69f4581c0fea4f5c5f040333961501923646d54"
     },
     {
       "index": 40,
@@ -284,7 +284,7 @@
       "index": 47,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/045_GlobalFunction.as",
-      "source_sha256": "ad7a4f62599a65729a314dd6c1b4a3942c7c402f91f15670c23c982f229747f2"
+      "source_sha256": "195dddcc92ca17066eda59d1b5699f970a5318be2d9b8d88d26a0086bfaaf3f8"
     },
     {
       "index": 48,
@@ -296,7 +296,7 @@
       "index": 49,
       "class": "com.meng52.game.ui.element.ItemPVP",
       "source": "client/src/stages/047_ItemPVP.as",
-      "source_sha256": "fe8a662400a2651e885ffeb5d9920d9c12b625cc056bd2a3098a627dabb5b64d"
+      "source_sha256": "051a4b3bfe6f100c6dd05c7fe8409184d4a10e15652970365fa5f53d2f9cbfd7"
     },
     {
       "index": 50,
@@ -326,7 +326,7 @@
       "index": 54,
       "class": "com.meng52.game.ui.panel.PanelGameEndAward",
       "source": "client/src/stages/052_PanelGameEndAward.as",
-      "source_sha256": "d17efec0a78a5a59a90944b4e73663d2d26026bd2f8ed6ca51b48f0e91b5d7a1"
+      "source_sha256": "bc10fff37aefe0f86b6977eb9431218a4637aa3c2fb4064e902caf84d6e1ce94"
     },
     {
       "index": 55,
@@ -344,13 +344,13 @@
       "index": 57,
       "class": "com.meng52.game.ui.screen.PanelCenterShopVIP",
       "source": "client/src/stages/055_PanelCenterShopVIP.as",
-      "source_sha256": "cb675424636d59b47183a3bba28e09f08746f40da7a2bf4b2d7d588e3b4bc035"
+      "source_sha256": "0ed878b7245fd33e528e88734181be31a2669044713731d1cae385aa18ae6b54"
     },
     {
       "index": 58,
       "class": "com.meng52.game.ui.element.ItemPVEcombat",
       "source": "client/src/stages/056_ItemPVEcombat.as",
-      "source_sha256": "d9d21256d43b1818fceea4da18178d00393c4024639953606781219a9a31478f"
+      "source_sha256": "6a13467a195a73519c440bc7f97dfb3f287901a38d6d1a5242f2ff1421aa8ddd"
     },
     {
       "index": 59,
@@ -446,7 +446,7 @@
       "index": 74,
       "class": "com.meng52.game.ui.element.ItemGuildShop",
       "source": "client/src/stages/071_ItemGuildShop.as",
-      "source_sha256": "bc3ef002690233965cfa1fa56aeef12dd283d25e65e515b56bf124f78881ff1b"
+      "source_sha256": "0ac96c163fc6fc47873b3dddd17059856b60a0cb35d8e3cbb07b2aa024c4371d"
     },
     {
       "index": 75,
@@ -548,7 +548,7 @@
       "index": 91,
       "class": "com.meng52.game.ui.element.ItemActivityTime",
       "source": "client/src/stages/089_ItemActivityTime.as",
-      "source_sha256": "41c5219a5df0d9b1bbbd86e1f82ebc72a08bda6ad4138a89088fb778c4799ec9"
+      "source_sha256": "8cae7118ffff548b52b2a729e45beb2e82a655dd0186db823f86337ad3075b98"
     },
     {
       "index": 92,
@@ -566,7 +566,7 @@
       "index": 94,
       "class": "com.meng52.game.ui.element.ItemExchange",
       "source": "client/src/stages/092_ItemExchange.as",
-      "source_sha256": "7454970cbd879be3d26926dba9251d2673a0e9b3fe15daf1e974f1edb2704ff3"
+      "source_sha256": "e9554ca5da1b61c7f9ee819f3b973abb64a8bd3d3e00c6755ae7b1d71f3fa001"
     },
     {
       "index": 95,
@@ -584,7 +584,7 @@
       "index": 97,
       "class": "com.meng52.game.ui.element.ItemFragment",
       "source": "client/src/stages/095_ItemFragment.as",
-      "source_sha256": "f380dda0aa05e22a8c8495e65f651a159ef84d66ba43046395426cfe64878c65"
+      "source_sha256": "964574cc898eec448c98be8f42f11d198e5ce72c0e91991d8771fb6301bc9f5b"
     },
     {
       "index": 98,
@@ -596,13 +596,13 @@
       "index": 99,
       "class": "com.meng52.game.ui.element.ItemInteGralExchange",
       "source": "client/src/stages/097_ItemInteGralExchange.as",
-      "source_sha256": "c14e441f8fbe4744d9eb5a0d08b5b42a095db163c1a29ea2d6a2ded3d09e4d49"
+      "source_sha256": "9ab347cc6de8ecdf5821b39192a66f34ab183faf5e38003c4803930bf0894e83"
     },
     {
       "index": 100,
       "class": "com.meng52.game.ui.element.ItemSocialMail",
       "source": "client/src/stages/098_ItemSocialMail.as",
-      "source_sha256": "70b11e4be5071f3d8c0574f0afa183dc7545d66f466962aaed3c80562b251b21"
+      "source_sha256": "d6095bf9f4e4c73c8466e26ba8655d7e25c2e8d3735fcbff92f1cded30885722"
     },
     {
       "index": 101,
@@ -614,13 +614,13 @@
       "index": 102,
       "class": "com.meng52.game.ui.element.ItemVIPShopping",
       "source": "client/src/stages/100_ItemVIPShopping.as",
-      "source_sha256": "8475f254e7fc3c7f0a803c3a42d80f7d5316fac6e66cd46c36426d62e0079fac"
+      "source_sha256": "61088ace68695eb736c83fba23d0237e1c804f8d2b5991e6107da0d27b97568e"
     },
     {
       "index": 103,
       "class": "com.meng52.game.ui.panel.PanelActivityBoxKey",
       "source": "client/src/stages/101_PanelActivityBoxKey.as",
-      "source_sha256": "95476115b9a278df6b243224156d6280f03de8f5192bfd973b8c8a45f3f43055"
+      "source_sha256": "9631093d2ea1103310280d740c662b74bb8181c3c5c72bf9b23d418c23ad5b8b"
     },
     {
       "index": 104,
@@ -651,31 +651,31 @@
       "index": 108,
       "class": "com.meng52.game.ui.panel.PanelActivityRoulette",
       "source": "client/src/stages/106_PanelActivityRoulette.as",
-      "source_sha256": "22c7602f86fc57ad0e0f628552ff88cf6b76ae027df712cfa0f71e25c0af2c6e"
+      "source_sha256": "5c74211b3b5096c352b35538b4c10b93c4facc55d067e7a69626c4698657548b"
     },
     {
       "index": 109,
       "class": "com.meng52.game.ui.panel.PanelActivitySign",
       "source": "client/src/stages/107_PanelActivitySign.as",
-      "source_sha256": "dc24015b8c0b61d2fa0f0bdd16746149b366aac097c2e30cf97a69c6457a3822"
+      "source_sha256": "8805b0af426523aca01afaec37a48104657f448dfb3669c8b1232360c4a660b2"
     },
     {
       "index": 110,
       "class": "com.meng52.game.ui.panel.PanelActivitySpendRank",
       "source": "client/src/stages/108_PanelActivitySpendRank.as",
-      "source_sha256": "001eff9234f69f5baa7ae922df7d8b591a0a36286371accf0f1721a2abd90cc9"
+      "source_sha256": "c8d11a27ee6736b6b0eef38daf29f7ab180404482165577aff9cbde4a19bd150"
     },
     {
       "index": 111,
       "class": "com.meng52.game.ui.panel.PanelActivityTimeAvatarExtract",
       "source": "client/src/stages/109_PanelActivityTimeAvatarExtract.as",
-      "source_sha256": "26739f258625229cc3b77129c1a50e71ee263452eed09c5ff134387b1c1ab87e"
+      "source_sha256": "63dcf92ba886b2975f473be79e45f6d0200ce3e57199873a08aedd35be012c4c"
     },
     {
       "index": 112,
       "class": "com.meng52.game.ui.panel.PanelActivityTimePay",
       "source": "client/src/stages/110_PanelActivityTimePay.as",
-      "source_sha256": "8839d63a8709aa94ec4fa14b1bb51746bebb161d06e99872383ca59f9e1e38c6"
+      "source_sha256": "04b5163f2377be1c12e8b59a4f1d8e573e317937912dfdde59320bf076d20abd"
     },
     {
       "index": 113,
@@ -693,7 +693,7 @@
       "index": 115,
       "class": "com.meng52.game.ui.panel.PanelEquipSellSelect",
       "source": "client/src/stages/113_PanelEquipSellSelect.as",
-      "source_sha256": "13d32d7f3ea604ccac98affba748a59a48aab6bb96f6258a236178722facba95"
+      "source_sha256": "800ace6672dfaf0392968478b8a63fe6cdf21e38eb9804b987ac926d33e2dff0"
     },
     {
       "index": 116,
@@ -771,13 +771,13 @@
       "index": 128,
       "class": "com.meng52.game.ui.element.ItemAvatarSoul",
       "source": "client/src/stages/126_ItemAvatarSoul.as",
-      "source_sha256": "c8d7c9e29f6cdd0a6b5ca4f03deeed583674d2018f18698cfbef8aff58409c0a"
+      "source_sha256": "647fa047906b626073f490d1a618fdc56393276b677791fd8f4a1647bafb2a88"
     },
     {
       "index": 129,
       "class": "com.meng52.game.ui.element.ItemEquipSoul",
       "source": "client/src/stages/127_ItemEquipSoul.as",
-      "source_sha256": "225f9199374e15f9755c4c6bd1b1abe52612911677bd3bcc849e69633add2314"
+      "source_sha256": "833dd3bbf36ec90834d2a04356fa057922b23f3a6840d990eb5c1aa2e5753466"
     },
     {
       "index": 130,
@@ -789,7 +789,7 @@
       "index": 131,
       "class": "com.meng52.game.ui.screen.PanelCenterShopVIP",
       "source": "client/src/stages/129_PanelCenterShopVIP.as",
-      "source_sha256": "93583ceb8bba158420516f51d983b9f5ea59dcab71adb4a78f2e43494e539905"
+      "source_sha256": "222e502f5454fef8a85b55ecd609ffcefc72ba4ea7f3192c30e87c4d5ae9a9d4"
     },
     {
       "index": 132,
@@ -813,7 +813,7 @@
       "index": 135,
       "class": "com.meng52.game.ui.element.ItemTaskAward",
       "source": "client/src/stages/133_ItemTaskAward.as",
-      "source_sha256": "efbaf467d4b8f0a7edc3d3bc4e6273659bbc9de48b11217b81c41ba0df733a67"
+      "source_sha256": "522d9db53441ec27b05ec44356e2e01173ca61e17cceee68ed91cafac1f979fe"
     },
     {
       "index": 136,
@@ -957,13 +957,13 @@
       "index": 159,
       "class": "com.meng52.game.ui.panel.PanelEquipSelect",
       "source": "client/src/stages/158_PanelEquipSelect.as",
-      "source_sha256": "7ad25e18dc7fc92f47ae1b59dc28abbd022778aba22a621a261008bcdbe135bd"
+      "source_sha256": "c7cfdacd603b36ada1476ee2e31af0c37de534b4a5bea81a4507e13ed9fc44c5"
     },
     {
       "index": 160,
       "class": "com.meng52.game.ui.element.ItemBase",
       "source": "client/src/stages/159_ItemBase.as",
-      "source_sha256": "f21837607df33224857bd8f2c37840ebd7c03b414a8af2d62579c49a01c8d609"
+      "source_sha256": "cee3ce48fff2590b843d524776d9732ce98fb984842c52c65122ac4c8867225b"
     },
     {
       "index": 161,
@@ -1029,7 +1029,7 @@
       "index": 171,
       "source": "client/src/stages/170_GlobalFunction.as",
       "class": "com.meng52.game.global.GlobalFunction",
-      "source_sha256": "02fd2a22a72c4194864c3395ec565ff295d42bb2482fd67e9cfea143556aa5de",
+      "source_sha256": "bd45dbe862f4de22d42e0de13898f492d83681528f11c4ae87a10bb2bb197c76",
       "methods": [
         "getTeamPower",
         "getUserCombat"
@@ -1070,7 +1070,7 @@
       "index": 177,
       "class": "com.meng52.game.ui.panel.PanelGameEndAward",
       "source": "client/src/stages/176_PanelGameEndAward.as",
-      "source_sha256": "b8c72208e5773b87ddb9f60a5d7f4ffed6816bcb43f156b0511fa8b14b318bfb"
+      "source_sha256": "0166c8014304836ca853accc8d69205caec3351e50e92bf974ec1ac4c2676dcc"
     },
     {
       "index": 178,

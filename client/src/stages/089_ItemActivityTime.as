@@ -128,7 +128,7 @@ package com.meng52.game.ui.element
       
       private function onTRIGGERED_to(param1:Event) : void
       {
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
          {
             GlobalFunction.popAvatarLen();

@@ -616,7 +616,7 @@ package com.meng52.game.ui.panel
       {
          var _loc7_:int = 0;
          var _loc4_:Avatar = null;
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          var _loc5_:int = 0;
          var _loc6_:Array = GlobalData.$tempAvatarBetterArr;
          while(_loc7_ < _loc6_.length)
@@ -779,6 +779,27 @@ package com.meng52.game.ui.panel
             }
          }
          tempSelect = 0;
+         // MATERIAL STACKS 106: untouched copies of one material share a card;
+         // ItemBetterSelect feeds them one copy per tap. Protected copies stay apart.
+         var _firstRow:Object = _loc13_ > 0 && firstSelect < _loc2_.length ? _loc2_[firstSelect] : null;
+         var _stackKeys:Array = [];
+         for(var _stackRowIndex:int = 0; _stackRowIndex < _loc2_.length; _stackRowIndex++)
+         {
+            var _stackRow:Object = _loc2_[_stackRowIndex];
+            _stackKeys.push(_stackRow["material_protected"] ? "" : GlobalData.avatarStackKey(String(_stackRow.id),_loc3_[_stackRow.id]));
+         }
+         _loc2_ = GlobalData.collapseStacks(_loc2_,_stackKeys);
+         if(_firstRow != null)
+         {
+            for(var _stackIndex:int = 0; _stackIndex < _loc2_.length; _stackIndex++)
+            {
+               if(_loc2_[_stackIndex] == _firstRow || _loc2_[_stackIndex].stack_ids is Array && (_loc2_[_stackIndex].stack_ids as Array).indexOf(String(_firstRow.id)) > -1)
+               {
+                  firstSelect = _stackIndex;
+                  break;
+               }
+            }
+         }
          this.setListTimer(mList,_loc2_,ItemBetterSelect,false);
          this.bringRarityFiltersToFront();
       }

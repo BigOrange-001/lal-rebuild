@@ -1,5 +1,6 @@
 """Material stacks share one roster/equipment slot without changing stored instances."""
 import copy
+import sqlite3
 import unittest
 from pathlib import Path
 
@@ -7,7 +8,7 @@ from gateway import load_game_config
 from gameplay_common import grant_reward
 from material_stacks import (STACK_LIMIT, avatar_stack_key, book_stack_key, equipment_slots,
                              roster_slots, roster_slots_after)
-from player_store import GameplayFault
+from player_store import GameplayFault, PlayerStore
 
 ROOT = Path(__file__).resolve().parents[1]
 FRESH = {"lv": 1, "slv": 1, "exp": 0, "hp": 0, "ap": 0, "de_ph": 0, "de_ma": 0,
@@ -66,6 +67,28 @@ class MaterialStackTests(unittest.TestCase):
                 grant_reward(profile, reward, self.config)
             self.assertEqual(caught.exception.code, "AvatarCapacity")
             self.assertEqual(profile, before)
+
+    def test_profile_normalization_keeps_warehouse_capacity_when_materials_stack(self):
+        db = sqlite3.connect(":memory:")
+        self.addCleanup(db.close)
+        store = PlayerStore(db, self.config)
+        uid = store.login("stack-capacity-regression")["uid"]
+        original = store.profile_raw(uid)["attrs"]["avatar_len"]
+        capacity = original + 5
+
+        def stock(profile):
+            profile["attrs"]["avatar_len"] = capacity
+            for n in range(capacity + 1):
+                iid = f"A_6996_5|{n + 100}"
+                profile["avatars"][iid] = card(iid)
+            return profile, {}
+
+        store.atomic_update(uid, stock)
+        normalized = store.profile(uid)
+        self.assertGreater(len(normalized["avatars"]), capacity)
+        self.assertLess(roster_slots(normalized), capacity)
+        self.assertEqual(normalized["attrs"]["avatar_len"], capacity)
+        self.assertEqual(store.profile_raw(uid)["attrs"]["avatar_len"], capacity)
 
     def test_spare_books_stack_but_equipped_locked_or_grown_books_do_not(self):
         equips = [(f"eq{n}", dict(BOOK)) for n in range(5)]

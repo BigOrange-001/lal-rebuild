@@ -159,8 +159,11 @@ class NativeFxWiringTests(unittest.TestCase):
     def test_wired_heroes_are_not_claimed_by_code_effects(self):
         source = "\n".join(path.read_text(encoding="utf-8") for path in CODE_FX)
         for hero in ("A_1060", "A_1022", "A_1096", "A_1002", "A_1021", "A_1016", "A_1099", "A_1068", "A_1029",
-                     "A_1077", "A_1063", "A_1131", "A_1095", "A_1056", "A_1023", "A_1097", "A_1025", "A_1011", "A_1120"):
+                     "A_1077", "A_1063", "A_1131", "A_1095", "A_1056", "A_1023", "A_1097", "A_1025", "A_1011"):
             self.assertNotIn(hero, source)
+        # Kayle's wired art is only the Divine Judgment dome, played by Avatar itself (SELF_FX);
+        # group E draws her attacks and states and never names that effect (checked just below).
+        self.assertIn('"A_1120"', (ROOT / "client/src/hero_fx_e_106.aspart").read_text(encoding="utf-8"))
         for key in NEW_FX:
             self.assertNotIn(key, source)
         for ability, old, _ in MANUAL_ABILITY_RULES:

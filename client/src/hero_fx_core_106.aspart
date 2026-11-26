@@ -1,6 +1,6 @@
       // BEGIN HERO FX CORE 106
-      // Code-painted hero skill effects. Four group files plug into this core:
-      // hero_fx_a_106 / hero_fx_b_106 / hero_fx_c_106 / hero_fx_d_106, each owning its own heroes;
+      // Code-painted hero skill effects. Five group files plug into this core:
+      // hero_fx_a_106 / hero_fx_b_106 / hero_fx_c_106 / hero_fx_d_106 / hero_fx_e_106, each owning its own heroes;
       // group K (kaisa_rain_fx_106) is Dragonmancer Kai'Sa's Icathian Rain.
       // A kind is "<group>:<name>" (e.g. "a:snipe"); a texture id is "<group>:<name>" too.
       // Presentation only: nothing here reads gameplay RNG or changes combat state.
@@ -21,8 +21,10 @@
       //             extra = {lane,pos} for ground pulses. Replaces the atlas pulse.
       //   "heal" / "shield"  kind = String(s2Family()); target = recipient. Nothing to replace.
       //   "native"  kind = native effect name passed to attackAimList; target = first target;
-      //             extra = {targets:Vector.<Avatar>}. Claiming it removes the native visuals
-      //             (pre/bullet/hit) but keeps their combat flags.
+      //             extra = {targets:Vector.<Avatar>, buff:Buff or null}. Claiming it removes the native
+      //             visuals (pre/bullet/hit) but keeps their combat flags; a claimer may set extra.sp
+      //             (bullet speed) so the hit waits a known time for its drawn projectile.
+      //   "chain" / "cast" / "direct" / "spawn"  group E hooks (see hero_fx_e_106.aspart).
       // A group claims by drawing (heroFx106) and returning true. Returning true without
       // drawing anything is a valid way to silence an unfitting placeholder.
       private function heroFxClaim106(event:String, kind:String, target:Avatar = null, extra:Object = null) : Boolean
@@ -31,6 +33,7 @@
          if(heroFxClaimA106(event,kind,target,extra)) return true;
          if(heroFxClaimB106(event,kind,target,extra)) return true;
          if(heroFxClaimC106(event,kind,target,extra)) return true;
+         if(heroFxClaimE106(event,kind,target,extra)) return true;
          if(heroFxClaimD106(event,kind,target,extra)) return true;
          // Shared looks (generic heal / shield / cleanse...) answer only what no hero claimed.
          return heroFxFallbackB106(event,kind,target,extra);
@@ -64,6 +67,7 @@
          if(group=="b") return heroFxLifeB106(local);
          if(group=="c") return heroFxLifeC106(local);
          if(group=="d") return heroFxLifeD106(local);
+         if(group=="e") return heroFxLifeE106(local);
          return 0;
       }
       public static function heroFxSprites106(kind:String, t:Number, sx:Number, sy:Number, tx:Number, ty:Number, seed:int, out:Array, p:Object = null) : void
@@ -74,6 +78,7 @@
          else if(group=="b") heroFxSpritesB106(local,t,sx,sy,tx,ty,seed,out);
          else if(group=="c") heroFxSpritesC106(local,t,sx,sy,tx,ty,seed,out);
          else if(group=="d") heroFxSpritesD106(local,t,sx,sy,tx,ty,seed,out);
+         else if(group=="e") heroFxSpritesE106(local,t,sx,sy,tx,ty,seed,out);
          if(out.length>first+HFX_MAX_SPRITES106) out.length=first+HFX_MAX_SPRITES106;
          for(var i:int=first;i<out.length;i++) out[i].k=group+":"+out[i].k;
       }
@@ -85,6 +90,7 @@
          if(group=="b") return heroFxPaintB106(local);
          if(group=="c") return heroFxPaintC106(local);
          if(group=="d") return heroFxPaintD106(local);
+         if(group=="e") return heroFxPaintE106(local);
          return null;
       }
       private static function heroFxTexture106(id:String) : starling.textures.Texture
@@ -120,11 +126,12 @@
          if(!ids) ids=heroFxStateB106(row);
          if(!ids) ids=heroFxStateC106(row);
          if(!ids) ids=heroFxStateD106(row);
+         if(!ids) ids=heroFxStateE106(row);
          return ids;
       }
       private static function heroFxAnimate106(art:DisplayObject, row:Object, index:int, seed:int) : Boolean
       {
-         return heroFxAnimateA106(art,row,index,fxTime104,seed) || heroFxAnimateB106(art,row,index,fxTime104,seed) || heroFxAnimateC106(art,row,index,fxTime104,seed) || heroFxAnimateD106(art,row,index,fxTime104,seed);
+         return heroFxAnimateA106(art,row,index,fxTime104,seed) || heroFxAnimateB106(art,row,index,fxTime104,seed) || heroFxAnimateC106(art,row,index,fxTime104,seed) || heroFxAnimateD106(art,row,index,fxTime104,seed) || heroFxAnimateE106(art,row,index,fxTime104,seed);
       }
       public static function heroFxClear106() : void
       {

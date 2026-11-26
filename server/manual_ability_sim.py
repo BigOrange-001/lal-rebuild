@@ -550,15 +550,8 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
                     self.state(target).pop('bomb_consume_owner',None)
                     if landed and bomb:self.state(target).pop(key,None)
             case 'aoxing_n':
-                enemies=en(650)
-                if not enemies:return False
-                primary=enemies[0];targets=[primary];marked=False
-                for i in range(3):
-                    if i:
-                        enemies=en(300,primary,1,excluded=targets)
-                        if not enemies:break
-                        primary=enemies[0];targets.append(primary)
-                    if hit(primary,(1.4 if i==0 else self.equipment_part(skill,'lightning_bounce',1))*scale,2) and self.hero(primary):marked=True
+                if not self.opponents(owner):return False
+                marked=self.aoxing_chain(owner,1.4*scale,self.equipment_part(skill,'lightning_bounce',1)*scale,lambda target,ratio:hit(target,ratio,2))
                 if marked:state['thunder']=min(3,state.get('thunder',0)+1)
             case 'aoxing_c':
                 count=state.get('thunder',0);state['thunder']=0;largest=-1;targets=[]

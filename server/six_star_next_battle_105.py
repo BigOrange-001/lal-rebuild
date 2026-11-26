@@ -38,20 +38,41 @@ class SixStarNextBattle:
                 amount /= self._real_damage_rate
             self._native_damage(owner, target, 1, kind, raw_override=amount, defense_base=defense_base)
 
-    def six_next_lightning(self, owner, action):
-        targets = self.six_star_lane(owner, 650)
-        if not targets:
-            return
-        target = targets[0]
-        visited = [target]
-        self._native_damage(owner, target, action[4], 2)
-        for _ in range(2):
-            targets = self.six_next_radius(owner, target, 300, 1, visited)
-            if not targets:
+    # Aurelion Sol's chain lightning, every star (client Avatar.aoxingChain106): no range
+    # limit, crosses lanes, at most five targets, a lone enemy takes three times the first bolt.
+    AOXING_CHAIN_MAX = 5
+    AOXING_CHAIN_SOLO = 3
+
+    def aoxing_chain_targets(self, owner):
+        """Nearest enemy in his lane (else the nearest lane), then the unhit enemy nearest the last."""
+        pool = self.opponents(owner)
+        targets = []
+        lane, at = owner['line'], owner['pos']
+        while len(targets) < self.AOXING_CHAIN_MAX:
+            left = [u for u in pool if all(u is not hit for hit in targets)]
+            if not left:
                 break
-            target = targets[0]
-            visited.append(target)
-            self._native_damage(owner, target, action[5], 2)
+            target = min(left, key=lambda u: (abs(u['line']-lane), abs(u['pos']-at), self.state(u)['index']))
+            targets.append(target)
+            lane, at = target['line'], target['pos']
+        return targets
+
+    def aoxing_chain(self, owner, first, bounce, strike):
+        """strike(target, ratio) -> landed; returns True when an enemy hero was hit."""
+        targets = self.aoxing_chain_targets(owner)
+        hero = False
+        for i, target in enumerate(targets):
+            ratio = bounce if i else first*(self.AOXING_CHAIN_SOLO if len(targets) == 1 else 1)
+            if strike(target, ratio) and self.hero(target):
+                hero = True
+        return hero
+
+    def six_next_lightning(self, owner, action):
+        def strike(target, ratio):
+            if target['hp'] > 0 and owner['hp'] > 0:
+                self._native_damage(owner, target, ratio, 2)
+            return False
+        self.aoxing_chain(owner, action[4], action[5], strike)
 
     def six_next_copy_normal(self, clone, owner):
         clone.update(skill=copy.deepcopy(owner.get('skill')), skillB=None, leader_skill=None,
@@ -135,7 +156,7 @@ class SixStarNextBattle:
                 return False
             state['next_requiem'] = a[4]
         elif kind == 'six_next_aoxing_n':
-            if state.get('next_storm') or not self.six_star_lane(owner, 650):
+            if state.get('next_storm') or not self.opponents(owner):
                 return False
             if state.get('next_charge', 0) >= 5:
                 state['next_storm'] = a

@@ -17,11 +17,11 @@ const row={manualDamageMultiplier:input.damage,manualEffectMultiplier:input.effe
 const GlobalData={$mConfig_skill:{TEST:row},$mConfig_simple:{skill_effect_radius_scale:1.4}};
 let context;
 const currentAbilityAttack=()=>context,activeManualEffectMultiplier=()=>input.effect;
-const Avatar={};
+const Avatar={},abyssCaptureContext104=()=>null;
 for(const [name,value] of Object.entries(input.consts||{}))globalThis[name]=value;
 function attach(u){for(const [name,[params,body]] of Object.entries(input.methods))u[name]=eval('(function('+params+'){with(this){'+body+'\n}})');}
 const units=input.units.map((data,i)=>Object.assign(data,{id:data.aid,hpMax:data.hp_max,abilityState:{},abilitySerial:0,
- abilityIndex:i+1,buffs:{},otherTeam:3-data.team,isManualSummonUnit:false,
+ abilityIndex:i+1,buffs:{},otherTeam:3-data.team,isManualSummonUnit:false,s2AnnieImmune:()=>false,s2AnnieStatus:()=>{},
  heroSkillOutputRate104:()=>1,getType:()=>1,getStar:()=>6,getDamage:()=>1000,getHpMax:()=>10000,abilityFeedback:()=>{},
  beginParallelVisualBatch:()=>null,endParallelVisualBatch:()=>{},prepareParallelVisualTarget:()=>{},setParallelVisualWave:()=>{},heroFxClaim106:()=>false,
  checkMove(forward,distance,center=null){this.pos+=(this.team===1?-1:1)*(forward?1:-1)*distance;},

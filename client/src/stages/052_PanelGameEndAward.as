@@ -2349,7 +2349,7 @@ package com.meng52.game.ui.panel
             GameMapLayer.isAuto = false;
             mBox_btn.visible = true;
             if(mAutoTF) mAutoTF.visible = false;
-            GlobalFunction.popError("今日该副本挑战次数已用完，可返回副本列表购买次数。");
+            GlobalFunction.popError(resourceQuote.hero ? "今日该英雄挑战次数已用完。" : "今日该副本挑战次数已用完，可返回副本列表购买次数。");
             return;
          }
          var _loc1_:* = GameMap.lastRe;
@@ -2370,7 +2370,7 @@ package com.meng52.game.ui.panel
          var resourceQuote:Object = GlobalData.$tempPVE_type == "status_pve_activities" ? GlobalFunction.getMaterialChallenge(GlobalData.$tempPVE_combatID) : null;
          if(resourceQuote && int(resourceQuote.remaining) <= 0)
          {
-            GlobalFunction.popError("今日该副本挑战次数已用完，可返回副本列表购买次数。");
+            GlobalFunction.popError(resourceQuote.hero ? "今日该英雄挑战次数已用完。" : "今日该副本挑战次数已用完，可返回副本列表购买次数。");
             return;
          }
          var _loc4_:int = 0;

@@ -487,6 +487,8 @@ class ReferenceBattle:
                 current.value-=1
                 return
             container.pop(str(kind), None)
+            if current is not None and kind == 'purify':
+                self._purify_exhausted(unit)
 
     @staticmethod
     def _purify_layers(unit):
@@ -499,12 +501,18 @@ class ReferenceBattle:
         while layers > 0 and self._cancel_earliest_debuff(unit):
             layers -= 1
         if layers <= 0:
+            if not self._purify_layers(unit):
+                self._purify_exhausted(unit)
             return
         container = unit["_buffs"]
         current = container.get("purify")
         incoming.round = 0
         incoming.value = layers + (self._purify_layers(unit) if current is not None else 0)
         container["purify"] = incoming
+
+    def _purify_exhausted(self, unit):
+        """Hook for the last purify layer being spent or dispelled."""
+        pass
 
     def _cancel_earliest_debuff(self, unit):
         """Remove one generic debuff (one curse layer); False when none is held."""

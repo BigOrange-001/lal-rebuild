@@ -207,6 +207,25 @@ class ManualAbilityLayerTests(unittest.TestCase):
             self.assertGreater(b._buff(owner, shield).value, 0)
         self.assertEqual(b._buff(owner, 'curse').value, 2)
 
+    def test_sivir_heals_when_purify_spends_its_last_layer(self):
+        for existing_debuff in (True, False):
+            with self.subTest(existing_debuff=existing_debuff):
+                b = self.battle()
+                owner = b.a[0]
+                owner['hp'] = 500
+                owner['skillB'] = {'skills': [['manual_ability', 'six_next_sivir_p', 0, 0, 0, .15]]}
+                if existing_debuff:
+                    b._add_buff(owner, 'weak', 2, .3)
+                    b.add_purify_charges(owner, 1)
+                else:
+                    b.add_purify_charges(owner, 2)
+                    b._add_buff(owner, 'weak', 2, .3)
+                    self.assertEqual(owner['hp'], 500)
+                    b._add_buff(owner, 'weak', 2, .3)
+                self.assertEqual(owner['hp'], 650)
+                self.assertIsNone(b._buff(owner, 'weak'))
+                self.assertIsNone(b._buff(owner, 'purify'))
+
     def test_purify_charges_stack_with_ordinary_layers(self):
         b = self.battle()
         owner = b.a[0]

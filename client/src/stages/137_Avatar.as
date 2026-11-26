@@ -16856,6 +16856,7 @@ package com.meng52.game.module.avatar
             while(purifyLayers106 > 0 && cancelEarliestDebuff106()) --purifyLayers106;
             if(purifyLayers106 <= 0)
             {
+               if(!buffs["purify"]) purifyExhausted106();
                _loc7_.delayCall(_loc7_.infoLayer.popTextForAvatar,param4,GlobalLanguageStr.getLanguageStr(30016),this,10526975,param5,_loc14_);
                return;
             }
@@ -17298,12 +17299,15 @@ package com.meng52.game.module.avatar
             _loc3_.delayCall(m_buff.removeChild,GameMap.actionDelay,_loc2_.displayObject);
          }
          delete buffs[param1];
-         if(param1=="purify" && hp>0 && this.skillB)
-         {
-            var sivir105:Array=sixNextPassive105("sivir");
-            if(sivir105) sixNextHeal105(hpMax*Number(sivir105[5]));
-         }
+         if(param1=="purify") purifyExhausted106();
          if(_loc2_.type=="shield") queueVitalBar104();
+      }
+
+      private function purifyExhausted106() : void
+      {
+         if(hp<=0 || !skillB) return;
+         var sivir:Array = sixNextPassive105("sivir");
+         if(sivir) sixNextHeal105(hpMax*Number(sivir[5]));
       }
 
       private var dotPopup104:Object = null;

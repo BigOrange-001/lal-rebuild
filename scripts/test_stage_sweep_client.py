@@ -82,5 +82,37 @@ assert.equal(request.max_coin, 20);
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+    def test_full_inventory_does_not_block_the_sweep_dialog(self):
+        from test_vital_bar_104 import method
+
+        on_sweep = method(CARD.relative_to(ROOT).as_posix(), 'onSweep')
+        script = f"const onSweep = {on_sweep};" + '''
+const assert = require("node:assert/strict");
+const int = Number;
+const GlobalData = {
+    $tempPVE_type: "status_pve_activities",
+    $userData: {attrs: {avatar_len: 10}, vip_lv: 0},
+    $mConfig_simple: {equip_config: [10]},
+    rosterSlotCount: () => 10,
+    equipSlotCount: () => 10
+};
+const GlobalFunction = {
+    popAvatarLen() { assert.fail("The actual reward may fit a stack"); },
+    popEquipFull() { assert.fail("This stage may award no equipment"); },
+    getEnergy: () => ({energy: 10})
+};
+let opened = false;
+const card = {
+    mSweepBusy: false, stage: {}, data: {activity_kind: "material", needvip: 0},
+    mLimit: 1, mSweepEnergy: 5, refreshSweepLimit() {}, sweepMax: () => 1,
+    openSweepDialog() { opened = true; }, onSweep
+};
+card.onSweep({stopPropagation() {}});
+assert.equal(opened, true);
+'''
+        result = subprocess.run(["node"], input=script, text=True, encoding="utf-8", capture_output=True, cwd=ROOT)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 if __name__ == '__main__':
     unittest.main()

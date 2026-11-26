@@ -879,17 +879,6 @@ package com.meng52.game.ui.element
             return;
          }
          refreshSweepLimit();
-         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
-         if(GlobalData.$userData_avatarNum >= int(GlobalData.$userData.attrs.avatar_len))
-         {
-            GlobalFunction.popAvatarLen();
-            return;
-         }
-         if((GlobalData.$tempPVE_type == "status_pve_hard" || GlobalData.$tempPVE_type == "status_pve_activities") && GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
-         {
-            GlobalFunction.popEquipFull();
-            return;
-         }
          if(this.data.needvip > GlobalData.$userData.vip_lv)
          {
             GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(97685));

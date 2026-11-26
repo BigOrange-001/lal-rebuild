@@ -46,15 +46,17 @@ class CatKatarina103Tests(unittest.TestCase):
         b=self.battle();b.state(b.a[0])['root']={'until':3};self.assertFalse(self.cast(b))
         self.assertTrue(all(u['hp']==10000 for u in b.b))
     def test_captain_all_lanes_six_hits_and_two_persistent_purify_charges(self):
-        b=self.battle(3);b.b[1]['line']=1;b.b[2]['line']=2;b._add_buff(b.a[0],'curse',3)
+        b=self.battle(3);b.b[1]['line']=1;b.b[2]['line']=2
         self.cast(b,'c');self.assertEqual([u['hp'] for u in b.b],[9460]*3)
-        self.assertIsNone(b._buff(b.a[0],'curse'));self.assertEqual(b._buff_value(b.a[0],'purify'),2)
+        self.assertEqual(b._buff_value(b.a[0],'purify'),2)
         for _ in range(4):b._tick_buffs(b.a[0])
         self.assertEqual(b._buff_value(b.a[0],'purify'),2)
         b._add_buff(b.a[0],'stun',1);self.assertIsNone(b._buff(b.a[0],'stun'))
         self.assertEqual(b._buff_value(b.a[0],'purify'),1)
+        # A hero ability DOT is hero-specific: it neither spends nor is stopped by purify.
         b._add_manual_skill_dot(b.a[0],'dot','poison',10,0,3,b.b[0],2,False)
-        self.assertIsNone(b._buff(b.a[0],'purify'));self.assertFalse(b.a[0].get('_manual_dots'))
+        self.assertEqual(b._buff_value(b.a[0],'purify'),1);self.assertTrue(b.a[0].get('_manual_dots'))
+        b._add_buff(b.a[0],'silence',1);self.assertIsNone(b._buff(b.a[0],'silence'))
         b._add_buff(b.a[0],'silence',1);self.assertIsNotNone(b._buff(b.a[0],'silence'))
     def test_captain_rewards_each_crit_only_after_all_damage(self):
         b=self.battle(2)
@@ -86,7 +88,7 @@ class CatKatarina103Tests(unittest.TestCase):
         b=self.battle(2,True);b.b[0]['hp']=1;b._add_buff(b.b[0],'bless',2)
         b._injured(b.b[0],100,3,source=b.a[0]);self.assertEqual(b.b[1]['hp'],10000)
         b.add_purify_charges(b.a[0],2);b._add_buff(b.a[0],'purify',3)
-        self.assertEqual(b._buff_value(b.a[0],'purify'),2)
+        self.assertEqual(b._buff_value(b.a[0],'purify'),3)
         b._remove_all_good(b.a[0]);self.assertIsNone(b._buff(b.a[0],'purify'))
 
 if __name__=='__main__':unittest.main()

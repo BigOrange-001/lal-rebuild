@@ -71,6 +71,12 @@ package com.meng52.game.module.skill
 
       public var poisonHpRate104:Number = 1;
 
+      // Acquisition order: purify cancels the earliest debuff and curse
+      // strips the earliest good buff. A refreshed buff keeps its first stamp.
+      private static var serial106:int = 0;
+
+      public var seq:int;
+
       private var m_do:DisplayObject;
 
       public function Buff(param1:String, param2:int, param3:Number = 0)
@@ -79,6 +85,7 @@ package com.meng52.game.module.skill
          type = param1;
          round = param2;
          value = param3;
+         seq = ++serial106;
       }
 
       public function get displayObject() : DisplayObject

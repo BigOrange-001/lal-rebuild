@@ -112,9 +112,13 @@ class NightbringerYasuoTests(unittest.TestCase):
         b,o,en=self.battle()
         for kind in ('root','weak','curse'):
             b._add_buff(o,kind,3,1)
+        # The layer cancels only the earliest debuff.
         self.cast(b,o)
-        for kind in ('root','weak','curse'):
-            self.assertIsNone(b._buff(o,kind))
+        self.assertIsNone(b._buff(o,'root'))
+        self.assertIsNotNone(b._buff(o,'weak'))
+        self.assertIsNone(b._buff(o,'purify'))
+        b._remove_all_debuff(o)
+        self.cast(b,o)
         self.assertEqual(b._buff(o,'purify').value,1)
         b._add_buff(o,'silence',2)
         self.assertIsNone(b._buff(o,'silence'))
@@ -123,7 +127,7 @@ class NightbringerYasuoTests(unittest.TestCase):
         self.assertIsNotNone(b._buff(o,'silence'))
         self.cast(b,o)
         self.assertIsNone(b._buff(o,'silence'))
-        self.assertEqual(b._buff(o,'purify').value,1)
+        self.assertIsNone(b._buff(o,'purify'))
 
     def test_q_rank_ten_weakness_is_actual_attack_reduction_and_expires(self):
         b,o,en=self.battle(3)

@@ -45,8 +45,10 @@ class PolarAshe103Tests(unittest.TestCase):
         self.assertEqual(readings,[50123]*3)
         self.assertEqual([100000-u['hp'] for u in b.b],[900,900,0,0,900])
         self.assertEqual(b._get_hit(owner),123)
-        for u in (b.b[0],b.b[1],b.b[4]):
-            self.assertEqual(b._buff(u,'curse').round,1);self.assertEqual(b._buff(u,'stun').round,1)
+        # The curse layer strips b.b[0]'s strength and keeps one charge.
+        self.assertIsNone(b._buff(b.b[0],'strong'))
+        for u,charges in ((b.b[0],1),(b.b[1],2),(b.b[4],2)):
+            self.assertEqual(b._buff(u,'curse').value,charges);self.assertEqual(b._buff(u,'stun').round,1)
     def test_cast_precision_is_restored_even_if_damage_raises(self):
         b=self.battle();owner=b.a[0]
         def fail(*args,**kwargs):raise RuntimeError('test')

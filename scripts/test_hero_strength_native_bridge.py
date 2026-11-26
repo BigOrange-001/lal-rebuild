@@ -97,9 +97,11 @@ class NativeBridgeTests(unittest.TestCase):
                     entries=[v for k,v in b.state(annie).items() if isinstance(k,tuple) and isinstance(v,dict) and v.get('debuff')]
                     remaining=bool(entries or annie.get('_manual_dots') or annie.get('_relic_dots'))
                     self.assertEqual(remaining,mode=='cooldown')
-                    self.assertEqual(bool(enemy.get('_manual_dots')),mode=='ready')
+                    # Purify only stops the generic relic DOT; hero statuses still land.
+                    lands=mode=='ready' or mode=='purify' and path!='relic'
+                    self.assertEqual(bool(enemy.get('_manual_dots')),lands)
                     self.assertFalse(b._js_contexts)
-                    if mode=='purify':self.assertEqual(b._buff(annie,'purify').value,1)
+                    if mode=='purify':self.assertEqual(b._buff(annie,'purify').value,1 if path=='relic' else 2)
 
     def test_annie_poison_is_attack_only_two_ticks_and_independently_stackable(self):
         for hp_max in (10000,1000000):

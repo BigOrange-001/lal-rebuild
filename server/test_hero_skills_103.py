@@ -80,9 +80,10 @@ class HeroSkills103Tests(unittest.TestCase):
         b._add_buff(caster, 'stun', 1)
         b._add_buff(b.a[1], 'curse', 3)
         self.assertTrue(b._use_turn_start_passive(caster, b.b))
+        # One purify layer cancels only the earliest debuff (the curse).
+        self.assertIsNotNone(b._buff(caster, 'stun'))
         for ally in b.a:
             self.assertIsNone(b._buff(ally, 'curse'))
-            self.assertIsNone(b._buff(ally, 'stun'))
             self.assertEqual(b._buff_value(ally, 'shield'), 300)
             self.assertEqual(b._buff_value(ally, 'strong'), .5)
             self.assertEqual(b._buff_value(ally, 'steel'), 1.5)
@@ -96,7 +97,8 @@ class HeroSkills103Tests(unittest.TestCase):
             b._add_buff(b.a[0], 'curse', 2)
             self.cast(b, 'S_201311_6', level)
             self.assertIsNone(b._buff(b.a[0], 'curse'))
-            self.assertEqual(b._buff(b.a[0], 'purify').round, 2)
+            # Its purify layer was spent cancelling the curse.
+            self.assertIsNone(b._buff(b.a[0], 'purify'))
             self.assertEqual(b._buff(b.a[0], 'bless').round, 2)
             for stat in ('hit', 'flee', 'tough'):
                 self.assertAlmostEqual(b._buff_value(b.a[0], stat + 'up'), expected)
@@ -127,8 +129,10 @@ class HeroSkills103Tests(unittest.TestCase):
             self.assertEqual(b._buff_value(ally, 'shield'), 500)
             self.assertEqual(b._buff_value(ally, 'steel'), 1)
             self.assertEqual(b._buff_value(ally, 'strong'), .2)
-            for kind in ('shield', 'steel', 'strong', 'purify', 'bless'):
+            for kind in ('shield', 'steel', 'strong', 'bless'):
                 self.assertEqual(b._buff(ally, kind).round, 2)
+            # The purify layer was spent cancelling the curse.
+            self.assertIsNone(b._buff(ally, 'purify'))
         self.assertEqual(b.b[0]['hp'], 10000)
 
     def test_mordekaiser_curse_and_dispel_precede_damage(self):
@@ -141,7 +145,7 @@ class HeroSkills103Tests(unittest.TestCase):
         self.cast(b, 'S_621137_6', 10)
         self.assertIsNone(b._buff(b.b[0], 'shield'))
         self.assertIsNone(b._buff(b.b[0], 'strong'))
-        self.assertEqual(b._buff(b.b[0], 'curse').round, 1)
+        self.assertEqual(b._buff(b.b[0], 'curse').value, 2)
         self.assertLess(b.b[0]['hp'], 10000)
         self.assertEqual(b._buff_value(b.b[1], 'shield'), 9999)
         self.assertIsNone(b._buff(b.a[0], 'curse'))

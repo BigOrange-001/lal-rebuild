@@ -984,8 +984,8 @@ package com.meng52.game.module.avatar
             (attack.kind!="active" && attack.kind!="basic") || attack.skill && attack.skill===skillB) return;
          if(attack.sixNamiWave105 && target.hp>0 && target.getType()==1 && !target.isManualSummonUnit && !target.s2AnnieImmune())
          {
-            if(target.buffs["purify"]) target.removeBuff("purify",true);
-            else target.abilityState.sixNamiSlow105={until:target.abilitySerial+2,debuff:true};
+            // Hero-specific slow: outside purify's generic debuff list.
+            target.abilityState.sixNamiSlow105={until:target.abilitySerial+2,debuff:true};
          }
          var aura:Object=attack.sixNamiTicket105;
          if(!aura)
@@ -2261,7 +2261,8 @@ package com.meng52.game.module.avatar
                for each(target in foes)
                {
                   target.dispelShieldForSkill();
-                  target.removeBuff("purify");
+                  // A single dispel takes one purify layer.
+                  target.removeBuff("purify",true);
                   abilityControl(target,"silence",1);
                   sixStarHit105(target,ratio,2,effect);
                }
@@ -2849,7 +2850,6 @@ package com.meng52.game.module.avatar
                   {
                      var infected:Avatar = next[0];
                      if(infected.s2AnnieImmune()) continue;
-                     if(infected.buffs.purify) {infected.removeBuff("purify",true); continue;}
                      state.hops = 1; state.until = infected.abilitySerial+1; infected.abilityState[key] = state;
                      infected.s2AnnieStatus("poison");
                   }
@@ -13142,7 +13142,6 @@ package com.meng52.game.module.avatar
       private function s2Mark(target:Avatar, name:String, duration:int) : void
       {
          if(target && target.s2AnnieImmune()) return;
-         if(target && target.buffs.purify) {target.removeBuff("purify",true);return;}
          if(target && target.hp > 0)
          {
             {target.skin2[name] = {owner:this,skill:skin2.castSkill || skillB,expires:manualOwnerActionSerial+duration};fxPulse104(name,target);}
@@ -13187,7 +13186,7 @@ package com.meng52.game.module.avatar
          for each(key in keys)
          {
             if(key == "shield") stolen = target.shieldValue104();
-            target.removeBuff(key); ++count; if(!all) break;
+            target.removeBuff(key,!all && key == "purify"); ++count; if(!all) break;
          }
          if(count)fxPulse104("cleanse",target);
          if(count && s2Family()==1214)
@@ -14325,7 +14324,6 @@ package com.meng52.game.module.avatar
             case "malzahar_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
                if(target.s2AnnieImmune()) break;
-               if(target.buffs.purify) {target.removeBuff("purify",true); break;}
                target.abilityState["malz_"+abilityIndex]={owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_4",1),ticks:nativeAbilityNumber(sourceSkill,kind,"cast_5",3),tickDamage:getDamage()*nativeAbilityNumber(sourceSkill,kind,"cast_6",1)*scale*manualDamageMultiplier*heroSkillOutputRate104(),hops:0,debuff:true};
                target.s2AnnieStatus("poison");
                break;
@@ -14380,7 +14378,7 @@ package com.meng52.game.module.avatar
                break;
             case "kaelthas_n":
                enemies=abilityEnemies(nativeAbilityNumber(sourceSkill,kind,"cast_0",600)); if(!enemies.length) return false; target=enemies[0];
-               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.buffs.purify && !target.s2AnnieImmune())
+               if(abilityHit(target,nativeAbilityNumber(sourceSkill,kind,"cast_2",0.8)*scale,nativeAbilityNumber(sourceSkill,kind,"cast_3",2),effect) && target.hp>0 && !target.s2AnnieImmune())
                {
                   target.abilityState["bomb_"+abilityIndex]={abyssRelicContext104:abyssCaptureContext104(this),owner:this,until:target.abilitySerial+nativeAbilityNumber(sourceSkill,kind,"cast_6",1),coefficient:equipmentPart104(sourceSkill,"bomb_burst",nativeAbilityNumber(sourceSkill,kind,"cast_7",1.2))*scale,manualDamageMultiplier:manualDamageMultiplier,debuff:true};
                   target.s2AnnieStatus("bomb");
@@ -14621,15 +14619,8 @@ package com.meng52.game.module.avatar
       public function addPurifyCharges(count:int) : void
       {
          if(count < 1 || hp <= 0) return;
-         removeAllDebuff();
-         var previous:Buff = buffs["purify"] as Buff;
-         count = Math.max(count,previous ? int(previous.value) : 0);
-         removeBuff("purify");
-         // Positive purify value stores charges; ordinary purify keeps value 0.
-         var guard:Buff = new Buff("purify",0,count);
-         buffs["purify"] = guard;
-         if(GameMapLayer.gl) GameMapLayer.gl.delayCall(showBuff,GameMap.actionDelay,guard);
-         abilityFeedback("净化（"+count+"层）","FX_S9150_PURIFY",10526975);
+         // Ordinary purify layers: each cancels one held debuff, the rest stack.
+         addBuff("purify",0,count,0,-1,this);
       }
 
       private function executeCatSkin(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
@@ -16638,11 +16629,7 @@ package com.meng52.game.module.avatar
          if(yasuoImmune104(param2)) return;
          if(s2AnnieImmune()) return;
          if(!param1 || (param2 != "poison" && param2 != "burn" && param2 != "bleed") || !isFinite(param3) || param3 < 0 || !isFinite(param4) || param4 < 0 || param5 < 1) return;
-         if(buffs && buffs["purify"])
-         {
-            removeBuff("purify",true);
-            return;
-         }
+         // Hero ability DOTs are hero-specific: purify neither blocks nor cancels them.
          if(!manualSkillDots) manualSkillDots = {};
          if(stack) param1 += ":layer:" + (++manualDotSerial);
          _loc1_ = {"kind":param2,"apTick":Math.max(0,int(param3)),"hpMaxFraction":param4,"damageType":param7,"round":param5,"source":param6};
@@ -16764,7 +16751,8 @@ package com.meng52.game.module.avatar
          var source:Avatar = param6 || (sourceContext ? sourceContext.owner as Avatar : null);
          var manualEffect:Number = sourceContext ? Number(sourceContext.manualEffectMultiplier) : 1;
          if(!isFinite(manualEffect) || manualEffect <= 0) manualEffect = 1;
-         if(param3 != 0 && param1 != "summon" && !(param1 == "shield" && abyssOrigin104 == "relic_shield")) param3 *= manualEffect;
+         // Purify layers and curse layers are counts, not scaled amounts.
+         if(param3 != 0 && param1 != "summon" && param1 != "purify" && param1 != "curse" && !(param1 == "shield" && abyssOrigin104 == "relic_shield")) param3 *= manualEffect;
          if(param1 == "shield" && ratioDamage104()) param3 = Tools.toInt(param3 * precisionRecovery105(source || this));
          if(param1 == "shield" && source) param3 *= source.getRecoveryTalentMultiplier();
          if(param1 == "shield" && source) param3 = source.abyssAmplifyHeal104(param3);
@@ -16772,6 +16760,7 @@ package com.meng52.game.module.avatar
          _loc11_.source = source;
          if(param1 == "poison" && source && GlobalData.$mConfig_simple.hero_skill_output_rate_104 != null) _loc11_.poisonHpRate104 = source.poisonSkillOutputRate104();
          var _loc12_:Buff = buffs[param1];
+         if(_loc12_) _loc11_.seq = _loc12_.seq;
          var priorBurnLayers:int=param1=="burn" && _loc12_ && _loc12_.round>0 && _loc12_.value>0 ?
             Math.max(1,int(abilityState.sixReactionBurnLayers105)) : 0;
          // A timed revival must never shorten an existing permanent one.
@@ -16860,6 +16849,32 @@ package com.meng52.game.module.avatar
             checkMove(false,param3,GameMap.currentAvatar,-1,true);
             return;
          }
+         var stacked106:Boolean = false;
+         if(param1 == "purify")
+         {
+            // Each new layer cancels the earliest debuff held; the rest stack.
+            var purifyLayers106:int = Math.max(1,int(_loc11_.value));
+            while(purifyLayers106 > 0 && cancelEarliestDebuff106()) --purifyLayers106;
+            if(purifyLayers106 <= 0)
+            {
+               _loc7_.delayCall(_loc7_.infoLayer.popTextForAvatar,param4,GlobalLanguageStr.getLanguageStr(30016),this,10526975,param5,_loc14_);
+               return;
+            }
+            stacked106 = true;
+            _loc9_ = true;
+            if(_loc12_)
+            {
+               _loc12_.value = Math.max(1,int(_loc12_.value)) + purifyLayers106;
+               _loc11_ = _loc12_;
+            }
+            else
+            {
+               _loc11_.round = 0;
+               _loc11_.value = purifyLayers106;
+               buffs[param1] = _loc11_;
+               _loc7_.delayCall(showBuff,param4,_loc11_);
+            }
+         }
          if(buffs["purify"])
          {
             if(Buff.LIST_DEBUFF.indexOf(param1) != -1)
@@ -16882,23 +16897,40 @@ package com.meng52.game.module.avatar
                return;
             }
          }
-         if(buffs["curse"] && Buff.LIST_BUFF.indexOf(param1) != -1 && param1 != "purify")
+         if(param1 == "curse")
          {
+            // A new layer strips up to two good buffs; leftover charges block later ones.
+            var curseCharges106:int = CURSE_CHARGES_PER_LAYER106;
+            while(curseCharges106 > 0 && stripEarliestGood106()) --curseCharges106;
+            var heldCurse106:int = _loc12_ ? int(_loc12_.value) : 0;
+            _loc11_.round = 0;
+            _loc11_.value = Math.min(CURSE_MAX_LAYERS106 * CURSE_CHARGES_PER_LAYER106,heldCurse106 + curseCharges106);
+            if(_loc12_) removeBuff("curse",false,false);
+            if(_loc11_.value > 0)
+            {
+               buffs["curse"] = _loc11_;
+               _loc7_.delayCall(showBuff,param4,_loc11_);
+            }
+            stacked106 = true;
+            _loc9_ = true;
+         }
+         else if(buffs["curse"] && Buff.LIST_BUFF.indexOf(param1) != -1 && param1 != "purify")
+         {
+            // Each curse charge rejects one incoming good buff.
+            spendCurse106(1);
             _loc8_ = 10526880;
             _loc13_ = GlobalLanguageStr.getLanguageStr(30025);
             _loc7_.delayCall(_loc7_.infoLayer.popTextForAvatar,param4,_loc13_,this,_loc8_,param5,_loc14_);
             return;
          }
-         if(param1 == "purify")
-         {
-            removeAllDebuff();
-            if(_loc12_ && _loc12_.value > 0) return;
-         }
-         else if(param1 == "evil")
+         if(param1 == "evil")
          {
             removeAllGoodBuff();
          }
-         if(!_loc12_)
+         if(stacked106)
+         {
+         }
+         else if(!_loc12_)
          {
             buffs[param1] = _loc11_;
             _loc7_.delayCall(showBuff,param4,_loc11_);
@@ -16910,9 +16942,7 @@ package com.meng52.game.module.avatar
             {
                case "stun":
                case "silence":
-               case "purify":
                case "evil":
-               case "curse":
                case "taunt":
                case "bless":
                   if(_loc11_.round >= _loc12_.round)
@@ -17018,7 +17048,7 @@ package com.meng52.game.module.avatar
                   break;
                case "purify":
                   _loc8_ = 10526975;
-                  _loc13_ = GlobalLanguageStr.getLanguageStr(30016) + _loc11_.round + GlobalLanguageStr.getLanguageStr(30002);
+                  _loc13_ = GlobalLanguageStr.getLanguageStr(30016) + int(_loc11_.value) + "层";
                   break;
                case "evil":
                   _loc8_ = 10053222;
@@ -17026,7 +17056,7 @@ package com.meng52.game.module.avatar
                   break;
                case "curse":
                   _loc8_ = 10053222;
-                  _loc13_ = "诅咒" + _loc11_.round + GlobalLanguageStr.getLanguageStr(30002);
+                  _loc13_ = "诅咒" + (_loc11_.value > 0 ? curseLayers106(_loc11_.value) + "层" : "");
                   break;
                case "bless":
                   _loc8_ = 16777164;
@@ -17169,6 +17199,65 @@ package com.meng52.game.module.avatar
          abyssDots104 = null;
       }
 
+      // Purify: each layer cancels one generic debuff, never expires and
+      // stacks without limit. Curse: each layer holds two charges, each one
+      // strips a held generic good buff or blocks the next incoming one; at
+      // most three layers. Hero-specific statuses (ability DOTs, marks, skin
+      // marks, independent shields) are outside both lists.
+      public static const CURSE_CHARGES_PER_LAYER106:int = 2;
+      public static const CURSE_MAX_LAYERS106:int = 3;
+
+      public static function curseLayers106(charges:Number) : int
+      {
+         return Math.ceil(Math.max(0,int(charges)) / CURSE_CHARGES_PER_LAYER106);
+      }
+
+      private function cancelEarliestDebuff106() : Boolean
+      {
+         var earliestKey:String = null;
+         var earliest:Buff = null;
+         for(var key:String in buffs)
+         {
+            var entry:Buff = buffs[key] as Buff;
+            if(entry && Buff.LIST_DEBUFF.indexOf(key) > -1 && (!earliest || entry.seq < earliest.seq))
+            {
+               earliest = entry;
+               earliestKey = key;
+            }
+         }
+         if(!earliest) return false;
+         if(earliestKey == "curse") spendCurse106(CURSE_CHARGES_PER_LAYER106);
+         else removeBuff(earliestKey,false,false);
+         return true;
+      }
+
+      private function spendCurse106(charges:int) : void
+      {
+         var curse:Buff = buffs["curse"] as Buff;
+         if(!curse) return;
+         curse.value = int(curse.value) - charges;
+         if(curse.value <= 0) removeBuff("curse",false,false);
+      }
+
+      private function stripEarliestGood106() : Boolean
+      {
+         var earliestKey:String = null;
+         var earliest:Buff = null;
+         for(var key:String in buffs)
+         {
+            var entry:Buff = buffs[key] as Buff;
+            if(entry && Buff.LIST_BUFF.indexOf(key) > -1 && (!earliest || entry.seq < earliest.seq))
+            {
+               earliest = entry;
+               earliestKey = key;
+            }
+         }
+         if(!earliest) return false;
+         removeBuff(earliestKey,earliestKey == "purify",false);
+         return true;
+      }
+
+
       protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
       {
          abyssRemoveDots104(param1);
@@ -17272,7 +17361,8 @@ package com.meng52.game.module.avatar
             _loc1_ = buffs[_loc3_];
             // Only the new timed variant expires; legacy revival stays armed.
             if(_loc3_ == "bless" && _loc1_.value <= 0) continue;
-            if(_loc3_ == "purify" && _loc1_.value > 0) continue;
+            // Purify layers and curse charges last until they are spent.
+            if(_loc3_ == "purify" || _loc3_ == "curse") continue;
             if(_loc3_=="sixReactionMfShield105") continue;
             --_loc1_.round;
             switch(_loc3_)

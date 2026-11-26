@@ -172,7 +172,8 @@ class DragonmancerKaisaTests(unittest.TestCase):
    if slot=='skill':
     self.assertIsNone(b._buff(o,'curse'));self.assertIsNone(b._buff(clone,'burn'))
     self.assertEqual((b._buff(o,'shield').value,b._buff(o,'shield').round),(60000,3))
-    self.assertEqual((b._buff(clone,'shield').value,b._buff(clone,'purify').round),(2400,3))
+    # Each purify layer was spent cancelling the held debuff.
+    self.assertEqual(b._buff(clone,'shield').value,2400);self.assertIsNone(b._buff(clone,'purify'))
    return original(actor,opponents,slot)
   b._apply_native_skill=guarded
   b._add_buff(enemies[0],'stun',1)

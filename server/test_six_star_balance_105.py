@@ -432,7 +432,8 @@ class SixStarBalanceTests(TestCase):
         b._add_buff(owner,'weak',2,.1)
         self.assertTrue(b._emit_mod_event(owner,'shield_break',foe,owner))
         self.assertAlmostEqual(b._buff_value(owner,'strong'),.5)
-        self.assertTrue(b._buff(owner,'purify'))
+        # The purify layer was spent cancelling the weakness.
+        self.assertIsNone(b._buff(owner,'purify'))
         self.assertIsNone(b._buff(owner,'weak'))
 
         b, owner, enemies = self.arena(1002, [(0,1400,100000)])

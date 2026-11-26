@@ -165,7 +165,8 @@ class ReferenceBattleActionTests(unittest.TestCase):
                         (line, damage, 2) for line in range(3)
                         for damage in (306, 150)))
                     for enemy in enemy_side:
-                        self.assertEqual(enemy["_buffs"]["curse"].round, 2)
+                        # One curse layer: two charges.
+                        self.assertEqual(enemy["_buffs"]["curse"].value, 2)
                         self.assertIn("weak", enemy["_buffs"])
                     self.assertNotIn("curse", caster.get("_buffs", {}))
 
@@ -300,16 +301,15 @@ class ReferenceBattleActionTests(unittest.TestCase):
         unit['manual_attack_range'] = 800
         self.assertEqual(battle._get_range(unit), 800)
 
-    def test_curse_rejects_every_positive_buff(self):
+    def test_one_curse_layer_rejects_the_next_two_positive_buffs(self):
         target = self.unit('A_1002_6', 2, 600)
         battle = ReferenceBattle([self.unit('A_1001_6', 1, 500)], [target], config=self.config)
         battle._add_buff(target, 'curse', 1)
 
-        for kind in ('shield', 'strong', 'taunt', 'bless', 'steel', 'armor',
-                     'hitup', 'fleeup', 'critup', 'toughup'):
+        for kind in ('shield', 'strong', 'taunt', 'bless'):
             battle._add_buff(target, kind, 2, 100)
 
-        self.assertEqual(set(target['_buffs']), {'curse'})
+        self.assertEqual(set(target['_buffs']), {'taunt', 'bless'})
 
     def test_purify_has_priority_before_or_after_curse(self):
         for order in (('curse', 'purify'), ('purify', 'curse')):
@@ -321,17 +321,18 @@ class ReferenceBattleActionTests(unittest.TestCase):
                 self.assertNotIn('curse', target['_buffs'])
                 self.assertNotIn('_curse_window_started', target)
 
-    def test_purify_cleanses_evil_and_curse_together(self):
+    def test_each_purify_layer_cancels_one_of_evil_and_curse(self):
         target = self.unit('A_1002_6', 2, 600)
         battle = ReferenceBattle([self.unit('A_1001_6', 1, 500)], [target], config=self.config)
         battle._add_buff(target, 'evil', 2)
         battle._add_buff(target, 'curse', 2)
 
         battle._add_buff(target, 'purify', 1)
+        self.assertEqual(set(target['_buffs']), {'curse'})
+        battle._add_buff(target, 'purify', 1)
+        self.assertEqual(set(target['_buffs']), set())
 
-        self.assertEqual(set(target['_buffs']), {'purify'})
-
-    def test_curse_blocks_the_targets_next_turn_then_expires(self):
+    def test_curse_blocks_two_casts_then_is_spent(self):
         for target_acts_first in (True, False):
             with self.subTest(target_acts_first=target_acts_first):
                 target = self.unit('A_1002_6', 1, 500)
@@ -351,6 +352,10 @@ class ReferenceBattleActionTests(unittest.TestCase):
                 battle._run_unit_turn(target, sides, 1)
 
                 self.assertNotIn('curse', target['_buffs'])
+                self.assertNotIn('strong', target['_buffs'])
+
+                battle._run_unit_turn(target, sides, 1)
+
                 self.assertIn('strong', target['_buffs'])
 
     def test_curse_action_targets_the_enemy(self):

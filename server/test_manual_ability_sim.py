@@ -57,7 +57,8 @@ class ManualAbilityStateTests(unittest.TestCase):
         second['hp']=1;b._injured(second,10,6,source=b.a[0])
         self.assertNotIn(key,b.state(b.b[2]))
 
-    def test_bomb_detonates_on_expiry_or_death_and_purify_clears_it(self):
+    def test_bomb_detonates_on_expiry_or_death_and_purify_does_not_touch_it(self):
+        # The bomb is a hero-specific mark, outside purify's generic list.
         for mode in ('expiry','death','purify'):
             with self.subTest(mode=mode):
                 b=self.battle();self.cast(b,'kaelthas_n');target=b.b[0]
@@ -65,7 +66,7 @@ class ManualAbilityStateTests(unittest.TestCase):
                 if mode=='expiry':b.turn_start(target)
                 elif mode=='death':target['hp']=1;b._injured(target,10,6,source=b.a[0])
                 else:b._add_buff(target,'purify',2,0);b.turn_start(target)
-                self.assertEqual(b.b[1]['hp']==before,mode=='purify')
+                self.assertLess(b.b[1]['hp'],before)
 
     def test_unknown_ability_fails_explicitly(self):
         b=self.battle()

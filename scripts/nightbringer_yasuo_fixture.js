@@ -30,8 +30,15 @@ function make(team=1,pos=2400,yasuo=true){
  u.yasuoWhirlwind104=(lane,offset,points)=>u.flights.push({lane,offset,points:structuredClone(points)});
  u.beginParallelVisualBatch=()=>({});u.endParallelVisualBatch=()=>{};u.prepareParallelVisualTarget=()=>{};
  u.abilityCandidates=(team,lane)=>units.filter(t=>t.hp>0&&t.team===team&&t.line===lane).sort((a,b)=>team===1?a.pos-b.pos:b.pos-a.pos);
- u.removeBuff=(key,consume=false,clear=true)=>{if(key==='shield'&&clear)u.removeIndependentShields104();if(key==='purify'&&consume&&u.buffs[key]?.value>1){u.buffs[key].value--;return}delete u.buffs[key]};
- u.addBuff=(key,round,value=0)=>{if(u.yasuoImmune104(key))return;if(u.buffs.purify&&debuffs.includes(key)){u.removeBuff('purify',true);return}if(key==='shield'&&u.buffs.curse)return;u.buffs[key]=new Buff(key,round,value)};
+ u.removeBuff=(key,consume=false,clear=true)=>{if(key==='shield'&&clear)u.removeIndependentShields104();if(key==='root')delete u.abilityState.root;if(key==='purify'&&consume&&u.buffs[key]?.value>1){u.buffs[key].value--;return}delete u.buffs[key]};
+ // Purify layers (137_Avatar addBuff): each new layer cancels the earliest
+ // held debuff (insertion order here), then DOT rows; the rest stack.
+ u.cancelEarliestDebuff=()=>{const key=Object.keys(u.buffs).find(k=>debuffs.includes(k));if(key){u.removeBuff(key,false,false);return true}
+  if(Object.keys(u.manualSkillDots||{}).length){u.manualSkillDots={};return true}return false};
+ u.addBuff=(key,round,value=0)=>{if(u.yasuoImmune104(key))return;
+  if(key==='purify'){let n=Math.max(1,value|0);while(n>0&&u.cancelEarliestDebuff())n--;if(n<=0)return;
+   if(u.buffs.purify)u.buffs.purify.value+=n;else u.buffs.purify=new Buff(key,0,n);return}
+  if(u.buffs.purify&&debuffs.includes(key)){u.removeBuff('purify',true);return}if(key==='shield'&&u.buffs.curse)return;u.buffs[key]=new Buff(key,round,value)};
  u.abilityControl=(target,key,round,value=0)=>target.addBuff(key,round,value);
  u.removeAllDebuff=()=>{
   for(const key of debuffs)delete u.buffs[key];
@@ -137,15 +144,18 @@ for(const team of [1,2]){
  assert.equal(100000-en[0].hp,472);assert.deepEqual(en[0].receipts.map(r=>r.settled),[350,122]);cases++;
 }
 {
- const {a,en}=fresh(2);for(const key of ['weak','root','curse'])a.addBuff(key,3,1);
+ const {a,en}=fresh(2);for(const key of ['root','weak','curse'])a.addBuff(key,3,1);
  a.abilityState.root=true;a.manualSkillDots={bleed:{kind:'bleed'}};
  a.yasuoExecute104('night_yasuo_n',a.skill0);
- assert(!a.buffs.weak&&!a.buffs.root&&!a.buffs.curse&&!a.abilityState.root);assert.deepEqual(a.manualSkillDots,{});
- assert.equal(a.pos,2000,'purification removes root before the dash');assert.equal(a.buffs.purify.value,1);
+ assert(!a.buffs.root&&!a.abilityState.root&&a.buffs.weak&&a.buffs.curse,'one layer cancels only the earliest debuff');
+ assert.equal(a.pos,2000,'purification removes root before the dash');assert(!a.buffs.purify,'the layer is spent');
+ a.removeAllDebuff();
+ a.yasuoExecute104('night_yasuo_n',a.skill0);assert.equal(a.buffs.purify.value,1);
  a.addBuff('silence',2);assert(!a.buffs.silence&&!a.buffs.purify,'one future debuff is blocked');
  a.addBuff('silence',2);assert(a.buffs.silence,'the next debuff applies normally');
- a.yasuoExecute104('night_yasuo_n',a.skill0);assert.equal(a.buffs.purify.value,1,'recast restores one charge');
- a.buffs.purify.value=2;a.yasuoExecute104('night_yasuo_n',a.skill0);assert.equal(a.buffs.purify.value,2,'existing stronger purification stays intact');cases++;
+ a.yasuoExecute104('night_yasuo_n',a.skill0);assert(!a.buffs.silence&&!a.buffs.purify,'recast cancels the held debuff');
+ a.yasuoExecute104('night_yasuo_n',a.skill0);assert.equal(a.buffs.purify.value,1);
+ a.buffs.purify.value=2;a.yasuoExecute104('night_yasuo_n',a.skill0);assert.equal(a.buffs.purify.value,3,'layers stack');cases++;
 }
 {
  const {a,en}=fresh(3);a.skill0=skill(data.normal,10);missTargets.add(en[2]);

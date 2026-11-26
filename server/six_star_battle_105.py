@@ -69,7 +69,8 @@ class SixStarBattleMixin(SixStarFollowupBattle, SixStarExtendedBattle, SixStarRe
         elif kind == 'six_blitz_c':
             for target in targets:
                 self._remove_buff(target, 'shield')
-                self._remove_buff(target, 'purify')
+                # A single dispel takes one purify layer.
+                self._remove_buff(target, 'purify', consume=True)
                 self.control(owner, target, 'silence', 1)
                 self._native_damage(owner, target, ratio, 2)
         elif kind in ('six_akali_c', 'six_ahri_c'):

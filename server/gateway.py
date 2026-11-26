@@ -201,6 +201,8 @@ def build_static_config(path):
  apply_daily_reset_config(document)
  from stage_sweep import apply_stage_sweep
  apply_stage_sweep(document)
+ from hero_challenge import apply_hero_challenge
+ apply_hero_challenge(document)
  from shop_balance_105 import apply_shop_balance_105
  apply_shop_balance_105(document)
  from guild_exchange_105 import apply_guild_exchange

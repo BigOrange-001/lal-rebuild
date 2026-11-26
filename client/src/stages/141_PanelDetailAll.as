@@ -417,6 +417,32 @@ package com.meng52.game.ui.panel
          return _details;
       }
 
+      // Inner left padding of each skill column, so text clears the rules.
+      private static const skillColumnPad105:int = 6;
+
+      // Puts the captain tag at the start of a column and the captain skill's
+      // name right after it, both centred on the name row.
+      private function placeCaptainTag105(tag:Image, name:LOL_TextField, x:int, y:int, rowHeight:int) : void
+      {
+         tag.x = x;
+         tag.y = y + int((rowHeight - tag.height) / 2);
+         name.x = x + int(tag.width) + 3;
+         name.y = y;
+      }
+
+      // A thin divider between skill columns, in the colour of the panel's own rule.
+      private function addSkillColumnRule105(x:int, y:int, height:int) : Quad
+      {
+         var rule:Quad = Tools.newQuad(1,height);
+         rule.color = 10120765;
+         rule.alpha = 0.6;
+         rule.x = x;
+         rule.y = y;
+         rule.touchable = false;
+         _uiMain.addChild(rule);
+         return rule;
+      }
+
       protected function update() : void
       {
          var _loc23_:LOL_TextField = null;
@@ -556,7 +582,8 @@ package com.meng52.game.ui.panel
          _uiMain.addChild(mBox_P);
          var _loc16_:Array = [];
          var _loc2_:Image = null;
-         mBox_P.x = _bg2.x + 30;
+         // Stat columns share the skill columns' grid below.
+         mBox_P.x = _bg2.x + 20 + skillColumnPad105;
          mBox_P.y = _bg2.y + 15;
          _quadType = new Quad(_bg1.width,45);
          _quadType.x = _loc29_.x;
@@ -577,7 +604,7 @@ package com.meng52.game.ui.panel
             _loc28_.touchable = false;
             _loc28_.hAlign = "left";
             _loc28_.vAlign = "top";
-            _loc28_.x = int(_loc47_ / 4) * 170;
+            _loc28_.x = int(_loc47_ / 4) * (int((_bg2.width - 66) / 3) + 8);
             _loc28_.y = _loc47_ % 4 * 23;
             mBox_P.addChild(_loc28_);
             _loc1_.push(_loc28_);
@@ -589,7 +616,7 @@ package com.meng52.game.ui.panel
          var hasPassiveSkill:Boolean = _avatar != null && _avatar.skillB != null;
          var skillNameHeight:int = hasPassiveSkill ? 24 : 35;
          var skillNameWidth:int = hasPassiveSkill ? skillThreeWidth - 48 : skillColumnWidth - 146;
-         var skillLevelWidth:int = hasPassiveSkill ? 46 : 60;
+         var skillLevelWidth:int = hasPassiveSkill ? 56 : 60;
          var skillLeaderNameWidth:int = hasPassiveSkill ? skillThreeWidth : skillColumnWidth - 120;
          var skillTimingWidth:int = hasPassiveSkill ? skillThreeWidth : skillColumnWidth;
          var _loc22_:Quad = Tools.newQuad(_bg2.width - 50,2);
@@ -800,13 +827,21 @@ package com.meng52.game.ui.panel
          _loc51_.y = skillDetailTopY + 26;
          _loc6_.x = _loc20_.x;
          _loc6_.y = skillDetailTopY + 26;
-         _loc11_.x = _loc32_.x + skillColumnWidth - 18;
-         _loc11_.y = skillDetailTopY - 1;
+         // The captain tag leads the captain skill's own name instead of
+         // sitting at the column's far edge, where it read as the next column's.
+         placeCaptainTag105(_loc11_,_loc20_,_loc32_.x + skillColumnPad105,skillDetailTopY,skillNameHeight);
+         _loc21_.x += skillColumnPad105;
+         _loc4_.x = _loc21_.x + int(_loc21_.textBounds.width) + 6;
+         _loc51_.x += skillColumnPad105;
+         _loc6_.x += skillColumnPad105;
+         var skillRule:Quad = addSkillColumnRule105(_loc22_.x + skillColumnWidth + 5,_loc22_.y + 10,skillDetailTopY + 87 - (_loc22_.y + 10));
+         // Heroes without skills show an info line across the panel instead.
+         skillRule.visible = _loc11_.visible;
          _loc9_.visible = false;
          _loc8_.visible = false;
-         _loc34_.x = _loc22_.x;
+         _loc34_.x = _loc22_.x + skillColumnPad105;
          _loc34_.y = skillDetailTopY + 55;
-         _loc32_.x = _loc22_.x + skillColumnWidth + 10;
+         _loc32_.x = _loc22_.x + skillColumnWidth + 10 + skillColumnPad105;
          _loc32_.y = skillDetailTopY + 55;
          if(_loc41_[0] > 0)
          {
@@ -825,9 +860,12 @@ package com.meng52.game.ui.panel
          {
             // Three equal columns reproduce the retained reference layout when a passive exists.
             // Keep the existing two-column measurements untouched for heroes without skillB.
-            var skillThreeX0:int = _loc22_.x;
+            var skillThreeX0:int = _loc22_.x + skillColumnPad105;
             var skillThreeX1:int = skillThreeX0 + skillThreeWidth + skillThreeGap;
             var skillThreeX2:int = skillThreeX1 + skillThreeWidth + skillThreeGap;
+            // Three columns: move the two-column rule and add a second one.
+            skillRule.x = skillThreeX1 - skillColumnPad105 - int(skillThreeGap / 2);
+            addSkillColumnRule105(skillThreeX2 - skillColumnPad105 - int(skillThreeGap / 2),skillRule.y,skillRule.height);
             var skillThreeNameY:int = skillDetailTopY;
             var skillThreeTimingY:int = skillDetailTopY + 26;
             var skillThreeButtonY:int = skillDetailTopY + 55;
@@ -840,8 +878,6 @@ package com.meng52.game.ui.panel
             _loc32_.x = skillThreeX1;
             _loc32_.y = skillThreeButtonY;
             _loc32_.style(GlobalConfig.FONT_0,14,_avatar.skill1 ? (_loc39_ ? 52479 : 16777215) : 6710886);
-            _loc11_.x = skillThreeX1 + skillThreeWidth - 14;
-            _loc11_.y = skillThreeNameY - 1;
 
             _quadSkill1.x = skillThreeX0;
             _quadSkill1.y = _loc22_.y;
@@ -856,15 +892,15 @@ package com.meng52.game.ui.panel
             _loc21_.x = skillThreeX0;
             _loc21_.y = skillThreeNameY;
             _loc21_.fontSize = 16;
-            _loc4_.x = skillThreeX0 + skillThreeWidth - 46;
-            _loc4_.y = skillThreeNameY + 1;
-            _loc4_.fontSize = 15;
-            _loc4_.hAlign = "right";
+            // The skill level follows the name it belongs to, not the column's edge.
+            _loc4_.fontSize = 14;
+            _loc4_.hAlign = "left";
+            _loc4_.x = skillThreeX0 + int(_loc21_.textBounds.width) + 6;
+            _loc4_.y = skillThreeNameY + 2;
 
             _loc20_.text = _loc5_;
-            _loc20_.x = skillThreeX1;
-            _loc20_.y = skillThreeNameY;
             _loc20_.fontSize = 16;
+            placeCaptainTag105(_loc11_,_loc20_,skillThreeX1,skillThreeNameY,skillNameHeight);
             _loc9_.visible = false;
             _loc8_.visible = false;
             _loc21_.visible = _loc20_.visible = true;

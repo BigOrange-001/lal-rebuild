@@ -92,14 +92,17 @@ def class_replay(stages: list[dict]) -> dict[str, list[dict]]:
     return replay
 
 
-def source_manifest(stages: list[dict]) -> dict[str, dict]:
+def source_manifest(stages: list[dict], *, source_overrides: dict[str, bytes] | None = None) -> dict[str, dict]:
     """Per class: the stages replayed for it and a digest of their sources."""
     manifest = {}
     for name, chain in class_replay(stages).items():
         digest = hashlib.sha256()
         for stage in chain:
             digest.update(json.dumps({k: stage.get(k) for k in ("class", "methods", "allow_constant_pool_append", "compiler")}, sort_keys=True).encode("utf-8"))
-            digest.update(sha256_file((ROOT / stage["source"]).resolve()).encode("ascii"))
+            path = stage["source"]
+            override = source_overrides.get(path) if source_overrides else None
+            source_hash = hashlib.sha256(override).hexdigest() if override is not None else sha256_file(ROOT / path)
+            digest.update(source_hash.encode("ascii"))
             if stage.get('compiler') == 'air-mxmlc':
                 digest.update(sha256_file(ROOT/'scripts/CompileAirAs3.java').encode('ascii'))
         manifest[name] = {"stages": [stage["index"] for stage in chain], "digest": digest.hexdigest()}

@@ -12,11 +12,13 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.InputType;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -35,7 +37,7 @@ import java.io.OutputStream;
 import java.io.File;
 import java.util.List;
 
-/** Two controls and a raw terminal. No graphical GM operations are exposed. */
+/** A status card, two controls and a raw terminal. No graphical GM operations are exposed. */
 public class MainActivity extends Activity implements SaveAdapter.Actions, ServiceConnection {
     static final String PREFS = "manager";
     static final String KEY_AUTOSAVE = "autosave";
@@ -45,6 +47,10 @@ public class MainActivity extends Activity implements SaveAdapter.Actions, Servi
     private static final int REQUEST_NOTIFICATIONS = 4003;
 
     private TextView statusText;
+    private TextView statusDetail;
+    private GradientDrawable statusDot;
+    private Button sendButton;
+    private boolean toggleShowsStop;
     private TextView logText;
     private ScrollView terminal;
     private EditText commandInput;
@@ -131,45 +137,111 @@ public class MainActivity extends Activity implements SaveAdapter.Actions, Servi
     @Override public void onServiceDisconnected(ComponentName name) {
         service = null;
         commandInput.setEnabled(false);
+        sendButton.setEnabled(false);
         toggleButton.setEnabled(false);
     }
 
     private LinearLayout buildContent() {
         LinearLayout root = Ui.column(this);
-        root.setBackgroundColor(Color.BLACK);
-        int pad = Ui.dp(this, 12);
+        root.setBackgroundColor(Ui.BG);
+        int pad = Ui.dp(this, 16);
         root.setPadding(pad, pad, pad, pad);
         ProjectNotice.attach(this, root);
+
+        TextView title = Ui.body(this, ManagerStrings.home_manager);
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f);
+        title.setTypeface(title.getTypeface(), Typeface.BOLD);
+        Ui.topMargin(title, 10f, this);
+        root.addView(title);
+        TextView subtitle = Ui.meta(this, ManagerStrings.notif_text);
+        Ui.topMargin(subtitle, 2f, this);
+        root.addView(subtitle);
+
+        // Status card: a coloured dot and phase, any detail, then the two actions.
+        LinearLayout status = Ui.sectionCard(this);
+        Ui.topMargin(status, 14f, this);
+        LinearLayout phaseRow = Ui.row(this);
+        phaseRow.setGravity(Gravity.CENTER_VERTICAL);
+        statusDot = new GradientDrawable();
+        statusDot.setShape(GradientDrawable.OVAL);
+        statusDot.setColor(Ui.TEXT_SECONDARY);
+        View dot = new View(this);
+        dot.setBackground(statusDot);
+        int dotSize = Ui.dp(this, 10);
+        phaseRow.addView(dot, new LinearLayout.LayoutParams(dotSize, dotSize));
+        statusText = Ui.cardTitle(this, ManagerStrings.state_stopped);
+        statusText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);
+        phaseRow.addView(statusText);
+        Ui.leftMargin(statusText, 10f, this);
+        status.addView(phaseRow);
+        statusDetail = Ui.meta(this, "");
+        statusDetail.setTextIsSelectable(true);
+        statusDetail.setVisibility(View.GONE);
+        status.addView(statusDetail);
+        Ui.topMargin(statusDetail, 6f, this);
+
+        LinearLayout actions = Ui.row(this);
         toggleButton = Ui.button(this, ManagerStrings.action_start_server);
-        root.addView(toggleButton, fixedHeight(50));
         toggleButton.setEnabled(false);
         toggleButton.setOnClickListener(v -> ServerService.request(this, ServerService.ACTION_TOGGLE));
+        actions.addView(toggleButton, new LinearLayout.LayoutParams(0, Ui.dp(this, 46), 1f));
         backupsButton = Ui.outlinedButton(this, ManagerStrings.action_backups);
-        root.addView(backupsButton, fixedHeight(48));
+        backupsButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
         backupsButton.setOnClickListener(v -> showBackups());
-        statusText = Ui.mono(this, ManagerStrings.state_stopped, 12f, Color.LTGRAY);
-        statusText.setPadding(0, pad, 0, pad);
-        root.addView(statusText);
+        actions.addView(backupsButton, new LinearLayout.LayoutParams(0, Ui.dp(this, 46), 1f));
+        Ui.leftMargin(backupsButton, 10f, this);
+        status.addView(actions);
+        Ui.topMargin(actions, 14f, this);
+        root.addView(status);
+
+        TextView logTitle = Ui.sectionTitle(this, ManagerStrings.section_log);
+        Ui.margin(logTitle, 18f, 8f, this);
+        root.addView(logTitle);
+
+        // Console card: the log fills the rest of the screen, the prompt sits under it.
+        LinearLayout console = Ui.column(this);
+        GradientDrawable consoleBg = Ui.rounded(Ui.CONSOLE, 14f, this);
+        consoleBg.setStroke(Ui.dp(this, 1), Ui.HAIRLINE);
+        console.setBackground(consoleBg);
+        int inner = Ui.dp(this, 12);
+        console.setPadding(inner, inner, inner, Ui.dp(this, 6));
+        root.addView(console, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         terminal = new ScrollView(this);
         terminal.setFillViewport(true);
-        logText = Ui.mono(this, "", 12f, Color.LTGRAY);
+        logText = Ui.mono(this, "", 11.5f, 0xFFB8C0D0);
+        logText.setHint(ManagerStrings.log_empty);
+        logText.setHintTextColor(Ui.TEXT_SECONDARY);
+        logText.setLineSpacing(0f, 1.15f);
         logText.setTextIsSelectable(true);
         terminal.addView(logText);
-        root.addView(terminal, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        console.addView(terminal, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        View rule = new View(this);
+        rule.setBackgroundColor(Ui.HAIRLINE);
+        LinearLayout.LayoutParams ruleParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, Ui.dp(this, 1)));
+        ruleParams.topMargin = Ui.dp(this, 8);
+        console.addView(rule, ruleParams);
 
         LinearLayout inputRow = Ui.row(this);
         inputRow.setGravity(Gravity.CENTER_VERTICAL);
-        inputRow.addView(Ui.mono(this, "server> ", 13f, Color.LTGRAY));
+        TextView prompt = Ui.mono(this, "›", 18f, Ui.ACCENT);
+        prompt.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+        inputRow.addView(prompt);
         commandInput = new EditText(this);
+        commandInput.setBackground(null);
         commandInput.setTypeface(Typeface.MONOSPACE);
-        commandInput.setTextColor(Color.WHITE);
+        commandInput.setTextColor(Ui.TEXT_PRIMARY);
+        commandInput.setHintTextColor(0xFF5C6478);
+        commandInput.setHint(ManagerStrings.console_hint_idle);
         commandInput.setTextSize(13f);
         commandInput.setSingleLine(true);
         commandInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                 | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
         commandInput.setImeOptions(EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         commandInput.setEnabled(false);
+        commandInput.setPadding(Ui.dp(this, 8), Ui.dp(this, 6), Ui.dp(this, 8), Ui.dp(this, 6));
         inputRow.addView(commandInput, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         commandInput.setOnEditorActionListener((view, action, event) -> {
             if (action == EditorInfo.IME_ACTION_SEND || (event != null
@@ -179,7 +251,17 @@ public class MainActivity extends Activity implements SaveAdapter.Actions, Servi
             }
             return event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER;
         });
-        root.addView(inputRow);
+        sendButton = Ui.button(this, ManagerStrings.action_send);
+        sendButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+        Ui.tint(sendButton, Ui.ACCENT, 9f);
+        sendButton.setMinWidth(0);
+        sendButton.setMinimumWidth(0);
+        sendButton.setPadding(Ui.dp(this, 14), 0, Ui.dp(this, 14), 0);
+        sendButton.setEnabled(false);
+        sendButton.setOnClickListener(v -> sendCommand());
+        inputRow.addView(sendButton, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(this, 34)));
+        console.addView(inputRow);
         return root;
     }
 
@@ -198,18 +280,29 @@ public class MainActivity extends Activity implements SaveAdapter.Actions, Servi
         boolean running = ServerService.PHASE_RUNNING.equals(phase);
         boolean busy = ServerService.PHASE_STARTING.equals(phase) || ServerService.PHASE_STOPPING.equals(phase);
         String label;
+        int color;
         switch (phase) {
-            case ServerService.PHASE_RUNNING: label = ManagerStrings.state_running; break;
-            case ServerService.PHASE_STARTING: label = ManagerStrings.state_starting; break;
-            case ServerService.PHASE_STOPPING: label = ManagerStrings.state_stopping; break;
-            case ServerService.PHASE_FAILED: label = ManagerStrings.state_failed; break;
-            default: label = ManagerStrings.state_stopped;
+            case ServerService.PHASE_RUNNING: label = ManagerStrings.state_running; color = Ui.OK; break;
+            case ServerService.PHASE_STARTING: label = ManagerStrings.state_starting; color = Ui.WARN; break;
+            case ServerService.PHASE_STOPPING: label = ManagerStrings.state_stopping; color = Ui.WARN; break;
+            case ServerService.PHASE_FAILED: label = ManagerStrings.state_failed; color = Ui.DANGER; break;
+            default: label = ManagerStrings.state_stopped; color = Ui.TEXT_SECONDARY;
         }
-        statusText.setText(label + (service.detail().isEmpty() ? "" : "\n" + service.detail()));
+        statusText.setText(label);
+        statusDot.setColor(color);
+        String detail = service.detail();
+        statusDetail.setText(detail);
+        statusDetail.setVisibility(detail.isEmpty() ? View.GONE : View.VISIBLE);
+        if (running != toggleShowsStop) {
+            toggleShowsStop = running;
+            Ui.tint(toggleButton, running ? Ui.STOP : Ui.ACCENT, 12f);
+        }
         toggleButton.setText(running ? ManagerStrings.action_stop_server : ManagerStrings.action_start_server);
         toggleButton.setEnabled(!busy);
         backupsButton.setEnabled(!busy);
         commandInput.setEnabled(running);
+        sendButton.setEnabled(running);
+        commandInput.setHint(running ? ManagerStrings.console_hint : ManagerStrings.console_hint_idle);
         String output = join(service.log());
         if (!output.equals(renderedLog)) {
             boolean atBottom = !terminal.canScrollVertically(1);
@@ -234,17 +327,24 @@ public class MainActivity extends Activity implements SaveAdapter.Actions, Servi
         Button capture = Ui.button(this, ManagerStrings.action_save_now);
         content.addView(capture, fixedHeight(48));
         capture.setOnClickListener(v -> { if (service != null) service.saveNow(); });
+        LinearLayout secondary = Ui.row(this);
         Button importSave = Ui.outlinedButton(this, ManagerStrings.action_import);
-        content.addView(importSave, fixedHeight(48));
+        secondary.addView(importSave, new LinearLayout.LayoutParams(0, Ui.dp(this, 44), 1f));
         importSave.setOnClickListener(v -> pickImportSource());
         Button prune = Ui.outlinedButton(this, ManagerStrings.action_prune);
-        content.addView(prune, fixedHeight(48));
+        secondary.addView(prune, new LinearLayout.LayoutParams(0, Ui.dp(this, 44), 1f));
+        Ui.leftMargin(prune, 10f, this);
         prune.setOnClickListener(v -> confirmPrune());
+        content.addView(secondary);
+        Ui.topMargin(secondary, 10f, this);
         storageSummary = Ui.meta(this, "");
         content.addView(storageSummary);
+        Ui.margin(storageSummary, 12f, 4f, this);
         savesEmpty = Ui.meta(this, ManagerStrings.saves_empty);
         content.addView(savesEmpty);
         savesList = new ListView(this);
+        savesList.setDivider(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        savesList.setDividerHeight(Ui.dp(this, 8));
         savesList.setAdapter(adapter);
         content.addView(savesList, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 Ui.dp(this, 280)));

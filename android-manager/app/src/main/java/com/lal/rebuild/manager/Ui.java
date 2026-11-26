@@ -1,9 +1,11 @@
 package com.lal.rebuild.manager;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.util.TypedValue;
 import android.view.View;
@@ -37,6 +39,10 @@ final class Ui {
     static final int OK = 0xFF3DD68C;
     static final int WARN = 0xFFFFC14D;
     static final int DANGER = 0xFFFF6B6B;
+    static final int STOP = 0xFFD9534F;
+    static final int DISABLED = 0xFF2A2F3D;
+    static final int CONSOLE = 0xFF0B0E14;
+    static final int HAIRLINE = 0xFF262C3A;
 
     static int dp(Context context, float value) {
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
@@ -164,9 +170,22 @@ final class Ui {
         button.setText(text);
         button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
         button.setAllCaps(false);
-        button.setBackground(rounded(ACCENT, 12f, context));
-        button.setTextColor(Color.WHITE);
+        button.setStateListAnimator(null);
+        tint(button, ACCENT, 12f);
         return button;
+    }
+
+    /** Recolours a filled button, keeping its pressed and disabled looks. */
+    static void tint(android.widget.Button button, int color, float radiusDp) {
+        Context context = button.getContext();
+        StateListDrawable states = new StateListDrawable();
+        states.addState(new int[]{-android.R.attr.state_enabled}, rounded(DISABLED, radiusDp, context));
+        states.addState(new int[]{android.R.attr.state_pressed}, rounded(shade(color, 0.8f), radiusDp, context));
+        states.addState(new int[0], rounded(color, radiusDp, context));
+        button.setBackground(states);
+        button.setTextColor(new ColorStateList(
+                new int[][]{{-android.R.attr.state_enabled}, new int[0]},
+                new int[]{TEXT_SECONDARY, Color.WHITE}));
     }
 
     /** A secondary action: transparent fill with a thin accent border. */
@@ -175,9 +194,26 @@ final class Ui {
         button.setText(text);
         button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
         button.setAllCaps(false);
-        button.setBackground(outlined(context, 10f, 0xFF2E5AA8));
-        button.setTextColor(TEXT_PRIMARY);
+        button.setStateListAnimator(null);
+        StateListDrawable states = new StateListDrawable();
+        states.addState(new int[]{-android.R.attr.state_enabled}, outlined(context, 10f, DISABLED));
+        GradientDrawable pressed = outlined(context, 10f, ACCENT);
+        pressed.setColor(0x264C8DFF);
+        states.addState(new int[]{android.R.attr.state_pressed}, pressed);
+        states.addState(new int[0], outlined(context, 10f, 0xFF2E5AA8));
+        button.setBackground(states);
+        button.setTextColor(new ColorStateList(
+                new int[][]{{-android.R.attr.state_enabled}, new int[0]},
+                new int[]{TEXT_SECONDARY, TEXT_PRIMARY}));
         return button;
+    }
+
+    /** Multiplies a colour's RGB channels, keeping its alpha. */
+    static int shade(int color, float factor) {
+        return Color.argb(Color.alpha(color),
+                Math.round(Color.red(color) * factor),
+                Math.round(Color.green(color) * factor),
+                Math.round(Color.blue(color) * factor));
     }
 
     /** A row action inside the save list: flat, coloured text only. */

@@ -7791,10 +7791,10 @@ package com.meng52.game.global
       public static const UI_MUTED:uint = 8022613;
       public static const UI_WIN:uint = 3046706;
       public static const UI_LOSE:uint = 12000284;
-      private static var uiToast:Sprite;
+      private static var uiToast:starling.display.Sprite;
 
       /** Native text, non-touchable, added to parent. */
-      public static function uiText(text:String, size:int, color:uint, align:String, w:Number, h:Number, parent:Sprite, x:Number, y:Number) : TextField
+      public static function uiText(text:String, size:int, color:uint, align:String, w:Number, h:Number, parent:starling.display.Sprite, x:Number, y:Number) : TextField
       {
          var field:TextField=GlobalTextStyle.getTextField(text,size,color,align,w,h,GlobalConfig.FONT_1);
          field.x=x;field.y=y;field.touchable=false;
@@ -7803,7 +7803,7 @@ package com.meng52.game.global
       }
 
       /** Native button. kind: "primary" (yellow), "normal" (default) or "small". */
-      public static function uiButton(label:String, w:Number, h:Number, kind:String, parent:Sprite, x:Number, y:Number, handler:Function = null) : LOL_Scale9Button
+      public static function uiButton(label:String, w:Number, h:Number, kind:String, parent:starling.display.Sprite, x:Number, y:Number, handler:Function = null) : LOL_Scale9Button
       {
          var skin:String=kind=="primary"?"UI_btn_enterGame_0_0000":(kind=="small"?"UI_btn_smallFun_1_0000":"UI_btn_normalFun_0000");
          var button:LOL_Scale9Button=new LOL_Scale9Button(label,w,h,skin);
@@ -7845,11 +7845,11 @@ package com.meng52.game.global
        * Native dialog: dimmed backdrop, parchment box and title. Returns
        * {root, box}; remove root with removeFromParent(true) to close.
        */
-      public static function uiModal(host:Sprite, title:String, width:Number, height:Number) : Object
+      public static function uiModal(host:starling.display.Sprite, title:String, width:Number, height:Number) : Object
       {
-         var root:Sprite=new Sprite();
+         var root:starling.display.Sprite=new starling.display.Sprite();
          var mask:Quad=new Quad(GlobalData.$mStageWidth,GlobalData.$mStageHeight,0);mask.alpha=.7;root.addChild(mask);
-         var box:Sprite=new Sprite();
+         var box:starling.display.Sprite=new starling.display.Sprite();
          box.x=int((GlobalData.$mStageWidth-width)/2);
          box.y=int(Math.max(40,(GlobalData.$mStageHeight-height)/2-40));
          root.addChild(box);
@@ -7860,7 +7860,7 @@ package com.meng52.game.global
       }
 
       /** Text input on a parchment frame, with an optional label above it. */
-      public static function uiField(box:Sprite, label:String, x:Number, y:Number, width:Number, text:String, prompt:String, maxChars:int) : TextInput
+      public static function uiField(box:starling.display.Sprite, label:String, x:Number, y:Number, width:Number, text:String, prompt:String, maxChars:int) : TextInput
       {
          if(label) uiText(label,18,UI_BROWN,"left",width,26,box,x,y-30);
          var frame:Scale9Image=createScale9Image("UI_pvp_bg_1_0000",width,58,new Rectangle(30,30,50,50));
@@ -7875,10 +7875,10 @@ package com.meng52.game.global
       /** Non-blocking notice that fades out; kind "success" or "info". */
       public static function popToast(message:String, kind:String = "success") : void
       {
-         var stage:Sprite=GlobalData.$mGameClassObject as Sprite;
+         var stage:starling.display.Sprite=GlobalData.$mGameClassObject as starling.display.Sprite;
          if(stage==null || GlobalData.$mStarling==null) {popError(message,true);return;}
          if(uiToast) {GlobalData.$mStarling.juggler.removeTweens(uiToast);uiToast.removeFromParent(true);}
-         var toast:Sprite=new Sprite();uiToast=toast;toast.touchable=false;
+         var toast:starling.display.Sprite=new starling.display.Sprite();uiToast=toast;toast.touchable=false;
          var width:Number=Math.min(GlobalData.$mStageWidth-60,560);
          var label:TextField=GlobalTextStyle.getTextField(message,21,kind=="success"?11003770:16777215,"center",width-40,56,GlobalConfig.FONT_1);
          var bg:Quad=new Quad(width,64,0);bg.alpha=.82;toast.addChild(bg);

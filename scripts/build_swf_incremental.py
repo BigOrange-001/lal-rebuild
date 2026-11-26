@@ -23,8 +23,10 @@ import tempfile
 import time
 from pathlib import Path
 
-from build_client import (ROOT, cli_command, compile_stage, java_major, read_build_config,
-                          save_compiled_swf, sha256_file, source_manifest)
+from build_client import (ROOT, checked_run, cli_command, compile_stage, java_major,
+                          read_build_config, save_compiled_swf, sha256_file, source_manifest)
+
+GLOBAL_FUNCTION = 'com.meng52.game.global.GlobalFunction'
 
 
 def load_base(base: Path) -> dict:
@@ -44,6 +46,24 @@ def changed_classes(stages: list[dict], base: dict) -> list[str]:
     return sorted(names, key=lambda name: first[name])
 
 
+def needs_scoped_ui_kit_repair(stages: list[dict], baseline: dict) -> bool:
+    # Recompiling all of GlobalFunction against a final SWF can disturb startup.
+    # Patch the existing methods only if qualifying Sprite is the complete
+    # difference between the old fingerprint and the current class sources.
+    overrides = {}
+    global_stages = [stage for stage in stages if stage['class'] == GLOBAL_FUNCTION]
+    for stage in global_stages:
+        path = stage['source']
+        source = (ROOT / path).read_bytes()
+        begin, marker, rest = source.partition(b'// BEGIN UI KIT 105')
+        kit, end, tail = rest.partition(b'// END UI KIT 105')
+        if not marker or not end:
+            return False
+        overrides[path] = begin + marker + kit.replace(b'starling.display.Sprite', b'Sprite') + end + tail
+    legacy = source_manifest(global_stages, source_overrides=overrides)
+    return legacy.get(GLOBAL_FUNCTION) == baseline.get(GLOBAL_FUNCTION)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--base', type=Path, required=True, help='SWF saved by a previous build (with .sources.json)')
@@ -58,8 +78,10 @@ def main(argv=None) -> int:
     stages = config['stages']
     base = args.base.expanduser().absolute()
     snapshot = source_manifest(stages)
-    names = changed_classes(stages, load_base(base))
-    replay = {name: row['stages'] for name, row in source_manifest(stages).items()}
+    baseline = load_base(base)
+    names = changed_classes(stages, baseline)
+    scoped_ui_kit = GLOBAL_FUNCTION in names and needs_scoped_ui_kit_repair(stages, baseline)
+    replay = {name: row['stages'] for name, row in snapshot.items()}
     by_index = {stage['index']: stage for stage in stages}
     print(f'{len(names)} changed class(es):', ', '.join(name.rsplit('.', 1)[-1] for name in names) or 'none', flush=True)
     if args.dry_run:
@@ -80,6 +102,14 @@ def main(argv=None) -> int:
         current = work / 'base.swf'
         shutil.copy2(base, current)
         pending, step = list(names), 0
+        if scoped_ui_kit:
+            if ffdec.suffix.lower() != '.jar':
+                raise SystemExit('The scoped UI kit repair requires the FFDec JAR')
+            output = work / 'ui-kit.swf'
+            print(checked_run([args.java, '-cp', str(ffdec), str(ROOT / 'scripts/FixUiSpriteTypes.java'),
+                               str(current), str(output)], label='Scoped UI kit repair').strip(), flush=True)
+            current = output
+            pending.remove(GLOBAL_FUNCTION)
         while pending:
             failed: list[tuple[str, str]] = []
             for name in pending:

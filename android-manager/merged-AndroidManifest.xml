@@ -103,7 +103,7 @@
             android:launchMode="singleTask"
             android:screenOrientation="user"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
-            android:windowSoftInputMode="adjustResize|stateUnspecified">
+            android:windowSoftInputMode="adjustResize|stateHidden">
             <meta-data android:name="embeddedFonts" android:value="false" />
             <meta-data android:name="namespaceVersion" android:value="51.4" />
             <meta-data android:name="aspectRatio" android:value="portrait" />

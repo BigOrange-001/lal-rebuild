@@ -480,6 +480,9 @@ package com.meng52.game.ui.panel
             this.mBg_touch.addEventListener("triggered",onTRIGGERED_self);
             this.mBg_touch.visible = true;
          }
+         // The data button comes first: it reads only this battle's statistics,
+         // so it must not depend on the reward text below building cleanly.
+         addStatisticsButton104();
          setUIInfo();
          checkReplayAndNext();
       }
@@ -1731,7 +1734,8 @@ package com.meng52.game.ui.panel
          }
          _goldStr = _add_gold.toString();
          _expStr = _add_exp.toString();
-         _updateEXPStr = _add_updateEXP.toString();
+         // At the level cap the remaining amount goes negative; there is nothing left to earn.
+         _updateEXPStr = _isMAX_lv ? "0" : Math.max(0,_add_updateEXP).toString();
          isRandom_avatars = false;
          if(_awardData.random_av)
          {
@@ -2219,7 +2223,6 @@ package com.meng52.game.ui.panel
 
       private function checkReplayAndNext() : void
       {
-         addStatisticsButton104();
          var _loc2_:GameMapData = null;
          var _loc5_:int = 0;
          var _loc9_:LOL_Scale9Button = null;

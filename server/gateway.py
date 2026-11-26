@@ -475,6 +475,9 @@ class Handler(BaseHTTPRequestHandler):
     log_path=ROOT/'data'/'logs'/'client-errors.log'
     log_path.parent.mkdir(parents=True,exist_ok=True)
     with log_path.open('a',encoding='utf8') as log:log.write(error.rstrip('\r\n')+'\n')
+    # Also show it in the server console (the phone's local-service page): the log
+    # file sits in app-private storage that a release build cannot hand out.
+    print('Client error:',*error.strip().splitlines()[:8],sep='\n  ',file=sys.stderr)
     self.send_body(200,b'ok','text/plain')
    except OSError:
     self.send_body(500,b'Diagnostic storage unavailable','text/plain')

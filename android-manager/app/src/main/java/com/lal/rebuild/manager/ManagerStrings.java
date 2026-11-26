@@ -56,6 +56,9 @@ final class ManagerStrings {
 
     static final String section_log = "运行日志";
     static final String log_empty = "（暂无输出）";
+    static final String console_hint = "输入服务端命令";
+    static final String console_hint_idle = "服务运行后可输入命令";
+    static final String action_send = "发送";
 
     static final String footer_note =
             "服务器只监听本机 127.0.0.1，不联网。导出存档后即使卸载重装也能恢复进度。";

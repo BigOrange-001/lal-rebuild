@@ -269,19 +269,9 @@ package com.meng52.game.ui.screen
          this.addChild(this.mBtn_enterGame);
          this.mBtn_enterGame.x = int(GlobalData.$mStageWidth * 0.5);
          this.mBtn_enterGame.addEventListener("triggered",this.onTRIGGERED);
-         this.mBtn_service = GlobalFunction.createButtonStarling("UI_selectService_btn_jryx_0001",{
-            "t":GlobalLanguageStr.getLanguageStr(20418),
-            "fs":20,
-            "fc":1118481
-         });
-         mBtn_service.pivotX = mBtn_service.width / 2;
-         mBtn_service.pivotY = mBtn_service.height / 2;
-         this.mBtn_service.name = "btn_name_service";
-         this.addChild(this.mBtn_service);
-         this.mBtn_service.x = this.mBtn_enterGame.x;
-         this.mBtn_service.addEventListener("triggered",this.onTRIGGERED);
-         this.mBtn_enterGame.y = mImg_bgBtn.y - 32;
-         this.mBtn_service.y = mImg_bgBtn.y + 38;
+         // Single-player build: only the local server exists, so the zone picker
+         // is gone; the zone is still chosen automatically below.
+         this.mBtn_enterGame.y = mImg_bgBtn.y;
          _j = GlobalData.$mStarling.juggler;
          LayoutUIAnimation.heartbeat(mBtn_enterGame,1,1.06,0.5,0.4,_j);
          mLogo = GlobalFunction.createImage("ui_logo");

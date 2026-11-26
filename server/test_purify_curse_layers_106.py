@@ -104,6 +104,17 @@ class CurseLayerTests(unittest.TestCase):
         self.assertEqual(set(self.target['_buffs']), {'yasuoShield104_1', 'curse'})
         self.assertEqual(self.charges(), 1)
 
+    def test_held_shields_are_never_stripped(self):
+        self.battle._add_buff(self.target, 'shield', 2, 100)
+        self.battle._add_buff(self.target, 'strong', 2, .3)
+        self.battle._add_buff(self.target, 'curse', 1)
+        self.assertEqual(set(self.target['_buffs']), {'shield', 'curse'})
+        self.assertEqual(self.charges(), 1)
+        # A new shield is still blocked by the remaining charge.
+        self.battle._add_buff(self.target, 'shield', 2, 500)
+        self.assertEqual(self.target['_buffs']['shield'].value, 100)
+        self.assertEqual(self.charges(), 0)
+
     def test_a_layer_strips_the_two_earliest_good_buffs(self):
         self.battle._add_buff(self.target, 'strong', 2, .3)
         self.battle._add_buff(self.target, 'steel', 2, .3)

@@ -17265,7 +17265,8 @@ package com.meng52.game.module.avatar
          for(var key:String in buffs)
          {
             var entry:Buff = buffs[key] as Buff;
-            if(entry && Buff.LIST_BUFF.indexOf(key) > -1 && (!earliest || entry.seq < earliest.seq))
+            // A held shield is never stripped; curse only blocks new ones.
+            if(entry && key != "shield" && Buff.LIST_BUFF.indexOf(key) > -1 && (!earliest || entry.seq < earliest.seq))
             {
                earliest = entry;
                earliestKey = key;

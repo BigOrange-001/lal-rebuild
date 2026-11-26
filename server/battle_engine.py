@@ -565,7 +565,9 @@ class ReferenceBattle:
 
     def _strip_earliest_good(self, unit):
         container = unit.get("_buffs") or {}
-        held = [(entry.seq, key) for key, entry in container.items() if key in _GOOD_BUFFS]
+        # A held shield is never stripped; curse only blocks new ones.
+        held = [(entry.seq, key) for key, entry in container.items()
+                if key in _GOOD_BUFFS and key != "shield"]
         if not held:
             return False
         key = min(held)[1]

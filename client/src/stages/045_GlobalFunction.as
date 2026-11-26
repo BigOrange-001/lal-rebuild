@@ -827,9 +827,29 @@ package com.meng52.game.global
          return Math.min(1,units / 1000000);
       }
 
+      // Hero challenge (server hero_challenge.py): every difficulty of one
+      // challenge shares base_attempts wins a day, +1 per vip_step VIP levels.
+      // Shaped like a resource quote without purchases; "hero" marks it.
+      public static function getHeroChallenge(param1:Object) : Object
+      {
+         var group:String = param1.hero_challenge ? String(param1.hero_challenge.group) : "";
+         var now:Date = new Date(Number(SendAndSelect.$systemTimer_nowSecond) * 1000 + 28800000);
+         var month:int = now.getUTCMonth() + 1;
+         var day:int = now.getUTCDate();
+         var today:String = String(now.getUTCFullYear()) + "-" + (month < 10 ? "0" : "") + String(month) + "-" + (day < 10 ? "0" : "") + String(day);
+         var daily:Object = GlobalData.$userData.records.hero_challenge;
+         var used:int = daily && String(daily.day) == today && daily.uses ? int(daily.uses[group]) : 0;
+         var policy:Object = GlobalData.$mConfig_simple.hero_challenge;
+         var base:int = policy ? int(policy.base_attempts) : 2;
+         var step:int = policy && int(policy.vip_step) > 0 ? int(policy.vip_step) : 3;
+         var limit:int = base + int(Math.max(0,getVipLv()) / step);
+         return {"bid":group,"remaining":Math.max(0,limit - used),"limit":limit,"buys":0,"buyLimit":0,"price":0,"hero":true};
+      }
+
       public static function getMaterialChallenge(param1:String) : Object
       {
          var row:Object = GlobalData.$mConfig_combat_ploy == null ? null : GlobalData.$mConfig_combat_ploy[param1];
+         if(row && row.activity_kind == "hero_challenge") return getHeroChallenge(row);
          if(!row || row.activity_kind != "material") return null;
          var bid:String = param1.substring(0,param1.lastIndexOf("_"));
          var now:Date = new Date(Number(SendAndSelect.$systemTimer_nowSecond) * 1000 + 28800000);

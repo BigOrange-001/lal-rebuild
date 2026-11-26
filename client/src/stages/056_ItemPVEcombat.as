@@ -345,7 +345,7 @@ package com.meng52.game.ui.element
          this.mLimit = GlobalFunction.getUserCombat(GlobalData.$tempPVE_type,this.data.id);
          this.mLimit = _loc13_.getLimit(diff) - this.mLimit;
          this.mLimit = this.mLimit < 0 ? 0 : this.mLimit;
-         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
+         if(GlobalData.$tempPVE_type == "status_pve_activities" && (this.data.activity_kind == "material" || this.data.activity_kind == "hero_challenge"))
          {
             this.mLimit = int(GlobalFunction.getMaterialChallenge(String(this.data.id)).remaining);
          }
@@ -359,7 +359,7 @@ package com.meng52.game.ui.element
          this.mTxt_num.touchable = false;
          this.mTxt_num.x = this.mTxt_str0.x + _loc37_ + 5;
          this.mTxt_num.y = this.mTxt_str0.y;
-         if(mLimit <= 20 || this.data.activity_kind == "material")
+         if(mLimit <= 20 || this.data.activity_kind == "material" || this.data.activity_kind == "hero_challenge")
          {
             mBaseSpr.addChild(this.mTxt_num);
          }
@@ -814,6 +814,11 @@ package com.meng52.game.ui.element
       {
          var type:String = GlobalData.$tempPVE_type;
          if(type != "status_pve_normal" && type != "status_pve_hard" && type != "status_pve_activities")
+         {
+            return false;
+         }
+         // Hero challenges cannot be swept (server refuses sweep_disabled stages).
+         if(this.data.sweep_disabled)
          {
             return false;
          }

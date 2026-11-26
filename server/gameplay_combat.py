@@ -19,6 +19,7 @@ from mod_policy import (runtime as mod_runtime, effective_digest, validate_battl
 from tower_rewards_103 import roll_tower_reward, roll_tower_encounter, validate_tower_reward, SCHEMA as TOWER_REWARD_SCHEMA
 from material_attempts_103 import remaining as material_remaining, consume_win as consume_material_win, daily_state as material_daily, BUY_COST
 import stage_sweep
+import hero_challenge
 
 
 class GameplayCombat:
@@ -267,6 +268,9 @@ class GameplayCombat:
         elif activity_kind == "material":
             if material_remaining(profile,cid.rsplit('_',1)[0],self.store.clock.now())<=0:
                 raise GameplayFault("ActivityAttemptsExhausted", "This material activity has no shared attempts remaining today")
+        elif activity_kind == hero_challenge.KIND:
+            if hero_challenge.remaining(profile, stage, self.store.clock.now()) <= 0:
+                raise stage_sweep.fault("ActivityAttemptsExhausted", "今日该英雄挑战次数已用完。")
         if not is_activity and int(profile.get("lv", 1)) < int(chapter.get("ulv", 1)):
             raise GameplayFault("StageLocked", "Player level is below this chapter's unlock requirement")
         if not is_activity and not self._is_unlocked(cid, progress):
@@ -276,7 +280,8 @@ class GameplayCombat:
                     else limit_value if type(limit_value) is int else 99)
         attempt_bucket = "combat_ploy" if is_activity else "combat_main_hard" if diff else "combat_main"
         attempts = int(profile.get("records", {}).get('daily_stage_attempts',{}).get(attempt_bucket, {}).get(cid, 0))
-        if attempts >= limit and activity_kind != 'material' and not stage.get("unlimited_attempts"):
+        if (attempts >= limit and activity_kind not in ('material', hero_challenge.KIND)
+                and not stage.get("unlimited_attempts")):
             raise GameplayFault("ActivityAttemptsExhausted" if is_activity else "StageAttemptsExhausted",
                                 "This stage has no attempts remaining")
         return progress
@@ -309,6 +314,8 @@ class GameplayCombat:
         """Today's remaining challenge attempts, or None when the stage has no cap."""
         if activity_kind == "material":
             return material_remaining(profile, cid.rsplit("_", 1)[0], now)
+        if activity_kind == hero_challenge.KIND:
+            return hero_challenge.remaining(profile, stage, now)
         if stage.get("unlimited_attempts"):
             return None
         limit_value = stage.get("limit", [99, 99, 99])
@@ -404,6 +411,8 @@ class GameplayCombat:
         def mutate(profile):
             now = int(self.store.clock.now())
             profile.setdefault("cid", "M_001_1"); profile.setdefault("hid", "M_001_1")
+            if stage.get("sweep_disabled"):
+                raise stage_sweep.fault("SweepLocked", "该关卡不能扫荡。")
             if self._stage_stars(profile, cid, diff, is_activity) < stage_sweep.REQUIRED_STARS:
                 raise stage_sweep.fault("SweepLocked", "三星通关后才能扫荡。")
             if int(stage.get("needvip", 0) or 0) > int(profile.get("vip_lv", 0) or 0):
@@ -642,6 +651,8 @@ class GameplayCombat:
         chapter_key = cid.rsplit("_", 1)[0]
         if sign==1 and is_activity and stage.get('activity_kind')=='material':
             consume_material_win(profile,chapter_key,self.store.clock.now())
+        if sign==1 and is_activity and stage.get('activity_kind')==hero_challenge.KIND:
+            hero_challenge.consume_win(profile,stage,self.store.clock.now())
         try:
             stage_index = int(cid.rsplit("_", 1)[1]) - 1
         except (ValueError, IndexError):
@@ -785,8 +796,15 @@ class GameplayCombat:
                     reward.setdefault("items", []).append({"eid": dropped_eid, "num": 1})
                 exclusive_eid=roll_ancient_exclusive_drop(self.full_config,stage,cid,True,
                     self._reward_rng(uid,fight_id,pending,'ancient-trial-exclusive'))
+            challenge_hero=None
+            if is_activity and sign == 1 and stage.get("activity_kind") == hero_challenge.KIND:
+                challenge_hero = hero_challenge.roll_drop(
+                    self.full_config, stage, self._reward_rng(uid, fight_id, pending, "hero-challenge"))
+                if challenge_hero is not None:
+                    reward.setdefault("heroes", []).append({"aid": challenge_hero, "num": 1})
             before_avatars=set(profile.get("avatars",{})); before_equips=set(profile.get("my_equips",{}))
-            grant_reward(profile, reward, self.full_config, allow_skin=tower_drop is not None)
+            grant_reward(profile, reward, self.full_config,
+                         allow_skin=tower_drop is not None or challenge_hero is not None)
             if exclusive_eid is not None:
                 exclusive_reward={'items':[{'eid':exclusive_eid,'num':1}]}
                 grant_reward(profile,exclusive_reward,self.full_config,allow_equipment_exclusive=True)

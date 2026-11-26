@@ -164,6 +164,49 @@ class ManualAbilityLayerTests(unittest.TestCase):
                'skill': {'TEST': {}}, 'system_simple': {}}
         return SkillCompleteBattle(a, b, config=cfg)
 
+    def test_purify_cancels_one_ordinary_or_relic_debuff_in_acquisition_order(self):
+        from unittest.mock import patch
+        from abyss_equip_passives import after_damage
+
+        b = self.battle()
+        owner, target = b.a[0], b.b[0]
+
+        def apply_relic(kind):
+            with patch('abyss_equip_passives.active_normal',
+                       return_value={'affix': {'id': kind, 'value': .5}, 'hit': set()}):
+                after_damage(b, owner, target, 100, 0, 1, None)
+
+        b._add_buff(target, 'burn', 2, 10)
+        apply_relic(10)
+        b._add_buff(target, 'stun', 2)
+        apply_relic(10)  # Refresh keeps the acquisition order.
+        apply_relic(11)
+        b.add_purify_charges(target, 1)
+        self.assertIsNone(b._buff(target, 'burn'))
+        self.assertEqual([dot['kind'] for dot in target['_relic_dots']], ['burn', 'poison'])
+        b.add_purify_charges(target, 1)
+        self.assertIsNotNone(b._buff(target, 'stun'))
+        self.assertEqual([dot['kind'] for dot in target['_relic_dots']], ['poison'])
+        b.add_purify_charges(target, 2)
+        self.assertFalse(target['_relic_dots'])
+        self.assertFalse(target['_buffs'])
+
+    def test_curse_does_not_block_independent_shield_generation(self):
+        from unittest.mock import patch
+        from six_star_reaction_battle_105 import MF_SHIELD
+
+        b = self.battle()
+        owner, target = b.a[0], b.b[0]
+        b._add_buff(owner, 'curse', 1)
+        with patch.object(b, 'yasuo_passive', return_value=True):
+            b.yasuo_event(owner, 'crit', owner, target, 10)
+        b.six_next_stack_shield(owner, 'next_diana_shield', 100)
+        owner['skillB'] = {'skills': [['manual_ability', 'six_reaction_mf_p', 0, 0, .5, .2, .1]]}
+        b.six_reaction_mf_dealt(owner, target, 100)
+        for shield in ('yasuoShield104_1', 'next_diana_shield', MF_SHIELD):
+            self.assertGreater(b._buff(owner, shield).value, 0)
+        self.assertEqual(b._buff(owner, 'curse').value, 2)
+
     def test_purify_charges_stack_with_ordinary_layers(self):
         b = self.battle()
         owner = b.a[0]

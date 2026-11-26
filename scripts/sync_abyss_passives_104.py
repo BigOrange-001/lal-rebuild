@@ -46,12 +46,12 @@ def avatar(s):
                var hit:Boolean=abilityHit(target,coefficient/globalRate,2,"FX_KAISA_MISSILE104");'''
     s = once(s, before, before.replace('            try\n',
              '            context.abyssHits104=abyssVolleyHits104;\n            try\n',1))
-    # Targeted purges must clear relic layers even if no ordinary Buff exists.
+    # Targeted purges clear relic layers unless purify cancels only a single ordinary buff.
     s = once(s, '''      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
       {
-''', '''      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
+''', '''      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true, clearRelicDots:Boolean = true) : void
       {
-         abyssRemoveDots104(param1);
+         if(clearRelicDots) abyssRemoveDots104(param1);
 ''')
     # Preserve the source small-skill and shared hit set for delayed effects.
     for prefix in ('abilityState.zone={line:', 'abilityState.channel={pos:',

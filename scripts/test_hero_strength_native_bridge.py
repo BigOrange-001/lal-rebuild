@@ -63,6 +63,17 @@ class NativeBridgeTests(unittest.TestCase):
         self.assertIsNone(b._buff(owner,'stun'))
         self.assertFalse(b._js_contexts)
 
+    def test_annie_reacts_to_curse_that_spends_both_charges_immediately(self):
+        b = self.battle(1221)
+        annie, enemy = b.a[0], b.b[0]
+        b._add_buff(annie, 'strong', 2, .3)
+        b._add_buff(annie, 'steel', 2, .3)
+        b._add_buff(annie, 'curse', 1, source=enemy)
+        self.assertIsNone(b._buff(annie, 'curse'))
+        self.assertIsNone(b._buff(annie, 'strong'))
+        self.assertIsNone(b._buff(annie, 'steel'))
+        self.assertTrue(enemy.get('_manual_dots'))
+
     def test_annie_non_buff_status_paths_respect_immunity_and_retaliate(self):
         for path in ('infection','spread','bleed','mark','bomb','relic'):
             for mode in ('ready','immune','cooldown','purify'):

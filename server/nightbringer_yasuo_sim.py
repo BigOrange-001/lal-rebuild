@@ -106,7 +106,7 @@ class YasuoBattleMixin:
         if event == 'hit' and owner.get('_yasuo_vamp_rounds', -1) >= 0 and amount > 0:
             # Settled HP damage is already the heal amount; no precision formula.
             self._injured(owner, _to_int(amount), 4, source=owner, fixed_recovery=True)
-        if event != 'crit' or not self.yasuo_passive(owner) or self._buff(owner, 'curse'):
+        if event != 'crit' or not self.yasuo_passive(owner):
             return
         if self._buff(owner, 'evil'):
             self._remove_buff(owner, 'evil', consume=True)

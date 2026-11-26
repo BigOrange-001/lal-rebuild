@@ -156,7 +156,7 @@ class SixStarReactionBattle:
             receipt = {}
             self._injured(owner, taken*passive[4], 4, source=owner, receipt=receipt, fixed_recovery=True)
         overflow = receipt.get('healing_overflow', 0)
-        if overflow <= 0 or self._buff(owner, 'curse'):
+        if overflow <= 0:
             return
         if self._buff(owner, 'evil'):
             self._remove_buff(owner, 'evil')

@@ -1232,7 +1232,7 @@ package com.meng52.game.module.avatar
          try { sixFollowupHeal105(this,amount*Number(passive[4]),true); }
          finally { endAbilityAttack(cast); }
          var surplus:Number=Number(cast.sixReactionMfOverflow105 || 0);
-         if(surplus<=0 || buffs.curse) return;
+         if(surplus<=0) return;
          if(buffs.evil) { removeBuff("evil"); return; }
          var shield:Buff=buffs.sixReactionMfShield105 as Buff;
          if(!shield)
@@ -1628,7 +1628,7 @@ package com.meng52.game.module.avatar
 
       private function sixNextStackShield105(key:String, amount:Number) : void
       {
-         if(amount<=0 || hp<=0 || buffs.curse) return;
+         if(amount<=0 || hp<=0) return;
          if(buffs.evil) {removeBuff("evil");return;}
          if(ratioDamage104()) amount*=precisionRecovery105(this);
          amount=abyssAmplifyHeal104(amount*getRecoveryTalentMultiplier());
@@ -3390,7 +3390,6 @@ package com.meng52.game.module.avatar
          if(event!="crit" || !yasuoPassive104()) return;
          // Each entry is an ordinary shield Buff with its own native timer.
          // It never replaces or refreshes another entry, including allied shields.
-         if(buffs.curse) return;
          if(buffs.evil) {removeBuff("evil",true);return;}
          var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier()*precisionRecovery105(this));
          if(amountShield<=0) return;
@@ -17225,9 +17224,28 @@ package com.meng52.game.module.avatar
                earliestKey = key;
             }
          }
+         var relicIndex:int = -1;
+         var earliestSeq:int = earliest ? earliest.seq : int.MAX_VALUE;
+         if(abyssDots104)
+         {
+            for(var index:int = 0; index < abyssDots104.length; ++index)
+            {
+               var seq:int = int(abyssDots104[index].seq);
+               if(seq < earliestSeq)
+               {
+                  relicIndex = index;
+                  earliestSeq = seq;
+               }
+            }
+         }
+         if(relicIndex >= 0)
+         {
+            abyssDots104.splice(relicIndex,1);
+            return true;
+         }
          if(!earliest) return false;
          if(earliestKey == "curse") spendCurse106(CURSE_CHARGES_PER_LAYER106);
-         else removeBuff(earliestKey,false,false);
+         else removeBuff(earliestKey,false,false,false);
          return true;
       }
 
@@ -17258,9 +17276,9 @@ package com.meng52.game.module.avatar
       }
 
 
-      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void
+      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true, clearRelicDots:Boolean = true) : void
       {
-         abyssRemoveDots104(param1);
+         if(clearRelicDots) abyssRemoveDots104(param1);
          if(param1=="shield" && clearShields) removeIndependentShields104();
          if(param1 == "root") delete abilityState.root;
          var _loc2_:Buff = buffs[param1];
@@ -21799,13 +21817,25 @@ package com.meng52.game.module.avatar
                removeBuff("purify",true);
                return;
             }
-            var kept:Array = [];
+            if(!abyssDots104) abyssDots104 = [];
+            var existing:Object = null;
             for each(var row:Object in abyssDots104)
             {
-               if(row.kind != dotName || row.source !== source) kept.push(row);
+               if(row.kind == dotName && row.source === source)
+               {
+                  existing = row;
+                  break;
+               }
             }
-            kept.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2});
-            abyssDots104 = kept;
+            if(existing)
+            {
+               existing.amount = dotAmount;
+               existing.left = 2;
+            }
+            else
+            {
+               abyssDots104.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2,"seq":Buff.nextSequence106()});
+            }
             s2AnnieStatus(dotName);
             if(dotName=="burn") sixReactionBurnChanged105();
             abyssTrace104("normal_dot",source,this,{"kind":dotName,"amount":dotAmount,"duration":2});

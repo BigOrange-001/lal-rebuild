@@ -797,10 +797,10 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         super()._tick_slot_cd(owner,key)
         if key=='_skill_cd_leader':self.kaisa_try_hunt(owner)
 
-    def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
+    def _remove_buff(self, unit, kind, consume=False, clear_shields=True, clear_relic_dots=True):
         purify=self._buff(unit,'purify') if kind=='purify' else None
         if kind=='root':self.state(unit).pop('root',None)
-        super()._remove_buff(unit,kind,consume,clear_shields)
+        super()._remove_buff(unit, kind, consume, clear_shields, clear_relic_dots)
         if purify and not self._buff(unit,'purify') and (passive:=self.six_next_passive(unit,'sivir')):
             self.six_next_heal(unit,unit['hp_max']*passive[5])
 

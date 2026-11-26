@@ -283,13 +283,25 @@
                removeBuff("purify",true);
                return;
             }
-            var kept:Array = [];
+            if(!abyssDots104) abyssDots104 = [];
+            var existing:Object = null;
             for each(var row:Object in abyssDots104)
             {
-               if(row.kind != dotName || row.source !== source) kept.push(row);
+               if(row.kind == dotName && row.source === source)
+               {
+                  existing = row;
+                  break;
+               }
             }
-            kept.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2});
-            abyssDots104 = kept;
+            if(existing)
+            {
+               existing.amount = dotAmount;
+               existing.left = 2;
+            }
+            else
+            {
+               abyssDots104.push({"kind":dotName,"source":source,"amount":dotAmount,"left":2,"seq":Buff.nextSequence106()});
+            }
             s2AnnieStatus(dotName);
             abyssTrace104("normal_dot",source,this,{"kind":dotName,"amount":dotAmount,"duration":2});
          }

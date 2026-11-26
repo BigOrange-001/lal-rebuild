@@ -279,8 +279,12 @@ class _Buff:
         self.source = source
         # Acquisition order: purify cancels the earliest debuff, curse strips
         # the earliest good buff. A refreshed buff keeps its first stamp.
-        _Buff._serial += 1
-        self.seq = _Buff._serial
+        self.seq = self.next_sequence()
+
+    @classmethod
+    def next_sequence(cls):
+        cls._serial += 1
+        return cls._serial
 
 
 # Purify: each layer cancels one generic debuff (_DEBUFFS); layers never
@@ -470,8 +474,8 @@ class ReferenceBattle:
             return
         # back / summon and every other kind: the new buff is discarded.
 
-    def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
-        if kind in ('poison','burn') and unit.get('_relic_dots'):
+    def _remove_buff(self, unit, kind, consume=False, clear_shields=True, clear_relic_dots=True):
+        if clear_relic_dots and kind in ('poison','burn') and unit.get('_relic_dots'):
             unit['_relic_dots'] = [d for d in unit['_relic_dots'] if d['kind']!=kind]
         container = unit.get("_buffs")
         if isinstance(container, dict):
@@ -505,15 +509,21 @@ class ReferenceBattle:
     def _cancel_earliest_debuff(self, unit):
         """Remove one generic debuff (one curse layer); False when none is held."""
         container = unit.get("_buffs") or {}
-        held = [(entry.seq, key) for key, entry in container.items() if key in _DEBUFFS]
-        if held:
-            key = min(held)[1]
-            if key == "curse":
-                self._spend_curse(unit, CURSE_CHARGES_PER_LAYER)
-            else:
-                self._remove_buff(unit, key, clear_shields=False)
+        held = min(((entry.seq, key) for key, entry in container.items() if key in _DEBUFFS),
+                   default=None)
+        dots = unit.get('_relic_dots') or []
+        relic = min(range(len(dots)), key=lambda index: dots[index].get('seq', 0), default=None)
+        if relic is not None and (held is None or dots[relic].get('seq', 0) < held[0]):
+            dots.pop(relic)
             return True
-        return False
+        if held is None:
+            return False
+        key = held[1]
+        if key == "curse":
+            self._spend_curse(unit, CURSE_CHARGES_PER_LAYER)
+        else:
+            self._remove_buff(unit, key, clear_shields=False, clear_relic_dots=False)
+        return True
 
     def _gain_curse(self, unit, incoming):
         """A new layer strips up to two good buffs, the rest block later ones."""

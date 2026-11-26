@@ -77,6 +77,11 @@ package com.meng52.game.module.skill
 
       public var seq:int;
 
+      public static function nextSequence106() : int
+      {
+         return ++serial106;
+      }
+
       private var m_do:DisplayObject;
 
       public function Buff(param1:String, param2:int, param3:Number = 0)
@@ -85,7 +90,7 @@ package com.meng52.game.module.skill
          type = param1;
          round = param2;
          value = param3;
-         seq = ++serial106;
+         seq = nextSequence106();
       }
 
       public function get displayObject() : DisplayObject

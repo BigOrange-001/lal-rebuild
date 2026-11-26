@@ -37,6 +37,8 @@ package com.meng52.game.module.map
 
       public static const BATTLE_OF_THE_PEAK_ID:String = "battle_of_the_peak";
 
+      private static const SHOW_BATTLE_ORIGIN_MISMATCH:Boolean = false;
+
       public static var ROUND_MAX:int = 40;
 
       public static var damageNum:int = 0;
@@ -1703,7 +1705,6 @@ package com.meng52.game.module.map
          var _loc2_:Avatar = null;
          var _loc7_:* = undefined;
          var _loc5_:Object = null;
-         var _loc4_:String = null;
          if(!re)
          {
             return;
@@ -1763,9 +1764,12 @@ package com.meng52.game.module.map
          if(!_loc3_)
          {
             GameMapTools.reportOriginMismatch(gameMapData ? gameMapData.id : "unknown");
-            _loc4_ = GlobalLanguageStr.getLanguageStr(46099);
-            _loc4_ = Tools.formatLineX(_loc4_,GlobalTextStyle.COLOR_W_Y_Y_G);
-            GlobalFunction.popAlert("",_loc4_);
+            if(SHOW_BATTLE_ORIGIN_MISMATCH)
+            {
+               var message:String = GlobalLanguageStr.getLanguageStr(46099);
+               message = Tools.formatLineX(message,GlobalTextStyle.COLOR_W_Y_Y_G);
+               GlobalFunction.popAlert("",message);
+            }
          }
       }
 

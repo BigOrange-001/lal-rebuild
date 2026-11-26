@@ -334,8 +334,9 @@ class SkillBooksTests(unittest.TestCase):
         self.assertIsNone(battle._buff(target, 'curse'))
         battle.rng.get_random.return_value = 799
         battle._basic_attack(caster, target)
-        self.assertEqual(battle._buff(target, 'curse').round, 3)
-        battle._add_buff(target, 'purify', 1, 0)
+        self.assertEqual(battle._buff(target, 'curse').value, 2)
+        # Two layers: one cancels the curse, the other blocks the next one.
+        battle._add_buff(target, 'purify', 0, 2)
         self.assertIsNone(battle._buff(target, 'curse'))
         battle._basic_attack(caster, target)
         self.assertIsNone(battle._buff(target, 'curse'))

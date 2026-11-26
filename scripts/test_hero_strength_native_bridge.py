@@ -63,6 +63,17 @@ class NativeBridgeTests(unittest.TestCase):
         self.assertIsNone(b._buff(owner,'stun'))
         self.assertFalse(b._js_contexts)
 
+    def test_annie_reacts_to_curse_that_spends_both_charges_immediately(self):
+        b = self.battle(1221)
+        annie, enemy = b.a[0], b.b[0]
+        b._add_buff(annie, 'strong', 2, .3)
+        b._add_buff(annie, 'steel', 2, .3)
+        b._add_buff(annie, 'curse', 1, source=enemy)
+        self.assertIsNone(b._buff(annie, 'curse'))
+        self.assertIsNone(b._buff(annie, 'strong'))
+        self.assertIsNone(b._buff(annie, 'steel'))
+        self.assertTrue(enemy.get('_manual_dots'))
+
     def test_annie_non_buff_status_paths_respect_immunity_and_retaliate(self):
         for path in ('infection','spread','bleed','mark','bomb','relic'):
             for mode in ('ready','immune','cooldown','purify'):
@@ -97,9 +108,11 @@ class NativeBridgeTests(unittest.TestCase):
                     entries=[v for k,v in b.state(annie).items() if isinstance(k,tuple) and isinstance(v,dict) and v.get('debuff')]
                     remaining=bool(entries or annie.get('_manual_dots') or annie.get('_relic_dots'))
                     self.assertEqual(remaining,mode=='cooldown')
-                    self.assertEqual(bool(enemy.get('_manual_dots')),mode=='ready')
+                    # Purify only stops the generic relic DOT; hero statuses still land.
+                    lands=mode=='ready' or mode=='purify' and path!='relic'
+                    self.assertEqual(bool(enemy.get('_manual_dots')),lands)
                     self.assertFalse(b._js_contexts)
-                    if mode=='purify':self.assertEqual(b._buff(annie,'purify').value,1)
+                    if mode=='purify':self.assertEqual(b._buff(annie,'purify').value,1 if path=='relic' else 2)
 
     def test_annie_poison_is_attack_only_two_ticks_and_independently_stackable(self):
         for hp_max in (10000,1000000):

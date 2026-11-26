@@ -19,7 +19,7 @@ class SixStarNextBattle:
             self._injured(owner, int(amount), 4, source=owner, fixed_recovery=True)
 
     def six_next_stack_shield(self, owner, key, amount):
-        if amount <= 0 or owner['hp'] <= 0 or self._buff(owner, 'curse'):
+        if amount <= 0 or owner['hp'] <= 0:
             return
         if self._buff(owner, 'evil'):
             self._remove_buff(owner, 'evil')

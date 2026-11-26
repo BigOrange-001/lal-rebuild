@@ -210,9 +210,15 @@ def after_damage(battle, source, target, health_damage, shield_damage, damage_ty
             # Match native debuff admission via the ordinary buff guard.
             if battle._buff(target,'purify'): battle._remove_buff(target,'purify',consume=True)
             return
-        rows = target.setdefault('_relic_dots',[])
-        rows[:] = [d for d in rows if d['kind']!=dot['kind'] or d['source'] is not source]
-        rows.append(dot)
+        from battle_engine import _Buff
+        rows = target.setdefault('_relic_dots', [])
+        for existing in rows:
+            if existing['kind'] == dot['kind'] and existing['source'] is source:
+                existing.update(amount=dot['amount'], left=dot['left'])
+                break
+        else:
+            dot['seq'] = _Buff.next_sequence()
+            rows.append(dot)
         battle._status_received(target,dot['kind'])
         trace(battle,'normal_dot',source,target,kind=dot['kind'],amount=dot['amount'],duration=2)
     elif kind==13 and battle.rng.get_random(1000000)<int(affix['value']*1000000):

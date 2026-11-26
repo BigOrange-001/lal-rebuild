@@ -476,7 +476,6 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
                 if not enemies:return False
                 target=enemies[0]
                 if self._status_immune(target):pass
-                elif self._buff(target,'purify'):self._remove_buff(target,'purify',consume=True)
                 else:
                     self.state(target)[('malz',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,ticks=3,tick_damage=self._get_damage(owner)*scale*damage*self.hero_output_rate_104(owner),hops=0,debuff=True)
                     self._status_received(target,'poison')
@@ -537,7 +536,7 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
                 enemies=en(600)
                 if not enemies:return False
                 target=enemies[0]
-                if hit(target,.8*scale,2) and target['hp']>0 and not self._buff(target,'purify') and not self._status_immune(target):
+                if hit(target,.8*scale,2) and target['hp']>0 and not self._status_immune(target):
                     self.state(target)[('bomb',state['index'])]=dict(owner=owner,until=self.state(target)['serial']+1,coefficient=self.equipment_part(skill,'bomb_burst',1.2)*scale,damage=damage,debuff=True)
                     self._status_received(target,'bomb')
             case 'kaelthas_c':
@@ -570,11 +569,8 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         return [u for u in (self.b if self._team_number(owner)==1 else self.a) if u.get('hp',0)>0]
 
     def add_purify_charges(self,owner,count):
-        self._remove_all_debuff(owner)
-        guard=self._buff(owner,'purify')
-        count=max(count,int(guard.value) if guard else 0)
-        self._remove_buff(owner,'purify')
-        self._add_buff(owner,'purify',0,count)
+        # Ordinary purify layers: each cancels one held debuff, the rest stack.
+        if count>=1 and owner.get('hp',0)>0:self._add_buff(owner,'purify',0,count)
 
     def _get_hit(self,owner):
         state = self.state(owner)
@@ -755,14 +751,12 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         old_stun = self._buff(unit, 'stun') if kind == 'stun' else None
         old_burn = self._buff(unit, 'burn') if kind == 'burn' else None
         burn_layers = old_burn.layers if old_burn else 0
-        curse = self._buff(unit, 'curse') if kind == 'curse' else None
         relic_shield=kind=='shield' and getattr(self,'_equip_origin',None)=='relic_shield'
-        if ctx and value and kind!='summon' and not relic_shield:value*=ctx['effect_factor']
+        # Purify layers and curse charges are counts, not scaled amounts.
+        if ctx and value and kind not in ('summon','purify','curse') and not relic_shield:value*=ctx['effect_factor']
         result=super()._add_buff(unit,kind,rounds,value,source=source if source is not None else (ctx['owner'] if ctx else None),poison_hp_rate_104=poison_hp_rate_104)
         if kind in ('stun','silence') and self._buff(unit,kind):
             self.six_next_interrupt(unit)
-        if kind == 'curse' and self._buff(unit, 'curse') is not curse and self._buff(unit, 'curse'):
-            self.six_batch_curse(unit)
         if kind=='stun' and self._buff(unit,'stun'):
             self.kaisa_stun(unit)
             self.six_star_stun_applied(unit)
@@ -803,14 +797,21 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         super()._tick_slot_cd(owner,key)
         if key=='_skill_cd_leader':self.kaisa_try_hunt(owner)
 
-    def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
-        purify=self._buff(unit,'purify') if kind=='purify' else None
-        super()._remove_buff(unit,kind,consume,clear_shields)
-        if purify and not self._buff(unit,'purify') and (passive:=self.six_next_passive(unit,'sivir')):
-            self.six_next_heal(unit,unit['hp_max']*passive[5])
+    def _remove_buff(self, unit, kind, consume=False, clear_shields=True, clear_relic_dots=True):
+        if kind == 'root':
+            self.state(unit).pop('root', None)
+        super()._remove_buff(unit, kind, consume, clear_shields, clear_relic_dots)
 
-    def _remove_all_debuff(self, unit):
-        super()._remove_all_debuff(unit)
+    def _purify_exhausted(self, unit):
+        if passive := self.six_next_passive(unit, 'sivir'):
+            self.six_next_heal(unit, unit['hp_max'] * passive[5])
+
+    def _curse_applied(self, unit):
+        super()._curse_applied(unit)
+        self.six_batch_curse(unit)
+
+    def _clear_other_debuffs(self, unit):
+        super()._clear_other_debuffs(unit)
         state=self.state(unit)
         for key,value in list(state.items()):
             if isinstance(value,dict) and value.get('debuff') is True:state.pop(key,None)
@@ -1056,8 +1057,6 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
                 targets=self.candidates(owner,self._team_number(unit),unit['line'],unit['pos'],300,1,excluded=[unit])
                 if targets:
                     if self._status_immune(targets[0]):continue
-                    if self._buff(targets[0],'purify'):
-                        self._remove_buff(targets[0],'purify',consume=True);continue
                     entry['hops']=1;entry['until']=self.state(targets[0])['serial']+1
                     self.state(targets[0])[key]=entry
                     self._status_received(targets[0],'poison')

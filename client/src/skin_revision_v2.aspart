@@ -144,7 +144,6 @@
       private function s2Mark(target:Avatar, name:String, duration:int) : void
       {
          if(target && target.s2AnnieImmune()) return;
-         if(target && target.buffs.purify) {target.removeBuff("purify",true);return;}
          if(target && target.hp > 0)
          {
             target.skin2[name] = {owner:this,skill:skin2.castSkill || skillB,expires:manualOwnerActionSerial+duration};
@@ -188,7 +187,7 @@
          for each(key in keys)
          {
             if(key == "shield") stolen = target.shieldValue104();
-            target.removeBuff(key); ++count; if(!all) break;
+            target.removeBuff(key,!all && key == "purify"); ++count; if(!all) break;
          }
          if(count && s2Family()==1214)
          {

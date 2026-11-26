@@ -215,6 +215,9 @@ def build_static_config(path):
  apply_aoxing_chain_106(document)
  from hero_passive_quality_105 import restrict_low_star_passives
  restrict_low_star_passives(document)
+ # After every text overlay: purify and curse are layered, not timed.
+ from purify_curse_text_106 import apply_purify_curse_text
+ apply_purify_curse_text(document)
  # Last: mechanic names are matched against the final skill texts.
  from hero_mechanic_terms_105 import apply_hero_mechanic_terms
  apply_hero_mechanic_terms(document)

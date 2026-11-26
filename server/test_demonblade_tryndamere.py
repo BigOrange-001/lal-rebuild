@@ -103,7 +103,7 @@ class DemonbladeTryndamereTests(unittest.TestCase):
         b._add_buff(en[1], 'summon', 4, source=en[0])
         self.assertTrue(self.cast(b, o))
         self.assertEqual([100000-u['hp'] for u in en], [208, 416, 208])
-        self.assertTrue(all(b._buff(u, 'curse').round == 2 for u in en))
+        self.assertTrue(all(b._buff(u, 'curse') is not None for u in en))
         self.assertEqual(b.demon_rage(o), 42.5)
         for _ in range(6):
             b.demon_hurt(o)
@@ -196,11 +196,9 @@ class DemonbladeTryndamereTests(unittest.TestCase):
     def test_endless_rage_precedes_bless_holds_three_turns_as_captain_and_ends_with_cleanse_heal(self):
         b, o, _, en = self.battle(1)
         b._add_buff(o, 'bless', 2, source=o)
-        b._add_buff(o, 'curse', 2)
         b._injured(o, 200000, 1, source=en[0])
         self.assertEqual(o['hp'], 1)
         self.assertIsNotNone(b._buff(o, 'bless'))
-        self.assertIsNone(b._buff(o, 'curse'))
         # 20 opening + 60 from Endless Rage + 2 for the lethal hit itself.
         self.assertEqual(b.demon_rage(o), 82)
         self.assertEqual(b._get_damage(o), int(int(100*1.6)*1.6))

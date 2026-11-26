@@ -216,9 +216,13 @@ class NativeSkinBattle(MeasuredBattle):
         before_value = previous.value if previous else None
         result = super()._add_buff(unit, kind, rounds, value, source, poison_hp_rate_104)
         accepted = unit.get('_buffs', {}).get(kind)
-        if ready and accepted and (accepted is not previous or accepted.value != before_value):
+        if ready and kind != 'curse' and accepted and (accepted is not previous or accepted.value != before_value):
             self.invoke(unit, 's2AnnieStatus', kind)
         return result
+
+    def _curse_applied(self, unit):
+        self._status_received(unit, 'curse')
+        super()._curse_applied(unit)
 
     def control(self, owner, target, kind, duration, value=0):
         if getattr(self, '_bridge_ready', False) and target is not None and self.invoke(target, 's2AnnieImmune'):

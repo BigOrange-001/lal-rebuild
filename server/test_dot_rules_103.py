@@ -63,8 +63,10 @@ class DotRules103Tests(unittest.TestCase):
         b._add_manual_skill_dot(target,'b','burn',100,0,3,owner,2,False)
         b._add_buff(target,'bless',2,0);b._tick_buffs(target)
         self.assertEqual(target['hp'],5000);self.assertFalse(target['_manual_dots'])
+        # Hero ability DOTs are hero-specific: purify does not block them.
         b._add_buff(target,'purify',2,0)
-        self.assertFalse(b._add_manual_skill_dot(target,'blocked','bleed',100,0,3,owner,1,False))
+        self.assertTrue(b._add_manual_skill_dot(target,'after-purify','bleed',100,0,3,owner,1,False))
+        self.assertIsNotNone(b._buff(target,'purify'))
     def test_malzahar_tick_uses_same_armor_bypass_and_shield_rule(self):
         b,owner,target=self.battle(SkillCompleteBattle)
         b.state(target)[('malz',1)]=dict(owner=owner,until=1,ticks=3,tick_damage=100,hops=0,debuff=True)

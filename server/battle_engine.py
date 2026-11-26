@@ -267,7 +267,8 @@ def _percent_debuff_value(raw):
 
 class _Buff:
     """Mirror of Buff(type, round, value) from 140_Buff.as."""
-    __slots__ = ("type", "round", "value", "source", "poison_hp_rate_104", "layers")
+    __slots__ = ("type", "round", "value", "source", "poison_hp_rate_104", "layers", "seq")
+    _serial = 0
 
     def __init__(self, kind, rounds, value=0, source=None, poison_hp_rate_104=1):
         self.poison_hp_rate_104 = poison_hp_rate_104
@@ -276,6 +277,29 @@ class _Buff:
         self.layers = int(self.type != 'burn' or (self.round > 0 and value > 0))
         self.value = value
         self.source = source
+        # Acquisition order: purify cancels the earliest debuff, curse strips
+        # the earliest good buff. A refreshed buff keeps its first stamp.
+        self.seq = self.next_sequence()
+
+    @classmethod
+    def next_sequence(cls):
+        cls._serial += 1
+        return cls._serial
+
+
+# Purify: each layer cancels one generic debuff (_DEBUFFS); layers never
+# expire and stack without limit. Curse: each layer holds two charges, each one
+# strips a held generic good buff (_GOOD_BUFFS) or blocks the next incoming
+# one; at most three layers. Hero-specific statuses (ability DOTs, marks,
+# independent shields) are outside both lists.
+CURSE_CHARGES_PER_LAYER = 2
+CURSE_MAX_LAYERS = 3
+CURSE_MAX_CHARGES = CURSE_CHARGES_PER_LAYER * CURSE_MAX_LAYERS
+
+
+def curse_layers(charges):
+    """Layers shown for a curse holding *charges* (a partly spent layer counts)."""
+    return -(-max(0, int(charges)) // CURSE_CHARGES_PER_LAYER)
 
 
 class ReferenceBattle:
@@ -390,42 +414,44 @@ class ReferenceBattle:
         container = unit.setdefault("_buffs", {})
         current = container.get(kind)
         incoming = _Buff(kind, rounds, value, source, poison_hp_rate_104)
+        if current is not None:
+            incoming.seq = current.seq
         if kind == 'bless' and current is not None:
             if current.value <= 0 < incoming.value:
                 return
             if incoming.value <= 0 < current.value:
                 incoming.round = max(incoming.round, current.round)
-        # Purify has priority over every debuff, including evil and curse. It
-        # must clear them before the one-shot evil/purify guards are checked.
+        # Purify has priority over every debuff, including evil and curse:
+        # each gained layer first cancels the earliest debuff held.
         if kind == "purify":
-            self._remove_all_debuff(unit)
-            unit.pop("_curse_window_started", None)
-        if container.get("purify") is not None and kind in _DEBUFFS:
-            # An armed purify refuses one incoming debuff and is consumed.
-            self._remove_buff(unit,'purify',consume=True)
+            self._gain_purify(unit, incoming)
             return
-        if container.get("curse") is not None and kind in _GOOD_BUFFS and kind != "purify":
-            # Unlike evil's one-shot guard, curse rejects positive buffs while
-            # its normal owner-turn countdown remains active.
-            return
-        if container.get("evil") is not None and kind in _GOOD_BUFFS:
+        # Guard order follows the client's addBuff: purify, else evil, then curse.
+        if container.get("purify") is not None:
+            if kind in _DEBUFFS:
+                # Each purify layer refuses one incoming debuff.
+                self._remove_buff(unit,'purify',consume=True)
+                return
+        elif container.get("evil") is not None and kind in _GOOD_BUFFS:
             del container["evil"]
+            return
+        if kind == "curse":
+            self._gain_curse(unit, incoming)
+            return
+        if container.get("curse") is not None and kind in _GOOD_BUFFS:
+            # Each curse charge rejects one incoming good buff.
+            self._spend_curse(unit, 1)
             return
         if current is None:
             container[kind] = incoming
-            if kind == "purify":
-                self._remove_all_debuff(unit)
-            elif kind == "evil":
+            if kind == "evil":
                 self._remove_all_good(unit)
             return
-        if kind=='purify' and current.value>0:return
-        if kind in ("stun", "silence", "purify", "evil", "curse", "taunt", "bless"):
+        if kind in ("stun", "silence", "evil", "taunt", "bless"):
             # Round-compare arm: the longer duration wins outright.
             if incoming.round >= current.round:
                 container[kind] = incoming
-                if kind == "purify":
-                    self._remove_all_debuff(unit)
-                elif kind == "evil":
+                if kind == "evil":
                     self._remove_all_good(unit)
             return
         if kind in ("poison", "burn"):
@@ -448,8 +474,8 @@ class ReferenceBattle:
             return
         # back / summon and every other kind: the new buff is discarded.
 
-    def _remove_buff(self, unit, kind, consume=False, clear_shields=True):
-        if kind in ('poison','burn') and unit.get('_relic_dots'):
+    def _remove_buff(self, unit, kind, consume=False, clear_shields=True, clear_relic_dots=True):
+        if clear_relic_dots and kind in ('poison','burn') and unit.get('_relic_dots'):
             unit['_relic_dots'] = [d for d in unit['_relic_dots'] if d['kind']!=kind]
         container = unit.get("_buffs")
         if isinstance(container, dict):
@@ -461,6 +487,98 @@ class ReferenceBattle:
                 current.value-=1
                 return
             container.pop(str(kind), None)
+            if current is not None and kind == 'purify':
+                self._purify_exhausted(unit)
+
+    @staticmethod
+    def _purify_layers(unit):
+        entry = (unit.get("_buffs") or {}).get("purify")
+        return max(1, int(entry.value)) if entry is not None else 0
+
+    def _gain_purify(self, unit, incoming):
+        """Each new layer cancels the earliest debuff; the rest stack up."""
+        layers = max(1, int(incoming.value or 0))
+        while layers > 0 and self._cancel_earliest_debuff(unit):
+            layers -= 1
+        if layers <= 0:
+            if not self._purify_layers(unit):
+                self._purify_exhausted(unit)
+            return
+        container = unit["_buffs"]
+        current = container.get("purify")
+        incoming.round = 0
+        incoming.value = layers + (self._purify_layers(unit) if current is not None else 0)
+        container["purify"] = incoming
+
+    def _purify_exhausted(self, unit):
+        """Hook for the last purify layer being spent or dispelled."""
+        pass
+
+    def _cancel_earliest_debuff(self, unit):
+        """Remove one generic debuff (one curse layer); False when none is held."""
+        container = unit.get("_buffs") or {}
+        held = min(((entry.seq, key) for key, entry in container.items() if key in _DEBUFFS),
+                   default=None)
+        dots = unit.get('_relic_dots') or []
+        relic = min(range(len(dots)), key=lambda index: dots[index].get('seq', 0), default=None)
+        if relic is not None and (held is None or dots[relic].get('seq', 0) < held[0]):
+            dots.pop(relic)
+            return True
+        if held is None:
+            return False
+        key = held[1]
+        if key == "curse":
+            self._spend_curse(unit, CURSE_CHARGES_PER_LAYER)
+        else:
+            self._remove_buff(unit, key, clear_shields=False, clear_relic_dots=False)
+        return True
+
+    def _gain_curse(self, unit, incoming):
+        """A new layer strips up to two good buffs, the rest block later ones."""
+        container = unit["_buffs"]
+        current = container.get("curse")
+        charges = CURSE_CHARGES_PER_LAYER
+        while charges > 0 and self._strip_earliest_good(unit):
+            charges -= 1
+        held = int(current.value) if current is not None else 0
+        total = min(CURSE_MAX_CHARGES, held + charges)
+        if total > 0:
+            incoming.round = 0
+            incoming.value = total
+            container["curse"] = incoming
+        else:
+            container.pop("curse", None)
+        self._curse_applied(unit)
+
+    def _curse_applied(self, unit):
+        """Hook: a curse layer landed (even if it spent itself at once)."""
+        pass
+
+    def _spend_curse(self, unit, charges):
+        container = unit.get("_buffs") or {}
+        curse = container.get("curse")
+        if curse is None:
+            return
+        curse.value = int(curse.value) - charges
+        if curse.value <= 0:
+            container.pop("curse", None)
+
+    def _strip_earliest_good(self, unit):
+        container = unit.get("_buffs") or {}
+        held = [(entry.seq, key) for key, entry in container.items() if key in _GOOD_BUFFS]
+        if not held:
+            return False
+        key = min(held)[1]
+        if key == "purify":
+            self._remove_buff(unit, key, consume=True)
+        else:
+            container.pop(key, None)
+        return True
+
+    def _clear_other_debuffs(self, unit):
+        unit.pop('_relic_dots',None)
+        if isinstance(unit.get("_manual_dots"), dict):
+            unit["_manual_dots"].clear()
 
     def _remove_all_good(self, unit):
         container = unit.get("_buffs")
@@ -473,9 +591,7 @@ class ReferenceBattle:
                 container.pop(kind, None)
 
     def _remove_all_debuff(self, unit):
-        unit.pop('_relic_dots',None)
-        if isinstance(unit.get("_manual_dots"), dict):
-            unit["_manual_dots"].clear()
+        self._clear_other_debuffs(unit)
         container = unit.get("_buffs")
         if not isinstance(container, dict):
             return
@@ -502,7 +618,8 @@ class ReferenceBattle:
             # Ordinary revival stays armed; the explicit timed variant expires.
             if kind == "bless" and entry.value <= 0:
                 continue
-            if kind=='purify' and entry.value>0:continue
+            # Purify layers and curse charges last until they are spent.
+            if kind in ('purify','curse'):continue
             if kind=='sixReactionMfShield105':continue
             entry.round -= 1
             if kind == "summon" and entry.round < 0:
@@ -1057,9 +1174,7 @@ class ReferenceBattle:
             return False
         if _to_int(rounds) < 1:
             return False
-        if self._buff(target, "purify") is not None:
-            self._remove_buff(target, "purify",consume=True)
-            return False
+        # Hero ability DOTs are hero-specific: purify neither blocks nor cancels them.
         if stack:
             self._manual_dot_serial = int(getattr(self, "_manual_dot_serial", 0)) + 1
             key = "%s:layer:%d" % (key, self._manual_dot_serial)

@@ -165,7 +165,6 @@
          if(event!="crit" || !yasuoPassive104()) return;
          // Each entry is an ordinary shield Buff with its own native timer.
          // It never replaces or refreshes another entry, including allied shields.
-         if(buffs.curse) return;
          if(buffs.evil) {removeBuff("evil",true);return;}
          var amountShield:int=Tools.toInt((getHpMax()*.05+getDamage()*.25)*getRecoveryTalentMultiplier()*precisionRecovery105(this));
          if(amountShield<=0) return;

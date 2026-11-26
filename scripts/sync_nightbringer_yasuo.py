@@ -51,9 +51,10 @@ s = re.sub(r'^         if\(yasuo(?:Night|Vamp)Rounds104[^\n]*\n', '', s, flags=r
 once('         tickManualLethalFloors();',
      '         if(yasuoNightRounds104>=0 && --yasuoNightRounds104<0) yasuoQueueNight104(false);\n'
      '         if(yasuoVampRounds104>=0) --yasuoVampRounds104;\n         tickManualLethalFloors();')
-once('      protected function removeBuff(param1:String, consume:Boolean = false) : void\n      {',
-     '      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void\n      {\n'
-     '         if(param1=="shield" && clearShields) removeIndependentShields104();')
+if 'if(param1=="shield" && clearShields) removeIndependentShields104();' not in s:
+    once('      protected function removeBuff(param1:String, consume:Boolean = false) : void\n      {',
+         '      protected function removeBuff(param1:String, consume:Boolean = false, clearShields:Boolean = true) : void\n      {\n'
+         '         if(param1=="shield" && clearShields) removeIndependentShields104();')
 # Replacement by a stronger allied shield and ordinary expiry must not dispel
 # independent shields. Explicit shield dispels continue to clear all pools.
 a = s.index('      public function addBuff(')

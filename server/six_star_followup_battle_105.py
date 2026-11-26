@@ -195,9 +195,8 @@ class SixStarFollowupBattle:
         if not ctx or taken<=0 or ctx.get('six_derived') or ctx['kind'] not in ('active','basic') or ctx.get('six_slot')=='skillB':
             return
         if self.six_star_row(ctx.get('skill')).get('sixStarNamiWave105') and self.hero(target) and target['hp']>0:
-            if self._buff(target,'purify'):
-                self._remove_buff(target,'purify',consume=True)
-            elif not self._status_immune(target):
+            # Hero-specific slow: outside purify's generic debuff list.
+            if not self._status_immune(target):
                 state=self.state(target)
                 state['six_nami_slow']=dict(until=state['serial']+2,debuff=True)
         aura=ctx.get('six_nami_ticket')

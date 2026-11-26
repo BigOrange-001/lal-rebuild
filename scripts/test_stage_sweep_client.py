@@ -45,16 +45,17 @@ class StageSweepClientTests(unittest.TestCase):
         self.assertNotIn('Tools.getGameDayKey', source)  # Tools compiles after this stage
 
 
-    def test_confirm_keeps_the_price_visible_in_the_dialog(self):
+    def test_paid_sweep_asks_in_a_second_dialog_at_the_quoted_price(self):
         from test_vital_bar_104 import method
 
         path = CARD.relative_to(ROOT).as_posix()
         quote = method(path, 'changeSweepTimes')
-        confirm = method(path, 'confirmSweep').replace('function(receipt:Object):void', 'function(receipt)')
-        script = f"const changeSweepTimes = {quote}, confirmSweep = {confirm};" + '''
+        confirm = method(path, 'confirmSweep')
+        send = method(path, 'sendSweep').replace('function(receipt:Object):void', 'function(receipt)')
+        script = f"const changeSweepTimes = {quote}, confirmSweep = {confirm}, sendSweep = {send};" + '''
 const assert = require("node:assert/strict");
 const int = Number;
-let price = {cost: 20, free: 1};
+let price = {cost: 20, free: 1, price: 20};
 let request;
 const GlobalData = {$userData: {uid: "u1", coin: 100}, stageSweepQuote: () => price};
 const SendAndSelect = {
@@ -66,17 +67,32 @@ const SendAndSelect = {
 };
 let $sweepLastTimes;
 const card = {
-    mSweepTimes: 1, mSweepQuotedCost: 0, mSweepBusy: false, mSweepAction: "",
+    mSweepTimes: 1, mSweepQuote: null, mSweepBusy: false, mSweepAction: "",
     mSweepEnergy: 5, mSweepCountText: {}, mSweepCostText: {}, mSweepOk: {}, mSweepBtn: {},
     data: {id: "M_001_1"}, sweepMax: () => 5, sweepDiff: () => 0,
-    closeSweepDialog() {}, onSweepError() {}, changeSweepTimes, confirmSweep
+    closeSweepDialog() {}, onSweepError() {}, changeSweepTimes, confirmSweep, sendSweep,
+    openSweepCoinDialog(times, quote) { this.coinDialog = [times, quote]; }
 };
 card.changeSweepTimes(2);
-assert.match(card.mSweepOk.text, /20金砖/);
-price = {cost: 40, free: 0};
+// The price is on the cost line, never in brackets on the button.
+assert.equal(card.mSweepOk.text, "扫荡2次");
+assert.match(card.mSweepCostText.text, /需要金砖20/);
+price = {cost: 80, free: 0, price: 40};
 card.confirmSweep();
+// Nothing is sent until the second dialog is confirmed ...
+assert.equal(request, undefined);
+assert.deepEqual(card.coinDialog, [2, {cost: 20, free: 1, price: 20}]);
+// ... which sends at the price the player was shown, not a later one.
+card.sendSweep(card.coinDialog[0], card.coinDialog[1].cost);
 assert.equal(request.times, 2);
 assert.equal(request.max_coin, 20);
+// A free sweep skips the second dialog.
+request = undefined; card.coinDialog = undefined; card.mSweepBusy = false;
+price = {cost: 0, free: 2};
+card.changeSweepTimes(2);
+card.confirmSweep();
+assert.equal(card.coinDialog, undefined);
+assert.equal(request.max_coin, 0);
 '''
         result = subprocess.run(["node"], input=script, text=True, encoding="utf-8", capture_output=True, cwd=ROOT)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

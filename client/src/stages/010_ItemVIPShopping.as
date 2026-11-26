@@ -278,7 +278,7 @@ package com.meng52.game.ui.element
             var _loc2_:Boolean = true;
             if(_loc3_["avatar"])
             {
-               _loc4_ = Tools.getElementNum(GlobalData.$userData.avatars);
+               _loc4_ = GlobalData.rosterSlotCount();
                if(_loc4_ >= GlobalData.$userData.attrs.avatar_len)
                {
                   _loc2_ = false;
@@ -288,7 +288,7 @@ package com.meng52.game.ui.element
             }
             if(_loc3_["equip"])
             {
-               _loc1_ = Tools.getElementNum(GlobalData.$userData.my_equips);
+               _loc1_ = GlobalData.equipSlotCount();
                if(_loc1_ >= GlobalData.$mConfig_simple.equip_config[0])
                {
                   _loc2_ = false;
@@ -348,7 +348,7 @@ package com.meng52.game.ui.element
          var _loc5_:LOL_Scale9Button = param1.currentTarget as LOL_Scale9Button;
          var _loc4_:Object = data["data_base"].data;
          var _loc3_:Boolean = true;
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(!_loc5_.enabled)
          {
             if(GlobalFunction.getVipLv() > 0)
@@ -376,7 +376,7 @@ package com.meng52.game.ui.element
          }
          if(_loc4_["equip"])
          {
-            _loc2_ = Tools.getElementNum(GlobalData.$userData.my_equips);
+            _loc2_ = GlobalData.equipSlotCount();
             if(_loc2_ >= GlobalData.$mConfig_simple.equip_config[0])
             {
                _loc3_ = false;

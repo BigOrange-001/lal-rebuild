@@ -537,7 +537,7 @@ package com.meng52.game.ui.element
          }
          soundTriggered();
          _type = data["id"];
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(data["taskResult"] == 1)
          {
             _giftType = data["giftType"];
@@ -651,7 +651,7 @@ package com.meng52.game.ui.element
             }
             else if((_type.indexOf("pay") || _type.indexOf("time_pay")) && data["giftType"] == "equip")
             {
-               if(Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+               if(GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
                {
                   GlobalFunction.popEquipFull();
                }
@@ -717,7 +717,7 @@ package com.meng52.game.ui.element
                }
                else if(data["giftType"] == "equip")
                {
-                  if(Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+                  if(GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
                   {
                      GlobalFunction.popEquipFull();
                   }
@@ -764,7 +764,7 @@ package com.meng52.game.ui.element
                }
                else if(data["giftType"] == "equip")
                {
-                  if(Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+                  if(GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
                   {
                      GlobalFunction.popEquipFull();
                   }

@@ -164,7 +164,7 @@ package com.meng52.game.ui.element
             GlobalFunction.popAlert("",GlobalLanguageStr.getLanguageStr(97998));
             return;
          }
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(data.data.hasOwnProperty("avatar") && GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
          {
             GlobalFunction.popAvatarLen();

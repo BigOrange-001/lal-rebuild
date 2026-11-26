@@ -6,11 +6,14 @@ package com.meng52.game.ui.element
    import com.meng52.game.module.guide.GuideMaster;
    import com.meng52.game.ui.screen.PanelCenterDNTeam;
    import com.meng52.utils.StarlingTools;
+   import com.meng52.utils.Tools;
    import feathers.controls.renderers.IListItemRenderer;
    import starling.events.Event;
    
    public class ItemBetterSelect extends ItemAvatarSell implements IListItemRenderer
    {
+
+      private var mStackPicked:LOL_TextField;
       
       public function ItemBetterSelect()
       {
@@ -39,6 +42,12 @@ package com.meng52.game.ui.element
          }
          visibleTeam(_loc2_);
          this.setUISelect();
+         mStackPicked = null;
+         if(this.data.stack_ids is Array)
+         {
+            initStack();
+            return;
+         }
          if(GlobalData.$tempAvatarBetterArr.indexOf(data["id"]) > -1)
          {
             this.data.status = -1;
@@ -55,6 +64,99 @@ package com.meng52.game.ui.element
          this.checkSelect();
       }
       
+      // MATERIAL STACKS 106: a stack card stands for stack_ids. Each picked copy
+      // is registered under its own instance id, exactly like a single card,
+      // so the feed request and its server checks are unchanged.
+      private function initStack() : void
+      {
+         var _picked:int = stackPicked();
+         this.data.status = _picked > 0 ? -1 : 0;
+         this.checkLock();
+         for each(var _copy:String in this.data.stack_ids)
+         {
+            if(GlobalData.$tempAvatarBetterArr.indexOf(_copy) > -1)
+            {
+               GlobalFunction.changeAvatarBetterArray(_copy,false,this,stackCopyData(_copy));
+            }
+         }
+         this.checkSelect();
+         showStackPicked(_picked);
+      }
+
+      private function stackPicked() : int
+      {
+         var _picked:int = 0;
+         for each(var _copy:String in this.data.stack_ids)
+         {
+            if(GlobalData.$tempAvatarBetterArr.indexOf(_copy) > -1)
+            {
+               _picked++;
+            }
+         }
+         return _picked;
+      }
+
+      private function stackCopyData(param1:String) : Object
+      {
+         var _copy:Object = Tools.clone(this.data);
+         delete _copy.stack_ids;
+         delete _copy.stack_count;
+         _copy.id = param1;
+         _copy.aid = param1;
+         _copy.status = -1;
+         return _copy;
+      }
+
+      private function showStackPicked(param1:int) : void
+      {
+         if(mStackPicked == null)
+         {
+            mStackPicked = new LOL_TextField("",86,30,false);
+            mStackPicked.fontSize = 20;
+            mStackPicked.fontColor = 11003770;
+            mStackPicked.hAlign = "left";
+            mStackPicked.shadowFilter();
+            mStackPicked.touchable = false;
+            mStackPicked.x = 6;
+            mStackPicked.y = 4;
+            addChild(mStackPicked);
+         }
+         mStackPicked.text = param1 > 0 ? "已选" + param1 : "";
+         setChildIndex(mStackPicked,numChildren - 1);
+      }
+
+      // Tap adds the next unpicked copy while the five-material limit allows;
+      // when nothing more can be added, the tap puts this stack's copies back.
+      private function checkStackSelect() : void
+      {
+         var _next:String = null;
+         for each(var _copy:String in this.data.stack_ids)
+         {
+            if(GlobalData.$tempAvatarBetterArr.indexOf(_copy) == -1)
+            {
+               _next = _copy;
+               break;
+            }
+         }
+         if(_next != null && GlobalData.$tempAvatarBetterArr.length < 5)
+         {
+            GlobalFunction.changeAvatarBetterArray(_next,false,this,stackCopyData(_next));
+            GlobalData.$tempAvatarChoose.push(_next);
+         }
+         else
+         {
+            for each(_copy in this.data.stack_ids)
+            {
+               GlobalFunction.changeAvatarBetterArray(_copy,true,this,null);
+            }
+         }
+         var _picked:int = stackPicked();
+         this.data.status = _picked > 0 ? -1 : 0;
+         this.checkSelect();
+         showStackPicked(_picked);
+         GlobalData.$mEventDispatcher.dispatchEventWith("update_avatar_better_data");
+      }
+
       override public function onTRIGGERED(param1:Event) : void
       {
          if(!this.mTouchB)
@@ -70,6 +172,11 @@ package com.meng52.game.ui.element
       
       override public function checkSelectData() : void
       {
+         if(this.data.stack_ids is Array)
+         {
+            checkStackSelect();
+            return;
+         }
          if(this.data.status == 0)
          {
             if(GlobalData.$tempAvatarBetterArr.length >= 5)
@@ -114,6 +221,10 @@ package com.meng52.game.ui.element
             {
                this.data.status = 0;
                this.checkSelect();
+               if(this.data.stack_ids is Array)
+               {
+                  showStackPicked(0);
+               }
             }
          }
       }

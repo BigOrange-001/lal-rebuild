@@ -199,6 +199,8 @@ def build_static_config(path):
  apply_attack_ranges(document)
  from game_calendar import apply_daily_reset_config
  apply_daily_reset_config(document)
+ from stage_sweep import apply_stage_sweep
+ apply_stage_sweep(document)
  from shop_balance_105 import apply_shop_balance_105
  apply_shop_balance_105(document)
  from guild_exchange_105 import apply_guild_exchange

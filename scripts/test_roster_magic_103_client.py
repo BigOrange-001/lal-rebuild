@@ -131,7 +131,7 @@ out.push(unit.magicUpgradeQuote(0,10));console.log(JSON.stringify(out));'''
         for filename in ('002_GlobalFunction.as', '017_GlobalFunction.as', '045_GlobalFunction.as'):
             script = '''const events=[],logs=[],Tools={getElementNum:o=>Object.keys(o).length},trace=v=>logs.push(v);
 const GlobalData={$userData:{avatars:{h:{}},team:[['h']]},$tempTeamPowerTemp:1,$mConfig_avatar:{h:{}},$mConfig_simple:{},
-applyProfileSnapshot:()=>true,$mEventDispatcher:{dispatchEventWith:name=>{events.push(name);if(name==='profile_state_sync')throw Error('closed panel');}}};
+applyProfileSnapshot:()=>true,rosterSlotCount:()=>1,$mEventDispatcher:{dispatchEventWith:name=>{events.push(name);if(name==='profile_state_sync')throw Error('closed panel');}}};
 const unit={getTeamPower:()=>12345,refreshProfileTopBar:()=>{throw Error('closed top bar');}};
 '''
             script += method(filename, 'refreshOwnedTeamPower')

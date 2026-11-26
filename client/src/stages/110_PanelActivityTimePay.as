@@ -918,7 +918,7 @@ package com.meng52.game.ui.panel
          {
             GlobalFunction.popAvatarLen();
          }
-         else if(Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]) && _data[0]["type"] == "equip")
+         else if(GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]) && _data[0]["type"] == "equip")
          {
             GlobalFunction.popEquipFull();
          }

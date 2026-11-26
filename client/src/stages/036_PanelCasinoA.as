@@ -934,7 +934,7 @@ package com.meng52.game.ui.panel
       public function checkWager(param1:int = 1, param2:int = 0) : void
       {
          var _loc3_:Boolean = true;
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
          {
             GlobalFunction.popAvatarLen();

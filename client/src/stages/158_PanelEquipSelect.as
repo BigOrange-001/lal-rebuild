@@ -260,6 +260,18 @@ package com.meng52.game.ui.panel
             {
                _loc2_.sortOn(["sort_4","sort_1","sort_3"],[16,16,0x10 | 2]);
             }
+            if(GlobalData.$tempEquipFunId == 3)
+            {
+               // MATERIAL STACKS 106: spare untouched copies of one skill book
+               // share a row (×N); upgrading opens the first copy as before.
+               var _used:Object = GlobalData.stackUsedEquips();
+               var _stackKeys:Array = [];
+               for(var _stackIndex:int = 0; _stackIndex < _loc2_.length; _stackIndex++)
+               {
+                  _stackKeys.push(GlobalData.bookStackKey(String(_loc2_[_stackIndex].id),_loc1_[_loc2_[_stackIndex].id],_used));
+               }
+               _loc2_ = GlobalData.collapseStacks(_loc2_,_stackKeys);
+            }
             this.setListTimer(mList,_loc2_,ItemEquipRender,false);
          }
          if(_loc2_.length <= 0)

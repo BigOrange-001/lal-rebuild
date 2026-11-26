@@ -127,7 +127,7 @@ package com.meng52.game.ui.element
          var _loc4_:Object = null;
          if(mStatus_full)
          {
-            _loc3_ = Tools.getElementNum(GlobalData.$userData.my_equips);
+            _loc3_ = GlobalData.equipSlotCount();
             if(_loc3_ >= GlobalData.$mConfig_simple.equip_config[0])
             {
                GlobalFunction.popEquipFull();
@@ -141,8 +141,8 @@ package com.meng52.game.ui.element
             _loc4_ = GlobalFunction.getFragmentPower();
             if(_loc4_.energy >= _loc2_[3])
             {
-               _loc3_ = Tools.getElementNum(GlobalData.$userData.my_equips);
-               GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+               _loc3_ = GlobalData.equipSlotCount();
+               GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
                if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
                {
                   GlobalFunction.popAvatarLen();

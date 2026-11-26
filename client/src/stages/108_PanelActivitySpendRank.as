@@ -586,11 +586,11 @@ package com.meng52.game.ui.panel
       {
          if(mCurr_data.num > 0)
          {
-            if(awardNum != null && awardNum[0] == 1 && Tools.getElementNum(GlobalData.$userData.avatars) >= GlobalData.$userData.attrs.avatar_len)
+            if(awardNum != null && awardNum[0] == 1 && GlobalData.rosterSlotCount() >= GlobalData.$userData.attrs.avatar_len)
             {
                GlobalFunction.popAvatarLen();
             }
-            else if(awardNum != null && awardNum[1] == 1 && Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+            else if(awardNum != null && awardNum[1] == 1 && GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
             {
                GlobalFunction.popEquipFull();
             }

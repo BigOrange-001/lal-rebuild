@@ -240,7 +240,7 @@ package com.meng52.game.ui.element
          {
             if(data["indexID_s"] != "avatar")
             {
-               _loc2_ = Tools.getElementNum(GlobalData.$userData.my_equips);
+               _loc2_ = GlobalData.equipSlotCount();
                if(GlobalData.$userData.vip_lv < data["status_vip"])
                {
                   GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90281,data["status_vip"]));
@@ -254,7 +254,7 @@ package com.meng52.game.ui.element
             }
             else
             {
-               GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+               GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
                if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
                {
                   GlobalFunction.popAvatarLen();
@@ -343,7 +343,7 @@ package com.meng52.game.ui.element
                GlobalData.$userData.my_equips = param1.data.my_equips;
             }
          }
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          var _loc2_:Object = GlobalFunction.getAwardByType(_loc3_["exch_type"],_loc3_["exch_id"]);
          GlobalFunction.popAward(_loc3_["exch_type"],GlobalLanguageStr.getLanguageStr(90062,_loc2_.msg),_loc3_["exch_id"],false);
          _loc2_ = null;

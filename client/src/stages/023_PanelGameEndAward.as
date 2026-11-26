@@ -1841,12 +1841,12 @@ package com.meng52.game.ui.panel
          var _loc6_:int = 0;
          if(GameMapLayer.isAuto)
          {
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
             {
                GlobalFunction.popAvatarLen();
             }
-            else if(GlobalData.$tempPVE_type == "status_pve_hard" && Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+            else if(GlobalData.$tempPVE_type == "status_pve_hard" && GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
             {
                GlobalFunction.popEquipFull();
             }
@@ -2049,7 +2049,7 @@ package com.meng52.game.ui.panel
             _loc2_ = GameMapManager.getOnlyExample().getData(GlobalData.$tempPVE_combatID);
             _loc5_ = int(GlobalFunction.getEnergy().energy);
             _loc3_ = _loc2_.getEnergy(_loc4_);
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             if(GlobalFunction.getEnergy().energy < _loc2_.getEnergy(_loc4_))
             {
                GlobalFunction.popEnergy();
@@ -2058,7 +2058,7 @@ package com.meng52.game.ui.panel
             {
                GlobalFunction.popAvatarLen();
             }
-            else if(GlobalData.$tempPVE_type == "status_pve_hard" && Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+            else if(GlobalData.$tempPVE_type == "status_pve_hard" && GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
             {
                GlobalFunction.popEquipFull();
             }

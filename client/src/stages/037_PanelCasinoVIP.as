@@ -329,7 +329,7 @@ package com.meng52.game.ui.panel
                   GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(90010),_loc3_,_loc4_);
                   return;
                }
-               GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+               GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
                if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
                {
                   GlobalFunction.popAvatarLen();
@@ -354,7 +354,7 @@ package com.meng52.game.ui.panel
                   GlobalFunction.popAlert(GlobalLanguageStr.getLanguageStr(90010),_loc2_,_loc6_);
                   return;
                }
-               GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+               GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
                if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
                {
                   GlobalFunction.popAvatarLen();

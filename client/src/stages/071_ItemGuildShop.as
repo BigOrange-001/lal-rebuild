@@ -208,8 +208,8 @@ package com.meng52.game.ui.element
          var send:*;
          var e:Event = param1;
          var _b:Boolean = true;
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
-         _myEquipNum = Tools.getElementNum(GlobalData.$userData.my_equips);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
+         _myEquipNum = GlobalData.equipSlotCount();
          if(_award.type == "avatar")
          {
             if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)

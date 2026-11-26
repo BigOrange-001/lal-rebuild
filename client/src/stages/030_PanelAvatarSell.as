@@ -685,7 +685,7 @@ package com.meng52.game.ui.screen
       
       public function formatTxtInfo() : void
       {
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          this.mGold_all = GlobalFunction.getSellAvatarGold();
          var _loc4_:Number = this.mGold_all;
          var _loc3_:Number = GlobalData.$tempSell.length;

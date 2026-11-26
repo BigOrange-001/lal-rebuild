@@ -418,7 +418,7 @@ package com.meng52.game.ui.panel
          var _loc5_:Touch = param1.getTouch(this,"ended");
          if(_loc5_)
          {
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
             {
                GlobalFunction.popAvatarLen();

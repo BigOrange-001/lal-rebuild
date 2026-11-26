@@ -551,8 +551,8 @@ package com.meng52.game.ui.panel
          }
          else if(_loc4_ == "getaward_btn")
          {
-            GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
-            _loc2_ = Tools.getElementNum(GlobalData.$userData.my_equips);
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
+            _loc2_ = GlobalData.equipSlotCount();
             if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
             {
                GlobalFunction.popAvatarLen();
@@ -664,7 +664,7 @@ package com.meng52.game.ui.panel
          {
             GlobalData.$userData.attrs.sign_in = _loc3_.sign_in;
          }
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(_loc3_.gift_dict != null)
          {
             _loc4_ = Tools.getElementNum(_loc3_.gift_dict);
@@ -822,7 +822,7 @@ package com.meng52.game.ui.panel
          {
             GlobalData.$userData.attrs.sign_in = _loc3_.sign_in;
          }
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(_loc3_.gift_dict != null)
          {
             _loc4_ = Tools.getElementNum(_loc3_.gift_dict);

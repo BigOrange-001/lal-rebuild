@@ -1184,6 +1184,363 @@ package com.meng52.game.global
          return param1 != null && param1 === $profileSyncAppliedEnvelope;
       }
       
+      // BEGIN MATERIAL STACKS 106
+      // Mirrors server/material_stacks.py; scripts/test_material_stacks_client.py
+      // runs these bodies against the server rule. Untouched copies of a
+      // material card, and spare untouched skill books, share one warehouse
+      // slot (up to STACK_LIMIT copies). Storage still keeps every instance,
+      // so feeding, selling and upgrades keep working by instance id.
+      public static const STACK_LIMIT:int = 999;
+
+      public static function stackFieldRules() : Object
+      {
+         return {
+            "avatarNumbers":{"lv":[0,1],"slv":[0,1],"exp":[0],"hp":[0],"ap":[0],"de_ph":[0],"de_ma":[0],"phase":[0],"morph":[0],"love_exp":[0],"limit_break":[0],"pith_max":[0],"inherit_count":[0]},
+            "avatarBlank":["equips","talent","lock","locked","culture_legacy_raw","culture_roll_raw","worship_info"],
+            "bookNumbers":{"lv":[0,1],"slv":[0,1],"sexp":[0],"haloLv":[0],"haloExp":[0],"rune_lv":[0],"magic_stage5":[0],"inherit_count":[0]},
+            "bookAllZero":["new_4attrs","halo","alchemy","magic"],
+            "bookBlank":["lock","locked"]
+         };
+      }
+
+      public static function stackBlank(value:*) : Boolean
+      {
+         if(value == null || value === false)
+         {
+            return true;
+         }
+         if(value === true)
+         {
+            return false;
+         }
+         if(typeof value == "number")
+         {
+            return Number(value) == 0;
+         }
+         if(typeof value == "string")
+         {
+            return String(value).length == 0;
+         }
+         if(value is Array)
+         {
+            return value.length == 0;
+         }
+         if(typeof value == "object" && !(value is Date))
+         {
+            for(var key:String in value)
+            {
+               return false;
+            }
+            return true;
+         }
+         return false;
+      }
+
+      public static function stackNumbersFresh(row:Object, fields:Object) : Boolean
+      {
+         for(var key:String in fields)
+         {
+            var value:* = row[key];
+            if(value == null)
+            {
+               continue;
+            }
+            if(typeof value != "number")
+            {
+               return false;
+            }
+            var allowed:Array = fields[key];
+            var fresh:Boolean = false;
+            for(var i:int = 0; i < allowed.length; i++)
+            {
+               if(Number(value) == Number(allowed[i]))
+               {
+                  fresh = true;
+               }
+            }
+            if(!fresh)
+            {
+               return false;
+            }
+         }
+         return true;
+      }
+
+      public static function stackAllZero(value:*) : Boolean
+      {
+         if(value != null && typeof value == "object" && !(value is Date))
+         {
+            for(var key:String in value)
+            {
+               if(!stackBlank(value[key]))
+               {
+                  return false;
+               }
+            }
+            return true;
+         }
+         return stackBlank(value);
+      }
+
+      /** The material id when this card is an untouched copy, otherwise "". */
+      public static function avatarStackKey(id:String, row:Object) : String
+      {
+         if(row == null || typeof row != "object")
+         {
+            return "";
+         }
+         var source:String = typeof row.aid == "string" ? String(row.aid) : String(id);
+         var aid:String = source.split("|")[0];
+         if(aid.indexOf("A_") != 0 || aid.indexOf("A_1") == 0)
+         {
+            return "";
+         }
+         var rules:Object = stackFieldRules();
+         if(!stackNumbersFresh(row,rules.avatarNumbers))
+         {
+            return "";
+         }
+         var blank:Array = rules.avatarBlank;
+         for(var i:int = 0; i < blank.length; i++)
+         {
+            if(!stackBlank(row[blank[i]]))
+            {
+               return "";
+            }
+         }
+         return aid;
+      }
+
+      /** eid|roll when this is a spare untouched skill book, otherwise "". */
+      public static function bookStackKey(eqid:String, row:Object, used:Object) : String
+      {
+         if(row == null || typeof row != "object" || (used != null && used[eqid]))
+         {
+            return "";
+         }
+         var definition:Object = GlobalData.$mConfig_equip == null ? null : GlobalData.$mConfig_equip[row.eid];
+         if(definition == null || int(definition.type) != 6)
+         {
+            return "";
+         }
+         var rules:Object = stackFieldRules();
+         if(!stackNumbersFresh(row,rules.bookNumbers))
+         {
+            return "";
+         }
+         var zero:Array = rules.bookAllZero;
+         for(var i:int = 0; i < zero.length; i++)
+         {
+            if(!stackAllZero(row[zero[i]]))
+            {
+               return "";
+            }
+         }
+         var blank:Array = rules.bookBlank;
+         for(var j:int = 0; j < blank.length; j++)
+         {
+            if(!stackBlank(row[blank[j]]))
+            {
+               return "";
+            }
+         }
+         var roll:* = row.stat_roll_ppm;
+         return String(row.eid) + "|" + (typeof roll == "number" ? String(int(roll)) : "0");
+      }
+
+      /** Equipment ids worn by a squad or hero, or waiting on a wash result. */
+      public static function stackUsedEquips() : Object
+      {
+         var used:Object = {};
+         var data:Object = GlobalData.$userData;
+         if(data == null)
+         {
+            return used;
+         }
+         var squads:Array = data.as_equips as Array;
+         if(squads != null)
+         {
+            for(var i:int = 0; i < squads.length; i++)
+            {
+               var squad:Array = squads[i] as Array;
+               if(squad != null)
+               {
+                  for(var j:int = 0; j < squad.length; j++)
+                  {
+                     if(squad[j])
+                     {
+                        used[String(squad[j])] = true;
+                     }
+                  }
+               }
+            }
+         }
+         for(var hid:String in data.avatars)
+         {
+            var worn:Array = data.avatars[hid] == null ? null : data.avatars[hid].equips as Array;
+            if(worn != null)
+            {
+               for(var k:int = 0; k < worn.length; k++)
+               {
+                  if(worn[k])
+                  {
+                     used[String(worn[k])] = true;
+                  }
+               }
+            }
+         }
+         var wash:Object = data.attrs == null ? null : data.attrs.equip_wash;
+         if(wash != null && wash.eqid)
+         {
+            used[String(wash.eqid)] = true;
+         }
+         return used;
+      }
+
+      /** Non-hero cards: minions, monsters, towers, EXP books, skill cookies. */
+      public static function isMaterialCard(id:String) : Boolean
+      {
+         var aid:String = String(id).split("|")[0];
+         return aid.indexOf("A_") == 0 && aid.indexOf("A_1") != 0;
+      }
+
+      public static function stackSlotCount(keys:Array) : int
+      {
+         var counts:Object = {};
+         var total:int = 0;
+         for(var i:int = 0; i < keys.length; i++)
+         {
+            var key:String = keys[i];
+            if(key)
+            {
+               counts[key] = int(counts[key]) + 1;
+            }
+            else
+            {
+               total++;
+            }
+         }
+         for(var stack:String in counts)
+         {
+            total += int((int(counts[stack]) + STACK_LIMIT - 1) / STACK_LIMIT);
+         }
+         return total;
+      }
+
+      /** Hero warehouse slots in use: a material stack counts once. */
+      public static function rosterSlotCount() : int
+      {
+         var data:Object = GlobalData.$userData;
+         if(data == null || data.avatars == null)
+         {
+            return 0;
+         }
+         var keys:Array = [];
+         for(var id:String in data.avatars)
+         {
+            keys.push(avatarStackKey(id,data.avatars[id]));
+         }
+         return stackSlotCount(keys);
+      }
+
+      /** Equipment slots in use: a stack of spare skill books counts once. */
+      public static function equipSlotCount() : int
+      {
+         var data:Object = GlobalData.$userData;
+         if(data == null || data.my_equips == null)
+         {
+            return 0;
+         }
+         var used:Object = stackUsedEquips();
+         var keys:Array = [];
+         for(var id:String in data.my_equips)
+         {
+            keys.push(bookStackKey(id,data.my_equips[id],used));
+         }
+         return stackSlotCount(keys);
+      }
+
+      /**
+       * Collapse display rows (clones, in list order) into stack rows. The first
+       * copy of each stack stands for it and carries stack_count and stack_ids;
+       * rows whose key is "" stay as they are.
+       */
+      public static function collapseStacks(rows:Array, keys:Array) : Array
+      {
+         var result:Array = [];
+         var heads:Object = {};
+         for(var i:int = 0; i < rows.length; i++)
+         {
+            var row:Object = rows[i];
+            var key:String = keys[i];
+            if(!key)
+            {
+               result.push(row);
+               continue;
+            }
+            var head:Object = heads[key];
+            if(head == null || head.stack_ids.length >= STACK_LIMIT)
+            {
+               head = row;
+               head.stack_ids = [String(row.id)];
+               head.stack_count = 1;
+               heads[key] = head;
+               result.push(head);
+            }
+            else
+            {
+               head.stack_ids.push(String(row.id));
+               head.stack_count = head.stack_ids.length;
+            }
+         }
+         return result;
+      }
+      // END MATERIAL STACKS 106
+
+      // BEGIN STAGE SWEEP 106
+      // Same game day as server game_day (Tools.getGameDayKey compiles later
+      // than the stage cards, so the rule is repeated here).
+      public static function gameDayKey(milliseconds:Number) : String
+      {
+         var settings:Object = GlobalData.$mConfig_simple;
+         var resetHour:Number = settings && settings.daily_reset_hour !== undefined ? Number(settings.daily_reset_hour) : 0;
+         var timezoneHours:Number = settings && settings.daily_timezone_offset_hours !== undefined ? Number(settings.daily_timezone_offset_hours) : 8;
+         var day:Date = new Date(Math.floor((milliseconds + (timezoneHours - resetHour) * 3600000) / 86400000) * 86400000);
+         var month:String = day.monthUTC + 1 < 10 ? "0" + (day.monthUTC + 1) : String(day.monthUTC + 1);
+         var date:String = day.dateUTC < 10 ? "0" + day.dateUTC : String(day.dateUTC);
+         return day.fullYearUTC + "-" + month + "-" + date;
+      }
+
+      /** system_simple.stage_sweep, with the shipped defaults. */
+      public static function stageSweepPolicy() : Object
+      {
+         var policy:Object = GlobalData.$mConfig_simple == null ? null : GlobalData.$mConfig_simple.stage_sweep;
+         return {
+            "free":policy ? int(policy.free) : 20,
+            "vip_bonus":policy ? int(policy.vip_bonus) : 5,
+            "extra_cost":policy ? int(policy.extra_cost) : 20,
+            "stars":policy ? int(policy.stars) : 3,
+            "max_times":policy ? int(policy.max_times) : 100
+         };
+      }
+
+      /** Today's free sweeps and the gold-brick cost of `times` more (server stage_sweep.quote). */
+      public static function stageSweepQuote(times:int, nowSecond:Number) : Object
+      {
+         var policy:Object = stageSweepPolicy();
+         var data:Object = GlobalData.$userData;
+         var vip:int = Math.max(0,int(data.vip_lv));
+         var limit:int = policy.free + policy.vip_bonus * vip;
+         var state:Object = data.records == null ? null : data.records.stage_sweep;
+         var used:int = state != null && String(state.day) == gameDayKey(nowSecond * 1000) ? int(state.used) : 0;
+         var freeLeft:int = Math.max(0,limit - used);
+         var free:int = Math.min(times,freeLeft);
+         var paid:int = Math.max(0,times - free);
+         return {"limit":limit,"freeLeft":freeLeft,"free":free,"paid":paid,"cost":paid * policy.extra_cost,"price":policy.extra_cost};
+      }
+      // END STAGE SWEEP 106
+
+
       public static function set $userData_avatarNum(param1:int) : void
       {
          if($currentGuide == "A")

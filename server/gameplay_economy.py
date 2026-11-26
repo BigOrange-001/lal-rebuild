@@ -4,6 +4,7 @@ import calendar, copy, datetime, hashlib, math, random
 from gameplay_common import game_day, grant_reward, skin_acquisition_blocked_ids, equipment_exclusive_ids
 from gameplay_energy import energy_state, normalize_energy_purchase_day, ENERGY_PURCHASE_CAP
 from player_store import GameplayFault, native_dates
+from material_stacks import roster_slots, equipment_slots
 from vip_campaign import credit_vip_gift, normalize_vip_profile
 from spending_budget import ORDINARY_TIERS,LIMIT_MESSAGE,charge_spending,normalize_spending,public_spending
 from check_in_rewards import apply_check_in_rewards,check_in_coin,orange_bonus_count,random_orange_aid
@@ -1476,7 +1477,7 @@ class GameplayEconomy:
             state.setdefault("score",0)
             if self.summon_pools is not None:
                 capacity = int(attrs.get("avatar_len", 1000))
-                if len(p.get("avatars", {})) + draws > capacity:
+                if roster_slots(p) + draws > capacity:
                     raise GameplayFault("RosterFull", "Hero roster is full")
                 picks = [{"kind": "avatar", "aid": self.summon_pools.draw("vip", random)}
                          for _ in range(draws)]
@@ -1556,7 +1557,7 @@ class GameplayEconomy:
             attrs=p.setdefault("attrs",{}); state=attrs.setdefault("lottery_activity",{"score":0})
             if not isinstance(state,dict): state={"score":0};attrs["lottery_activity"]=state
             if int(state.get("score",0))<need: raise GameplayFault("ActivityScoreLow", "Not enough activity points")
-            if ("heroes" in reward or "avatar" in reward) and len(p.get("avatars",{}))>=int(attrs.get("avatar_len",0)):
+            if ("heroes" in reward or "avatar" in reward) and roster_slots(p)>=int(attrs.get("avatar_len",0)):
                 raise GameplayFault("AvatarCapacity", "Hero inventory is full")
             before=set(p.get("avatars",{}));grant_reward(p,reward,{"cfg":self.config})
             avatar={k:v for k,v in p.get("avatars",{}).items() if k not in before}
@@ -1615,7 +1616,7 @@ class GameplayEconomy:
             avatars=p.setdefault("avatars",{})
             if not isinstance(avatars,dict):
                 raise GameplayFault("InvalidProfile", "Hero inventory has an invalid shape")
-            if len(avatars)>=capacity:
+            if roster_slots(p)>=capacity:
                 raise GameplayFault("AvatarCapacity", "Hero inventory is full")
             score=attrs.get("activity_score",0)
             if type(score) is not int or score<0:
@@ -1701,9 +1702,9 @@ class GameplayEconomy:
             for kind in ("box","key"):
                 amount=int(cost.get(kind,1))
                 if int(state[kind]["num"])<amount: raise GameplayFault("InsufficientBoxKey", "One box and one key are required")
-            if len(p.get("avatars",{}))>=int(p.get("attrs",{}).get("avatar_len",0)): raise GameplayFault("AvatarCapacity", "Hero inventory is full")
+            if roster_slots(p)>=int(p.get("attrs",{}).get("avatar_len",0)): raise GameplayFault("AvatarCapacity", "Hero inventory is full")
             equip_capacity=int(self.config.get("system_simple",{}).get("equip_config",[100])[0])
-            if len(p.get("my_equips",{}))>=equip_capacity: raise GameplayFault("EquipCapacity", "Equipment inventory is full")
+            if equipment_slots(p,self.config.get("equip",{}))>=equip_capacity: raise GameplayFault("EquipCapacity", "Equipment inventory is full")
             state["box"]["num"]-=int(cost.get("box",1));state["key"]["num"]-=int(cost.get("key",1))
             prize=copy.deepcopy(random.choice(rewards)) if rewards else {"coin":50}
             before_avatar=set(p.get("avatars",{}));before_equip=set(p.get("my_equips",{}))

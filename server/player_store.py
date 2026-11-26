@@ -7,6 +7,7 @@ from cultivation_rules import normalize_profile as normalize_culture_profile
 from game_clock import GameClock
 from game_calendar import game_day, normalize_daily_counters
 from spending_budget import initial_spending,normalize_spending
+from material_stacks import roster_slots
 
 class GameplayFault(Exception):
  def __init__(self,code,message):self.code,self.message=code,message
@@ -389,7 +390,7 @@ INSERT OR IGNORE INTO player_state_revision(uid,revision) SELECT uid,0 FROM play
   # reducing any previously earned capacity.
   old_capacity=p['attrs'].get('avatar_len',0)
   if type(old_capacity) is not int or old_capacity<0:old_capacity=0
-  p['attrs']['avatar_len']=max(self._default_avatar_capacity(len(p['avatars'])),old_capacity,len(p['avatars']))
+  p['attrs']['avatar_len']=max(self._default_avatar_capacity(roster_slots(p)),old_capacity)
   legacy={k for k in p['avatars'] if k.isdigit()}
   if legacy:
    mapping={k:v['aid']+'|'+str(int(k)-1) for k,v in p['avatars'].items() if k in legacy}

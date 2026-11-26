@@ -160,7 +160,7 @@ package com.meng52.game.ui.element
          if(mStatus_full)
          {
             _loc3_ = this.index;
-            _loc2_ = Tools.getElementNum(GlobalData.$userData.avatars);
+            _loc2_ = GlobalData.rosterSlotCount();
             if(_loc2_ >= int(GlobalData.$userData.attrs.avatar_len))
             {
                GlobalFunction.popAvatarLen();

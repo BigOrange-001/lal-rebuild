@@ -457,8 +457,8 @@ package com.meng52.game.ui.panel
          {
             if(mBtn_open.enabled)
             {
-               GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
-               _loc2_ = Tools.getElementNum(GlobalData.$userData.my_equips);
+               GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
+               _loc2_ = GlobalData.equipSlotCount();
                if(GlobalData.$userData_avatarNum >= GlobalData.$userData.attrs.avatar_len)
                {
                   GlobalFunction.popAvatarLen();
@@ -672,7 +672,7 @@ package com.meng52.game.ui.panel
          mGiftData = _loc6_.gift;
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
          GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateGold();
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          var _loc7_:Object = checkBtnGetStatus();
          mBtn_get.enabled = _loc7_.isCan;
          mBtn_get.visible = _loc7_.isCan;

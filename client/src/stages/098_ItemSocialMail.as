@@ -302,7 +302,7 @@ package com.meng52.game.ui.element
          {
             if((data.gift_dict as Object).hasOwnProperty("equip"))
             {
-               if(Tools.getElementNum(GlobalData.$userData.my_equips) >= GlobalData.$mConfig_simple.equip_config[0])
+               if(GlobalData.equipSlotCount() >= GlobalData.$mConfig_simple.equip_config[0])
                {
                   GlobalFunction.popEquipFull();
                   return;
@@ -421,7 +421,7 @@ package com.meng52.game.ui.element
             this.mTxt_title.y = 31;
             this.addChild(this.mTxt_title);
          }
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(this.stage && this.UI_btn_smallFun_0)
          {
             this.UI_btn_smallFun_0.removeFromParent(true);

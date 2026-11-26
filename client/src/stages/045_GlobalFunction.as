@@ -2989,13 +2989,13 @@ package com.meng52.game.global
          if(param2 == null)
          {
             delete GlobalData.$userData.avatars[param1];
-            GlobalData.$userData_avatarNum -= 1;
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
             return;
          }
          GlobalData.$userData.avatars[param1] = param2;
          if(param3)
          {
-            GlobalData.$userData_avatarNum += 1;
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          }
       }
       
@@ -4464,7 +4464,7 @@ package com.meng52.game.global
             GlobalFunction.popAvatarLen();
             _loc1_ = false;
          }
-         else if(Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+         else if(GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
          {
             GlobalFunction.popEquipFull();
             _loc1_ = false;
@@ -4947,7 +4947,7 @@ package com.meng52.game.global
          {
             return false;
          }
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          // A rendered panel is a projection of a committed snapshot. Its
          // failure cannot turn an accepted gameplay operation into a retry.
          try { refreshProfileTopBar(); } catch(topError:Error) { trace("profile top bar refresh: "+topError.message); }
@@ -4967,7 +4967,7 @@ package com.meng52.game.global
          for(_loc2_ in _loc3_)
          {
             GlobalData.$userData.avatars[_loc2_] = _loc3_[_loc2_];
-            GlobalData.$userData_avatarNum += 1;
+            GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          }
          _loc3_ = param1.new_avatar_soul;
          for(_loc2_ in _loc3_)

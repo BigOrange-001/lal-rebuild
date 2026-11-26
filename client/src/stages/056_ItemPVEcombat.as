@@ -94,6 +94,15 @@ package com.meng52.game.ui.element
       {
          GlobalData.$mEventDispatcher.removeEventListener("material_attempts_changed",refreshMaterialAttempts);
          SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onMaterialBuyError);
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onSweepError);
+         closeSweepDialog();
+         if(mSweepBtn)
+         {
+            mSweepBtn.removeEventListener("triggered",onSweep);
+         }
+         mSweepBtn = null;
+         mSweepBusy = false;
+         mSweepAction = "";
          mMaterialBuy = null;
          mMaterialBusy = false;
          mMaterialAction = "";
@@ -362,8 +371,8 @@ package com.meng52.game.ui.element
          if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
          {
             mTxt_num.width = 130;
-            mMaterialBuy = new LOL_Scale9Button("购买次数",126,35,"UI_btn_normalFun_0000");
-            mMaterialBuy.x = mBtn_bg_lv.x;
+            mMaterialBuy = new LOL_Scale9Button("购买次数",sweepUnlocked() ? 104 : 126,35,"UI_btn_normalFun_0000");
+            mMaterialBuy.x = mBtn_bg_lv.x + mBtn_bg_lv.width - mMaterialBuy.width;
             mMaterialBuy.y = mTxt_num.y;
             mMaterialBuy.addEventListener("triggered",onMaterialBuy);
             mBaseSpr.addChild(mMaterialBuy);
@@ -371,6 +380,7 @@ package com.meng52.game.ui.element
             GlobalData.$mEventDispatcher.addEventListener("material_attempts_changed",refreshMaterialAttempts);
             refreshMaterialAttempts();
          }
+         setupSweep(_loc13_);
          if(this.data.needvip)
          {
             _loc16_ = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(97684,this.data.needvip),14,16724736,"center",200,35);
@@ -654,10 +664,10 @@ package com.meng52.game.ui.element
          var _loc2_:int = 0;
          var _loc3_:int = 0;
          var _loc8_:int = 0;
-         GlobalData.$userData_avatarNum = Tools.getElementNum(GlobalData.$userData.avatars);
+         GlobalData.$userData_avatarNum = GlobalData.rosterSlotCount();
          if(GlobalData.$userData_avatarNum < GlobalData.$userData.attrs.avatar_len)
          {
-            if((GlobalData.$tempPVE_type == "status_pve_hard" || GlobalData.$tempPVE_type == "status_pve_activities") && Tools.getElementNum(GlobalData.$userData.my_equips) >= int(GlobalData.$mConfig_simple.equip_config[0]))
+            if((GlobalData.$tempPVE_type == "status_pve_hard" || GlobalData.$tempPVE_type == "status_pve_activities") && GlobalData.equipSlotCount() >= int(GlobalData.$mConfig_simple.equip_config[0]))
             {
                GlobalFunction.popEquipFull();
             }
@@ -774,6 +784,331 @@ package com.meng52.game.ui.element
             "no":GlobalFunction.functionNull
          });
       }
+
+      // BEGIN STAGE SWEEP 106
+      // Three-star stages can be swept: the server settles a three-star win
+      // (energy and today's attempts still apply) without entering battle.
+      // Free sweeps per day: free + vip_bonus x VIP level; past that each
+      // sweep costs extra_cost gold bricks. Rule: system_simple.stage_sweep.
+      private static var $sweepLastTimes:int = 1;
+
+      private static const SWEEP_REWARD_ORDER:Array = ["exp","gold","coin","score","medal","mark","dust","sp","culture_book","dn_stone","avatar","equip","avatar_soul","equip_soul"];
+
+      private var mSweepBtn:LOL_Scale9Button;
+      private var mSweepEnergy:int = 0;
+      private var mSweepBusy:Boolean = false;
+      private var mSweepAction:String = "";
+      private var mSweepModal:Sprite;
+      private var mSweepTimes:int = 1;
+      private var mSweepQuotedCost:int;
+      private var mSweepCountText:TextField;
+      private var mSweepCostText:TextField;
+      private var mSweepOk:LOL_Scale9Button;
+
+      private function sweepDiff() : int
+      {
+         return GlobalData.$tempPVE_type == "status_pve_hard" ? 1 : 0;
+      }
+
+      private function sweepUnlocked() : Boolean
+      {
+         var type:String = GlobalData.$tempPVE_type;
+         if(type != "status_pve_normal" && type != "status_pve_hard" && type != "status_pve_activities")
+         {
+            return false;
+         }
+         return int(GlobalFunction.getCombatStarById(String(this.data.id))) >= int(GlobalData.stageSweepPolicy().stars);
+      }
+
+      private function setupSweep(param1:GameMapData) : void
+      {
+         if(!sweepUnlocked())
+         {
+            return;
+         }
+         mSweepEnergy = param1.getEnergy(diff);
+         // Next to 购买次数 on resource stages; left of the activity tag that
+         // sits under 挑战 on tower floors; otherwise under 挑战.
+         var _tagged:Boolean = int(data["status_activity"]) > 0 && this.data.activity_kind != "material";
+         var _width:int = mMaterialBuy ? 84 : (_tagged ? 110 : 126);
+         mSweepBtn = new LOL_Scale9Button("扫荡",_width,35,"UI_btn_normalFun_0000");
+         mSweepBtn.x = mMaterialBuy ? mMaterialBuy.x - 6 - _width : (_tagged ? mBtn_bg_lv.x - 8 - _width : mBtn_bg_lv.x);
+         mSweepBtn.y = mTxt_num.y;
+         mSweepBtn.addEventListener("triggered",onSweep);
+         mBaseSpr.addChild(mSweepBtn);
+         if(mMaterialBuy)
+         {
+            mTxt_num.x = mTxt_str0.x + 92;
+            mTxt_num.width = 125;
+         }
+      }
+
+      private function refreshSweepLimit() : void
+      {
+         if(!data)
+         {
+            return;
+         }
+         if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
+         {
+            refreshMaterialAttempts();
+            return;
+         }
+         var map:GameMapData = GameMapManager.getOnlyExample().getData(data.id);
+         mLimit = Math.max(0,map.getLimit(diff) - GlobalFunction.getUserCombat(GlobalData.$tempPVE_type,this.data.id));
+         if(mTxt_num)
+         {
+            mTxt_num.text = GlobalLanguageStr.getLanguageStr(20031,mLimit);
+         }
+      }
+
+      private function sweepMax() : int
+      {
+         var policy:Object = GlobalData.stageSweepPolicy();
+         var byEnergy:int = mSweepEnergy > 0 ? int(GlobalFunction.getEnergy().energy / mSweepEnergy) : policy.max_times;
+         var quote:Object = GlobalData.stageSweepQuote(0,SendAndSelect.$systemTimer_nowSecond);
+         var byCoin:int = quote.freeLeft + (quote.price > 0 ? int(int(GlobalData.$userData.coin) / quote.price) : policy.max_times);
+         return Math.max(0,Math.min(policy.max_times,mLimit,byEnergy,byCoin));
+      }
+
+      private function onSweep(param1:Event) : void
+      {
+         param1.stopPropagation();
+         if(mSweepBusy || !stage || !data)
+         {
+            return;
+         }
+         refreshSweepLimit();
+         if(this.data.needvip > GlobalData.$userData.vip_lv)
+         {
+            GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(97685));
+            return;
+         }
+         if(mLimit <= 0)
+         {
+            if(this.data.activity_kind == "material")
+            {
+               onMaterialBuy(param1);
+            }
+            else
+            {
+               GlobalFunction.popError(GlobalLanguageStr.getLanguageStr(90031));
+            }
+            return;
+         }
+         if(mSweepEnergy > 0 && GlobalFunction.getEnergy().energy < mSweepEnergy)
+         {
+            GlobalFunction.popEnergy();
+            return;
+         }
+         if(sweepMax() <= 0)
+         {
+            GlobalFunction.popError("免费扫荡次数已用完，金砖不足" + GlobalData.stageSweepQuote(1,SendAndSelect.$systemTimer_nowSecond).price + "，无法继续扫荡。");
+            return;
+         }
+         openSweepDialog();
+      }
+
+      private function closeSweepDialog() : void
+      {
+         if(mSweepModal)
+         {
+            mSweepModal.removeFromParent(true);
+         }
+         mSweepModal = null;
+         mSweepCountText = null;
+         mSweepCostText = null;
+         mSweepOk = null;
+      }
+
+      private function sweepHost() : Sprite
+      {
+         var host:Sprite = GlobalData.$mGameClassObject as Sprite;
+         return host != null ? host : this;
+      }
+
+      private function openSweepDialog() : void
+      {
+         closeSweepDialog();
+         var policy:Object = GlobalData.stageSweepPolicy();
+         var quote:Object = GlobalData.stageSweepQuote(0,SendAndSelect.$systemTimer_nowSecond);
+         mSweepTimes = Math.max(1,Math.min($sweepLastTimes,sweepMax()));
+         var modal:Object = GlobalFunction.uiModal(sweepHost(),"扫荡 · " + String(this.data.name),560,440);
+         mSweepModal = modal.root as Sprite;
+         var box:Sprite = modal.box as Sprite;
+         var info:String = "三星通关的关卡可直接领取胜利奖励，不进入战斗。\n" + "每次消耗体力" + mSweepEnergy + "，并计入今日挑战次数" + (mLimit < 10000 ? "（剩余" + mLimit + "次）" : "") + "。\n" + "今日免费扫荡剩余" + quote.freeLeft + "/" + quote.limit + "次（VIP每级+" + policy.vip_bonus + "次），" + "用完后每次" + quote.price + "金砖。";
+         GlobalFunction.uiText(info,18,GlobalFunction.UI_BROWN,"left",500,110,box,30,74);
+         var minus:LOL_Scale9Button = GlobalFunction.uiButton("－",64,52,"normal",box,0,0,function():void
+         {
+            changeSweepTimes(mSweepTimes - 1);
+         });
+         mSweepCountText = GlobalFunction.uiText("",24,GlobalFunction.UI_DARK,"center",120,52,box,0,0);
+         var plus:LOL_Scale9Button = GlobalFunction.uiButton("＋",64,52,"normal",box,0,0,function():void
+         {
+            changeSweepTimes(mSweepTimes + 1);
+         });
+         var most:LOL_Scale9Button = GlobalFunction.uiButton("最多",96,52,"normal",box,0,0,function():void
+         {
+            changeSweepTimes(sweepMax());
+         });
+         GlobalFunction.uiRow([minus,mSweepCountText,plus,most],30,530,206,12,"center");
+         mSweepCostText = GlobalFunction.uiText("",19,GlobalFunction.UI_BROWN,"center",500,34,box,30,276);
+         var cancel:LOL_Scale9Button = GlobalFunction.uiButton("取消",150,60,"normal",box,0,0,closeSweepDialog);
+         mSweepOk = GlobalFunction.uiButton("",200,60,"primary",box,0,0,confirmSweep);
+         GlobalFunction.uiRow([cancel,mSweepOk],30,530,340,24,"center");
+         changeSweepTimes(mSweepTimes);
+      }
+
+      private function changeSweepTimes(param1:int) : void
+      {
+         var most:int = Math.max(1,sweepMax());
+         mSweepTimes = Math.max(1,Math.min(param1,most));
+         var quote:Object = GlobalData.stageSweepQuote(mSweepTimes,SendAndSelect.$systemTimer_nowSecond);
+         mSweepQuotedCost = int(quote.cost);
+         if(mSweepCountText)
+         {
+            mSweepCountText.text = mSweepTimes + "次";
+         }
+         if(mSweepCostText)
+         {
+            mSweepCostText.text = "消耗体力" + mSweepEnergy * mSweepTimes + "　" + (quote.cost > 0 ? "花费金砖" + quote.cost + "（免费" + quote.free + "次）" : "免费");
+         }
+         if(mSweepOk)
+         {
+            mSweepOk.text = quote.cost > 0 ? "扫荡" + mSweepTimes + "次（" + quote.cost + "金砖）" : "扫荡" + mSweepTimes + "次";
+         }
+      }
+
+      private function confirmSweep() : void
+      {
+         if(mSweepBusy || !data)
+         {
+            return;
+         }
+         var times:int = mSweepTimes;
+         var cost:int = mSweepQuotedCost;
+         closeSweepDialog();
+         if(cost > int(GlobalData.$userData.coin))
+         {
+            GlobalFunction.popError("金砖不足，本次扫荡需要" + cost + "金砖。");
+            return;
+         }
+         $sweepLastTimes = times;
+         var owner:ItemPVEcombat = this;
+         var uid:String = String(GlobalData.$userData.uid);
+         var cid:String = String(this.data.id);
+         var params:Object = {
+            "cid":cid,
+            "diff":sweepDiff(),
+            "times":times,
+            "max_coin":cost,
+            "actionID":"sweep-" + cid + "-" + new Date().time + "-" + int(Math.random() * 1000000)
+         };
+         mSweepBusy = true;
+         mSweepAction = String(params.actionID);
+         if(mSweepBtn)
+         {
+            mSweepBtn.enabled = false;
+         }
+         SendAndSelect.$SendServiceAMFDispatcher.addEventListener("error_broadcast",onSweepError);
+         SendAndSelect.sendAndSelectService("user.stage_sweep",params,function(receipt:Object):void
+         {
+            SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",owner.onSweepError);
+            owner.finishSweepRequest();
+            if(!GlobalData.$userData || String(GlobalData.$userData.uid) != uid || receipt == null || receipt.data == null)
+            {
+               return;
+            }
+            GlobalData.$mGameClassObject.mLayoutUITop.mPanelTopMain.updateCoin();
+            GlobalData.$mEventDispatcher.dispatchEventWith("material_attempts_changed");
+            owner.showSweepResult(receipt.data.sweep);
+         });
+      }
+
+      public function finishSweepRequest() : void
+      {
+         mSweepBusy = false;
+         mSweepAction = "";
+         if(mSweepBtn)
+         {
+            mSweepBtn.enabled = true;
+         }
+         refreshSweepLimit();
+      }
+
+      public function onSweepError(param1:NetEvent) : void
+      {
+         var error:Object = param1.data;
+         var receipt:Object = error && error.profile_receipt ? error.profile_receipt : error;
+         if(!receipt || !receipt.params || String(receipt.params.actionID) != mSweepAction)
+         {
+            return;
+         }
+         SendAndSelect.$SendServiceAMFDispatcher.removeEventListener("error_broadcast",onSweepError);
+         finishSweepRequest();
+      }
+
+      public static function sweepRewardText(param1:Object) : String
+      {
+         var parts:Array = [];
+         var seen:Object = {};
+         var order:Array = SWEEP_REWARD_ORDER.concat();
+         for(var extra:String in param1)
+         {
+            if(order.indexOf(extra) == -1)
+            {
+               order.push(extra);
+            }
+         }
+         for each(var type:String in order)
+         {
+            if(param1 == null || param1[type] == null || seen[type])
+            {
+               continue;
+            }
+            seen[type] = true;
+            if(type == "avatar" || type == "equip" || type == "avatar_soul" || type == "equip_soul")
+            {
+               for(var id:String in param1[type])
+               {
+                  var one:Object = {};
+                  one[id] = param1[type][id];
+                  parts.push(GlobalFunction.getAwardByType(type,one).msg);
+               }
+            }
+            else
+            {
+               parts.push(GlobalFunction.getAwardByType(type,param1[type]).msg);
+            }
+         }
+         return parts.length > 0 ? parts.join("，") : "无";
+      }
+
+      public function showSweepResult(param1:Object) : void
+      {
+         closeSweepDialog();
+         if(param1 == null)
+         {
+            return;
+         }
+         var modal:Object = GlobalFunction.uiModal(sweepHost(),"扫荡完成",560,440);
+         mSweepModal = modal.root as Sprite;
+         var box:Sprite = modal.box as Sprite;
+         var spent:String = "扫荡" + int(param1.times) + "次，消耗体力" + int(param1.energy_cost) + (int(param1.coin_cost) > 0 ? "，花费金砖" + int(param1.coin_cost) : "") + "。今日免费扫荡剩余" + int(param1.free_left) + "次。";
+         GlobalFunction.uiText(spent,18,GlobalFunction.UI_BROWN,"left",500,56,box,30,74);
+         GlobalFunction.uiText("获得：" + sweepRewardText(param1.gift_dict),19,GlobalFunction.UI_DARK,"left",500,190,box,30,132);
+         var again:LOL_Scale9Button = GlobalFunction.uiButton("再次扫荡",170,60,"normal",box,0,0,function():void
+         {
+            closeSweepDialog();
+            if(stage && data)
+            {
+               onSweep(new Event("triggered"));
+            }
+         });
+         var done:LOL_Scale9Button = GlobalFunction.uiButton("确定",170,60,"primary",box,0,0,closeSweepDialog);
+         GlobalFunction.uiRow([again,done],30,530,340,24,"center");
+      }
+      // END STAGE SWEEP 106
 
       private function onMaterialBuyError(event:NetEvent) : void
       {

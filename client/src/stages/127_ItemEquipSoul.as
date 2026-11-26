@@ -159,7 +159,7 @@ package com.meng52.game.ui.element
          if(mStatus_full)
          {
             _loc3_ = this.index;
-            _loc2_ = Tools.getElementNum(GlobalData.$userData.my_equips);
+            _loc2_ = GlobalData.equipSlotCount();
             if(_loc2_ >= GlobalData.$mConfig_simple.equip_config[0])
             {
                GlobalFunction.popEquipFull();

@@ -800,6 +800,7 @@ package com.meng52.game.ui.element
       private var mSweepAction:String = "";
       private var mSweepModal:Sprite;
       private var mSweepTimes:int = 1;
+      private var mSweepQuotedCost:int;
       private var mSweepCountText:TextField;
       private var mSweepCostText:TextField;
       private var mSweepOk:LOL_Scale9Button;
@@ -974,6 +975,7 @@ package com.meng52.game.ui.element
          var most:int = Math.max(1,sweepMax());
          mSweepTimes = Math.max(1,Math.min(param1,most));
          var quote:Object = GlobalData.stageSweepQuote(mSweepTimes,SendAndSelect.$systemTimer_nowSecond);
+         mSweepQuotedCost = int(quote.cost);
          if(mSweepCountText)
          {
             mSweepCountText.text = mSweepTimes + "次";
@@ -995,7 +997,7 @@ package com.meng52.game.ui.element
             return;
          }
          var times:int = mSweepTimes;
-         var cost:int = int(GlobalData.stageSweepQuote(times,SendAndSelect.$systemTimer_nowSecond).cost);
+         var cost:int = mSweepQuotedCost;
          closeSweepDialog();
          if(cost > int(GlobalData.$userData.coin))
          {

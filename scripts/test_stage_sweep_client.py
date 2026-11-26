@@ -1,5 +1,6 @@
 """The sweep card's free-quota and price preview matches server/stage_sweep.py."""
 import shutil
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -42,6 +43,43 @@ class StageSweepClientTests(unittest.TestCase):
         self.assertIn('>= int(GlobalData.stageSweepPolicy().stars)', source)
         self.assertIn('setupSweep(_loc13_);', source)
         self.assertNotIn('Tools.getGameDayKey', source)  # Tools compiles after this stage
+
+
+    def test_confirm_keeps_the_price_visible_in_the_dialog(self):
+        from test_vital_bar_104 import method
+
+        path = CARD.relative_to(ROOT).as_posix()
+        quote = method(path, 'changeSweepTimes')
+        confirm = method(path, 'confirmSweep').replace('function(receipt:Object):void', 'function(receipt)')
+        script = f"const changeSweepTimes = {quote}, confirmSweep = {confirm};" + '''
+const assert = require("node:assert/strict");
+const int = Number;
+let price = {cost: 20, free: 1};
+let request;
+const GlobalData = {$userData: {uid: "u1", coin: 100}, stageSweepQuote: () => price};
+const SendAndSelect = {
+    $SendServiceAMFDispatcher: {addEventListener() {}},
+    sendAndSelectService(method, params) {
+        assert.equal(method, "user.stage_sweep");
+        request = params;
+    }
+};
+let $sweepLastTimes;
+const card = {
+    mSweepTimes: 1, mSweepQuotedCost: 0, mSweepBusy: false, mSweepAction: "",
+    mSweepEnergy: 5, mSweepCountText: {}, mSweepCostText: {}, mSweepOk: {}, mSweepBtn: {},
+    data: {id: "M_001_1"}, sweepMax: () => 5, sweepDiff: () => 0,
+    closeSweepDialog() {}, onSweepError() {}, changeSweepTimes, confirmSweep
+};
+card.changeSweepTimes(2);
+assert.match(card.mSweepOk.text, /20金砖/);
+price = {cost: 40, free: 0};
+card.confirmSweep();
+assert.equal(request.times, 2);
+assert.equal(request.max_coin, 20);
+'''
+        result = subprocess.run(["node"], input=script, text=True, encoding="utf-8", capture_output=True, cwd=ROOT)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == '__main__':

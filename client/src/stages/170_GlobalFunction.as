@@ -7923,7 +7923,7 @@ package com.meng52.game.global
          var skin:String=kind=="primary"?"UI_btn_enterGame_0_0000":(kind=="small"?"UI_btn_smallFun_1_0000":"UI_btn_normalFun_0000");
          var button:LOL_Scale9Button=new LOL_Scale9Button(label,w,h,skin);
          button.fontSize=h>=56?22:(h>=42?20:18);button.x=x;button.y=y;
-         if(handler!=null) button.addEventListener("triggered",function(event:Event):void {handler();});
+         if(handler!=null) button.addEventListener("triggered",function(event:starling.events.Event):void {handler();});
          if(parent) parent.addChild(button);
          return button;
       }

@@ -14,7 +14,7 @@
       "index": 2,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/002_GlobalFunction.as",
-      "source_sha256": "f46867ceb7496fc24e0c2598a620d5b9fda34a5743c521688db1e40e2c5bcc50"
+      "source_sha256": "44e591cdcb317dc63d28b68e674d9dac4d2154c25e52d3f755b2376b18d94d0e"
     },
     {
       "index": 3,
@@ -104,7 +104,7 @@
       "index": 17,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/017_GlobalFunction.as",
-      "source_sha256": "741d59ac4450f62c1c054e207767c39a20b80a13702ad0f436c8388c3cfed7d7"
+      "source_sha256": "4c28f20dc14d0f32d5cb23db32d08f32588359683d2eb5430dd547cab5fea5bd"
     },
     {
       "index": 18,
@@ -284,7 +284,7 @@
       "index": 47,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/045_GlobalFunction.as",
-      "source_sha256": "e36de6d00c70a760391ffbcb17173fb0dd57dae3a4c3c44c398d91fc52580c4d"
+      "source_sha256": "fa5f382455599ac27867c6ab607901186859679d323f6cedf14d67ec649f5a4d"
     },
     {
       "index": 48,
@@ -350,7 +350,7 @@
       "index": 58,
       "class": "com.meng52.game.ui.element.ItemPVEcombat",
       "source": "client/src/stages/056_ItemPVEcombat.as",
-      "source_sha256": "b9504a429d21886b78ccb1380197f9a80ea91d9c2af0ca0b9558a71c0bf60f59"
+      "source_sha256": "b67f30503d7984ca9d3b26b52212834e0a15f63b438ec3f06b8aa904d2655623"
     },
     {
       "index": 59,
@@ -1029,7 +1029,7 @@
       "index": 171,
       "source": "client/src/stages/170_GlobalFunction.as",
       "class": "com.meng52.game.global.GlobalFunction",
-      "source_sha256": "e2d0b88b81cfe2c11983868324f0d6d3b6f41f1746ac23e152c210a80ddb3332",
+      "source_sha256": "2acd3da9e56847c96aa8b69a8e2cc236cf3df47d2a0c48603ff296709ed5324e",
       "methods": [
         "getTeamPower",
         "getUserCombat"

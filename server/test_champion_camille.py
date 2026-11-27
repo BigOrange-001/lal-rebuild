@@ -38,13 +38,14 @@ class ChampionCamilleTests(unittest.TestCase):
         enemies = enemies or [self.unit('A_1028_6', 2, 1, .20), self.unit('A_1001_5', 2, 1, .26)]
         return SkillCompleteBattle([owner, *extra_allies], enemies, config=self.cfg)
 
-    def test_engage_spawns_at_cast_origin_and_replaces_one_trophy_per_owner(self):
+    def test_engage_spawns_at_cast_origin_and_trophies_coexist(self):
         battle = self.battle(extra_allies=(self.unit(CHAMPION, 1, 2, .80),))
         owner, friend = battle.a
         target, front = battle.b
         for unit, ap in ((target, 100), (front, 10)):
             unit.update(ap=ap, hp=100000, hp_max=100000)
         self.assertEqual(owner['skill']['skills'][0][5:9], [2, .15, 4, .20])
+        self.assertEqual(owner['skill']['pl'][:2], [0, 3])
         origin = owner['pos']
         with patch.object(battle, 'hit', wraps=battle.hit) as hit:
             self.assertTrue(battle._apply_native_skill(owner, battle.b))
@@ -57,13 +58,23 @@ class ChampionCamilleTests(unittest.TestCase):
                          (owner['hp_max'], battle._get_de_ph(owner), battle._get_de_ma(owner), 0))
         self.assertTrue(battle._apply_native_skill(friend, battle.b))
         friend_cup = battle.a[-1]
+        original_lifetime = battle._buff(cup, 'summon')
+        battle._settle_turn_buffs(cup)
         battle._add_buff(cup, 'bless', 0)
         self.assertTrue(battle._apply_native_skill(owner, battle.b))
-        self.assertEqual(cup['hp'], 0)
+        self.assertGreater(cup['hp'], 0)
+        self.assertIs(battle._buff(cup, 'summon'), original_lifetime)
+        self.assertEqual(original_lifetime.round, 4)
         self.assertGreater(friend_cup['hp'], 0)
-        self.assertEqual(battle.a[-1]['line'], 1)
+        new_cup = battle.a[-1]
+        self.assertEqual(new_cup['line'], 1)
+        self.assertEqual(battle._buff(new_cup, 'summon').round, 5)
+        for _ in range(5):
+            battle._settle_turn_buffs(cup)
+        self.assertEqual(cup['hp'], 0)
+        self.assertGreater(new_cup['hp'], 0)
 
-    def test_rain_heals_each_champion_and_trophy_bless_does_not_extend_life(self):
+    def test_rain_heals_each_champion_and_bless_does_not_extend_trophy_life(self):
         friend = self.unit(CHAMPION, 1, 2, .80)
         other = self.unit('A_1001_5', 1, 2, .90)
         battle = self.battle(extra_allies=(friend, other))
@@ -79,15 +90,19 @@ class ChampionCamilleTests(unittest.TestCase):
         self.assertFalse(battle._buff(owner, 'stun'))
         self.assertFalse(battle._buff(owner, 'bless'))
         life = battle._buff(cup, 'summon')
-        life.round = 1
+        self.assertEqual(life.round, 5)
+        for _ in range(4):
+            battle._settle_turn_buffs(cup)
+        self.assertEqual(cup['hp'], 700)
+        self.assertEqual(life.round, 1)
         cup['hp'] = 0
         battle._resolve_lethal(cup)
         self.assertGreater(cup['hp'], 0)
         self.assertEqual(life.round, 1)
         self.assertFalse(battle._buff(cup, 'bless'))
         battle._add_buff(cup, 'bless', 0)
-        battle._settle_turn_buffs(cup)
-        battle._settle_turn_buffs(cup)
+        self.assertFalse(battle._settle_turn_buffs(cup))
+        self.assertTrue(battle._settle_turn_buffs(cup))
         self.assertEqual(cup['hp'], 0)
 
     def test_wild_form_keeps_stats_and_two_actions_and_can_be_purified(self):

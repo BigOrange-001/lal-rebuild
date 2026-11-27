@@ -13024,9 +13024,6 @@ package com.meng52.game.module.avatar
          unit.hit=unit.flee=unit.crit=unit.tough=0; unit.abyssReduction104=0;
          unit.addBuff("summon",life);
          GameMap.currentMap.addAvatar(unit,team,line,pos,false);
-         var old:Avatar=abilityState.camilleTrophy as Avatar;
-         if(old && old.hp>0) {old.hp=0; old.deadFast();}
-         abilityState.camilleTrophy=unit;
          return true;
       }
 

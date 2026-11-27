@@ -51,10 +51,10 @@ def apply_champion_camille(document):
                                 actionTargetPolicies=['ally_self'], actionTargetMaxTargets=[1], calibration_104=True)
 
     engage = [TROPHY, 1, .075, 2, .10, 300, 3, 2, 5]
-    skill(NORMAL, '强势开团', 'engage', 0, 2,
+    skill(NORMAL, '强势开团', 'engage', 0, 3,
           '在原地召唤奖杯，再突进至全场攻击力最高的敌方英雄所在分路，将其拉至前排并眩晕2回合。'
           '对其和落点300范围内同路最多3名敌人，各造成{rank:0:5}攻击力＋{rank:0:6}目标最大生命的物理伤害，'
-          '再造成{rank:0:7}攻击力＋{rank:0:8}目标最大生命的真实伤害。奖杯存续自身5个行动回合，每位卡密尔限一座。',
+          '再造成{rank:0:7}攻击力＋{rank:0:8}目标最大生命的真实伤害。每座奖杯存续自身5个行动回合，可与其他奖杯共存。',
           engage, [[0, index, engage[index-4] / 9] for index in (5, 6, 7, 8)])
     skill(CAPTAIN, '冠军打野', 'smite', 1, 2,
           '使全场最大生命最高的敌方英雄变成同品质野怪2个自身行动回合，突进至其所在分路，'

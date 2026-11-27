@@ -73,11 +73,6 @@ def execute(battle, owner, ability, action):
     panel = battle._summon_panel_snapshot(owner)
     trophy['hp'] = trophy['hp_max'] = panel['hp_max']
     trophy['de_ph'], trophy['de_ma'] = panel['de_ph'], panel['de_ma']
-    state = battle.state(owner)
-    old = state.get('camille_trophy')
-    if old is not None and old['hp'] > 0:
-        old['hp'] = 0
-    state['camille_trophy'] = trophy
     enemy_side = battle._team_number(target)
     toward_owner = 1 if enemy_side == 2 else -1
     lane = [unit for unit in foes if unit['line'] == target['line']]

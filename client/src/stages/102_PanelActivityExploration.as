@@ -1601,7 +1601,7 @@ class AbyssChoicePanel104 extends AbyssPanel104
       }
       var bottomY:Number = by - 90;
       // Every offer may be skipped (server rule since map_version 2, legacy saves too).
-      addButton("跳过，不加入",lx + 50,bottomY,190,66,function():void
+      addButton("跳过，不加入",lx + 50,bottomY,230,66,function():void
       {
          AbyssCore104.send("user.abyss_skip",{},function(d:Object):void
          {
@@ -1958,7 +1958,9 @@ class AbyssRestPanel104 extends AbyssPanel104
       }
       if(!any) addText("当前没有可进行此项提升的英雄，可切换选项或离开",lx + 20,by - 128,iw - 40,26,17,AbyssCore104.COLOR_RED,"center");
       var name:String = heroId && r.pool[heroId] ? AbyssCore104.heroName(String(r.pool[heroId].aid)) : "";
-      addButton(heroId ? (option == "skill" ? "升级" + name + "技能" : "将" + name + "升为橙卡") : "请先选择英雄",lx + 30,by - 90,iw - 250,66,function():void
+      // 提升 and 离开 share one size: half the row each.
+      var actionW:Number = (iw - 90) * 0.5;
+      addButton(heroId ? (option == "skill" ? "升级" + name + "技能" : "将" + name + "升为橙卡") : "请先选择英雄",lx + 30,by - 90,actionW,66,function():void
       {
          if(!heroId) return;
          AbyssCore104.send("user.abyss_rest",{"hero_id":heroId,"option":option},function(d:Object):void
@@ -1967,7 +1969,7 @@ class AbyssRestPanel104 extends AbyssPanel104
             AbyssCore104.toast(option == "skill" ? name + "技能升至" + resultSlv + "级" : name + "已升为橙卡");
          });
       },heroId != null);
-      addButton("离开",lx + iw - 200,by - 90,170,66,function():void
+      addButton("离开",lx + iw - 30 - actionW,by - 90,actionW,66,function():void
       {
          AbyssCore104.send("user.abyss_rest",{"option":"leave"},function(d:Object):void
          {
@@ -2208,14 +2210,14 @@ class AbyssConfirmPanel104 extends AbyssPanel104
       var y:Number = by - 100;
       if(dangerLabel)
       {
-         var danger:LOL_Scale9Button = addButton(dangerLabel,lx + 70,y,200,70,dangerFn);
+         var danger:LOL_Scale9Button = addButton(dangerLabel,lx + 70,y,200,66,dangerFn);
          if(dangerRed) danger.fontColor = AbyssCore104.COLOR_RED;
-         var safe:LOL_Scale9Button = addButton(safeLabel,lx + iw - 270,y,200,70,safeFn);
+         var safe:LOL_Scale9Button = addButton(safeLabel,lx + iw - 270,y,200,66,safeFn);
          // The safe choice is the default: mark it like the native highlighted button.
          safe.fontColor = 0x1A6F1A;
-         selectMark(safe.x - 6,safe.y - 6,212,82,"current");
+         selectMark(safe.x - 6,safe.y - 6,212,78,"current");
       }
-      else addButton(safeLabel,lx + (iw - 200) * 0.5,y,200,70,safeFn);
+      else addButton(safeLabel,lx + (iw - 200) * 0.5,y,200,66,safeFn);
       if(mBtn_close) mBtn_close.visible = tapOutsideIsSafe;
    }
 }
@@ -2553,7 +2555,9 @@ class AbyssRelicRows104
       {
          if(e.getTouch(hit,"ended") && onInfo != null) onInfo(id);
       });
-      var btn:LOL_Scale9Button = new LOL_Scale9Button(String(st.label),84,45,st.red ? "UI_btn_smallFun_1_0000" : "UI_btn_enterGame_0_0000",true,false);
+      // Same skin as the abyss panels' other buttons; a removal is marked by red text only.
+      var btn:LOL_Scale9Button = new LOL_Scale9Button(String(st.label),84,45,"UI_btn_normalFun_0000",true,false);
+      if(st.red) btn.fontColor = AbyssCore104.COLOR_RED;
       btn.x = rowW - 84 - 10;
       btn.y = int((105 - 45 + 26) * 0.5);
       btn.enabled = Boolean(st.enabled);

@@ -224,7 +224,9 @@ console.log(JSON.stringify({count:nodes.length,positions:nodes.map(v=>v.x),pulse
         self.assertLessEqual(result['bottom'],363)
         self.assertFalse(result['robot']['playing']);self.assertFalse(result['robot']['loop'])
         self.assertEqual(result['robot']['scaleX'],2)
-        self.assertTrue(all(b['texture']=='UI_btn_normalFun_0000' for b in result['buttons']))
+        # Same gold skin and size as the task rows' claim buttons.
+        self.assertTrue(all(b['texture']=='UI_btn_enterGame_0_0000' for b in result['buttons']))
+        self.assertEqual({b['width'] for b in result['buttons']},{104})
         self.assertLessEqual(result['buttons'][1]['x']+result['buttons'][1]['width'],248)
 
     def test_zhuabao_single_and_ten_play_once_then_show_awards(self):

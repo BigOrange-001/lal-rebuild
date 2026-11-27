@@ -42,6 +42,12 @@ def targets(owner,enemies,allies,action,anchors,reach):
         return [unit] if unit is not None and unit.get('hp',0)>0 and same==good else []
     if selector=='previous':
         return [u for u in (anchor or {}).get('units',[]) if u.get('hp',0)>0]
+    if selector == 'ally_lane_lowest_hp_other_hero':
+        pool = [u for u in allies if u is not owner and u.get('hp', 0) > 0
+                and u.get('line') == owner['line'] and str(u.get('aid', '')).startswith('A_1')
+                and not u.get('summoned') and not u.get('summon_owner')]
+        best = min(pool, key=lambda u: (u['hp'] / max(1, u['hp_max']), abs(u['pos'] - owner['pos'])), default=None)
+        return [best] if best is not None else []
     if selector in ('self','ally_radius','all_allies'):
         pool=[u for u in allies if u.get('hp',0)>0]
     else:pool=[u for u in enemies if u.get('hp',0)>0]

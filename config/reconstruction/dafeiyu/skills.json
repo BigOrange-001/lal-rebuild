@@ -1,0 +1,85 @@
+{
+  "skills": [
+    {
+      "id": "dafeiyu_attack",
+      "name": "大肥鱼出击！",
+      "model": "effect-sequence-v1",
+      "warmup": 0,
+      "cooldown": 1,
+      "range": 3000,
+      "maxLevel": 10,
+      "trigger": {"kind": "ready"},
+      "description": "为自身和本路400范围内的友军各回复相当于自身90%攻击力＋5%最大生命的生命，施加1层净化，攻击力提高20%，持续1回合。\n对本路生命比例最低的敌人依次造成60%、30%攻击力的真实伤害，击退400距离并眩晕1回合。\n对全体敌人造成15%攻击力的真实伤害，施加10%破甲，持续1回合。",
+      "rankInfoTemplate": "为自身和本路{flat:0:4}范围内的友军各回复相当于自身{rank:0:5}攻击力＋{rank:0:6}最大生命的生命，施加1层净化，攻击力提高{rank:2:7}，持续{flat:2:9}回合。\n对本路生命比例最低的敌人依次造成{rank:3:5}、{rank:4:5}攻击力的真实伤害，击退{flat:5:10}距离并眩晕{flat:6:9}回合。\n对全体敌人造成{rank:7:5}攻击力的真实伤害，施加{rank:8:7}破甲，持续{flat:8:9}回合。",
+      "actions": [
+        {"attackRatio": 0.9, "growth": {"attackRatio": 0.0999, "maxHpRatio": 0.00555}, "maxHpRatio": 0.05, "radius": 400, "target": "ally_radius", "type": "heal"},
+        {"buff": "purify", "radius": 400, "target": "ally_radius", "type": "buff"},
+        {"amount": 0.2, "buff": "strong", "growth": {"amount": 0.0222}, "radius": 400, "target": "ally_radius", "type": "buff"},
+        {"attackRatio": 0.6, "growth": {"attackRatio": 0.0666}, "target": "lane_lowest_hp", "type": "damage"},
+        {"attackRatio": 0.3, "centerAction": 3, "growth": {"attackRatio": 0.0333}, "target": "previous", "type": "damage"},
+        {"centerAction": 3, "distance": 400, "target": "previous", "type": "push"},
+        {"buff": "stun", "centerAction": 3, "target": "previous", "type": "buff"},
+        {"attackRatio": 0.15, "growth": {"attackRatio": 0.01665}, "target": "all_enemies", "type": "damage"},
+        {"amount": 0.1, "buff": "sunder", "growth": {"amount": 0.0111}, "target": "all_enemies", "type": "buff"}
+      ]
+    },
+    {
+      "id": "o_jingjing",
+      "name": "哦鲸鲸！",
+      "model": "effect-sequence-v1",
+      "warmup": 1,
+      "cooldown": 2,
+      "range": 3000,
+      "maxLevel": 1,
+      "trigger": {"kind": "ready"},
+      "description": "在本路召唤鲸鲸，继承自身召唤时135%的对应属性。鲸鲸在自身行动3次后消失，再次召唤时替换旧鲸鲸。\n自身和本路生命比例最低的另一名友方英雄获得神佑，持续3回合。\n全体友军精准提高10000点，物防与法防提高35%，并各获得相当于大肥鱼最大生命25%的护盾，均持续3回合。",
+      "rankInfoTemplate": "在本路召唤鲸鲸，继承自身召唤时{rank:0:12}的对应属性。鲸鲸在自身行动{flat:0:13}次后消失，再次召唤时替换旧鲸鲸。\n自身和本路生命比例最低的另一名友方英雄获得神佑，持续{flat:1:9}回合。\n全体友军精准提高{flat:4:7}点，物防与法防提高{rank:3:7}，并各获得相当于大肥鱼最大生命{rank:5:6}的护盾，均持续{flat:5:9}回合。",
+      "actions": [
+        {"statRatio": 1.35, "type": "summon", "unit": "self:hero/whale/quality5"},
+        {"type": "buff", "buff": "bless", "duration": 3},
+        {"type": "buff", "buff": "bless", "duration": 3},
+        {"amount": 0.35, "buff": "steel", "duration": 3, "target": "all_allies", "type": "buff"},
+        {"amount": 10000, "buff": "hitup", "duration": 3, "target": "all_allies", "type": "buff"},
+        {"duration": 3, "maxHpRatio": 0.25, "target": "all_allies", "type": "buff"}
+      ]
+    },
+    {
+      "id": "dafeiyu_guard",
+      "name": "净化护航",
+      "model": "effect-sequence-v1",
+      "warmup": 0,
+      "cooldown": 2,
+      "range": 3000,
+      "maxLevel": 1,
+      "trigger": {"buff": "purify", "kind": "absent_buff"},
+      "description": "自身没有净化且技能就绪时，获得3层净化。全体友军各获得相当于大肥鱼10%最大生命＋200%当前攻击力的护盾，持续1回合。",
+      "rankInfoTemplate": "自身没有净化且技能就绪时，获得{flat:0:7}层净化。全体友军各获得相当于大肥鱼{rank:1:6}最大生命＋{rank:1:5}当前攻击力的护盾，持续{flat:1:9}回合。",
+      "actions": [
+        {"type": "buff", "buff": "purify", "amount": 3},
+        {"type": "buff", "target": "all_allies", "maxHpRatio": 0.1, "attackRatio": 2}
+      ]
+    },
+    {
+      "id": "whale_charge",
+      "name": "鲸鱼冲锋！",
+      "model": "effect-sequence-v1",
+      "warmup": 0,
+      "cooldown": 2,
+      "range": 3000,
+      "maxLevel": 1,
+      "trigger": {"kind": "ready"},
+      "description": "突进至本路最前排敌人面前，造成200%攻击力的真实伤害，击退1000距离，眩晕1回合并施加40%破甲，持续1回合。\n对主目标受击前位置周围300范围内的其他同路敌人造成100%攻击力的真实伤害，击退500距离，施加30%破甲，持续1回合。",
+      "rankInfoTemplate": "突进至本路最前排敌人面前，造成{rank:1:5}攻击力的真实伤害，击退{flat:2:10}距离，眩晕{flat:3:9}回合并施加{rank:4:7}破甲，持续{flat:4:9}回合。\n对主目标受击前位置周围{flat:5:4}范围内的其他同路敌人造成{rank:5:5}攻击力的真实伤害，击退{flat:6:10}距离，施加{rank:7:7}破甲，持续{flat:7:9}回合。",
+      "actions": [
+        {"target": "lane_front", "type": "move"},
+        {"attackRatio": 2, "centerAction": 0, "target": "previous", "type": "damage"},
+        {"centerAction": 0, "distance": 1000, "target": "previous", "type": "push"},
+        {"buff": "stun", "centerAction": 0, "target": "previous", "type": "buff"},
+        {"amount": 0.4, "buff": "sunder", "centerAction": 0, "target": "previous", "type": "buff"},
+        {"attackRatio": 1, "centerAction": 0, "excludeCenter": true, "radius": 300, "target": "enemy_radius", "type": "damage"},
+        {"centerAction": 5, "distance": 500, "target": "previous", "type": "push"},
+        {"amount": 0.3, "buff": "sunder", "centerAction": 5, "target": "previous", "type": "buff"}
+      ]
+    }
+  ]
+}

@@ -993,7 +993,8 @@ package com.meng52.game.module.skill
          }
          if(selector == "self") return avatar.hp > 0 ? [avatar] : [];
          if(selector == "enemy_radius" && !anchor) return result;
-         var allied:Boolean = selector == "all_allies" || selector == "ally_radius";
+         var lowestAlly:Boolean = selector == "ally_lane_lowest_hp_other_hero";
+         var allied:Boolean = selector == "all_allies" || selector == "ally_radius" || lowestAlly;
          var source:Vector.<Avatar> = GameMap.currentMap.getAliveList(allied ? avatar.team : avatar.otherTeam) as Vector.<Avatar>;
          var centerLine:int = anchor ? int(anchor.line) : avatar.line;
          var centerPos:int = anchor ? int(anchor.pos) : avatar.pos;
@@ -1005,9 +1006,14 @@ package com.meng52.game.module.skill
             if(!unit || unit.hp <= 0) continue;
             if(selector == "all_allies" || selector == "all_enemies") { result.push(unit); continue; }
             if(selector == "lane_all") { if(unit.line == avatar.line && Math.abs(unit.pos-avatar.pos) <= Math.abs(skillSetData.range)) result.push(unit); continue; }
-            if(selector == "lane_front" || selector == "lane_lowest_hp")
+            if(selector == "lane_front" || selector == "lane_lowest_hp" || lowestAlly)
             {
-               if(unit.line != avatar.line || Math.abs(unit.pos-avatar.pos) > Math.abs(skillSetData.range)) continue;
+               if(unit.line != avatar.line) continue;
+               if(lowestAlly)
+               {
+                  if(unit === avatar || unit.getType() != 1 || unit.isManualSummonUnit) continue;
+               }
+               else if(Math.abs(unit.pos-avatar.pos) > Math.abs(skillSetData.range)) continue;
                score = selector == "lane_front" ? Math.abs(unit.pos-avatar.pos) : Number(unit.hp)/Math.max(1,unit.getHpMax());
                if(score < bestScore || (score == bestScore && best && Math.abs(unit.pos-avatar.pos) < Math.abs(best.pos-avatar.pos)))
                { best = unit; bestScore = score; }

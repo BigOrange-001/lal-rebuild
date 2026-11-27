@@ -2657,6 +2657,8 @@ class GameplayRosterEquipment:
             skill0 = self._skill(bond_skills['skill'], max(1, int(hero.get('slv', 1))))
         if bond_skills.get('leader_skill'):
             skill1 = self._skill(bond_skills['leader_skill'])
+        if bond_skills.get('skillB'):
+            skillb = self._skill(bond_skills['skillB'])
         stats['bonds_104'] = [bond['id'] for bond in bonds]
         from equipment_bonds_104 import profile_equipment_bonds, skill_id as equipment_skill_id, apply_equipment_stats
         equipment_bonds=profile_equipment_bonds(bond_config,profile,key,hero_only)

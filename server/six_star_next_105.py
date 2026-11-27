@@ -4,7 +4,7 @@ from six_star_balance_105 import HEAL, MAGIC, SHIELD, compound, endpoint, text, 
 from skill_output_104 import RATE
 
 PASSIVE_NAMES = {
-    1053: '霰弹交火', 1054: '巨龙真身', 1056: '断刃震荡', 1060: '光束护盾',
+    1053: '新命运', 1054: '巨龙真身', 1056: '断刃震荡', 1060: '光束护盾',
     1078: '弹射狩猎', 1086: '月银之刃', 1098: '死亡契约', 1103: '虚灵号令',
     1114: '风暴龙光环', 1127: '镜花水月', 1205: '吸元秘术',
 }

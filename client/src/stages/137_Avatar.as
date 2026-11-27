@@ -232,6 +232,7 @@ package com.meng52.game.module.avatar
          captain = equipmentSkillId104(captain);
          var heroRow104:Object = GlobalData.$mConfig_avatar[avatarData.id];
          var passive104:String = heroRow104 && heroRow104.pl.length>13 ? heroRow104.pl[13] : null;
+         if(variant && variant.skillB && sources && sources.skillB == passive104) passive104 = String(variant.skillB);
          passive104 = equipmentSkillId104(passive104);
          if(passive104 && (!skillB || skillB.skillSetData.id != passive104)) skillB = new SkillSet(passive104,this,1);
          if(normal && (!skill0 || skill0.skillSetData.id != normal || skill0.lv != slv)) skill0 = new SkillSet(normal,this,slv);
@@ -264,7 +265,8 @@ package com.meng52.game.module.avatar
                if(benefit.stats) for(var stat:String in benefit.stats) effects.push(labels[stat]+"提高"+Math.round(Number(benefit.stats[stat])*10000)/100+"%");
                var flats:Object = benefit.flat_by_quality ? benefit.flat_by_quality[String(quality)] : null;
                if(flats) for(stat in flats) effects.push(labels[stat]+"增加"+flats[stat]);
-               if(benefit.skill_rate) effects.push("技能数值提高"+Math.round(Number(benefit.skill_rate)*100)+"%");
+               if(benefit.skill_rate) effects.push((benefit.passive_skill_rate ? "小技能和大招数值提高" : "技能数值提高")+Math.round(Number(benefit.skill_rate)*100)+"%");
+               if(benefit.passive_skill_rate && hero && hero.pl.length>13 && hero.pl[13]) effects.push("被动数值提高"+Math.round(Number(benefit.passive_skill_rate)*100)+"%");
                if(benefit.info) effects.push(String(benefit.info));
                if(bond.focus==member)
                {

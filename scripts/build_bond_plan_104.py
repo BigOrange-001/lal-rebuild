@@ -178,11 +178,14 @@ def build():
                 keys = ['hp','de_ph','de_ma'] if style in ('guard','banner') else ['ap','hp'] if style in ('light','tide') else ['ap']
                 budget = {2:.28,3:.40,4:.52,5:.64}[n]
                 benefits[family] = {'stats': {key: budget / len(keys) for key in keys}}
+        values_only = name == '赏金猎团'
+        if values_only:
+            benefits[families[0]] = {'skill_rate': .44, 'passive_skill_rate': .44}
         if name == '武道争锋':
             # Yi has no orange card: use the quality-independent panel budget.
             benefits['A_1012'] = {'stats': {'ap': .32, 'hp': .32}}
         bond = {'id': f'b{index+1:03}', 'name': name, 'relation': relation, 'families': families, 'benefits': benefits}
-        if n >= 3:
+        if n >= 3 and not values_only:
             bond['focus'] = families[0]
             bond['mechanism'] = {'normal': mechanism(name, style, n >= 4)}
             if n >= 4:
@@ -307,13 +310,6 @@ def customize_rework(bond, hero):
         put('captain','幽牢审判', [['dispel_good',1,'FX60_PURIFY'],['stun',4.8,2,1,'FX60_STUN'],['heal_damage_sum',.3,[1],heal]],
             ['enemy_lane_frontmost','enemy_lane_frontmost','ally_self'],[4,4,1],
             '驱散本路4名敌人的增益，再造成480%攻击魔伤并眩晕1回合，自身恢复累计伤害的30%，专克同路密集增益阵容。',[2,3,3000,0,99,0])
-    elif hero==1053:
-        put('normal','破阵霰弹', [['sunder_percent',3.2,1,.3,2,'FX60_SUNDER'],['push_aoe',3000,350,'push']],
-            ['enemy_lane_frontmost','enemy_lane_all'],[2,2],
-            '轰击本路2名前排造成320%攻击物伤并削弱30%双防2回合，击退350码，为猎团打开火力窗口。强化每级伤害+32%。',[0,2,3000,0,99,0],[[0,1,.32]])
-        put('captain','悬赏清场', [['dispel_good',1,'FX60_PURIFY'],['locked_combo_group',2,3,2.2,1,0,slash]],
-            ['enemy_global_lowest_hp_ratio_hero']*2,[2,2],
-            '跨路锁定生命比例最低的2名英雄，先驱散增益，再各轰击3次，每击220%攻击物伤，收割分散的残血目标。',[2,3,9999,0,99,1])
     elif hero==1217:
         put('normal','坏孩子礼盒', [['dispel_good',1,'FX60_PURIFY'],['weak_percent',3.0,2,.25,2,'FX60_WEAK']],
             ['enemy_global_highest_attack_hero']*2,[1,1],

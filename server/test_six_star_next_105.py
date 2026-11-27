@@ -33,6 +33,59 @@ class NextSixStarTests(TestCase):
             battle._injured(owner,100,1,source=foes[0])
         self.assertEqual(owner['_skill_cd'],3)
 
+    def test_graves_bounty_hunters_scales_existing_skills(self):
+        from battle_engine import _native_skill_snapshot
+        from bonds_104 import active_bonds, skill_ids
+
+        cfg = self.fixture.cfg
+        for quality in (5, 6):
+            roster = [f'A_{number}_{quality}' for number in (1053, 1096, 1105, 1135)]
+            aid = roster[0]
+            bonds = active_bonds(cfg, aid, roster)
+            self.assertEqual([bond['id'] for bond in bonds], ['b106'])
+            variants = skill_ids(cfg, aid, bonds)
+            for field, slot in (('skill', 10), ('leader_skill', 11)):
+                with self.subTest(quality=quality, slot=slot):
+                    base_id = cfg['avatar'][aid]['pl'][slot]
+                    boosted_id = variants[field]
+                    base = _native_skill_snapshot(cfg, base_id, 10)
+                    boosted = _native_skill_snapshot(cfg, boosted_id, 10)
+                    self.assertEqual(cfg['skill'][boosted_id]['name'], cfg['skill'][base_id]['name'])
+                    self.assertEqual(boosted['pl'], base['pl'])
+                    self.assertEqual([a[0] for a in boosted['skills']], [a[0] for a in base['skills']])
+                    action, coefficient = (0, 5) if (quality, slot) == (6, 10) else (2, 1)
+                    self.assertAlmostEqual(boosted['skills'][action][coefficient],
+                                           base['skills'][action][coefficient] * 1.44)
+
+    def test_graves_bounty_hunters_boosts_passive_in_battle_snapshot(self):
+        from gameplay_roster import GameplayRosterEquipment
+
+        cfg = self.fixture.cfg
+        roster = [f'A_{number}_6' for number in (1053, 1096, 1105, 1135)]
+        ids = [f'{aid}|{i}' for i, aid in enumerate(roster)]
+        profile = {
+            'avatars': {iid: {'aid': aid, 'lv': 60} for iid, aid in zip(ids, roster)},
+            'team': [ids], 'as_equips': [[] for _ in ids], 'my_equips': {},
+            'attrs': {'team_num': 0},
+        }
+        equipment = GameplayRosterEquipment(None, {'cfg': cfg})
+        bonded = equipment.battle_attributes(profile, ids[0])['skillB']
+        profile['team'] = [ids[:-1]]
+        unbonded = equipment.battle_attributes(profile, ids[0])['skillB']
+        self.assertNotEqual(bonded['skid'], unbonded['skid'])
+        self.assertEqual(cfg['skill'][bonded['skid']]['name'], '新命运')
+        self.assertEqual(bonded['pl'], unbonded['pl'])
+        self.assertEqual(bonded['skills'][0][:4], unbonded['skills'][0][:4])
+
+        battle, owner, foes = self.arena(1053)
+        owner['skillB'] = bonded
+        self.assertEqual(battle._get_range(owner), 500)
+        for distance, coefficient in ((200, 4), (350, 2.8), (500, 1.8)):
+            foes[0]['pos'] = owner['pos'] - distance
+            with patch.object(battle, '_native_damage', wraps=battle._native_damage) as hit:
+                battle._basic_attack(owner, foes[0])
+                self.assertAlmostEqual(hit.call_args.args[2], coefficient * 1.44)
+
     def test_shyvana_transforms_once_and_shields_from_cross_lane_burn(self):
         battle, owner, foes = self.arena(1054)
         old = owner['hp_max']

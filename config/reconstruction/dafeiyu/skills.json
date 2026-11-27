@@ -36,8 +36,8 @@
       "rankInfoTemplate": "在本路召唤鲸鲸，继承自身召唤时{rank:0:12}的对应属性。鲸鲸在自身行动{flat:0:13}次后消失，再次召唤时替换旧鲸鲸。\n自身和本路生命比例最低的另一名友方英雄获得神佑，持续{flat:1:9}回合。\n全体友军精准提高{flat:4:7}点，物防与法防提高{rank:3:7}，并各获得相当于大肥鱼最大生命{rank:5:6}的护盾，均持续{flat:5:9}回合。",
       "actions": [
         {"statRatio": 1.35, "type": "summon", "unit": "self:hero/whale/quality5"},
-        {"type": "buff", "buff": "bless", "duration": 3},
-        {"type": "buff", "buff": "bless", "duration": 3},
+        {"type": "buff", "buff": "timed_bless", "duration": 3},
+        {"type": "buff", "buff": "timed_bless", "duration": 3},
         {"amount": 0.35, "buff": "steel", "duration": 3, "target": "all_allies", "type": "buff"},
         {"amount": 10000, "buff": "hitup", "duration": 3, "target": "all_allies", "type": "buff"},
         {"duration": 3, "maxHpRatio": 0.25, "target": "all_allies", "type": "buff"}

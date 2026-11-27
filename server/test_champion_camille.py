@@ -153,3 +153,20 @@ class ChampionCamilleTests(unittest.TestCase):
         battle._injured(target, 1000, 3, source=owner, derived=True)
         self.assertEqual(target['hp'], 1)
         self.assertTrue(battle.demon_fury(target))
+
+    def test_wild_form_blocks_direct_on_hit_passives_without_blocking_basic_damage(self):
+        for aid in ('A_1086_6', 'A_1103_6'):
+            with self.subTest(aid=aid):
+                battle = self.battle(enemies=[self.unit(aid, 2, 1, .2)])
+                owner, transformed = battle.a[0], battle.b[0]
+                self.assertTrue(battle._apply_native_skill(owner, battle.b, 'leader_skill'))
+                self.assertTrue(battle._buff(transformed, 'camille_wild'))
+                owner.update(hp=100000, hp_max=100000)
+                with (patch.object(battle, '_roll_attack', return_value=1),
+                      patch.object(battle, 'six_next_raw', wraps=battle.six_next_raw) as lunar,
+                      patch.object(battle, 'six_next_command_void', wraps=battle.six_next_command_void) as command):
+                    battle._basic_attack(transformed, owner)
+                self.assertLess(owner['hp'], 100000)
+                lunar.assert_not_called()
+                command.assert_not_called()
+                self.assertIsNone(battle._buff(owner, 'silence'))

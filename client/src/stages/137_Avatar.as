@@ -2116,8 +2116,8 @@ package com.meng52.game.module.avatar
          var passive:Array;
          if(source && source.team!=team)
          {
-            source.sixNextRage105();
-            if(direct)
+            if(!source.camilleWild) source.sixNextRage105();
+            if(direct && !camilleWild)
             {
                sixNextRage105();
                demonHurtTaken105();
@@ -2129,7 +2129,7 @@ package com.meng52.game.module.avatar
                }
             }
             var attack:Object=currentAbilityAttack();
-            if(attack && attack.owner===source)
+            if(attack && attack.owner===source && !source.camilleWild)
             {
                var leech:Number=Number(attack.sixNextLeech || 0);
                if((passive=source.sixNextPassive105("sivir")) && (attack.kind=="basic" || attack.skill===source.skill1))
@@ -2152,7 +2152,7 @@ package com.meng52.game.module.avatar
          }
          if(damage>0 && (kind==7 || dotKind=="burn"))
             for each(var dragon:Avatar in GameMap.currentMap.getAliveList(otherTeam))
-               if(dragon.abilityState.nextDragon && (passive=dragon.sixNextPassive105("shyvana")))
+               if(!dragon.camilleWild && dragon.abilityState.nextDragon && (passive=dragon.sixNextPassive105("shyvana")))
                   dragon.sixNextStackShield105("nextDragonShield",damage*Number(passive[4]));
       }
 
@@ -21010,7 +21010,7 @@ package com.meng52.game.module.avatar
             }
          }
          if(param4 != 4) abilityRecordDamage(param7,param4,abilityHpBefore,abilityDamageTaken);
-         if(modActualDamage>0 && skillB && avatarData.id=="A_1138_6" && sixFollowupPassive105("tahm"))
+         if(!camilleWild && modActualDamage>0 && skillB && avatarData.id=="A_1138_6" && sixFollowupPassive105("tahm"))
             abilityState.sixTahmGrey105=Number(abilityState.sixTahmGrey105 || 0)+modActualDamage;
          var catContext:Object = currentAbilityAttack();
          if(param2 > 1 && param4 >= 1 && param4 <= 3 && param7 && catContext && catContext.owner === param7 && catContext.catCaptainCapture)
@@ -21023,7 +21023,7 @@ package com.meng52.game.module.avatar
          if(param4>=1 && param4<=3 && param7 && catContext &&
             (catContext.sixNamiWave105 || catContext.sixNamiTicket105 || param7.abilityState.sixNamiBless105))
             param7.sixFollowupAfterHit105(this,catContext,abilityDamageTaken+statisticsShield104);
-         if(param7 && param7.skillB && (param4>=1 && param4<=3 || param4>=6 && param4<=8))
+         if(param7 && !param7.camilleWild && param7.skillB && (param4>=1 && param4<=3 || param4>=6 && param4<=8))
          {
             param7.sixBatchAfterDamage105(this,abilityDamageTaken+statisticsShield104);
             param7.sixReactionMfDealt105(this,modActualDamage+statisticsShield104);

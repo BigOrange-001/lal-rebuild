@@ -846,14 +846,15 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
         amount=self.six_followup_damage_received(target,amount,damage_type,source,dot_kind)
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')
-        sustain = source is not None and damage_type in (1, 2, 3, 6, 7, 8) and self.six_reaction_passive(source, 'mf')
+        source_can_trigger = source is not None and not self._buff(source, 'camille_wild')
+        sustain = source_can_trigger and damage_type in (1, 2, 3, 6, 7, 8) and self.six_reaction_passive(source, 'mf')
         if sustain and receipt is None:
             receipt = {}
         dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt,
                               fixed_recovery=fixed_recovery,derived=derived)
         lost=max(0,before-max(0,target.get('hp',0)))
         taken=lost+max(0,shield_before-self._buff_value(target,'shield'))
-        if lost and damage_type in (1,2,3,6,7,8) and self.six_followup_passive(target,'tahm'):
+        if lost and damage_type in (1,2,3,6,7,8) and not self._buff(target,'camille_wild') and self.six_followup_passive(target,'tahm'):
             state['six_tahm_grey']=state.get('six_tahm_grey',0)+lost
         grey=state.get('grey')
         if grey and taken>0 and damage_type!=4:
@@ -866,13 +867,13 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
             if target['hp']<=0 and self.hero(target) and all(u is not target for u in ctx['kills']):ctx['kills'].append(target)
         if source is not None and 1<=damage_type<=3:
             self.six_followup_direct_hit(source,target,ctx,taken)
-        if source is not None and damage_type in (1, 2, 3, 6, 7, 8):
+        if source_can_trigger and damage_type in (1, 2, 3, 6, 7, 8):
             self.six_batch_after_damage(source, target, taken)
         if sustain:
             self.six_reaction_mf_dealt(source, target, receipt.get('actual', 0)+receipt.get('shield_absorbed', 0))
         self.six_next_after_damage(source,target,damage_type,lost,taken,dot_kind,ctx)
         if target.get('hp',0)<=0:self.death(target)
-        if before>0 and target.get('hp',0)<=0 and source is not None and self._team_number(source)!=self._team_number(target):
+        if before>0 and target.get('hp',0)<=0 and source_can_trigger and self._team_number(source)!=self._team_number(target):
             self.queue_cat_skin_kill(source)
             if self.hero(target):self.queue_santa_kill(source)
         return dealt

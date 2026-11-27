@@ -182,11 +182,11 @@ package com.meng52.game.ui.panel
          this.mTabBar.selectedIndex = GlobalData.$tempChatRoomIndex;
          if(chat_cfg.black_status != 0)
          {
-            mBtn_blackList = new LOL_Scale9Button(GlobalLanguageStr.getStr(90717),126,48,"UI_btn_smallFun_1_0000");
+            // Same skin and size as 发送.
+            mBtn_blackList = new LOL_Scale9Button(GlobalLanguageStr.getStr(90717),126,48,"UI_btn_enterGame_0_0000");
             mBtn_blackList.x = this.mImg9_baseBg.width - mBtn_blackList.width - 50;
             mBtn_blackList.y = this.mTabBar.y + 5;
             mBtn_blackList.name = BTN_BLACKLIST;
-            mBtn_blackList.textColor = 1513239;
             mBtn_blackList.addEventListener("triggered",btn_click);
             mBtn_blackList.touchable = false;
             this.addChild(mBtn_blackList);

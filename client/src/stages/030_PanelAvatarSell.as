@@ -383,7 +383,8 @@ package com.meng52.game.ui.screen
          var _i:int = 0;
          while(_i < _stars.length)
          {
-            _button = new LOL_Scale9Button((_labels[_i] as String) + (mRarityFilter[_stars[_i]] === true ? "开" : "关"),56,34,"UI_btn_enterGame_0_0000");
+            // Same skin as this panel's native 清空 / 出售 buttons.
+            _button = new LOL_Scale9Button((_labels[_i] as String) + (mRarityFilter[_stars[_i]] === true ? "开" : "关"),56,34,"UI_btn_normalFun_0000");
             _button.name = "rarity_" + _stars[_i];
             _button.x = param1 + _i * 58;
             _button.y = param2;

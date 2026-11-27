@@ -428,12 +428,13 @@ package com.meng52.game.ui.screen
          if(claimed)
          {
             GlobalFunction.uiText(MainConfig.$isEnglish ? "Claimed" : "已领取",20,GlobalFunction.UI_MUTED,
-               "center",124,48,row,width - 142,30);
+               "center",126,47,row,width - 144,30);
          }
          else
          {
-            GlobalFunction.uiButton(MainConfig.$isEnglish ? "Claim Free" : "免费领取",124,48,"primary",row,
-               width - 142,30,function():void { claimWorkshopHero(aid,String(hero.name)); });
+            // Same size as the soul rows' native 召唤 buttons (126x47).
+            GlobalFunction.uiButton(MainConfig.$isEnglish ? "Claim Free" : "免费领取",126,47,"primary",row,
+               width - 144,30,function():void { claimWorkshopHero(aid,String(hero.name)); });
          }
          return row;
       }

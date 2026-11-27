@@ -243,7 +243,8 @@ package com.meng52.game.ui.element
             _loc18_.x = _loc15_ - 70;
             _loc18_.y = height - 24 - 10;
             addChild(_loc18_);
-            this.mBtn_pk = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(_loc40_),85,60,(param1["is_enemy"] < 0 || _loc38_) && !_loc33_ ? "UI_btn_enterGame_0_0000" : "UI_btn_smallFun_1_0000");
+            // One skin for every row. Alpha is left alone: onTRIGGERED_btns reads it as the cooldown flag.
+            this.mBtn_pk = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(_loc40_),85,60,"UI_btn_enterGame_0_0000");
             if(MainConfig.$isEnglish == true)
             {
                mBtn_pk.fontSize = 19;
@@ -457,12 +458,13 @@ package com.meng52.game.ui.element
             var last:TextField=GlobalTextStyle.getTextField(won?"上次 胜利":"上次 失败",16,won?3046706:12000284,"left",175,22,GlobalConfig.FONT_1);
             last.x=290;last.y=92;mBox_UIs.addChild(last);
          }
-         mBtn_pk=new LOL_Scale9Button(playable?"挑战":"不可用",85,60,playable?"UI_btn_enterGame_0_0000":"UI_btn_smallFun_1_0000");
-         mBtn_pk.fontSize=22;mBtn_pk.x=570-85-12;mBtn_pk.y=10;
+         // 挑战 and 更多 share one skin and size, stacked in the row.
+         mBtn_pk=new LOL_Scale9Button(playable?"挑战":"不可用",85,50,"UI_btn_enterGame_0_0000");
+         mBtn_pk.fontSize=20;mBtn_pk.x=570-85-12;mBtn_pk.y=10;
          if(!playable) mBtn_pk.alpha=0.6;
          mBtn_pk.addEventListener("triggered",challengeFormation104);addChild(mBtn_pk);
-         var more:LOL_Scale9Button=new LOL_Scale9Button("更多",85,38,"UI_btn_normalFun_0000");
-         more.fontSize=18;more.x=mBtn_pk.x;more.y=74;
+         var more:LOL_Scale9Button=new LOL_Scale9Button("更多",85,50,"UI_btn_enterGame_0_0000");
+         more.fontSize=20;more.x=mBtn_pk.x;more.y=66;
          more.addEventListener("triggered",function(event:Event):void
          {
             GlobalData.$mEventDispatcher.dispatchEventWith("formation_action",false,{action:"more",row:_data});

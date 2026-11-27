@@ -688,7 +688,8 @@ package com.meng52.game.ui.screen
 
       private function zhuabaoButton(label:String,key:String,x:Number,y:Number,w:Number,h:Number=56,enabled:Boolean=true) : void
       {
-         var button:LOL_Scale9Button = new LOL_Scale9Button(label,w,h,"UI_btn_normalFun_0000");
+         // Same gold skin as the task rows' claim buttons.
+         var button:LOL_Scale9Button = new LOL_Scale9Button(label,w,h,"UI_btn_enterGame_0_0000");
          button.name=key;button.x=x;button.y=y;button.fontSize=19;
          button.touchable=enabled && !zhuabaoBusy;button.alpha=button.touchable ? 1 : 0.55;
          button.addEventListener("triggered",onZhuabaoAction);zhuabaoBox.addChild(button);
@@ -763,12 +764,12 @@ package com.meng52.game.ui.screen
          zhuabaoRobot.addEventListener("complete",onZhuabaoComplete);zhuabaoBox.addChild(zhuabaoRobot);
          adventureStatus.text="本轮进度："+zhuabaoData.count+" / 300次\n每日首抓免费，十连九折，满300次开启新一轮";
          // Gold balance already shows in the top resource bar; no duplicate here.
-         zhuabaoButton("抓一次","draw1",32,-8,100,54);
-         zhuabaoButton("抓十次","draw10",140,-8,108,54);
-         zhuabaoPrice(32,50,100,zhuabaoData.free ? "免费" : "100");
-         zhuabaoPrice(140,50,108,String(zhuabaoData.ten_cost));
-         zhuabaoButton("奖池预览","pool",w-152,-8,124,54);
-         var preview:TextField=GlobalFunction.createTextField(124,28,"材料、英雄、装备","",14,15127728);preview.x=w-152;preview.y=50;preview.autoScale=true;preview.touchable=false;zhuabaoBox.addChild(preview);
+         zhuabaoButton("抓一次","draw1",32,-8,104,54);
+         zhuabaoButton("抓十次","draw10",140,-8,104,54);
+         zhuabaoPrice(32,50,104,zhuabaoData.free ? "免费" : "100");
+         zhuabaoPrice(140,50,104,String(zhuabaoData.ten_cost));
+         zhuabaoButton("奖池预览","pool",w-132,-8,104,54);
+         var preview:TextField=GlobalFunction.createTextField(124,28,"材料、英雄、装备","",14,15127728);preview.x=w-142;preview.y=50;preview.autoScale=true;preview.touchable=false;zhuabaoBox.addChild(preview);
          var ribbon:DisplayObject=GlobalFunction.createImage("UI_roulette_t_bg_0000");
          ribbon.width=w-64;ribbon.height=34;ribbon.x=32;ribbon.y=90;ribbon.touchable=false;
          zhuabaoBox.addChild(ribbon);

@@ -363,7 +363,8 @@ package com.meng52.game.ui.element
          {
             mBaseSpr.addChild(this.mTxt_num);
          }
-         mBtn_bg_lv = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20033),126,47,GlobalData.$tempPVE_type == "status_pve_normal" ? "UI_btn_enterGame_0_0000" : (GlobalData.$tempPVE_type == "status_pve_hard" ? "UI_btn_enterGame_1_0000" : "UI_btn_enterGame_0_0000"));
+         mActionSkin = GlobalData.$tempPVE_type == "status_pve_hard" ? "UI_btn_enterGame_1_0000" : "UI_btn_enterGame_0_0000";
+         mBtn_bg_lv = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20033),126,47,mActionSkin);
          mBtn_bg_lv.x = mImg9_bg.width - mBtn_bg_lv.width - 30;
          mBtn_bg_lv.y = _loc28_ - 4;
          mBtn_bg_lv.addEventListener("triggered",this.onTRIGGERED_btn);
@@ -371,9 +372,7 @@ package com.meng52.game.ui.element
          if(GlobalData.$tempPVE_type == "status_pve_activities" && this.data.activity_kind == "material")
          {
             mTxt_num.width = 130;
-            mMaterialBuy = new LOL_Scale9Button("购买次数",sweepUnlocked() ? 104 : 126,35,"UI_btn_normalFun_0000");
-            mMaterialBuy.x = mBtn_bg_lv.x + mBtn_bg_lv.width - mMaterialBuy.width;
-            mMaterialBuy.y = mTxt_num.y;
+            mMaterialBuy = new LOL_Scale9Button("购买次数",mBtn_bg_lv.width,mBtn_bg_lv.height,mActionSkin);
             mMaterialBuy.addEventListener("triggered",onMaterialBuy);
             mBaseSpr.addChild(mMaterialBuy);
             GlobalData.$mEventDispatcher.removeEventListener("material_attempts_changed",refreshMaterialAttempts);
@@ -381,12 +380,14 @@ package com.meng52.game.ui.element
             refreshMaterialAttempts();
          }
          setupSweep(_loc13_);
+         stackActionColumn();
          if(this.data.needvip)
          {
             _loc16_ = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(97684,this.data.needvip),14,16724736,"center",200,35);
             mBaseSpr.addChild(_loc16_);
             _loc16_.x = mBtn_bg_lv.x + mBtn_bg_lv.width / 2 - _loc16_.width / 2;
-            _loc16_.y = mBtn_bg_lv.y + mBtn_bg_lv.height;
+            _loc16_.y = mColumnBottom;
+            mColumnBottom = Math.max(mColumnBottom,_loc16_.y + 24);
          }
          if(mRndSpr)
          {
@@ -421,7 +422,7 @@ package com.meng52.game.ui.element
             mBaseSpr.addChild(_loc22_);
             _loc31_ = GlobalFunction.createImage(_loc21_);
             _loc31_.x = mBtn_bg_lv.x + 15;
-            _loc31_.y = mBtn_bg_lv.y + mBtn_bg_lv.height;
+            _loc31_.y = mColumnBottom;
             _loc22_.x = _loc31_.x;
             _loc22_.y = _loc31_.y;
             if(_loc8_ == 2)
@@ -434,6 +435,7 @@ package com.meng52.game.ui.element
             _loc12_.x = _loc31_.x + _loc31_.width;
             _loc12_.y = _loc31_.y + 8;
             mBaseSpr.addChild(_loc12_);
+            mColumnBottom = Math.max(mColumnBottom,_loc22_.y + _loc22_.height,_loc31_.y + _loc31_.height);
          }
          var _loc9_:Number = _loc13_.getUserPower(diff);
          var _loc14_:Array = [_loc10_,_loc10_,_loc10_,_loc10_];
@@ -465,7 +467,10 @@ package com.meng52.game.ui.element
          this.mDetails = new Sprite();
          this.mDetails.touchable = false;
          this.mDetails.x = _loc3_.x;
-         this.mDetails.y = _loc3_.y + 106;
+         // A taller button column pushes the divider and details down.
+         _quad.y = Math.max(112,mColumnBottom + 4);
+         this.mDetails.y = Math.max(_loc3_.y + 106,_quad.y + 9);
+         this.mH_min = Math.max(142,Math.ceil(mColumnBottom + 14));
          var _requiredPower:TextField = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(98240,_loc7_),18,_loc10_,"left",385,28);
          _requiredPower.y = 0;
          _requiredPower.touchable = false;
@@ -795,12 +800,14 @@ package com.meng52.game.ui.element
       private static const SWEEP_REWARD_ORDER:Array = ["exp","gold","coin","score","medal","mark","dust","sp","culture_book","dn_stone","avatar","equip","avatar_soul","equip_soul"];
 
       private var mSweepBtn:LOL_Scale9Button;
+      private var mActionSkin:String = "UI_btn_enterGame_0_0000";
+      private var mColumnBottom:Number = 0;
       private var mSweepEnergy:int = 0;
       private var mSweepBusy:Boolean = false;
       private var mSweepAction:String = "";
       private var mSweepModal:Sprite;
       private var mSweepTimes:int = 1;
-      private var mSweepQuotedCost:int;
+      private var mSweepQuote:Object;
       private var mSweepCountText:TextField;
       private var mSweepCostText:TextField;
       private var mSweepOk:LOL_Scale9Button;
@@ -834,18 +841,29 @@ package com.meng52.game.ui.element
          mSweepEnergy = param1.getEnergy(diff);
          // Next to 购买次数 on resource stages; left of the activity tag that
          // sits under 挑战 on tower floors; otherwise under 挑战.
-         var _tagged:Boolean = int(data["status_activity"]) > 0 && this.data.activity_kind != "material";
-         var _width:int = mMaterialBuy ? 84 : (_tagged ? 110 : 126);
-         mSweepBtn = new LOL_Scale9Button("扫荡",_width,35,"UI_btn_normalFun_0000");
-         mSweepBtn.x = mMaterialBuy ? mMaterialBuy.x - 6 - _width : (_tagged ? mBtn_bg_lv.x - 8 - _width : mBtn_bg_lv.x);
-         mSweepBtn.y = mTxt_num.y;
+         mSweepBtn = new LOL_Scale9Button("扫荡",mBtn_bg_lv.width,mBtn_bg_lv.height,mActionSkin);
          mSweepBtn.addEventListener("triggered",onSweep);
          mBaseSpr.addChild(mSweepBtn);
-         if(mMaterialBuy)
+      }
+
+      /**
+       * 挑战, 扫荡 and 购买次数 share one size and skin, stacked in a column at
+       * 挑战's x. Below it go the VIP note and activity tag; the card grows to fit.
+       */
+      private function stackActionColumn() : void
+      {
+         var y:Number = mBtn_bg_lv.y + mBtn_bg_lv.height;
+         for each(var button:LOL_Scale9Button in [mSweepBtn,mMaterialBuy])
          {
-            mTxt_num.x = mTxt_str0.x + 92;
-            mTxt_num.width = 125;
+            if(button == null)
+            {
+               continue;
+            }
+            button.x = mBtn_bg_lv.x;
+            button.y = y + 4;
+            y = button.y + button.height;
          }
+         mColumnBottom = y;
       }
 
       private function refreshSweepLimit() : void
@@ -941,25 +959,31 @@ package com.meng52.game.ui.element
          var modal:Object = GlobalFunction.uiModal(sweepHost(),"扫荡 · " + String(this.data.name),560,440);
          mSweepModal = modal.root as Sprite;
          var box:Sprite = modal.box as Sprite;
-         var info:String = "三星通关的关卡可直接领取胜利奖励，不进入战斗。\n" + "每次消耗体力" + mSweepEnergy + "，并计入今日挑战次数" + (mLimit < 10000 ? "（剩余" + mLimit + "次）" : "") + "。\n" + "今日免费扫荡剩余" + quote.freeLeft + "/" + quote.limit + "次（VIP每级+" + policy.vip_bonus + "次），" + "用完后每次" + quote.price + "金砖。";
-         GlobalFunction.uiText(info,18,GlobalFunction.UI_BROWN,"left",500,110,box,30,74);
-         var minus:LOL_Scale9Button = GlobalFunction.uiButton("－",64,52,"normal",box,0,0,function():void
+         // One sentence per line, each short enough at 17px not to leave a word
+         // alone on the next line of the 500px text area.
+         var info:String = "三星通关的关卡可直接领取胜利奖励，不进入战斗。\n" + "每次消耗体力" + mSweepEnergy + "，计入今日挑战次数" + (mLimit < 10000 ? "（剩余" + mLimit + "次）" : "") + "。\n" + "今日免费扫荡" + quote.freeLeft + "/" + quote.limit + "次（VIP每级+" + policy.vip_bonus + "），之后每次" + quote.price + "金砖。";
+         GlobalFunction.uiText(info,17,GlobalFunction.UI_BROWN,"left",500,110,box,30,74);
+         var minus:LOL_Scale9Button = GlobalFunction.uiButton("-",64,47,"primary",box,0,0,function():void
          {
             changeSweepTimes(mSweepTimes - 1);
          });
-         mSweepCountText = GlobalFunction.uiText("",24,GlobalFunction.UI_DARK,"center",120,52,box,0,0);
-         var plus:LOL_Scale9Button = GlobalFunction.uiButton("＋",64,52,"normal",box,0,0,function():void
+         minus.fontSize = 30;
+         mSweepCountText = GlobalFunction.uiText("",24,GlobalFunction.UI_DARK,"center",120,47,box,0,0);
+         // Centred on the -/+ buttons it sits between.
+         mSweepCountText.vAlign = "center";
+         var plus:LOL_Scale9Button = GlobalFunction.uiButton("+",64,47,"primary",box,0,0,function():void
          {
             changeSweepTimes(mSweepTimes + 1);
          });
-         var most:LOL_Scale9Button = GlobalFunction.uiButton("最多",96,52,"normal",box,0,0,function():void
+         plus.fontSize = 30;
+         var most:LOL_Scale9Button = GlobalFunction.uiButton("最多",126,47,"primary",box,0,0,function():void
          {
             changeSweepTimes(sweepMax());
          });
          GlobalFunction.uiRow([minus,mSweepCountText,plus,most],30,530,206,12,"center");
          mSweepCostText = GlobalFunction.uiText("",19,GlobalFunction.UI_BROWN,"center",500,34,box,30,276);
-         var cancel:LOL_Scale9Button = GlobalFunction.uiButton("取消",150,60,"normal",box,0,0,closeSweepDialog);
-         mSweepOk = GlobalFunction.uiButton("",200,60,"primary",box,0,0,confirmSweep);
+         var cancel:LOL_Scale9Button = GlobalFunction.uiButton("取消",126,47,"primary",box,0,0,closeSweepDialog);
+         mSweepOk = GlobalFunction.uiButton("",126,47,"primary",box,0,0,confirmSweep);
          GlobalFunction.uiRow([cancel,mSweepOk],30,530,340,24,"center");
          changeSweepTimes(mSweepTimes);
       }
@@ -969,18 +993,18 @@ package com.meng52.game.ui.element
          var most:int = Math.max(1,sweepMax());
          mSweepTimes = Math.max(1,Math.min(param1,most));
          var quote:Object = GlobalData.stageSweepQuote(mSweepTimes,SendAndSelect.$systemTimer_nowSecond);
-         mSweepQuotedCost = int(quote.cost);
+         mSweepQuote = quote;
          if(mSweepCountText)
          {
             mSweepCountText.text = mSweepTimes + "次";
          }
          if(mSweepCostText)
          {
-            mSweepCostText.text = "消耗体力" + mSweepEnergy * mSweepTimes + "　" + (quote.cost > 0 ? "花费金砖" + quote.cost + "（免费" + quote.free + "次）" : "免费");
+            mSweepCostText.text = "消耗体力" + mSweepEnergy * mSweepTimes + "　" + (quote.cost > 0 ? "需要金砖" + quote.cost : "免费");
          }
          if(mSweepOk)
          {
-            mSweepOk.text = quote.cost > 0 ? "扫荡" + mSweepTimes + "次（" + quote.cost + "金砖）" : "扫荡" + mSweepTimes + "次";
+            mSweepOk.text = "扫荡" + mSweepTimes + "次";
          }
       }
 
@@ -991,7 +1015,8 @@ package com.meng52.game.ui.element
             return;
          }
          var times:int = mSweepTimes;
-         var cost:int = mSweepQuotedCost;
+         var quote:Object = mSweepQuote;
+         var cost:int = int(quote.cost);
          closeSweepDialog();
          if(cost > int(GlobalData.$userData.coin))
          {
@@ -999,6 +1024,43 @@ package com.meng52.game.ui.element
             return;
          }
          $sweepLastTimes = times;
+         if(cost > 0)
+         {
+            openSweepCoinDialog(times,quote);
+            return;
+         }
+         sendSweep(times,cost);
+      }
+
+      /** Second step for a sweep that spends 金砖: says how many are paid, and what for. */
+      private function openSweepCoinDialog(times:int, quote:Object) : void
+      {
+         var cost:int = int(quote.cost);
+         var free:int = int(quote.free);
+         var modal:Object = GlobalFunction.uiModal(sweepHost(),"使用金砖扫荡",520,330);
+         mSweepModal = modal.root as Sprite;
+         var box:Sprite = modal.box as Sprite;
+         var info:String = (free > 0 ? "免费扫荡还剩" + free + "次，其余" + (times - free) + "次" : "今日免费扫荡已用完，这" + times + "次") + "每次花费" + int(quote.price) + "金砖。\n" + "共需金砖" + cost + "，当前拥有" + int(GlobalData.$userData.coin) + "。";
+         GlobalFunction.uiText(info,19,GlobalFunction.UI_BROWN,"center",460,110,box,30,84);
+         var back:LOL_Scale9Button = GlobalFunction.uiButton("返回",126,47,"primary",box,0,0,function():void
+         {
+            // Back to the first dialog, keeping the chosen count.
+            openSweepDialog();
+         });
+         var pay:LOL_Scale9Button = GlobalFunction.uiButton("确定花费",126,47,"primary",box,0,0,function():void
+         {
+            closeSweepDialog();
+            sendSweep(times,cost);
+         });
+         GlobalFunction.uiRow([back,pay],30,490,230,24,"center");
+      }
+
+      private function sendSweep(times:int, cost:int) : void
+      {
+         if(mSweepBusy || !data)
+         {
+            return;
+         }
          var owner:ItemPVEcombat = this;
          var uid:String = String(GlobalData.$userData.uid);
          var cid:String = String(this.data.id);
@@ -1053,10 +1115,14 @@ package com.meng52.game.ui.element
          finishSweepRequest();
       }
 
-      public static function sweepRewardText(param1:Object) : String
+      /** One "name × amount" line per reward, in SWEEP_REWARD_ORDER. */
+      public static function sweepRewardLines(param1:Object) : Array
       {
-         var parts:Array = [];
-         var seen:Object = {};
+         var lines:Array = [];
+         if(param1 == null)
+         {
+            return lines;
+         }
          var order:Array = SWEEP_REWARD_ORDER.concat();
          for(var extra:String in param1)
          {
@@ -1067,26 +1133,28 @@ package com.meng52.game.ui.element
          }
          for each(var type:String in order)
          {
-            if(param1 == null || param1[type] == null || seen[type])
+            if(param1[type] == null)
             {
                continue;
             }
-            seen[type] = true;
             if(type == "avatar" || type == "equip" || type == "avatar_soul" || type == "equip_soul")
             {
+               // The server sends {id: count}. The native award formatter expects
+               // another shape for these and mislabels them, so name them here.
+               var table:Object = type.indexOf("avatar") == 0 ? GlobalData.$mConfig_avatar : GlobalData.$mConfig_equip;
                for(var id:String in param1[type])
                {
-                  var one:Object = {};
-                  one[id] = param1[type][id];
-                  parts.push(GlobalFunction.getAwardByType(type,one).msg);
+                  var row:Object = table ? table[id] : null;
+                  var name:String = row && row.name ? String(row.name) : id;
+                  lines.push(name + (type.indexOf("_soul") > 0 ? "魂魄" : "") + " × " + int(param1[type][id]));
                }
             }
             else
             {
-               parts.push(GlobalFunction.getAwardByType(type,param1[type]).msg);
+               lines.push(GlobalFunction.getAwardByType(type,param1[type]).msg);
             }
          }
-         return parts.length > 0 ? parts.join("，") : "无";
+         return lines;
       }
 
       public function showSweepResult(param1:Object) : void
@@ -1096,13 +1164,34 @@ package com.meng52.game.ui.element
          {
             return;
          }
-         var modal:Object = GlobalFunction.uiModal(sweepHost(),"扫荡完成",560,440);
+         var rewards:Array = sweepRewardLines(param1.gift_dict);
+         if(rewards.length == 0)
+         {
+            rewards.push("无");
+         }
+         // Two reward columns; the dialog grows with them instead of leaving
+         // a fixed block of empty parchment under a short list.
+         var rows:int = Math.ceil(rewards.length / 2);
+         var listY:int = 176;
+         var buttonY:int = listY + rows * 34 + 22;
+         var height:int = buttonY + 60 + 34;
+         var modal:Object = GlobalFunction.uiModal(sweepHost(),"扫荡完成",560,height);
          mSweepModal = modal.root as Sprite;
          var box:Sprite = modal.box as Sprite;
-         var spent:String = "扫荡" + int(param1.times) + "次，消耗体力" + int(param1.energy_cost) + (int(param1.coin_cost) > 0 ? "，花费金砖" + int(param1.coin_cost) : "") + "。今日免费扫荡剩余" + int(param1.free_left) + "次。";
-         GlobalFunction.uiText(spent,18,GlobalFunction.UI_BROWN,"left",500,56,box,30,74);
-         GlobalFunction.uiText("获得：" + sweepRewardText(param1.gift_dict),19,GlobalFunction.UI_DARK,"left",500,190,box,30,132);
-         var again:LOL_Scale9Button = GlobalFunction.uiButton("再次扫荡",170,60,"normal",box,0,0,function():void
+         var spent:String = "扫荡" + int(param1.times) + "次，消耗体力" + int(param1.energy_cost) + (int(param1.coin_cost) > 0 ? "，花费金砖" + int(param1.coin_cost) : "");
+         GlobalFunction.uiText(spent,18,GlobalFunction.UI_BROWN,"center",500,28,box,30,72);
+         GlobalFunction.uiText("今日免费扫荡剩余" + int(param1.free_left) + "次",16,GlobalFunction.UI_MUTED,"center",500,26,box,30,100);
+         var rule:Quad = new Quad(500,2,GlobalFunction.UI_MUTED);
+         rule.alpha = 0.4;
+         rule.x = 30;
+         rule.y = 136;
+         box.addChild(rule);
+         GlobalFunction.uiText("获得",20,GlobalFunction.UI_DARK,"left",100,30,box,40,142);
+         for(var i:int = 0; i < rewards.length; i++)
+         {
+            GlobalFunction.uiText(String(rewards[i]),19,GlobalFunction.UI_DARK,"left",230,30,box,i % 2 == 0 ? 50 : 300,listY + int(i / 2) * 34);
+         }
+         var again:LOL_Scale9Button = GlobalFunction.uiButton("再次扫荡",126,47,"primary",box,0,0,function():void
          {
             closeSweepDialog();
             if(stage && data)
@@ -1110,8 +1199,8 @@ package com.meng52.game.ui.element
                onSweep(new Event("triggered"));
             }
          });
-         var done:LOL_Scale9Button = GlobalFunction.uiButton("确定",170,60,"primary",box,0,0,closeSweepDialog);
-         GlobalFunction.uiRow([again,done],30,530,340,24,"center");
+         var done:LOL_Scale9Button = GlobalFunction.uiButton("确定",126,47,"primary",box,0,0,closeSweepDialog);
+         GlobalFunction.uiRow([again,done],30,530,buttonY,24,"center");
       }
       // END STAGE SWEEP 106
 

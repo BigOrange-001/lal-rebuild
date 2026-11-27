@@ -175,6 +175,8 @@ def build_static_config(path):
  apply_nightbringer_yasuo(document)
  from demonblade_tryndamere_105 import apply_demonblade_tryndamere
  apply_demonblade_tryndamere(document)
+ from champion_camille import apply_champion_camille
+ apply_champion_camille(document)
  from skill_tips_105 import apply_skill_tips
  apply_skill_tips(document)
  from shyvana_dragon_media_105 import apply_dragon_media

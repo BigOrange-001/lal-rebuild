@@ -1,0 +1,69 @@
+{
+  "digest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9",
+  "assets": [
+    {
+      "alias": "MOD_CHAMPION_CAMILLE_6",
+      "kind": "image",
+      "path": "portraits/A_1804_6.png",
+      "sha256": "f670f56da945ba93445c7f61afc6cdfa5ab3e218caac78c2260748da6dbecdcd",
+      "bytes": 213005,
+      "width": 600,
+      "height": 300,
+      "role": "portrait",
+      "packageId": "builtin.champion-camille",
+      "version": "1.0.6",
+      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+    },
+    {
+      "alias": "MOD_CHAMPION_CAMILLE_6_icon0000",
+      "kind": "image",
+      "path": "cards/A_1804_6.png",
+      "sha256": "46d70c8fb74d182f1b3dc5ed211557958da0a0f684fb224ebcfc4fa39cee3b69",
+      "bytes": 34498,
+      "width": 160,
+      "height": 160,
+      "role": "icon",
+      "packageId": "builtin.champion-camille",
+      "version": "1.0.6",
+      "cardFrame": [
+        24,
+        16,
+        112,
+        128
+      ],
+      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+    },
+    {
+      "alias": "MOD_CHAMPION_TROPHY_6",
+      "kind": "image",
+      "path": "portraits/A_2905000_6.png",
+      "sha256": "634005588de123a4fe168ee4926f823c69f56740d2773400407f5e25b7905229",
+      "bytes": 159767,
+      "width": 600,
+      "height": 300,
+      "role": "portrait",
+      "packageId": "builtin.champion-camille",
+      "version": "1.0.6",
+      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+    },
+    {
+      "alias": "MOD_CHAMPION_TROPHY_6_icon0000",
+      "kind": "image",
+      "path": "cards/A_2905000_6.png",
+      "sha256": "6e4b938feef6222c5ee0fa4fff466ffbe74dd5899e0cd53c0f11811425f0616a",
+      "bytes": 36257,
+      "width": 160,
+      "height": 160,
+      "role": "icon",
+      "packageId": "builtin.champion-camille",
+      "version": "1.0.6",
+      "cardFrame": [
+        24,
+        16,
+        112,
+        128
+      ],
+      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+    }
+  ]
+}

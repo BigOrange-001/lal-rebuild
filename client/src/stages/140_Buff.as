@@ -57,7 +57,7 @@ package com.meng52.game.module.skill
 
       public static const BUFF_AVENGE:String = "avenge";
 
-      public static const LIST_DEBUFF:Array = ["root","stun","silence","weak","sunder","poison","burn","evil","curse"];
+      public static const LIST_DEBUFF:Array = ["root","stun","silence","weak","sunder","poison","burn","evil","curse","camille_wild"];
 
       public static const LIST_BUFF:Array = ["shield","strong","taunt","bless","steel","armor","hitup","fleeup","critup","toughup","purify","book_penetration"];
 

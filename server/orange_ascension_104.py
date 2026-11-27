@@ -89,6 +89,10 @@ def apply_orange_ascension_104(document):
 
 
 def builtin_asset(cfg, content_digest, path):
+    from champion_camille import builtin_asset as camille_asset
+    custom = camille_asset(cfg, content_digest, path)
+    if custom is not None:
+        return custom
     from demonblade_tryndamere_105 import builtin_asset as demonblade_asset
     custom = demonblade_asset(cfg, content_digest, path)
     if custom is not None:

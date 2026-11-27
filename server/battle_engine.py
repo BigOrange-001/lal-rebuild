@@ -205,7 +205,7 @@ def serialize_player_team(config, profile, team_num, submitted_team, attributes_
 # Buff.LIST_BUFF / Buff.LIST_DEBUFF (140_Buff.as:57/59).
 _GOOD_BUFFS = frozenset(["shield", "strong", "taunt", "bless", "steel", "armor",
                          "hitup", "fleeup", "critup", "toughup", "purify", "book_penetration"])
-_DEBUFFS = frozenset(["root", "stun", "silence", "weak", "sunder", "poison", "burn", "evil", "curse"])
+_DEBUFFS = frozenset(["root", "stun", "silence", "weak", "sunder", "poison", "burn", "evil", "curse", "camille_wild"])
 
 # checkBuffOfSkillB's literal OR list (079_Avatar.as:3547-3552). This is the
 # exact string set the client compares against, so it is NOT _GOOD_BUFFS:
@@ -447,7 +447,7 @@ class ReferenceBattle:
             if kind == "evil":
                 self._remove_all_good(unit)
             return
-        if kind in ("stun", "silence", "evil", "taunt", "bless"):
+        if kind in ("stun", "silence", "evil", "taunt", "bless", "camille_wild"):
             # Round-compare arm: the longer duration wins outright.
             if incoming.round >= current.round:
                 container[kind] = incoming
@@ -621,7 +621,7 @@ class ReferenceBattle:
             if kind == "bless" and entry.value <= 0:
                 continue
             # Purify layers and curse charges last until they are spent.
-            if kind in ('purify','curse'):continue
+            if kind in ('purify','curse','camille_wild'):continue
             if kind=='sixReactionMfShield105':continue
             entry.round -= 1
             if kind == "summon" and entry.round < 0:
@@ -824,7 +824,7 @@ class ReferenceBattle:
         if before>0 and damage_type not in (0,4,5):
             from abyss_equip_passives import after_damage
             after_damage(self,source,target,actual,max(0,shield_before-self._buff_value(target,'shield')),damage_type,dot_kind)
-            if target.get('hp',0)<=0 and hasattr(self, 'six_next_last_cast'):
+            if target.get('hp',0)<=0 and not self._buff(target, 'camille_wild') and hasattr(self, 'six_next_last_cast'):
                 self.six_next_last_cast(target)
         if receipt is not None:receipt.update(actual=actual,before=before,after=int(target.get('hp',0)))
         killed=before>0 and target.get('hp',0)<=0
@@ -922,7 +922,11 @@ class ReferenceBattle:
             observer(source, target, max(0, absorbed) + min(max(0, amount), int(target['hp'])), 0)
         if amount <= 0:
             return 0
-        target["hp"] = max(0, int(target.get("hp", 0)) - amount)
+        before_hit = int(target.get('hp', 0))
+        target["hp"] = max(0, before_hit - amount)
+        if target.get('skillB') and target['hp'] > 0:
+            from champion_camille_battle import trigger_fmvp
+            trigger_fmvp(self, target, before_hit)
         self._resolve_lethal(target)
         return amount
 
@@ -3637,6 +3641,13 @@ class ReferenceBattle:
 
     def _run_unit_turn(self, attacker, sides, side):
         attacker['_team']=sides[side]
+        wild = self._buff(attacker, 'camille_wild')
+        if wild is not None:
+            if wild.round <= 0:
+                self._remove_buff(attacker, 'camille_wild')
+                attacker.pop('_camille_wild_card', None)
+            else:
+                wild.round -= 1
         if attacker.get('hp',0)>0:
             attacker['_mod_owner_turn']=attacker.get('_mod_owner_turn',0)+1
             self._emit_mod_event(attacker,'turn_start',attacker,attacker)

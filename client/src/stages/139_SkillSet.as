@@ -1192,7 +1192,7 @@ package com.meng52.game.module.skill
 
       public function useSkill() : Boolean
       {
-         if(!hasCastTargets()) return false;
+         if(!avatar || avatar.camilleWild || !hasCastTargets()) return false;
          var previousNativeSource:String = activeNativeSource;
          var modCastCompleted:Boolean = false;
          var previousNativeAction:Array = activeNativeAction;

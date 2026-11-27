@@ -1769,14 +1769,15 @@ package com.meng52.game.ui.screen
          giftIcon.touchable=false;
          row.addChild(giftIcon);
          var locked:Boolean=pack.locked==true;
-         var buttonWidth:Number=150;
+         var buttonWidth:Number=126;
          GlobalFunction.uiText(String(pack.name),22,GlobalFunction.UI_RED,"left",textWidth,30,row,108,8);
          GlobalFunction.uiText(rewardText,17,GlobalFunction.UI_BROWN,"left",textWidth,rewardHeight,row,108,38);
          var status:String=locked?"VIP"+int(pack.vip)+" 解锁":(pack.kind=="vip_once" ? (int(pack.left)>0?"一次性奖励":"已领取") : "今日剩余 "+int(pack.left)+"/"+int(pack.limit));
          GlobalFunction.uiText(status,16,GlobalFunction.UI_MUTED,"left",textWidth,24,row,108,rowHeight-28);
          var label:String=locked?"未解锁":(int(pack.left)>0?(int(pack.price)>0?int(pack.price)+"金砖":"领取"):(pack.kind=="vip_once"?"已领取":"已售罄"));
-         var button:LOL_Scale9Button=GlobalFunction.uiButton(label,buttonWidth,56,locked||int(pack.left)<=0?"normal":"primary",row,
-            width-buttonWidth-18,(rowHeight-56)/2,function():void
+         // Same skin and size as the other shop buttons; unavailable ones are only dimmed.
+         var button:LOL_Scale9Button=GlobalFunction.uiButton(label,buttonWidth,47,"primary",row,
+            width-buttonWidth-18,(rowHeight-47)/2,function():void
             {
                if(locked) {GlobalFunction.popToast("VIP"+int(pack.vip)+" 才能购买这个礼包","info");return;}
                if(int(pack.left)<=0) {GlobalFunction.popToast(pack.kind=="vip_once"?"该奖励已领取":"今天的购买次数已用完","info");return;}
@@ -1796,8 +1797,8 @@ package com.meng52.game.ui.screen
          dailyModal105=modal.root as Sprite;
          var box:Sprite=modal.box as Sprite;
          GlobalFunction.uiText((int(pack.price)>0?"花费 "+int(pack.price)+" 金砖，获得：\n":"免费领取：\n")+detail,19,GlobalFunction.UI_BROWN,"left",480,height-170,box,40,76);
-         var cancel:LOL_Scale9Button=GlobalFunction.uiButton("取消",150,60,"normal",box,0,0,closeDaily105);
-         var ok:LOL_Scale9Button=GlobalFunction.uiButton(verb,170,60,"primary",box,0,0,function():void {buyDaily105(pack);});
+         var cancel:LOL_Scale9Button=GlobalFunction.uiButton("取消",126,47,"primary",box,0,0,closeDaily105);
+         var ok:LOL_Scale9Button=GlobalFunction.uiButton(verb,126,47,"primary",box,0,0,function():void {buyDaily105(pack);});
          GlobalFunction.uiRow([cancel,ok],30,530,height-86,24,"center");
       }
 

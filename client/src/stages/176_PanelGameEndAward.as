@@ -125,11 +125,10 @@ package com.meng52.game.ui.panel
          for each(var row:Object in Avatar.statisticsRows104)
             statisticsSnapshot104.push({name:row.name,team:row.team,res:statisticsRes104(row.unit),damage:row.damage,healing:row.healing,taken:row.taken});
          if(statisticsButton104) statisticsButton104.removeFromParent(true);
-         // Same native skin/size family as the replay/continue row (150x70 normalFun);
-         // 60px tall so it ends 12px above that row at SCREEN_HEIGHT*0.66+80.
-         // Centred on the same axis as the replay/continue row below it, and
-         // above it so reward cards stay uncovered.
-         statisticsButton104 = GlobalFunction.uiButton("战斗数据",150,60,"normal",mBox_btn,int(GameMapConfig.SCREEN_WIDTH * 0.5 - 75),int(GameMapConfig.SCREEN_HEIGHT * 0.66 + 8));
+         // Same native skin and size as the replay/continue row (150x70 normalFun),
+         // centred on its axis and ending 6px above it at SCREEN_HEIGHT*0.66+80,
+         // so reward cards stay uncovered.
+         statisticsButton104 = GlobalFunction.uiButton("战斗数据",150,70,"normal",mBox_btn,int(GameMapConfig.SCREEN_WIDTH * 0.5 - 75),int(GameMapConfig.SCREEN_HEIGHT * 0.66 + 4));
          statisticsButton104.addEventListener("triggered",openStatistics104);
       }
 
@@ -175,7 +174,7 @@ package com.meng52.game.ui.panel
          var tab:Boolean = key == "team1" || key == "team2";
          // Native skins: the selected team tab is the highlighted (yellow) action,
          // other tabs and the pager use the normal function button.
-         var button:LOL_Scale9Button = GlobalFunction.uiButton(label,width,tab ? 48 : 46,tab && selected ? "primary" : "normal",panel,x,y);
+         var button:LOL_Scale9Button = GlobalFunction.uiButton(label,width,47,tab && selected ? "primary" : "normal",panel,x,y);
          button.name = key;
          button.addEventListener("triggered",statisticsNavigate104);
       }
@@ -2449,9 +2448,11 @@ package com.meng52.game.ui.panel
             choice.addEventListener("triggered",onLimitBreakChoice);
             mLimitBreakPanel.addChild(choice);
          }
-         var later:LOL_Scale9Button = new LOL_Scale9Button("稍后再选",160,50,"UI_btn_3_0000",false);
+         // Same skin and height as the hero choices above it.
+         var later:LOL_Scale9Button = new LOL_Scale9Button("稍后再选",160,60,"UI_btn_normalFun_0000");
+         later.fontSize = 21;
          later.x = box.x + (width - later.width) * 0.5;
-         later.y = box.y + height - 66;
+         later.y = box.y + height - 74;
          later.addEventListener("triggered",closeLimitBreakPanel);
          mLimitBreakPanel.addChild(later);
          addChild(mLimitBreakPanel);

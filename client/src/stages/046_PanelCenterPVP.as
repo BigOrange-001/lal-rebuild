@@ -2141,9 +2141,10 @@ package com.meng52.game.ui.screen
          mBtn_re.visible=false;if(mBtn_change) mBtn_change.visible=false;
          pvpRule.visible=false;headImg.visible=false;
          formationHeader104=new Sprite();addChild(formationHeader104);
-         shareExport104=formationButton104("导出我的阵容",170,62,true,this,right-170-4,mBg_list.y-74,exportFormation104);
-         shareImport104=formationButton104("导入阵容码",140,62,false,this,shareExport104.x-140-10,mBg_list.y-74,function():void {showImportFormation104();});
-         GlobalFunction.uiRow([shareImport104,shareExport104],left+250,right-4,mBg_list.y-74,10,"right");
+         // Same skin and size as the arena tab's header buttons (换一批, 刷新).
+         shareExport104=formationButton104("导出阵容",135,70,false,this,0,0,exportFormation104);
+         shareImport104=formationButton104("导入阵容码",135,70,false,this,0,0,function():void {showImportFormation104();});
+         GlobalFunction.uiRow([shareImport104,shareExport104],left+250,right-3,mBg_list.y-70,10,"right");
          var textWidth:Number=Math.max(150,shareImport104.x-left-16);
          formationText104("阵容挑战",26,16777215,"left",textWidth,36,formationHeader104,left+10,mBg_list.y-86);
          formationText104("练习对战 · 不耗次数 · 不影响排名",16,FORMATION_LIGHT104,"left",textWidth,26,formationHeader104,left+10,mBg_list.y-46);
@@ -2187,8 +2188,8 @@ package com.meng52.game.ui.screen
          formationEmpty104=new Sprite();addChild(formationEmpty104);
          var w:Number=mBg_list.width-48;var x:Number=mBg_list.x+24;var y:Number=mBg_list.y+64;
          var cards:Array=[
-            ["挑战自己","用现在的英雄和站位导出一份阵容并保存，培养或换装后再来对比强弱。","导出我的阵容",true,exportFormation104],
-            ["挑战好友","粘贴好友分享的阵容码（以 LALF1 开头），保存后可反复挑战。","导入阵容码",false,function():void {showImportFormation104();}]];
+            ["挑战自己","用现在的英雄和站位导出一份阵容并保存，培养或换装后再来对比强弱。","导出阵容",true,exportFormation104],
+            ["挑战好友","粘贴好友分享的阵容码（以 LALF1 开头），保存后可反复挑战。","导入阵容码",true,function():void {showImportFormation104();}]];
          for(var i:int=0;i<cards.length;i++)
          {
             var row:Array=cards[i];
@@ -2196,7 +2197,7 @@ package com.meng52.game.ui.screen
             card.x=x;card.y=y+i*170;formationEmpty104.addChild(card);
             formationText104(row[0],24,FORMATION_RED104,"left",w-220,34,formationEmpty104,x+24,card.y+18);
             formationText104(row[1],18,FORMATION_BROWN104,"left",w-220,78,formationEmpty104,x+24,card.y+56);
-            formationButton104(row[2],170,62,row[3],formationEmpty104,x+w-170-20,card.y+44,row[4]);
+            formationButton104(row[2],126,47,row[3],formationEmpty104,x+w-126-20,card.y+52,row[4]);
          }
       }
 
@@ -2265,12 +2266,12 @@ package com.meng52.game.ui.screen
          formationText104("「复制阵容码」可发给好友，对方在「导入阵容码」里粘贴即可",16,FORMATION_BROWN104,"center",560,26,box,20,236);
          var buttons:Array=[];
          var busy:Function=function(value:Boolean):void {for each(var b:LOL_Scale9Button in buttons) b.enabled=!value;};
-         buttons.push(formationButton104("保存并去挑战",180,62,true,box,20,300,function():void
+         buttons.push(formationButton104("保存并挑战",126,47,true,box,0,0,function():void
          {
             busy(true);
             saveFormation104(code,formationName104(shareNameInput104),function(reply:Object):void {if(formationModalOwner104(owner)) busy(false);});
          }));
-         buttons.push(formationButton104("复制阵容码",180,62,false,box,210,300,function():void
+         buttons.push(formationButton104("复制阵容码",126,47,true,box,0,0,function():void
          {
             var name:String=formationName104(shareNameInput104);
             if(!name || name==original) {System.setClipboard(code);GlobalFunction.popToast("阵容码已复制。");return;}
@@ -2284,7 +2285,8 @@ package com.meng52.game.ui.screen
                System.setClipboard(code);GlobalFunction.popToast("已复制「"+original+"」的阵容码。");
             });
          }));
-         buttons.push(formationButton104("关闭",180,62,false,box,400,300,closeFormationCode104));
+         buttons.push(formationButton104("关闭",126,47,true,box,0,0,closeFormationCode104));
+         GlobalFunction.uiRow(buttons,30,570,306,24,"center");
          formationText104("关闭后仍可在列表的「更多」里复制已保存阵容的代码",15,FORMATION_BROWN104,"center",560,24,box,20,372);
       }
 
@@ -2293,8 +2295,8 @@ package com.meng52.game.ui.screen
          var box:Sprite=openFormationModal104("导入阵容码",430);
          var owner:Sprite=shareModal104;
          formationText104("粘贴好友分享的阵容码（以 LALF1 开头），也可以导入自己的。",18,FORMATION_BROWN104,"center",560,28,box,20,70);
-         shareInput104=formationField104(box,"阵容码",136,code,"在这里粘贴阵容码",131072,430);
-         formationButton104("粘贴",110,58,false,box,465,136,function():void
+         shareInput104=formationField104(box,"阵容码",136,code,"在这里粘贴阵容码",131072,420);
+         formationButton104("粘贴",126,47,true,box,455,141,function():void
          {
             var value:Object=Clipboard.generalClipboard.getData(ClipboardFormats.TEXT_FORMAT);
             if(shareInput104 && value!=null) shareInput104.text=String(value);
@@ -2302,7 +2304,7 @@ package com.meng52.game.ui.screen
          });
          shareNameInput104=formationField104(box,"阵容名称（选填，最多16字）",238,"","留空则使用原名称",16);
          var confirm:LOL_Scale9Button;
-         confirm=formationButton104("导入保存",200,62,true,box,80,330,function():void
+         confirm=formationButton104("导入保存",126,47,true,box,0,0,function():void
          {
             var text:String=shareInput104?shareInput104.text:"";
             if(text==null || text.replace(/\s+/g,"").length==0) {GlobalFunction.popToast("请先粘贴阵容码。","info");return;}
@@ -2313,7 +2315,8 @@ package com.meng52.game.ui.screen
                if(reply && reply.return_code==0) {$tabBarSelectedIndex=4;if(mTabBar.selectedIndex!=4) mTabBar.selectedIndex=4;}
             });
          });
-         formationButton104("取消",200,62,false,box,320,330,closeFormationCode104);
+         var cancel:LOL_Scale9Button=formationButton104("取消",126,47,true,box,0,0,closeFormationCode104);
+         GlobalFunction.uiRow([cancel,confirm],30,570,336,24,"center");
       }
 
       private function formationRecord104(row:Object) : String
@@ -2337,7 +2340,7 @@ package com.meng52.game.ui.screen
          formationText104("作者 "+row.author+" · Lv."+int(row.lv)+" · 战力 "+int(row.formation_power),19,FORMATION_DARK104,"center",560,28,box,20,74);
          formationText104(formationRecord104(row)+(row.created_text?"　导入于 "+row.created_text:""),17,FORMATION_BROWN104,"center",560,26,box,20,106);
          var x:Number=150;
-         formationButton104("复制阵容码",300,60,true,box,x,150,function():void
+         formationButton104("复制阵容码",300,47,true,box,x,156,function():void
          {
             SendAndSelect.sendAndSelectService("user.formation_code",{formation_id:id},function(reply:Object):void
             {
@@ -2346,8 +2349,8 @@ package com.meng52.game.ui.screen
                GlobalFunction.popToast("阵容码已复制，可以发给好友了。");
             });
          });
-         formationButton104("重命名",300,60,false,box,x,222,function():void {showRenameFormation104(row);});
-         formationButton104("删除阵容",300,60,false,box,x,294,function():void
+         formationButton104("重命名",300,47,true,box,x,228,function():void {showRenameFormation104(row);});
+         formationButton104("删除阵容",300,47,true,box,x,300,function():void
          {
             closeFormationCode104();
             GlobalFunction.popAlert("删除阵容","确定删除「"+row.name+"」？\n战绩会一起清除，之后仍可重新导入阵容码。",{
@@ -2359,7 +2362,7 @@ package com.meng52.game.ui.screen
                   });
                },okUI:"删除",no:function():void{},noUI:"取消"});
          });
-         formationButton104("关闭",300,60,false,box,x,366,closeFormationCode104);
+         formationButton104("关闭",300,47,true,box,x,372,closeFormationCode104);
       }
 
       private function showRenameFormation104(row:Object) : void
@@ -2368,7 +2371,7 @@ package com.meng52.game.ui.screen
          var owner:Sprite=shareModal104;
          shareNameInput104=formationField104(box,"新名称（最多16字）",112,String(row.name),"输入阵容名称",16);
          var save:LOL_Scale9Button;
-         save=formationButton104("保存",200,62,true,box,80,200,function():void
+         save=formationButton104("保存",126,47,true,box,0,0,function():void
          {
             var name:String=formationName104(shareNameInput104);
             if(!name) {GlobalFunction.popToast("请输入阵容名称。","info");return;}
@@ -2383,7 +2386,8 @@ package com.meng52.game.ui.screen
                GlobalFunction.popToast("已重命名为「"+reply.data.name+"」。");
             });
          });
-         formationButton104("取消",200,62,false,box,320,200,closeFormationCode104);
+         var cancel:LOL_Scale9Button=formationButton104("取消",126,47,true,box,0,0,closeFormationCode104);
+         GlobalFunction.uiRow([cancel,save],30,570,206,24,"center");
       }
       // END FORMATION PANEL 104
       // BEGIN ARENA RAIDS 105
@@ -2410,7 +2414,8 @@ package com.meng52.game.ui.screen
       {
          if(raidButton105) raidButton105.removeFromParent(true);
          if(arenaHelp105) arenaHelp105.removeFromParent(true);
-         raidButton105=GlobalFunction.uiButton("对手来袭",135,70,"primary",this,0,0,function():void
+         // Same skin and size as the native 换一批 / 刷新 buttons in this row.
+         raidButton105=GlobalFunction.uiButton("对手来袭",135,70,"normal",this,0,0,function():void
          {
             if(raidRows105 && raidRows105.length) showRaid105(raidRows105[0]);
          });
@@ -2496,8 +2501,8 @@ package com.meng52.game.ui.screen
          }
          var rules:String="迎战胜利：保住第"+myRank+"名。\n迎战失败：与对方交换名次，降到第"+int(row.rank)+"名。\n不占用今日奖励场次；24小时内不迎战，对方会放弃。";
          GlobalFunction.uiText(rules,18,GlobalFunction.UI_BROWN,"left",width-80,90,box,40,272);
-         var later:LOL_Scale9Button=GlobalFunction.uiButton("稍后",150,62,"normal",box,0,0,closeRaid105);
-         var fight:LOL_Scale9Button=GlobalFunction.uiButton("迎战",170,62,"primary",box,0,0,function():void {startRaid105(row);});
+         var later:LOL_Scale9Button=GlobalFunction.uiButton("稍后",126,47,"primary",box,0,0,closeRaid105);
+         var fight:LOL_Scale9Button=GlobalFunction.uiButton("迎战",126,47,"primary",box,0,0,function():void {startRaid105(row);});
          GlobalFunction.uiRow([later,fight],30,width-30,height-86,24,"center");
       }
 
@@ -2525,7 +2530,7 @@ package com.meng52.game.ui.screen
             "· 进入前十后，排名靠后的对手会不时来袭。迎战失败会交换名次，不占奖励场次。\n"+
             "· “换一批”刷新对手；“战报”查看并回放最近的战斗。";
          GlobalFunction.uiText(lines,19,GlobalFunction.UI_BROWN,"left",width-80,330,box,40,76);
-         var ok:LOL_Scale9Button=GlobalFunction.uiButton("知道了",170,62,"primary",box,0,0,closeRaid105);
+         var ok:LOL_Scale9Button=GlobalFunction.uiButton("知道了",126,47,"primary",box,0,0,closeRaid105);
          GlobalFunction.uiRow([ok],30,width-30,height-86,24,"center");
       }
       // END ARENA RAIDS 105

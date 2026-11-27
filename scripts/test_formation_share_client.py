@@ -22,7 +22,7 @@ class Sprite {removeFromParent(){this.removed=true;}}
 let pending=[],notices=[],refreshes=0,buttons={};
 const FORMATION_BROWN104=0;
 const GlobalData={$mEventDispatcher:{dispatchEventWith(){refreshes++;}}};
-const GlobalFunction={popToast(text){notices.push(text);}};
+const GlobalFunction={popToast(text){notices.push(text);},uiRow(){}};
 const SendAndSelect={sendAndSelectService(method,params,callback){pending.push(callback);}};
 const unit={stage:{},shareModal104:null,shareInput104:null,shareNameInput104:null,
   mTabBar:{selectedIndex:4},$tabBarSelectedIndex:4,

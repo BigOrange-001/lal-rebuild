@@ -21,7 +21,8 @@
       {
          if(raidButton105) raidButton105.removeFromParent(true);
          if(arenaHelp105) arenaHelp105.removeFromParent(true);
-         raidButton105=GlobalFunction.uiButton("对手来袭",135,70,"primary",this,0,0,function():void
+         // Same skin and size as the native 换一批 / 刷新 buttons in this row.
+         raidButton105=GlobalFunction.uiButton("对手来袭",135,70,"normal",this,0,0,function():void
          {
             if(raidRows105 && raidRows105.length) showRaid105(raidRows105[0]);
          });
@@ -107,8 +108,8 @@
          }
          var rules:String="迎战胜利：保住第"+myRank+"名。\n迎战失败：与对方交换名次，降到第"+int(row.rank)+"名。\n不占用今日奖励场次；24小时内不迎战，对方会放弃。";
          GlobalFunction.uiText(rules,18,GlobalFunction.UI_BROWN,"left",width-80,90,box,40,272);
-         var later:LOL_Scale9Button=GlobalFunction.uiButton("稍后",150,62,"normal",box,0,0,closeRaid105);
-         var fight:LOL_Scale9Button=GlobalFunction.uiButton("迎战",170,62,"primary",box,0,0,function():void {startRaid105(row);});
+         var later:LOL_Scale9Button=GlobalFunction.uiButton("稍后",126,47,"primary",box,0,0,closeRaid105);
+         var fight:LOL_Scale9Button=GlobalFunction.uiButton("迎战",126,47,"primary",box,0,0,function():void {startRaid105(row);});
          GlobalFunction.uiRow([later,fight],30,width-30,height-86,24,"center");
       }
 
@@ -136,6 +137,6 @@
             "· 进入前十后，排名靠后的对手会不时来袭。迎战失败会交换名次，不占奖励场次。\n"+
             "· “换一批”刷新对手；“战报”查看并回放最近的战斗。";
          GlobalFunction.uiText(lines,19,GlobalFunction.UI_BROWN,"left",width-80,330,box,40,76);
-         var ok:LOL_Scale9Button=GlobalFunction.uiButton("知道了",170,62,"primary",box,0,0,closeRaid105);
+         var ok:LOL_Scale9Button=GlobalFunction.uiButton("知道了",126,47,"primary",box,0,0,closeRaid105);
          GlobalFunction.uiRow([ok],30,width-30,height-86,24,"center");
       }

@@ -228,10 +228,20 @@ class NextSixStarTests(TestCase):
         captain_clone = battle.a[1]
         self.assertEqual(captain_clone['next_mirror_generation'], 1)
         battle._emit_mod_event(captain_clone, 'dodge', foes[0], captain_clone)
-        passive_clone, = battle.state(owner)['next_mirrors']
-        self.assertIsNot(passive_clone, captain_clone)
+        captain_entry, passive_clone = battle.state(owner)['next_mirrors']
+        self.assertIs(captain_entry, captain_clone)
+        self.assertEqual(captain_clone['skill'], owner['skill'])
         self.assertEqual(passive_clone['next_mirror_generation'], 2)
         self.assertEqual(passive_clone['ap'], battle._summon_panel_snapshot(owner)['ap'])
+        for _ in range(7):
+            battle._emit_mod_event(passive_clone, 'dodge', foes[0], passive_clone)
+        self.assertEqual(captain_clone['hp'], 0)
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
+        oldest = battle.state(owner)['next_mirrors'][0]
+        self.assertTrue(self.fixture.cast(battle, owner, 'leader_skill'))
+        self.assertEqual(oldest['hp'], 0)
+        self.assertEqual(battle.state(owner)['next_mirrors'][-1]['next_mirror_generation'], 1)
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
 
     def test_baron_heals_only_from_hitting_an_existing_own_curse(self):
         for prior, landed in (('none', True), ('ally', True), ('own', False), ('own', True)):

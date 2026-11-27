@@ -1318,6 +1318,7 @@ package com.meng52.game.module.avatar
          {
             skill0=null;
             abilityState.sixBatchSand105=true;
+            manualAttackRangeOverride=175;
          }
       }
 
@@ -1754,19 +1755,31 @@ package com.meng52.game.module.avatar
       {
          var generation:int=int(abilityState.nextMirrorGeneration);
          if(!GameMap.currentMap || generation>=int(passive[6])) return;
-         var group:Array=owner.abilityState.nextMirrors || [];
-         var living:Array=[];
-         for each(var old:Avatar in group) if(old && old.hp>0) living.push(old);
          var clone:Avatar=new Avatar(GlobalData.modDefinitionId(owner.avatarData.id,"summoned"),{lv:owner.lv,slv:owner.slv});
          clone.goFight(team,line,0,false);
+         clone.manualActionTypeOverride=1;
          if(!clone.inheritSummonPanel(owner,Number(passive[4]))) return;
          clone.sixNextCopyNormal105(owner,generation+1);
-         clone.manualActionTypeOverride=1;
          clone.addBuff("summon",3);
          GameMap.currentMap.addAvatar(clone,team,line,pos+(team==1 ? -1 : 1)*GameMapConfig.SUMMON_POS,false);
-         if(living.length>=int(passive[5])) {old=living.shift() as Avatar;old.hp=0;old.dead();}
+         owner.sixNextRegisterMirror105(clone);
+      }
+
+      public function sixNextRegisterMirror105(clone:Avatar) : void
+      {
+         var group:Array=abilityState.nextMirrors || [];
+         var living:Array=[];
+         for each(var old:Avatar in group) if(old && old.hp>0) living.push(old);
+         var passive:Array=sixNextPassive105("leblanc");
+         var limit:int=passive ? int(passive[5]) : 8;
+         if(living.length>=limit)
+         {
+            old=living.shift() as Avatar;
+            old.hp=0;
+            old.dead();
+         }
          living.push(clone);
-         owner.abilityState.nextMirrors=living;
+         abilityState.nextMirrors=living;
       }
 
       private function sixNextCommandVoid105(target:Avatar) : void
@@ -2744,9 +2757,11 @@ package com.meng52.game.module.avatar
          {
             var unit:Avatar = new Avatar(GlobalData.modDefinitionId(clone ? avatarData.id : aid,"summoned"),{lv:lv,slv:1});
             unit.goFight(team,line,0,false);
-            if(!unit.inheritSummonPanel(this,ratio)) return;
-            unit.speed = 220; unit.range = 350; unit.skill0 = null; unit.skill1 = null; unit.skill2 = null; unit.skillB = null;
             unit.manualActionTypeOverride = 1;
+            if(!unit.inheritSummonPanel(this,ratio)) return;
+            unit.speed = 220; unit.range = 350;
+            if(key != "skin2bear") unit.skill0 = null;
+            unit.skill1 = null; unit.skill2 = null; unit.skillB = null;
             unit.addBuff("summon",turns);
             if(clone) unit.addBuff("taunt",1);
             if(focus) unit.manualFocusTarget = focus;
@@ -2773,7 +2788,7 @@ package com.meng52.game.module.avatar
          return int(Math.min(2147483647,Math.max(minimum,Math.floor(value * ratio))));
       }
 
-      public function inheritSummonPanel(owner:Avatar, apRatio:Number, hpRatio:Number = -1, dePhRatio:Number = -1, deMaRatio:Number = -1, secondaryRatio:Number = -1) : Boolean
+      public function inheritSummonPanel(owner:Avatar, apRatio:Number, hpRatio:Number = -1, dePhRatio:Number = -1, deMaRatio:Number = -1, secondaryRatio:Number = -1, sandHpRatio:Number = 8) : Boolean
       {
          if(hpRatio == -1) hpRatio = apRatio;
          if(dePhRatio == -1) dePhRatio = apRatio;
@@ -2783,9 +2798,17 @@ package com.meng52.game.module.avatar
          var panel:Object = owner.abyssSummonPanel104(owner.getSummonPanelSnapshot());
          abyssReduction104 = owner.abyssReduction104;
          statisticsOwner104 = owner;
+         var sand:Boolean=GlobalData.baseModHeroId(avatarData.id) == "A_3002_2";
+         if(sand)
+         {
+            sixBatchConfigureSummon105(true,false);
+            hpRatio = sandHpRatio;
+            dePhRatio = deMaRatio = 1;
+            secondaryRatio = 0;
+         }
          hpMax = scaledSummonStat(Number(panel.hpMax),hpRatio,1);
          hp = hpMax;
-         ap = scaledSummonStat(Number(panel.ap),apRatio,1);
+         ap = sand || getEffectiveActionType() == 3 ? 0 : scaledSummonStat(Number(panel.ap),apRatio,1);
          dePh = scaledSummonStat(Number(panel.dePh),dePhRatio,0);
          deMa = scaledSummonStat(Number(panel.deMa),deMaRatio,0);
          hit = scaledSummonStat(Number(panel.hit),secondaryRatio,0);

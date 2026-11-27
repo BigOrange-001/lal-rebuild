@@ -134,7 +134,7 @@ class SixStarBalanceTests(TestCase):
             with self.subTest(aid=aid, slot=slot, action=i, field=j):
                 self.assertAlmostEqual(self.snapshot(aid, slot)['skills'][i][j], number)
                 if slot == 10:
-                    self.assertAlmostEqual(self.snapshot(aid, slot, 1)['skills'][i][j], number/2)
+                    self.assertAlmostEqual(self.snapshot(aid, slot, 1)['skills'][i][j], number if aid == 1124 else number/2)
 
     def test_reaction_annie_global_and_mixed_burn_layers(self):
         self.assertAlmostEqual(self.snapshot(1029)['skills'][0][2], .65)
@@ -323,9 +323,13 @@ class SixStarBalanceTests(TestCase):
 
     def test_extended_sand_soldier_and_shaco_summons(self):
         battle, owner, enemies = self.arena(1124, [(0,1300,100000)], [(0,1850,100000),(1,1750,100000)])
+        owner['new_4attrs'].update(hit=137, flee=321, crit=444, tough=555)
+        panel = battle._summon_panel_snapshot(owner)
         self.assertTrue(self.cast(battle, owner))
         soldier = battle.a[-1]
-        self.assertEqual((soldier['aid'], soldier['hp_max'], soldier['ap']), ('A_3002_2',800000,8000))
+        self.assertEqual((soldier['aid'], soldier['hp_max'], soldier['ap']), ('A_3002_2',800000,0))
+        self.assertEqual((soldier['de_ph'], soldier['de_ma']), (panel['de_ph'], panel['de_ma']))
+        self.assertEqual(soldier['new_4attrs'], dict(hit=0, flee=0, crit=0, tough=0))
         self.assertIsNone(soldier['skill'])
         before = enemies[0]['hp']
         battle._run_unit_turn_base(soldier, {1:battle.a, 2:battle.b}, 1)

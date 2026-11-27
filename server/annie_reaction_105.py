@@ -25,6 +25,16 @@ def apply_annie_reaction(document):
         return document
     heroes = [aid for aid in cfg['avatar'] if aid.rsplit('_', 1)[0] == 'A_1221']
     refs = hero_skill_references(cfg, {'A_1221'})
+    roar = 'S_985202010_6'
+    description = '对本路所有敌人造成200%攻击力真实伤害，并施加33%衰弱2回合。准备0回合，冷却2回合。'
+    cfg['skill'][roar] = dict(
+        id=roar, name='怒吼', res=cfg['skill']['S_9000_6']['res'],
+        pl=[0, 2, 3001, 0, -1, 0],
+        skill=[['weak_percent', 2, 3, .33, 2, 'FX60_WEAK']],
+        info=description, rankInfoTemplate=description,
+        actionTargetPolicies=['enemy_lane_all'], actionTargetMaxTargets=[-1],
+    )
+    cfg['avatar']['A_2020_6']['pl'][10] = roar
     for aid in heroes:
         hero = cfg['avatar'][aid]
         original = cfg['skill'][hero['pl'][13]]
@@ -50,7 +60,7 @@ def apply_annie_reaction(document):
             for field in ('info', 'rankInfoTemplate'):
                 value = row.get(field, row['info'])
                 value = re.sub(r'其普攻额外造成[\d.]+%安妮攻击', f'其普攻额外造成{command*100:.1f}%安妮攻击', value)
-                row[field] = value + '\n提伯斯伙伴：' + text
+                row[field] = value + '\n提伯斯伙伴：' + text + '\n怒吼：' + description
     for sid, slot in refs.items():
         if slot != 13:
             continue

@@ -80,6 +80,13 @@ class SummonPanelTests(unittest.TestCase):
         self.assertEqual([unit[k] for k in ('de_ph','de_ma')],[0,0])
         self.assertEqual(unit['new_4attrs'],dict(hit=0,flee=0,crit=0,tough=0))
 
+    def test_non_attacking_summon_keeps_other_inherited_stats(self):
+        battle, owner = self.battle()
+        wall = battle._spawn_summon(owner, 'A_5010_3', .5, 2, extra_multiplier=1.5)
+        self.assertEqual(wall['ap'], 0)
+        self.assertEqual(wall['hp_max'], 7500)
+        self.assertEqual(wall['new_4attrs'], dict(hit=84, flee=91, crit=93, tough=96))
+
     def test_out_of_range_summon_advances_with_snapshot_speed_then_attacks(self):
         battle,owner=self.battle()
         owner['pos']=2400

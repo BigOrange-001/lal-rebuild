@@ -1912,8 +1912,10 @@ class ReferenceBattle:
         if converted < 0:
             return
         targets = self._skill_targets(attacker, enemies, pl, skill=skill, index=index)
+        damage_type = action[2]
+        coefficient = self._true_skill_coefficient(action[1]) if damage_type == 3 else action[1]
         for target in targets:
-            self._native_damage(attacker, target, action[1], action[2])
+            self._native_damage(attacker, target, coefficient, damage_type)
             self._add_buff(target, "weak", int(action[4]), converted)
         if targets:
             context["targets"][index] = targets[0]
@@ -2952,7 +2954,7 @@ class ReferenceBattle:
                 or not math.isfinite(float(fraction)) or not 0.01 <= float(fraction) <= 100:
             return
         bounded = self._has_bounded_summon_policy(str(skill.get("equipment_source_skill_104") or skill.get("skid", "")))
-        sand = self._six_star_setting(skill, 'BatchSand')
+        batch_sand = self._six_star_setting(skill, 'BatchSand')
         shaco = self._six_star_setting(skill, 'BatchShacoClone')
         plant_skill = self._six_star_setting(skill, 'ReactionPlant')
         if plant_skill:
@@ -2962,7 +2964,7 @@ class ReferenceBattle:
             if anchor is None:
                 return
         owner_level = _to_int(attacker.get("lv", 1))
-        level = max(1, owner_level if sand or shaco else _to_int(float(fraction)*owner_level))
+        level = max(1, owner_level if batch_sand or shaco else _to_int(float(fraction)*owner_level))
         skill_id = str(skill.get("skid", ""))
         if bounded and self._has_live_bounded_summon(attacker, skill_id):
             return
@@ -2983,20 +2985,24 @@ class ReferenceBattle:
                                    bounded=bounded, bounded_skill_id=skill_id,
                                    ap_factor=self._summon_ap_factor(skill_id),
                                    stat_ratios=ratios, extra_multiplier=extra,
-                                   skill_level=1 if shaco or plant_skill else None)
+                                   skill_level=1 if shaco or plant_skill else None,
+                                   action_type=policy.get("actionType") if policy else None,
+                                   sand_hp_ratio=float(fraction) if batch_sand else 8)
         if clone is not None:
             if policy:
                 if policy.get("clearSkills") is True:
                     clone.update(leader_skill=None, book_skill=None, skillB=None)
                     if not shaco:
                         clone["skill"] = None
-                if self._six_star_setting(skill,'NextLeBlancClone'):
-                    clone["skill"] = copy.deepcopy(attacker.get("skill"))
-                    clone["next_mirror_generation"] = 1
-                if policy.get("actionType") in (1, 2, 4):
-                    clone["manualActionTypeOverride"] = policy["actionType"]
                 if isinstance(policy.get("attackRange"), (int, float)) and policy["attackRange"] > 0:
                     clone["manual_attack_range"] = policy["attackRange"]
+            if self._six_star_setting(skill, 'NextLeBlancClone'):
+                clone.update(skill=copy.deepcopy(attacker.get("skill")), skillB=None,
+                             leader_skill=None, book_skill=None, next_mirror_generation=1)
+                register_mirror = getattr(self, 'six_next_register_mirror', None)
+                if register_mirror:
+                    register_mirror(attacker, clone, captain=True)
+            sand = clone.get('_batch_sand')
             if sand or shaco or plant_skill:
                 key = '_reaction_counted_plant' if plant_skill else '_batch_sand' if sand else '_batch_shaco_clone'
                 clone[key] = True
@@ -3133,7 +3139,8 @@ class ReferenceBattle:
 
     def _spawn_summon(self, owner, aid, scale, rounds, level=None, bounded=False,
                       bounded_skill_id=None, ap_factor=None, stat_ratios=None,
-                      extra_multiplier=1, skill_level=None, position_anchor=None):
+                      extra_multiplier=1, skill_level=None, position_anchor=None,
+                      action_type=None, sand_hp_ratio=8):
         """Create a live-panel snapshot; never use template growth as inherited stats."""
         if type(scale) not in (int, float) or not math.isfinite(scale) or not 0.01 <= scale <= 100:
             return None
@@ -3159,8 +3166,17 @@ class ReferenceBattle:
         panel = self._summon_panel_snapshot(owner)
         from abyss_equip_passives import summon_panel
         panel = summon_panel(owner,panel)
+        if action_type in (1, 2, 4):
+            unit["manualActionTypeOverride"] = action_type
+        sand = base_aid(self._config, aid) == "A_3002_2"
+        if sand:
+            ratios.update(hp_max=sand_hp_ratio, de_ph=1, de_ma=1, hit=0, flee=0, crit=0, tough=0)
+            extra_multiplier = 1
+            unit.update(_batch_sand=True, range=175)
+        if sand or self._get_action_type(unit) == 3:
+            ratios["ap"] = 0
         for key, ratio in ratios.items():
-            minimum = 1 if key in ("hp_max", "ap") else 0
+            minimum = 1 if key == "hp_max" or (key == "ap" and ratio > 0) else 0
             value = self._scaled_summon_stat(panel[key], ratio, minimum)
             value = self._scaled_summon_stat(value, extra_multiplier, minimum)
             if key in ("hit", "flee", "crit", "tough"):
@@ -3693,7 +3709,7 @@ class ReferenceBattle:
             if summoned:
                 if abs(target["pos"] - attacker["pos"]) > reach and self._get_action_type(attacker) != 3:
                     self._check_move(attacker, True)
-                if attacker.get("_batch_sand") or reach <= 0 or abs(target["pos"] - attacker["pos"]) > reach:
+                if attacker.get("_batch_sand") or self._get_action_type(attacker) == 3 or reach <= 0 or abs(target["pos"] - attacker["pos"]) > reach:
                     return True
             if self.rng.get_random(100) < 80:
                 self._basic_attack(attacker, target)

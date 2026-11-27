@@ -214,7 +214,7 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         units=[]
         team=self._team_number(owner)
         for i in range(count):
-            unit=self._spawn_summon(owner,owner['aid'] if clone else aid,ratio,turns)
+            unit=self._spawn_summon(owner,owner['aid'] if clone else aid,ratio,turns,action_type=1)
             if unit is None:raise ValueError(f'Missing manual summon template: {aid}')
             unit.update(skill=None,leader_skill=None,book_skill=None,skillB=None)
             unit.update(speed=220,range=MIN_ATTACK_RANGE,manualActionTypeOverride=1)
@@ -1150,7 +1150,7 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         if not acted:
             reach=self._get_range(attacker)
             if summoned:
-                targets=self._find_aim_list(attacker,enemies,reach)
+                targets = [] if self._get_action_type(attacker) == 3 else self._find_aim_list(attacker, enemies, reach)
                 if targets:
                     target=min(targets,key=lambda u:(u is not focus,abs(u['pos']-attacker['pos']),
                                                      self.state(u)['index']))

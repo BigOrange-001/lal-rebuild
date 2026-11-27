@@ -62,10 +62,11 @@ def apply_extended(normal, captain, passive):
     row = normal(1124)
     row['skill'] = row['skill'][:1]
     endpoint(row, 0, 1, 8)
+    row.setdefault('rankFixedPaths105', []).append([0, 1])
     row['manualSummonPolicy'].update(skillId=row['id'], apRatio=1, hpRatio=1, dePhRatio=1, deMaRatio=1)
     row.pop('captainSummonMultiplier', None)
     row['sixStarBatchSand105'] = True
-    text(row, '在本路召唤1名沙兵，继承召唤时自身{rank:0:1}面板属性，不能攻击，存活4次自身行动。同时最多2名，以新替旧。')
+    text(row, '在本路召唤1名沙兵，继承召唤时自身{rank:0:1}最大生命和100%双防。攻击力为0，暴击、韧性、精准和闪避初始为0，存活4次自身行动。同时最多2名，以新替旧。')
     row = captain(1124)
     row.pop('manualSummonPolicy', None)
     row.pop('captainSummonMultiplier', None)

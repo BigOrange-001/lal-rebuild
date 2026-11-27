@@ -881,7 +881,7 @@ package com.meng52.game.ui.panel
             skillImg.name = mAvatar.skill0 == null ? "" : mAvatar.skill0.skillSetData.id;
             skillImg.addEventListener("triggered",onSkill);
             mBox_info.addChild(skillImg);
-            _loc13_ = this.mAvatar.skill0 ? this.mAvatar.skill0.skillSetData.name + " " + GlobalLanguageStr.getLanguageStr(20492,this.mAvatar.skill0.lv) : GlobalLanguageStr.getLanguageStr(90021);
+            _loc13_ = this.mAvatar.skill0 ? this.mAvatar.skill0.skillSetData.name + " " + "LV" + this.mAvatar.skill0.lv : GlobalLanguageStr.getLanguageStr(90021);
             _txtSkillA = GlobalTextStyle.getTextField(_loc13_,20,1513239,"left",200,35);
             _txtSkillA.x = skillImg.x + skillImg.width + 3;
             _txtSkillA.y = skillImg.y + 5;

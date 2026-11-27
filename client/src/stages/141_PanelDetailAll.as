@@ -624,7 +624,7 @@ package com.meng52.game.ui.panel
          _loc22_.x = _bg2.x + 20;
          _loc22_.y = _bg2.y + 120;
          _uiMain.addChild(_loc22_);
-         var _loc34_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20212),110,32,"UI_btn_3_0000",false);
+         var _loc34_:LOL_Scale9Button = new LOL_Scale9Button("普通技",110,32,"UI_btn_3_0000",false);
          _loc34_.name = _avatar && _avatar.skill0 ? _avatar.skill0.skillSetData.id : "";
          _loc34_.x = _loc22_.x;
          _loc34_.y = _loc22_.y + _loc22_.height;
@@ -641,7 +641,7 @@ package com.meng52.game.ui.panel
                }
             }
          }
-         var _loc32_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20212),110,32,"UI_btn_3_0000",false);
+         var _loc32_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20105),110,32,"UI_btn_3_0000",false);
          _loc32_.name = _avatar && _avatar.skill1 ? _avatar.skill1.skillSetData.id : "";
          _loc32_.x = _loc34_.x + skillColumnWidth + 10;
          _loc32_.y = _loc34_.y;
@@ -749,7 +749,7 @@ package com.meng52.game.ui.panel
             _quadFoster1.touchable = true;
          }
          var _loc3_:String = _avatar.skill0 ? _avatar.skill0.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
-         var _loc26_:String = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(20492,_avatar.skill0.lv) : "";
+         var _loc26_:String = _avatar.skill0 ? "LV" + _avatar.skill0.lv : "";
          var _loc5_:String = _avatar.skill1 ? _avatar.skill1.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
          var _loc42_:String = "";
          var _loc38_:String = "";
@@ -871,7 +871,7 @@ package com.meng52.game.ui.panel
             var skillThreeButtonY:int = skillDetailTopY + 55;
             var skillThreeHitHeight:int = 112;
 
-            _loc34_.text = GlobalLanguageStr.getLanguageStr(20212);
+            _loc34_.text = "普通技";
             _loc34_.style(GlobalConfig.FONT_0,14,_avatar.skill0 ? 16777215 : 6710886);
             _loc34_.x = skillThreeX0;
             _loc34_.y = skillThreeButtonY;
@@ -921,7 +921,7 @@ package com.meng52.game.ui.panel
             _quadSkillPassive.name = _avatar.skillB.skillSetData.id;
             _uiMain.addChild(_quadSkillPassive);
             _quadSkillPassive.addEventListener("touch",quadSkill_Touch);
-            skillPassiveBtn = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20212),110,32,"UI_btn_3_0000",false);
+            skillPassiveBtn = new LOL_Scale9Button("被动技",110,32,"UI_btn_3_0000",false);
             skillPassiveBtn.x = skillThreeX2;
             skillPassiveBtn.y = skillThreeButtonY;
             skillPassiveBtn.style(GlobalConfig.FONT_0,14,16777215);

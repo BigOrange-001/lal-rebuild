@@ -702,7 +702,7 @@ package com.meng52.game.ui.element
          _loc44_.x = _bg2.x + 20;
          _loc44_.y = _bg2.y + 100;
          _loc44_.touchable = false;
-         var _loc17_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20091),86,35,"UI_btn_3_0000",false);
+         var _loc17_:LOL_Scale9Button = new LOL_Scale9Button("普通技",86,35,"UI_btn_3_0000",false);
          _loc17_.name = "btn1";
          _loc17_.x = mBox_P.x;
          _loc17_.y = mBox_P.y + 75;
@@ -721,7 +721,7 @@ package com.meng52.game.ui.element
                }
             }
          }
-         var _loc16_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20091),86,35,"UI_btn_3_0000",false);
+         var _loc16_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20105),86,35,"UI_btn_3_0000",false);
          _loc16_.name = "btn2";
          _loc16_.x = _loc17_.x + 275;
          _loc16_.y = _loc17_.y;
@@ -917,8 +917,8 @@ package com.meng52.game.ui.element
                _loc3_[_loc38_].text = _loc41_[_loc38_];
                _loc38_++;
             }
-            _loc6_ = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(20489,_avatar.skill0.skillSetData.name) : GlobalLanguageStr.getLanguageStr(90021);
-            _loc5_ = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(20492,_avatar.skill0.lv) : "";
+            _loc6_ = _avatar.skill0 ? _avatar.skill0.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
+            _loc5_ = _avatar.skill0 ? "LV" + _avatar.skill0.lv : "";
             _loc9_ = _avatar.skill1 ? _avatar.skill1.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
             _loc25_ = "";
             _loc22_ = "";
@@ -999,7 +999,7 @@ package com.meng52.game.ui.element
             _quadSkill1.height = _quadSkill2.height = 80;
             _quadSkill1.y = _quadSkill2.y = _quadSkill2.y = _loc44_.y - 15;
             _quadSkill2.x = _loc16_.x;
-            skillPassiveBtn = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20513),86,35,"UI_btn_3_0000",false);
+            skillPassiveBtn = new LOL_Scale9Button("被动技",86,35,"UI_btn_3_0000",false);
             skillPassiveBtn.name = "skillPassiveBtn";
             skillPassiveBtn.x = _loc16_.x + 200;
             skillPassiveBtn.y = _loc16_.y;
@@ -1007,7 +1007,7 @@ package com.meng52.game.ui.element
             skillPassiveBtn.name = _avatar && _avatar.skillB ? _avatar.skillB.skillSetData.id : "";
             _uiMain.addChild(skillPassiveBtn);
             skillPassiveBtn.addEventListener("triggered",onTRIGGERED_btn);
-            skillPassiveTxt = new LOL_TextField(GlobalLanguageStr.getLanguageStr(20489,_avatar.skillB.skillSetData.name),130,35);
+            skillPassiveTxt = new LOL_TextField(_avatar.skillB.skillSetData.name,130,35);
             skillPassiveTxt.fontSize = 20;
             skillPassiveTxt.vAlign = "center";
             skillPassiveTxt.x = skillPassiveBtn.x;
@@ -1265,7 +1265,7 @@ package com.meng52.game.ui.element
          _loc30_.x = _bg2.x + 20;
          _loc30_.y = _bg2.y + 120;
          _uiMain.addChild(_loc30_);
-         var _loc46_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20091),86,35,"UI_btn_3_0000",false);
+         var _loc46_:LOL_Scale9Button = new LOL_Scale9Button("普通技",86,35,"UI_btn_3_0000",false);
          _loc46_.name = "_btn1";
          _loc46_.x = _loc30_.x;
          _loc46_.y = _loc30_.y + _loc30_.height;
@@ -1284,7 +1284,7 @@ package com.meng52.game.ui.element
                }
             }
          }
-         var _loc45_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20091),86,35,"UI_btn_3_0000",false);
+         var _loc45_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20105),86,35,"UI_btn_3_0000",false);
          _loc45_.name = "_btn2";
          _loc45_.x = _loc46_.x + 270;
          _loc45_.y = _loc46_.y;
@@ -1553,8 +1553,8 @@ package com.meng52.game.ui.element
                _loc2_[_loc64_].text = _loc28_[_loc64_];
                _loc64_++;
             }
-            _loc4_ = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(20489,_avatar.skill0.skillSetData.name) : GlobalLanguageStr.getLanguageStr(90021);
-            _loc34_ = _avatar.skill0 ? GlobalLanguageStr.getLanguageStr(20492,_avatar.skill0.lv) : "";
+            _loc4_ = _avatar.skill0 ? _avatar.skill0.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
+            _loc34_ = _avatar.skill0 ? "LV" + _avatar.skill0.lv : "";
             _loc6_ = _avatar.skill1 ? _avatar.skill1.skillSetData.name : GlobalLanguageStr.getLanguageStr(90021);
             _loc54_ = "";
             _loc50_ = "";
@@ -1669,7 +1669,7 @@ package com.meng52.game.ui.element
             _quadSkill1.height = _quadSkill2.height = 114;
             _quadSkill1.y = _quadSkill2.y = _quadSkill2.y = _loc30_.y;
             _quadSkill2.x = _loc45_.x;
-            skillPassiveBtn = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20513),86,35,"UI_btn_3_0000",false);
+            skillPassiveBtn = new LOL_Scale9Button("被动技",86,35,"UI_btn_3_0000",false);
             skillPassiveBtn.name = "skillPassiveBtn";
             skillPassiveBtn.x = _loc45_.x + 200;
             skillPassiveBtn.y = _loc45_.y;
@@ -1677,7 +1677,7 @@ package com.meng52.game.ui.element
             skillPassiveBtn.name = _avatar && _avatar.skillB ? _avatar.skillB.skillSetData.id : "";
             _uiMain.addChild(skillPassiveBtn);
             skillPassiveBtn.addEventListener("triggered",onTRIGGERED_btn);
-            skillPassiveTxt = new LOL_TextField(GlobalLanguageStr.getLanguageStr(20489,_avatar.skillB.skillSetData.name),130,35);
+            skillPassiveTxt = new LOL_TextField(_avatar.skillB.skillSetData.name,130,35);
             skillPassiveTxt.fontSize = 20;
             skillPassiveTxt.vAlign = "center";
             skillPassiveTxt.x = skillPassiveBtn.x;

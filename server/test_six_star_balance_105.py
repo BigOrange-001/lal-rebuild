@@ -711,7 +711,7 @@ class SixStarBalanceTests(TestCase):
         loss=before-sum(u['hp'] for u in enemies)
         self.assertEqual(b._buff_value(owner,'shield'),int(loss*.5))
 
-    def test_nami_one_charge_per_cast_and_one_bonus_per_target(self):
+    def test_nami_one_charge_per_cast_and_one_bonus_per_hit(self):
         b, owner, enemies = self.arena(1131, [(0,1400,100000),(0,1320,100000),(1,1470,100000)],
                                        [(0,1750,70000),(0,1760,70000),(1,1800,70000)])
         first,target,cross=b.a[1:]
@@ -726,8 +726,16 @@ class SixStarBalanceTests(TestCase):
                 for victim in (enemies[0],enemies[0],enemies[1]):
                     b._native_damage(target,victim,1,1)
                 # Fixed true damage: full panel (1250) under the global scale, then toughness.
-                self.assertEqual([call.args[1] for call in injured.call_args_list if call.args[2]==3],[660,660])
+                bonus = [call.args[:2] for call in injured.call_args_list if call.args[2] == 3]
+                self.assertEqual(bonus, [(enemies[0], 660), (enemies[0], 660), (enemies[1], 660)])
         self.assertEqual(aura['left'],2)
+        with patch.object(b, '_fixed_true_damage', wraps=b._fixed_true_damage) as bonus:
+            for remaining in (1, 0):
+                b._basic_attack(target, enemies[0])
+                self.assertEqual(aura['left'], remaining)
+            self.assertEqual(bonus.call_count, 2)
+            b._basic_attack(target, enemies[0])
+            self.assertEqual(bonus.call_count, 2)
         self.assertAlmostEqual(b._buff_value(enemies[0],'weak'),.66/.34)
         self.assertTrue(self.cast(b,owner,'leader_skill'))
         self.assertTrue(b.state(enemies[0])['six_nami_slow'])

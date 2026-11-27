@@ -996,10 +996,8 @@ package com.meng52.game.module.avatar
             if(!aura || int(aura.left)<=0) return;
             --aura.left;
             attack.sixNamiTicket105=aura;
-            attack.sixNamiTargets105=[];
          }
-         if(target.hp<=0 || attack.sixNamiTargets105.indexOf(target)>=0) return;
-         attack.sixNamiTargets105.push(target);
+         if(target.hp<=0) return;
          attack.sixDerived105=true;
          try
          {

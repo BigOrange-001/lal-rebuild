@@ -111,3 +111,71 @@
             if(uiToast==toast) uiToast=null;
          }});
       }
+
+      /**
+       * Show server rewards with the game's own "获得" popups (showReward2),
+       * one popup per item, in the order given. Each entry of rewards is one
+       * reward object as the server granted it; nested attrs and hero/item
+       * lists are flattened to the keys the native popup draws. Anything it
+       * cannot draw is listed in one toast so no reward goes unmentioned.
+       */
+      public static function popRewards105(info:String, rewards:Array) : void
+      {
+         var extra:Array=[];
+         var shown:Boolean=false;
+         for each(var reward:Object in rewards)
+         {
+            var flat:Object=nativeReward105(reward,extra);
+            for(var key:String in flat) {showReward2({"info":info},flat);shown=true;break;}
+         }
+         if(extra.length) popToast("获得："+extra.join("，"),"success");
+         if(shown) SoundManager.getOnlyExample().playSound("skill2");
+      }
+
+      private static const NATIVE_REWARD_105:Object={coin:1,gold:1,score:1,medal:1,mark:1,exp:1,energy:1,fragment_energy:1,
+         culture_book:1,dn_stone:1,guild_currency:1,guild_money:1,guild_contribute:1};
+      private static const REWARD_NAMES_105:Object={stardust:"星辉",box_key:"钥匙"};
+
+      private static function nativeReward105(reward:Object, extra:Array) : Object
+      {
+         var flat:Object={};
+         if(reward==null) return flat;
+         for(var key:String in reward)
+         {
+            var value:*=reward[key];
+            if(key=="attrs" && value!=null && !(value is Number)) {for(var attr:String in value) addNativeReward105(flat,attr,value[attr],extra);}
+            else if((key=="heroes" || key=="items") && value is Array)
+            {
+               for each(var row:Object in value)
+               {
+                  var id:String=String(key=="heroes"?row.aid:row.eid);var one:Object={};
+                  one[id]=row.num==null?1:int(row.num);
+                  addNativeReward105(flat,key=="heroes"?"avatar":"equip",one,extra);
+               }
+            }
+            else addNativeReward105(flat,key,value,extra);
+         }
+         return flat;
+      }
+
+      private static function addNativeReward105(flat:Object, key:String, value:*, extra:Array) : void
+      {
+         if(value==null) return;
+         if(key=="dust" || key=="sp")
+         {
+            // The native popup reads every colour slot, so pad to the full set.
+            var amounts:Array=value is Array?value as Array:[value];
+            var sum:Array=flat[key] is Array?flat[key] as Array:(key=="dust"?[0,0,0,0]:[0,0,0,0,0,0]);
+            var positive:Boolean=false;
+            for(var i:int=0;i<amounts.length;i++) {while(sum.length<=i) sum.push(0);sum[i]=int(sum[i])+int(amounts[i]);if(int(amounts[i])>0) positive=true;}
+            if(positive) flat[key]=sum;
+         }
+         else if(key=="avatar" || key=="equip" || key=="avatar_soul" || key=="equip_soul")
+         {
+            var map:Object=flat[key] ? flat[key] : {};var added:Boolean=false;
+            for(var id:String in value) if(int(value[id])>0) {map[id]=int(map[id])+int(value[id]);added=true;}
+            if(added) flat[key]=map;
+         }
+         else if(value is Number && NATIVE_REWARD_105[key]) {if(int(value)>0) flat[key]=int(flat[key])+int(value);}
+         else if(value is Number) {if(int(value)>0) extra.push((REWARD_NAMES_105[key]?REWARD_NAMES_105[key]:key)+"×"+int(value));}
+      }

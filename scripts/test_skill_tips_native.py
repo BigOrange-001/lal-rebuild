@@ -77,7 +77,7 @@ let cases=0;
  GlobalData.$mConfig_skill.S4={tipNotes105:[['怒气','上限100。'],['无尽怒火','免疫诅咒，期间生命不低于1。']]};
  const s=skill('S4','受到致死伤害时进入无尽怒火，获得神佑。',0,0,'A_T');
  const text=s.getInfoDetails();
- assert.equal(text.split('\n\n')[1],'[怒气：上限100。]\n[无尽怒火：免疫诅咒，期间生命不低于1。]\n[诅咒：每层删除2个通用增益（护盾除外）或阻止之后2次通用增益，最多叠加3层；不影响英雄专属效果]\n[神佑：阵亡时立即复活并恢复50%生命]');
+ assert.equal(text.split('\n\n')[1],'[怒气：上限100。]\n[无尽怒火：免疫诅咒，期间生命不低于1。]\n[诅咒：每层删除2个通用增益或阻止之后2次通用增益，最多叠加3层；护盾和英雄专属效果不受影响]\n[神佑：阵亡时立即复活并恢复50%生命]');
  // Colors apply after formatting, longest name first, across a forced wrap.
  wrapAt=text.indexOf('尽怒');
  const html=methods.formatTip105(text);

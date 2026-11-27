@@ -309,7 +309,8 @@ class ReferenceBattleActionTests(unittest.TestCase):
         for kind in ('shield', 'strong', 'taunt', 'bless'):
             battle._add_buff(target, kind, 2, 100)
 
-        self.assertEqual(set(target['_buffs']), {'taunt', 'bless'})
+        # Shields pass the curse without spending a charge.
+        self.assertEqual(set(target['_buffs']), {'shield', 'bless'})
 
     def test_purify_has_priority_before_or_after_curse(self):
         for order in (('curse', 'purify'), ('purify', 'curse')):

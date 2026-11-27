@@ -182,10 +182,10 @@ class AdventureTaskTests(unittest.TestCase):
                 profile['attrs']['pay_total']=amount
                 return profile,{}
             self.store.atomic_update(self.uid,change)
-        for amount in (29999,30000,49999,50000):
+        for amount in (29999,30000,39999,40000,49999,50000):
             paid(amount)
             info=self.rpc('user.adventure_tasks_info','new-tiers-'+str(amount))
-            for threshold,aid,name in ((30000,'A_1801_6','神龙尊者卡莎'),(50000,'A_1802_6','黑夜使者亚索')):
+            for threshold,aid,name in ((30000,'A_1801_6','神龙尊者卡莎'),(40000,'A_1805_6','冠军-卡密尔'),(50000,'A_1802_6','黑夜使者亚索')):
                 row=self.row(info,'milestones',str(threshold))
                 self.assertEqual(row['required_yuan'],threshold)
                 self.assertEqual(row['claimable'],amount>=threshold)
@@ -198,7 +198,7 @@ class AdventureTaskTests(unittest.TestCase):
             return profile,{}
         self.store.atomic_update(self.uid,eligible)
         before=self.store.profile_raw(self.uid)
-        for key,aid in (('30000','A_1801_6'),('50000','A_1802_6')):
+        for key,aid in (('30000','A_1801_6'),('40000','A_1805_6'),('50000','A_1802_6')):
             reward=self.rpc('user.adventure_task_claim','skin-'+key,kind='milestone',key=key)
             self.assertEqual(reward['award'],{'avatar':{aid:1}})
             count=len(self.store.profile_raw(self.uid)['avatars'])
@@ -209,7 +209,7 @@ class AdventureTaskTests(unittest.TestCase):
                 self.rpc('user.adventure_task_claim','skin-again-'+key,kind='milestone',key=key)
             self.assertEqual(caught.exception.code,'AdventureTaskClaimed')
         after=self.store.profile_raw(self.uid)
-        self.assertEqual(len(after['avatars']),len(before['avatars'])+2)
+        self.assertEqual(len(after['avatars']),len(before['avatars'])+3)
         for field in ('coin','gold'):
             self.assertEqual(after[field],before[field])
         self.assertEqual(after['attrs']['pay_total'],50000)

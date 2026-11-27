@@ -365,8 +365,6 @@ class ItemSign extends Sprite
       var _loc4_:String = null;
       var _reward:Object = null;
       var _coin:int = 0;
-      var _cardId:String = null;
-      var _cardName:String = null;
       var _loc3_:String = "sound03";
       SoundManager.getOnlyExample().playSound(_loc3_);
       if(param1.data)
@@ -374,14 +372,6 @@ class ItemSign extends Sprite
          _reward = param1.data.check_in_reward;
          _coin = _reward && _reward.coin != null ? int(_reward.coin) : int(this._AwardItem);
          _loc4_ = (_double_gift ? "VIP补领：" : "签到获得：") + "金砖×" + Tools.formateNum(_coin);
-         if(!_double_gift && _reward && _reward.avatar)
-         {
-            for(_cardId in _reward.avatar)
-            {
-               _cardName = GlobalData.$mConfig_avatar[_cardId] && GlobalData.$mConfig_avatar[_cardId].name ? String(GlobalData.$mConfig_avatar[_cardId].name) : _cardId;
-               _loc4_ += "\n" + _cardName + "×" + int(_reward.avatar[_cardId]);
-            }
-         }
          if(this.m_double_need_vip != 0)
          {
             _loc2_ = {"need_vip":this.m_double_need_vip};
@@ -390,6 +380,10 @@ class ItemSign extends Sprite
          else
          {
             GlobalFunction.popAward("coin",_loc4_,_coin,true,null);
+         }
+         if(!_double_gift && _reward && _reward.avatar)
+         {
+            GlobalFunction.popRewards105("签到奖励",[{"avatar":_reward.avatar}]);
          }
          if(!GlobalFunction.isVersionedProfileReceipt(param1))
          {

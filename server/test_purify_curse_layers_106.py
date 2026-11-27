@@ -83,7 +83,8 @@ class PurifyLayerTests(unittest.TestCase):
 
 
 class CurseLayerTests(unittest.TestCase):
-    GOOD = ('shield', 'strong', 'taunt', 'bless', 'steel', 'armor',
+    # Shields are outside curse, so they are not in the blockable list.
+    GOOD = ('strong', 'taunt', 'bless', 'steel', 'armor',
             'hitup', 'fleeup', 'critup', 'toughup')
 
     def setUp(self):
@@ -104,16 +105,16 @@ class CurseLayerTests(unittest.TestCase):
         self.assertEqual(set(self.target['_buffs']), {'yasuoShield104_1', 'curse'})
         self.assertEqual(self.charges(), 1)
 
-    def test_held_shields_are_never_stripped(self):
+    def test_shields_are_neither_stripped_nor_blocked(self):
         self.battle._add_buff(self.target, 'shield', 2, 100)
         self.battle._add_buff(self.target, 'strong', 2, .3)
         self.battle._add_buff(self.target, 'curse', 1)
         self.assertEqual(set(self.target['_buffs']), {'shield', 'curse'})
         self.assertEqual(self.charges(), 1)
-        # A new shield is still blocked by the remaining charge.
+        # A new shield lands and costs no charge.
         self.battle._add_buff(self.target, 'shield', 2, 500)
-        self.assertEqual(self.target['_buffs']['shield'].value, 100)
-        self.assertEqual(self.charges(), 0)
+        self.assertEqual(self.target['_buffs']['shield'].value, 500)
+        self.assertEqual(self.charges(), 1)
 
     def test_a_layer_strips_the_two_earliest_good_buffs(self):
         self.battle._add_buff(self.target, 'strong', 2, .3)
@@ -127,10 +128,10 @@ class CurseLayerTests(unittest.TestCase):
         self.battle._add_buff(self.target, 'curse', 1)
         self.assertNotIn('strong', self.target['_buffs'])
         self.assertEqual(self.charges(), 1)
-        self.battle._add_buff(self.target, 'shield', 2, 100)
+        self.battle._add_buff(self.target, 'steel', 2, .3)
         self.assertEqual(set(self.target['_buffs']), set())
-        self.battle._add_buff(self.target, 'shield', 2, 100)
-        self.assertIn('shield', self.target['_buffs'])
+        self.battle._add_buff(self.target, 'steel', 2, .3)
+        self.assertIn('steel', self.target['_buffs'])
 
     def test_three_layers_block_six_good_buffs_at_most(self):
         for _ in range(5):

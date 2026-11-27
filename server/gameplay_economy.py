@@ -451,6 +451,16 @@ class GameplayEconomy:
         result, _ = self.store.atomic_update(uid, mutate, None)
         return result
 
+    def random_orange_hero(self, skin_percent, rng):
+        """One orange hero; a skin orange with skin_percent% chance (a multiple of 10)."""
+        if skin_percent % 10: raise ValueError("skin_percent must be a multiple of 10")
+        pools = self._simple("vip_daily_pack_pools_105", {})
+        skin = rng.randrange(10) < skin_percent // 10
+        choices = [aid for aid in pools.get("skin_orange" if skin else "ordinary_orange", [])
+                   if not is_test_hero(self.config, aid)]
+        if not choices: raise GameplayFault('InvalidConfig', 'VIP hero pool is empty')
+        return rng.choice(choices)
+
     def _vip_pack_reward(self, reward):
         """Resolve random entries into a concrete, grantable reward."""
         pools = self._simple("vip_daily_pack_pools_105", {})
@@ -468,11 +478,8 @@ class GameplayEconomy:
                 if not choices: raise GameplayFault("InvalidConfig", "VIP hero pool is empty")
                 result.setdefault("avatar_soul", {})[rng.choice(choices)] = int(value)
             elif key in ('random_orange_hero','random_skin_orange'):
-                skin = key=='random_skin_orange' or rng.randrange(10)==0
-                choices = [aid for aid in pools.get("skin_orange" if skin else "ordinary_orange", [])
-                           if not is_test_hero(self.config, aid)]
-                if not choices:raise GameplayFault('InvalidConfig','VIP hero pool is empty')
-                result['avatar']={rng.choice(choices):int(value)}
+                skin_percent = 100 if key=='random_skin_orange' else 10
+                result['avatar']={self.random_orange_hero(skin_percent, rng):int(value)}
             else:
                 result[key] = copy.deepcopy(value)
         return result

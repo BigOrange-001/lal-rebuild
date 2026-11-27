@@ -453,7 +453,9 @@ package com.meng52.game.ui.screen
             }
             if(response.data.granted)
             {
-               GlobalFunction.popToast((MainConfig.$isEnglish ? "Claimed " : "已领取 ") + name,"success");
+               var hero:Object = {};
+               hero[aid] = 1;
+               GlobalFunction.popRewards105(MainConfig.$isEnglish ? "Claimed" : "已领取",[{"avatar":hero}]);
             }
             if(isWorkshopOpen())
             {

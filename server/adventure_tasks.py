@@ -5,6 +5,7 @@ import copy
 import secrets
 from collections import Counter
 
+from champion_camille import CHAMPION
 from gameplay_common import game_day, grant_reward, equipment_exclusive_ids
 from player_store import GameplayFault
 from recruit_exchange import daily_orange_pool
@@ -32,6 +33,7 @@ MILESTONES = (
     (8000, "培养材料", "fixed", {"coin": 30000, "dn_stone": 3000}),
     (10000, "二郎真君赵信", "hero", "A_1226_6"),
     (30000, "神龙尊者卡莎", "hero", "A_1801_6"),
+    (40000, "冠军-卡密尔", "hero", CHAMPION),
     (50000, "黑夜使者亚索", "hero", "A_1802_6"),
 )
 
@@ -115,7 +117,7 @@ class AdventureTasks:
     def _reward_text(kind, reward):
         if kind == "hero":
             names = {"A_1310_6":"钢铁侠提莫", "A_1226_6":"二郎真君赵信",
-                     "A_1801_6":"神龙尊者卡莎", "A_1802_6":"黑夜使者亚索"}
+                     "A_1801_6":"神龙尊者卡莎", CHAMPION:"冠军-卡密尔", "A_1802_6":"黑夜使者亚索"}
             return names[reward]+"橙卡×1" if reward in names else "随机非皮肤橙英雄×1"
         if kind == "equipment":
             return "随机非专属橙装备×1"
@@ -174,7 +176,7 @@ class AdventureTasks:
                 return self._award_random_heroes(profile, 1)
             aid = reward
             grant_reward(profile, {"avatar": {aid: 1}}, self.config,
-                         allow_skin=aid in {"A_1310_6", "A_1226_6", "A_1801_6", "A_1802_6"})
+                         allow_skin=aid in {"A_1310_6", "A_1226_6", "A_1801_6", CHAMPION, "A_1802_6"})
             return {"avatar": {aid: 1}}
         if kind == "equipment":
             if not self.equipment:

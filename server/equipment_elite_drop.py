@@ -14,6 +14,8 @@ from gameplay_common import equipment_exclusive_ids
 
 
 ALLOWED_EQUIPMENT_TYPES = {1, 3, 4, 5}
+# Chapters 31-60 come from campaign_expansion_106, which adds their tiers.
+LAST_CAMPAIGN_CHAPTER = 60
 _MAIN_STAGE = re.compile(r"M_(\d{3})_(\d+)")
 
 
@@ -40,7 +42,7 @@ def roll_elite_drop(config: dict, stage_id: str, difficulty: int, victory: bool,
     if not match:
         return None
     chapter = int(match.group(1))
-    if chapter < 1 or chapter > 30:
+    if chapter < 1 or chapter > LAST_CAMPAIGN_CHAPTER:
         return None
     policy = policy_from_config(config)
     if policy is None:

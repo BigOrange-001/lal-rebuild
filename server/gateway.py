@@ -201,6 +201,10 @@ def build_static_config(path):
  apply_relic_config(document)
  from attack_range_105 import apply_attack_ranges
  apply_attack_ranges(document)
+ # After the final attack ranges: the new stage rows carry them and their
+ # recommended power is measured with them.
+ from campaign_expansion_106 import apply_campaign_expansion
+ apply_campaign_expansion(document)
  from game_calendar import apply_daily_reset_config
  apply_daily_reset_config(document)
  from stage_sweep import apply_stage_sweep

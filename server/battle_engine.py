@@ -438,8 +438,8 @@ class ReferenceBattle:
         if kind == "curse":
             self._gain_curse(unit, incoming)
             return
-        if container.get("curse") is not None and kind in _GOOD_BUFFS:
-            # Each curse charge rejects one incoming good buff.
+        if container.get("curse") is not None and kind in _GOOD_BUFFS and kind != "shield":
+            # Each curse charge rejects one incoming good buff; shields pass.
             self._spend_curse(unit, 1)
             return
         if current is None:
@@ -565,7 +565,7 @@ class ReferenceBattle:
 
     def _strip_earliest_good(self, unit):
         container = unit.get("_buffs") or {}
-        # A held shield is never stripped; curse only blocks new ones.
+        # Shields are outside curse: never stripped, never blocked.
         held = [(entry.seq, key) for key, entry in container.items()
                 if key in _GOOD_BUFFS and key != "shield"]
         if not held:

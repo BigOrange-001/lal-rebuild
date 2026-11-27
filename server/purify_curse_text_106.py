@@ -12,7 +12,7 @@ import re
 
 # Glossary lines shown in skill popups (skill_tips_105.aspart).
 PURIFY_TERM = '净化：每层抵消1次通用负面状态，可无限叠加；获得时先抵消身上最早的，单次驱散只移除1层；不影响英雄专属效果'
-CURSE_TERM = '诅咒：每层删除2个通用增益（护盾除外）或阻止之后2次通用增益，最多叠加3层；不影响英雄专属效果'
+CURSE_TERM = '诅咒：每层删除2个通用增益或阻止之后2次通用增益，最多叠加3层；护盾和英雄专属效果不受影响'
 # return_msg_config 25018: the native skill-info line for purify actions.
 PURIFY_INFO = '净化：每层抵消1次通用负面状态，获得时先抵消最早获得的，不影响英雄专属效果。'
 

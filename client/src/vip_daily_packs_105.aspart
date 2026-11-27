@@ -169,7 +169,7 @@
          SendAndSelect.sendAndSelectService(method,params,function(reply:Object):void
          {
             if(!reply || reply.return_code!=0) return;
-            GlobalFunction.popToast("购买成功："+rewardText105(reply.data.granted),"success");
+            if(reply.data && reply.data.granted) GlobalFunction.popRewards105("购买成功",[reply.data.granted]);
             updateDaily105(reply);
          });
       }

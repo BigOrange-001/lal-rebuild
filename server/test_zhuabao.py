@@ -51,6 +51,29 @@ class ZhuabaoTests(unittest.TestCase):
    self.z.dispatch(self.uid,"user.zhuabao_claim",dict(actionID=str(tier),tier=tier))
    with self.assertRaises(GameplayFault):self.z.dispatch(self.uid,"user.zhuabao_claim",dict(actionID="again"+str(tier),tier=tier))
   self.assertEqual(self.z.info(self.b.players.profile_raw(self.uid))["count"],0)
+ def test_100_and_300_milestones_grant_a_random_orange(self):
+  from zhuabao import SKIN_PERCENT
+  self.assertEqual(SKIN_PERCENT,{100:10,300:50})
+  pools=self.b.players.economy._simple("vip_daily_pack_pools_105",{})
+  def seed(p):p["attrs"]["zhuabao"]={"count":300,"claimed":[],"free_day":""};return p,{}
+  self.b.players.atomic_update(self.uid,seed)
+  for tier,extra in ((100,"attrs"),(300,"coin")):
+   gift=self.z.dispatch(self.uid,"user.zhuabao_claim",dict(actionID="orange"+str(tier),tier=tier))["gift"]
+   self.assertNotIn("random_orange_hero",gift);self.assertIn(extra,gift)
+   (aid,num),=gift["avatar"].items();self.assertEqual(num,1)
+   self.assertIn(aid,pools["ordinary_orange"]+pools["skin_orange"])
+   owned=self.b.players.profile_raw(self.uid)["avatars"].values()
+   self.assertTrue(any(isinstance(h,dict) and str(h.get("aid","")).startswith(aid) for h in owned),aid)
+ def test_milestone_skin_chance_follows_the_percent(self):
+  pools=self.b.players.economy._simple("vip_daily_pack_pools_105",{})
+  class Rng:
+   def __init__(self,ticket):self.ticket=ticket
+   def randrange(self,n):return self.ticket
+   def choice(self,rows):return rows[0]
+  pick=self.b.players.economy.random_orange_hero
+  for percent in (10,50):
+   self.assertIn(pick(percent,Rng(percent//10-1)),pools["skin_orange"])
+   self.assertIn(pick(percent,Rng(percent//10)),pools["ordinary_orange"])
  def test_cross_cycle_ten_draw_preserves_all_pending_rewards(self):
   def seed(p):p["attrs"]["zhuabao"]={"count":295,"claimed":[10,50,100,200],"free_day":""};return p,{}
   self.b.players.atomic_update(self.uid,seed)

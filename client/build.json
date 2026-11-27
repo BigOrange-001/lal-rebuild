@@ -1,6 +1,6 @@
 {
   "schema": "lal-client-build-v2",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "stage_count": 183,
   "unique_class_count": 156,
   "stages": [
@@ -14,7 +14,7 @@
       "index": 2,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/002_GlobalFunction.as",
-      "source_sha256": "44e591cdcb317dc63d28b68e674d9dac4d2154c25e52d3f755b2376b18d94d0e"
+      "source_sha256": "d18e551aaefbaa65d18da796a20692f7565e2bbf344ef2bfa72d82108f6940d2"
     },
     {
       "index": 3,
@@ -56,7 +56,7 @@
       "index": 9,
       "class": "com.meng52.game.ui.screen.PanelCenterTaskAward",
       "source": "client/src/stages/009_PanelCenterTaskAward.as",
-      "source_sha256": "3dd21bc32c04c3717a908d3b0e9cebb4c599bcb0bf8529d9d07ec0a5c6e5dae8"
+      "source_sha256": "a41975afd276bc0067ef94a774735ab864c9dfdca284e3c0ea39a3a404ab762b"
     },
     {
       "index": 10,
@@ -104,7 +104,7 @@
       "index": 17,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/017_GlobalFunction.as",
-      "source_sha256": "4c28f20dc14d0f32d5cb23db32d08f32588359683d2eb5430dd547cab5fea5bd"
+      "source_sha256": "8e735994ea2b0e593ec03ac1a1596ffdfb637b9a504f9c6965f9a4becbc4633e"
     },
     {
       "index": 18,
@@ -284,7 +284,7 @@
       "index": 47,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/045_GlobalFunction.as",
-      "source_sha256": "fa5f382455599ac27867c6ab607901186859679d323f6cedf14d67ec649f5a4d"
+      "source_sha256": "b06269392ad5a2a8c36d0d2409273e6330e3fd2564b2bca5beb83612e90ea39e"
     },
     {
       "index": 48,
@@ -302,7 +302,7 @@
       "index": 50,
       "class": "com.meng52.game.ui.panel.PanelEveryDaySign",
       "source": "client/src/stages/048_PanelEveryDaySign.as",
-      "source_sha256": "5ee9f37ec4ff65ca06479a376761a319d17dbd0715434d257bcf7198fba700b6"
+      "source_sha256": "333b6a45b96f6813a3d22b2303bc2bc9389a21745e0f6978a6328fb520ed6730"
     },
     {
       "index": 51,
@@ -783,13 +783,13 @@
       "index": 130,
       "class": "com.meng52.game.ui.screen.PanelCenterSoul",
       "source": "client/src/stages/128_PanelCenterSoul.as",
-      "source_sha256": "2574967cf8b7024abac98d3025075aaaf344a02199078befb9d3a64c188f5ed0"
+      "source_sha256": "b65c21c5f1bb58718a9eb81845e92b2d77480e36896b33b359da7e9d3bd0acb9"
     },
     {
       "index": 131,
       "class": "com.meng52.game.ui.screen.PanelCenterShopVIP",
       "source": "client/src/stages/129_PanelCenterShopVIP.as",
-      "source_sha256": "39fbc7404d3bcaf5f47fbaa4d478841f0ea65b1ead924a9056472f125d563815"
+      "source_sha256": "b0a6beeddf4b119e025d17f3cb3b523e7eef93218f581fdfec4c529f8343ea19"
     },
     {
       "index": 132,
@@ -831,7 +831,7 @@
       "index": 138,
       "class": "MainLLOL",
       "source": "client/src/stages/136_MainLLOL.as",
-      "source_sha256": "b40dc02131ca0cf1705d3e2018a670c68acf9a42b20007fd637e7f1ec217cf4b"
+      "source_sha256": "90ba751435023fe5428e6d2391f1593228c7233bdcf2bd56c354131c3f51f3a2"
     },
     {
       "index": 139,
@@ -843,7 +843,7 @@
       "index": 140,
       "class": "com.meng52.game.module.avatar.Avatar",
       "source": "client/src/stages/137_Avatar.as",
-      "source_sha256": "1d0ca0ab14e6c51c2963fd42d56c6dbd3f7869af27e33b1b86a3374521602438"
+      "source_sha256": "830957ec74f9d5ddf39e9a9b78e1d9269df057cc621a3a04bf441d284fa09aad"
     },
     {
       "index": 141,
@@ -855,7 +855,7 @@
       "index": 142,
       "class": "com.meng52.game.module.skill.SkillSet",
       "source": "client/src/stages/139_SkillSet.as",
-      "source_sha256": "eee0a09108d850702fa7a3eb1ed8ab7630fca82b6138f9c1c616404dc368f83f"
+      "source_sha256": "8af17d56f73b5972f4b3ea9d31fe44a0fef1e2172810cc1e8cda1a5476605f1e"
     },
     {
       "index": 143,
@@ -1029,7 +1029,7 @@
       "index": 171,
       "source": "client/src/stages/170_GlobalFunction.as",
       "class": "com.meng52.game.global.GlobalFunction",
-      "source_sha256": "2acd3da9e56847c96aa8b69a8e2cc236cf3df47d2a0c48603ff296709ed5324e",
+      "source_sha256": "fe45f20545bdf959035fefd4fad406c9bd9cf050d6cddfaddcd04c15df20b354",
       "methods": [
         "getTeamPower",
         "getUserCombat"
@@ -1070,7 +1070,7 @@
       "index": 177,
       "class": "com.meng52.game.ui.panel.PanelGameEndAward",
       "source": "client/src/stages/176_PanelGameEndAward.as",
-      "source_sha256": "61e770c846f5ae01c65d3e3ac6e54fda982303c33a4dec8ebc04de5cf42e7182"
+      "source_sha256": "cad6a644b2820515ffc6569f021894b7cde192dc64196fc4a391f1586947eb9e"
     },
     {
       "index": 178,
@@ -1115,7 +1115,7 @@
   },
   "descriptor": {
     "path": "client/air/application.xml",
-    "sha256": "62fd0e7c7769caa061681df36bd3550a7e9564fa738efa69cbcf8a621e07db09"
+    "sha256": "eedde410360adfab9ef00dba077f15b82ea1bd79c9101b439ade4958feddb073"
   },
   "assets_manifest": {
     "path": "client/resources/assets-manifest.json",

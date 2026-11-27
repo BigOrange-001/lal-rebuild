@@ -14,7 +14,7 @@
       "index": 2,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/002_GlobalFunction.as",
-      "source_sha256": "d18e551aaefbaa65d18da796a20692f7565e2bbf344ef2bfa72d82108f6940d2"
+      "source_sha256": "409ab95742300688ecf5456fc541b883d41da9253c3b9ba3351efbecc3192272"
     },
     {
       "index": 3,
@@ -104,7 +104,7 @@
       "index": 17,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/017_GlobalFunction.as",
-      "source_sha256": "8e735994ea2b0e593ec03ac1a1596ffdfb637b9a504f9c6965f9a4becbc4633e"
+      "source_sha256": "c8ea246cd7717e1c9d922cf24660c39dab87edebed1892b667b0c2cb76d871c3"
     },
     {
       "index": 18,
@@ -284,7 +284,7 @@
       "index": 47,
       "class": "com.meng52.game.global.GlobalFunction",
       "source": "client/src/stages/045_GlobalFunction.as",
-      "source_sha256": "b06269392ad5a2a8c36d0d2409273e6330e3fd2564b2bca5beb83612e90ea39e"
+      "source_sha256": "a58cea999f0e49413c653c758219517517570c44fc1409932f01df6ff5c65824"
     },
     {
       "index": 48,
@@ -1029,7 +1029,7 @@
       "index": 171,
       "source": "client/src/stages/170_GlobalFunction.as",
       "class": "com.meng52.game.global.GlobalFunction",
-      "source_sha256": "fe45f20545bdf959035fefd4fad406c9bd9cf050d6cddfaddcd04c15df20b354",
+      "source_sha256": "e528e3e86ca964c45c9ab971a82ba50c1489b7389230cd548efc52dca48b5642",
       "methods": [
         "getTeamPower",
         "getUserCombat"

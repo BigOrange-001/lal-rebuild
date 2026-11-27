@@ -7907,7 +7907,7 @@ package com.meng52.game.global
          if(reward==null) return flat;
          for(var key:String in reward)
          {
-            var value:*=reward[key];
+            var value:* = reward[key];
             if(key=="attrs" && value!=null && !(value is Number)) {for(var attr:String in value) addNativeReward105(flat,attr,value[attr],extra);}
             else if((key=="heroes" || key=="items") && value is Array)
             {

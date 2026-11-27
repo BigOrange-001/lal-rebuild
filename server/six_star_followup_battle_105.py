@@ -206,11 +206,8 @@ class SixStarFollowupBattle:
                 return
             aura['left']-=1
             ctx['six_nami_ticket']=aura
-            ctx['six_nami_targets']=set()
-        seen=ctx['six_nami_targets']
-        if id(target) in seen or target['hp']<=0:
+        if target['hp']<=0:
             return
-        seen.add(id(target))
         ctx['six_derived']=True
         try:
             self._fixed_true_damage(owner,target,int(self._get_damage(aura['source'])*aura['ratio']))

@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from battle_engine import ReferenceBattle, base_unit
 from gateway import load_game_config
 from equipment_bonds_104 import equipped_bonds, skill_id
 from native_skill_snapshot import _native_skill_snapshot
@@ -31,6 +32,35 @@ class AnnieReactionTests(unittest.TestCase):
             self.assertEqual(base['annie_core_105'][key],upgraded['annie_core_105'][key])
         self.assertNotIn('提伯斯每完成',base['info'])
         self.assertEqual(base['skin_v2_keys'],[])
+
+    def test_tibbers_roar_hits_only_its_lane_and_uses_its_own_cooldown(self):
+        cfg = self.cfg
+        annie = base_unit(cfg, 'A_1221_6', 60, team=1)
+        foes = [base_unit(cfg, 'A_1001_5', 60, line=line, team=2) for line in (0, 0, 1)]
+        battle = ReferenceBattle([annie], foes, config=cfg)
+        owner = battle.a[0]
+        owner['_team'] = battle.a
+        bear = battle._spawn_summon(owner, 'A_2020_6', .7, 99)
+        skill = bear['skill']
+        self.assertEqual(skill['pl'][:2], [0, 2])
+        battle._roll_attack = lambda *_args, **_kwargs: 1
+        initial = [foe['hp'] for foe in battle.b]
+        battle._tick_slot_cd(bear, '_skill_cd')
+        with patch.object(battle, '_native_damage', wraps=battle._native_damage) as damage:
+            self.assertTrue(battle._use_skill_slot(bear, battle.b, 'skill', '_skill_cd'))
+        self.assertEqual([call.args[1] for call in damage.call_args_list], battle.b[:2])
+        self.assertTrue(all(call.args[2:] == (battle._true_skill_coefficient(2), 3) for call in damage.call_args_list))
+        for foe, hp in zip(battle.b[:2], initial):
+            self.assertLess(foe['hp'], hp)
+            self.assertEqual(battle._buff(foe, 'weak').round, 2)
+            self.assertAlmostEqual(battle._buff_value(foe, 'weak'), .33 / .67)
+        self.assertEqual(battle.b[2]['hp'], initial[2])
+        self.assertIsNone(battle._buff(battle.b[2], 'weak'))
+        for _ in range(2):
+            battle._tick_slot_cd(bear, '_skill_cd')
+            self.assertFalse(battle._use_skill_slot(bear, battle.b, 'skill', '_skill_cd'))
+        battle._tick_slot_cd(bear, '_skill_cd')
+        self.assertTrue(battle._use_skill_slot(bear, battle.b, 'skill', '_skill_cd'))
 
     def test_companion_moves_to_all_normal_variants_without_rank_scaling(self):
         c=self.cfg

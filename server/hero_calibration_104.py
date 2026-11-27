@@ -114,6 +114,8 @@ def apply_hero_calibration_104(document):
                 set_text(p,'护盾被敌人击破时，对攻击者造成{rank:0:5}攻击力物理伤害，并眩晕1回合。')
         elif family=='A_1126':private_skill(cfg,h,11)['pl'][:2]=[2,4]
         elif family=='A_1124':
+            normal = cfg['skill'][h['pl'][10]]
+            set_text(normal, '在本路召唤1名沙兵，继承自身800%最大生命和100%双防。攻击力为0，暴击、韧性、精准和闪避初始为0，存活4次自身行动。同时最多2名，以新替旧。')
             s=cfg['skill'][h['pl'][11]]
             s['calibration_104']=True
             if s['skill'][2][0]=='summon':
@@ -121,7 +123,11 @@ def apply_hero_calibration_104(document):
                 s['skill']=s['skill'][:3]
                 for key in ('actionTargetPolicies','actionTargetMaxTargets','actionTargetGroups','actionTargetLocks','actionTargetPolicyArgs'):
                     if key in s:s[key]=s[key][:3]
-                set_text(s,'对本路最多3名敌人造成{rank:0:1}攻击力魔法伤害并击退350码。已有沙兵恢复30%最大生命、获得50%力量2回合，剩余存在时间延长至至少3次行动；没有沙兵时召唤2名沙兵。')
+                set_text(s,'对本路最多3名敌人造成{rank:0:1}攻击力魔法伤害并击退350码。已有沙兵恢复30%最大生命，剩余存在时间延长至至少3次行动；没有沙兵时召唤2名沙兵。')
+        elif family=='A_1127' and aid.endswith('_5'):
+            s=cfg['skill'][h['pl'][11]]
+            s['sixStarNextLeBlancClone105'] = True
+            set_text(s, s.get('rankInfoTemplate', s['info']).replace('面板与自身相同但是没有技能的分身', '继承自身面板且可施放小技能的第一代分身'))
         elif family=='A_1132':
             s=private_skill(cfg,h,11)
             if s.get('manualClonePolicy'):s['manualClonePolicy']['ttlOwnTurns']=5

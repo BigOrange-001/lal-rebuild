@@ -134,7 +134,7 @@ class SixStarBalanceTests(TestCase):
             with self.subTest(aid=aid, slot=slot, action=i, field=j):
                 self.assertAlmostEqual(self.snapshot(aid, slot)['skills'][i][j], number)
                 if slot == 10:
-                    self.assertAlmostEqual(self.snapshot(aid, slot, 1)['skills'][i][j], number/2)
+                    self.assertAlmostEqual(self.snapshot(aid, slot, 1)['skills'][i][j], number if aid == 1124 else number/2)
 
     def test_reaction_annie_global_and_mixed_burn_layers(self):
         self.assertAlmostEqual(self.snapshot(1029)['skills'][0][2], .65)
@@ -323,9 +323,13 @@ class SixStarBalanceTests(TestCase):
 
     def test_extended_sand_soldier_and_shaco_summons(self):
         battle, owner, enemies = self.arena(1124, [(0,1300,100000)], [(0,1850,100000),(1,1750,100000)])
+        owner['new_4attrs'].update(hit=137, flee=321, crit=444, tough=555)
+        panel = battle._summon_panel_snapshot(owner)
         self.assertTrue(self.cast(battle, owner))
         soldier = battle.a[-1]
-        self.assertEqual((soldier['aid'], soldier['hp_max'], soldier['ap']), ('A_3002_2',800000,8000))
+        self.assertEqual((soldier['aid'], soldier['hp_max'], soldier['ap']), ('A_3002_2',800000,0))
+        self.assertEqual((soldier['de_ph'], soldier['de_ma']), (panel['de_ph'], panel['de_ma']))
+        self.assertEqual(soldier['new_4attrs'], dict(hit=0, flee=0, crit=0, tough=0))
         self.assertIsNone(soldier['skill'])
         before = enemies[0]['hp']
         battle._run_unit_turn_base(soldier, {1:battle.a, 2:battle.b}, 1)
@@ -707,7 +711,7 @@ class SixStarBalanceTests(TestCase):
         loss=before-sum(u['hp'] for u in enemies)
         self.assertEqual(b._buff_value(owner,'shield'),int(loss*.5))
 
-    def test_nami_one_charge_per_cast_and_one_bonus_per_target(self):
+    def test_nami_one_charge_per_cast_and_one_bonus_per_hit(self):
         b, owner, enemies = self.arena(1131, [(0,1400,100000),(0,1320,100000),(1,1470,100000)],
                                        [(0,1750,70000),(0,1760,70000),(1,1800,70000)])
         first,target,cross=b.a[1:]
@@ -722,8 +726,16 @@ class SixStarBalanceTests(TestCase):
                 for victim in (enemies[0],enemies[0],enemies[1]):
                     b._native_damage(target,victim,1,1)
                 # Fixed true damage: full panel (1250) under the global scale, then toughness.
-                self.assertEqual([call.args[1] for call in injured.call_args_list if call.args[2]==3],[660,660])
+                bonus = [call.args[:2] for call in injured.call_args_list if call.args[2] == 3]
+                self.assertEqual(bonus, [(enemies[0], 660), (enemies[0], 660), (enemies[1], 660)])
         self.assertEqual(aura['left'],2)
+        with patch.object(b, '_fixed_true_damage', wraps=b._fixed_true_damage) as bonus:
+            for remaining in (1, 0):
+                b._basic_attack(target, enemies[0])
+                self.assertEqual(aura['left'], remaining)
+            self.assertEqual(bonus.call_count, 2)
+            b._basic_attack(target, enemies[0])
+            self.assertEqual(bonus.call_count, 2)
         self.assertAlmostEqual(b._buff_value(enemies[0],'weak'),.66/.34)
         self.assertTrue(self.cast(b,owner,'leader_skill'))
         self.assertTrue(b.state(enemies[0])['six_nami_slow'])

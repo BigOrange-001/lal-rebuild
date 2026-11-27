@@ -993,7 +993,8 @@ package com.meng52.game.module.skill
          }
          if(selector == "self") return avatar.hp > 0 ? [avatar] : [];
          if(selector == "enemy_radius" && !anchor) return result;
-         var allied:Boolean = selector == "all_allies" || selector == "ally_radius";
+         var lowestAlly:Boolean = selector == "ally_lane_lowest_hp_other_hero";
+         var allied:Boolean = selector == "all_allies" || selector == "ally_radius" || lowestAlly;
          var source:Vector.<Avatar> = GameMap.currentMap.getAliveList(allied ? avatar.team : avatar.otherTeam) as Vector.<Avatar>;
          var centerLine:int = anchor ? int(anchor.line) : avatar.line;
          var centerPos:int = anchor ? int(anchor.pos) : avatar.pos;
@@ -1005,9 +1006,14 @@ package com.meng52.game.module.skill
             if(!unit || unit.hp <= 0) continue;
             if(selector == "all_allies" || selector == "all_enemies") { result.push(unit); continue; }
             if(selector == "lane_all") { if(unit.line == avatar.line && Math.abs(unit.pos-avatar.pos) <= Math.abs(skillSetData.range)) result.push(unit); continue; }
-            if(selector == "lane_front" || selector == "lane_lowest_hp")
+            if(selector == "lane_front" || selector == "lane_lowest_hp" || lowestAlly)
             {
-               if(unit.line != avatar.line || Math.abs(unit.pos-avatar.pos) > Math.abs(skillSetData.range)) continue;
+               if(unit.line != avatar.line) continue;
+               if(lowestAlly)
+               {
+                  if(unit === avatar || unit.getType() != 1 || unit.isManualSummonUnit) continue;
+               }
+               else if(Math.abs(unit.pos-avatar.pos) > Math.abs(skillSetData.range)) continue;
                score = selector == "lane_front" ? Math.abs(unit.pos-avatar.pos) : Number(unit.hp)/Math.max(1,unit.getHpMax());
                if(score < bestScore || (score == bestScore && best && Math.abs(unit.pos-avatar.pos) < Math.abs(best.pos-avatar.pos)))
                { best = unit; bestScore = score; }
@@ -1192,7 +1198,7 @@ package com.meng52.game.module.skill
 
       public function useSkill() : Boolean
       {
-         if(!hasCastTargets()) return false;
+         if(!avatar || avatar.camilleWild || !hasCastTargets()) return false;
          var previousNativeSource:String = activeNativeSource;
          var modCastCompleted:Boolean = false;
          var previousNativeAction:Array = activeNativeAction;
@@ -2311,8 +2317,10 @@ package com.meng52.game.module.skill
                   _loc18_ = getPercentDebuffValue(_loc20_[3]);
                   if(_loc18_ >= 0)
                   {
-                     var weakPercentTotal:Number = _loc3_.length > 0 ? damageShareTotal(_loc14_,Number(_loc20_[1]),_loc3_[0],preCastDotTargets,preCastBurnTargets) : Number(_loc20_[1]);
-                     _loc1_ = avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,_loc20_[2],weakPercentTotal,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],new Buff("weak",_loc20_[4],_loc18_),damageShareWeight(Number(_loc20_[1]),weakPercentTotal));
+                     var weakPercentBase:Number = Number(_loc20_[1]);
+                     var weakPercentTotal:Number = _loc3_.length > 0 ? damageShareTotal(_loc14_,weakPercentBase,_loc3_[0],preCastDotTargets,preCastBurnTargets) : weakPercentBase;
+                     var weakDamage:Number = int(_loc20_[2]) == 3 ? Avatar.trueSkillCoefficient104(weakPercentTotal) : weakPercentTotal;
+                     _loc1_ = avatar.checkAttack(_loc3_,getActionSortFunction(_loc14_,avatar.getSortOnFun()),getActionRange(_loc14_,_loc24_),_loc2_,_loc20_[2],weakDamage,getActionAoeIndex(_loc14_,_loc7_,_loc3_),_loc20_[_loc20_.length - 1],new Buff("weak",_loc20_[4],_loc18_),damageShareWeight(weakPercentBase,weakPercentTotal));
                      if(_loc1_) actionTargets[_loc14_] = _loc1_;
                   }
                   break;
@@ -3917,8 +3925,9 @@ package com.meng52.game.module.skill
          var summonLevel:int=batchSand || batchClone ? avatar.lv : Math.max(1,Tools.toInt(_loc8_ * avatar.lv));
          _loc2_ = new Avatar(GlobalData.modDefinitionId(summonDefinition,"summoned"),{"lv":summonLevel,"slv":1});
          _loc2_.goFight(avatar.team,summonLine,0,false);
-         if(!_loc2_.inheritSummonPanel(avatar,_loc8_,summonHpRatio,summonDePhRatio,summonDeMaRatio,_loc8_)) return;
-         if(batchSand || batchClone) _loc2_.sixBatchConfigureSummon105(batchSand,batchClone);
+         if(typeof _loc1_.actionType == "number" && (_loc1_.actionType == 1 || _loc1_.actionType == 2 || _loc1_.actionType == 4)) _loc2_.manualActionTypeOverride = int(_loc1_.actionType);
+         if(!_loc2_.inheritSummonPanel(avatar,_loc8_,summonHpRatio,summonDePhRatio,summonDeMaRatio,_loc8_,batchSand ? _loc8_ : 8)) return;
+         if(batchClone) _loc2_.sixBatchConfigureSummon105(false,true);
          if(_loc1_.clearSkills === true)
          {
             if(!batchClone) _loc2_.skill0 = null;
@@ -3926,18 +3935,18 @@ package com.meng52.game.module.skill
             _loc2_.skill2 = null;
             _loc2_.skillB = null;
          }
-         if(getNativeSetting("sixStarNextLeBlancClone105",false)) _loc2_.sixNextCopyNormal105(avatar);
+         var mirror105:Boolean=Boolean(getNativeSetting("sixStarNextLeBlancClone105",false));
+         if(mirror105) _loc2_.sixNextCopyNormal105(avatar);
          var plantSkill:String=getNativeSetting("sixStarReactionPlant105") as String;
          if(plantSkill && plantSkill.length) _loc2_.sixReactionConfigurePlant105(plantSkill);
-         if(typeof _loc1_.actionType == "number" && (_loc1_.actionType == 1 || _loc1_.actionType == 2 || _loc1_.actionType == 4)) _loc2_.manualActionTypeOverride = int(_loc1_.actionType);
          if(Number(_loc1_.attackRange) > 0) _loc2_.manualAttackRangeOverride = Number(_loc1_.attackRange);
          var captainRow:Object = GlobalData.$mConfig_skill ? GlobalData.$mConfig_skill[skillSetData.id] : null;
          var captainFactor:Number = Number(getNativeSetting("captainSummonMultiplier",1));
-         if(isFinite(captainFactor) && captainFactor > 0 && captainFactor != 1)
+         if(GlobalData.baseModHeroId(summonDefinition) != "A_3002_2" && isFinite(captainFactor) && captainFactor > 0 && captainFactor != 1)
          {
             _loc2_.hpMax = Math.max(1,int(_loc2_.hpMax * captainFactor));
             _loc2_.hp = _loc2_.hpMax;
-            _loc2_.ap = Math.max(1,int(_loc2_.ap * captainFactor));
+            if(_loc2_.ap > 0) _loc2_.ap = Math.max(1,int(_loc2_.ap * captainFactor));
             _loc2_.dePh = Math.max(1,int(_loc2_.dePh * captainFactor));
             _loc2_.deMa = Math.max(1,int(_loc2_.deMa * captainFactor));
             _loc2_.hit = Math.max(0,int(_loc2_.hit * captainFactor));
@@ -3962,6 +3971,7 @@ package com.meng52.game.module.skill
          if(avatar.registerManualSummon(_loc3_,_loc2_,_loc4_))
          {
             GameMap.currentMap.addAvatar(_loc2_,avatar.team,summonLine,summonPos,false);
+            if(mirror105) avatar.sixNextRegisterMirror105(_loc2_);
             replacementIndex = 0;
             while(replacementIndex < replacedSummons.length)
             {

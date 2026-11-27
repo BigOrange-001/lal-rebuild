@@ -214,7 +214,7 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         units=[]
         team=self._team_number(owner)
         for i in range(count):
-            unit=self._spawn_summon(owner,owner['aid'] if clone else aid,ratio,turns)
+            unit=self._spawn_summon(owner,owner['aid'] if clone else aid,ratio,turns,action_type=1)
             if unit is None:raise ValueError(f'Missing manual summon template: {aid}')
             unit.update(skill=None,leader_skill=None,book_skill=None,skillB=None)
             unit.update(speed=220,range=MIN_ATTACK_RANGE,manualActionTypeOverride=1)
@@ -252,6 +252,9 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         return value*float(row.get('equipment_parts_104',{}).get(part,1))
 
     def execute(self, owner, kind, scale, skill):
+        if kind.startswith('champion_camille_'):
+            from champion_camille_battle import execute
+            return execute(self, owner, kind.removeprefix('champion_camille_'), skill['skills'][0])
         if kind.startswith('six_'):return self.six_star_execute(owner,kind,skill)
         row=self.six_star_row(skill)
         if row.get('sixStarNextBaronLane105'):
@@ -778,6 +781,10 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         if owner is not None:
             if event == 'death':
                 self.six_batch_notify_death(owner, source)
+            if self._buff(owner, 'camille_wild'):
+                from abyss_equip_passives import on_event
+                on_event(self, owner, event)
+                return False
             if event == 'damage_taken':
                 self.six_reaction_taken(owner, amount)
             if event == 'hit' and target is not None:
@@ -803,6 +810,8 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         super()._remove_buff(unit, kind, consume, clear_shields, clear_relic_dots)
 
     def _purify_exhausted(self, unit):
+        if self._buff(unit, 'camille_wild'):
+            return
         if passive := self.six_next_passive(unit, 'sivir'):
             self.six_next_heal(unit, unit['hp_max'] * passive[5])
 
@@ -837,14 +846,15 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
             amount=_to_int(amount*(0 if guard['kind']=='kayle' else max(0,1-.55*guard.get('effect',1))))
         amount=self.six_followup_damage_received(target,amount,damage_type,source,dot_kind)
         before=target.get('hp',0);shield_before=self._buff_value(target,'shield')
-        sustain = source is not None and damage_type in (1, 2, 3, 6, 7, 8) and self.six_reaction_passive(source, 'mf')
+        source_can_trigger = source is not None and not self._buff(source, 'camille_wild')
+        sustain = source_can_trigger and damage_type in (1, 2, 3, 6, 7, 8) and self.six_reaction_passive(source, 'mf')
         if sustain and receipt is None:
             receipt = {}
         dealt=super()._injured(target,amount,damage_type,source=source,dot_kind=dot_kind,receipt=receipt,
                               fixed_recovery=fixed_recovery,derived=derived)
         lost=max(0,before-max(0,target.get('hp',0)))
         taken=lost+max(0,shield_before-self._buff_value(target,'shield'))
-        if lost and damage_type in (1,2,3,6,7,8) and self.six_followup_passive(target,'tahm'):
+        if lost and damage_type in (1,2,3,6,7,8) and not self._buff(target,'camille_wild') and self.six_followup_passive(target,'tahm'):
             state['six_tahm_grey']=state.get('six_tahm_grey',0)+lost
         grey=state.get('grey')
         if grey and taken>0 and damage_type!=4:
@@ -857,13 +867,13 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
             if target['hp']<=0 and self.hero(target) and all(u is not target for u in ctx['kills']):ctx['kills'].append(target)
         if source is not None and 1<=damage_type<=3:
             self.six_followup_direct_hit(source,target,ctx,taken)
-        if source is not None and damage_type in (1, 2, 3, 6, 7, 8):
+        if source_can_trigger and damage_type in (1, 2, 3, 6, 7, 8):
             self.six_batch_after_damage(source, target, taken)
         if sustain:
             self.six_reaction_mf_dealt(source, target, receipt.get('actual', 0)+receipt.get('shield_absorbed', 0))
         self.six_next_after_damage(source,target,damage_type,lost,taken,dot_kind,ctx)
         if target.get('hp',0)<=0:self.death(target)
-        if before>0 and target.get('hp',0)<=0 and source is not None and self._team_number(source)!=self._team_number(target):
+        if before>0 and target.get('hp',0)<=0 and source_can_trigger and self._team_number(source)!=self._team_number(target):
             self.queue_cat_skin_kill(source)
             if self.hero(target):self.queue_santa_kill(source)
         return dealt
@@ -916,6 +926,9 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         return result
 
     def _basic_attack(self, attacker, target):
+        from champion_camille_battle import kit_action
+        if kit_action(attacker, 'skill', 'rain'):
+            return
         riven = self.six_next_passive(attacker, 'riven')
         riven_targets = self.six_next_radius(attacker, target, 600) if riven else ()
         with self.context(attacker,'basic') as ctx:
@@ -997,6 +1010,8 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
             ctx['damage_factor'],ctx['effect_factor']=previous
 
     def _apply_native_skill(self, attacker, enemies, slot='skill'):
+        if self._buff(attacker, 'camille_wild'):
+            return False
         skill=attacker.get(slot)
         if not isinstance(skill,dict) or not skill.get('skills'):return False
         with self.context(attacker,'active',skill) as ctx:
@@ -1013,6 +1028,8 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         return result
 
     def _use_skill_slot(self, attacker, enemies, slot, cd_key):
+        if self._buff(attacker, 'camille_wild'):
+            return False
         if (slot=='leader_skill' and self.yasuo_is(attacker) and self._buff(attacker,'silence')
                 and not self.yasuo_cast_silenced(attacker)):
             return False
@@ -1076,8 +1093,9 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
                 state.pop(key,None)
                 if owner['hp']>0 and entry['value']>0:self._add_buff(owner,'shield',2,_to_int(entry['value']*self.hero_output_rate_104(owner)))
             elif 'until' in entry and serial>entry['until']:state.pop(key,None)
-        self.six_star_owner_turn(owner)
-        self.six_reaction_turn(owner)
+        if not self._buff(owner, 'camille_wild'):
+            self.six_star_owner_turn(owner)
+            self.six_reaction_turn(owner)
         zone=state.get('zone')
         if zone and owner['hp']>0:
             from abyss_equip_passives import delayed_cast
@@ -1096,6 +1114,8 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         return owner['hp']<=0
 
     def _run_unit_turn_base(self, attacker, sides, side):
+        from champion_camille_battle import kit_action
+
         attacker['_team']=sides[side]
         self._resolve_pending_strike(attacker)
         if attacker['hp']<=0:return True
@@ -1120,6 +1140,14 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         enemies=self.opponents(attacker)
         if not enemies:return False
         summoned=self._buff(attacker,'summon') is not None
+        if kit_action(attacker, 'skill', 'engage') and not any(unit['line'] == attacker['line'] for unit in enemies):
+            # A global cast from a cleared lane must capture the actual origin
+            # before the generic turn logic moves the hero to a different lane.
+            if not self._buff(attacker, 'silence'):
+                self._use_skill_slot(attacker, enemies, 'skill', '_skill_cd')
+                if attacker.get('leader'):
+                    self._use_skill_slot(attacker, enemies, 'leader_skill', '_skill_cd_leader')
+            return True
         nearby_enemies=enemies
         if summoned:
             nearby_enemies=[u for u in enemies if u['line']==attacker['line']]
@@ -1150,7 +1178,7 @@ class SkillCompleteBattle(DemonTryndBattleMixin, SixStarBattleMixin, YasuoBattle
         if not acted:
             reach=self._get_range(attacker)
             if summoned:
-                targets=self._find_aim_list(attacker,enemies,reach)
+                targets = [] if self._get_action_type(attacker) == 3 else self._find_aim_list(attacker, enemies, reach)
                 if targets:
                     target=min(targets,key=lambda u:(u is not focus,abs(u['pos']-attacker['pos']),
                                                      self.state(u)['index']))

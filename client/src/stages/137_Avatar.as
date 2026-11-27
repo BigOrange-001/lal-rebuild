@@ -232,6 +232,7 @@ package com.meng52.game.module.avatar
          captain = equipmentSkillId104(captain);
          var heroRow104:Object = GlobalData.$mConfig_avatar[avatarData.id];
          var passive104:String = heroRow104 && heroRow104.pl.length>13 ? heroRow104.pl[13] : null;
+         if(variant && variant.skillB && sources && sources.skillB == passive104) passive104 = String(variant.skillB);
          passive104 = equipmentSkillId104(passive104);
          if(passive104 && (!skillB || skillB.skillSetData.id != passive104)) skillB = new SkillSet(passive104,this,1);
          if(normal && (!skill0 || skill0.skillSetData.id != normal || skill0.lv != slv)) skill0 = new SkillSet(normal,this,slv);
@@ -264,7 +265,8 @@ package com.meng52.game.module.avatar
                if(benefit.stats) for(var stat:String in benefit.stats) effects.push(labels[stat]+"提高"+Math.round(Number(benefit.stats[stat])*10000)/100+"%");
                var flats:Object = benefit.flat_by_quality ? benefit.flat_by_quality[String(quality)] : null;
                if(flats) for(stat in flats) effects.push(labels[stat]+"增加"+flats[stat]);
-               if(benefit.skill_rate) effects.push("技能数值提高"+Math.round(Number(benefit.skill_rate)*100)+"%");
+               if(benefit.skill_rate) effects.push((benefit.passive_skill_rate ? "小技能和大招数值提高" : "技能数值提高")+Math.round(Number(benefit.skill_rate)*100)+"%");
+               if(benefit.passive_skill_rate && hero && hero.pl.length>13 && hero.pl[13]) effects.push("被动数值提高"+Math.round(Number(benefit.passive_skill_rate)*100)+"%");
                if(benefit.info) effects.push(String(benefit.info));
                if(bond.focus==member)
                {
@@ -994,10 +996,8 @@ package com.meng52.game.module.avatar
             if(!aura || int(aura.left)<=0) return;
             --aura.left;
             attack.sixNamiTicket105=aura;
-            attack.sixNamiTargets105=[];
          }
-         if(target.hp<=0 || attack.sixNamiTargets105.indexOf(target)>=0) return;
-         attack.sixNamiTargets105.push(target);
+         if(target.hp<=0) return;
          attack.sixDerived105=true;
          try
          {
@@ -1318,6 +1318,7 @@ package com.meng52.game.module.avatar
          {
             skill0=null;
             abilityState.sixBatchSand105=true;
+            manualAttackRangeOverride=175;
          }
       }
 
@@ -1754,19 +1755,31 @@ package com.meng52.game.module.avatar
       {
          var generation:int=int(abilityState.nextMirrorGeneration);
          if(!GameMap.currentMap || generation>=int(passive[6])) return;
-         var group:Array=owner.abilityState.nextMirrors || [];
-         var living:Array=[];
-         for each(var old:Avatar in group) if(old && old.hp>0) living.push(old);
          var clone:Avatar=new Avatar(GlobalData.modDefinitionId(owner.avatarData.id,"summoned"),{lv:owner.lv,slv:owner.slv});
          clone.goFight(team,line,0,false);
+         clone.manualActionTypeOverride=1;
          if(!clone.inheritSummonPanel(owner,Number(passive[4]))) return;
          clone.sixNextCopyNormal105(owner,generation+1);
-         clone.manualActionTypeOverride=1;
          clone.addBuff("summon",3);
          GameMap.currentMap.addAvatar(clone,team,line,pos+(team==1 ? -1 : 1)*GameMapConfig.SUMMON_POS,false);
-         if(living.length>=int(passive[5])) {old=living.shift() as Avatar;old.hp=0;old.dead();}
+         owner.sixNextRegisterMirror105(clone);
+      }
+
+      public function sixNextRegisterMirror105(clone:Avatar) : void
+      {
+         var group:Array=abilityState.nextMirrors || [];
+         var living:Array=[];
+         for each(var old:Avatar in group) if(old && old.hp>0) living.push(old);
+         var passive:Array=sixNextPassive105("leblanc");
+         var limit:int=passive ? int(passive[5]) : 8;
+         if(living.length>=limit)
+         {
+            old=living.shift() as Avatar;
+            old.hp=0;
+            old.dead();
+         }
          living.push(clone);
-         owner.abilityState.nextMirrors=living;
+         abilityState.nextMirrors=living;
       }
 
       private function sixNextCommandVoid105(target:Avatar) : void
@@ -2002,7 +2015,7 @@ package com.meng52.game.module.avatar
 
       private function sixNextLastCast105() : void
       {
-         if(hp>0 || !sixNextPassive105("karthus") || abilityState.nextLastCast || !skill0) return;
+         if(camilleWild || hp>0 || !sixNextPassive105("karthus") || abilityState.nextLastCast || !skill0) return;
          var allied:Array=abilityCandidates(team,line,pos,GameMapConfig.LINE_POS,1,false,"nearest",[this]);
          if(!allied.length) return;
          abilityState.nextLastCast=true;
@@ -2103,8 +2116,8 @@ package com.meng52.game.module.avatar
          var passive:Array;
          if(source && source.team!=team)
          {
-            source.sixNextRage105();
-            if(direct)
+            if(!source.camilleWild) source.sixNextRage105();
+            if(direct && !camilleWild)
             {
                sixNextRage105();
                demonHurtTaken105();
@@ -2116,7 +2129,7 @@ package com.meng52.game.module.avatar
                }
             }
             var attack:Object=currentAbilityAttack();
-            if(attack && attack.owner===source)
+            if(attack && attack.owner===source && !source.camilleWild)
             {
                var leech:Number=Number(attack.sixNextLeech || 0);
                if((passive=source.sixNextPassive105("sivir")) && (attack.kind=="basic" || attack.skill===source.skill1))
@@ -2139,7 +2152,7 @@ package com.meng52.game.module.avatar
          }
          if(damage>0 && (kind==7 || dotKind=="burn"))
             for each(var dragon:Avatar in GameMap.currentMap.getAliveList(otherTeam))
-               if(dragon.abilityState.nextDragon && (passive=dragon.sixNextPassive105("shyvana")))
+               if(!dragon.camilleWild && dragon.abilityState.nextDragon && (passive=dragon.sixNextPassive105("shyvana")))
                   dragon.sixNextStackShield105("nextDragonShield",damage*Number(passive[4]));
       }
 
@@ -2744,9 +2757,11 @@ package com.meng52.game.module.avatar
          {
             var unit:Avatar = new Avatar(GlobalData.modDefinitionId(clone ? avatarData.id : aid,"summoned"),{lv:lv,slv:1});
             unit.goFight(team,line,0,false);
-            if(!unit.inheritSummonPanel(this,ratio)) return;
-            unit.speed = 220; unit.range = 350; unit.skill0 = null; unit.skill1 = null; unit.skill2 = null; unit.skillB = null;
             unit.manualActionTypeOverride = 1;
+            if(!unit.inheritSummonPanel(this,ratio)) return;
+            unit.speed = 220; unit.range = 350;
+            if(key != "skin2bear") unit.skill0 = null;
+            unit.skill1 = null; unit.skill2 = null; unit.skillB = null;
             unit.addBuff("summon",turns);
             if(clone) unit.addBuff("taunt",1);
             if(focus) unit.manualFocusTarget = focus;
@@ -2773,7 +2788,7 @@ package com.meng52.game.module.avatar
          return int(Math.min(2147483647,Math.max(minimum,Math.floor(value * ratio))));
       }
 
-      public function inheritSummonPanel(owner:Avatar, apRatio:Number, hpRatio:Number = -1, dePhRatio:Number = -1, deMaRatio:Number = -1, secondaryRatio:Number = -1) : Boolean
+      public function inheritSummonPanel(owner:Avatar, apRatio:Number, hpRatio:Number = -1, dePhRatio:Number = -1, deMaRatio:Number = -1, secondaryRatio:Number = -1, sandHpRatio:Number = 8) : Boolean
       {
          if(hpRatio == -1) hpRatio = apRatio;
          if(dePhRatio == -1) dePhRatio = apRatio;
@@ -2783,9 +2798,17 @@ package com.meng52.game.module.avatar
          var panel:Object = owner.abyssSummonPanel104(owner.getSummonPanelSnapshot());
          abyssReduction104 = owner.abyssReduction104;
          statisticsOwner104 = owner;
+         var sand:Boolean=GlobalData.baseModHeroId(avatarData.id) == "A_3002_2";
+         if(sand)
+         {
+            sixBatchConfigureSummon105(true,false);
+            hpRatio = sandHpRatio;
+            dePhRatio = deMaRatio = 1;
+            secondaryRatio = 0;
+         }
          hpMax = scaledSummonStat(Number(panel.hpMax),hpRatio,1);
          hp = hpMax;
-         ap = scaledSummonStat(Number(panel.ap),apRatio,1);
+         ap = sand || getEffectiveActionType() == 3 ? 0 : scaledSummonStat(Number(panel.ap),apRatio,1);
          dePh = scaledSummonStat(Number(panel.dePh),dePhRatio,0);
          deMa = scaledSummonStat(Number(panel.deMa),deMaRatio,0);
          hit = scaledSummonStat(Number(panel.hit),secondaryRatio,0);
@@ -3018,7 +3041,7 @@ package com.meng52.game.module.avatar
       }
       private function kaisaTryCaptain104() : Boolean
       {
-         if(!skill1 || skill1.m_cooldownNum>=0 || !kaisaCanCast104("dragon_kaisa_c")) return false;
+         if(camilleWild || !skill1 || skill1.m_cooldownNum>=0 || !kaisaCanCast104("dragon_kaisa_c")) return false;
          var enabled:Boolean=false;
          for each(var action:Array in skill1.skills) if(action[0]=="manual_ability" && action[1]=="dragon_kaisa_c") enabled=true;
          if(!enabled) return false;
@@ -3739,6 +3762,7 @@ package com.meng52.game.module.avatar
       }
       public function demonHurtTaken105() : void
       {
+         if(camilleWild) return;
          var passive:Array=demonPassive105();
          if(!passive) return;
          var cap:Number=Number(passive[20])*skinBondNumber104("demon_rage_gain",1);
@@ -12941,8 +12965,163 @@ package com.meng52.game.module.avatar
       // END HERO FX E 106
       // END HERO CODE FX 106
 
+      // The native Champion Camille kit uses the authored unit definitions.
+      public function get camilleWild() : Boolean
+      {
+         return buffs && buffs["camille_wild"] != null;
+      }
+
+      private function camilleAction(skill:SkillSet, ability:String) : Array
+      {
+         var action:Array=skill && skill.skills && skill.skills.length ? skill.skills[0] as Array : null;
+         return action && action[0]=="manual_ability" && action[1]=="champion_camille_"+ability ? action : null;
+      }
+
+      private function camilleTarget(health:Boolean) : Avatar
+      {
+         if(!GameMap.currentMap) return null;
+         var best:Avatar=null;
+         for each(var foe:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+         {
+            if(!foe || foe.hp<=0 || foe.getType()!=1 || foe.isManualSummonUnit) continue;
+            if(!best || (health ? foe.hpMax>best.hpMax : foe.getDamage()>best.getDamage())) best=foe;
+         }
+         return best;
+      }
+
+      private function camilleCanCast(ability:String) : Boolean
+      {
+         if(camilleWild || hp<=0 || !GameMap.currentMap) return false;
+         if(ability=="rain") return true;
+         return ability!="fmvp" && !abilityState.root && !buffs["root"] && camilleTarget(ability=="smite")!=null;
+      }
+
+      private function camilleRefreshWild(resource:String) : void
+      {
+         if(!m_fightRes) return;
+         if(m_icon && m_icon.parent)
+         {
+            var previous:Image=m_icon.parent.getChildByName("camilleWildCard") as Image;
+            if(previous) previous.removeFromParent(true);
+            m_icon.visible=!resource;
+            if(resource)
+            {
+               var card:Image=GlobalFunction.getAvatarIcon(resource);
+               card.name="camilleWildCard";
+               card.x=m_icon.x; card.y=m_icon.y;
+               card.width=m_icon.width; card.height=m_icon.height;
+               card.touchable=false;
+               m_icon.parent.addChildAt(card,m_icon.parent.getChildIndex(m_icon));
+            }
+         }
+         else if(m_fightBg && m_resourceObj)
+         {
+            var old:Image=m_fightBg.getChildByName("camilleWildCard") as Image;
+            if(old) old.removeFromParent(true);
+            m_resourceObj.visible=!resource;
+            if(resource)
+            {
+               var icon:Image=GlobalFunction.getAvatarIcon(resource);
+               icon.name="camilleWildCard";
+               icon.pivotX=icon.width/2; icon.pivotY=icon.height/2;
+               icon.touchable=false;
+               m_fightBg.addChild(icon);
+            }
+         }
+      }
+
+      private function camilleQueueWild(resource:String) : void
+      {
+         if(GameMapLayer.gl) GameMapLayer.gl.delayCall(camilleRefreshWild,GameMap.actionDelay,resource);
+      }
+
+      private function camilleTrophy(aid:String, life:int) : Boolean
+      {
+         var unit:Avatar=new Avatar(aid,{lv:lv,slv:1});
+         unit.goFight(team,line,0,false);
+         if(!unit.inheritSummonPanel(this,1)) return false;
+         var panel:Object=getSummonPanelSnapshot();
+         unit.hp=unit.hpMax=int(panel.hpMax);
+         unit.dePh=int(panel.dePh); unit.deMa=int(panel.deMa);
+         unit.ap=0; unit.range=0; unit.abilityEntryAttack=0;
+         unit.hit=unit.flee=unit.crit=unit.tough=0; unit.abyssReduction104=0;
+         unit.addBuff("summon",life);
+         GameMap.currentMap.addAvatar(unit,team,line,pos,false);
+         return true;
+      }
+
+      private function camilleExecute(ability:String, skill:SkillSet) : Boolean
+      {
+         var action:Array=camilleAction(skill,ability);
+         if(!action || !camilleCanCast(ability)) return false;
+         var target:Avatar;
+         if(ability=="rain")
+         {
+            for each(target in GameMap.currentMap.getAliveList(team))
+            {
+               if(!target || target.hp<=0 || (target!==this && GlobalData.baseModHeroId(target.avatarData.id)!=String(action[4]))) continue;
+               target.injured(Tools.toInt(target.hpMax*Number(action[5])),1,null,4,this,false,this,null,"",false,true);
+               target.addPurifyCharges(int(action[6]));
+            }
+            addBuff("bless",0);
+            abilityFeedback("金色的雨","FX_S9150_PURIFY",0xFFD568);
+            return true;
+         }
+         target=camilleTarget(ability=="smite");
+         if(!target) return false;
+         if(ability=="smite")
+         {
+            target.addBuff("camille_wild",int(action[5]));
+            if(target.camilleWild)
+            {
+               delete target.abilityState.channel;
+               if(target.abilityState.nextRequiem || target.abilityState.nextStorm) target.sixNextInterrupted105();
+               var forms:Object=action[6];
+               var form:Object=GlobalData.$mConfig_avatar[String(forms[String(target.getStar())])];
+               if(form) target.camilleQueueWild(String(form.res));
+            }
+            abilityDash(target);
+            abilityFeedback("惩戒","",0xFFD568);
+            target.injured(Tools.toInt(target.hpMax*Number(action[4])),1,null,3,this,false,this);
+            return true;
+         }
+         if(!camilleTrophy(String(action[4]),int(action[12]))) return false;
+         var direction:int=team==1 ? 1 : -1;
+         var front:Avatar=target;
+         for each(var foe:Avatar in GameMap.currentMap.getAliveList(otherTeam))
+            if(foe.hp>0 && foe.line==target.line && direction*foe.pos>direction*front.pos) front=foe;
+         reline(target.line,Math.max(0,Math.min(GameMapConfig.LINE_POS,front.pos+direction*250)));
+         if(front!==target && !target.buffs["purify"] && !target.s2AnnieImmune())
+            target.reline(target.line,Math.max(0,Math.min(GameMapConfig.LINE_POS,front.pos+direction*125)),-2147483648,0,0,true);
+         abilityControl(target,"stun",int(action[11]));
+         var victims:Array=[target].concat(abilityCandidates(otherTeam,target.line,target.pos,Number(action[9]),int(action[10]),false,"nearest",[target]));
+         for(var index:int=0; index<2; ++index)
+            for each(var victim:Avatar in victims)
+               if(victim.hp>0 && hp>0)
+               {
+                  var ratio:Number=Number(action[5+2*index])+Number(action[6+2*index])*victim.hpMax/Math.max(1,getDamage());
+                  abilityHit(victim,ratio,index==0 ? 1 : 3,"");
+               }
+         return true;
+      }
+
+      private function camilleFmvp(before:int) : void
+      {
+         var action:Array=camilleAction(skillB,"fmvp");
+         if(!action || camilleWild || hp<=0 || (abilityState.camilleFmvpFired && skillB.m_cooldownNum>=0)) return;
+         var threshold:Number=hpMax*Number(action[4]);
+         if(before<=threshold || hp>threshold) return;
+         abilityState.camilleFmvpFired=true;
+         skillB.m_cooldownNum=skillB.skillSetData.cooldown;
+         addPurifyCharges(int(action[7]));
+         addBuff("bless",int(action[6]),1);
+         addBuff("shield",int(action[6]),Tools.toInt(hpMax*Number(action[5])),0,-1,this);
+         abilityFeedback("FMVP","",0xFFD568);
+      }
+
       public function abilityCanCast(kind:String, distance:int, sourceSkill:* = null) : Boolean
       {
+         if(kind.indexOf("champion_camille_")==0) return camilleCanCast(kind.substr(17));
          if(hp <= 0 || !GameMap.currentMap) return false;
          if(kind.indexOf("six_")==0) return sixStarCanCast105(kind,distance);
          if(kind.indexOf("demon_trynd_")==0) return demonCanCast105(kind);
@@ -13045,6 +13224,7 @@ package com.meng52.game.module.avatar
 
       private function s2AnnieStatus(kind:String) : void
       {
+         if(camilleWild) return;
          var spec:Object=s2AnnieCore();
          if(!spec || hp<=0 || !GameMap.currentMap) return;
          if(Buff.LIST_DEBUFF.indexOf(kind)<0 && ["cold","wanted","charmed","exposed","airborne","contract","windmark","bleed","mark","bomb"].indexOf(kind)<0) return;
@@ -14075,6 +14255,7 @@ package com.meng52.game.module.avatar
 
       private function executeAbilityBody(kind:String, scale:Number, effect:String, sourceSkill:*) : Boolean
       {
+         if(kind.indexOf("champion_camille_")==0) return camilleExecute(kind.substr(17),sourceSkill as SkillSet);
          if(kind.indexOf("six_")==0) return sixStarExecute105(kind,effect,sourceSkill);
          if(kind.indexOf("demon_trynd_")==0) return demonExecute105(kind,sourceSkill);
          if(kind.indexOf("night_yasuo_")==0) return yasuoExecute104(kind,sourceSkill);
@@ -14496,7 +14677,7 @@ package com.meng52.game.module.avatar
 
       private function queueNurseHealing(amount:int, overheal:int = 0) : void
       {
-         if(hp <= 0 || amount <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "nurse_healing") return;
+         if(camilleWild || hp <= 0 || amount <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "nurse_healing") return;
          if(!abilityState.nursePending) abilityState.nursePending = [];
          overheal = Math.max(0,Math.min(amount,overheal));
          var overflowRate:Number = skillB.skills[0].length > 2 ? Number(skillB.skills[0][2]) : 1;
@@ -14532,7 +14713,7 @@ package com.meng52.game.module.avatar
 
       private function queueSantaKill() : void
       {
-         if(hp <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "santa_kill") return;
+         if(camilleWild || hp <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "santa_kill") return;
          abilityState.santaStacks = int(abilityState.santaStacks)+int(skillB.skills[0][1]);
          abilityState.santaKills = int(abilityState.santaKills)+int(skillB.skills[0][2]);
       }
@@ -14666,7 +14847,7 @@ package com.meng52.game.module.avatar
 
       private function queueCatSkinKill() : void
       {
-         if(hp <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "cat_passive") return;
+         if(camilleWild || hp <= 0 || !skillB || !skillB.skills || !skillB.skills.length || skillB.skills[0][0] != "cat_passive") return;
          var round:int = GameMap.currentMap ? GameMap.currentMap.roundNum : 0;
          if(abilityState.catKillRound == null || int(abilityState.catKillRound) != round)
          {
@@ -14988,6 +15169,7 @@ package com.meng52.game.module.avatar
       public function emitModEvent(event:String,source:Avatar = null,target:Avatar = null,amount:Number = 0,overheal:Number = 0) : Boolean
       {
          if(event=="death") sixBatchDeath105(source);
+         if(camilleWild) return false;
          if(event=="crit" && skillB && sixBatchPassive105("yasuo")) skillB.cooldown();
          yasuoEvent104(event,source,target,amount);
          demonEvent105(event,source,target);
@@ -16725,7 +16907,7 @@ package com.meng52.game.module.avatar
          for each(var current:Buff in buffs) if(current === param1) active = true;
          if(!active && manualSkillDots)
             for each(var dot:Object in manualSkillDots) if(dot && dot.visual === param1) active = true;
-         if(!active) return;
+         if(!active || param1.type=="camille_wild") return;
          if(!m_buff)
          {
             return;
@@ -16945,6 +17127,7 @@ package com.meng52.game.module.avatar
                case "evil":
                case "taunt":
                case "bless":
+               case "camille_wild":
                   if(_loc11_.round >= _loc12_.round)
                   {
                      removeBuff(param1,false,false);
@@ -17295,18 +17478,19 @@ package com.meng52.game.module.avatar
             return;
          }
          var _loc3_:GameMapLayer = GameMapLayer.gl;
-         if(_loc2_.displayObject)
+         if(param1!="camille_wild" && _loc2_.displayObject)
          {
             _loc3_.delayCall(m_buff.removeChild,GameMap.actionDelay,_loc2_.displayObject);
          }
          delete buffs[param1];
+         if(param1=="camille_wild") camilleQueueWild(null);
          if(param1=="purify") purifyExhausted106();
          if(_loc2_.type=="shield") queueVitalBar104();
       }
 
       private function purifyExhausted106() : void
       {
-         if(hp<=0 || !skillB) return;
+         if(camilleWild || hp<=0 || !skillB) return;
          var sivir:Array = sixNextPassive105("sivir");
          if(sivir) sixNextHeal105(hpMax*Number(sivir[5]));
       }
@@ -17386,6 +17570,7 @@ package com.meng52.game.module.avatar
             if(_loc3_ == "bless" && _loc1_.value <= 0) continue;
             // Purify layers and curse charges last until they are spent.
             if(_loc3_ == "purify" || _loc3_ == "curse") continue;
+            if(_loc3_ == "camille_wild") continue;
             if(_loc3_=="sixReactionMfShield105") continue;
             --_loc1_.round;
             switch(_loc3_)
@@ -18923,10 +19108,16 @@ package com.meng52.game.module.avatar
          }
          // A finished lane may still supply a global turn-start passive.
          // The lane-end guard below stops normal attacks, skills and movement.
-         if(_currentMap.isEnd() || (_currentMap.winnerList[line] != 0 && !abilityState.nextRequiem &&
+         var camilleGlobal:Boolean=Boolean(camilleAction(skill0,"rain") || camilleAction(skill0,"engage"));
+         if(_currentMap.isEnd() || (_currentMap.winnerList[line] != 0 && !camilleGlobal && !abilityState.nextRequiem &&
             !abilityState.nextStorm && (!skillB || skillB.getCastRange() <= GameMapConfig.LINE_POS)))
          {
             return false;
+         }
+         if(camilleWild)
+         {
+            if(buffs["camille_wild"].round<=0) removeBuff("camille_wild");
+            else --buffs["camille_wild"].round;
          }
          advanceManualOwnerAction();
          _currentMap.startAction(this);
@@ -18978,11 +19169,11 @@ package com.meng52.game.module.avatar
          {
             checkSkillB();
          }
-         if(abilityState.sixTurret105 || abilityState.sixCaitlyn105) sixStarTurnStart105();
-         if(hp>0 && (skillB || abilityState.sixMorganaLinks105)) sixFollowupTurn105();
+         if(!camilleWild && (abilityState.sixTurret105 || abilityState.sixCaitlyn105)) sixStarTurnStart105();
+         if(!camilleWild && hp>0 && (skillB || abilityState.sixMorganaLinks105)) sixFollowupTurn105();
          var requiemSpent:Boolean=(abilityState.nextRequiem || abilityState.nextStorm) && sixNextTurn105();
          getTeamHp();
-         if(GameMap.currentMap.isEnd(line))
+         if(GameMap.currentMap.isEnd(line) && !camilleGlobal)
          {
             _gl.delayCall(_currentMap.endAction,GameMap.actionDelay);
             return true;
@@ -19022,6 +19213,14 @@ package com.meng52.game.module.avatar
          {
             _gl.delayCall(SoundManager.getOnlyExample().playSound,GameMap.actionDelay,"stun");
             GameMap.actionDelay += 0.2;
+         }
+         else if(camilleGlobal && (camilleAction(skill0,"rain") || _currentMap.isEnd(line)))
+         {
+            if(!camilleWild && !buffs["silence"])
+            {
+               skill0.checkUse();
+               if(isLeader && skill1) skill1.checkUse();
+            }
          }
          else if(abilityState.sixBatchSand105)
          {
@@ -20556,6 +20755,7 @@ package com.meng52.game.module.avatar
                param7.manualSkillDamageCapture.total = Number(param7.manualSkillDamageCapture.total) + Math.min(Math.max(0,param1),Math.max(0,hp));
             }
             hp -= param1;
+            if(hp>0 && skillB) camilleFmvp(abilityHpBefore);
             abilityDamageTaken = Math.min(Math.max(0,param1),Math.max(0,abilityHpBefore));
             if(param4 == 6)
             {
@@ -20810,7 +21010,7 @@ package com.meng52.game.module.avatar
             }
          }
          if(param4 != 4) abilityRecordDamage(param7,param4,abilityHpBefore,abilityDamageTaken);
-         if(modActualDamage>0 && skillB && avatarData.id=="A_1138_6" && sixFollowupPassive105("tahm"))
+         if(!camilleWild && modActualDamage>0 && skillB && avatarData.id=="A_1138_6" && sixFollowupPassive105("tahm"))
             abilityState.sixTahmGrey105=Number(abilityState.sixTahmGrey105 || 0)+modActualDamage;
          var catContext:Object = currentAbilityAttack();
          if(param2 > 1 && param4 >= 1 && param4 <= 3 && param7 && catContext && catContext.owner === param7 && catContext.catCaptainCapture)
@@ -20823,7 +21023,7 @@ package com.meng52.game.module.avatar
          if(param4>=1 && param4<=3 && param7 && catContext &&
             (catContext.sixNamiWave105 || catContext.sixNamiTicket105 || param7.abilityState.sixNamiBless105))
             param7.sixFollowupAfterHit105(this,catContext,abilityDamageTaken+statisticsShield104);
-         if(param7 && param7.skillB && (param4>=1 && param4<=3 || param4>=6 && param4<=8))
+         if(param7 && !param7.camilleWild && param7.skillB && (param4>=1 && param4<=3 || param4>=6 && param4<=8))
          {
             param7.sixBatchAfterDamage105(this,abilityDamageTaken+statisticsShield104);
             param7.sixReactionMfDealt105(this,modActualDamage+statisticsShield104);
@@ -21174,6 +21374,7 @@ package com.meng52.game.module.avatar
 
       public function checkSkillB() : void
       {
+         if(camilleWild) return;
          if(skillB && GlobalData.skillBoo)
          {
             GlobalData.skillBoo = false;
@@ -21189,6 +21390,7 @@ package com.meng52.game.module.avatar
 
       public function checkSkill() : Boolean
       {
+         if(camilleWild) return false;
          var _loc1_:Boolean = false;
          if(buffs["silence"])
          {

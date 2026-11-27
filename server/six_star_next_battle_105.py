@@ -247,14 +247,26 @@ class SixStarNextBattle:
         generation = dodger.get('next_mirror_generation', 0)
         if generation >= int(passive[6]):
             return
-        state = self.state(owner)
-        living = [u for u in state.get('next_mirrors', []) if u['hp'] > 0]
-        clone = self._spawn_summon(owner, owner['aid'], passive[4], 3, position_anchor=dodger)
+        clone = self._spawn_summon(owner, owner['aid'], passive[4], 3, position_anchor=dodger, action_type=1)
         if clone is None:
             return
         self.six_next_copy_normal(clone, owner)
         clone['next_mirror_generation'] = generation + 1
-        if len(living) >= int(passive[5]):
+        self.six_next_register_mirror(owner, clone)
+
+    def six_next_register_mirror(self, owner, clone, captain=False):
+        state = self.state(owner)
+        living = [u for u in state.get('next_mirrors', []) if u['hp'] > 0]
+        if captain:
+            previous = next((u for u in living if u.get('next_mirror_captain')), None)
+            if previous is not None:
+                living = [u for u in living if u is not previous]
+                previous['hp'] = 0
+                self.death(previous)
+            clone['next_mirror_captain'] = True
+        passive = self.six_next_passive(owner, 'leblanc')
+        limit = int(passive[5]) if passive else 8
+        if len(living) >= limit:
             old = living.pop(0)
             old['hp'] = 0
             self.death(old)
@@ -384,10 +396,12 @@ class SixStarNextBattle:
             return
         direct = 1 <= kind <= 3 and not dot_kind
         if source and self._team_number(source) != self._team_number(target):
-            if demon := self.demon_state(source):
-                demon['dealt'] = True
-            self.six_next_rage(source)
-            if direct:
+            source_wild = self._buff(source, 'camille_wild') is not None
+            if not source_wild:
+                if demon := self.demon_state(source):
+                    demon['dealt'] = True
+                self.six_next_rage(source)
+            if direct and not self._buff(target, 'camille_wild'):
                 self.six_next_rage(target)
                 self.demon_hurt(target)
                 if self.six_next_passive(target, 'graves') and target['hp'] > 0:
@@ -395,7 +409,7 @@ class SixStarNextBattle:
                     state['next_graves_hits'] = (state.get('next_graves_hits', 0)+1) % 3
                     if not state['next_graves_hits']:
                         self._tick_slot_cd(target, '_skill_cd')
-            if ctx:
+            if ctx and not source_wild:
                 leech = ctx.get('six_next_leech', 0)
                 if (passive := self.six_next_passive(source, 'sivir')) and (
                         ctx['kind'] == 'basic' or ctx.get('skill') is source.get('leader_skill')):
@@ -419,5 +433,6 @@ class SixStarNextBattle:
                     self.six_next_command_void(source, target)
         if lost and (kind==7 or dot_kind=='burn'):
             for dragon in self.opponents(target):
-                if self.state(dragon).get('next_dragon') and (passive := self.six_next_passive(dragon, 'shyvana')):
+                if (not self._buff(dragon, 'camille_wild') and self.state(dragon).get('next_dragon')
+                        and (passive := self.six_next_passive(dragon, 'shyvana'))):
                     self.six_next_stack_shield(dragon, 'next_dragon_shield', lost*passive[4])

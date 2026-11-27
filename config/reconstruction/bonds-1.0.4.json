@@ -4837,7 +4837,10 @@
         "A_1135"
       ],
       "benefits": {
-        "A_1053": {},
+        "A_1053": {
+          "skill_rate": 0.44,
+          "passive_skill_rate": 0.44
+        },
         "A_1096": {
           "secondary": [
             "crit",
@@ -4851,91 +4854,6 @@
           "stats": {
             "ap": 0.52
           }
-        }
-      },
-      "focus": "A_1053",
-      "mechanism": {
-        "normal": {
-          "replace": true,
-          "name": "破阵霰弹",
-          "actions": [
-            [
-              "sunder_percent",
-              3.2,
-              1,
-              0.3,
-              2,
-              "FX60_SUNDER"
-            ],
-            [
-              "push_aoe",
-              3000,
-              350,
-              "push"
-            ]
-          ],
-          "policies": [
-            "enemy_lane_frontmost",
-            "enemy_lane_all"
-          ],
-          "caps": [
-            2,
-            2
-          ],
-          "info": "轰击本路2名前排造成320%攻击物伤并削弱30%双防2回合，击退350码，为猎团打开火力窗口。强化每级伤害+32%。",
-          "pl": [
-            0,
-            2,
-            3000,
-            0,
-            99,
-            0
-          ],
-          "upgrades": [
-            [
-              0,
-              1,
-              0.32
-            ]
-          ]
-        },
-        "captain": {
-          "replace": true,
-          "name": "悬赏清场",
-          "actions": [
-            [
-              "dispel_good",
-              1,
-              "FX60_PURIFY"
-            ],
-            [
-              "locked_combo_group",
-              2,
-              3,
-              2.2,
-              1,
-              0,
-              "FX60_SLASH_COMBO"
-            ]
-          ],
-          "policies": [
-            "enemy_global_lowest_hp_ratio_hero",
-            "enemy_global_lowest_hp_ratio_hero"
-          ],
-          "caps": [
-            2,
-            2
-          ],
-          "info": "跨路锁定生命比例最低的2名英雄，先驱散增益，再各轰击3次，每击220%攻击物伤，收割分散的残血目标。",
-          "pl": [
-            2,
-            3,
-            9999,
-            0,
-            99,
-            1
-          ],
-          "upgrades": null
         }
       }
     },

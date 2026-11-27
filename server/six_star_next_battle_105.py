@@ -247,14 +247,26 @@ class SixStarNextBattle:
         generation = dodger.get('next_mirror_generation', 0)
         if generation >= int(passive[6]):
             return
-        state = self.state(owner)
-        living = [u for u in state.get('next_mirrors', []) if u['hp'] > 0]
-        clone = self._spawn_summon(owner, owner['aid'], passive[4], 3, position_anchor=dodger)
+        clone = self._spawn_summon(owner, owner['aid'], passive[4], 3, position_anchor=dodger, action_type=1)
         if clone is None:
             return
         self.six_next_copy_normal(clone, owner)
         clone['next_mirror_generation'] = generation + 1
-        if len(living) >= int(passive[5]):
+        self.six_next_register_mirror(owner, clone)
+
+    def six_next_register_mirror(self, owner, clone, captain=False):
+        state = self.state(owner)
+        living = [u for u in state.get('next_mirrors', []) if u['hp'] > 0]
+        if captain:
+            previous = next((u for u in living if u.get('next_mirror_captain')), None)
+            if previous is not None:
+                living = [u for u in living if u is not previous]
+                previous['hp'] = 0
+                self.death(previous)
+            clone['next_mirror_captain'] = True
+        passive = self.six_next_passive(owner, 'leblanc')
+        limit = int(passive[5]) if passive else 8
+        if len(living) >= limit:
             old = living.pop(0)
             old['hp'] = 0
             self.death(old)

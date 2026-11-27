@@ -5,12 +5,12 @@ import hashlib
 import json
 from pathlib import Path
 
-CHAMPION = 'A_1804_6'
+CHAMPION = 'A_1805_6'
 TROPHY = 'A_2905000_6'
-NORMAL = 'S_98618040_6'
-CAPTAIN = 'S_98618041_6'
-PASSIVE = 'S_98618043_6'
-RAIN = 'S_98618044_6'
+NORMAL = 'S_98618050_6'
+CAPTAIN = 'S_98618051_6'
+PASSIVE = 'S_98618053_6'
+RAIN = 'S_98618054_6'
 MEDIA = Path(__file__).resolve().parents[1] / 'config/reconstruction/champion-camille-media'
 WILD_FORMS = {'1': 'A_4001_1', '2': 'A_4001_2', '3': 'A_4001_3', '4': 'A_4004_4',
               '5': 'A_4014_5', '6': 'A_4015_6'}

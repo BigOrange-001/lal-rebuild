@@ -3,7 +3,7 @@ MIN_ATTACK_RANGE = 350
 # Form-changing heroes have their own positioning. Graves has short shotgun
 # reach, and the two newer skins already have individually tuned ranges.
 SPECIAL_RANGES = frozenset({
-    'A_1036', 'A_1041', 'A_1053', 'A_1105', 'A_1120', 'A_1123', 'A_1801', 'A_1802',
+    'A_1036', 'A_1041', 'A_1053', 'A_1105', 'A_1120', 'A_1123', 'A_1801', 'A_1802', 'A_1804',
 })
 
 

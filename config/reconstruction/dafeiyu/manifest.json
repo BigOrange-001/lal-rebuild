@@ -1,0 +1,69 @@
+{
+  "digest": "c71f2f86bc9987c1e8cbe2da742486da2b672e442af20dab38ab7810b80dfee3",
+  "assets": [
+    {
+      "kind": "image",
+      "width": 600,
+      "height": 300,
+      "alias": "MOD_DAFEIYU_6",
+      "path": "fish-portrait.png",
+      "role": "portrait",
+      "sha256": "18e2e1c9f9862de2f63ca055ae91b9eb6047e17df810f5e34000c99c86bcf11a",
+      "bytes": 176385,
+      "packageId": "builtin.dafeiyu",
+      "version": "1.0.5",
+      "contentDigest": "c71f2f86bc9987c1e8cbe2da742486da2b672e442af20dab38ab7810b80dfee3"
+    },
+    {
+      "kind": "image",
+      "width": 160,
+      "height": 160,
+      "cardFrame": [
+        27,
+        19,
+        106,
+        122
+      ],
+      "alias": "MOD_DAFEIYU_6_icon0000",
+      "path": "fish-card.png",
+      "role": "icon",
+      "sha256": "c4efe9e77cc75304dc27d664352b6ec88b1aaeaf07d3db6e66a2603fedab713c",
+      "bytes": 29613,
+      "packageId": "builtin.dafeiyu",
+      "version": "1.0.5",
+      "contentDigest": "c71f2f86bc9987c1e8cbe2da742486da2b672e442af20dab38ab7810b80dfee3"
+    },
+    {
+      "kind": "image",
+      "width": 600,
+      "height": 300,
+      "alias": "MOD_DAFEIYU_WHALE_6",
+      "path": "whale-portrait.png",
+      "role": "portrait",
+      "sha256": "2c8533769232ae2a96b1afc6af835f83ef0d3d5eb851b890b32645b136e60bc2",
+      "bytes": 77555,
+      "packageId": "builtin.dafeiyu",
+      "version": "1.0.5",
+      "contentDigest": "c71f2f86bc9987c1e8cbe2da742486da2b672e442af20dab38ab7810b80dfee3"
+    },
+    {
+      "kind": "image",
+      "width": 256,
+      "height": 256,
+      "cardFrame": [
+        16,
+        0,
+        223,
+        256
+      ],
+      "alias": "MOD_DAFEIYU_WHALE_6_icon0000",
+      "path": "whale-card.png",
+      "role": "icon",
+      "sha256": "3b26d6ad6d832bbcc61a29a0a7eb1958a995c61d186af6fd231ef8a2087fbaa3",
+      "bytes": 74970,
+      "packageId": "builtin.dafeiyu",
+      "version": "1.0.5",
+      "contentDigest": "c71f2f86bc9987c1e8cbe2da742486da2b672e442af20dab38ab7810b80dfee3"
+    }
+  ]
+}

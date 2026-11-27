@@ -4,7 +4,7 @@ from six_star_balance_105 import HEAL, MAGIC, SHIELD, compound, endpoint, text, 
 from skill_output_104 import RATE
 
 PASSIVE_NAMES = {
-    1053: '霰弹交火', 1054: '巨龙真身', 1056: '断刃震荡', 1060: '光束护盾',
+    1053: '新命运', 1054: '巨龙真身', 1056: '断刃震荡', 1060: '光束护盾',
     1078: '弹射狩猎', 1086: '月银之刃', 1098: '死亡契约', 1103: '虚灵号令',
     1114: '风暴龙光环', 1127: '镜花水月', 1205: '吸元秘术',
 }
@@ -109,11 +109,12 @@ def apply_next(avatars, normal, captain, passive):
     row = captain(1127)
     timing(row, 2, 4)
     row['sixStarNextLeBlancClone105'] = True
-    text(row, row.get('rankInfoTemplate', row['info']) + '\n队长技能召唤的分身也可施放恶意魔印。')
+    description = row.get('rankInfoTemplate', row['info']).replace('面板与自身相同但是没有技能的分身', '继承自身面板且可施放小技能的第一代分身')
+    text(row, description + '\n大招分身闪避时也能召唤下一代，与被动召唤的分身共用8个名额。')
     action(passive(1127), 'leblanc_p', 0, 0, 0, mirror, [1, 8, 3],
            '自身或分身闪避时，在闪避者所在分路召唤一个能施放小技能的分身，继承本体{rank:0:4}即时面板。'
            '本体直接召出的分身为第一代；第{flat:0:6}代分身仍可闪避，但不会再召唤。'
-           '闪避分身存活3次自身行动，每个本体最多保留{flat:0:5}个；达到上限时替换最早召唤的存活分身。', (5, 6))
+           '闪避分身存活3次自身行动。每个本体的大招与被动分身合计最多{flat:0:5}个；达到上限时替换最早召唤的存活分身。', (5, 6))
 
     row = normal(1203)
     row['sixStarNextBaronLane105'] = True

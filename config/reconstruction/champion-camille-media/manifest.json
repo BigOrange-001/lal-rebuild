@@ -1,10 +1,10 @@
 {
-  "digest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9",
+  "digest": "998437c523e0cbc68d736d6b91f0093de486f7d52bb693124b439814b4927db2",
   "assets": [
     {
       "alias": "MOD_CHAMPION_CAMILLE_6",
       "kind": "image",
-      "path": "portraits/A_1804_6.png",
+      "path": "portraits/A_1805_6.png",
       "sha256": "f670f56da945ba93445c7f61afc6cdfa5ab3e218caac78c2260748da6dbecdcd",
       "bytes": 213005,
       "width": 600,
@@ -12,12 +12,12 @@
       "role": "portrait",
       "packageId": "builtin.champion-camille",
       "version": "1.0.6",
-      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+      "contentDigest": "998437c523e0cbc68d736d6b91f0093de486f7d52bb693124b439814b4927db2"
     },
     {
       "alias": "MOD_CHAMPION_CAMILLE_6_icon0000",
       "kind": "image",
-      "path": "cards/A_1804_6.png",
+      "path": "cards/A_1805_6.png",
       "sha256": "46d70c8fb74d182f1b3dc5ed211557958da0a0f684fb224ebcfc4fa39cee3b69",
       "bytes": 34498,
       "width": 160,
@@ -31,7 +31,7 @@
         112,
         128
       ],
-      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+      "contentDigest": "998437c523e0cbc68d736d6b91f0093de486f7d52bb693124b439814b4927db2"
     },
     {
       "alias": "MOD_CHAMPION_TROPHY_6",
@@ -44,7 +44,7 @@
       "role": "portrait",
       "packageId": "builtin.champion-camille",
       "version": "1.0.6",
-      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+      "contentDigest": "998437c523e0cbc68d736d6b91f0093de486f7d52bb693124b439814b4927db2"
     },
     {
       "alias": "MOD_CHAMPION_TROPHY_6_icon0000",
@@ -63,7 +63,7 @@
         112,
         128
       ],
-      "contentDigest": "007812ccee183039b81a1783553237d6b10397b373d79154e11acd71321bc1e9"
+      "contentDigest": "998437c523e0cbc68d736d6b91f0093de486f7d52bb693124b439814b4927db2"
     }
   ]
 }

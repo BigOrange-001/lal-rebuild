@@ -10,6 +10,7 @@ import json
 PLAN = Path(__file__).resolve().parents[1] / 'config/reconstruction/bonds-1.0.4.json'
 MAIN = ('hp', 'ap', 'de_ph', 'de_ma')
 SECONDARY = ('hit', 'flee', 'crit', 'tough')
+SKILL_SLOTS = {'skill': 10, 'leader_skill': 11, 'skillB': 13}
 
 
 def extend_action_metadata(row):
@@ -90,11 +91,11 @@ def skill_ids(cfg, aid, bonds):
     # An explicit Mod skill replacement wins for that slot. Never overwrite it
     # with a variant generated from the pre-patch skill definition.
     return {field: sid for field, sid in variants.items()
-            if len(pl) > {'skill':10, 'leader_skill':11}[field]
-            and sources.get(field) == pl[{'skill':10, 'leader_skill':11}[field]]}
+            if len(pl) > SKILL_SLOTS[field]
+            and sources.get(field) == pl[SKILL_SLOTS[field]]}
 
 
-def _scale_skill(source, factor):
+def _scale_skill(source, factor, *, passive=False):
     from skill_balance_overlay import _action_paths, _get, _set
     from captain_strength import _EXTRA_PATHS, _update_growth
     row = copy.deepcopy(source)
@@ -112,7 +113,7 @@ def _scale_skill(source, factor):
             # intentionally excludes them and is not the bond magnitude map.
             if action[1] == 'buff':
                 extras.extend((i,) for i in (5,6,7,18,19) if i < len(action))
-        if action[0] == 'manual_ability' and str(action[1]).startswith('six_') and not str(action[1]).endswith('_p'):
+        if action[0] == 'manual_ability' and str(action[1]).startswith('six_') and (passive or not str(action[1]).endswith('_p')):
             extras.extend((i,) for i in range(4, len(action)))
         if action[0] == 'cure' and row.get('sixStarExactHeal105') and len(action) == 4:
             extras.append((2,))
@@ -124,7 +125,7 @@ def _scale_skill(source, factor):
             _set(action, path, before * factor)
             paths.add((index, *path))
     _update_growth(row, paths, factor)
-    if any(a[0] == 'manual_ability' for a in row.get('skill', [])) and not row.get('skin_revision_v2_104'):
+    if not passive and any(a[0] == 'manual_ability' for a in row.get('skill', [])) and not row.get('skin_revision_v2_104'):
         row['manualDamageMultiplier'] = row.get('manualDamageMultiplier', 1) * factor
         row['manualEffectMultiplier'] = row.get('manualEffectMultiplier', 1) * factor
     kinds = [a[1] for a in row.get('skill',[]) if a[0]=='manual_ability']
@@ -174,25 +175,31 @@ def apply_bonds_104(document):
         if not related:
             continue
         variants[aid] = {}
-        sources[aid] = {'skill':hero['pl'][10], 'leader_skill':hero['pl'][11]}
+        slots = {'skill': 10, 'leader_skill': 11}
+        if len(hero['pl']) > 13 and hero['pl'][13] and any(
+                b['benefits'][family].get('passive_skill_rate') for b in related):
+            slots['skillB'] = 13
+        sources[aid] = {field: hero['pl'][slot] for field, slot in slots.items()}
         for count in range(1, len(related) + 1):
             for selected in itertools.combinations(related, count):
                 key = '|'.join(sorted(b['id'] for b in selected))
                 replacements = {}
                 mechanics = [b for b in selected if b.get('focus') == family]
                 strongest = max(mechanics, key=lambda b: (len(b['families']), b['id']), default=None)
-                for slot, field in ((10, 'skill'), (11, 'leader_skill')):
+                for field, slot in slots.items():
+                    rate_key = 'passive_skill_rate' if field == 'skillB' else 'skill_rate'
                     factor = 1.0
                     for bond in selected:
-                        factor *= 1 + bond['benefits'][family].get('skill_rate', 0)
+                        factor *= 1 + bond['benefits'][family].get(rate_key, 0)
+                    uses_mechanism = strongest and (slot == 10 or (slot == 11 and len(strongest['families']) >= 4))
                     source = cfg['skill'].get(hero['pl'][slot])
                     if not source:
                         continue
                     row = copy.deepcopy(source)
-                    if strongest and source.get('skin_revision_v2_104') and (slot == 10 or len(strongest['families']) >= 4):
+                    if uses_mechanism and source.get('skin_revision_v2_104'):
                         from skin_revision_104 import update_bond_mechanism
                         update_bond_mechanism(row,strongest,slot)
-                    elif strongest and (slot == 10 or len(strongest['families']) >= 4):
+                    elif uses_mechanism:
                         mechanism = strongest['mechanism']['normal' if slot == 10 else 'captain']
                         if mechanism.get('replace'):
                             row['skill'] = copy.deepcopy(mechanism['actions'])
@@ -221,8 +228,8 @@ def apply_bonds_104(document):
                         elif row.get('rankInfoTemplate'):
                             row['rankInfoTemplate'] += '\n'+mechanism['info']
                     if factor != 1:
-                        row = _scale_skill(row, factor)
-                    if factor == 1 and not (strongest and (slot == 10 or len(strongest['families']) >= 4)):
+                        row = _scale_skill(row, factor, passive=field == 'skillB')
+                    if factor == 1 and not uses_mechanism:
                         continue
                     sid = 'S_7' + str(int(hashlib.sha256(f'{aid}:{key}:{slot}'.encode()).hexdigest()[:12], 16)) + '_' + aid.rsplit('_', 1)[1]
                     if sid in cfg['skill']:
@@ -236,7 +243,7 @@ def apply_bonds_104(document):
                             row['equipment_source_skill_104'] = row[policy_key]['skillId']
                             row[policy_key]['skillId'] = sid
                     row['id'] = sid
-                    row['bond_power_rate_104'] = factor * (1 + {2:.25,3:.32,4:.44,5:.56}[len(strongest['families'])] if strongest and (slot == 10 or len(strongest['families']) >= 4) else 1)
+                    row['bond_power_rate_104'] = factor * (1 + {2:.25,3:.32,4:.44,5:.56}[len(strongest['families'])] if uses_mechanism else 1)
                     cfg['skill'][sid] = row
                     replacements[field] = sid
                 variants[aid][key] = replacements

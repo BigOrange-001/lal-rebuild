@@ -33,6 +33,59 @@ class NextSixStarTests(TestCase):
             battle._injured(owner,100,1,source=foes[0])
         self.assertEqual(owner['_skill_cd'],3)
 
+    def test_graves_bounty_hunters_scales_existing_skills(self):
+        from battle_engine import _native_skill_snapshot
+        from bonds_104 import active_bonds, skill_ids
+
+        cfg = self.fixture.cfg
+        for quality in (5, 6):
+            roster = [f'A_{number}_{quality}' for number in (1053, 1096, 1105, 1135)]
+            aid = roster[0]
+            bonds = active_bonds(cfg, aid, roster)
+            self.assertEqual([bond['id'] for bond in bonds], ['b106'])
+            variants = skill_ids(cfg, aid, bonds)
+            for field, slot in (('skill', 10), ('leader_skill', 11)):
+                with self.subTest(quality=quality, slot=slot):
+                    base_id = cfg['avatar'][aid]['pl'][slot]
+                    boosted_id = variants[field]
+                    base = _native_skill_snapshot(cfg, base_id, 10)
+                    boosted = _native_skill_snapshot(cfg, boosted_id, 10)
+                    self.assertEqual(cfg['skill'][boosted_id]['name'], cfg['skill'][base_id]['name'])
+                    self.assertEqual(boosted['pl'], base['pl'])
+                    self.assertEqual([a[0] for a in boosted['skills']], [a[0] for a in base['skills']])
+                    action, coefficient = (0, 5) if (quality, slot) == (6, 10) else (2, 1)
+                    self.assertAlmostEqual(boosted['skills'][action][coefficient],
+                                           base['skills'][action][coefficient] * 1.44)
+
+    def test_graves_bounty_hunters_boosts_passive_in_battle_snapshot(self):
+        from gameplay_roster import GameplayRosterEquipment
+
+        cfg = self.fixture.cfg
+        roster = [f'A_{number}_6' for number in (1053, 1096, 1105, 1135)]
+        ids = [f'{aid}|{i}' for i, aid in enumerate(roster)]
+        profile = {
+            'avatars': {iid: {'aid': aid, 'lv': 60} for iid, aid in zip(ids, roster)},
+            'team': [ids], 'as_equips': [[] for _ in ids], 'my_equips': {},
+            'attrs': {'team_num': 0},
+        }
+        equipment = GameplayRosterEquipment(None, {'cfg': cfg})
+        bonded = equipment.battle_attributes(profile, ids[0])['skillB']
+        profile['team'] = [ids[:-1]]
+        unbonded = equipment.battle_attributes(profile, ids[0])['skillB']
+        self.assertNotEqual(bonded['skid'], unbonded['skid'])
+        self.assertEqual(cfg['skill'][bonded['skid']]['name'], '新命运')
+        self.assertEqual(bonded['pl'], unbonded['pl'])
+        self.assertEqual(bonded['skills'][0][:4], unbonded['skills'][0][:4])
+
+        battle, owner, foes = self.arena(1053)
+        owner['skillB'] = bonded
+        self.assertEqual(battle._get_range(owner), 500)
+        for distance, coefficient in ((200, 4), (350, 2.8), (500, 1.8)):
+            foes[0]['pos'] = owner['pos'] - distance
+            with patch.object(battle, '_native_damage', wraps=battle._native_damage) as hit:
+                battle._basic_attack(owner, foes[0])
+                self.assertAlmostEqual(hit.call_args.args[2], coefficient * 1.44)
+
     def test_shyvana_transforms_once_and_shields_from_cross_lane_burn(self):
         battle, owner, foes = self.arena(1054)
         old = owner['hp_max']
@@ -107,7 +160,10 @@ class NextSixStarTests(TestCase):
               patch.object(battle, 'six_next_raw', wraps=battle.six_next_raw) as lunar):
             battle._basic_attack(owner, foes[0])
         self.assertEqual(aura['left'], 2)
-        nami.assert_called_once()
+        self.assertEqual(nami.call_count, 2)
+        for hit in nami.call_args_list:
+            self.assertIs(hit.args[1], foes[0])
+            self.assertEqual(hit.args[2], 625)
         lunar.assert_called_once()
         self.assertIs(lunar.call_args.args[1], foes[0])
 
@@ -228,10 +284,20 @@ class NextSixStarTests(TestCase):
         captain_clone = battle.a[1]
         self.assertEqual(captain_clone['next_mirror_generation'], 1)
         battle._emit_mod_event(captain_clone, 'dodge', foes[0], captain_clone)
-        passive_clone, = battle.state(owner)['next_mirrors']
-        self.assertIsNot(passive_clone, captain_clone)
+        captain_entry, passive_clone = battle.state(owner)['next_mirrors']
+        self.assertIs(captain_entry, captain_clone)
+        self.assertEqual(captain_clone['skill'], owner['skill'])
         self.assertEqual(passive_clone['next_mirror_generation'], 2)
         self.assertEqual(passive_clone['ap'], battle._summon_panel_snapshot(owner)['ap'])
+        for _ in range(7):
+            battle._emit_mod_event(passive_clone, 'dodge', foes[0], passive_clone)
+        self.assertEqual(captain_clone['hp'], 0)
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
+        oldest = battle.state(owner)['next_mirrors'][0]
+        self.assertTrue(self.fixture.cast(battle, owner, 'leader_skill'))
+        self.assertEqual(oldest['hp'], 0)
+        self.assertEqual(battle.state(owner)['next_mirrors'][-1]['next_mirror_generation'], 1)
+        self.assertEqual(sum(u['hp'] > 0 for u in battle.a[1:]), 8)
 
     def test_baron_heals_only_from_hitting_an_existing_own_curse(self):
         for prior, landed in (('none', True), ('ally', True), ('own', False), ('own', True)):

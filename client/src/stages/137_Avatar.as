@@ -17096,9 +17096,9 @@ package com.meng52.game.module.avatar
             stacked106 = true;
             _loc9_ = true;
          }
-         else if(buffs["curse"] && Buff.LIST_BUFF.indexOf(param1) != -1 && param1 != "purify")
+         else if(buffs["curse"] && Buff.LIST_BUFF.indexOf(param1) != -1 && param1 != "purify" && param1 != "shield")
          {
-            // Each curse charge rejects one incoming good buff.
+            // Each curse charge rejects one incoming good buff; shields pass.
             spendCurse106(1);
             _loc8_ = 10526880;
             _loc13_ = GlobalLanguageStr.getLanguageStr(30025);
@@ -17448,7 +17448,7 @@ package com.meng52.game.module.avatar
          for(var key:String in buffs)
          {
             var entry:Buff = buffs[key] as Buff;
-            // A held shield is never stripped; curse only blocks new ones.
+            // Shields are outside curse: never stripped, never blocked.
             if(entry && key != "shield" && Buff.LIST_BUFF.indexOf(key) > -1 && (!earliest || entry.seq < earliest.seq))
             {
                earliest = entry;

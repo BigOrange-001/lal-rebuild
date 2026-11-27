@@ -3,8 +3,8 @@
   <id>air.com.meng52.lol.android</id>
   <filename>最强王者</filename>
   <name>最强王者</name>
-  <versionNumber>1.0.5</versionNumber>
-  <versionLabel>1.0.5</versionLabel>
+  <versionNumber>1.0.6</versionNumber>
+  <versionLabel>1.0.6</versionLabel>
   <supportedProfiles>mobileDevice</supportedProfiles>
   <!-- AIR 51's legacy Android ELS fallback can reject setItem on upgraded installs. -->
   <encryptedLocalStorage>

@@ -13,6 +13,7 @@ from solo_progression import expedition_stones, exploration_encounter, explorati
 from gameplay_energy import energy_state, write_energy_after_spend
 from equipment_elite_drop import roll_elite_drop
 from hero_drop import roll_campaign_hero_drop
+from campaign_expansion_106 import roll_hero_card, roll_relic
 from mod_policy import (runtime as mod_runtime, effective_digest, validate_battle_config,
                         candidate_ids, ensure_reward, ensure_available, base_aid,
                         hero_available, band_candidates, retain_frozen_intent)
@@ -634,6 +635,7 @@ class GameplayCombat:
         """Settle one pending PvE intent inside an atomic update; sweeps reuse the win path."""
         first_clear = False
         encounter = None
+        campaign_relic = None
         pending_map = profile.setdefault("pending_pve", {})
         pending = pending_map.get(fight_id)
         if not pending or pending.get("cid") != cid or int(pending.get("diff", -1)) != diff or int(pending.get("expires", 0)) < int(self.store.clock.now()):
@@ -765,6 +767,15 @@ class GameplayCombat:
                 )
                 if hero_aid is not None:
                     reward.setdefault("heroes", []).append({"aid": hero_aid, "num": 1})
+                # Chapters 31-60 (never swept): a normal win may add an
+                # orange card, an elite win one abyss relic.
+                card_aid = roll_hero_card(self.full_config, stage, cid, diff,
+                                          self._reward_rng(uid, fight_id, pending, "campaign-card-106"))
+                if card_aid is not None:
+                    reward.setdefault("heroes", []).append({"aid": card_aid, "num": 1})
+                if not sweep:
+                    campaign_relic = roll_relic(self.full_config, stage, cid, diff,
+                                                self._reward_rng(uid, fight_id, pending, "campaign-relic-106"))
             first = copy.deepcopy(authored_reward.get("first_clear", {}))
             if isinstance(first, dict):
                 first_attrs = first.get("attrs", {})
@@ -812,6 +823,10 @@ class GameplayCombat:
             if tower_hero is not None:
                 grant_reward(profile, {"heroes": [{"aid": tower_hero, "num": 1}]}, self.full_config, allow_skin=True)
                 reward.setdefault("heroes", []).append({"aid": tower_hero, "num": 1})
+            if campaign_relic is not None:
+                from abyss_relics import normalize_relic_slots
+                normalize_relic_slots(profile)
+                profile["abyss_relics"][campaign_relic["id"]] = campaign_relic
             if reward.get("avatar_exp"):
                 from gameplay_roster import GameplayRosterEquipment
                 roster_rules = GameplayRosterEquipment.for_config(self.store, self.full_config)
@@ -928,6 +943,9 @@ class GameplayCombat:
                 "attrs":profile.get("attrs",{}),"sp":profile.get("attrs",{}).get("sp",[0,0,0,0]),"records":profile.get("records",{}),"gold_reward":amount_gold,"exp_reward":exp_gain,
                 "get_avatars":granted_avatars,"get_equips":granted_equips,"culture_book":profile.get("attrs",{}).get("culture_book",0),"box_key":profile.get("attrs",{}).get("box_key",0),"dust":profile.get("attrs",{}).get("dust",[0,0,0,0]),"dn_stone":profile.get("attrs",{}).get("dn_stone",0),
                 "battle_teams":snapshots,"first_clear":first_clear}
+            if campaign_relic is not None:
+                return_data["abyss_relic_drop"] = copy.deepcopy(campaign_relic)
+                return_data["abyss_relics"] = copy.deepcopy(profile["abyss_relics"])
         else:
             return_data = {"sign":2,"combat_star":0,"next_cid":profile.get("hid" if diff else "cid","M_001_1"),
                 "gold":profile.get("gold",0),"coin":profile.get("coin",0),"score":profile.get("score",0),

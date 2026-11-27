@@ -1,6 +1,7 @@
 """Exercise task-panel flow and renderer geometry using actual AS methods."""
 import unittest
 import re
+from pathlib import Path
 
 import test_playtest_client as client_helpers
 from test_playtest_client import NODE
@@ -23,7 +24,8 @@ let requests=[],popups=[],drawn=[];
 const GlobalData={$mStageWidth:640,$center_height_curr:1000,
  $mConfig_avatar:{A_1226_6:{name:'二郎真君赵信'}},$mConfig_equip:{},
  $mEventDispatcher:{dispatchEventWith:noop}};
-const GlobalFunction={isCurrentProfileSyncEnvelope:()=>true,popAlert:(...args)=>popups.push(args)};
+const GlobalFunction={isCurrentProfileSyncEnvelope:()=>true,popAlert:(...args)=>popups.push(args),
+ popRewards105:(info,rewards)=>popups.push(['native',info,rewards])};
 GlobalData.isCurrentProfileSyncEnvelope=()=>true;
 const SendAndSelect={sendAndSelectService:(method,params,cb)=>requests.push({method,params,cb})};
 const Tools={clone:v=>({...v})};
@@ -84,7 +86,7 @@ console.log(JSON.stringify({count:requests.length,params:first.params,popups}));
         self.assertEqual(result['params'], {'kind': 'repeat', 'key': '2000'})
         self.assertEqual(result['popups'], [])
 
-    def test_claim_updates_tasks_and_names_actual_hero(self):
+    def test_claim_updates_tasks_and_shows_the_native_reward_popup(self):
         script = BASE + function('009_PanelCenterTaskAward.as', 'onAdventureClaim', 'param1')
         script += r'''
 unit.addList=noop;unit.update=noop;
@@ -95,7 +97,7 @@ console.log(JSON.stringify({claiming:unit.adventureClaiming,tasks:unit.adventure
         result = self.run_js(script)
         self.assertFalse(result['claiming'])
         self.assertEqual(result['tasks']['paid_yuan'], 10000)
-        self.assertEqual(result['popups'], [['奖励已领取', '二郎真君赵信×1']])
+        self.assertEqual(result['popups'], [['native', '奖励已领取', [{'avatar': {'A_1226_6': 1}}]]])
 
     def test_renderer_children_stay_inside_card(self):
         script = BASE + r'''
@@ -233,7 +235,7 @@ console.log(JSON.stringify({count:nodes.length,positions:nodes.map(v=>v.x),pulse
         for num in [1,10]:
             code=self.zhuabao_script()+f"unit.renderZhuabao();unit.requestZhuabao('user.zhuabao_draw',{{num:{num}}});"+r"""
 const activity=unit.zhuabaoData;
-requests[0].cb({return_code:0,data:{activity,awards:[{name:'培养书×10'}]}});
+requests[0].cb({return_code:0,data:{activity,awards:[{name:'培养书×10',gift:{culture_book:10}},{name:'100金砖',gift:{coin:100}}]}});
 const robot=unit.zhuabaoRobot;
 const before={playing:robot.playing,loop:robot.loop,playCount:robot.playCount,busy:unit.zhuabaoBusy,popups:popups.length};
 unit.requestZhuabao('user.zhuabao_draw',{num:10});
@@ -243,9 +245,11 @@ console.log(JSON.stringify({before,requests:requests.length,busy:unit.zhuabaoBus
             result=self.run_js(code)
             self.assertEqual(result['before'],dict(playing=True,loop=False,playCount=1,busy=True,popups=0))
             self.assertEqual(result['requests'],1);self.assertFalse(result['busy']);self.assertTrue(result['idle'])
-            self.assertEqual(result['popups'],[['抓宝收获','培养书×10']])
+            # One native popup per drawn reward, only after the claw stops.
+            self.assertEqual(result['popups'],[['native','抓宝收获',[{'culture_book':10},{'coin':100}]]])
 
     def test_zhuabao_gift_claim_and_preview_are_separate(self):
+        # The pool preview button is gone; tiers 100 and 300 award a random orange.
         code=self.zhuabao_script()+r"""
 unit.onZhuabaoAction({currentTarget:{name:'claim100'}});
 unit.onZhuabaoAction({currentTarget:{name:'claim10'}});
@@ -253,7 +257,24 @@ console.log(JSON.stringify({requests:requests.map(v=>({method:v.method,params:v.
 """
         result=self.run_js(code)
         self.assertEqual(result['requests'],[dict(method='user.zhuabao_claim',params=dict(tier=10))])
-        self.assertIn('橙色盖伦',result['popups'][0][1])
+        self.assertIn('随机橙卡（10%皮肤橙）',result['popups'][0][1])
+
+    def test_zhuabao_claim_reply_pops_the_granted_reward(self):
+        code=self.zhuabao_script()+r"""
+unit.requestZhuabao('user.zhuabao_claim',{tier:100});
+requests[0].cb({return_code:0,data:{activity:unit.zhuabaoData,awards:[],gift:{avatar:{A_1226_6:1},attrs:{sp:[300,300,300,300,300,300]}}}});
+console.log(JSON.stringify({popups}));
+"""
+        self.assertEqual(self.run_js(code)['popups'],
+                         [['native','累计抓宝奖励',[{'avatar':{'A_1226_6':1},'attrs':{'sp':[300]*6}}]]])
+
+    def test_zhuabao_has_no_pool_preview(self):
+        code=self.zhuabao_script()+r"""
+unit.renderZhuabao();
+console.log(JSON.stringify({labels:unit.zhuabaoBox.children.filter(v=>v.texture).map(v=>v.text)}));
+"""
+        self.assertEqual(self.run_js(code)['labels'],['抓一次','抓十次'])
+        self.assertNotIn('奖池',(Path(__file__).resolve().parents[1]/'client/src/stages/009_PanelCenterTaskAward.as').read_text('utf-8'))
 
     def test_reward_icon_uses_native_assets_and_fits_in_reserved_column(self):
         script=BASE+r'''

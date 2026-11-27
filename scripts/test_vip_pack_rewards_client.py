@@ -126,6 +126,41 @@ console.log(JSON.stringify(rows));
                 self.assertEqual(result["events"], ["update_vip_gift"])
                 self.assertTrue(result["unchanged"])
 
+    def test_rewards_use_one_native_popup_per_reward(self):
+        """popRewards105 flattens server rewards into showReward2's native keys."""
+        source=(ROOT/'client/src/ui_kit_105.aspart').read_text('utf-8')
+        def js(name,params):
+            body=method(source,name,params).replace('flat[key] is Array','Array.isArray(flat[key])')
+            return re.sub(r'([\w.]+) is Number',r'(typeof \1 === "number")',body)
+        consts=''.join('const %s=%s;\n'%(name,re.search(name+r':Object=(\{.*?\});',source,re.S)[1])
+                       for name in ('NATIVE_REWARD_105','REWARD_NAMES_105'))
+        script=('const assert=require("node:assert/strict"),int=v=>Math.trunc(Number(v)||0);\n'
+                'const shown=[],toasts=[],sounds=[];\n'
+                'const showReward2=(info,flat)=>shown.push([info.info,flat]);const popToast=t=>toasts.push(t);\n'
+                'const SoundManager={getOnlyExample:()=>({playSound:s=>sounds.push(s)})};\n'+consts)
+        script+='const nativeReward105='+js('nativeReward105','reward,extra')+';\n'
+        script+='const addNativeReward105='+js('addNativeReward105','flat,key,value,extra')+';\n'
+        script+='const popRewards105='+js('popRewards105','info,rewards')+';\n'
+        script+=r'''
+popRewards105('抓宝收获',[{heroes:[{aid:'A_1',num:5}]},{attrs:{dust:[0,0,20],stardust:1000,culture_book:3}},
+ {coin:100,avatar:{A_2:1}},{},{attrs:{sp:[300,300,300,300,300,300]},avatar:{A_3:1}}]);
+// One native popup per reward, in order; empty rewards pop nothing.
+assert.deepEqual(shown,[['抓宝收获',{avatar:{A_1:5}}],['抓宝收获',{dust:[0,0,20,0],culture_book:3}],
+ ['抓宝收获',{coin:100,avatar:{A_2:1}}],['抓宝收获',{sp:[300,300,300,300,300,300],avatar:{A_3:1}}]]);
+// Rewards the native popup cannot draw are still named once.
+assert.deepEqual(toasts,['获得：星辉×1000']);assert.deepEqual(sounds,['skill2']);
+shown.length=0;sounds.length=0;popRewards105('x',[{coin:0}]);
+assert.deepEqual(shown,[]);assert.deepEqual(sounds,[]);'''
+        run=subprocess.run([NODE],input=script,encoding='utf-8',capture_output=True,cwd=ROOT)
+        self.assertEqual(run.returncode,0,run.stdout+run.stderr)
+
+    def test_purchases_and_claims_use_the_native_reward_popup(self):
+        for path,call in (('client/src/stages/129_PanelCenterShopVIP.as','popRewards105("购买成功",[reply.data.granted])'),
+                          ('client/src/vip_daily_packs_105.aspart','popRewards105("购买成功",[reply.data.granted])'),
+                          ('client/src/stages/128_PanelCenterSoul.as','popRewards105(MainConfig.$isEnglish ? "Claimed" : "已领取",[{"avatar":hero}])'),
+                          ('client/src/stages/048_PanelEveryDaySign.as','popRewards105("签到奖励",[{"avatar":_reward.avatar}])')):
+            self.assertIn(call,(ROOT/path).read_text('utf-8'),path)
+
 
 if __name__ == "__main__":
     unittest.main()

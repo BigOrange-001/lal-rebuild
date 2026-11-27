@@ -68,10 +68,9 @@ package com.meng52.game.ui.screen
       private var zhuabaoRobot:MovieClip;
       private var zhuabaoData:Object;
       private var zhuabaoBusy:Boolean = false;
-      private var zhuabaoPage:int = 0;
       private var zhuabaoRequest:int = 0;
       private var zhuabaoGifts:Array = [];
-      private var zhuabaoAwards:String;
+      private var zhuabaoAwards:Array;
       private var zhuabaoAnimating:Boolean = false;
       
       public function PanelCenterTaskAward()
@@ -654,16 +653,8 @@ package com.meng52.game.ui.screen
             if(reply.state_sync && !GlobalData.isCurrentProfileSyncEnvelope(reply.state_sync)) { addList(); update(); return; }
             adventureData = reply.data.tasks;
             addList();
-            var lines:Array = [];
-            var award:Object = reply.data.award;
-            if(award)
-            {
-               for(var aid:String in award.avatar)
-                  lines.push((GlobalData.$mConfig_avatar[aid] ? GlobalData.$mConfig_avatar[aid].name : "橙色英雄") + "×" + award.avatar[aid]);
-               for(var eid:String in award.equip)
-                  lines.push((GlobalData.$mConfig_equip[eid] ? GlobalData.$mConfig_equip[eid].name : "橙色装备") + "×" + award.equip[eid]);
-            }
-            GlobalFunction.popAlert("奖励已领取",lines.length > 0 ? lines.join("\n") : rewardText);
+            if(reply.data.award) GlobalFunction.popRewards105("奖励已领取",[reply.data.award]);
+            else GlobalFunction.popAlert("奖励已领取",rewardText);
          });
       }
 
@@ -720,16 +711,17 @@ package com.meng52.game.ui.screen
             if(adventureTab==3) renderZhuabao();
             if(method=="user.zhuabao_draw")
             {
-               var lines:Array=[];for each(var award:Object in reply.data.awards) lines.push(award.name);
+               // One native "获得" popup per drawn reward, after the claw finishes.
+               var gifts:Array=[];for each(var award:Object in reply.data.awards) gifts.push(award.gift);
                if(adventureTab==3 && zhuabaoRobot)
                {
-                  zhuabaoAwards=lines.join("\n");zhuabaoAnimating=true;zhuabaoBusy=true;
+                  zhuabaoAwards=gifts;zhuabaoAnimating=true;zhuabaoBusy=true;
                   zhuabaoRobot.currentFrame=0;zhuabaoRobot.play();Starling.juggler.add(zhuabaoRobot);
                   for(var b:int=0;b<zhuabaoBox.numChildren;b++) zhuabaoBox.getChildAt(b).touchable=false;
                }
-               else GlobalFunction.popAlert("抓宝收获",lines.join("\n"));
+               else GlobalFunction.popRewards105("抓宝收获",gifts);
             }
-            else if(method=="user.zhuabao_claim") GlobalFunction.popAlert("累计奖励","奖励已放入背包；每轮每档可领取一次。");
+            else if(method=="user.zhuabao_claim" && reply.data.gift) GlobalFunction.popRewards105("累计抓宝奖励",[reply.data.gift]);
          });
       }
       private function clearZhuabaoMotion() : void
@@ -741,9 +733,9 @@ package com.meng52.game.ui.screen
       private function onZhuabaoComplete(event:Event) : void
       {
          if(!zhuabaoAnimating) return;
-         var awards:String=zhuabaoAwards;
+         var awards:Array=zhuabaoAwards;
          zhuabaoBusy=false;clearZhuabaoMotion();
-         if(stage && adventureTab==3) { renderZhuabao();GlobalFunction.popAlert("抓宝收获",awards); }
+         if(stage && adventureTab==3) { renderZhuabao();GlobalFunction.popRewards105("抓宝收获",awards); }
       }
       private function renderZhuabao() : void
       {
@@ -768,8 +760,6 @@ package com.meng52.game.ui.screen
          zhuabaoButton("抓十次","draw10",140,-8,104,54);
          zhuabaoPrice(32,50,104,zhuabaoData.free ? "免费" : "100");
          zhuabaoPrice(140,50,104,String(zhuabaoData.ten_cost));
-         zhuabaoButton("奖池预览","pool",w-132,-8,104,54);
-         var preview:TextField=GlobalFunction.createTextField(124,28,"材料、英雄、装备","",14,15127728);preview.x=w-142;preview.y=50;preview.autoScale=true;preview.touchable=false;zhuabaoBox.addChild(preview);
          var ribbon:DisplayObject=GlobalFunction.createImage("UI_roulette_t_bg_0000");
          ribbon.width=w-64;ribbon.height=34;ribbon.x=32;ribbon.y=90;ribbon.touchable=false;
          zhuabaoBox.addChild(ribbon);
@@ -817,16 +807,10 @@ package com.meng52.game.ui.screen
       {
          if(zhuabaoBusy || !zhuabaoData) return;
          var key:String=String((event.currentTarget as DisplayObject).name);
-         if(key=="pool")
-         {
-            var pool:Array=zhuabaoData.pool as Array;var pages:int=Math.max(1,Math.ceil(pool.length/20));zhuabaoPage%=pages;
-            var lines:Array=[];for(var i:int=zhuabaoPage*20;i<Math.min(pool.length,(zhuabaoPage+1)*20);i++)lines.push(pool[i].group+"："+pool[i].name);
-            GlobalFunction.popAlert("奖池 "+(zhuabaoPage+1)+"/"+pages+"（再次点击翻页）",lines.join("\n"));zhuabaoPage++;return;
-         }
          if(key.indexOf("claim")==0)
          {
             var tier:int=int(key.substr(5));
-            var rewards:Array=["500金砖 + 1000培养书","四色粉尘各500 + 德诺石500","橙色盖伦 + 六色天赋材料各300","艾克橙卡 + 5000金砖"];
+            var rewards:Array=["500金砖 + 1000培养书","四色粉尘各500 + 德诺石500","随机橙卡（10%皮肤橙）+ 六色天赋材料各300","随机橙卡（50%皮肤橙）+ 5000金砖"];
             for(var n:int=0;n<zhuabaoData.milestones.length;n++)
             {
                var row:Object=zhuabaoData.milestones[n];

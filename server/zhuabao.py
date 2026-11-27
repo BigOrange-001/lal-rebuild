@@ -34,7 +34,9 @@ def material_pool(cfg):
 def draw_cost(num,free):
  return (TEN_PRICE if num==10 else PRICE)-(PRICE if free else 0)
 
-MILESTONES={10:{"coin":500,"culture_book":1000},50:{"attrs":{"dust":[500]*4},"dn_stone":500},100:{"avatar":{"A_1001_6":1},"attrs":{"sp":[300]*6}},300:{"avatar":{"A_1140_6":1},"coin":5000}}
+MILESTONES={10:{"coin":500,"culture_book":1000},50:{"attrs":{"dust":[500]*4},"dn_stone":500},100:{"random_orange_hero":1,"attrs":{"sp":[300]*6}},300:{"random_orange_hero":1,"coin":5000}}
+# Chance (percent) that a milestone's random orange hero is a skin orange.
+SKIN_PERCENT={100:10,300:50}
 
 class Zhuabao:
  def __init__(self,economy):
@@ -69,6 +71,11 @@ class Zhuabao:
    return random.choice(self.equipment_pools[quality])
   if group=='金砖':return random.choices(self.groups[group],weights=[19,1],k=1)[0]
   return random.choice(self.groups[group])
+ def milestone_reward(self,tier):
+  """Resolve the milestone's random orange hero into a concrete card."""
+  reward=copy.deepcopy(MILESTONES[tier]);count=reward.pop("random_orange_hero",0)
+  if count:reward["avatar"]={self.economy.random_orange_hero(SKIN_PERCENT[tier],random.SystemRandom()):count}
+  return reward
  def state(self,p):
   s=p.setdefault("attrs",{}).setdefault("zhuabao",{"count":0,"claimed":[],"free_day":""})
   if s.get("version")!=2:
@@ -86,7 +93,7 @@ class Zhuabao:
   draw=method=="user.zhuabao_draw";n=params.get("num",1) if draw else params.get("tier")
   if type(n) is not int or (draw and n not in (1,10)) or (not draw and n not in MILESTONES):raise GameplayFault("InvalidSelection","请选择单抓、十连或有效累计奖励。")
   def mutate(p):
-   s=self.state(p);awards=[]
+   s=self.state(p);awards=[];reward=None
    if draw:
     today=game_day(self.store.clock.now());free=s["free_day"]!=today;cost=draw_cost(n,free)
     if p.get("coin",0)<cost:raise GameplayFault("InsufficientCoin","金砖不足。")
@@ -99,6 +106,7 @@ class Zhuabao:
    else:
     available=s["total"]//300+int(s["count"]>=n)
     if s["claimed"].get(str(n),0)>=available:raise GameplayFault("AlreadyClaimed","次数未达到或该奖励已经领取。")
-    grant_reward(p,MILESTONES[n],{"cfg":self.cfg},allow_skin=True);s["claimed"][str(n)]=s["claimed"].get(str(n),0)+1
-   return p,dict(activity=self.info(p),awards=awards,gift=None if draw else copy.deepcopy(MILESTONES[n]))
+    reward=self.milestone_reward(n)
+    grant_reward(p,reward,{"cfg":self.cfg},allow_skin=True);s["claimed"][str(n)]=s["claimed"].get(str(n),0)+1
+   return p,dict(activity=self.info(p),awards=awards,gift=copy.deepcopy(reward))
   out,replayed=self.store.atomic_update(uid,mutate,method+":"+action,{"num" if draw else "tier":n});out["replayed"]=replayed;return out

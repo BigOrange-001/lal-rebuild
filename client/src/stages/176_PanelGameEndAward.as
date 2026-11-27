@@ -2202,7 +2202,9 @@ package com.meng52.game.ui.panel
          {
             _loc1_ = Tools.isNoChildrenInObj(GlobalData.$gameEndAwardObj.data.get_avatars);
             _loc2_ = Tools.isNoChildrenInObj(GlobalData.$gameEndAwardObj.data.get_equips);
-            if((!_loc1_ || GlobalData.$gameEndAwardObj.data.get_fragments != null) && GlobalData.$tempPVE_type == "status_pve_normal" || (!_loc1_ || !_loc2_ || GlobalData.$gameEndAwardObj.data.get_fragments != null) && GlobalData.$tempPVE_type == "status_pve_hard" || (!_loc1_ || !_loc2_ || GlobalData.$gameEndAwardObj.data.get_fragments != null) && GlobalData.$tempPVE_type == "status_pve_activities")
+            // Chapters 31-60: an elite win may drop nothing but an abyss relic.
+            var _relicOnly106:Boolean = GlobalData.$gameEndAwardObj.data.abyss_relic_drop != null && GlobalData.$tempPVE_type == "status_pve_hard";
+            if(_relicOnly106 || (!_loc1_ || GlobalData.$gameEndAwardObj.data.get_fragments != null) && GlobalData.$tempPVE_type == "status_pve_normal" || (!_loc1_ || !_loc2_ || GlobalData.$gameEndAwardObj.data.get_fragments != null) && GlobalData.$tempPVE_type == "status_pve_hard" || (!_loc1_ || !_loc2_ || GlobalData.$gameEndAwardObj.data.get_fragments != null) && GlobalData.$tempPVE_type == "status_pve_activities")
             {
                this.setAwardAvatar(GlobalData.$gameEndAwardObj.data);
                _loc3_ = true;
@@ -2848,6 +2850,25 @@ package com.meng52.game.ui.panel
          else
          {
             _txt.visible = false;
+         }
+         // Chapters 31-60: the server adds abyss_relic_drop to an elite win.
+         // A relic has no item icon here, so name it under the drops.
+         var _relic106:Object = param1.abyss_relic_drop;
+         if(_relic106 != null)
+         {
+            var _ancient106:Boolean = _relic106.main != null && _relic106.main.ancient;
+            for each(var _affix106:Object in _relic106.substats)
+            {
+               if(_affix106 && _affix106.ancient)
+               {
+                  _ancient106 = true;
+               }
+            }
+            var _relicText106:TextField = GlobalTextStyle.getTextField("获得深渊遗物：" + String(_relic106.name) + (_ancient106 ? "（含太古词条）" : ""),24,16764006,"center",_loc2_,32);
+            _relicText106.x = int((GlobalData.$mStageWidth - _loc2_) * 0.5);
+            _relicText106.y = this.mBox_avatar.y + (_loc11_ > 0 ? int(Math.ceil(_loc11_ / _loc4_)) * (90 + 25) + 10 : 0);
+            _relicText106.touchable = false;
+            addChild(_relicText106);
          }
       }
 

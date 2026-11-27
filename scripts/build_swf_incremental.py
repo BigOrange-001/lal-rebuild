@@ -48,10 +48,13 @@ def changed_classes(stages: list[dict], base: dict) -> list[str]:
 
 def needs_scoped_ui_kit_repair(stages: list[dict], baseline: dict) -> bool:
     # Recompiling all of GlobalFunction against a final SWF can disturb startup.
-    # Patch the existing methods only if qualifying Sprite is the complete
-    # difference between the old fingerprint and the current class sources.
-    overrides = {}
+    # Known bases used Flash types for both names, or already fixed Sprite.
+    prior = baseline.get(GLOBAL_FUNCTION)
+    if prior is None:
+        return False
     global_stages = [stage for stage in stages if stage['class'] == GLOBAL_FUNCTION]
+    event_only = {}
+    sprite_and_event = {}
     for stage in global_stages:
         path = stage['source']
         source = (ROOT / path).read_bytes()
@@ -59,9 +62,12 @@ def needs_scoped_ui_kit_repair(stages: list[dict], baseline: dict) -> bool:
         kit, end, tail = rest.partition(b'// END UI KIT 105')
         if not marker or not end:
             return False
-        overrides[path] = begin + marker + kit.replace(b'starling.display.Sprite', b'Sprite') + end + tail
-    legacy = source_manifest(global_stages, source_overrides=overrides)
-    return legacy.get(GLOBAL_FUNCTION) == baseline.get(GLOBAL_FUNCTION)
+        old_event = kit.replace(b'starling.events.Event', b'Event')
+        event_only[path] = begin + marker + old_event + end + tail
+        sprite_and_event[path] = begin + marker + old_event.replace(
+            b'starling.display.Sprite', b'Sprite') + end + tail
+    return any(source_manifest(global_stages, source_overrides=overrides).get(GLOBAL_FUNCTION) == prior
+               for overrides in (event_only, sprite_and_event))
 
 
 def main(argv=None) -> int:

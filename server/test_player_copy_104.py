@@ -39,6 +39,15 @@ class PlayerCopyTests(unittest.TestCase):
         once=copy.deepcopy(document);apply_player_copy_104(document)
         self.assertEqual(document,once)
 
+    def test_skill_upgrade_chance_shows_one_percent_sign(self):
+        # The client fills 90401 with 2004 ("@0%"), which already adds the sign.
+        document={'cfg':{'return_msg_config':{'2004':'@0%','90401':'技能升级概率：@0%'}}}
+        apply_player_copy_104(document)
+        messages=document['cfg']['return_msg_config']
+        rate=messages['2004'].replace('@0','35')
+        self.assertEqual(messages['90401'].replace('@0',rate),'技能升级概率：35%')
+        self.assertEqual(messages['90401'].replace('@0','--'),'技能升级概率：--')
+
     def test_display_names_for_stages_resources_and_unknown_units(self):
         stages={'M_010_5':{'name':'第10章·还没排好的火力'},'M_001_1':{'name':'第1章·散落的工事'}}
         ploy={'P_1':{'name':'英雄经验·难度3'},'P_2':{'name':'远古试炼·第4档'},'P_3':{'name':'灵魂塔·第12层'}}

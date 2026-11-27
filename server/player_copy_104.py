@@ -139,6 +139,11 @@ def apply_player_copy_104(document):
     apply_display_names_104(document)
     from copy_polish_104 import polish_sections
     polish_sections(cfg)
+    # The client fills 90401 with a rate already formatted by 2004 ("@0%"), so
+    # the template's own % doubled it ("35%%"); a maxed skill showed "--%".
+    messages = cfg.get('return_msg_config')
+    if isinstance(messages, dict) and messages.get('90401') == '技能升级概率：@0%':
+        messages['90401'] = '技能升级概率：@0'
     return document
 
 

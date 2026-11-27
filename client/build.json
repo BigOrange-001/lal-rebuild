@@ -224,7 +224,7 @@
       "index": 37,
       "class": "com.meng52.game.ui.panel.PanelBetterStart",
       "source": "client/src/stages/035_PanelBetterStart.as",
-      "source_sha256": "ef6a3e175672bd1953f7bec88ab9babb7b6c8670228411d8d1f14e1f834f41fd"
+      "source_sha256": "c0aa9cbc28982f265b676b346edeb541dbf50f0a54fcaaf62fe9d2cb8dd1bfa1"
     },
     {
       "index": 38,
@@ -759,7 +759,7 @@
       "index": 126,
       "class": "com.meng52.game.ui.panel.PanelStarUpStart",
       "source": "client/src/stages/124_PanelStarUpStart.as",
-      "source_sha256": "4491fa2f4725f8422346c4f4d428c4f975c4a82848ca2d98333630804f42ff9b"
+      "source_sha256": "05527851f0a47577bf8a051ab5d4f0f2f0a434d6b9baccdde1081704c60a7bc7"
     },
     {
       "index": 127,
@@ -867,19 +867,19 @@
       "index": 144,
       "class": "com.meng52.game.ui.panel.PanelDetailAll",
       "source": "client/src/stages/141_PanelDetailAll.as",
-      "source_sha256": "63d691ce9eee43a8196f8ac74a4e4956da8fc70dff379a74eb801a8bda264fbd"
+      "source_sha256": "716ab01ac6c67d143ac7dd28671fdebdd2383b6af51d4dbf9d0e26c475343acb"
     },
     {
       "index": 145,
       "class": "com.meng52.game.ui.panel.PanelDetailDN",
       "source": "client/src/stages/142_PanelDetailDN.as",
-      "source_sha256": "4398627a38883ae7d21142aa7a1816423f73ce93337c0de2e377c5f395493a60"
+      "source_sha256": "cdf7bc3821bba147f452b15ea9e87e39aae4ad6462ccced7fb9de22a32911d0e"
     },
     {
       "index": 146,
       "class": "com.meng52.game.ui.element.LOL_DetailAvatar",
       "source": "client/src/stages/143_LOL_DetailAvatar.as",
-      "source_sha256": "44da54a45453086772e7bf7eed56605c3eff612bda940ade96c3b3364e5fb8ae"
+      "source_sha256": "a619f28c893e7da9cf2f7d0cb62930cfbedf34e797c83105c8080951b4b0aeb1"
     },
     {
       "index": 147,

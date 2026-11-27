@@ -1009,7 +1009,7 @@ package com.meng52.game.ui.panel
             _loc32_++;
          }
          _loc8_ = [_loc5_.hpP == 0 ? "" : Tools.formatLineX(GlobalLanguageStr.getLanguageStr(20080,_loc5_.hpP,_loc16_),GlobalTextStyle.COLOR_R_Y_Y_Y,1000,20),_loc5_.apP == 0 ? "" : Tools.formatLineX(GlobalLanguageStr.getLanguageStr(20080,_loc5_.apP,_loc16_),GlobalTextStyle.COLOR_R_Y_Y_Y,1000,20),_loc5_.dePhP == 0 ? "" : Tools.formatLineX(GlobalLanguageStr.getLanguageStr(20080,_loc5_.dePhP,_loc16_),GlobalTextStyle.COLOR_R_Y_Y_Y,1000,20),_loc5_.deMaP == 0 ? "" : Tools.formatLineX(GlobalLanguageStr.getLanguageStr(20080,_loc5_.deMaP,_loc16_),GlobalTextStyle.COLOR_R_Y_Y_Y,1000,20)];
-         var _loc17_:LOL_Scale9Button = new LOL_Scale9Button(GlobalLanguageStr.getLanguageStr(20091),88,36,"UI_btn_3_0000",false);
+         var _loc17_:LOL_Scale9Button = new LOL_Scale9Button("普通技",88,36,"UI_btn_3_0000",false);
          _loc17_._text.width = 80;
          _loc17_._text.height = 35;
          _loc17_._text.shadowFilter();
@@ -1031,7 +1031,7 @@ package com.meng52.game.ui.panel
          param1.addChild(_loc43_);
          if(_loc5_.skill0)
          {
-            _loc26_ = GlobalTextStyle.getTextField(GlobalLanguageStr.getLanguageStr(20492,_loc5_.skill0.lv),20,16777215,"left",200,29);
+            _loc26_ = GlobalTextStyle.getTextField("LV" + _loc5_.skill0.lv,20,16777215,"left",200,29);
             _loc26_.x = _loc43_.x + _loc43_.textBounds.width + 5;
             _loc26_.y = _loc43_.y;
             param1.addChild(_loc26_);

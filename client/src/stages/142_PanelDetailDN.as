@@ -88,7 +88,7 @@ package com.meng52.game.ui.panel
          }
          else if(param1 == "skill")
          {
-            _loc3_ = param2 == 0 ? GlobalLanguageStr.getLanguageStr(20091) : GlobalLanguageStr.getLanguageStr(20105);
+            _loc3_ = param2 == 0 ? "普通技" : GlobalLanguageStr.getLanguageStr(20105);
          }
          return _loc3_;
       }
